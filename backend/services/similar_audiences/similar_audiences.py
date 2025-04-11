@@ -17,35 +17,9 @@ class SimilarAudienceService:
 
 
     def get_audience_feature_importance(self, audience_data: List[AudienceData]) -> AudienceFeatureImportance:
-        data, amount = self.get_transactions_with_geo(audience_data)
-        feature_importance = self.train_catboost(data, amount)
+        data, customer_value = self.normalizer.normalize(audience_data)
+        feature_importance = self.train_catboost(data, customer_value)
         return self.audience_importance(feature_importance)
-
-
-    def get_transactions_with_geo(self, audience_data: List[AudienceData]) -> Tuple[DataFrame, DataFrame]:
-        df_geo = self.get_states_dataframe()
-        df = self.get_dataframe(audience_data)
-
-        df_with_geo = df.merge(df_geo, how='left', left_on='ZipCode5', right_on='zip')
-        df_with_geo['state_city'] = df_with_geo['state_name'] + '|' + df_with_geo['city']
-
-        cat_indicator_columns = [name + 'IsMissing' for name in [
-            'PersonGender', 'HasChildren', 'HomeownerStatus', 'MaritalStatus',
-            'HasCreditCard', 'OccupationGroupCode', 'IsBookReader',
-            'IsOnlinePurchaser', 'IsTraveler'
-        ]]
-
-        df_final = df_with_geo[
-            ['PersonExactAge', 'PersonGender', 'EstimatedHouseholdIncomeCode', 'EstimatedCurrentHomeValueCode',
-             'HomeownerStatus', 'HasChildren', 'NumberOfChildren', 'CreditRating', 'NetWorthCode', 'HasCreditCard',
-             'LengthOfResidenceYears', 'MaritalStatus', 'OccupationGroupCode', 'IsBookReader', 'IsOnlinePurchaser',
-             'IsTraveler', 'state_name', 'state_city'] + cat_indicator_columns]
-        df_final.loc[:, 'state_name'] = df_final['state_name'].fillna('unknown')
-        df_final.loc[:, 'state_city'] = df_final['state_city'].fillna('unknown')
-
-        amount = df_with_geo['amount']
-
-        return df_final, amount
 
 
     def train_catboost(self, df: DataFrame, amount: DataFrame) -> DataFrame:
@@ -82,16 +56,6 @@ class SimilarAudienceService:
             feature_importance['Importance']
         ))
         return AudienceFeatureImportance(**feature_importance_dict)
-
-
-    def get_dataframe(self, audience_data: List[AudienceData]):
-        return self.normalizer.normalize(audience_data)
-
-
-    def get_states_dataframe(self) -> DataFrame:
-        path = Folders.data('uszips.csv')
-        dataframe = pd.read_csv(path, usecols=["zip", "city", "state_name"], dtype={"zip": str})
-        return dataframe
 
 
 def get_similar_audiences_service(normalizer: AudienceDataNormalizationServiceDep):

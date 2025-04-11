@@ -24,7 +24,7 @@ class AudienceData(BaseModel):
     IsOnlinePurchaser: Optional[str]
     StateAbbr: Optional[str]
     IsTraveler: Optional[str]
-    amount: Decimal
+    customer_value: Decimal
 
 
 class AudienceFeatureImportance(BaseModel):
@@ -44,5 +44,8 @@ class AudienceFeatureImportance(BaseModel):
     IsBookReader: float
     IsOnlinePurchaser: float
     IsTraveler: float
+    ZipCode5: float
+    ZipCode4: float
+    ZipCode3: float
     state_name: float
     state_city: float
