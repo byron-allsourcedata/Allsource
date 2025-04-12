@@ -606,6 +606,31 @@ const SmartAudiences: React.FC = () => {
           .join(" ")
     }
 
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const [isScrolledX, setIsScrolledX] = useState(false);
+    const [isScrolledY, setIsScrolledY] = useState(false);
+    
+    useEffect(() => {
+      if (tableContainerRef.current) {
+        const container = tableContainerRef.current;
+        const checkScroll = () => {
+          setIsScrolledX(container.scrollLeft > 0);
+          setIsScrolledY(container.scrollTop > 0);
+        };
+    
+        container.addEventListener("scroll", checkScroll);
+        window.addEventListener("resize", checkScroll);
+    
+        checkScroll();
+    
+        return () => {
+          container.removeEventListener("scroll", checkScroll);
+          window.removeEventListener("resize", checkScroll);
+        };
+      } else {
+        console.warn("TableContainer ref is still null");
+      }
+    }, [tableContainerRef.current]);
 
     return (
         <>
@@ -877,6 +902,7 @@ const SmartAudiences: React.FC = () => {
                                             <Grid container spacing={1} sx={{ flex: 1 }}>
                                                 <Grid item xs={12} sx={{display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
                                                     <TableContainer
+                                                        ref={tableContainerRef}
                                                         component={Paper}
                                                         sx={{
                                                             border: '1px solid rgba(235, 235, 235, 1)',
@@ -920,6 +946,9 @@ const SmartAudiences: React.FC = () => {
                                                                                     left: 0,
                                                                                     zIndex: 10,
                                                                                     top: 0,
+                                                                                    boxShadow: isScrolledX
+                                                                                    ? "3px 0px 3px #00000033"
+                                                                                    : "none",
                                                                                 }),
                                                                                 ...(key === 'average_time_sec' && {
                                                                                     "::after": { content: 'none' }
@@ -948,28 +977,36 @@ const SmartAudiences: React.FC = () => {
                                                                         </TableCell>
                                                                     ))}
                                                                 </TableRow>
-                                                                {loaderForTable 
-                                                                    ? (
-                                                                        <TableRow sx={{
-                                                                            position: "sticky",
-                                                                            top: '56px',
-                                                                            zIndex: 11,
-                                                                        }}>
-                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px" }}>
-                                                                                <LinearProgress variant="indeterminate" sx={{ width: "100%", height: "2px", position: "absolute" }} />
-                                                                            </TableCell>
-                                                                        </TableRow>
-                                                                    )
-                                                                    : (
-                                                                        <TableRow sx={{
-                                                                            position: "sticky",
-                                                                            top: '56px',
-                                                                            zIndex: 11,
-                                                                        }}>
-                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }}/>
-                                                                        </TableRow>
-                                                                    )
-                                                                }
+                                                                <TableRow
+                                                                    sx={{
+                                                                    position: "sticky",
+                                                                    top: "60px",
+                                                                    zIndex: 11,
+                                                                    borderTop: "none",
+                                                                    }}
+                                                                >
+                                                                    <TableCell
+                                                                    colSpan={9}
+                                                                    sx={{
+                                                                        p: 0,
+                                                                        pb: "1.5px",
+                                                                        borderTop: "none",
+                                                                        backgroundColor: "rgba(235, 235, 235, 1)",
+                                                                        borderColor: "rgba(235, 235, 235, 1)",
+                                                                    }}
+                                                                    >
+                                                                    {loaderForTable && (
+                                                                        <LinearProgress
+                                                                        variant="indeterminate"
+                                                                        sx={{
+                                                                            width: "100%",
+                                                                            height: "1.5px",
+                                                                            position: "absolute",
+                                                                        }}
+                                                                        />
+                                                                    )}
+                                                                    </TableCell>
+                                                                </TableRow>
                                                             </TableHead>
                                                             <TableBody>
                                                                 {data.map((row: Smarts, index) => {
@@ -993,7 +1030,10 @@ const SmartAudiences: React.FC = () => {
                                                                             {/* Name Column */}
                                                                             <TableCell className="sticky-cell"
                                                                                 sx={{
-                                                                                    ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff', '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' }
+                                                                                    ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff', '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' },
+                                                                                    boxShadow: isScrolledX
+                                                                                    ? "3px 0px 3px #00000033"
+                                                                                    : "none",
                                                                                 }}>
                                                                                 <Box sx={{display: 'flex', justifyContent: "space-between"}}>
                                                                                     <Tooltip

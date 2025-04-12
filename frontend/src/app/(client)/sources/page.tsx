@@ -53,7 +53,7 @@ import { MoreVert } from "@mui/icons-material";
 import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SearchFilter";
 import CloseIcon from "@mui/icons-material/Close";
-import CustomCell from "./components/CustomCell";
+import TableCustomCell from "./components/table/TableCustomCell";
 
 interface Source {
   id: string;
@@ -674,35 +674,31 @@ const Sources: React.FC = () => {
       .join(", ");
   };
 
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [isScrolled, setIsScrolled] = useState(false);
+const tableContainerRef = useRef<HTMLDivElement>(null);
+const [isScrolledX, setIsScrolledX] = useState(false);
+const [isScrolledY, setIsScrolledY] = useState(false);
 
-  useEffect(() => {
-    if (tableContainerRef.current) {
-      const container = tableContainerRef.current;
-      const checkScroll = () => {
-        if (container) {
-          setIsScrolled(container.scrollLeft > 0);
-        }
-      };
+useEffect(() => {
+  if (tableContainerRef.current) {
+    const container = tableContainerRef.current;
+    const checkScroll = () => {
+      setIsScrolledX(container.scrollLeft > 0);
+      setIsScrolledY(container.scrollTop > 0);
+    };
 
-      if (container) {
-        container.addEventListener("scroll", checkScroll);
-      }
-      window.addEventListener("resize", checkScroll);
+    container.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
 
-      checkScroll();
+    checkScroll();
 
-      return () => {
-        if (container) {
-          container.removeEventListener("scroll", checkScroll);
-        }
-        window.removeEventListener("resize", checkScroll);
-      };
-    } else {
-      console.warn("TableContainer ref is still null");
-    }
-  }, [tableContainerRef.current]);
+    return () => {
+      container.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  } else {
+    console.warn("TableContainer ref is still null");
+  }
+}, [tableContainerRef.current]);
 
   return (
     <>
@@ -1083,8 +1079,8 @@ const Sources: React.FC = () => {
                                             left: 0,
                                             zIndex: 10,
                                             top: 0,
-                                            boxShadow: isScrolled
-                                              ? "2px 0px 6px 0px #00000033"
+                                            boxShadow: isScrolledX
+                                              ? "3px 0px 3px #00000033"
                                               : "none",
                                           }),
                                         }}
@@ -1252,12 +1248,17 @@ const Sources: React.FC = () => {
                                           ...(key === "name" && {
                                             position: "sticky",
                                             left: 0,
-                                            zIndex: 10,
+                                            zIndex: 98,
                                             top: 0,
-                                            boxShadow: isScrolled
-                                              ? "2px 0px 6px 0px #00000033"
-                                              : "none",
+                                            boxShadow: 
+                                              //   isScrolledX && isScrolledY ? "3px 3px 3px #00000033"
+                                              // : isScrolledX ? "3px 0px 3px #00000033"
+                                              // : isScrolledY ? "0px 3px 3px #00000033"
+                                              // : "none",
+                                              isScrolledX ? "3px 0px 3px #00000033": "none",
                                           }),
+                                            
+                                          right: "none",
                                           ...(key === "average_time_sec" && {
                                             "::after": { content: "none" },
                                           }),
@@ -1311,8 +1312,8 @@ const Sources: React.FC = () => {
                                 <TableRow
                                   sx={{
                                     position: "sticky",
-                                    top: "56px",
-                                    zIndex: 11,
+                                    top: "60px",
+                                    zIndex: 99,
                                     borderTop: "none",
                                   }}
                                 >
@@ -1320,10 +1321,11 @@ const Sources: React.FC = () => {
                                     colSpan={columns.length}
                                     sx={{
                                       p: 0,
-                                      pb: "2px",
+                                      pb: "1.5px",
                                       borderTop: "none",
                                       backgroundColor: "rgba(235, 235, 235, 1)",
                                       borderColor: "rgba(235, 235, 235, 1)",
+                                      
                                     }}
                                   >
                                     {loaderForTable && (
@@ -1331,7 +1333,7 @@ const Sources: React.FC = () => {
                                         variant="indeterminate"
                                         sx={{
                                           width: "100%",
-                                          height: "2px",
+                                          height: "1.5px",
                                           position: "absolute",
                                         }}
                                       />
@@ -1360,10 +1362,11 @@ const Sources: React.FC = () => {
                                               "rgba(247, 247, 247, 1)",
                                           },
                                         },
+                                        
                                       }}
                                     >
                                       {/* Name Column */}
-                                      <CustomCell
+                                      <TableCustomCell
                                         rowExample={row.name}
                                         loaderForTable={loaderForTable}
                                         customCellStyles={{
@@ -1373,8 +1376,8 @@ const Sources: React.FC = () => {
                                           backgroundColor: loaderForTable
                                             ? "#fff"
                                             : "#fff",
-                                          boxShadow: isScrolled
-                                            ? "2px 0px 6px 0px #00000033"
+                                          boxShadow: isScrolledX
+                                            ? "3px 0px 3px #00000033"
                                             : "none",
                                         }}
                                       />
@@ -1407,13 +1410,13 @@ const Sources: React.FC = () => {
                                       {/* <CustomCell rowExample={setSourceOrigin(row.source_type)} cellWidth="60px" loaderForTable={loaderForTable}/> */}
 
                                       {/* Domain Column */}
-                                      <CustomCell
+                                      <TableCustomCell
                                         rowExample={row.domain ?? "--"}
                                         loaderForTable={loaderForTable}
                                       />
 
                                       {/* Type Column */}
-                                      <CustomCell
+                                      <TableCustomCell
                                         rowExample={setSourceType(
                                           row.source_origin
                                         )}
@@ -1421,7 +1424,7 @@ const Sources: React.FC = () => {
                                       />
 
                                       {/* Created date Column */}
-                                      <CustomCell
+                                      <TableCustomCell
                                         rowExample={
                                           dayjs(row.created_at).isValid()
                                             ? dayjs(row.created_at).format(
@@ -1433,7 +1436,7 @@ const Sources: React.FC = () => {
                                       />
 
                                       {/* Created By Column */}
-                                      <CustomCell
+                                      <TableCustomCell
                                         rowExample={row.created_by}
                                         loaderForTable={loaderForTable}
                                       />
