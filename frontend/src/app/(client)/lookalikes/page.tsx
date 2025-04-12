@@ -51,7 +51,9 @@ const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
   const [isLookalikeGenerated, setIsLookalikeGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loaderForTable, setLoaderForTable] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [lookalikesData, setLookalikeData] = useState<any[]>([]);
 
   // Pagination and Sorting
@@ -234,7 +236,8 @@ const CreateLookalikePage: React.FC = () => {
     appliedDates,
   }: FetchDataParams) => {
     try {
-      setLoading(true);
+      isFirstLoad ? setLoading(true) : setLoaderForTable(true);
+      
       // Processing "Date Calendly"
       const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
       const startEpoch = appliedDates.start
@@ -297,7 +300,14 @@ const CreateLookalikePage: React.FC = () => {
       setRowsPerPage(selectedValue);
     } catch (error) {
     } finally {
-      setLoading(false);
+      if (isFirstLoad){
+        setIsFirstLoad(false)
+        setLoading(false);
+        
+      }
+      else {
+        setLoaderForTable(false);
+      }
       setIsLoading(false);
     }
   };
@@ -679,6 +689,7 @@ const CreateLookalikePage: React.FC = () => {
                 orderBy={orderBy}
                 onSort={handleSort}
                 refreshData={refreshData}
+                loader_for_table={loaderForTable}
               />
               <Box
                 sx={{

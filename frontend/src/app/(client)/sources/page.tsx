@@ -53,7 +53,7 @@ import { MoreVert } from "@mui/icons-material";
 import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SearchFilter";
 import CloseIcon from "@mui/icons-material/Close";
-import CustomCell from "./components/CustomCell";
+import TableCustomCell from "./components/table/TableCustomCell";
 
 interface Source {
   id: string;
@@ -1236,7 +1236,7 @@ const Sources: React.FC = () => {
                               sx={{ tableLayout: "fixed" }}
                             >
                               <TableHead sx={{ position: "relative" }}>
-                                <TableRow>
+                                <TableRow sx={{height: "56px"}}>
                                   {columns.map(
                                     ({
                                       key,
@@ -1360,10 +1360,11 @@ const Sources: React.FC = () => {
                                               "rgba(247, 247, 247, 1)",
                                           },
                                         },
+                                        
                                       }}
                                     >
                                       {/* Name Column */}
-                                      <CustomCell
+                                      <TableCustomCell
                                         rowExample={row.name}
                                         loaderForTable={loaderForTable}
                                         customCellStyles={{
@@ -1407,13 +1408,13 @@ const Sources: React.FC = () => {
                                       {/* <CustomCell rowExample={setSourceOrigin(row.source_type)} cellWidth="60px" loaderForTable={loaderForTable}/> */}
 
                                       {/* Domain Column */}
-                                      <CustomCell
+                                      <TableCustomCell
                                         rowExample={row.domain ?? "--"}
                                         loaderForTable={loaderForTable}
                                       />
 
                                       {/* Type Column */}
-                                      <CustomCell
+                                      <TableCustomCell
                                         rowExample={setSourceType(
                                           row.source_origin
                                         )}
@@ -1421,7 +1422,7 @@ const Sources: React.FC = () => {
                                       />
 
                                       {/* Created date Column */}
-                                      <CustomCell
+                                      <TableCustomCell
                                         rowExample={
                                           dayjs(row.created_at).isValid()
                                             ? dayjs(row.created_at).format(
@@ -1433,7 +1434,7 @@ const Sources: React.FC = () => {
                                       />
 
                                       {/* Created By Column */}
-                                      <CustomCell
+                                      <TableCustomCell
                                         rowExample={row.created_by}
                                         loaderForTable={loaderForTable}
                                       />

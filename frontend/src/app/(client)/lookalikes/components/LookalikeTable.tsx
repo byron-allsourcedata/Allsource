@@ -17,11 +17,12 @@ import {
   Popover,
   TextField,
   InputAdornment,
+  LinearProgress,
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
+import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 import dayjs from "dayjs";
 import { useSearchParams } from "next/navigation";
 import { lookalikesStyles } from "./lookalikeStyles";
@@ -30,6 +31,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { audienceStyles } from "../../audience/audienceStyles";
+import TableCustomCell from "../../sources/components/table/TableCustomCell";
 
 interface TableRowData {
   id: string;
@@ -50,6 +52,7 @@ interface LookalikeTableProps {
   orderBy?: keyof TableRowData;
   onSort: (column: keyof TableRowData) => void;
   refreshData: () => void;
+  loader_for_table: boolean
 }
 
 const audienceSize = [
@@ -85,12 +88,36 @@ const audienceSize = [
   },
 ];
 
+const createCommonCellStyles = () => ({
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  minWidth: "150px",
+  maxWidth: "150px",
+  width: "150px",
+});
+
+
+const columns = (isDebug: boolean) => [
+  { key: "name", label: "Name", sortable: true },
+  { key: "source", label: "Source" },
+  { key: "source_type", label: "Source Type" },
+  { key: "target_schema", label: "Target Type" },
+  { key: "lookalike_size", label: "Lookalike Size" },
+  { key: "created_date", label: "Created Date", sortable: true },
+  { key: "created_by", label: "Created By" },
+  { key: "size", label: "Size", sortable: true },
+  ...(isDebug ? [{ key: "significantField", label: "Significant field" }] : []),
+  { key: "actions", label: "" },
+];
+
 const LookalikeTable: React.FC<LookalikeTableProps> = ({
   tableData,
   order,
   orderBy,
   onSort,
   refreshData,
+  loader_for_table
 }) => {
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editedName, setEditedName] = useState<string>("");
@@ -100,6 +127,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
   const [confirmAnchorEl, setConfirmAnchorEl] = useState<null | HTMLElement>(
     null
   );
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const searchParams = useSearchParams();
   const isDebug = searchParams.get("is_debug") === "true";
@@ -223,23 +251,10 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
         },
       }}
     >
-      <Table stickyHeader>
-        <TableHead>
-          <TableRow>
-            {[
-              { key: "name", label: "Name", sortable: true },
-              { key: "source", label: "Source" },
-              { key: "source_type", label: "Source Type" },
-              { key: "target_schema", label: "Target Type" },
-              { key: "lookalike_size", label: "Lookalike Size" },
-              { key: "created_date", label: "Created Date", sortable: true },
-              { key: "created_by", label: "Created By" },
-              { key: "size", label: "Size", sortable: true },
-              ...(isDebug
-                ? [{ key: "significantField", label: "Significant field" }]
-                : []),
-              { key: "actions", label: "" },
-            ].map(({ key, label, sortable = false }) => (
+      <Table stickyHeader >
+        <TableHead sx={{ position: "relative" }}>
+          <TableRow sx={{height: "60px"}}>
+          {columns(isDebug).map(({ key, label, sortable = false }) =>(
               <TableCell
                 key={key}
                 onClick={
@@ -251,13 +266,14 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   ...(key === "name" && {
                     position: "sticky",
                     left: 0,
-                    zIndex: 99,
+                    zIndex: 98,
+                    top: 0,
                   }),
                   ...(key === "actions" && {
-                    ...lookalikesStyles.table_column,
                     maxWidth: "30px",
                     "::after": { content: "none" },
                   }),
+                  borderBottom: "none",
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -267,64 +283,131 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   >
                     {label}
                   </Typography>
-                  {sortable && orderBy === key && (
-                    <IconButton size="small" sx={{ ml: 1 }}>
-                      {order === "asc" ? (
-                        <ArrowUpwardIcon fontSize="inherit" />
+                  {sortable && (
+                    <IconButton size="small">
+                    {orderBy === key ? (
+                      order === "asc" ? (
+                        <ArrowUpwardRoundedIcon fontSize="inherit" />
                       ) : (
-                        <ArrowDownwardIcon fontSize="inherit" />
-                      )}
-                    </IconButton>
-                  )}
+                        <ArrowDownwardRoundedIcon fontSize="inherit" />
+                      )
+                    ) : (
+                      <SwapVertIcon fontSize="inherit" />
+                    )}
+                  </IconButton>
+                )}
                 </Box>
               </TableCell>
             ))}
           </TableRow>
-        </TableHead>
-        <TableBody>
-          {tableData.map((row) => (
-            <TableRow key={row.id}>
-              <TableCell
-                sx={{
-                  ...lookalikesStyles.table_array,
-                  position: "sticky",
-                  left: 0,
-                  zIndex: 9,
-                  backgroundColor: "#fff",
-                  "&:hover .edit-icon": { opacity: 1, pointerEvents: "auto" },
-                }}
-              >
-                <Box
+          <TableRow
+            sx={{
+              position: "sticky",
+              top: "56px",
+              zIndex: 99,
+              borderTop: "none",
+            }}
+          >
+            <TableCell
+              colSpan={columns(isDebug).length}
+              sx={{
+                p: 0,
+                pb: "2px",
+                borderTop: "none",
+                backgroundColor: "rgba(235, 235, 235, 1)",
+                borderColor: "rgba(235, 235, 235, 1)",
+              }}
+            >
+              {loader_for_table && (
+                <LinearProgress
+                  variant="indeterminate"
                   sx={{
-                    display: "flex",
-                    flexDirection: "row",
-                    gap: 2,
-                    alignItems: "center",
-                    justifyContent: "space-between",
+                    width: "100%",
+                    height: "2px",
+                    position: "absolute",
                   }}
-                >
-                  {row.name}
-                  <IconButton
-                    className="edit-icon"
+                />
+              )}
+            </TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody sx={{ position: "relative" }}>
+          {tableData.map((row) => (
+            <TableRow key={row.id} sx={{
+              backgroundColor:
+                selectedRows.has(row.id) &&
+                !loader_for_table
+                  ? "rgba(247, 247, 247, 1)"
+                  : "#fff",
+              "&:hover": {
+                backgroundColor:
+                  "rgba(247, 247, 247, 1)",
+                "& .sticky-cell": {
+                  backgroundColor:
+                    "rgba(247, 247, 247, 1)",
+                },
+              },
+            }}>
+              <TableCustomCell
+                renderContent={() => (
+                  <Box
                     sx={{
-                      pl: 0,
-                      pr: 0,
-                      pt: 0.25,
-                      pb: 0.25,
-                      margin: 0,
-                      opacity: 0,
-                      pointerEvents: "none",
-                      transition: "opacity 0.2s ease-in-out",
-                      "@media (max-width: 900px)": {
-                        opacity: 1,
-                      },
+                      display: 'flex',
+                      flexDirection: 'row',
+                      gap: 2,
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      minWidth: '50px',
+                      maxWidth: '200px',
+                      width: '100%',
                     }}
-                    onClick={(event) => handleRename(event, row.id, row.name)}
                   >
-                    <EditIcon sx={{ maxHeight: "18px" }} />
-                  </IconButton>
-                </Box>
-              </TableCell>
+                    <Typography
+                      className="table-data"
+                      sx={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        flexGrow: 1,
+                      }}
+                    >
+                      {row.name}
+                    </Typography>
+                    <IconButton
+                      className="edit-icon"
+                      sx={{
+                        pl: 0,
+                        pr: 0,
+                        pt: 0.25,
+                        pb: 0.25,
+                        margin: 0,
+                        opacity: 0,
+                        pointerEvents: 'none',
+                        transition: 'opacity 0.2s ease-in-out',
+                        '@media (max-width: 900px)': {
+                          opacity: 1,
+                        },
+                      }}
+                      onClick={(event) => handleRename(event, row.id, row.name)}
+                    >
+                      <EditIcon sx={{ maxHeight: '18px' }} />
+                    </IconButton>
+                  </Box>
+                )}
+                rowExample={row.name}
+                customCellStyles={{
+                  ...lookalikesStyles.table_array,
+                  position: 'sticky',
+                  left: 0,
+                  zIndex: 8,
+                  backgroundColor: '#fff',
+                  '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' },
+                  minWidth: '150px',
+                  maxWidth: '150px',
+                  width: '150px',
+                }}
+              />
+
               <Popover
                 open={isEditPopoverOpen}
                 anchorEl={editPopoverAnchorEl}
@@ -443,17 +526,22 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   </Box>
                 </Box>
               </Popover>
+              
+              <TableCustomCell
+              customCellStyles={{ 
+                ...lookalikesStyles.table_array, 
+                position: "relative",
+                ...createCommonCellStyles()
+               }}
+                rowExample={row.source}
+              />
 
-              <TableCell
-                sx={{ ...lookalikesStyles.table_array, position: "relative" }}
-              >
-                {row.source}
-              </TableCell>
               <TableCell
                 sx={{
                   ...lookalikesStyles.table_array,
                   position: "relative",
                   cursor: "default",
+                  
                 }}
               >
                 <Box sx={{ display: "flex" }}>
@@ -596,13 +684,18 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   minWidth: "40px",
                   padding: "8px",
                   pr: 0,
+                  textAlign: "center"
                 }}
               >
                 <IconButton
-                  sx={{ pl: 0, pr: 0, pt: 0.25, pb: 0.25, margin: 0 }}
-                  onClick={(event) =>
-                    handleOpenConfirm(event, row.id, row.name)
-                  }
+                  sx={{
+                    pl: 0,
+                    pr: 0,
+                    pt: 0.25,
+                    pb: 0.25,
+                    margin: 0,
+                  }}
+                  onClick={(event) => handleOpenConfirm(event, row.id, row.name)}
                 >
                   <DeleteIcon sx={{ maxHeight: "18px" }} />
                 </IconButton>

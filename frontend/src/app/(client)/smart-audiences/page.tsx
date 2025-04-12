@@ -948,28 +948,36 @@ const SmartAudiences: React.FC = () => {
                                                                         </TableCell>
                                                                     ))}
                                                                 </TableRow>
-                                                                {loaderForTable 
-                                                                    ? (
-                                                                        <TableRow sx={{
-                                                                            position: "sticky",
-                                                                            top: '56px',
-                                                                            zIndex: 11,
-                                                                        }}>
-                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px" }}>
-                                                                                <LinearProgress variant="indeterminate" sx={{ width: "100%", height: "2px", position: "absolute" }} />
-                                                                            </TableCell>
-                                                                        </TableRow>
-                                                                    )
-                                                                    : (
-                                                                        <TableRow sx={{
-                                                                            position: "sticky",
-                                                                            top: '56px',
-                                                                            zIndex: 11,
-                                                                        }}>
-                                                                            <TableCell colSpan={9} sx={{ p: 0, pb: "1px", backgroundColor: "rgba(235, 235, 235, 1)", borderColor: "rgba(235, 235, 235, 1)" }}/>
-                                                                        </TableRow>
-                                                                    )
-                                                                }
+                                                                <TableRow
+                                                                    sx={{
+                                                                    position: "sticky",
+                                                                    top: "56px",
+                                                                    zIndex: 11,
+                                                                    borderTop: "none",
+                                                                    }}
+                                                                >
+                                                                    <TableCell
+                                                                    colSpan={9}
+                                                                    sx={{
+                                                                        p: 0,
+                                                                        pb: "2px",
+                                                                        borderTop: "none",
+                                                                        backgroundColor: "rgba(235, 235, 235, 1)",
+                                                                        borderColor: "rgba(235, 235, 235, 1)",
+                                                                    }}
+                                                                    >
+                                                                    {loaderForTable && (
+                                                                        <LinearProgress
+                                                                        variant="indeterminate"
+                                                                        sx={{
+                                                                            width: "100%",
+                                                                            height: "2px",
+                                                                            position: "absolute",
+                                                                        }}
+                                                                        />
+                                                                    )}
+                                                                    </TableCell>
+                                                                </TableRow>
                                                             </TableHead>
                                                             <TableBody>
                                                                 {data.map((row: Smarts, index) => {
