@@ -236,8 +236,35 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
     return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
   };
 
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [isScrolledX, setIsScrolledX] = useState(false);
+  const [isScrolledY, setIsScrolledY] = useState(false);
+  
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      const container = tableContainerRef.current;
+      const checkScroll = () => {
+        setIsScrolledX(container.scrollLeft > 0);
+        setIsScrolledY(container.scrollTop > 0);
+      };
+  
+      container.addEventListener("scroll", checkScroll);
+      window.addEventListener("resize", checkScroll);
+  
+      checkScroll();
+  
+      return () => {
+        container.removeEventListener("scroll", checkScroll);
+        window.removeEventListener("resize", checkScroll);
+      };
+    } else {
+      console.warn("TableContainer ref is still null");
+    }
+  }, [tableContainerRef.current]);
+
   return (
     <TableContainer
+      ref={tableContainerRef}
       sx={{
         border: "1px solid rgba(235, 235, 235, 1)",
         borderRadius: "4px",
@@ -268,6 +295,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                     left: 0,
                     zIndex: 98,
                     top: 0,
+                    boxShadow: isScrolledX
+                      ? "3px 0px 3px #00000033"
+                      : "none",
                   }),
                   ...(key === "actions" && {
                     maxWidth: "30px",
@@ -303,7 +333,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
           <TableRow
             sx={{
               position: "sticky",
-              top: "56px",
+              top: "60px",
               zIndex: 99,
               borderTop: "none",
             }}
@@ -312,7 +342,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
               colSpan={columns(isDebug).length}
               sx={{
                 p: 0,
-                pb: "2px",
+                pb: "1.5px",
                 borderTop: "none",
                 backgroundColor: "rgba(235, 235, 235, 1)",
                 borderColor: "rgba(235, 235, 235, 1)",
@@ -323,7 +353,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   variant="indeterminate"
                   sx={{
                     width: "100%",
-                    height: "2px",
+                    height: "1.5px",
                     position: "absolute",
                   }}
                 />
@@ -405,6 +435,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   minWidth: '150px',
                   maxWidth: '150px',
                   width: '150px',
+                  boxShadow: isScrolledX
+                      ? "3px 0px 3px #00000033"
+                      : "none",
                 }}
               />
 
@@ -532,6 +565,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                 ...lookalikesStyles.table_array, 
                 position: "relative",
                 ...createCommonCellStyles()
+                
                }}
                 rowExample={row.source}
               />
