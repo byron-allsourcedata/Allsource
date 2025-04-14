@@ -97,7 +97,7 @@ def update_users_integrations(session, status, integration_data_sync_id, service
             })
         session.commit()
         
-    if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
+    if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or ProccessDataSyncResult.PAYMENT_REQUIRED.value:
         logging.info(f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}")
         if service_name == SourcePlatformEnum.WEBHOOK.value:
             session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
@@ -133,24 +133,26 @@ def update_data_sync_imported_leads(session, status: str, integration_data_sync:
     session.commit()
     
 async def send_error_msg(user_id: int, service_name: str, notification_persistence: NotificationPersistence, title: str):
+    account_notification = notification_persistence.get_account_notification_by_title(title)
+    notification = notification_persistence.find_account_notifications(user_id=user_id, account_notification_id=account_notification.id)
+    if notification:
+        return
+    
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     queue_name = f"sse_events_{str(user_id)}"
-    account_notification = notification_persistence.get_account_notification_by_title(title)
     notification_text = account_notification.text.format(service_name)
-    notification = notification_persistence.find_account_with_notification(user_id=user_id, account_notification_id=account_notification.id)
-    if not notification:
-        save_account_notification = notification_persistence.save_account_notification(user_id=user_id, account_notification_id=account_notification.id, params=service_name)
-        try:
-            await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=queue_name,
-                message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
-            )
-        except:
-            logging.error('Failed to publish rabbitmq message')
-        finally:
-            await rabbitmq_connection.close()
+    save_account_notification = notification_persistence.save_account_notification(user_id=user_id, account_notification_id=account_notification.id, params=service_name)
+    try:
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=queue_name,
+            message_body={'notification_text': notification_text, 'notification_id': save_account_notification.id}
+        )
+    except:
+        logging.error('Failed to publish rabbitmq message')
+    finally:
+        await rabbitmq_connection.close()
 
 async def ensure_integration(message: IncomingMessage, integration_service: IntegrationService, session: Session, notification_persistence: NotificationPersistence):
     try:
@@ -218,6 +220,11 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                     logging.debug(f"authentication_failed: {service_name}")
                     update_users_integrations(session, ProccessDataSyncResult.AUTHENTICATION_FAILED.value, integration_data_sync.id, service_name, integration_data_sync.integration_id)
                     await send_error_msg(user_integration.user_id, service_name, notification_persistence, NotificationTitles.AUTHENTICATION_INTEGRATION_FAILED.value)
+                
+                case ProccessDataSyncResult.PAYMENT_REQUIRED.value:
+                    logging.debug(f"payment_required: {service_name}")
+                    update_users_integrations(session, ProccessDataSyncResult.PAYMENT_REQUIRED.value, integration_data_sync.id, service_name, integration_data_sync.integration_id)
+                    await send_error_msg(user_integration.user_id, service_name, notification_persistence, NotificationTitles.PAYMENT_INTEGRATION_REQUIRED.value)
                 
             if import_status != DataSyncImportedStatus.SENT.value:
                 update_data_sync_imported_leads(session=session, status=import_status, integration_data_sync=integration_data_sync, user_integration=user_integration, enrichment_user_ids=enrichment_user_ids)

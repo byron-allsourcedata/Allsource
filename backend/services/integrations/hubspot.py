@@ -218,6 +218,12 @@ class HubspotIntegrationsService:
                 json={"inputs": to_create}
             )
             
+            if create_resp.status_code == 402:
+                category = create_resp.json().get("category")
+                logging.warning(category)
+                if category == "PAYMENT_REQUIRED":
+                    return ProccessDataSyncResult.PAYMENT_REQUIRED.value
+                
             if create_resp.status_code not in (200, 201):
                 logging.error("Batch create failed: %s", create_resp.text)
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
