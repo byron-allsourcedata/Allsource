@@ -82,7 +82,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
 
     except BaseException as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.ack()
+        await message.reject(requeue=True)
         db_session.rollback()
 
 async def main():

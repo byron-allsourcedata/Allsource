@@ -44,7 +44,7 @@ class IntegrationLimit(Enum):
     SALESFORCE = 10000
     BING_ADS = 100000
     GOOGLE_ADS = 5000
-    META = 10000
+    META = 5000
     HUBSPOT = 100
     S3 = 10000
 

@@ -141,37 +141,59 @@ def get_previous_imported_encrhment_users(session, data_sync_id, data_sync_limit
 
 
 async def send_leads_to_rmq(session, rmq_connection, encrhment_users, data_sync, user_integrations_service_name):
-    encrhment_user_ids = [encrhment_user.id for encrhment_user in encrhment_users]
+    enrichment_user_ids = [encrhment_user.id for encrhment_user in encrhment_users]
     arr_enrichment_users = []
-    for encrhment_user_id in encrhment_user_ids:
-        data_sync_imported_leads = (
-            insert(AudienceDataSyncImportedPersons)
-            .values(
-                status=DataSyncImportedStatus.SENT.value,
-                enrichment_user_id=encrhment_user_id,
-                service_name=user_integrations_service_name,
-                data_sync_id=data_sync.id,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc)
+    
+    records = [
+        {
+            "status": DataSyncImportedStatus.SENT.value,
+            "enrichment_user_id": eid,
+            "service_name": user_integrations_service_name,
+            "data_sync_id": data_sync.id,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
+        }
+        for eid in enrichment_user_ids
+    ]
+    stmt = (
+        insert(AudienceDataSyncImportedPersons)
+        .values(records)
+        .on_conflict_do_nothing(
+            index_elements=["enrichment_user_id", "data_sync_id"]
+        )
+        .returning(
+            AudienceDataSyncImportedPersons.enrichment_user_id,
+            AudienceDataSyncImportedPersons.id
+        )
+    )
+
+    result = session.execute(stmt)
+    session.commit()
+
+    inserted_map = {row.enrichment_user_id: row.id for row in result}
+    missing = set(enrichment_user_ids) - set(inserted_map.keys())
+    if missing:
+        q = (
+            select(
+                AudienceDataSyncImportedPersons.enrichment_user_id,
+                AudienceDataSyncImportedPersons.id
             )
-            .returning(AudienceDataSyncImportedPersons.id)
-            .on_conflict_do_nothing()
+            .where(
+                AudienceDataSyncImportedPersons.data_sync_id == data_sync.id,
+                AudienceDataSyncImportedPersons.enrichment_user_id.in_(missing)
+            )
         )
-        data_sync_imported_leads = session.execute(data_sync_imported_leads)
-        session.commit()
-        sync_imported_encrichment_id = data_sync_imported_leads.scalar()
-        if not sync_imported_encrichment_id:
-            existing_id_query = (
-                select(AudienceDataSyncImportedPersons.id)
-                .filter_by(enrichment_user_id=encrhment_user_id, data_sync_id=data_sync.id)
-                )
-            sync_imported_encrichment_id = session.execute(existing_id_query).scalar()
-        arr_enrichment_users.append(
-            {
-                'data_sync_imported_id': str(sync_imported_encrichment_id),
-                'enrichment_user_id': str(encrhment_user_id),
-            }
-        )
+        for eid, pid in session.execute(q):
+            inserted_map[eid] = pid
+            
+    arr_enrichment_users = [
+        {
+            'data_sync_imported_id': str(imported_id),
+            'enrichment_user_id': str(eid),
+        }
+        for eid, imported_id in inserted_map.items()
+    ]
+
     msg = {
         'data_sync_id': data_sync.id,
         'arr_enrichment_users': arr_enrichment_users
