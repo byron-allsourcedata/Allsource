@@ -31,7 +31,6 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
 import EditIcon from '@mui/icons-material/Edit';
 import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
-import { textAlign } from '@mui/system';
 
 interface Smarts {
     id: string

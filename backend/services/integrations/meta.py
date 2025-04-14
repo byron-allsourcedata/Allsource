@@ -321,6 +321,8 @@ class MetaIntegrationsService:
             'list_name': list_name,
             'customer_id': customer_id,
             'sent_contacts': sent_contacts,
+            'campaign_id': campaign_id,
+            'campaign_name': campaign.get('campaign_name'),
             'sync_type': DataSyncType.AUDIENCE.value,
             'smart_audience_id': smart_audience_id,
             'data_map': data_map if data_map else None,
