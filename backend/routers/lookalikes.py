@@ -1,10 +1,16 @@
-from fastapi import APIRouter, Depends, Query
+from uuid import UUID
 
-from dependencies import get_lookalikes_service, check_user_authorization_without_pixel
+from fastapi import APIRouter, Depends, Query
+from pydantic.v1 import UUID4
+
+from dependencies import get_lookalikes_service, check_user_authorization_without_pixel, get_similar_audience_service
+from schemas.similar_audiences import AudienceFeatureImportance
 from services.lookalikes import AudienceLookalikesService
 from pydantic import BaseModel
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from fastapi import Body
+
+from services.similar_audiences import SimilarAudienceService
 
 AUDIENCE_LOOKALIKES_READER = 'audience_lookalikes_reader'
 
@@ -122,7 +128,6 @@ async def search_lookalikes(start_letter: str = Query(..., min_length=3),
                             user: dict = Depends(check_user_authorization_without_pixel)):
     return lookalike_service.search_lookalikes(start_letter, user=user)
 
-
 @router.get("/get-processing-lookalikes")
 def get_processing_lookalike(
         id: str = Query(...),
@@ -130,3 +135,17 @@ def get_processing_lookalike(
 ):
     
     return lookalike_service.get_processing_lookalike(id)
+
+@router.get("/calculate-lookalikes", response_model=AudienceFeatureImportance)
+async def calculate_lookalikes(
+    uuid_of_source: UUID = Query(..., description="UUID of source"),
+    lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
+    similar_audience_service: SimilarAudienceService = Depends(get_similar_audience_service),
+    user: dict = Depends(check_user_authorization_without_pixel)
+):
+    result = lookalike_service.calculate_lookalike(
+        similar_audience_service=similar_audience_service,
+        user=user,
+        uuid_of_source=uuid_of_source
+    )
+    return result

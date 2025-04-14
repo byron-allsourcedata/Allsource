@@ -26,7 +26,6 @@ class SimilarAudienceService:
         y = amount
 
         cat_features = x.select_dtypes(include=['object', 'category']).columns.tolist()
-
         x_train, x_test, y_train, y_test = train_test_split(x, y)
 
         model = CatBoostRegressor(

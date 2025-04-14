@@ -1,7 +1,15 @@
+from typing import List
+from uuid import UUID
+
+from pydantic.v1 import UUID4
+
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from enums import BaseEnum
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
+
+from schemas.similar_audiences import AudienceFeatureImportance
+from services.similar_audiences import SimilarAudienceService
 
 
 class AudienceLookalikesService:
@@ -91,6 +99,22 @@ class AudienceLookalikesService:
 
         limited_results = list(results)[:10]
         return limited_results
+
+    def calculate_lookalike(self, similar_audience_service: SimilarAudienceService, user: dict, uuid_of_source: UUID) -> AudienceFeatureImportance:
+        audience_data = self.lookalikes_persistence_service.calculate_lookalikes(
+            user_id=user.get("id"),
+            source_uuid=uuid_of_source
+        )
+        audience_feature = similar_audience_service.get_audience_feature_importance(audience_data)
+        audience_feature_dict = audience_feature.dict()
+
+        rounded_feature = {
+            key: round(value * 1000) / 1000 if isinstance(value, (int, float)) else value
+            for key, value in audience_feature_dict.items()
+        }
+
+        return AudienceFeatureImportance(**rounded_feature)
+
     
     def get_processing_lookalike(self, id: str):
         lookalike = self.lookalikes_persistence_service.get_processing_lookalike(id)

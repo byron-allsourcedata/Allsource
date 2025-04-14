@@ -156,7 +156,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
                 NumberOfChildren=str(enrichment_user.number_of_children),
                 CreditRating=str(enrichment_user.credit_rating),
                 NetWorthCode=str(enrichment_user.net_worth_code),
-                ZipCode5=str(enrichment_user.zip_code5) if enrichment_user.zip_code5 is not None else None,
+                ZipCode5=str(enrichment_user.zip_code5),
                 Latitude=enrichment_user.lat,
                 Longitude=enrichment_user.lon,
                 HasCreditCard=str(enrichment_user.has_credit_card),
