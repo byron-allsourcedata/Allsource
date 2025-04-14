@@ -47,24 +47,27 @@ def get_sources(
         "count": count
     }
 
+
 @router.get("/download/{source_id}")
-async def download_value_calculation(source_id: UUID,
-                         user=Depends(check_user_authorization_without_pixel),
-                         sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
+def download_value_calculation(
+        source_id: UUID,
+        sources_service: AudienceSourceService = Depends(get_audience_sources_service)
+):
     result = sources_service.download_value_calculation(source_id)
     if result:
-        return StreamingResponse(result, media_type="text/csv",
-                                 headers={"Content-Disposition": "attachment; filename=data.csv"})
+        return StreamingResponse(
+            result, media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=data.csv"})
     return BaseEnum.FAILURE
+
 
 @router.get("/domains-with-leads", response_model=List[DomainsLeads])
 def get_domains_with_leads(
         user=Depends(check_user_authorization_without_pixel),
         domains_service: UserDomainsService = Depends(get_domain_service)
 ):
-    domain_list = domains_service.get_domains_with_leads(user=user)
     
-    return domain_list
+    return domains_service.get_domains_with_leads(user=user)
 
 
 @router.post("/heading-substitution", response_model=Optional[List[str]])
@@ -96,17 +99,22 @@ def delete_source(
 
 @router.get("/sample-customers-list")
 def get_sample_customers_list(
-    source_type: str = Query(...),
-    sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
+        source_type: str = Query(...),
+        sources_service: AudienceSourceService = Depends(get_audience_sources_service)
+):
     file_path = sources_service.get_sample_customers_list(source_type)
-    return FileResponse(file_path, media_type="text/csv",
-                        headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
+    
+    return FileResponse(
+        file_path, media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
 
 
 @router.get("/get-processing-source", response_model=Optional[SourceResponse])
 def get_processing_source(
         id: str = Query(...),
-        sources_service: AudienceSourceService = Depends(get_audience_sources_service)):
+        sources_service: AudienceSourceService = Depends(get_audience_sources_service)
+):
+    
     return sources_service.get_processing_source(id)
 
 
@@ -117,4 +125,5 @@ def get_domains(
         per_page: int = Query(10, alias="per_page", ge=1, le=500, description="Items per page"),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service),
 ):
+    
     return sources_service.get_domains(user_id=user.get("id"), page=page, per_page=per_page)
