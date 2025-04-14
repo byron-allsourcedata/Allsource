@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
@@ -19,6 +20,7 @@ class LookalikeCreateRequest(BaseModel):
     uuid_of_source: str
     lookalike_size: str
     lookalike_name: str
+    audience_feature_importance: Optional[AudienceFeatureImportance]
 
 
 class UpdateLookalikeRequest(BaseModel):
@@ -77,7 +79,7 @@ async def get_all_sources(
 
 @router.post("/builder")
 async def create_lookalike(
-    request: LookalikeCreateRequest,
+    payload: LookalikeCreateRequest,
     lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
     user: dict = Depends(check_user_authorization_without_pixel)
 ):
@@ -88,10 +90,11 @@ async def create_lookalike(
 
     result = lookalike_service.create_lookalike(
         user=user,
-        uuid_of_source=request.uuid_of_source,
-        lookalike_size=request.lookalike_size,
-        lookalike_name=request.lookalike_name,
-        created_by_user_id=user_id
+        uuid_of_source=payload.uuid_of_source,
+        lookalike_size=payload.lookalike_size,
+        lookalike_name=payload.lookalike_name,
+        created_by_user_id=user_id,
+        audience_feature_importance=payload.audience_feature_importance
     )
     if result['status'] == 'SUCCESS':
         msg_body = {
@@ -99,9 +102,13 @@ async def create_lookalike(
         }
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
-        await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_READER, message_body=msg_body)
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=AUDIENCE_LOOKALIKES_READER,
+            message_body=msg_body
+        )
 
-    return result 
+    return result
 
 
 @router.delete("/delete-lookalike")

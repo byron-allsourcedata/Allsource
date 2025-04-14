@@ -221,11 +221,15 @@ const CreateLookalikePage: React.FC = () => {
   const handleGenerateLookalike = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.post("/audience-lookalikes/builder", {
+      const requestData = {
         uuid_of_source: selectedSourceId,
         lookalike_size: toSnakeCase(selectedLabel),
         lookalike_name: sourceName,
-      });
+        audience_feature_importance: calculatedResults
+      };
+  
+      const response = await axiosInstance.post("/audience-lookalikes/builder", requestData);
+      
       if (response.data.status === "SUCCESS") {
         showToast("Lookalike was created successfully!");
         createLookalikeData(response.data);
@@ -238,6 +242,7 @@ const CreateLookalikePage: React.FC = () => {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     handleSourceData();

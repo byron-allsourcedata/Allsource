@@ -20,7 +20,7 @@ from urllib.parse import unquote
 from uuid import UUID
 
 from models.users import Users
-from schemas.similar_audiences import AudienceData
+from schemas.similar_audiences import AudienceData, AudienceFeatureImportance
 
 
 class AudienceLookalikesPersistence:
@@ -111,12 +111,17 @@ class AudienceLookalikesPersistence:
         return result, count, max_page
 
     def create_lookalike(self, uuid_of_source, user_id, lookalike_size,
-                         lookalike_name, created_by_user_id):
+                         lookalike_name, created_by_user_id, audience_feature_importance: AudienceFeatureImportance):
         source_info = self.get_source_info(uuid_of_source, user_id)
         if not source_info:
             raise HTTPException(status_code=404, detail="Source not found or access denied")
 
         sources, created_by = source_info
+
+        audience_feature_dict = audience_feature_importance.__dict__
+        for key in audience_feature_dict.keys():
+            audience_feature_dict[key] = round(audience_feature_dict[key] * 1000) / 1000
+        sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
 
         lookalike = AudienceLookalikes(
             name=lookalike_name,
@@ -125,6 +130,7 @@ class AudienceLookalikesPersistence:
             created_date=datetime.utcnow(),
             created_by_user_id=created_by_user_id,
             source_uuid=uuid_of_source,
+            significant_fields=sorted_dict
         )
         self.db.add(lookalike)
         self.db.commit()

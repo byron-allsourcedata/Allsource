@@ -128,57 +128,6 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
     
         await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_MATCHING, message_body=message_body)
 
-        join_query = (
-            db_session.query(EnrichmentUser, AudienceSourcesMatchedPerson.value_score,
-                             AudienceSourcesMatchedPerson.email)
-            .select_from(AudienceSourcesMatchedPerson)
-            .join(EnrichmentUser, AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id)
-            .filter(AudienceSourcesMatchedPerson.source_id == audience_lookalike.source_uuid)
-            .order_by(AudienceSourcesMatchedPerson.value_score.desc())
-        )
-        results = join_query.all()
-
-        all_matched_persons = results
-        total_matched = len(all_matched_persons)
-        number_required = int(get_number_users(audience_lookalike.lookalike_size, total_matched))
-        selected_results = all_matched_persons[:number_required]
-        audience_data_list: List[AudienceData] = []
-
-        for enrichment_user, value_score, email in selected_results:
-            audience_data = AudienceData(
-                EmailAddress=email,
-                PersonExactAge=str(enrichment_user.age),
-                PersonGender=str(enrichment_user.gender),
-                EstimatedHouseholdIncomeCode=str(enrichment_user.estimated_household_income_code),
-                EstimatedCurrentHomeValueCode=str(enrichment_user.estimated_current_home_value_code),
-                HomeownerStatus=str(enrichment_user.homeowner_status),
-                HasChildren=str(enrichment_user.has_children),
-                NumberOfChildren=str(enrichment_user.number_of_children),
-                CreditRating=str(enrichment_user.credit_rating),
-                NetWorthCode=str(enrichment_user.net_worth_code),
-                ZipCode5=str(enrichment_user.zip_code5),
-                Latitude=enrichment_user.lat,
-                Longitude=enrichment_user.lon,
-                HasCreditCard=str(enrichment_user.has_credit_card),
-                LengthOfResidenceYears=str(enrichment_user.length_of_residence_years),
-                MaritalStatus=str(enrichment_user.marital_status),
-                OccupationGroupCode=enrichment_user.occupation_group_code,
-                IsBookReader=str(enrichment_user.is_book_reader),
-                IsOnlinePurchaser=str(enrichment_user.is_online_purchaser),
-                StateAbbr=enrichment_user.state_abbr,
-                IsTraveler=str(enrichment_user.is_traveler),
-                customer_value=Decimal(value_score)
-            )
-            audience_data_list.append(audience_data)
-
-        audience_feature_importance = similar_audience_service.get_audience_feature_importance(audience_data_list)
-
-        audience_feature_dict = audience_feature_importance.__dict__
-        for key in audience_feature_dict.keys():
-            audience_feature_dict[key] = round(audience_feature_dict[key] * 1000) / 1000
-        sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
-        audience_lookalike.significant_fields = sorted_dict
-
         db_session.commit()
         await message.ack()
     except BaseException as e:
