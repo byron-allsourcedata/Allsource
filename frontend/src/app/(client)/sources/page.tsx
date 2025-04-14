@@ -674,31 +674,31 @@ const Sources: React.FC = () => {
       .join(", ");
   };
 
-const tableContainerRef = useRef<HTMLDivElement>(null);
-const [isScrolledX, setIsScrolledX] = useState(false);
-const [isScrolledY, setIsScrolledY] = useState(false);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [isScrolledX, setIsScrolledX] = useState(false);
+  const [isScrolledY, setIsScrolledY] = useState(false);
 
-useEffect(() => {
-  if (tableContainerRef.current) {
-    const container = tableContainerRef.current;
-    const checkScroll = () => {
-      setIsScrolledX(container.scrollLeft > 0);
-      setIsScrolledY(container.scrollTop > 0);
-    };
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      const container = tableContainerRef.current;
+      const checkScroll = () => {
+        setIsScrolledX(container.scrollLeft > 0);
+        setIsScrolledY(container.scrollTop > 0);
+      };
 
-    container.addEventListener("scroll", checkScroll);
-    window.addEventListener("resize", checkScroll);
+      container.addEventListener("scroll", checkScroll);
+      window.addEventListener("resize", checkScroll);
 
-    checkScroll();
+      checkScroll();
 
-    return () => {
-      container.removeEventListener("scroll", checkScroll);
-      window.removeEventListener("resize", checkScroll);
-    };
-  } else {
-    console.warn("TableContainer ref is still null");
-  }
-}, [tableContainerRef.current]);
+      return () => {
+        container.removeEventListener("scroll", checkScroll);
+        window.removeEventListener("resize", checkScroll);
+      };
+    } else {
+      console.warn("TableContainer ref is still null");
+    }
+  }, [tableContainerRef.current]);
 
   return (
     <>
@@ -1250,14 +1250,16 @@ useEffect(() => {
                                             left: 0,
                                             zIndex: 98,
                                             top: 0,
-                                            boxShadow: 
+                                            boxShadow:
                                               //   isScrolledX && isScrolledY ? "3px 3px 3px #00000033"
                                               // : isScrolledX ? "3px 0px 3px #00000033"
                                               // : isScrolledY ? "0px 3px 3px #00000033"
                                               // : "none",
-                                              isScrolledX ? "3px 0px 3px #00000033": "none",
+                                              isScrolledX
+                                                ? "3px 0px 3px #00000033"
+                                                : "none",
                                           }),
-                                            
+
                                           right: "none",
                                           ...(key === "average_time_sec" && {
                                             "::after": { content: "none" },
@@ -1325,7 +1327,6 @@ useEffect(() => {
                                       borderTop: "none",
                                       backgroundColor: "rgba(235, 235, 235, 1)",
                                       borderColor: "rgba(235, 235, 235, 1)",
-                                      
                                     }}
                                   >
                                     {loaderForTable && (
@@ -1362,7 +1363,6 @@ useEffect(() => {
                                               "rgba(247, 247, 247, 1)",
                                           },
                                         },
-                                        
                                       }}
                                     >
                                       {/* Name Column */}
@@ -1382,7 +1382,7 @@ useEffect(() => {
                                         }}
                                       />
 
-                                      {/* Target Schema Column */}
+                                      {/* Target Type Column */}
                                       <TableCell
                                         sx={{
                                           ...sourcesStyles.table_array,

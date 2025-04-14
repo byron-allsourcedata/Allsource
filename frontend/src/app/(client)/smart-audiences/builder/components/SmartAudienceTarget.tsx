@@ -393,7 +393,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                 fontWeight: 500,
               }}
             >
-              Select your Target Schema
+              Select your Target Type
             </Typography>
             <Typography
               sx={{
