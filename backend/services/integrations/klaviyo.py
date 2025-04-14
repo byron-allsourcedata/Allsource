@@ -1,3 +1,4 @@
+import logging
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -6,6 +7,7 @@ from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
+import os
 from datetime import datetime, timedelta
 from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
@@ -14,6 +16,15 @@ import json
 from utils import format_phone_number
 from typing import List
 from utils import validate_and_format_phone, format_phone_number
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 
 class KlaviyoIntegrationsService:
@@ -43,35 +54,45 @@ class KlaviyoIntegrationsService:
                 response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
         return response
 
-    def get_credentials(self, domain_id: str):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.KLAVIYO.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.KLAVIYO.value)
         return credential
         
 
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
             credential.access_token = api_key
             credential.is_failed = False
             credential.error_message = None
             self.integrations_persisntece.db.commit()
             return credential
-        integartions = self.integrations_persisntece.create_integration({
-            'domain_id': domain_id,
+        
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
+        integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.KLAVIYO.value
-        })
-        if not integartions:
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+        
+        if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
-        return integartions
+        
+        return integartion
 
 
     def __mapped_list(self, list) -> KlaviyoList:
         return KlaviyoList(id=list['id'], list_name=list['attributes']['name'])
     
-    def get_list(self, domain_id: int):
-        credentials = self.get_credentials(domain_id)
+    def get_list(self, domain_id: int, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
         if not credentials:
             return
         return self.__get_list(credentials.access_token, credentials)
@@ -98,13 +119,13 @@ class KlaviyoIntegrationsService:
             return
         return [self.__mapped_tags(tag) for tag in response.json().get('data')]
 
-    def get_tags(self, domain_id: int):
-        credentials = self.get_credentials(domain_id)
+    def get_tags(self, domain_id: int, user: dict):
+        credentials = self.get_credentials(domain_id, user.get('id'))
         return self.__get_tags(credentials.access_token, credentials)
 
 
-    def create_tags(self, tag_name: str, domain_id: int):
-        credential = self.get_credentials(domain_id)
+    def create_tags(self, tag_name: str, domain_id: int, user: dict):
+        credential = self.get_credentials(domain_id, user.get('id'))
         response = self.__handle_request(method='POST', url='https://a.klaviyo.com/api/tags/', api_key=credential.access_token, json=self.__mapped_tags_json_to_klaviyo(tag_name))
         if response.status_code == 201 or response.status_code == 200:
             return self.__mapped_tags(response.json().get('data'))
@@ -115,22 +136,18 @@ class KlaviyoIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         
     
-    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = [], tags_id: str = None):
-        credentials = self.get_credentials(domain_id)
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
-            'list_id': list_id,
-            'list_name': list_name,
-            'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,
         }, integrations_users_sync_id)
-        if tags_id: 
-            self.update_tag_relationships_lists(tags_id=tags_id, list_id=list_id, api_key=credentials.access_token)
+        return sync
 
-    def create_list(self, list, domain_id: int):
-        credential = self.get_credentials(domain_id)
+    def create_list(self, list, domain_id: int, user_id: int):
+        credential = self.get_credentials(domain_id, user_id)
         response = self.client.post('https://a.klaviyo.com/api/lists', headers={
             'Authorization': f'Klaviyo-API-Key {credential.access_token}',
             'revision': '2024-07-15',
@@ -197,8 +214,8 @@ class KlaviyoIntegrationsService:
             ] 
         }, api_key=api_key)
     
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, tags_id: str = None, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id)
+    async def create_sync(self, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict,tags_id: str = None, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
@@ -359,12 +376,29 @@ class KlaviyoIntegrationsService:
                 }
             }
         }
-        
-        response = self.__handle_request(method='POST', url="https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs",api_key=api_key, data=json.dumps(payload))
+        try:
+            response = self.__handle_request(
+                method='POST',
+                url="https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs",
+                api_key=api_key,
+                data=json.dumps(payload)
+            )
+            response.raise_for_status()
+            return response
+        except Exception as http_err:
+            response = self.__handle_request(method='POST', url=f'https://a.klaviyo.com/api/lists/{list_id}/relationships/profiles/',api_key=api_key, json={
+                    "data": [
+                        {
+                        "type": "profile",
+                        "id": profile_id
+                        }
+                    ]
+                })
+            
         return response
         
-    def set_suppression(self, suppression: bool, domain_id: int):
-            credential = self.get_credentials(domain_id)
+    def set_suppression(self, suppression: bool, domain_id: int, user: dict):
+            credential = self.get_credentials(domain_id, user.get('id'))
             if not credential:
                 raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
             credential.suppression = suppression

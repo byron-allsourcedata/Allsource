@@ -19,7 +19,7 @@ interface CreateHubspotProps {
     initApiKey?: string
     boxShadow?: string;
     isEdit?: boolean;
-    Invalid_api_key?: boolean;
+    invalid_api_key?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -92,7 +92,7 @@ const hubspotStyles = {
     },
 }
 
-const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateHubspotProps) => {
+const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key }: CreateHubspotProps) => {
     const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
@@ -433,12 +433,12 @@ const HubspotIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxSha
                                         variant="outlined"
                                         fullWidth
                                         margin="normal"
-                                        error={apiKeyError || Invalid_api_key}
-                                        helperText={apiKeyError ? 'API Key is required' : ''}
+                                        error={invalid_api_key}
+                                        helperText={invalid_api_key ? 'Invalid API Key' : ''}
                                         value={apiKey}
                                         onChange={handleApiKeyChange}
                                         InputLabelProps={{ sx: hubspotStyles.inputLabel }}
-                                        InputProps={{ sx: { ...hubspotStyles.formInput, borderColor: Invalid_api_key ? 'red' : 'inherit' }, }}
+                                        InputProps={{ sx: { ...hubspotStyles.formInput, borderColor: invalid_api_key ? 'red' : 'inherit' }, }}
                                     />
                                 </Box>
                                 <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>

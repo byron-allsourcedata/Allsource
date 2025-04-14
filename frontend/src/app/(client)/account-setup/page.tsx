@@ -38,6 +38,7 @@ import OmnisendConnect from "@/components/OmnisendConnect";
 import MailchimpConnect from "@/components/MailchimpConnect";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import SendlaneConnect from "@/components/SendlaneConnect";
+import S3Connect from "@/components/S3Connect";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
 import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
@@ -88,6 +89,7 @@ const AccountSetup = () => {
   const [wordpressInstall, setWordpressInstall] = useState(false)
   const [googletagInstall, setGoogletagInstall] = useState(false)
   const [sendlanePopupOpen, setSendlanePopupOpen] = useState(false)
+  const [s3PopupOpen, setS3PopupOpen] = useState(false)
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [mailChimpPopupOpen, setMailchimpPopupOpen] = useState(false)
   const [attentivePopupOpen, setAttentivePopupOpen] = useState(false)
@@ -847,7 +849,8 @@ const AccountSetup = () => {
     { label: "Meta", src: "meta-icon.svg", setState: setMetaPopupOpen },
     { label: "Omnisend", src: "omnisend_icon_black.svg", setState: setOmnisendPopupOpen },
     { label: "Sendlane", src: "sendlane-icon.svg", setState: setSendlanePopupOpen },
-    { label: "Slack", src: "slack-icon.svg", setState: setSlackPopupOpen },
+    { label: "S3", src: "s3-icon.svg", setState: setS3PopupOpen },
+    { label: "Slack", src: "Slack-icon.svg", setState: setSlackPopupOpen },
     { label: "GoogleAds", src: "google-ads.svg", setState: setGoogleADSPopupOpen },
     { label: "BingAds", src: "bingads-icon.svg", setState: setBingAdsPopupOpen },
     { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen },
@@ -2804,6 +2807,7 @@ const AccountSetup = () => {
                   open={klaviyoPopupOpen}
                   handleClose={() => setKlaviyoPopupOpen(false)}
                   onSave={handleSaveSettings}
+                  invalid_api_key={false}
                   boxShadow="rgba(0, 0, 0, 0.1)"
                   initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'klaviyo')?.access_token}
                 />
@@ -2844,6 +2848,13 @@ const AccountSetup = () => {
                   onSave={handleSaveSettings}
                   boxShadow="rgba(0, 0, 0, 0.1)"
                   initApiKey={integrationsCredentials?.find(integration => integration.service_name === 'sendlane')?.access_token}
+                />
+                <S3Connect
+                  open={s3PopupOpen}
+                  handleClose={() => setS3PopupOpen(false)}
+                  onSave={handleSaveSettings}
+                  boxShadow="rgba(0, 0, 0, 0.1)"
+                  initApiKey={integrationsCredentials?.find(integration => integration.service_name === 's3')?.access_token}
                 />
                 <SlackConnectPopup
                   open={slackPopupOpen}

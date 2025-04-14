@@ -51,7 +51,7 @@ async def get_integrations_credentials(integration_serivce: IntegrationService =
     if source_platform in ['big_commerce', 'shopify']:
         filters = ['big_commerce', 'shopify']
         
-    integration = integration_serivce.get_user_service_credentials(domain.id, filters)
+    integration = integration_serivce.get_user_service_credentials(domain_id=domain.id, filters=filters, user_id=user.get('id'))
     return integration
 
 
@@ -126,7 +126,7 @@ async def delete_integration(service_name: str = Query(...),
                 detail="Access denied. Admins and standard only."
             )
     try:
-        integration_service.delete_integration(service_name, domain)
+        integration_service.delete_integration(service_name, domain, user)
         return {'message': 'Successfuly'}
     except:
         raise HTTPException(status_code=400)
@@ -138,11 +138,15 @@ async def get_list(ad_account_id: str = Query(None),
                    integration_service: IntegrationService = Depends(get_integration_service),
                    user=Depends(check_user_authorization), domain=Depends(check_domain)):
     with integration_service as service:
-        service = getattr(service, service_name.lower())
-        _ = {'domain_id': domain.id}
+        params = {
+            'domain_id': domain.id,
+            'user_id': user.get('id')
+        }
         if ad_account_id:
-            _['ad_account_id'] = ad_account_id
-        return service.get_list(**_)
+            params['ad_account_id'] = ad_account_id
+        service = getattr(service, service_name.lower())
+        
+        return service.get_list(**params)
 
 
 @router.post('/sync/list/', status_code=201)
@@ -152,19 +156,19 @@ async def create_list(list_data: CreateListOrTags,
                       user=Depends(check_user_authorization), domain=Depends(check_domain)):
     with integrations_service as service:
         service = getattr(service, service_name)
-        return service.create_list(list_data, domain.id)
+        return service.create_list(list_data, domain.id, user.get('id'))
     
 @router.get('/sync/sender', status_code=200)
 async def get_sender(integrations_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization), domain = Depends(check_domain)):
     with integrations_service as service:
-        return service.sendlane.get_sender(domain.id)
+        return service.sendlane.get_sender(domain.id, user.get('id'))
 
 
 @router.get('/sync/ad_accounts')
 async def get_ad_accounts(integration_service: IntegrationService = Depends(get_integration_service),
                           user = Depends(check_user_authorization), domain = Depends(check_domain)):
     with integration_service as serivce:
-        return serivce.meta.get_ad_accounts(domain.id)
+        return serivce.meta.get_ad_accounts(domain.id, user.get('id'))
 
 
 @router.post('/suppression/')
@@ -179,9 +183,8 @@ async def set_suppression(suppression_data: SupperssionSet, service_name: str = 
                 detail="Access denied. Admins and standard only."
             )
     with integration_service as service:
-        service.klaviyo.set_suppression()
         service = getattr(service, service_name)
-        return service.set_supperssions(suppression_data.suppression, domain.id)
+        return service.set_supperssions(suppression_data.suppression, domain.id, user)
 
 
 @router.get("/bigcommerce/oauth")
@@ -412,7 +415,7 @@ def oauth_shopify_callback(user = Depends(check_user_authentication),
                            domain = Depends(check_domain), 
                            integration_service: IntegrationService = Depends(get_integration_service)):
     with integration_service as service:
-        return service.google_ads.get_customer_info_and_resource_name(domain.id)
+        return service.google_ads.get_customer_info_and_resource_name(domain.id, user.get('id'))
 
 @router.get("/google-ads/get-channels")
 def oauth_shopify_callback(customer_id: str,
@@ -420,7 +423,7 @@ def oauth_shopify_callback(customer_id: str,
                            domain = Depends(check_domain), 
                            integration_service: IntegrationService = Depends(get_integration_service)):
     with integration_service as service:
-        return service.google_ads.get_user_lists(domain.id, customer_id)
+        return service.google_ads.get_user_lists(domain.id, customer_id, user.get('id'))
       
 @router.post("/kajabi")
 async def kajabi_webhook(request: Request, domain: str, persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):

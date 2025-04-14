@@ -23,6 +23,11 @@ class NotificationPersistence:
         self.db.add(account_notification)
         self.db.commit()
         return account_notification
+    
+    def find_account_with_notification(self, user_id, account_notification_id):
+        return self.db.query(UserAccountNotification).filter(UserAccountNotification.user_id == user_id, 
+                                                      UserAccountNotification.notification_id == account_notification_id, 
+                                                      UserAccountNotification.is_checked == False).first()
 
     def dismiss(self, request, user_id):
         if request is None:

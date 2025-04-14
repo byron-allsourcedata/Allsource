@@ -14,6 +14,7 @@ interface ApIkeyPopup {
     open: boolean
     handlePopupClose: () => void;
     boxShadow?: string;
+    invalid_api_key?: boolean
 }
 
 const klaviyoStyles = {
@@ -67,7 +68,7 @@ const klaviyoStyles = {
     },
 }
 
-const ZapierConnectPopup = ({ open, handlePopupClose, boxShadow }: ApIkeyPopup) => {
+const ZapierConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key }: ApIkeyPopup) => {
     const [apiKey, setApiKey] = useState('')
     const [value, setValue] = useState('1')
     const [checked, setChecked] = useState(false);
@@ -84,7 +85,7 @@ const ZapierConnectPopup = ({ open, handlePopupClose, boxShadow }: ApIkeyPopup) 
                 setApiKey(response.data)
             }
         }
-        if (open){
+        if (open) {
             fetchApiKey()
         }
     }, [open])
@@ -247,6 +248,17 @@ const ZapierConnectPopup = ({ open, handlePopupClose, boxShadow }: ApIkeyPopup) 
                                         Connect to Zapier
                                     </Button>
                                 </Box>
+                                {invalid_api_key && (
+                                    <Typography color="error" sx={{
+                                        fontFamily: "Nunito Sans",
+                                        fontSize: "14px",
+                                        fontWeight: "600",
+                                        lineHeight: "21.82px",
+                                        marginTop: "10px"
+                                    }}>
+                                        Invalid API Key detected. Please reconnect to Zapier and try again
+                                    </Typography>
+                                )}
                             </Box>
 
                         </TabPanel>

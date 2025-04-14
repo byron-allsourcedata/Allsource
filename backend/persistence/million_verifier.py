@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
+from sqlalchemy.dialects.postgresql import insert
 from models.leads_emails_verification import LeadEmailsVerification
 
 class MillionVerifierPersistence:
@@ -10,12 +11,11 @@ class MillionVerifierPersistence:
         return self.db.query(LeadEmailsVerification).filter(LeadEmailsVerification.email == email).first()
     
     def save_checked_email(self, email, is_verify, verify_result):
-        account_notification = LeadEmailsVerification(
+        lead_request = insert(LeadEmailsVerification).values(
             email=email,
             is_verify=is_verify,
             created_at=datetime.now(timezone.utc),
             verify_result=verify_result
-
-        )
-        self.db.add(account_notification)
+        ).on_conflict_do_nothing(index_elements=['email'])
+        self.db.execute(lead_request)
         self.db.commit()

@@ -15,7 +15,7 @@ interface CreateSalesForceProps {
     initApiKey?: string
     boxShadow?: string;
     isEdit?: boolean;
-    Invalid_api_key?: boolean;
+    invalid_api_key?: boolean;
 }
 
 interface IntegrationsCredentials {
@@ -28,7 +28,7 @@ interface IntegrationsCredentials {
     is_with_suppression?: boolean
 }
 
-const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, Invalid_api_key }: CreateSalesForceProps) => {
+const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key }: CreateSalesForceProps) => {
     const [apiKey, setApiKey] = useState('');
 
 
@@ -143,6 +143,17 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
                                         >
                                             Connect to SalesForce
                                         </Button>
+                                        {invalid_api_key && (
+                                            <Typography color="error" sx={{
+                                                fontFamily: "Nunito Sans",
+                                                fontSize: "14px",
+                                                fontWeight: "600",
+                                                lineHeight: "21.82px",
+                                                marginTop: "10px"
+                                            }}>
+                                                Invalid API Key detected. Please reconnect to Salesforce and try again
+                                            </Typography>
+                                        )}
                                     </Box>
                                 </Box>
                             </TabPanel>

@@ -1,93 +1,74 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormGroup, FormControlLabel, FormControl, FormLabel, Radio, Collapse, Checkbox, Button, List, ListItem, Link, Tab, Tooltip, Switch, RadioGroup, InputLabel, MenuItem, Select, Dialog, DialogActions, DialogContent, DialogTitle, Popover, Menu, SelectChangeEvent, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import Image from 'next/image';
+import { AxiosError } from 'axios';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
-
-interface ConnectKlaviyoPopupProps {
+interface ConnectS3PopupProps {
     open: boolean;
     onClose: () => void;
     data: any;
-    isEdit?: boolean;
+    isEdit: boolean;
 }
 
-
-type KlaviyoList = {
-    id: string
-    list_name: string
-}
-
-
-const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, data, isEdit }) => {
+const S3Datasync: React.FC<ConnectS3PopupProps> = ({ open, onClose, data, isEdit }) => {
     const { triggerSync } = useIntegrationContext();
     const [loading, setLoading] = useState(false)
     const [value, setValue] = React.useState('1');
-    const [checked, setChecked] = useState(false);
     const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedOption, setSelectedOption] = useState<KlaviyoList | null>(null);
-    const [listName, setlistName] = useState<string | null>(data?.name ?? '');
+    const [selectedOption, setSelectedOption] = useState<string | null>(data?.name ?? null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
-    const [newListName, setNewListName] = useState<string>('');
-    const [tagName, setTagName] = useState<string>('');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
     const textFieldRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
-    const [openDropdownMaximiz, setOpenDropdownMaximiz] = useState<number | null>(null)
-    const [apiKeyError, setApiKeyError] = useState(false);
     const [tab2Error, setTab2Error] = useState(false);
     const [isDropdownValid, setIsDropdownValid] = useState(false);
-    const [listNameError, setListNameError] = useState(false);
-    const [tagNameError, setTagNameError] = useState(false);
     const [deleteAnchorEl, setDeleteAnchorEl] = useState<null | HTMLElement>(null)
     const [selectedRowId, setSelectedRowId] = useState<number | null>(null);
-    const [newMapListName, setNewMapListName] = useState<string>('');
-    const [showCreateMapForm, setShowCreateMapForm] = useState<boolean>(false);
-    const [UpdateKlaviuo, setUpdateKlaviuo] = useState<any>(null);
-    const [maplistNameError, setMapListNameError] = useState(false);
-    const [klaviyoList, setKlaviyoList] = useState<KlaviyoList[]>([])
-    const [customFieldsList, setCustomFieldsList] = useState([{ type: 'Gender', value: 'gender' },
-    { type: 'Company Name', value: 'company_name' },
-    { type: 'Company Domain', value: 'company_domain' },
-    { type: 'Company SIC', value: 'company_sic' },
-    { type: 'Company LinkedIn URL', value: 'company_linkedin_url' },
-    { type: 'Company Revenue', value: 'company_revenue' },
-    { type: 'Company Employee Count', value: 'company_employee_count' },
-    { type: 'Net Worth', value: 'net_worth' },
-    { type: 'Last Updated', value: 'last_updated' },
-    { type: 'Personal Emails Last Seen', value: 'personal_emails_last_seen' },
-    { type: 'Company Last Updated', value: 'company_last_updated' },
-    { type: 'Job Title Last Updated', value: 'job_title_last_updated' },
-    { type: 'Age Min', value: 'age_min' },
-    { type: 'Age Max', value: 'age_max' },
-    { type: 'Additional Personal Emails', value: 'additional_personal_emails' },
-    { type: 'LinkedIn URL', value: 'linkedin_url' },
-    { type: 'Married', value: 'married' },
-    { type: 'Children', value: 'children' },
-    { type: 'Income Range', value: 'income_range' },
-    { type: 'Homeowner', value: 'homeowner' },
-    { type: 'Seniority Level', value: 'seniority_level' },
-    { type: 'Department', value: 'department' },
-    { type: 'Primary Industry', value: 'primary_industry' },
-    { type: 'Work History', value: 'work_history' },
-    { type: 'Education History', value: 'education_history' },
-    { type: 'Company Description', value: 'company_description' },
-    { type: 'Related Domains', value: 'related_domains' },
-    { type: 'Social Connections', value: 'social_connections' },
-    { type: 'URL Visited', value: 'url_visited' },
-    { type: 'Time on site', value: 'time_on_site' },
-    { type: 'DPV Code', value: 'dpv_code' }]);
+    const [klaviyoList, setKlaviyoList] = useState<string[]>([])
+    const [customFieldsList, setCustomFieldsList] = useState([
+        { type: 'Gender', value: 'gender' },
+        { type: 'Company Name', value: 'company_name' },
+        { type: 'Company Domain', value: 'company_domain' },
+        { type: 'Company SIC', value: 'company_sic' },
+        { type: 'Company LinkedIn URL', value: 'company_linkedin_url' },
+        { type: 'Company Revenue', value: 'company_revenue' },
+        { type: 'Company Employee Count', value: 'company_employee_count' },
+        { type: 'Net Worth', value: 'net_worth' },
+        { type: 'Last Updated', value: 'last_updated' },
+        { type: 'Personal Emails Last Seen', value: 'personal_emails_last_seen' },
+        { type: 'Company Last Updated', value: 'company_last_updated' },
+        { type: 'Job Title Last Updated', value: 'job_title_last_updated' },
+        { type: 'Age Min', value: 'age_min' },
+        { type: 'Age Max', value: 'age_max' },
+        { type: 'Additional Personal Emails', value: 'additional_personal_emails' },
+        { type: 'LinkedIn URL', value: 'linkedin_url' },
+        { type: 'Married', value: 'married' },
+        { type: 'Children', value: 'children' },
+        { type: 'Income Range', value: 'income_range' },
+        { type: 'Homeowner', value: 'homeowner' },
+        { type: 'Seniority Level', value: 'seniority_level' },
+        { type: 'Department', value: 'department' },
+        { type: 'Primary Industry', value: 'primary_industry' },
+        { type: 'Work History', value: 'work_history' },
+        { type: 'Education History', value: 'education_history' },
+        { type: 'Company Description', value: 'company_description' },
+        { type: 'Related Domains', value: 'related_domains' },
+        { type: 'Social Connections', value: 'social_connections' },
+        { type: 'DPV Code', value: 'dpv_code' }]);
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
                 // If clicked outside, reset shrink only if there is no input value
-                if (selectedOption?.list_name === '') {
+                if (selectedOption === '') {
                     setIsShrunk(false);
                 }
                 if (isDropdownOpen) {
@@ -101,6 +82,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [selectedOption]);
+
 
     const [customFields, setCustomFields] = useState<{ type: string, value: string }[]>([]);
 
@@ -126,145 +108,99 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
 
         setCustomFields(customFields.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
     };
-    const resetToDefaultValues = () => {
+    useEffect(() => {
+        if (open) { return }
         setLoading(false);
         setValue('1');
-        setChecked(false);
         setSelectedRadioValue('');
         setAnchorEl(null);
         setSelectedOption(null);
-        setlistName('')
         setShowCreateForm(false);
-        setNewListName('');
-        setTagName('');
         setIsShrunk(false);
         setIsDropdownOpen(false);
-        setOpenDropdownMaximiz(null);
-        setApiKeyError(false);
         setTab2Error(false);
         setIsDropdownValid(false);
-        setListNameError(false);
-        setTagNameError(false);
         setDeleteAnchorEl(null);
         setSelectedRowId(null);
-        setNewMapListName('');
-        setShowCreateMapForm(false);
-        setMapListNameError(false);
-    };
+    }, [open])
 
-    const getKlaviyoList = async () => {
+    const getSendlaneList = async () => {
         try {
             setLoading(true)
             const response = await axiosInstance.get('/integrations/sync/list/', {
                 params: {
-                    service_name: 'Klaviyo'
+                    service_name: 's3'
                 }
             })
             setKlaviyoList(response.data)
-            const foundItem = response.data?.find((item: any) => item.list_name === data?.name);
+            const foundItem = response.data?.find((item: any) => item === data);
             if (foundItem) {
-                setUpdateKlaviuo(data.id)
-                setSelectedOption({
-                    id: foundItem.id,
-                    list_name: foundItem.list_name
-                });
-                setlistName(foundItem.list_name)
+                setSelectedOption(foundItem);
             } else {
                 setSelectedOption(null);
             }
             setSelectedRadioValue(data?.type);
             setLoading(false)
         } catch (error) {
-
+            if (error instanceof AxiosError) {
+                if (error.response?.status === 400) {
+                    if (error.response.data.status === 'CREDENTIALS_MISSING') {
+                        showErrorToast(error.response.data.message);
+                    } else if (error.response.data.status === 'CREDENTIALS_INCOMPLETE') {
+                        showErrorToast(error.response.data.message);
+                    } else {
+                        showErrorToast(error.response.data.message);
+                    }
+                }
+            }
         }
     }
+
     useEffect(() => {
         if (open && !data) {
-            getKlaviyoList()
+            getSendlaneList()
         }
     }, [open])
 
-    const createNewList = async () => {
-        const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
-            name: selectedOption?.list_name
-        }, {
-            params: {
-                service_name: 'klaviyo'
-            }
-        });
-
-        if (newListResponse.status !== 201) {
-            showErrorToast('Failed to create a new tags')
-        }
-
-        return newListResponse.data;
-    };
-
-    const createTag = async () => {
-        const newTagsResponse = await axiosInstance.post('/data-sync/sync/tags', {
-            name: tagName
-        }, {
-            params: {
-                service_name: 'klaviyo'
-            }
-        })
-        if (newTagsResponse.status !== 201 && newTagsResponse.status !== 200) {
-            throw new Error('Failed to create a new tags')
-        }
-        return newTagsResponse.data
-    }
-
     const handleSaveSync = async () => {
         setLoading(true);
-        let list: KlaviyoList | null = null;
-        let tag = null;
+        let list: string | null = null;
 
         try {
-            if (selectedOption && selectedOption.id === '-1') {
-                list = await createNewList();
-            } else if (selectedOption) {
+            if (selectedOption) {
                 list = selectedOption;
-            }
-            else {
-                if (!listName) {
-                    showToast('Please select a valid option.');
-                    return;
-                }
-            }
-
-            if (tagName) {
-                tag = await createTag();
+            } else {
+                showToast('Please select a valid option.');
+                return;
             }
             if (isEdit) {
                 const response = await axiosInstance.put(`/data-sync/sync`, {
                     integrations_users_sync_id: data.id,
+                    list_name: list,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
                     params: {
-                        service_name: 'klaviyo'
+                        service_name: 's3'
                     }
                 });
                 if (response.status === 201 || response.status === 200) {
-                    resetToDefaultValues();
                     onClose();
                     showToast('Data sync updated successfully');
                     triggerSync();
                 }
             } else {
+                if (!list) { return }
                 const response = await axiosInstance.post('/data-sync/sync', {
-                    list_id: list?.id,
-                    list_name: list?.list_name,
-                    tags_id: tag ? tag.id : null,
+                    list_name: list,
                     leads_type: selectedRadioValue,
                     data_map: customFields
                 }, {
                     params: {
-                        service_name: 'klaviyo'
+                        service_name: 's3'
                     }
                 });
                 if (response.status === 201 || response.status === 200) {
-                    resetToDefaultValues();
                     onClose();
                     showToast('Data sync created successfully');
                     triggerSync();
@@ -298,22 +234,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         setAnchorEl(null);
         setShowCreateForm(false);
         setIsDropdownOpen(false);
-        setNewListName(''); // Clear new list name when closing
     };
 
-    const handleSelectOption = (value: KlaviyoList | string) => {
-        if (value === 'createNew') {
-            setShowCreateForm(prev => !prev);
-            if (!showCreateForm) {
-                setAnchorEl(textFieldRef.current);
-            }
-        } else if (isKlaviyoList(value)) {
-            // Проверка, является ли value объектом KlaviyoList
-            setSelectedOption({
-                id: value.id,
-                list_name: value.list_name
-            });
-            setlistName(value.list_name)
+
+    const handleSelectOption = (value: string) => {
+        if (isKlaviyoString(value)) {
+            setSelectedOption(value);
             setIsDropdownValid(true);
             handleClose();
         } else {
@@ -322,34 +248,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         }
     };
 
-    const isKlaviyoList = (value: any): value is KlaviyoList => {
-        return value !== null &&
-            typeof value === 'object' &&
-            'id' in value &&
-            'list_name' in value;
-    };
-
-    const handleSave = async () => {
-        let valid = true;
-
-        // Validate List Name
-        if (newListName.trim() === '') {
-            setListNameError(true);
-            valid = false;
-        } else {
-            setListNameError(false);
-        }
-
-        // If valid, save and close
-        if (valid) {
-            const newKlaviyoList = { id: '-1', list_name: newListName }
-            setSelectedOption(newKlaviyoList);
-            setlistName(newKlaviyoList.list_name)
-            if (isKlaviyoList(newKlaviyoList)) {
-                setIsDropdownValid(true);
-            }
-            handleClose();
-        }
+    const isKlaviyoString = (value: any): value is string => {
+        return value !== null
     };
 
     const klaviyoStyles = {
@@ -429,7 +329,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                 return (
                     <Button
                         variant="contained"
-                        disabled={!isDropdownValid && !listName}
+                        disabled={!isDropdownValid && !data}
                         onClick={handleNextTab}
                         sx={{
                             backgroundColor: '#5052B2',
@@ -448,7 +348,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                             borderRadius: '4px',
                         }}
                     >
-                        Next
+                        Save
                     </Button>
                 );
             case '3':
@@ -456,7 +356,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                     <Button
                         variant="contained"
                         onClick={handleSaveSync}
-                        disabled={!listName || !selectedRadioValue}
+                        disabled={!selectedOption || !selectedRadioValue.trim()}
                         sx={{
                             backgroundColor: '#5052B2',
                             fontFamily: "Nunito Sans",
@@ -495,12 +395,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     }
 
     const defaultRows: Row[] = [
-        { id: 1, type: 'Email', value: 'Email' },
-        { id: 2, type: 'Phone number', value: 'Phone number' },
-        { id: 3, type: 'First name', value: 'First name' },
-        { id: 4, type: 'Second name', value: 'Second name' },
-        { id: 5, type: 'Job Title', value: 'Job Title' },
-        { id: 6, type: 'Location', value: 'Location' }
+        { id: 1, type: 'Email', value: 'Email' }
     ];
 
     const [rows, setRows] = useState<Row[]>(defaultRows);
@@ -528,6 +423,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         }
     };
 
+
     const validateTab2 = () => {
         if (selectedRadioValue === null) {
             setTab2Error(true);
@@ -550,9 +446,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                 setValue((prevValue) => String(Number(prevValue) + 1));
             }
         } else if (value === '3') {
-
             if (isDropdownValid) {
-                // Proceed to next tab
                 setValue((prevValue) => String(Number(prevValue) + 1));
             }
         }
@@ -566,7 +460,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
     };
 
     const handlePopupClose = () => {
-        resetToDefaultValues()
         onClose()
     }
 
@@ -603,8 +496,12 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                         position: 'fixed',
                         zIndex: 1301,
                         top: 0,
-                        boxShadow: isEdit ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
                         bottom: 0,
+                        msOverflowStyle: 'none',
+                        scrollbarWidth: 'none',
+                        '&::-webkit-scrollbar': {
+                            display: 'none',
+                        },
                         '@media (max-width: 600px)': {
                             width: '100%',
                         }
@@ -613,33 +510,34 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                 slotProps={{
                     backdrop: {
                         sx: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.1)'
+                            backgroundColor: 'rgba(0, 0, 0, 0)'
                         }
                     }
                 }}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
                     <Typography variant="h6" className="first-sub-title" sx={{ textAlign: 'center' }}>
-                        Connect to Klaviyo
+                        Connect to S3
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-the-maximiz-contact-sync-work" target="_blank" rel="noopener referrer" className="main-text" sx={{
+                        {/* <Link href="#" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
                             color: '#5052b2',
                             textDecorationColor: '#5052b2'
-                        }}>Tutorial</Link>
+                        }}>Tutorial</Link> */}
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>
                     </Box>
                 </Box>
+
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
-                                <TabList centered aria-label="Connect to Klaviyo Tabs"
+                                <TabList centered aria-label="Connect to Sendlane Tabs"
                                     TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
@@ -662,7 +560,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                         <Typography variant="subtitle1" className='paragraph'>Synchronise all data in real-time from this moment forward for seamless integration and continuous updates.</Typography>
-                                        <FormControl sx={{ gap: '16px', }} error={tab2Error}>
+                                        <FormControl sx={{ gap: '16px' }} error={tab2Error}>
                                             <FormLabel id="contact-type-radio-buttons-group-label" className='first-sub-title' sx={{
                                                 '&.Mui-focused': {
                                                     color: '#000',
@@ -820,44 +718,50 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                         <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                                            <Image src='/klaviyo.svg' alt='klaviyo' height={26} width={32} />
+                                            <Image src='/s3-icon.svg' alt='sendlane' height={26} width={32} />
                                             <Typography variant="h6" className='first-sub-title'>Contact sync</Typography>
                                             <Tooltip title="Sync data with list" placement="right">
                                                 <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
                                             </Tooltip>
                                         </Box>
-                                        <ClickAwayListener disabled={data} onClickAway={handleClose}>
+                                        <ClickAwayListener onClickAway={() => { }}>
                                             <Box>
                                                 <TextField
                                                     ref={textFieldRef}
                                                     variant="outlined"
-                                                    value={listName}
+                                                    value={selectedOption}
                                                     onClick={handleClick}
+                                                    disabled={data?.name}
                                                     size="small"
-                                                    disabled={data}
                                                     fullWidth
-                                                    label={listName ? '' : 'Select or Create new list'}
+                                                    label={selectedOption ? '' : 'Select or Create new list'}
                                                     InputLabelProps={{
-                                                        shrink: listName ? false : isShrunk,
+                                                        shrink: selectedOption ? false : isShrunk,
                                                         sx: {
                                                             fontFamily: 'Nunito Sans',
                                                             fontSize: '12px',
                                                             lineHeight: '16px',
+                                                            color: 'rgba(17, 17, 19, 0.60)',
                                                             letterSpacing: '0.06px',
                                                             top: '5px',
+                                                            '&.Mui-focused': {
+                                                                color: '#0000FF',
+                                                            },
                                                         }
                                                     }}
                                                     InputProps={{
 
                                                         endAdornment: (
                                                             <InputAdornment position="end">
-                                                                {
-                                                                    !data ? (
-                                                                        <IconButton onClick={handleDropdownToggle} edge="end">
-                                                                            {isDropdownOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
-                                                                        </IconButton>
-                                                                    ) : ''
-                                                                }
+                                                                <IconButton onClick={handleDropdownToggle} edge="end">
+                                                                    {(!data?.name || data?.name === '') && (
+                                                                        isDropdownOpen ? (
+                                                                            <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} />
+                                                                        ) : (
+                                                                            <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />
+                                                                        )
+                                                                    )}
+                                                                </IconButton>
                                                             </InputAdornment>
                                                         ),
                                                         sx: klaviyoStyles.formInput
@@ -867,7 +771,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                             caretColor: 'transparent', // Hide caret with transparent color
                                                             fontFamily: "Nunito Sans",
                                                             fontSize: "14px",
-                                                            // color: "rgba(0, 0, 0, 0.89)",
+                                                            color: "rgba(0, 0, 0, 0.89)",
                                                             fontWeight: "600",
                                                             lineHeight: "normal",
                                                         },
@@ -893,236 +797,34 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
 
                                                     }}
                                                 >
-                                                    {/* Show "Create New List" option */}
-                                                    <MenuItem disabled={data} onClick={() => handleSelectOption('createNew')} sx={{
-                                                        borderBottom: showCreateForm ? "none" : "1px solid #cdcdcd",
-                                                        '&:hover': {
-                                                            background: 'rgba(80, 82, 178, 0.10)'
-                                                        }
-                                                    }}>
-                                                        <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
-                                                            sx: {
-                                                                fontFamily: "Nunito Sans",
-                                                                fontSize: "14px",
-                                                                color: showCreateForm ? "#5052B2" : "#202124",
-                                                                fontWeight: "500",
-                                                                lineHeight: "20px",
-
-                                                            }
-                                                        }} />
-                                                    </MenuItem>
-
-                                                    {/* Show Create New List form if 'showCreateForm' is true */}
-                                                    {showCreateForm && (
-                                                        <Box>
-                                                            <Box sx={{
-                                                                display: 'flex',
-                                                                flexDirection: 'column',
-                                                                gap: '24px',
-                                                                p: 2,
-                                                                width: anchorEl ? `${anchorEl.clientWidth}px` : '538px',
-                                                                pt: 0
-                                                            }}>
-                                                                <Box
-                                                                    sx={{
-
-
-                                                                        mt: 1, // Margin-top to separate form from menu item
-                                                                        display: 'flex',
-                                                                        justifyContent: 'space-between',
-                                                                        gap: '16px',
-                                                                        '@media (max-width: 600px)': {
-                                                                            flexDirection: 'column'
-                                                                        },
-                                                                    }}
-                                                                >
-                                                                    <TextField
-                                                                        label="List Name"
-                                                                        variant="outlined"
-                                                                        value={newListName}
-                                                                        disabled={data}
-                                                                        onChange={(e) => setNewListName(e.target.value)}
-                                                                        size="small"
-                                                                        fullWidth
-                                                                        onKeyDown={(e) => e.stopPropagation()}
-                                                                        error={listNameError}
-                                                                        helperText={listNameError ? 'List Name is required' : ''}
-                                                                        InputLabelProps={{
-                                                                            sx: {
-                                                                                fontFamily: 'Nunito Sans',
-                                                                                fontSize: '12px',
-                                                                                lineHeight: '16px',
-                                                                                fontWeight: '400',
-                                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                                '&.Mui-focused': {
-                                                                                    color: '#0000FF',
-                                                                                },
-                                                                            }
-                                                                        }}
-                                                                        InputProps={{
-
-                                                                            endAdornment: (
-                                                                                newListName && ( // Conditionally render close icon if input is not empty
-                                                                                    <InputAdornment position="end">
-                                                                                        <IconButton
-                                                                                            edge="end"
-                                                                                            onClick={() => setNewListName('')} // Clear the text field when clicked
-                                                                                        >
-                                                                                            <Image
-                                                                                                src='/close-circle.svg'
-                                                                                                alt='close-circle'
-                                                                                                height={18}
-                                                                                                width={18} // Adjust the size as needed
-                                                                                            />
-                                                                                        </IconButton>
-                                                                                    </InputAdornment>
-                                                                                )
-                                                                            ),
-                                                                            sx: {
-                                                                                '&.MuiOutlinedInput-root': {
-                                                                                    height: '32px',
-                                                                                    '& .MuiOutlinedInput-input': {
-                                                                                        padding: '5px 16px 4px 16px',
-                                                                                        fontFamily: 'Roboto',
-                                                                                        color: '#202124',
-                                                                                        fontSize: '14px',
-                                                                                        fontWeight: '400',
-                                                                                        lineHeight: '20px'
-                                                                                    },
-                                                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                                                        borderColor: '#A3B0C2',
-                                                                                    },
-                                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                        borderColor: '#A3B0C2',
-                                                                                    },
-                                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                        borderColor: '#0000FF',
-                                                                                    },
-                                                                                },
-                                                                                '&+.MuiFormHelperText-root': {
-                                                                                    marginLeft: '0',
-                                                                                },
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                    <TextField
-                                                                        label="Enter Tag Name"
-                                                                        variant="outlined"
-                                                                        value={tagName}
-                                                                        onChange={(e) => setTagName(e.target.value)}
-                                                                        size="small"
-                                                                        fullWidth
-                                                                        onKeyDown={(e) => e.stopPropagation()}
-                                                                        error={tagNameError}
-                                                                        helperText={tagNameError ? 'Tag Name is required' : ''}
-                                                                        InputLabelProps={{
-                                                                            sx: {
-                                                                                fontFamily: 'Nunito Sans',
-                                                                                fontSize: '12px',
-                                                                                lineHeight: '16px',
-                                                                                fontWeight: '400',
-                                                                                color: 'rgba(17, 17, 19, 0.60)',
-                                                                                '&.Mui-focused': {
-                                                                                    color: '#0000FF',
-                                                                                },
-                                                                            }
-                                                                        }}
-                                                                        InputProps={{
-                                                                            endAdornment: (
-                                                                                tagName && (
-                                                                                    <InputAdornment position="end">
-                                                                                        <IconButton edge="end"
-                                                                                            onClick={() => setTagName('')}>
-                                                                                            <Image
-                                                                                                src='/close-circle.svg'
-                                                                                                alt='close-circle'
-                                                                                                height={18} width={18} // Adjust the size as needed
-                                                                                            />
-                                                                                        </IconButton>
-                                                                                    </InputAdornment>
-                                                                                )
-                                                                            ),
-                                                                            sx: {
-                                                                                '&.MuiOutlinedInput-root': {
-                                                                                    height: '32px',
-                                                                                    '& .MuiOutlinedInput-input': {
-                                                                                        padding: '5px 16px 4px 16px',
-                                                                                        fontFamily: 'Roboto',
-                                                                                        color: '#202124',
-                                                                                        fontSize: '14px',
-                                                                                        fontWeight: '400',
-                                                                                        lineHeight: '20px'
-                                                                                    },
-                                                                                    '& .MuiOutlinedInput-notchedOutline': {
-                                                                                        borderColor: '#A3B0C2',
-                                                                                    },
-                                                                                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                        borderColor: '#A3B0C2',
-                                                                                    },
-                                                                                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                        borderColor: '#0000FF',
-                                                                                    },
-                                                                                },
-                                                                                '&+.MuiFormHelperText-root': {
-                                                                                    marginLeft: '0',
-                                                                                },
-                                                                            }
-                                                                        }}
-                                                                    />
-                                                                </Box>
-                                                                <Box sx={{ textAlign: 'right' }}>
-                                                                    <Button variant="contained" onClick={handleSave}
-                                                                        disabled={listNameError || tagNameError || !newListName}
-                                                                        sx={{
-                                                                            borderRadius: '4px',
-                                                                            border: '1px solid #5052B2',
-                                                                            background: '#fff',
-                                                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                            fontFamily: 'Nunito Sans',
-                                                                            fontSize: '14px',
-                                                                            fontWeight: '600',
-                                                                            lineHeight: '20px',
-                                                                            color: '#5052b2',
-                                                                            textTransform: 'none',
-                                                                            padding: '4px 22px',
-                                                                            '&:hover': {
-                                                                                background: 'transparent'
-                                                                            },
-                                                                            '&.Mui-disabled': {
-                                                                                background: 'transparent',
-                                                                                color: '#5052b2'
-                                                                            }
-                                                                        }}>
-                                                                        Save
-                                                                    </Button>
-                                                                </Box>
-
-                                                            </Box>
-
-
-                                                            {/* Add a Divider to separate form from options */}
-                                                            <Divider sx={{ borderColor: '#cdcdcd' }} />
-                                                        </Box>
-                                                    )}
 
                                                     {/* Show static options */}
-                                                    {klaviyoList && klaviyoList.map((klaviyo, option) => (
-                                                        <MenuItem key={klaviyo.id} onClick={() => handleSelectOption(klaviyo)} sx={{
-                                                            '&:hover': {
-                                                                background: 'rgba(80, 82, 178, 0.10)'
-                                                            }
-                                                        }}>
-                                                            <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
-                                                                sx: {
-                                                                    fontFamily: "Nunito Sans",
-                                                                    fontSize: "14px",
-                                                                    color: "#202124",
-                                                                    fontWeight: "500",
-                                                                    lineHeight: "20px"
+                                                    {klaviyoList && klaviyoList.map((klaviyo, index) => (
+                                                        <MenuItem
+                                                            disabled={data?.name}
+                                                            key={klaviyo}
+                                                            onClick={() => handleSelectOption(klaviyo)}
+                                                            sx={{
+                                                                '&:hover': {
+                                                                    background: 'rgba(80, 82, 178, 0.10)'
                                                                 }
-                                                            }} />
+                                                            }}
+                                                        >
+                                                            <ListItemText
+                                                                primary={klaviyo}
+                                                                primaryTypographyProps={{
+                                                                    sx: {
+                                                                        fontFamily: "Nunito Sans",
+                                                                        fontSize: "14px",
+                                                                        color: "#202124",
+                                                                        fontWeight: "500",
+                                                                        lineHeight: "20px"
+                                                                    }
+                                                                }}
+                                                            />
                                                         </MenuItem>
                                                     ))}
+
                                                 </Menu>
                                             </Box>
                                         </ClickAwayListener>
@@ -1140,7 +842,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                 }}>
                                     <Box sx={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
                                         <Typography variant="h6" className='first-sub-title'>Map list</Typography>
-                                        {selectedOption?.list_name && <Typography variant='h6' sx={{
+                                        <Typography variant='h6' sx={{
                                             background: '#EDEDF7',
                                             borderRadius: '3px',
                                             fontFamily: 'Roboto',
@@ -1150,8 +852,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                             padding: '2px 4px',
                                             lineHeight: '16px'
                                         }}>
-                                            {selectedOption.list_name}
-                                        </Typography>}
+                                            {selectedOption}
+                                        </Typography>
                                     </Box>
 
                                     <Grid container alignItems="center" sx={{ flexWrap: { xs: 'nowrap', sm: 'wrap' }, marginBottom: '14px' }}>
@@ -1161,7 +863,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/logo.svg' alt='logo' height={22} width={34} />
+                                            <Image src='/logo.svg' alt='logo' height={15} width={24} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1} sx={{
                                             '@media (max-width:599px)': {
@@ -1174,7 +876,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                 minWidth: '196px'
                                             }
                                         }}>
-                                            <Image src='/klaviyo.svg' alt='klaviyo' height={20} width={30} />
+                                            <Image src='/s3-icon.svg' alt='s3' height={20} width={24} />
                                         </Grid>
                                         <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                     </Grid>
@@ -1211,12 +913,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
-                                                                    width: '200px',
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
                                                                         color: '#202124',
-                                                                        fontSize: '12px',
+                                                                        fontSize: '14px',
                                                                         fontWeight: '400',
                                                                         lineHeight: '20px'
                                                                     },
@@ -1295,12 +996,11 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
-
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
                                                                         color: '#202124',
-                                                                        fontSize: '12px',
+                                                                        fontSize: '14px',
                                                                         fontWeight: '400',
                                                                         lineHeight: '20px'
                                                                     },
@@ -1425,21 +1125,16 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                         InputLabelProps={{
                                                             sx: {
                                                                 fontFamily: 'Nunito Sans',
-                                                                fontSize: '14px',
+                                                                fontSize: '12px',
                                                                 lineHeight: '16px',
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
-                                                                left: '2px',
-                                                                flexShrink: 0,
                                                                 '&.Mui-focused': {
                                                                     color: '#0000FF',
                                                                     top: 0
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
-                                                                    top: 0,
-                                                                    padding: 0,
-                                                                    margin: 0,
-                                                                    flexShrink: 0
+                                                                    top: 0
                                                                 }
                                                             }
                                                         }}
@@ -1447,7 +1142,6 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                             sx: {
                                                                 '&.MuiOutlinedInput-root': {
                                                                     height: '36px',
-                                                                    width: '200px',
                                                                     '& .MuiOutlinedInput-input': {
                                                                         padding: '6.5px 8px',
                                                                         fontFamily: 'Roboto',
@@ -1551,7 +1245,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                                                 </Grid>
                                             </Grid>
                                         ))}
-                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 6, mr: 6 }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2, mr: 6 }}>
                                             <Button
                                                 onClick={handleAddField}
                                                 aria-haspopup="true"
@@ -1586,13 +1280,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                         {/* Button based on selected tab */}
 
                     </Box>
-                    <Box sx={{
-                        px: 2, py: 2, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff', zIndex: '1',
-                        width: '620px',
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        }
-                    }}>
+                    <Box sx={{ px: 2, py: 2, width: '100%', border: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
 
                             {getButton(value)}
@@ -1604,4 +1292,4 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
         </>
     );
 };
-export default ConnectKlaviyo;
+export default S3Datasync;

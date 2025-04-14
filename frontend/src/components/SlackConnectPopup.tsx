@@ -67,10 +67,10 @@ interface SlackConnectProps {
     open: boolean
     initApiKey?: string;
     boxShadow?: string;
-    Invalid_api_key?: boolean;
+    invalid_api_key?: boolean;
 }
 
-const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectProps) => {
+const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key }: SlackConnectProps) => {
     const [authorizeUrl, setAuthorizeUrl] = useState('')
     const [value, setValue] = useState('1')
     const [loading, setLoading] = useState(false);
@@ -178,7 +178,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectPr
                         <TabPanel value="1" sx={{ p: 0 }}>
                             <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }} mt={2} mb={2}>
-                                    <Image src='/slack-icon.svg' alt='slack' height={24} width={24} />
+                                    <Image src='/slack-icon.svg' alt='Slack' height={24} width={24} />
                                     <Typography variant="h6" sx={{
                                         fontFamily: 'Nunito Sans',
                                         fontSize: '16px',
@@ -186,7 +186,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectPr
                                         color: '#202124',
                                         lineHeight: 'normal'
                                     }}>
-                                        Login to your slack
+                                        Login to your Slack
                                     </Typography>
                                 </Box>
                                 <Box>
@@ -194,7 +194,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectPr
                                         fullWidth
                                         onClick={handleLogin}
                                         variant="contained"
-                                        startIcon={<Image src='/slack-icon.svg' alt='slack' height={24} width={24} />}
+                                        startIcon={<Image src='/slack-icon.svg' alt='Slack' height={24} width={24} />}
                                         sx={{
                                             backgroundColor: '#f24e1e',
                                             fontFamily: "Nunito Sans",
@@ -214,6 +214,17 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectPr
                                     >
                                         Connect to Slack
                                     </Button>
+                                    {invalid_api_key && (
+                                        <Typography color="error" sx={{
+                                            fontFamily: "Nunito Sans",
+                                            fontSize: "14px",
+                                            fontWeight: "600",
+                                            lineHeight: "21.82px",
+                                            marginTop: "10px"
+                                        }}>
+                                            Invalid API Key detected. Please reconnect to Slack and try again
+                                        </Typography>
+                                    )}
                                 </Box>
                             </Box>
 
@@ -222,7 +233,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow }: SlackConnectPr
                             <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Image src='/slack-icon.svg' alt='slack' height={26} width={32} />
+                                        <Image src='/slack-icon.svg' alt='Slack' height={26} width={32} />
                                         <Typography variant="h6" sx={{
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '16px',

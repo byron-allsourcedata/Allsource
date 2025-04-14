@@ -42,42 +42,50 @@ class BingAdsIntegrationsService:
                 response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
         return response
 
-    def get_credentials(self, domain_id: str):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id, SourcePlatformEnum.BING_ADS.value)
+    def get_credentials(self, domain_id: int, user_id: int):
+        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.BING_ADS.value)
         return credential
         
 
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
-        credential = self.get_credentials(domain_id)
+        credential = self.get_credentials(domain_id, user.get('id'))
         if credential:
             credential.access_token = api_key
             credential.is_failed = False
             credential.error_message = None
             self.integrations_persisntece.db.commit()
             return credential
-        integartions = self.integrations_persisntece.create_integration({
-            'domain_id': domain_id,
+        
+        common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
+        integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
             'service_name': SourcePlatformEnum.BING_ADS.value
-        })
-        if not integartions:
+        }
+
+        if common_integration:
+            integration_data['user_id'] = user.get('id')
+        else:
+            integration_data['domain_id'] = domain_id
+            
+        integartion = self.integrations_persisntece.create_integration(integration_data)
+            
+        if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
-        return integartions
+        return integartion
     
-    def get_list(self, domain_id: int):
-        credentials = self.get_credentials(domain_id)
+    def get_list(self, domain_id: int, user_id: int):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user_id)
         if not credentials:
             return
         return self.__get_list(credentials.access_token, credentials)
     
-    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, created_by: str, data_map: List[DataMap] = [], tags_id: str = None):
-        credentials = self.get_credentials(domain_id)
+    def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, user_id: int, created_by: str, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
-            'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,
@@ -140,8 +148,8 @@ class BingAdsIntegrationsService:
         else:
             raise HTTPException(status_code=400, detail="Failed to get access token")
         
-    async def create_sync(self, leads_type: str, domain_id: int, created_by: str, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id)
+    async def create_sync(self, leads_type: str, domain_id: int, created_by: str, user: dict,data_map: List[DataMap] = []):
+        credentials = self.get_credentials(domain_id, user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'domain_id': domain_id,
@@ -193,8 +201,8 @@ class BingAdsIntegrationsService:
             
         return ProccessDataSyncResult.SUCCESS.value
                 
-    def set_suppression(self, suppression: bool, domain_id: int):
-            credential = self.get_credentials(domain_id)
+    def set_suppression(self, suppression: bool, domain_id: int, user: dict):
+            credential = self.get_credentials(domain_id, user.get('id'))
             if not credential:
                 raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
             credential.suppression = suppression

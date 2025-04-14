@@ -57,7 +57,7 @@ const GoogleAdsLanding = () => {
       </Link>
       <Image src={'/app_intalled.svg'} width={330} height={246} alt="Maximiz installed" />
       <Typography variant="h6" fontSize={'16px'} fontWeight={400} mt={2}>
-        Wait for GoogleAds token verification
+        Wait for SalesForce token verification
       </Typography>
     </Box>
   );

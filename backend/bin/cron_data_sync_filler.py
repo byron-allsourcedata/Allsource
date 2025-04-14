@@ -5,7 +5,6 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from dotenv import load_dotenv
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from sqlalchemy import create_engine, select, and_, or_
 from dotenv import load_dotenv
@@ -84,7 +83,8 @@ def fetch_leads_by_domain(session: Session, domain_id, limit, last_sent_lead_id,
             LeadUser.is_active == True,
             UserDomains.is_enable == True,
             (LeadsVisits.start_date < past_date) |
-            (LeadsVisits.start_date == past_date and LeadsVisits.start_time <= past_time)
+            (LeadsVisits.start_date == past_date and LeadsVisits.start_time <= past_time),
+            LeadUser.is_confirmed == True
         )
     if data_sync_leads_type != 'allContacts':
 
@@ -214,6 +214,10 @@ async def process_user_integrations(rmq_connection, session):
                 if (data_sync.last_sync_date is not None and data_sync.last_sync_date.replace(tzinfo=timezone.utc) > (datetime.now(timezone.utc) - timedelta(hours=24))) or \
                 (data_sync.created_at.replace(tzinfo=timezone.utc) > (datetime.now(timezone.utc) - timedelta(hours=24))):
                     logging.info(f"Attempt after failed Webhook, last_sync_date = {data_sync.last_sync_date}")
+                    
+                else:
+                    logging.info(f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}")
+                    continue
 
             else:
                 logging.info(f"Skip, Integration is failed {user_integrations[i].is_failed}, Data sync status {data_sync.sync_status}")
