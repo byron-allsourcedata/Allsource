@@ -300,10 +300,6 @@ class AudienceLookalikesPersistence:
             )
             audience_data_list.append(ad)
 
-        # audience_feature_dict = audience_feature_importance.__dict__
-        # for key in audience_feature_dict.keys():
-        #     audience_feature_dict[key] = round(audience_feature_dict[key] * 1000) / 1000
-        # sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
         return audience_data_list
 
 
