@@ -95,9 +95,14 @@ const CreateLookalikePage: React.FC = () => {
   const [calculatedResults, setCalculatedResults] = useState<CalculationResults | null>(null);
 
   const formatCalcKey = (key: string) =>
-    key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+    key
+      .replace(/_/g, " ") // replace all underscores with spaces
+      .replace(/(?!^)([A-Z])/g, " $1") // insert a space before uppercase letters, except if it's the first character
+      .replace(/\s+/g, " ") // collapse multiple spaces into a single space
+      .trim() // remove any leading or trailing spaces
+      .replace(/^./, (char) => char.toUpperCase()); // capitalize the first letter
 
-  const getSortedCalculatedEntries = (results: CalculationResults) => {
+  const getSortedCalculatedEntries = (results: CalculationResults): [keyof CalculationResults, number][] => {
     const order: (keyof CalculationResults)[] = [
       "PersonExactAge",
       "PersonGender",
@@ -123,7 +128,8 @@ const CreateLookalikePage: React.FC = () => {
     ];
     return order
       .filter((key) => results[key] > 0)
-      .map((key) => [key, results[key]]);
+      .map((key): [keyof CalculationResults, number] => [key, results[key]])
+      .sort((a, b) => b[1] - a[1]);
   };
 
   const handleSelectRow = (row: any) => {
@@ -508,12 +514,17 @@ const CreateLookalikePage: React.FC = () => {
                     <TableContainer>
                       <Table>
                         <TableBody>
-                          {getSortedCalculatedEntries(calculatedResults).map(([key, value]) => (
+                        {getSortedCalculatedEntries(calculatedResults).map(([key, value]) => {
+                          const percentValue = (value * 100).toFixed(1);
+                          return (
                             <TableRow key={String(key)}>
-                              <TableCell sx={{ fontWeight: "bold" }}>{formatCalcKey(String(key))}</TableCell>
-                              <TableCell>{value}</TableCell>
+                              <TableCell sx={{ }}>
+                                {formatCalcKey(String(key))}
+                              </TableCell>
+                              <TableCell>{percentValue}%</TableCell>
                             </TableRow>
-                          ))}
+                          );
+                        })}
                         </TableBody>
                       </Table>
                     </TableContainer>
