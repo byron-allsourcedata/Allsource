@@ -33,9 +33,9 @@ REDIRECT_URI = 'http://localhost:3000/bing-ads-landing'
 SCOPE = 'https://ads.microsoft.com/.default'
 
 
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
-# logging.getLogger('suds.client').setLevel(logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
 
 def get_access_token():
     token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
@@ -67,6 +67,188 @@ def get_customer_id(developer_token, client_id, client_secret, refresh_token):
     customer_id = response.User.CustomerId
 
     return customer_id
+
+
+def get_all_audiences(developer_token, client_id, client_secret, refresh_token):
+    # Настройка аутентификации
+    authentication = OAuthWebAuthCodeGrant(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirection_uri='http://localhost:3000/bing-ads-landing'
+    )
+    authentication.request_oauth_tokens_by_refresh_token(refresh_token)
+
+    # Получение информации о пользователе и аккаунтах
+    authorization_data = AuthorizationData(
+        developer_token=developer_token,
+        authentication=authentication
+    )
+
+    customer_service = ServiceClient(
+        service='CustomerManagementService',
+        version=13,
+        authorization_data=authorization_data
+    )
+
+    user = customer_service.GetUser().User
+    customer_id = user.CustomerId
+
+    accounts = customer_service.SearchAccounts(
+        Predicates={
+            'Predicate': [{
+                'Field': 'UserId',
+                'Operator': 'Equals',
+                'Value': user.Id
+            }]
+        },
+        PageInfo={'Index': 0, 'Size': 100}
+    )
+
+    if not accounts or not hasattr(accounts, 'AdvertiserAccount') or not accounts.AdvertiserAccount:
+        raise Exception("No advertiser accounts found for the user")
+
+    account_id = accounts.AdvertiserAccount[0].Id
+
+    # Обновление authorization_data с customer_id и account_id
+    authorization_data.customer_id = customer_id
+    authorization_data.account_id = account_id
+
+    # Инициализация клиента Campaign Management Service
+    campaign_service = ServiceClient(
+        service='CampaignManagementService',
+        version=13,
+        authorization_data=authorization_data
+    )
+
+    # Вызов метода GetAudiencesByIds с пустым списком идентификаторов
+    response = campaign_service.GetAudiencesByIds(
+        AudienceIds=[],  # Пустой список для получения всех аудиторий
+        Type='CustomerList',
+        ReturnAdditionalFields=None
+    )
+
+    audiences_container = response.Audiences
+    if not audiences_container or not hasattr(audiences_container, 'Audience'):
+        return []
+
+    # Получаем сам список
+    audience_list = audiences_container.Audience
+
+    # Если вернулся одиночный объект — оборачиваем в список
+    if not isinstance(audience_list, list):
+        audience_list = [audience_list]
+
+    return audience_list
+
+
+from bingads.service_client import ServiceClient
+from bingads.authorization import AuthorizationData, OAuthWebAuthCodeGrant
+
+def _get_authorization_data(developer_token, client_id, client_secret, refresh_token):
+    auth = OAuthWebAuthCodeGrant(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirection_uri='http://localhost:3000/bing-ads-landing'
+    )
+    auth.request_oauth_tokens_by_refresh_token(refresh_token)
+    return AuthorizationData(developer_token=developer_token, authentication=auth)
+
+def _setup_services(auth_data):
+    # CustomerManagement для получения customer_id и account_id
+    customer_service = ServiceClient(
+        service='CustomerManagementService',
+        version=13,
+        authorization_data=auth_data
+    )
+    user = customer_service.GetUser().User
+    auth_data.customer_id = user.CustomerId
+
+    accounts = customer_service.SearchAccounts(
+        Predicates={'Predicate': [{
+            'Field': 'UserId', 'Operator': 'Equals', 'Value': user.Id
+        }]},
+        PageInfo={'Index': 0, 'Size': 100}
+    )
+    auth_data.account_id = accounts.AdvertiserAccount[0].Id
+
+    # CampaignManagement для работы с аудиториями
+    campaign_service = ServiceClient(
+        service='CampaignManagementService',
+        version=13,
+        authorization_data=auth_data
+    )
+    return campaign_service
+
+def create_empty_audience(developer_token, client_id, client_secret, refresh_token,
+                          audience_name: str, description: str, membership_duration: int = 300):
+    """
+    Создаёт пустую CRM‑аудиторию (без e‑mail), возвращает её ID.
+    """
+    auth_data = _get_authorization_data(developer_token, client_id, client_secret, refresh_token)
+    campaign_service = _setup_services(auth_data)
+    factory = campaign_service.factory
+
+    # Формируем пустой UserList
+    customer_list = factory.create('CustomerList')
+    customer_list.Name = audience_name
+    customer_list.Description = description
+    customer_list.MembershipDuration = membership_duration
+    customer_list.Scope = 'Account'
+    customer_list.Type = 'CustomerList'
+    customer_list.ParentId = campaign_service.authorization_data.account_id
+
+    # 6. Оборачиваем в ArrayOfAudience и вызываем AddAudiences
+    audiences = factory.create('ArrayOfAudience')
+    audiences.Audience = [customer_list]
+
+    add_response = campaign_service.AddAudiences(Audiences=audiences)  # :contentReference[oaicite:0]{index=0}
+    # 7. Проверяем PartialErrors
+    if hasattr(add_response, 'PartialErrors') and add_response.PartialErrors and getattr(add_response.PartialErrors, 'BatchError', None):
+        for err in add_response.PartialErrors.BatchError:
+            print("=== BatchError ===")
+            print(f"  Index:     {getattr(err, 'Index', None)}")
+            print(f"  Code:      {getattr(err, 'Code', None)}")
+            print(f"  ErrorCode: {getattr(err, 'ErrorCode', None)}")
+            print(f"  FieldPath: {getattr(err, 'FieldPath', None)}")
+            print(f"  Message:   {getattr(err, 'Message', None)}")
+        raise Exception("Не удалось создать аудиторию. См. детали PartialErrors.")
+
+    # 8. Извлекаем и возвращаем ID новой аудитории
+    audience_ids = []
+    if hasattr(add_response, 'AudienceIds') and add_response.AudienceIds is not None:
+        audience_ids = add_response.AudienceIds.long
+    if not audience_ids:
+        raise Exception("AddAudiences вернул пустой список ID. Проверьте настройки запроса.")
+    return audience_ids[0]
+
+def add_emails_to_audience(developer_token, client_id, client_secret, refresh_token,
+                           audience_id: int, emails: list[str]):
+    """
+    Добавляет список e‑mail в уже существующую аудиторию.
+    """
+    auth_data = _get_authorization_data(developer_token, client_id, client_secret, refresh_token)
+    campaign_service = _setup_services(auth_data)
+    factory = campaign_service.factory
+
+    # Готовим объект CustomerList с ID аудитории
+    customer_list = factory.create('CustomerList')
+    customer_list.Id = audience_id
+
+    # Формируем элементы списка
+    items_array = factory.create('ArrayOfCustomerListItem')
+    item_objs = []
+    for email in emails:
+        item = factory.create('CustomerListItem')
+        item.SubType = 'Email'
+        item.Text = email
+        item_objs.append(item)
+    items_array.CustomerListItem = item_objs
+    customer_list.CustomerListItems = items_array
+
+    # Вызываем ApplyCustomerListItems для добавления контактов
+    response = campaign_service.ApplyCustomerListItems(CustomerListAudience=customer_list)
+    return response.PartialErrors  # пустой список при успешном добавлении
+
 
 
 def create_bing_ads_audience(developer_token, client_id, client_secret, refresh_token, 
@@ -275,33 +457,25 @@ def authenticate(developer_token, client_id, client_secret, refresh_token):
     )
     return authorization_data
 
-from bingads.v13.bulk.entities import BulkCustomerList, BulkCustomAudience
-from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters
-from bingads.v13.bulk import BulkFileReader
-
-from bingads.v13.bulk.entities import BulkCustomerList, BulkCustomerListItem
-from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters
-from bingads.v13.bulk import BulkFileReader
-
-
 
 
 # Пример использования:
 async def main():
-    developer_token = DEVELOPER_TOKEN
-    access_token = get_access_token()
+    #access_token = get_access_token()
     #customer_id = CLIENT_ID
     #print(get_customer_id(developer_token, CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN))
     #authorization_data = authenticate(developer_token, CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN)
-    result = create_bing_ads_audience(
-        developer_token=developer_token,
-        client_id=CLIENT_ID,
-        client_secret=CLIENT_SECRET,
-        refresh_token=REFRESH_TOKEN,
-        audience_name="My Custom Audience",
-        description="Audience created via API"
-    )
-    print(result)
+    # result = create_bing_ads_audience(
+    #     developer_token=developer_token,
+    #     client_id=CLIENT_ID,
+    #     client_secret=CLIENT_SECRET,
+    #     refresh_token=REFRESH_TOKEN,
+    #     audience_name="My Custom Audience",
+    #     description="Audience created via API"
+    # )
+    refresh_token = '1.AQwAoMOu-2xxzUSHxit-r-dIM4Ptp6kjpBNHnTQjJkaFg4HdAM8MAA.AgABAwEAAABVrSpeuWamRam2jAF1XRQEAwDs_wUA9P_-g8ZHqXoih_Zz0tYRVRrzFKeA6Wh8c5uwnBcEtqSg4zVHClEnwmZ2nQbIboy4tm3WksZcR9VOBBjHJVTGjNcsHqsmy9QQCkjo49407sk21tqwJ2BSyu__HeIdOaRdnY03M60ONWvksU-LrH62XPUnnN9gNFhkZFrULsFGKQaBONYLy8ten2dM8urPIeX0Z4oxxQUDQ1_ARh5lGJ__XydZTdXz9kVCr6T7U_4PsdchZgx5g7eq8xJHeSVdDkaLcJ8eM3pQ529qZcU50kt5eGURM7k4uoYKV0NH6MZk-2Wuf3lBq1m77DPg5sHnKRXD-IykWtOTvK0j8DxUjbAn6wvTV_24Ul1OgTZc1YeT246bNWNUY44WZfb0CQ4aOcepgx_hpbGd2eNlPntnF8IHQInp4EfHznBRiSrf-BWL2AwjgIZoGfUg1biNE2IFoUh3Va4zqIWd1N8TpWiFP50o2ZUPFw6EfZiXfjuuo4spYfvlxungfvBDtEhh5STxNGHYIUJicBG5rIZeMSLJe42wEA5GepbyU9GTo9RccifVFWzo-JimS7twA8oNhvwd054WCeiruUDVkOijwMi7SPdGFQbx3hDIYbhD3oQLh9MBfLAJDcSMm98JFBhZXj8_Rrr0NHutD6W_XEjZSGMNVsjguNEwp0bTQDtdcTFvlLhaWrFWUcyK5YfbtTuOfNor7o6rTznEM_35mSmAWVztnhNe1SHNc3IaIBbUcc_RNarGWjYWX2LXMLytR38LGm0qII_Xd4WcE_mTR-CpiDZ-r-uI__ejXvX3TumB1FsiHB0PBa02PivPca5sMhR6'
+    #result = create_empty_audience(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token, 'test_audience2', 'description')
+    print(get_all_audiences(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token))
     #customer_list_id = create_customer_list(authorization_data, 'test_list', 'customer_list_description', 123)
     #print(customer_list_id)
     # if customer_list_id:

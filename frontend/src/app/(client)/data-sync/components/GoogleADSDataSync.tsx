@@ -113,9 +113,10 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const getGoogleAdsList = async () => {
         try {
             setLoading(true)
-            const response = await axiosInstance.get('integrations/google-ads/get-channels', {
+            const response = await axiosInstance.get('integrations/get-channels', {
                 params: {
-                    customer_id: selectedAccountId
+                    customer_id: selectedAccountId,
+                    service_name: 'google_ads'
                 }
             });
             setInputListName('')
@@ -137,7 +138,11 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const getCustomersInfo = async () => {
         try {
             setLoading(true)
-            const response = await axiosInstance.get('integrations/google-ads/customers-info')
+            const response = await axiosInstance.get('integrations/customers-info', {
+                params: {
+                    service_name: 'google_ads'
+                }
+            });
             if (response.data.status === 'SUCCESS') {
                 setCustomersInfo(response.data.customers || [])
             }

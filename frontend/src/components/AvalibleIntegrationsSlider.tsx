@@ -245,7 +245,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                         }}>
                                             <ListItemButton onClick={() => setOpenBingAdsConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
                                                 <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                    <Image src="/bingads-icon.svg" alt="klaviyo" height={26} width={32} />
+                                                    <Image src="/bing-ads.svg" alt="klaviyo" height={26} width={32} />
                                                 </ListItemIcon>
                                                 <ListItemText primary="bingads" primaryTypographyProps={{
                                                     sx: {
