@@ -95,7 +95,7 @@ async def create_lookalike(
         connection = await rabbitmq_connection.connect()
         await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_READER, message_body=msg_body)
 
-    return result
+    return result 
 
 
 @router.delete("/delete-lookalike")
@@ -121,3 +121,12 @@ async def search_lookalikes(start_letter: str = Query(..., min_length=3),
                             lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
                             user: dict = Depends(check_user_authorization_without_pixel)):
     return lookalike_service.search_lookalikes(start_letter, user=user)
+
+
+@router.get("/get-processing-lookalikes")
+def get_processing_lookalike(
+        id: str = Query(...),
+        lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
+):
+    
+    return lookalike_service.get_processing_lookalike(id)

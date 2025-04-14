@@ -47,6 +47,8 @@ interface LookalikeData {
   lookalike_name: string;
   source: string;
   type: string;
+  size_progress: number;
+  size: number;
   source_target_schema: string;
   lookalike_size: string;
   created_date: string;
@@ -133,9 +135,11 @@ const CreateLookalikePage: React.FC = () => {
     setCurrentStep((prev) => prev + 1);
   };
 
-  const createLookalikeData = async (id: string) => {
+  const createLookalikeData = async (data: any) => {
     const lookalikeData = selectSourceData.map((row) => ({
-      id: id,
+      id: data.lookalike.id,
+      size_progress: data.lookalike.size_progress,
+      size: data.lookalike.size,
       lookalike_name: sourceName,
       source: row.source,
       type: row.type,
@@ -146,7 +150,6 @@ const CreateLookalikePage: React.FC = () => {
     }));
 
     setLookalikeData(lookalikeData);
-    setIsLookalikeCreated(true);
   };
 
   const handleGenerateLookalike = async () => {
@@ -162,14 +165,13 @@ const CreateLookalikePage: React.FC = () => {
       );
       if (response.data.status === "SUCCESS") {
         showToast("Lookalike was created successfully!");
-        createLookalikeData(response.data.lookalike.id);
+        createLookalikeData(response.data);
         setIsLookalikeCreated(true);
       }
     } catch {
       showErrorToast(
         "An error occurred while creating a new lookalike. Please try again later."
       );
-      setLookalikeData([]);
     } finally {
       setLoading(false);
     }

@@ -11,7 +11,7 @@ from uuid import UUID
 from typing import List, Optional, Dict
 from uuid import UUID
 from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource, DomainsSourceResponse
-from persistence.audience_sources_persistence import AudienceSourcesPersistence
+from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.domains import UserDomainsPersistence
 from enums import TypeOfCustomer, TypeOfSourceOrigin
 from persistence.audience_sources_matched_persons import AudienceSourcesMatchedPersonsPersistence
