@@ -16,9 +16,14 @@ interface BingAdsDataSyncProps {
     isEdit: boolean;
 }
 
-type ChannelList = {
-    list_id: string;
-    list_name: string;
+type AudienceList = {
+    audience_id: string;
+    audience_name: string;
+}
+
+type CampaignList = {
+    campaign_id: string;
+    campaign_name: string;
 }
 
 type Customers = {
@@ -32,19 +37,32 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
     const [value, setValue] = React.useState('1');
     const [selectedRadioValue, setSelectedRadioValue] = useState(data?.type);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [selectedOption, setSelectedOption] = useState<ChannelList | null>(
+    const [anchorElCampaign, setAnchorElCampaign] = useState<null | HTMLElement>(null);
+    const [selectedOption, setSelectedOption] = useState<AudienceList | null>(
         {
-            list_id: data?.list_id ?? '',
-            list_name: data?.name ?? '',
+            audience_id: data?.list_id ?? '',
+            audience_name: data?.name ?? '',
+        }
+        ?? null);
+    const [selectedOptionCampaign, setSelectedOptionCampaign] = useState<CampaignList | null>(
+        {
+            campaign_id: data?.list_id ?? '',
+            campaign_name: data?.name ?? '',
         }
         ?? null);
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
+    const [showCreateFormCampaign, setShowCreateFormCampaign] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>(data?.name ?? '');
+    const [newCampaignListName, setNewCampaignListName] = useState<string>(data?.name ?? '');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
+    const [isShrunkCampaign, setIsShrunkCampaign] = useState<boolean>(false);
     const textFieldRef = useRef<HTMLDivElement>(null);
+    const textFieldCampaignRef = useRef<HTMLDivElement>(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
+    const [isDropdownCampaignOpen, setIsDropdownCampaignOpen] = useState<boolean>(false);
     const [tab2Error, setTab2Error] = useState(false);
     const [isDropdownValid, setIsDropdownValid] = useState(false);
+    const [isDropdownCampaignValid, setIsDropdownCampaignValid] = useState(false);
     const [listNameError, setListNameError] = useState(false);
     const textFieldRefAdAccount = useRef<HTMLDivElement>(null);
     const [notAdsUser, setNotAdsUser] = useState<boolean>(false);
@@ -52,7 +70,9 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
     const [isDropdownOpenAdAccount, setIsDropdownOpenAdAccount] = useState(false);
     const [inputCustomerName, setInputCustomerName] = useState(data?.customer_id ?? '');
     const [inputListName, setInputListName] = useState(data?.name ?? '');
-    const [googleList, setGoogleAdsList] = useState<ChannelList[]>([]);
+    const [inputCampaignListName, setInputCampaignListName] = useState(data?.name ?? '');
+    const [audienceList, setAudienceList] = useState<AudienceList[]>([]);
+    const [campaignList, setCampaignList] = useState<CampaignList[]>([]);
 
     const [customersInfo, setCustomersInfo] = useState<Customers[]>([
         {
@@ -63,15 +83,15 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
 
     const [selectedAccountId, setSelectedAccountId] = useState<string>(data?.customer_id ?? '');
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
-    const [savedList, setSavedList] = useState<ChannelList | null>({
-        list_id: data?.list_id ?? '',
-        list_name: data?.name ?? '',
+    const [savedList, setSavedList] = useState<AudienceList | null>({
+        audience_id: data?.list_id ?? '',
+        audience_name: data?.name ?? '',
     } ?? null);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (textFieldRef.current && !textFieldRef.current.contains(event.target as Node)) {
-                if (selectedOption?.list_name === '') {
+                if (selectedOption?.audience_name === '') {
                     setIsShrunk(false);
                 }
                 if (isDropdownOpen) {
@@ -97,12 +117,18 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
         setValue('1');
         setSelectedRadioValue('');
         setAnchorEl(null);
+        setAnchorElCampaign(null)
         setSelectedOption(null);
         setInputListName('')
+        setInputCampaignListName('')
         setShowCreateForm(false);
+        setShowCreateFormCampaign(false)
         setNewListName('');
+        setNewCampaignListName('');
         setIsShrunk(false);
+        setIsShrunkCampaign(false)
         setIsDropdownOpen(false);
+        setIsDropdownCampaignOpen(false);
         setTab2Error(false);
         setIsDropdownValid(false);
         setListNameError(false);
@@ -110,7 +136,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
         setIsDropdownOpenAdAccount(false)
     }, [open])
 
-    const getGoogleAdsList = async () => {
+    const getAudienceList = async () => {
         try {
             setLoading(true)
             const response = await axiosInstance.get('integrations/get-channels', {
@@ -120,7 +146,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                 }
             });
             setInputListName('')
-            setGoogleAdsList(response.data.user_lists || [])
+            setAudienceList(response.data.audience_list || [])
             if (response.data.status !== 'SUCCESS') {
                 showErrorToast(response.data.message)
             }
@@ -129,9 +155,31 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
             setLoading(false)
         }
     }
+
+    const getCampaignsList = async () => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get('integrations/get-campaigns', {
+                params: {
+                    customer_id: selectedAccountId,
+                    service_name: 'bing_ads'
+                }
+            });
+            setInputCampaignListName('')
+            setCampaignList(response.data.campaign_list || [])
+            if (response.data.status !== 'SUCCESS') {
+                showErrorToast(response.data.message)
+            }
+        } catch (error) { }
+        finally {
+            setLoading(false)
+        }
+    }
+
     useEffect(() => {
         if (open && selectedAccountId && !data?.name) {
-            getGoogleAdsList();
+            getAudienceList();
+            getCampaignsList();
         }
     }, [open, selectedAccountId]);
 
@@ -169,11 +217,11 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
         try {
             setLoading(true)
             const newListResponse = await axiosInstance.post('/integrations/sync/list/', {
-                name: selectedOption?.list_name,
+                name: selectedOption?.audience_name,
                 customer_id: String(selectedAccountId)
             }, {
                 params: {
-                    service_name: 'google_ads'
+                    service_name: 'bing_ads'
                 }
             });
 
@@ -236,9 +284,9 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
     const handleSaveList = async () => {
         setLoading(true);
         try {
-            let list: ChannelList | null = null;
+            let list: AudienceList | null = null;
 
-            if (selectedOption && selectedOption.list_id === '-1') {
+            if (selectedOption && selectedOption.audience_id === '-1') {
                 list = await createNewList();
             } else if (selectedOption) {
                 list = selectedOption;
@@ -269,10 +317,10 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
             if (isEdit) {
                 const response = await axiosInstance.put('/data-sync/sync', {
                     integrations_users_sync_id: data.id,
-                    name: savedList.list_name,
+                    name: savedList.audience_name,
                     leads_type: selectedRadioValue,
                 }, {
-                    params: { service_name: 'google_ads' }
+                    params: { service_name: 'bing_ads' }
                 });
 
                 if (response.status === 201 || response.status === 200) {
@@ -282,13 +330,13 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                 }
             } else {
                 const response = await axiosInstance.post('/data-sync/sync', {
-                    list_id: String(savedList.list_id),
+                    list_id: String(savedList.audience_id),
+                    list_name: savedList.audience_name,
                     customer_id: String(selectedAccountId),
-                    list_name: savedList.list_name,
                     leads_type: selectedRadioValue,
                     data_map: rows
                 }, {
-                    params: { service_name: 'google_ads' }
+                    params: { service_name: 'bing_ads' }
                 });
 
                 if (response.status === 201 || response.status === 200) {
@@ -311,32 +359,47 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
         setShowCreateForm(false);
     };
 
+    const handleClickCampaign = (event: React.MouseEvent<HTMLInputElement>) => {
+        setIsShrunkCampaign(true);
+        setIsDropdownCampaignOpen(prev => !prev);
+        setAnchorElCampaign(event.currentTarget);
+        setShowCreateFormCampaign(false);
+    };
+
     const handleDropdownToggle = (event: React.MouseEvent) => {
         event.stopPropagation();
         setIsDropdownOpen(prev => !prev);
         setAnchorEl(textFieldRef.current);
     };
 
+    const handleDropdownCampaignToggle = (event: React.MouseEvent) => {
+        event.stopPropagation();
+        setIsDropdownCampaignOpen(prev => !prev);
+        setAnchorElCampaign(textFieldRef.current);
+    };
+
     const handleClose = () => {
         setAnchorEl(null);
+        setAnchorElCampaign(null)
         setAnchorElAdAccount(null)
         setIsDropdownOpenAdAccount(false)
         setShowCreateForm(false);
+        setShowCreateFormCampaign(false)
         setIsDropdownOpen(false);
     };
 
-    const handleSelectOption = (value: ChannelList | string) => {
+    const handleSelectOption = (value: AudienceList | string) => {
         if (value === 'createNew') {
             setShowCreateForm(prev => !prev);
             if (!showCreateForm) {
                 setAnchorEl(textFieldRef.current);
             }
-        } else if (isKlaviyoList(value)) {
+        } else if (isAudienceList(value)) {
             setSelectedOption({
-                list_id: value.list_id,
-                list_name: value.list_name,
+                audience_id: value.audience_id,
+                audience_name: value.audience_name,
             });
-            setInputListName(value.list_name)
+            setInputListName(value.audience_name)
             setIsDropdownValid(true);
             handleClose()
         } else {
@@ -345,11 +408,38 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
         }
     };
 
-    const isKlaviyoList = (value: any): value is ChannelList => {
+    const handleSelectOptionCampaign = (value: CampaignList | string) => {
+        if (value === 'createNew') {
+            setShowCreateFormCampaign(prev => !prev);
+            if (!showCreateFormCampaign) {
+                setAnchorElCampaign(textFieldRef.current);
+            }
+        } else if (isCampaignList(value)) {
+            setSelectedOptionCampaign({
+                campaign_id: value.campaign_id,
+                campaign_name: value.campaign_name,
+            });
+            setInputCampaignListName(value.campaign_name)
+            setIsDropdownCampaignValid(true);
+            handleClose()
+        } else {
+            setIsDropdownCampaignValid(false);
+            setSelectedOptionCampaign(null);
+        }
+    };
+
+    const isAudienceList = (value: any): value is AudienceList => {
         return value !== null &&
             typeof value === 'object' &&
-            'list_id' in value &&
-            'list_name' in value;
+            'audience_id' in value &&
+            'audience_name' in value;
+    };
+
+    const isCampaignList = (value: any): value is CampaignList => {
+        return value !== null &&
+            typeof value === 'object' &&
+            'campaign_id' in value &&
+            'campaign_name' in value;
     };
 
     const handleSave = async () => {
@@ -363,11 +453,32 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
         }
 
         if (valid) {
-            const newSlackList = { list_id: '-1', list_name: newListName }
-            setSelectedOption(newSlackList);
-            setInputListName(newSlackList.list_name)
-            if (isKlaviyoList(newSlackList)) {
+            const newAudienceList = { audience_id: '-1', audience_name: newListName }
+            setSelectedOption(newAudienceList);
+            setInputListName(newAudienceList.audience_name)
+            if (isAudienceList(newAudienceList)) {
                 setIsDropdownValid(true);
+            }
+            handleClose();
+        }
+    };
+
+    const handleCampaignSave = async () => {
+        let valid = true;
+
+        if (newListName.trim() === '') {
+            setListNameError(true);
+            valid = false;
+        } else {
+            setListNameError(false);
+        }
+
+        if (valid) {
+            const newCampaignList = { campaign_id: '-1', campaign_name: newListName }
+            setSelectedOptionCampaign(newCampaignList);
+            setInputCampaignListName(newCampaignList.campaign_name)
+            if (isAudienceList(newCampaignList)) {
+                setIsDropdownCampaignValid(true);
             }
             handleClose();
         }
@@ -559,7 +670,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
 
     const handleNewListChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        if (googleList?.some(list => list.list_name === value)) {
+        if (audienceList?.some(list => list.audience_name === value)) {
             setListNameError(true);
             setListNameErrorMessage('List name must be unique');
         } else {
@@ -1020,6 +1131,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                 cursor: 'default',
                                                                 top: '5px'
                                                             },
+                                                            marginBottom: '24px'
                                                         }}
                                                     />
                                                     <Menu
@@ -1175,13 +1287,238 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                 <Divider sx={{ borderColor: '#cdcdcd' }} />
                                                             </Box>
                                                         )}
-                                                        {googleList && googleList?.map((klaviyo) => (
-                                                            <MenuItem key={klaviyo.list_id} onClick={() => handleSelectOption(klaviyo)} sx={{
+                                                        {audienceList && audienceList?.map((audience) => (
+                                                            <MenuItem key={audience.audience_id} onClick={() => handleSelectOption(audience)} sx={{
                                                                 '&:hover': {
                                                                     background: 'rgba(80, 82, 178, 0.10)'
                                                                 }
                                                             }}>
-                                                                <ListItemText primary={klaviyo.list_name} primaryTypographyProps={{
+                                                                <ListItemText primary={audience.audience_name} primaryTypographyProps={{
+                                                                    sx: {
+                                                                        fontFamily: "Nunito Sans",
+                                                                        fontSize: "14px",
+                                                                        color: "#202124",
+                                                                        fontWeight: "500",
+                                                                        lineHeight: "20px"
+                                                                    }
+                                                                }} />
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Menu>
+                                                </Box>
+                                            </ClickAwayListener>
+
+                                            <ClickAwayListener onClickAway={() => { }}>
+                                                <Box>
+                                                    <TextField
+                                                        ref={textFieldCampaignRef}
+                                                        variant="outlined"
+                                                        value={inputCampaignListName}
+                                                        onClick={handleClickCampaign}
+                                                        disabled={data?.name}
+                                                        size="small"
+                                                        fullWidth
+                                                        label={inputCampaignListName ? '' : 'Select or Create new campaign list'}
+                                                        InputLabelProps={{
+                                                            shrink: inputCampaignListName ? false : isShrunkCampaign,
+                                                            sx: {
+                                                                fontFamily: 'Nunito Sans',
+                                                                fontSize: '12px',
+                                                                lineHeight: '16px',
+                                                                color: 'rgba(17, 17, 19, 0.60)',
+                                                                letterSpacing: '0.06px',
+                                                                top: '5px',
+                                                                '&.Mui-focused': {
+                                                                    color: '#0000FF',
+                                                                },
+                                                            }
+                                                        }}
+                                                        InputProps={{
+
+                                                            endAdornment: (
+                                                                <InputAdornment position="end">
+                                                                    <IconButton onClick={handleDropdownCampaignToggle} edge="end">
+                                                                        {isDropdownCampaignOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
+                                                                    </IconButton>
+                                                                </InputAdornment>
+                                                            ),
+                                                            sx: klaviyoStyles.formInput
+                                                        }}
+                                                        sx={{
+                                                            '& input': {
+                                                                caretColor: 'transparent',
+                                                                fontFamily: "Nunito Sans",
+                                                                fontSize: "14px",
+                                                                color: "rgba(0, 0, 0, 0.89)",
+                                                                fontWeight: "600",
+                                                                lineHeight: "normal",
+                                                            },
+                                                            '& .MuiOutlinedInput-input': {
+                                                                cursor: 'default',
+                                                                top: '5px'
+                                                            },
+                                                        }}
+                                                    />
+                                                    <Menu
+                                                        anchorEl={anchorElCampaign}
+                                                        open={Boolean(anchorElCampaign) && isDropdownCampaignOpen}
+                                                        onClose={handleClose}
+                                                        PaperProps={{
+                                                            sx: {
+                                                                width: anchorElCampaign ? `${anchorElCampaign.clientWidth}px` : '538px', borderRadius: '4px',
+                                                                border: '1px solid #e4e4e4'
+                                                            },
+                                                        }}
+                                                        sx={{
+
+                                                        }}
+                                                    >
+                                                        <MenuItem disabled={data?.name}
+                                                            onClick={() => handleSelectOptionCampaign('createNew')} sx={{
+                                                                borderBottom: showCreateFormCampaign ? "none" : "1px solid #cdcdcd",
+                                                                '&:hover': {
+                                                                    background: 'rgba(80, 82, 178, 0.10)'
+                                                                }
+                                                            }}>
+                                                            <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
+                                                                sx: {
+                                                                    fontFamily: "Nunito Sans",
+                                                                    fontSize: "14px",
+                                                                    color: showCreateFormCampaign ? "#5052B2" : "#202124",
+                                                                    fontWeight: "500",
+                                                                    lineHeight: "20px",
+
+                                                                }
+                                                            }} />
+                                                        </MenuItem>
+                                                        {showCreateFormCampaign && (
+                                                            <Box>
+                                                                <Box sx={{
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    gap: '24px',
+                                                                    p: 2,
+                                                                    width: anchorElCampaign ? `${anchorElCampaign.clientWidth}px` : '538px',
+                                                                    pt: 0
+                                                                }}>
+                                                                    <Box
+                                                                        sx={{
+                                                                            mt: 1,
+                                                                            display: 'flex',
+                                                                            justifyContent: 'space-between',
+                                                                            gap: '16px',
+                                                                            '@media (max-width: 600px)': {
+                                                                                flexDirection: 'column'
+                                                                            },
+                                                                        }}
+                                                                    >
+                                                                        <TextField
+                                                                            label="Campaign List Name"
+                                                                            variant="outlined"
+                                                                            value={newCampaignListName}
+                                                                            onChange={handleNewListChange}
+                                                                            size="small"
+                                                                            fullWidth
+                                                                            onKeyDown={(e) => e.stopPropagation()}
+                                                                            error={listNameError}
+                                                                            helperText={listNameErrorMessage}
+                                                                            InputLabelProps={{
+                                                                                sx: {
+                                                                                    fontFamily: 'Nunito Sans',
+                                                                                    fontSize: '12px',
+                                                                                    lineHeight: '16px',
+                                                                                    fontWeight: '400',
+                                                                                    color: 'rgba(17, 17, 19, 0.60)',
+                                                                                    '&.Mui-focused': {
+                                                                                        color: '#0000FF',
+                                                                                    },
+                                                                                }
+                                                                            }}
+                                                                            InputProps={{
+
+                                                                                endAdornment: (
+                                                                                    newCampaignListName && (
+                                                                                        <InputAdornment position="end">
+                                                                                            <IconButton
+                                                                                                edge="end"
+                                                                                                onClick={() => setNewCampaignListName('')}
+                                                                                            >
+                                                                                                <Image
+                                                                                                    src='/close-circle.svg'
+                                                                                                    alt='close-circle'
+                                                                                                    height={18}
+                                                                                                    width={18}
+                                                                                                />
+                                                                                            </IconButton>
+                                                                                        </InputAdornment>
+                                                                                    )
+                                                                                ),
+                                                                                sx: {
+                                                                                    '&.MuiOutlinedInput-root': {
+                                                                                        height: '32px',
+                                                                                        '& .MuiOutlinedInput-input': {
+                                                                                            padding: '5px 16px 4px 16px',
+                                                                                            fontFamily: 'Roboto',
+                                                                                            color: '#202124',
+                                                                                            fontSize: '14px',
+                                                                                            fontWeight: '400',
+                                                                                            lineHeight: '20px'
+                                                                                        },
+                                                                                        '& .MuiOutlinedInput-notchedOutline': {
+                                                                                            borderColor: '#A3B0C2',
+                                                                                        },
+                                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                                                                                            borderColor: '#A3B0C2',
+                                                                                        },
+                                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                                                                                            borderColor: '#0000FF',
+                                                                                        },
+                                                                                    },
+                                                                                    '&+.MuiFormHelperText-root': {
+                                                                                        marginLeft: '0',
+                                                                                    },
+                                                                                }
+                                                                            }}
+                                                                        />
+
+                                                                    </Box>
+                                                                    <Box sx={{ textAlign: 'right' }}>
+                                                                        <Button variant="contained" onClick={handleCampaignSave}
+                                                                            disabled={listNameError || !newCampaignListName}
+                                                                            sx={{
+                                                                                borderRadius: '4px',
+                                                                                border: '1px solid #5052B2',
+                                                                                background: '#fff',
+                                                                                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                                fontFamily: 'Nunito Sans',
+                                                                                fontSize: '14px',
+                                                                                fontWeight: '600',
+                                                                                lineHeight: '20px',
+                                                                                color: '#5052b2',
+                                                                                textTransform: 'none',
+                                                                                padding: '4px 22px',
+                                                                                '&:hover': {
+                                                                                    background: 'transparent'
+                                                                                },
+                                                                                '&.Mui-disabled': {
+                                                                                    background: 'transparent',
+                                                                                    color: '#5052b2'
+                                                                                }
+                                                                            }}>
+                                                                            Save
+                                                                        </Button>
+                                                                    </Box>
+                                                                </Box>
+                                                                <Divider sx={{ borderColor: '#cdcdcd' }} />
+                                                            </Box>
+                                                        )}
+                                                        {campaignList && campaignList?.map((campaign) => (
+                                                            <MenuItem key={campaign.campaign_id} onClick={() => handleSelectOptionCampaign(campaign)} sx={{
+                                                                '&:hover': {
+                                                                    background: 'rgba(80, 82, 178, 0.10)'
+                                                                }
+                                                            }}>
+                                                                <ListItemText primary={campaign.campaign_name} primaryTypographyProps={{
                                                                     sx: {
                                                                         fontFamily: "Nunito Sans",
                                                                         fontSize: "14px",

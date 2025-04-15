@@ -411,7 +411,7 @@ async def oauth_shopify_redact(r: Request, integrations_service: IntegrationServ
         return GenericEcommerceResponse(message="Shopify data deleted successfully")
     
 @router.get("/customers-info")
-def oauth_shopify_callback(service_name: str = Query(...),
+def customers_info(service_name: str = Query(...),
                            user = Depends(check_user_authentication), 
                            domain = Depends(check_domain),
                            integration_service: IntegrationService = Depends(get_integration_service)):
@@ -421,7 +421,7 @@ def oauth_shopify_callback(service_name: str = Query(...),
         return service.get_customer_info(domain.id, user.get('id'))
     
 @router.get("/get-channels")
-def oauth_shopify_callback(service_name: str = Query(...),
+def get_channels(service_name: str = Query(...),
                            customer_id: str = Query(...),
                            user = Depends(check_user_authentication), 
                            domain = Depends(check_domain), 
@@ -429,6 +429,16 @@ def oauth_shopify_callback(service_name: str = Query(...),
     with integration_service as service:
         service = getattr(service, service_name)
         return service.get_user_lists(domain.id, customer_id, user.get('id'))
+
+@router.get("/get-campaigns")
+def get_campaigns(service_name: str = Query(...),
+                           customer_id: str = Query(...),
+                           user = Depends(check_user_authentication), 
+                           domain = Depends(check_domain), 
+                           integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        service = getattr(service, service_name)
+        return service.get_campaigns(domain.id, customer_id, user.get('id'))
       
 @router.post("/kajabi")
 async def kajabi_webhook(request: Request, domain: str, persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):
