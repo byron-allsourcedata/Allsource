@@ -98,6 +98,7 @@ async def on_message_received(message, session, subscription_service):
             if user.is_leads_auto_charging:
                 logging.info(f"is_leads_auto_charging true")
                 if lead_user_count >= QUANTITY:
+                    logging.info(f"{user.full_name} charge {QUANTITY} leads by {subscription_plan.price}")
                     result = purchase_product(customer_id, subscription_plan.stripe_price_id, QUANTITY,
                                                 'leads_credits')
                     if result['success']:
@@ -160,26 +161,22 @@ async def on_message_received(message, session, subscription_service):
                     else:
                         logging.error(f"Purchase failed: {result['error']}", exc_info=True)
                         account_notification = await get_account_notification_by_title(session, NotificationTitles.PAYMENT_FAILED.value)
-                        message_text = account_notification.text
-                        
-
-                    account_notification = await save_account_notification(session, user.id,
-                                                                            account_notification.id)
-
-                    queue_name = f'sse_events_{str(user.id)}'
-                    rabbitmq_connection = RabbitMQConnection()
-                    connection = await rabbitmq_connection.connect()
-                    try:
-                        await publish_rabbitmq_message(
-                            connection=connection,
-                            queue_name=queue_name,
-                            message_body={'notification_text': message_text,
-                                            'notification_id': account_notification.id}
-                        )
-                    except:
-                        await rabbitmq_connection.close()
-                    finally:
-                        await rabbitmq_connection.close()
+                        user_account_notification = await save_account_notification(session, user.id,
+                                                                                account_notification.id)
+                        queue_name = f'sse_events_{str(user.id)}'
+                        rabbitmq_connection = RabbitMQConnection()
+                        connection = await rabbitmq_connection.connect()
+                        try:
+                            await publish_rabbitmq_message(
+                                connection=connection,
+                                queue_name=queue_name,
+                                message_body={'notification_text': account_notification.text,
+                                                'notification_id': user_account_notification.id}
+                            )
+                        except:
+                            await rabbitmq_connection.close()
+                        finally:
+                            await rabbitmq_connection.close()
 
         logging.info(f"message ack")
         await message.ack()
