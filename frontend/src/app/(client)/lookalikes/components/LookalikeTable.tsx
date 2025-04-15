@@ -717,7 +717,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   maxWidth: "40px",
                   minWidth: "40px",
                   padding: "8px",
-                  pr: 0,
                   textAlign: "center"
                 }}
               >
