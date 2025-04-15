@@ -193,10 +193,10 @@ async def on_message_received(message, session, subscription_service):
         logging.info(f"message ack")
         await message.ack()
     except Exception as e:
-        logging.error("Error occurred while processing message.", exc_info=True)
+        logging.error(f"Error occurred while processing message: {e}", exc_info=True)
         session.rollback()
         await asyncio.sleep(5)
-        await message.reject(requeue=True)
+        await message.ack()
 
 
 async def main():
