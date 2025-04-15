@@ -18,5 +18,4 @@ class ProfessionalProfile(Base):
     primary_industry = Column(TEXT, nullable=True)
     annual_sales = Column(TEXT, nullable=True)
 
-    # Связь с EnrichmentUser через asid
     enrichment_user = relationship("EnrichmentUser", back_populates="professional_profile")
