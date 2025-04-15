@@ -1711,7 +1711,14 @@ const SourcesImport: React.FC = () => {
                       className: "form-input",
                     }}
                     value={sourceName}
-                    onChange={(e) => setSourceName(e.target.value)}
+                    onChange={(e) => {
+                      if (e.target.value.length < 128) {
+                        setSourceName(e.target.value)
+                      }
+                      else {
+                        showErrorToast("Your name is too long!")
+                      }
+                    }}
                   />
                 </Box>
               </Box>
