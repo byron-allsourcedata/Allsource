@@ -776,22 +776,21 @@ const SourcesImport: React.FC = () => {
                         className="form-input-label"
                         onClick={() => handleTargetAudienceChange(option)}
                         sx={{
+                          "&.MuiToggleButton-root.Mui-selected": {
+                            backgroundColor: "rgba(246, 248, 250, 1)",
+                            ":hover": {
+                              borderColor: "rgba(208, 213, 221, 1)",
+                              backgroundColor: "rgba(236, 238, 241, 1)",
+                            },
+                          },
                           textTransform: "none",
                           border:
                             targetAudience === option
                               ? "1px solid rgba(117, 168, 218, 1)"
                               : "1px solid #ccc",
                           color: "rgba(32, 33, 36, 1)",
-                          backgroundColor:
-                            targetAudience === option
-                              ? "rgba(246, 248, 250, 1)"
-                              : "rgba(255, 255, 255, 1)",
                           borderRadius: "4px",
                           padding: "8px 12px",
-                          ":hover": {
-                            borderColor: "rgba(208, 213, 221, 1)",
-                            backgroundColor: "rgba(236, 238, 241, 1)",
-                          },
                         }}
                       >
                         {option}
