@@ -200,50 +200,50 @@ class BingAdsIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
         return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
     
-    def __mapped_bing_ads_profile(self, enrichment_user: EnrichmentUser):
-        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
-        first_email = get_valid_email(emails_list)
-        fake = Faker()
+    # def __mapped_bing_ads_profile(self, enrichment_user: EnrichmentUser):
+    #     emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
+    #     first_email = get_valid_email(emails_list)
+    #     fake = Faker()
 
-        first_phone = fake.phone_number()
-        address_parts = fake.address().split("\n")
-        city_state_zip = address_parts[-1]
+    #     first_phone = fake.phone_number()
+    #     address_parts = fake.address().split("\n")
+    #     city_state_zip = address_parts[-1]
 
-        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
+    #     match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
 
-        if match:
-            city = match.group(1).strip()
-            state = match.group(2) if match.group(2) else ''
-            zip_code = match.group(3) if match.group(3) else ''
-        else:
-            city, state, zip_code = '', '', ''
+    #     if match:
+    #         city = match.group(1).strip()
+    #         state = match.group(2) if match.group(2) else ''
+    #         zip_code = match.group(3) if match.group(3) else ''
+    #     else:
+    #         city, state, zip_code = '', '', ''
             
-        gender = ''
+    #     gender = ''
         
-        if enrichment_user.gender == 1:
-            gender = 'm'
-        elif enrichment_user.gender == 2:
-            gender = 'f'
+    #     if enrichment_user.gender == 1:
+    #         gender = 'm'
+    #     elif enrichment_user.gender == 2:
+    #         gender = 'f'
             
-        first_name = fake.first_name()
-        last_name = fake.last_name()
+    #     first_name = fake.first_name()
+    #     last_name = fake.last_name()
         
-        birth_year, birth_month, birth_day = self.get_birth_date_from_age(enrichment_user.age)
+    #     birth_year, birth_month, birth_day = self.get_birth_date_from_age(enrichment_user.age)
             
-        return {
-            FirstName=getattr(five_x_five_user, 'first_name', None),
-            LastName=getattr(five_x_five_user, 'last_name', None),
-            Email=first_email,
-            Phone=', '.join(phone_number.split(', ')[-3:]) if phone_number else None,
-            MobilePhone=', '.join(mobile_phone.split(', ')[-3:]) if mobile_phone else None,
-            Company=company_name,
-            Title=getattr(five_x_five_user, 'job_title', None),
-            Industry=getattr(five_x_five_user, 'primary_industry', None),
-            LeadSource='Web',
-            City=location.get('city'),
-            State=location.get('region'),
-            Country='USA',
-            NumberOfEmployees=company_employee_count,
-            AnnualRevenue=company_revenue,
-            Description=description 
-        }
+    #     return {
+    #         FirstName=getattr(five_x_five_user, 'first_name', None),
+    #         LastName=getattr(five_x_five_user, 'last_name', None),
+    #         Email=first_email,
+    #         Phone=', '.join(phone_number.split(', ')[-3:]) if phone_number else None,
+    #         MobilePhone=', '.join(mobile_phone.split(', ')[-3:]) if mobile_phone else None,
+    #         Company=company_name,
+    #         Title=getattr(five_x_five_user, 'job_title', None),
+    #         Industry=getattr(five_x_five_user, 'primary_industry', None),
+    #         LeadSource='Web',
+    #         City=location.get('city'),
+    #         State=location.get('region'),
+    #         Country='USA',
+    #         NumberOfEmployees=company_employee_count,
+    #         AnnualRevenue=company_revenue,
+    #         Description=description 
+    #     }
