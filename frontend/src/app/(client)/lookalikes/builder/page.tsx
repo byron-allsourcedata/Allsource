@@ -308,10 +308,6 @@ const CreateLookalikePage: React.FC = () => {
     handleSourceData();
   }, []);
 
-  if (loading) {
-    return <CustomizedProgressBar />;
-  }
-
   // Transform source type (similar to previous implementation)
   const toNormalText = (sourceType: string) =>
     sourceType
@@ -325,7 +321,8 @@ const CreateLookalikePage: React.FC = () => {
       .join(", ");
 
   return (
-    <Box
+    <>
+      <Box
       sx={{
         display: "flex",
         flexDirection: "column",
@@ -333,7 +330,12 @@ const CreateLookalikePage: React.FC = () => {
         width: "100%",
         overflow: "auto",
       }}
-    >
+      >
+      {loading && (
+        <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 1200 }}>
+          <CustomizedProgressBar />
+        </Box>
+      )}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, pt: 1, overflow: "auto" }}>
         {!isLookalikeCreated ? (
           <>
@@ -841,6 +843,7 @@ const CreateLookalikePage: React.FC = () => {
         )}
       </Box>
     </Box>
+    </>
   );
 };
 
