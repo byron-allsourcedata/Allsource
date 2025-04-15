@@ -142,12 +142,11 @@ async def on_message_received(message, session, subscription_service):
                                     grouped_users[u.domain_id].append(up)
                                 
                                 transaction_dicts = []
-                                counter = 1
                                 for domain_id, up_ids in grouped_users.items():
                                     for up_id in up_ids:
                                         transaction_dicts.append({
                                             'user_id': user.id,
-                                            'transaction_id': f"{transaction_id}_{counter}",
+                                            'transaction_id': str(transaction_id),
                                             'created_at': datetime.now(timezone.utc),
                                             'updated_at': datetime.now(timezone.utc),
                                             'stripe_request_created_at': created_at,
@@ -157,7 +156,6 @@ async def on_message_received(message, session, subscription_service):
                                             'domain_id': domain_id,
                                             'five_x_five_up_id': up_id,
                                         })
-                                        counter += 1
 
                                 session.bulk_insert_mappings(
                                     UsersUnlockedFiveXFiveUser,
