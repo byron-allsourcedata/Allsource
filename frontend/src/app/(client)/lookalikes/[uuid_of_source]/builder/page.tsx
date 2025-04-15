@@ -89,7 +89,7 @@ const CreateLookalikePage: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [sourceName, setSourceName] = useState("");
   const [sourceData, setSourceData] = useState<TableData[]>([]);
-  const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
+  const [lookalike, setLookalikeData] = useState<any>([]);
   const [loading, setLoading] = useState(false);
   const [isLookalikeCreated, setIsLookalikeCreated] = useState(false);
 
@@ -143,9 +143,11 @@ const CreateLookalikePage: React.FC = () => {
       .toLowerCase();
   };
 
-  const createLookalikeData = async (id: string) => {
+  const createLookalikeData = async (data: any) => {
     const lookalikeData = sourceData.map((row) => ({
-      id: id,
+      id: data.lookalike.id,
+      size_progress: data.lookalike.size_progress,
+      size: data.lookalike.size,
       lookalike_name: sourceName,
       source: row.source,
       type: row.type,
@@ -156,7 +158,6 @@ const CreateLookalikePage: React.FC = () => {
     }));
 
     setLookalikeData(lookalikeData);
-    setIsLookalikeCreated(true);
   };
 
   const handleGenerateLookalike = async () => {
@@ -172,7 +173,7 @@ const CreateLookalikePage: React.FC = () => {
       );
       if (response.data.status === "SUCCESS") {
         showToast("Lookalike was created successfully!");
-        createLookalikeData(response.data.lookalike.id);
+        createLookalikeData(response.data);
         setIsLookalikeCreated(true);
       }
     } catch {

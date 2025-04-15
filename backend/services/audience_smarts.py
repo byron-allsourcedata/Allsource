@@ -5,7 +5,7 @@ import io
 import csv
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
-from persistence.audience_sources_persistence import AudienceSourcesPersistence
+from persistence.audience_sources import AudienceSourcesPersistence
 from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
 from models.enrichment_users import EnrichmentUser

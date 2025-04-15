@@ -455,14 +455,12 @@ const AudienceDashboard: React.FC = () => {
         <Box
           sx={{
             display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
+            flexDirection: "column",
+            alignItems: "start",
             position: "sticky",
             top: 0,
             pt: "12px",
-            pb: "12px",
-            pl: "8px",
-            pr: "1.5rem",
+            pr: "1rem",
             zIndex: 1,
             backgroundColor: "#fff",
             justifyContent: "space-between",
@@ -494,6 +492,7 @@ const AudienceDashboard: React.FC = () => {
             className="first-sub-title"
             sx={{
               ...dashboardStyles.title,
+              pl: "4px",
               "@media (max-width: 600px)": {
                 display: "none",
               },
@@ -528,6 +527,21 @@ const AudienceDashboard: React.FC = () => {
               Dashboard
             </Typography>
           </Box>
+          <Box
+            sx={{
+              width: "100%",
+              mt: 1,
+              pl: 0.5,
+              "@media (max-width: 900px)": { mt: 0, mb: 0 },
+            }}
+          >
+            <CustomCards
+              values={values}
+              onCardClick={handleCardClick}
+              selectedCard={selectedCard}
+              pixelCardActive={pixelCardActive}
+            />
+          </Box>
         </Box>
         <Box
           sx={{
@@ -545,22 +559,6 @@ const AudienceDashboard: React.FC = () => {
               pr: 2,
             }}
           >
-            <Box
-              sx={{
-                width: "100%",
-                mt: 1,
-                pl: 0.5,
-                mb: 0,
-                "@media (max-width: 900px)": { mt: 0, mb: 0 },
-              }}
-            >
-              <CustomCards
-                values={values}
-                onCardClick={handleCardClick}
-                selectedCard={selectedCard}
-                pixelCardActive={pixelCardActive}
-              />
-            </Box>
             {selectedCard ? (
               <Box>
                 <Grid

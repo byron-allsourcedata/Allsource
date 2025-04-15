@@ -321,6 +321,8 @@ class MetaIntegrationsService:
             'list_name': list_name,
             'customer_id': customer_id,
             'sent_contacts': sent_contacts,
+            'campaign_id': campaign_id,
+            'campaign_name': campaign.get('campaign_name'),
             'sync_type': DataSyncType.AUDIENCE.value,
             'smart_audience_id': smart_audience_id,
             'data_map': data_map if data_map else None,
@@ -329,21 +331,16 @@ class MetaIntegrationsService:
         return sync
         
     async def process_data_sync(self, user_integration, integration_data_sync, enrichment_users: EnrichmentUser):
-        result = self.__create_user(custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token, enrichment_users=enrichment_users)
-        
-        if result.get('error',{}).get('type') == 'OAuthException':
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        
-        return ProccessDataSyncResult.SUCCESS.value
-
-    def __create_user(self, custom_audience_id: str, access_token: str, enrichment_users: EnrichmentUser):
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__hash_mapped_meta_user(enrichment_user)
             profiles.append(profile)
-        
+            
+        return self.__create_user(custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token, profiles=profiles)
+
+    def __create_user(self, custom_audience_id: str, access_token: str, profiles: List[dict]):
         payload = {
-            "schema": ["EMAIL","PHONE","GEN","LN","FN","ST","CT","ZIP"],
+            "schema": ["EMAIL", "PHONE", "GEN", "DOBY", "DOBM", "DOBD", "LN", "FN", "ST", "CT", "ZIP"],
             "data":   profiles
         }
         session = {
@@ -359,7 +356,21 @@ class MetaIntegrationsService:
             'app_id': APP_ID
             })
         
-        return response.json()
+        result = response.json()
+        
+        if result.get('error',{}).get('type') == 'OAuthException':
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        
+        return ProccessDataSyncResult.SUCCESS.value
+    
+    def get_birth_date_from_age(self, age_range):
+        if age_range is None or age_range.lower is None:
+            return None, None, None
+        
+        age = age_range.lower
+        current_year = datetime.now().year
+        birth_year = current_year - age
+        return str(birth_year), '01', '01'
 
     def __hash_mapped_meta_user(self, enrichment_user: EnrichmentUser):
         emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
@@ -382,22 +393,33 @@ class MetaIntegrationsService:
         else:
             city, state, zip_code = '', '', ''
             
-        gender = fake.passport_gender()
+        gender = ''
+        
+        if enrichment_user.gender == 1:
+            gender = 'm'
+        elif enrichment_user.gender == 2:
+            gender = 'f'
+            
         first_name = fake.first_name()
         last_name = fake.last_name()
 
         def hash_value(value):
             return hashlib.sha256(value.encode('utf-8')).hexdigest() if value else ""
         
+        birth_year, birth_month, birth_day = self.get_birth_date_from_age(enrichment_user.age)
+
         return [
                 hash_value(first_email),                                                           # EMAIL
                 hash_value(first_phone),                                                           # PHONE
-                hash_value(gender),                                               # GEN
-                hash_value(first_name),                                            # LN
-                hash_value(last_name),                                           # FN
-                hash_value(state),                                       # ST
-                hash_value(city),                                        # CT
-                hash_value(zip_code),                                         # ZIP
+                hash_value(gender),                                                                # GEN
+                hash_value(birth_year),                                                            # DOBY
+                hash_value(birth_month),                                                           # DOBM
+                hash_value(birth_day),                                                             # DOBD
+                hash_value(first_name),                                                            # LN
+                hash_value(last_name),                                                             # FN
+                hash_value(state),                                                                 # ST
+                hash_value(city),                                                                  # CT
+                hash_value(zip_code),                                                              # ZIP
             ]
             
     def __mapped_meta_list(self, list):

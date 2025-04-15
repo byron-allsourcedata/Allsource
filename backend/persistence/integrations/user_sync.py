@@ -47,6 +47,14 @@ class IntegrationsUserSyncPersistence:
                 .first()
         )
         if sync:
+            audience = (
+                self.db.query(AudienceSmart)
+                    .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id)
+                    .filter(IntegrationUserSync.id == list_id)
+                    .first()
+            )
+            if audience:
+                audience.status = 'ready'
             self.db.delete(sync)
             self.db.commit()
             return True

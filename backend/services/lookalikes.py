@@ -91,3 +91,11 @@ class AudienceLookalikesService:
 
         limited_results = list(results)[:10]
         return limited_results
+    
+    def get_processing_lookalike(self, id: str):
+        lookalike = self.lookalikes_persistence_service.get_processing_lookalike(id)
+        if not lookalike:
+            return None
+
+        result = {key: value for key, value in lookalike.items()}
+        return result

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Table,
   TableBody,
@@ -14,10 +14,14 @@ import {
 import dayjs from "dayjs";
 import { useSSE } from "@/context/SSEContext";
 import ProgressBar from "./ProgressLoader";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
+import { usePolling } from "@/hooks/usePolling";
 
 interface TableData {
   id: string;
   lookalike_name: string;
+  size_progress: number;
+  size: number;
   source: string;
   type: string;
   source_target_schema: string;
@@ -28,6 +32,12 @@ interface TableData {
 
 interface TableContainerProps {
   tableData: TableData[];
+}
+
+interface PollingData {
+  id: string;
+  size: number;
+  size_progress: number;
 }
 
 const audienceSize = [
@@ -81,18 +91,36 @@ const truncateText = (text: string, maxLength: number) => {
 
 const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
   const { smartLookaLikeProgress } = useSSE();
-  const [progress, setProgress] = useState<number | 0>(0);
-  const [total, setTotal] = useState<number | 0>(0);
+  
+  const fetchData = async (id: string): Promise<PollingData> => {
+    try {
+      const response = await axiosInstance.get(
+        `/audience-lookalikes/get-processing-lookalikes?id=${id}`
+      );
+      const updatedItem = response.data;
 
-  useEffect(() => {
-    tableData.forEach((item) => {
-      const progress = smartLookaLikeProgress[item.id];
-      if (progress) {
-        setProgress(progress.processed);
-        setTotal(progress.total);
-      }
-    });
-  }, [smartLookaLikeProgress]);
+      console.log({updatedItem});
+
+      return {
+        size_progress: updatedItem.processed_size || 0,
+        size: updatedItem.size || 0,
+        id: id,
+      };
+    } catch {
+      return {
+        size_progress: 0,
+        size: 0,
+        id: id,
+      };
+    }
+  };
+
+  const { mergedProgress, mergedTotal } = usePolling(
+    tableData[0],
+    smartLookaLikeProgress[tableData[0].id] || null,
+    fetchData
+  );
+  
 
   return (
     <TableContainer
@@ -232,14 +260,17 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               </TableCell>
               <TableCell>{row.created_by}</TableCell>
               <TableCell sx={{ position: "relative" }}>
-                {progress >= total && progress !== 0 ? (
-                  progress.toLocaleString("en-US")
-                ) : (
-                  <ProgressBar
-                    progress={{ total: total, processed: progress }}
-                  />
-                )}
-              </TableCell>
+              {mergedTotal === mergedProgress && mergedProgress !== 0 ? (
+                mergedTotal.toLocaleString("en-US")
+              ) : (
+                <ProgressBar
+                  progress={{
+                    total: mergedTotal || 0,
+                    processed: mergedProgress || 0,
+                  }}
+                />
+              )}
+            </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -273,11 +304,14 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               <Box>
                 {" "}
                 Size:{" "}
-                {progress >= total ? (
-                  progress.toLocaleString("en-US")
+                {mergedTotal === mergedProgress && mergedProgress !== 0 ?  (
+                  mergedTotal.toLocaleString("en-US")
                 ) : (
                   <ProgressBar
-                    progress={{ total: total, processed: progress }}
+                    progress={{
+                      total: mergedTotal || 0,
+                      processed: mergedProgress || 0,
+                    }}
                   />
                 )}
               </Box>

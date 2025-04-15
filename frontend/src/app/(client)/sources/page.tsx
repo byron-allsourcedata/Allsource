@@ -131,7 +131,7 @@ const Sources: React.FC = () => {
   const isDebug = searchParams.get("is_debug") === "true";
   const [isScrolledX, setIsScrolledX] = useState(false);
   const [isScrolledY, setIsScrolledY] = useState(false);
-
+  
   const columns = [
     {
       key: "name",
@@ -699,7 +699,6 @@ const Sources: React.FC = () => {
       .join(", ");
   };
 
-
   return (
     <>
       {loading && <CustomizedProgressBar />}
@@ -1250,14 +1249,16 @@ const Sources: React.FC = () => {
                                             left: 0,
                                             zIndex: 98,
                                             top: 0,
-                                            boxShadow: 
+                                            boxShadow:
                                               //   isScrolledX && isScrolledY ? "3px 3px 3px #00000033"
                                               // : isScrolledX ? "3px 0px 3px #00000033"
                                               // : isScrolledY ? "0px 3px 3px #00000033"
                                               // : "none",
-                                              isScrolledX ? "3px 0px 3px #00000033": "none",
+                                              isScrolledX
+                                                ? "3px 0px 3px #00000033"
+                                                : "none",
                                           }),
-                                            
+
                                           right: "none",
                                           ...(key === "average_time_sec" && {
                                             "::after": { content: "none" },
@@ -1325,7 +1326,6 @@ const Sources: React.FC = () => {
                                       borderTop: "none",
                                       backgroundColor: "rgba(235, 235, 235, 1)",
                                       borderColor: "rgba(235, 235, 235, 1)",
-                                      
                                     }}
                                   >
                                     {loaderForTable && (
@@ -1362,7 +1362,6 @@ const Sources: React.FC = () => {
                                               "rgba(247, 247, 247, 1)",
                                           },
                                         },
-                                        
                                       }}
                                     >
                                       {/* Name Column */}
@@ -1382,7 +1381,7 @@ const Sources: React.FC = () => {
                                         }}
                                       />
 
-                                      {/* Target Schema Column */}
+                                      {/* Target Type Column */}
                                       <TableCell
                                         sx={{
                                           ...sourcesStyles.table_array,

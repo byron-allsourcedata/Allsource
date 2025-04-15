@@ -17,13 +17,6 @@ interface MetaCampaign {
     list_name: string
 }
 
-interface FormValues {
-    campaignName: string;
-    campaignObjective: string;
-    bidAmount: number;
-    dailyBudget: number;
-}
-
 type KlaviyoList = {
     id: string
     list_name: string
@@ -42,6 +35,8 @@ interface MetaContactSyncTabProps {
     selectedOptionMeta: MetaAuidece | null
     adAccountsMeta: adAccount[]
     optionAdAccountMeta: adAccount | null
+    formValues: any
+    setFormValues: any
     setOptionAdAccountMeta: (state: adAccount) => void
 }
 
@@ -97,7 +92,7 @@ const styles = {
     },
 }
 
-const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, selectedOptionCampaignMeta, setSelectedOptionCampaignMeta, setSelectedOptionMeta, selectedOptionMeta, adAccountsMeta, optionAdAccountMeta, setOptionAdAccountMeta }) => {
+const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, selectedOptionCampaignMeta, setSelectedOptionCampaignMeta, setSelectedOptionMeta, selectedOptionMeta, adAccountsMeta, optionAdAccountMeta, setOptionAdAccountMeta, formValues, setFormValues }) => {
     const [anchorElMeta, setAnchorElMeta] = useState<null | HTMLElement>(null);
     const [anchorElAdAccountMeta, setAnchorElAdAccountMeta] = useState<null | HTMLElement>(null);
     const [isDropdownOpenAdAccountMeta, setIsDropdownOpenAdAccountMeta] = useState(false);
@@ -117,17 +112,12 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
     const textFieldRefMeta = useRef<HTMLDivElement>(null);
     const [errorMessage, setErrorMessage] = useState('');
     const [errorMessage2, setErrorMessage2] = useState('');
-    const [formValues, setFormValues] = useState<FormValues>({
-        campaignName: '',
-        campaignObjective: '',
-        bidAmount: 1,
-        dailyBudget: 100,
-    });
     const [inputValueMeta, setInputValueMeta] = useState('');
     const [isDropdownValid, setIsDropdownValid] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>('');
     const [listNameError, setListNameError] = useState(false);
+    const [campaignNameError, setCampaignNameError] = useState(false);
 
     useEffect(() => {
         const allFieldsFilled = Object.values(formValues).every((value) => String(value).trim() !== '');
@@ -200,12 +190,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
         }
 
         if (isCheckedMeta) {
-            const newKlaviyoList = { id: '-1', list_name: formValues.campaignName }
-            setSelectedOptionCampaignMeta(newKlaviyoList);
-            if (isKlaviyoList(newKlaviyoList)) {
-                setIsDropdownValid(true);
-            }
-            setInputValueCampaignMeta(newKlaviyoList.list_name)
+            createNewCampaign(formValues.campaignName)
             handleCloseCampaignMeta();
         }
     };
@@ -264,7 +249,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
         const { name, value } = e.target;
         setErrorMessage('');
         setErrorMessage2('');
-        setFormValues((prevValues) => ({
+        setFormValues((prevValues: any) => ({
             ...prevValues,
             [name]: value,
         }));
@@ -350,9 +335,10 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
             }
             else {
                 const data = newListResponse.data
-                setSelectedOptionMeta(data)
-                setInputValueMeta(name)
+                setInputValueCampaignMeta(name)
+                setSelectedOptionCampaignMeta(data)
                 setIsDropdownValid(true)
+
             }
         } catch  {
         } finally {

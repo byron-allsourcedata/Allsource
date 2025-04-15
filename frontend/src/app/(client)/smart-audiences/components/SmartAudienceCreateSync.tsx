@@ -59,6 +59,14 @@ interface Integrations {
     data_sync: boolean
 }
 
+interface FormValues {
+    campaignName: string;
+    campaignObjective: string;
+    bidAmount: number;
+    dailyBudget: number;
+}
+
+
 interface Row {
     id: number;
     type: string;
@@ -102,6 +110,7 @@ interface RequestData {
     smart_audience_id?: string
     list_id?: string
     list_name?: string
+    campaign?: any
     customer_id?: string
     data_map: CustomRow[]
 }
@@ -425,6 +434,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                     requestObj.customer_id = String(optionAdAccountMeta?.id)
                     requestObj.list_id = String(selectedOptionMeta?.id),
                     requestObj.list_name = selectedOptionMeta?.list_name
+                    requestObj.campaign = {
+                        campaign_id: selectedOptionCampaignMeta?.id,
+                        campaign_name: formValuesMeta?.campaignName,
+                        campaign_objective: formValuesMeta?.campaignObjective,
+                        bid_amount: formValuesMeta?.bidAmount,
+                        daily_budget: formValuesMeta?.dailyBudget
+                    }
                 }
                 else {
                     showErrorToast("You have selected incorrect data!")
@@ -802,6 +818,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
     const [selectedOptionCampaignMeta, setSelectedOptionCampaignMeta] = useState<MetaCampaign | null>(null);
     const [optionAdAccountMeta, setOptionAdAccountMeta] = useState<adAccount | null>(null)
     const [adAccountsMeta, setAdAccountsMeta] = useState<adAccount[]>([])
+    const [formValuesMeta, setFormValuesMeta] = useState<FormValues>({
+        campaignName: '',
+        campaignObjective: '',
+        bidAmount: 1,
+        dailyBudget: 100,
+    });
 
 
     const fetchAdAccount = async () => {
@@ -1085,6 +1107,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                     setSelectedOptionMeta={setSelectedOptionMeta}
                                                     adAccountsMeta={adAccountsMeta}
                                                     optionAdAccountMeta={optionAdAccountMeta}
+                                                    formValues={formValuesMeta}
+                                                    setFormValues={setFormValuesMeta}
                                                     setOptionAdAccountMeta={setOptionAdAccountMeta}
                                                 />
                                             }

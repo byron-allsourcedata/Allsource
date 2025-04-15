@@ -44,7 +44,7 @@ class IntegrationLimit(Enum):
     SALESFORCE = 10000
     BING_ADS = 100000
     GOOGLE_ADS = 5000
-    META = 10000
+    META = 5000
     HUBSPOT = 100
     S3 = 10000
 
@@ -279,6 +279,7 @@ class DomainStatus(Enum):
 class NotificationTitles(Enum):
     PLAN_LIMIT_EXCEEDED = 'plan_limit_exceeded'
     AUTHENTICATION_INTEGRATION_FAILED = 'authentication_integration_failed'
+    PAYMENT_INTEGRATION_REQUIRED = 'payment_integration_required'
     DATA_SYNC_ERROR = 'data_sync_error'
     PAYMENT_FAILED = 'payment_failed'
     CONTACT_LIMIT_APPROACHING = 'contact_limit_approaching'
@@ -325,6 +326,7 @@ class ProccessDataSyncResult(Enum):
     AUTHENTICATION_FAILED = 'authentication_failed'
     TOO_MANY_REQUESTS = 'too_many_requests'
     VERIFY_EMAIL_FAILED = 'verify_email_failed'
+    PAYMENT_REQUIRED = 'payment_required'
     
 class PlanAlias(Enum):
     PARTNERS = 'partners'
