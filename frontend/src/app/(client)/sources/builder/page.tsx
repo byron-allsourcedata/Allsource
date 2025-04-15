@@ -641,7 +641,7 @@ const SourcesImport: React.FC = () => {
                       />
                     }
                     sx={{
-                      fontFamily: "Roboto",
+                      fontFamily: "Nunito Sans",
                       fontWeight: 400,
                       border: "1px solid rgba(208, 213, 221, 1)",
                       borderRadius: "4px",
@@ -684,7 +684,7 @@ const SourcesImport: React.FC = () => {
                       />
                     }
                     sx={{
-                      fontFamily: "Roboto",
+                      fontFamily: "Nunito Sans",
                       fontWeight: 400,
                       border: "1px solid rgba(208, 213, 221, 1)",
                       borderRadius: "4px",
