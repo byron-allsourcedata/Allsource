@@ -157,8 +157,6 @@ async def on_message_received(message, session, subscription_service):
                                     .update({"is_active": True}, synchronize_session=False)
                                 session.commit()
                                 logging.error(f"Purchase success")
-                                account_notification = await get_account_notification_by_title(session, NotificationTitles.PAYMENT_SUCCESS.value)
-                                message_text = account_notification.text
                     else:
                         logging.error(f"Purchase failed: {result['error']}", exc_info=True)
                         account_notification = await get_account_notification_by_title(session, NotificationTitles.PAYMENT_FAILED.value)
