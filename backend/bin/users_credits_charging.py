@@ -24,7 +24,7 @@ from models.users import Users
 from models.five_x_five_users import FiveXFiveUser
 from datetime import datetime, timezone
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
-from services.stripe_service import purchase_product
+from services.stripe_service import purchase_product, get_last_payment_intent
 from dependencies import (PlansPersistence)
 from dotenv import load_dotenv
 
@@ -111,6 +111,14 @@ async def on_message_received(message, session, subscription_service):
                 logging.info(f"is_leads_auto_charging true")
                 if lead_user_count >= QUANTITY:
                     logging.info(f"{user.full_name} charge {QUANTITY} leads by {contact_credits.price}")
+                    last_payment_intent = get_last_payment_intent(customer_id)
+                    if last_payment_intent:
+                        users_inlocked_five_x_five_user = session.query(UsersUnlockedFiveXFiveUser)\
+                        .filter(UsersUnlockedFiveXFiveUser.transaction_id==last_payment_intent.id).first()
+                        if not users_inlocked_five_x_five_user:
+                            logging.error(f"users_inlocked_five_x_five_user is None, last_transaction_id {last_payment_intent.id}")
+                            await message.reject(requeue=True)
+                            return
                     result = purchase_product(customer_id, contact_credits.stripe_price_id, QUANTITY,
                                                 'leads_credits')
                     if result['success']:
