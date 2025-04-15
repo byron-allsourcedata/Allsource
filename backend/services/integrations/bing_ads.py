@@ -108,31 +108,115 @@ class BingAdsIntegrationsService:
     
     def get_user_lists(self, domain_id: int, customer_id: int, user_id: int):
         try:
-            credential = self.get_credentials(domain_id, user_id)
-            client = self.get_google_ads_client(credential.access_token)
-            googleads_service = client.get_service("GoogleAdsService")
-            query = """
-                SELECT
-                    user_list.id,
-                    user_list.name,
-                    user_list.description
-                FROM
-                    user_list
-            """
+            credentials = self.get_credentials(domain_id, user_id)
+            if not credentials:
+                return
+            
+            authorization_data = self._get_authorization_data(refresh_token=credentials.access_token)
 
-            response = googleads_service.search(customer_id=str(customer_id), query=query)
-            user_lists = []
-            for row in response:
-                user_list = row.user_list
-                user_lists.append({
-                    'list_id': user_list.id,
-                    'list_name': user_list.name
-                })
+            customer_service = ServiceClient(
+                service='CustomerManagementService',
+                version=13,
+                authorization_data=authorization_data
+            )
+
+            user = customer_service.GetUser().User
+            customer_id = user.CustomerId
+
+            accounts = customer_service.SearchAccounts(
+                Predicates={
+                    'Predicate': [{
+                        'Field': 'UserId',
+                        'Operator': 'Equals',
+                        'Value': user.Id
+                    }]
+                },
+                PageInfo={'Index': 0, 'Size': 100}
+            )
+
+            if not accounts or not hasattr(accounts, 'AdvertiserAccount') or not accounts.AdvertiserAccount:
+                raise Exception("No advertiser accounts found for the user")
+
+            account_id = accounts.AdvertiserAccount[0].Id
+
+            # Обновление authorization_data с customer_id и account_id
+            authorization_data.customer_id = customer_id
+            authorization_data.account_id = account_id
+
+            # Инициализация клиента Campaign Management Service
+            campaign_service = ServiceClient(
+                service='CampaignManagementService',
+                version=13,
+                authorization_data=authorization_data
+            )
+
+            # Вызов метода GetAudiencesByIds с пустым списком идентификаторов
+            # RemarketingList, Custom, InMarket, Product, SimilarRemarketingList, CombinedList, CustomerList, ImpressionBasedRemarketingList
+            response = campaign_service.GetAudiencesByIds(
+                AudienceIds=[],  # Пустой список для получения всех аудиторий
+                Type='CustomerList',
+                ReturnAdditionalFields=None
+            )
+
+            audiences_container = response.Audiences
+            if not audiences_container or not hasattr(audiences_container, 'Audience'):
+                return []
+
+            # Получаем сам список
+            audience_list = audiences_container.Audience
+
+            # Если вернулся одиночный объект — оборачиваем в список
+            if not isinstance(audience_list, list):
+                audience_list = [audience_list]
+
+            return __get_account_hashes(audience_list)
             return {'status': IntegrationsStatus.SUCCESS.value, 'user_lists': user_lists}
             
         except Exception as e:
             logger.error(f"An unexpected error occurred: {e}")
             return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
+    
+    def _get_authorization_data(self, *, refresh_token):
+        client_id = os.getenv("AZURE_CLIENT_ID")
+        client_secret = os.getenv("AZURE_CLIENT_SECRET")
+        developer_token = os.getenv("AZURE_DEVELOPER_TOKEN")
+        auth = OAuthWebAuthCodeGrant(
+            client_id=client_id,
+            client_secret=client_secret,
+            redirection_uri=f"{os.getenv('SITE_HOST_URL')}/bing-ads-landing"
+        )
+        auth.request_oauth_tokens_by_refresh_token(refresh_token)
+        return AuthorizationData(developer_token=developer_token, authentication=auth)
+    
+    def _setup_customer_service(self, *, account_id, refresh_token):
+        auth_data = self._get_authorization_data(refresh_token)
+        customer_service = ServiceClient(
+            service='CustomerManagementService',
+            version=13,
+            authorization_data=auth_data
+        )
+        user = customer_service.GetUser().User
+        auth_data.customer_id = user.CustomerId
+        auth_data.account_id = account_id
+        return customer_service
+    
+    def _setup_campaign_service(self, *, account_id, refresh_token):
+        auth_data = self._get_authorization_data(refresh_token)
+        customer_service = ServiceClient(
+            service='CustomerManagementService',
+            version=13,
+            authorization_data=auth_data
+        )
+        user = customer_service.GetUser().User
+        auth_data.customer_id = user.CustomerId
+        auth_data.account_id = account_id
+        
+        campaign_service = ServiceClient(
+            service='CampaignManagementService',
+            version=13,
+            authorization_data=auth_data
+        )
+        return campaign_service
     
     def get_customer_info(self, domain_id: int, user_id: int):
         try:
@@ -140,19 +224,7 @@ class BingAdsIntegrationsService:
             if not credentials:
                 return
             
-            client_id = os.getenv("AZURE_CLIENT_ID")
-            client_secret = os.getenv("AZURE_CLIENT_SECRET")
-            developer_token = os.getenv("AZURE_DEVELOPER_TOKEN")
-            authentication = OAuthWebAuthCodeGrant(
-                client_id=client_id,
-                client_secret=client_secret,
-                redirection_uri='http://localhost:3000/bing-ads-landing'
-            )
-            authentication.request_oauth_tokens_by_refresh_token(credentials.access_token)
-            authorization_data = AuthorizationData(
-                developer_token=developer_token,
-                authentication=authentication
-            )
+            authorization_data = self._get_authorization_data(refresh_token=credentials.access_token)
             customer_service = ServiceClient(
                 service='CustomerManagementService',
                 version=13,
@@ -173,14 +245,76 @@ class BingAdsIntegrationsService:
             if not accounts or not hasattr(accounts, 'AdvertiserAccount'):
                 return []
             
-            accounts_list = self.__get_account_hashes(accounts.AdvertiserAccount)
+            accounts_list =  [{"account_id": account.Id, "account_name": account.Name} for account in accounts.AdvertiserAccount]
             return {'status': IntegrationsStatus.SUCCESS.value, 'customers': accounts_list}
         
         except Exception as e:
             logger.error(f"Error getting customer info: {e}")
     
-    def __get_account_hashes(self, advertiser_accounts):
-        return [{"customer_id": account.Id, "customer_name": account.Name} for account in advertiser_accounts]
+    def get_all_campaigns(developer_token: str,
+                        client_id: str,
+                        client_secret: str,
+                        refresh_token: str) -> list:
+        """
+        Возвращает список всех Campaign в аккаунте.
+        """
+        # 1. Аутентификация
+        auth = OAuthWebAuthCodeGrant(
+            client_id=client_id,
+            client_secret=client_secret,
+            redirection_uri='http://localhost:3000/bing-ads-landing'
+        )
+        auth.request_oauth_tokens_by_refresh_token(refresh_token)
+
+        # 2. AuthorizationData
+        authorization_data = AuthorizationData(
+            developer_token=developer_token,
+            authentication=auth
+        )
+
+        # 3. Получаем user → customer_id → account_id
+        customer_svc = ServiceClient(
+            service='CustomerManagementService',
+            version=13,
+            authorization_data=authorization_data
+        )
+        user = customer_svc.GetUser().User
+        authorization_data.customer_id = user.CustomerId
+
+        accounts = customer_svc.SearchAccounts(
+            Predicates={
+                'Predicate': [{
+                    'Field': 'UserId',
+                    'Operator': 'Equals',
+                    'Value': user.Id
+                }]
+            },
+            PageInfo={'Index': 0, 'Size': 100}
+        )
+        account_id = accounts.AdvertiserAccount[0].Id
+        authorization_data.account_id = account_id
+
+        # 4. Инициализация CampaignManagementService
+        campaign_svc = ServiceClient(
+            service='CampaignManagementService',
+            version=13,
+            authorization_data=authorization_data
+        )
+
+        # 5. Запрос GetCampaignsByAccountId
+        resp = campaign_svc.GetCampaignsByAccountId(
+            AccountId=account_id,
+            CampaignType='Search Shopping DynamicSearchAds Audience Hotel PerformanceMax App'  # None — вернуть все типы кампаний
+        )
+        print('---')
+        print(resp)
+        campaigns = resp.Campaign
+        # Если один объект, оборачиваем в список
+        if not isinstance(campaigns, list):
+            campaigns = [campaigns]
+
+        return __get_account_hashes(campaigns)
+            
         
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         client_id = os.getenv("AZURE_CLIENT_ID")

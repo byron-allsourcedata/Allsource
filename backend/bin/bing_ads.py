@@ -36,6 +36,7 @@ SCOPE = 'https://ads.microsoft.com/.default'
 import logging
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('suds.client').setLevel(logging.DEBUG)
+logging.getLogger('suds.transport.http').setLevel(logging.DEBUG)
 
 def get_access_token():
     token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
@@ -121,6 +122,7 @@ def get_all_audiences(developer_token, client_id, client_secret, refresh_token):
     )
 
     # Вызов метода GetAudiencesByIds с пустым списком идентификаторов
+    # RemarketingList, Custom, InMarket, Product, SimilarRemarketingList, CombinedList, CustomerList, ImpressionBasedRemarketingList
     response = campaign_service.GetAudiencesByIds(
         AudienceIds=[],  # Пустой список для получения всех аудиторий
         Type='CustomerList',
@@ -138,7 +140,7 @@ def get_all_audiences(developer_token, client_id, client_secret, refresh_token):
     if not isinstance(audience_list, list):
         audience_list = [audience_list]
 
-    return audience_list
+    return __get_account_hashes(audience_list)
 
 
 from bingads.service_client import ServiceClient
@@ -458,33 +460,252 @@ def authenticate(developer_token, client_id, client_secret, refresh_token):
     return authorization_data
 
 
+from datetime import date
+
+def get_all_campaigns(developer_token: str,
+                      client_id: str,
+                      client_secret: str,
+                      refresh_token: str) -> list:
+    """
+    Возвращает список всех Campaign в аккаунте.
+    """
+    # 1. Аутентификация
+    auth = OAuthWebAuthCodeGrant(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirection_uri='http://localhost:3000/bing-ads-landing'
+    )
+    auth.request_oauth_tokens_by_refresh_token(refresh_token)
+
+    # 2. AuthorizationData
+    authorization_data = AuthorizationData(
+        developer_token=developer_token,
+        authentication=auth
+    )
+
+    # 3. Получаем user → customer_id → account_id
+    customer_svc = ServiceClient(
+        service='CustomerManagementService',
+        version=13,
+        authorization_data=authorization_data
+    )
+    user = customer_svc.GetUser().User
+    authorization_data.customer_id = user.CustomerId
+
+    accounts = customer_svc.SearchAccounts(
+        Predicates={
+            'Predicate': [{
+                'Field': 'UserId',
+                'Operator': 'Equals',
+                'Value': user.Id
+            }]
+        },
+        PageInfo={'Index': 0, 'Size': 100}
+    )
+    account_id = accounts.AdvertiserAccount[0].Id
+    authorization_data.account_id = account_id
+
+    # 4. Инициализация CampaignManagementService
+    campaign_svc = ServiceClient(
+        service='CampaignManagementService',
+        version=13,
+        authorization_data=authorization_data
+    )
+
+    # 5. Запрос GetCampaignsByAccountId
+    resp = campaign_svc.GetCampaignsByAccountId(
+        AccountId=account_id,
+        CampaignType='Search Shopping DynamicSearchAds Audience Hotel PerformanceMax App'  # None — вернуть все типы кампаний
+    )
+    print('---')
+    print(resp)
+    campaigns = resp.Campaign
+    # Если один объект, оборачиваем в список
+    if not isinstance(campaigns, list):
+        campaigns = [campaigns]
+
+    return __get_account_hashes(campaigns)
+
+
+from datetime import date
+from typing import List
+from suds import WebFault
+
+def create_campaign(developer_token: str,
+                    client_id: str,
+                    client_secret: str,
+                    refresh_token: str,
+                    campaign_name: str,
+                    daily_budget: float,
+                    budget_type: str = 'DailyBudgetStandard',
+                    time_zone: str = 'EasternTimeUSCanada',
+                    start_date: date = None,
+                    end_date: date = None) -> int:
+    """
+    Создаёт новую кампанию и возвращает её ID.
+
+    Использует метод AddCampaigns из CampaignManagementService :contentReference[oaicite:0]{index=0}.
+    """
+    
+    # DailyBudgetAccelerated
+    
+    # 1. Аутентификация
+    auth = OAuthWebAuthCodeGrant(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirection_uri='http://localhost:3000/bing-ads-landing'
+    )
+    auth.request_oauth_tokens_by_refresh_token(refresh_token)
+
+    # 2. AuthorizationData
+    authorization_data = AuthorizationData(
+        developer_token=developer_token,
+        authentication=auth
+    )
+
+    # 3. Получаем customer_id и account_id
+    cust_svc = ServiceClient(
+        service='CustomerManagementService',
+        version=13,
+        authorization_data=authorization_data
+    )
+    user = cust_svc.GetUser().User
+    authorization_data.customer_id = user.CustomerId
+
+    accounts = cust_svc.SearchAccounts(
+        Predicates={'Predicate': [{
+            'Field': 'UserId',
+            'Operator': 'Equals',
+            'Value': user.Id
+        }]},
+        PageInfo={'Index': 0, 'Size': 100}
+    )
+    authorization_data.account_id = accounts.AdvertiserAccount[0].Id
+
+    # 4. Инициализация CampaignManagementService
+    campaign_svc = ServiceClient(
+        service='CampaignManagementService',
+        version=13,
+        authorization_data=authorization_data
+    )
+    factory = campaign_svc.factory
+
+    # 5. Формирование объекта Campaign
+    campaign = factory.create('Campaign')
+    campaign.Name = campaign_name
+    campaign.DailyBudget = daily_budget
+    campaign.BudgetType = budget_type
+    campaign.CampaignType = ['Search']
+    campaign.TimeZone = time_zone
+
+    if start_date:
+        sd = factory.create('Date')
+        sd.Day, sd.Month, sd.Year = start_date.day, start_date.month, start_date.year
+        campaign.StartDate = sd
+    if end_date:
+        ed = factory.create('Date')
+        ed.Day, ed.Month, ed.Year = end_date.day, end_date.month, end_date.year
+        campaign.EndDate = ed
+
+    # 6. Добавляем кампанию
+    arr = factory.create('ArrayOfCampaign')
+    arr.Campaign = [campaign]
+    try:
+        resp = campaign_svc.AddCampaigns(
+            AccountId=authorization_data.account_id,
+            Campaigns=arr
+        )
+    except WebFault as e:
+        # Выведет код и сообщение SOAP‑fault
+        print("SOAP Fault:", e.fault)
+        raise
+    if hasattr(resp, 'PartialErrors') and resp.PartialErrors:
+        raise Exception("Не удалось создать кампанию. См. PartialErrors.")
+    # 7. Возвращаем первый ID
+    return resp.CampaignIds.long[0]
+
+
+def add_audiences_to_campaign(developer_token: str,
+                              client_id: str,
+                              client_secret: str,
+                              refresh_token: str,
+                              campaign_id: int,
+                              audience_ids: List[int]) -> None:
+    """
+    Ассоциирует список аудиторий (audience_ids) с кампанией campaign_id.
+
+    Использует метод AddCampaignCriterions с CriterionType='Audience' :contentReference[oaicite:1]{index=1}.
+    """
+    # 1. Аутентификация и AuthorizationData
+    auth = OAuthWebAuthCodeGrant(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirection_uri='http://localhost:3000/bing-ads-landing'
+    )
+    auth.request_oauth_tokens_by_refresh_token(refresh_token)
+    authorization_data = AuthorizationData(
+        developer_token=developer_token,
+        authentication=auth
+    )
+
+    # 2. Получаем customer_id и account_id
+    cust_svc = ServiceClient(
+        service='CustomerManagementService',
+        version=13,
+        authorization_data=authorization_data
+    )
+    user = cust_svc.GetUser().User
+    authorization_data.customer_id = user.CustomerId
+
+    accounts = cust_svc.SearchAccounts(
+        Predicates={'Predicate': [{
+            'Field': 'UserId',
+            'Operator': 'Equals',
+            'Value': user.Id
+        }]},
+        PageInfo={'Index': 0, 'Size': 100}
+    )
+    authorization_data.account_id = accounts.AdvertiserAccount[0].Id
+
+    # 3. Инициализация CampaignManagementService
+    campaign_svc = ServiceClient(
+        service='CampaignManagementService',
+        version=13,
+        authorization_data=authorization_data
+    )
+    factory = campaign_svc.factory
+
+    # 4. Формируем массив критериев для аудиторий
+    arr_criteria = factory.create('ArrayOfCampaignCriterion')
+    arr_criteria.CampaignCriterion = []
+    for aud_id in audience_ids:
+        bcc = factory.create('BiddableCampaignCriterion')
+        bcc.CampaignId = campaign_id
+        aud = factory.create('AudienceCriterion')
+        aud.AudienceId = aud_id
+        bcc.Criterion = aud
+        arr_criteria.CampaignCriterion.append(bcc)
+
+    # 5. Добавляем аудитории к кампании
+    resp = campaign_svc.AddCampaignCriterions(
+        CampaignCriterions=arr_criteria,
+        CriterionType='Audience'
+    )
+    if hasattr(resp, 'NestedPartialErrors') and resp.NestedPartialErrors:
+        raise Exception("Не удалось добавить аудитории. См. NestedPartialErrors.")
+
+
+def __get_account_hashes(advertiser_accounts):
+        return [{"customer_id": account.Id, "customer_name": account.Name} for account in advertiser_accounts]
+
+
 
 # Пример использования:
 async def main():
-    #access_token = get_access_token()
-    #customer_id = CLIENT_ID
-    #print(get_customer_id(developer_token, CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN))
-    #authorization_data = authenticate(developer_token, CLIENT_ID, CLIENT_SECRET, REFRESH_TOKEN)
-    # result = create_bing_ads_audience(
-    #     developer_token=developer_token,
-    #     client_id=CLIENT_ID,
-    #     client_secret=CLIENT_SECRET,
-    #     refresh_token=REFRESH_TOKEN,
-    #     audience_name="My Custom Audience",
-    #     description="Audience created via API"
-    # )
     refresh_token = '1.AQwAoMOu-2xxzUSHxit-r-dIM4Ptp6kjpBNHnTQjJkaFg4HdAM8MAA.AgABAwEAAABVrSpeuWamRam2jAF1XRQEAwDs_wUA9P_-g8ZHqXoih_Zz0tYRVRrzFKeA6Wh8c5uwnBcEtqSg4zVHClEnwmZ2nQbIboy4tm3WksZcR9VOBBjHJVTGjNcsHqsmy9QQCkjo49407sk21tqwJ2BSyu__HeIdOaRdnY03M60ONWvksU-LrH62XPUnnN9gNFhkZFrULsFGKQaBONYLy8ten2dM8urPIeX0Z4oxxQUDQ1_ARh5lGJ__XydZTdXz9kVCr6T7U_4PsdchZgx5g7eq8xJHeSVdDkaLcJ8eM3pQ529qZcU50kt5eGURM7k4uoYKV0NH6MZk-2Wuf3lBq1m77DPg5sHnKRXD-IykWtOTvK0j8DxUjbAn6wvTV_24Ul1OgTZc1YeT246bNWNUY44WZfb0CQ4aOcepgx_hpbGd2eNlPntnF8IHQInp4EfHznBRiSrf-BWL2AwjgIZoGfUg1biNE2IFoUh3Va4zqIWd1N8TpWiFP50o2ZUPFw6EfZiXfjuuo4spYfvlxungfvBDtEhh5STxNGHYIUJicBG5rIZeMSLJe42wEA5GepbyU9GTo9RccifVFWzo-JimS7twA8oNhvwd054WCeiruUDVkOijwMi7SPdGFQbx3hDIYbhD3oQLh9MBfLAJDcSMm98JFBhZXj8_Rrr0NHutD6W_XEjZSGMNVsjguNEwp0bTQDtdcTFvlLhaWrFWUcyK5YfbtTuOfNor7o6rTznEM_35mSmAWVztnhNe1SHNc3IaIBbUcc_RNarGWjYWX2LXMLytR38LGm0qII_Xd4WcE_mTR-CpiDZ-r-uI__ejXvX3TumB1FsiHB0PBa02PivPca5sMhR6'
-    #result = create_empty_audience(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token, 'test_audience2', 'description')
-    print(get_all_audiences(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token))
-    #customer_list_id = create_customer_list(authorization_data, 'test_list', 'customer_list_description', 123)
-    #print(customer_list_id)
-    # if customer_list_id:
-    #     contacts = ['example1@example.com', 'example2@example.com']
-    #     add_contacts_to_customer_list(authorization_data, customer_list_id, contacts)
-    #     print(f'Список клиентов с ID {customer_list_id} создан и заполнен контактами.')
-    # else:
-    #     print('Не удалось создать список клиентов.')
-   
+    #create_campaign(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET,refresh_token, 'campaign_name', 500)
+    #print(get_all_audiences(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token))
+    print(get_all_campaigns(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token))
 # Запуск асинхронного main
 if __name__ == "__main__":
     asyncio.run(main())
