@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR, Index
+from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR, Index, DECIMAL
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from .base import Base, create_timestamps
@@ -12,7 +12,7 @@ class UsersUnlockedFiveXFiveUser(Base):
     created_at = Column(TIMESTAMP(precision=6))
     updated_at = Column(TIMESTAMP(precision=6))
     transaction_id = Column(VARCHAR, nullable=True, unique=True)
-    amount_credits = Column(Integer, nullable=True)
+    amount_credits = Column(DECIMAL(10, 2), nullable=True)
     domain_id = Column(Integer, ForeignKey("users_domains.id"), nullable=True)
     five_x_five_up_id = Column(VARCHAR, nullable=False)
     stripe_request_created_at = Column(TIMESTAMP)

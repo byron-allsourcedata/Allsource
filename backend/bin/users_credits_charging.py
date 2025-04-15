@@ -22,6 +22,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from sqlalchemy.orm import sessionmaker
 from services.subscriptions import SubscriptionService
 from models.users import Users
+from models.five_x_five_users import FiveXFiveUser
 from datetime import datetime, timezone
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from services.stripe_service import purchase_product
@@ -56,8 +57,6 @@ async def on_message_received(message, session, subscription_service):
         message_json = json.loads(message.body)
         customer_id = message_json.get('customer_id')
         plan_id = message_json.get('plan_id')
-        account_notification = await get_account_notification_by_title(session, NotificationTitles.PAYMENT_FAILED.value)
-        message_text = account_notification.text
         subscription_plan = session.query(SubscriptionPlan).filter_by(id=plan_id).first()
         user = session.query(Users).filter_by(customer_id=customer_id).first()
         
@@ -113,31 +112,58 @@ async def on_message_received(message, session, subscription_service):
                             logging.info(f"payment status {status}")
                             if status == 'succeeded':
                                 grouped_users = defaultdict(list)
-                                for lead_user in lead_users[:QUANTITY]:
-                                    grouped_users[lead_user.domain_id].append(lead_user)
-                                transaction_counter = 1
-                                for domain_id, users in grouped_users.items():
-                                    transaction_id_with_iteration = f"{transaction_id}_{transaction_counter}"
-                                    payment_transaction_obj = UsersUnlockedFiveXFiveUser(
-                                        user_id=user.id,
-                                        transaction_id=transaction_id_with_iteration,
-                                        created_at=datetime.now(timezone.utc),
-                                        stripe_request_created_at=created_at,
-                                        status=status,
-                                        amount_credits=QUANTITY // len(grouped_users),
-                                        type='buy_leads',
-                                        domain_id=domain_id
-                                    )
-                                    session.add(payment_transaction_obj)
-                                    session.flush()
-                                    transaction_counter += 1
+                                
+                                lead_subset = lead_users[:QUANTITY]
+                                five_x_five_ids = [user.five_x_five_user_id for user in lead_subset]
 
+                                id_up_pairs = (
+                                    session
+                                    .query(FiveXFiveUser.id, FiveXFiveUser.up_id)
+                                    .filter(FiveXFiveUser.id.in_(five_x_five_ids))
+                                    .all()
+                                )
+                                id_to_up = dict(id_up_pairs)
+                                grouped_users = defaultdict(list)
+                                for u in lead_subset:
+                                    up = id_to_up.get(u.five_x_five_user_id)
+                                    grouped_users[u.domain_id].append(up)
+                                
+                                transaction_dicts = []
+                                counter = 1
+                                for domain_id, up_ids in grouped_users.items():
+                                    for up_id in up_ids:
+                                        transaction_dicts.append({
+                                            'user_id': user.id,
+                                            'transaction_id': f"{transaction_id}_{counter}",
+                                            'created_at': datetime.now(timezone.utc),
+                                            'updated_at': datetime.now(timezone.utc),
+                                            'stripe_request_created_at': created_at,
+                                            'status': status,
+                                            'amount_credits': subscription_plan.price,
+                                            'type': 'buy_leads',
+                                            'domain_id': domain_id,
+                                            'five_x_five_up_id': up_id,
+                                        })
+                                        counter += 1
+
+                                session.bulk_insert_mappings(
+                                    UsersUnlockedFiveXFiveUser,
+                                    transaction_dicts
+                                )
+                                session.commit()
+                                
                                 session.query(LeadUser).filter(
-                                    LeadUser.id.in_([user.id for user in lead_users[:QUANTITY]])) \
+                                    LeadUser.id.in_([user.id for user in lead_subset])) \
                                     .update({"is_active": True}, synchronize_session=False)
                                 session.commit()
+                                logging.error(f"Purchase success")
+                                account_notification = await get_account_notification_by_title(session, NotificationTitles.PAYMENT_SUCCESS.value)
+                                message_text = account_notification.text
                     else:
                         logging.error(f"Purchase failed: {result['error']}", exc_info=True)
+                        account_notification = await get_account_notification_by_title(session, NotificationTitles.PAYMENT_FAILED.value)
+                        message_text = account_notification.text
+                        
 
                     account_notification = await save_account_notification(session, user.id,
                                                                             account_notification.id)
