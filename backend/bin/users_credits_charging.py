@@ -6,8 +6,6 @@ import os
 import sys
 from collections import defaultdict
 
-from sqlalchemy import create_engine
-
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -19,7 +17,8 @@ from models.account_notification import AccountNotification
 from models.users_account_notification import UserAccountNotification
 from models.leads_users import LeadUser
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker, aliased
 from services.subscriptions import SubscriptionService
 from models.users import Users
 from models.five_x_five_users import FiveXFiveUser
@@ -57,7 +56,20 @@ async def on_message_received(message, session, subscription_service):
         message_json = json.loads(message.body)
         customer_id = message_json.get('customer_id')
         plan_id = message_json.get('plan_id')
-        subscription_plan = session.query(SubscriptionPlan).filter_by(id=plan_id).first()
+        
+        
+        ContactCredits = aliased(SubscriptionPlan)
+        stmt = select(
+            ContactCredits.price.label('price'),
+            ContactCredits.stripe_price_id.label('stripe_price_id')
+        ).join(
+            SubscriptionPlan, SubscriptionPlan.contact_credit_plan_id == ContactCredits.id
+        ).where(
+            SubscriptionPlan.id == plan_id
+        )
+        
+        contact_credits = session.execute(stmt).first()
+        
         user = session.query(Users).filter_by(customer_id=customer_id).first()
         
         if not subscription_service.is_user_has_active_subscription(user.id):
@@ -65,7 +77,7 @@ async def on_message_received(message, session, subscription_service):
             await message.ack()
             return
         
-        if not user or not subscription_plan:
+        if not user or not contact_credits:
             logging.error("Invalid user or subscription plan", extra={'customer_id': customer_id, 'plan_id': plan_id})
             await message.ack()
             return
@@ -98,8 +110,8 @@ async def on_message_received(message, session, subscription_service):
             if user.is_leads_auto_charging:
                 logging.info(f"is_leads_auto_charging true")
                 if lead_user_count >= QUANTITY:
-                    logging.info(f"{user.full_name} charge {QUANTITY} leads by {subscription_plan.price}")
-                    result = purchase_product(customer_id, subscription_plan.stripe_price_id, QUANTITY,
+                    logging.info(f"{user.full_name} charge {QUANTITY} leads by {contact_credits.price}")
+                    result = purchase_product(customer_id, contact_credits.stripe_price_id, QUANTITY,
                                                 'leads_credits')
                     if result['success']:
                         stripe_payload = result['stripe_payload']
@@ -140,7 +152,7 @@ async def on_message_received(message, session, subscription_service):
                                             'updated_at': datetime.now(timezone.utc),
                                             'stripe_request_created_at': created_at,
                                             'status': status,
-                                            'amount_credits': subscription_plan.price,
+                                            'amount_credits': contact_credits.price,
                                             'type': 'buy_leads',
                                             'domain_id': domain_id,
                                             'five_x_five_up_id': up_id,
