@@ -219,6 +219,7 @@ def create_empty_audience(developer_token, client_id, client_secret, refresh_tok
     audience_ids = []
     if hasattr(add_response, 'AudienceIds') and add_response.AudienceIds is not None:
         audience_ids = add_response.AudienceIds.long
+        print(audience_ids)
     if not audience_ids:
         raise Exception("AddAudiences вернул пустой список ID. Проверьте настройки запроса.")
     return audience_ids[0]
@@ -703,8 +704,8 @@ def __get_account_hashes(advertiser_accounts):
 # Пример использования:
 async def main():
     refresh_token = '1.AQwAoMOu-2xxzUSHxit-r-dIM4Ptp6kjpBNHnTQjJkaFg4HdAM8MAA.AgABAwEAAABVrSpeuWamRam2jAF1XRQEAwDs_wUA9P_-g8ZHqXoih_Zz0tYRVRrzFKeA6Wh8c5uwnBcEtqSg4zVHClEnwmZ2nQbIboy4tm3WksZcR9VOBBjHJVTGjNcsHqsmy9QQCkjo49407sk21tqwJ2BSyu__HeIdOaRdnY03M60ONWvksU-LrH62XPUnnN9gNFhkZFrULsFGKQaBONYLy8ten2dM8urPIeX0Z4oxxQUDQ1_ARh5lGJ__XydZTdXz9kVCr6T7U_4PsdchZgx5g7eq8xJHeSVdDkaLcJ8eM3pQ529qZcU50kt5eGURM7k4uoYKV0NH6MZk-2Wuf3lBq1m77DPg5sHnKRXD-IykWtOTvK0j8DxUjbAn6wvTV_24Ul1OgTZc1YeT246bNWNUY44WZfb0CQ4aOcepgx_hpbGd2eNlPntnF8IHQInp4EfHznBRiSrf-BWL2AwjgIZoGfUg1biNE2IFoUh3Va4zqIWd1N8TpWiFP50o2ZUPFw6EfZiXfjuuo4spYfvlxungfvBDtEhh5STxNGHYIUJicBG5rIZeMSLJe42wEA5GepbyU9GTo9RccifVFWzo-JimS7twA8oNhvwd054WCeiruUDVkOijwMi7SPdGFQbx3hDIYbhD3oQLh9MBfLAJDcSMm98JFBhZXj8_Rrr0NHutD6W_XEjZSGMNVsjguNEwp0bTQDtdcTFvlLhaWrFWUcyK5YfbtTuOfNor7o6rTznEM_35mSmAWVztnhNe1SHNc3IaIBbUcc_RNarGWjYWX2LXMLytR38LGm0qII_Xd4WcE_mTR-CpiDZ-r-uI__ejXvX3TumB1FsiHB0PBa02PivPca5sMhR6'
-    #create_campaign(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET,refresh_token, 'campaign_name', 500)
-    #print(get_all_audiences(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token))
+    create_empty_audience(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET,refresh_token, 'audience_name', 'description')
+    
     print(get_all_campaigns(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token))
 # Запуск асинхронного main
 if __name__ == "__main__":

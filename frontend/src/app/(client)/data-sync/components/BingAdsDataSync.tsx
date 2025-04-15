@@ -191,7 +191,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                     service_name: 'bing_ads'
                 }
             });
-            
+
 
             if (response.data.status === 'SUCCESS') {
                 setCustomersInfo(response.data.customers || [])
@@ -329,13 +329,20 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                     onClose();
                 }
             } else {
-                const response = await axiosInstance.post('/data-sync/sync', {
+                const requestBody: any = {
                     list_id: String(savedList.audience_id),
                     list_name: savedList.audience_name,
                     customer_id: String(selectedAccountId),
                     leads_type: selectedRadioValue,
                     data_map: rows
-                }, {
+                };
+                
+                if (selectedOptionCampaign?.campaign_name && selectedOptionCampaign?.campaign_id) {
+                    requestBody.campaign_name = selectedOptionCampaign.campaign_name;
+                    requestBody.campaign_id = selectedOptionCampaign.campaign_id;
+                }
+                
+                const response = await axiosInstance.post('/data-sync/sync', requestBody, {
                     params: { service_name: 'bing_ads' }
                 });
 
@@ -683,6 +690,11 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
             setListNameError(true);
             setListNameErrorMessage('List name is required');
         }
+    };
+
+    const handleClearCampaign = () => {
+        setSelectedOptionCampaign(null)
+        setInputCampaignListName('')
     };
 
     const handleNextTab = async () => {
@@ -1092,7 +1104,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                         disabled={data?.name}
                                                         size="small"
                                                         fullWidth
-                                                        label={inputListName ? '' : 'Select or Create new list'}
+                                                        label={inputListName ? '' : 'Select or Create audience new list'}
                                                         InputLabelProps={{
                                                             shrink: inputListName ? false : isShrunk,
                                                             sx: {
@@ -1155,7 +1167,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                     background: 'rgba(80, 82, 178, 0.10)'
                                                                 }
                                                             }}>
-                                                            <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
+                                                            <ListItemText primary={`+ Create new audience list`} primaryTypographyProps={{
                                                                 sx: {
                                                                     fontFamily: "Nunito Sans",
                                                                     fontSize: "14px",
@@ -1340,6 +1352,11 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                     <IconButton onClick={handleDropdownCampaignToggle} edge="end">
                                                                         {isDropdownCampaignOpen ? <Image src='/chevron-drop-up.svg' alt='chevron-drop-up' height={24} width={24} /> : <Image src='/chevron-drop-down.svg' alt='chevron-drop-down' height={24} width={24} />}
                                                                     </IconButton>
+                                                                    {selectedOptionCampaign && (
+                                                                        <IconButton disabled={data?.campaign_name} onClick={handleClearCampaign} edge="end">
+                                                                            <CloseIcon />
+                                                                        </IconButton>
+                                                                    )}
                                                                 </InputAdornment>
                                                             ),
                                                             sx: klaviyoStyles.formInput
@@ -1380,7 +1397,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                     background: 'rgba(80, 82, 178, 0.10)'
                                                                 }
                                                             }}>
-                                                            <ListItemText primary={`+ Create new list`} primaryTypographyProps={{
+                                                            <ListItemText primary={`+ Create new campaign list`} primaryTypographyProps={{
                                                                 sx: {
                                                                     fontFamily: "Nunito Sans",
                                                                     fontSize: "14px",

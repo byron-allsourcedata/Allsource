@@ -257,17 +257,51 @@ class BingAdsIntegrationsService:
             }
         else:
             raise HTTPException(status_code=400, detail="Failed to get access token")
-        
-    async def create_sync(self, leads_type: str, domain_id: int, created_by: str, user: dict,data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id, user.get('id'))
+    
+    def create_list(self, list, domain_id, user_id):
+        credentials = self.get_credentials(domain_id, user_id)
+        if not credentials:
+            return
+        try:
+            campaign_service = self._setup_campaign_service(account_id=list.customer_id, refresh_token=credentials.access_token)
+            factory = campaign_service.factory
+            customer_list = factory.create('CustomerList')
+            customer_list.Name = list.name
+            customer_list.Description = '"List of customers by Maximiz app"'
+            customer_list.MembershipDuration = 300
+            customer_list.Scope = 'Account'
+            customer_list.Type = 'CustomerList'
+            customer_list.ParentId = campaign_service.authorization_data.account_id
+            audiences = factory.create('ArrayOfAudience')
+            audiences.Audience = [customer_list]
+            add_response = campaign_service.AddAudiences(Audiences=audiences)
+            audience_ids = []
+            if hasattr(add_response, 'AudienceIds') and add_response.AudienceIds is not None:
+                audience_ids = add_response.AudienceIds.long
+                
+            if not audience_ids:
+                raise Exception("AddAudiences returned an empty list of IDs. Check the request settings.")
+            
+            return {'status': IntegrationsStatus.SUCCESS.value, 'channel': {'audience_id': audience_ids[0], 'audience_name': list.name}}
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {e}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
+            
+    async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = [], campaign_id: str = None, campaign_name: str = None):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,
+            'campaign_id': campaign_id,
+            'campaign_name': campaign_name,
+            'customer_id': customer_id
         })
-        return sync
+        return sync 
 
     # async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
     #     profiles = []
