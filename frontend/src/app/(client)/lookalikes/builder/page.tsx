@@ -10,23 +10,27 @@ import {
   IconButton,
   InputAdornment,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
+  Popover,
   TableContainer,
+  Table,
   TableHead,
   TableRow,
+  TableCell,
+  TableBody,
+  Grid,
 } from "@mui/material";
-import AudienceSizeSelector from "@/app/(client)/lookalikes/components/SizeSelector";
-import SourceTableContainer from "@/app/(client)/lookalikes/components/SourceTableContainer";
 import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AudienceSizeSelector from "@/app/(client)/lookalikes/components/SizeSelector";
+import SourceTableContainer from "@/app/(client)/lookalikes/components/SourceTableContainer";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import LookalikeContainer from "../components/LookalikeContainer";
 import { smartAudiences } from "../../smart-audiences/smartAudiences";
+import { lookalikesStyles } from "../components/lookalikeStyles";
 
 interface TableData {
   name: string;
@@ -77,12 +81,25 @@ interface CalculationResults {
   state_city: number;
 }
 
+interface CalculationResponse {
+  count_matched_persons: number;
+  audience_feature_importance: CalculationResults;
+}
+
+// Helper: clone and sort features array (descending order by value)
+const sortFeatures = (
+  features: [keyof CalculationResults, number][]
+): [keyof CalculationResults, number][] => {
+  return [...features].sort((a, b) => b[1] - a[1]);
+};
+
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedLabel, setSelectedLabel] = useState<string>("");
   const [sliderValue, setSliderValue] = useState<number[]>([0, 0]);
+  // currentStep: 0 = choose source; 1 = select audience size; 2 = show name input & generate button.
   const [currentStep, setCurrentStep] = useState(0);
   const [sourceName, setSourceName] = useState("");
   const [sourceData, setSourceData] = useState<TableData[]>([]);
@@ -92,17 +109,26 @@ const CreateLookalikePage: React.FC = () => {
   const [isTableVisible, setIsTableVisible] = useState(false);
   const [search, setSearch] = useState("");
   const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
-  const [calculatedResults, setCalculatedResults] = useState<CalculationResults | null>(null);
+  const [calculatedResults, setCalculatedResults] = useState<CalculationResponse | null>(null);
 
+  // States for calculated features: those displayed and those hidden.
+  const [displayedFeatures, setDisplayedFeatures] = useState<[keyof CalculationResults, number][]>([]);
+  const [hiddenFeatures, setHiddenFeatures] = useState<[keyof CalculationResults, number][]>([]);
+  // State for the "Load More" popover anchor.
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
+  // formatCalcKey: removes underscores, adds spaces before uppercase letters,
+  // collapses extra spaces, trims, and capitalizes the first letter.
   const formatCalcKey = (key: string) =>
     key
-      .replace(/_/g, " ") // replace all underscores with spaces
-      .replace(/(?!^)([A-Z])/g, " $1") // insert a space before uppercase letters, except if it's the first character
-      .replace(/\s+/g, " ") // collapse multiple spaces into a single space
-      .trim() // remove any leading or trailing spaces
-      .replace(/^./, (char) => char.toUpperCase()); // capitalize the first letter
+      .replace(/_/g, " ") // replace underscores with spaces
+      .replace(/(?!^)([A-Z])/g, " $1") // insert space before uppercase letters (except first character)
+      .replace(/\s+/g, " ") // collapse multiple spaces
+      .trim() // trim spaces
+      .replace(/^./, (char) => char.toUpperCase()); // capitalize first letter
 
-  const getSortedCalculatedEntries = (results: CalculationResults): [keyof CalculationResults, number][] => {
+  // Returns sorted (descending) features from the given CalculationResults
+  const getAllCalculatedEntries = (results: CalculationResults): [keyof CalculationResults, number][] => {
     const order: (keyof CalculationResults)[] = [
       "PersonExactAge",
       "PersonGender",
@@ -127,9 +153,8 @@ const CreateLookalikePage: React.FC = () => {
       "state_city",
     ];
     return order
-      .filter((key) => results[key] > 0)
       .map((key): [keyof CalculationResults, number] => [key, results[key]])
-      .sort((a, b) => b[1] - a[1]);
+      .sort((a, b) => b[1] - a[1]); // sort descending by value
   };
 
   const handleSelectRow = (row: any) => {
@@ -157,8 +182,9 @@ const CreateLookalikePage: React.FC = () => {
     setSelectedSize(id);
     setSelectedLabel(label);
     setSliderValue([min_value, max_value]);
-    // Reset previous calculation results and subsequent steps if the size is changed
     setCalculatedResults(null);
+    setDisplayedFeatures([]);
+    setHiddenFeatures([]);
     setCurrentStep(1);
   };
 
@@ -187,7 +213,6 @@ const CreateLookalikePage: React.FC = () => {
   };
 
   const handleCalculate = async () => {
-    // Prevent calculation if matched records is 0
     if (selectSourceData[0]?.matched_records === 0) {
       showErrorToast("Cannot calculate lookalike because matched records is 0");
       return;
@@ -195,10 +220,15 @@ const CreateLookalikePage: React.FC = () => {
     try {
       setLoading(true);
       const response = await axiosInstance.get(
-        `/audience-lookalikes/calculate-lookalikes?uuid_of_source=${selectedSourceId}`
+        `/audience-lookalikes/calculate-lookalikes?uuid_of_source=${selectedSourceId}&lookalike_size=${selectedSize}`
       );
       if (response.data) {
         setCalculatedResults(response.data);
+        const allEntries = getAllCalculatedEntries(response.data.audience_feature_importance);
+        const nonZeroEntries = allEntries.filter(([, value]) => value > 0);
+        const zeroEntries = allEntries.filter(([, value]) => value === 0);
+        setDisplayedFeatures(nonZeroEntries);
+        setHiddenFeatures(zeroEntries);
         setCurrentStep(2);
       }
     } catch {
@@ -231,11 +261,9 @@ const CreateLookalikePage: React.FC = () => {
         uuid_of_source: selectedSourceId,
         lookalike_size: toSnakeCase(selectedLabel),
         lookalike_name: sourceName,
-        audience_feature_importance: calculatedResults
+        audience_feature_importance: calculatedResults?.audience_feature_importance,
       };
-  
       const response = await axiosInstance.post("/audience-lookalikes/builder", requestData);
-      
       if (response.data.status === "SUCCESS") {
         showToast("Lookalike was created successfully!");
         createLookalikeData(response.data);
@@ -248,7 +276,33 @@ const CreateLookalikePage: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
+  // Delete a feature from the displayed list and add it to the hidden list.
+  const handleDeleteFeature = (keyToDelete: keyof CalculationResults) => {
+    setDisplayedFeatures((prev) => sortFeatures(prev.filter(([key]) => key !== keyToDelete)));
+    const deletedFeature = displayedFeatures.find(([key]) => key === keyToDelete);
+    if (deletedFeature) {
+      setHiddenFeatures((prev) => sortFeatures([...prev, deletedFeature]));
+    }
+  };
+
+  // Popover handlers for the "Load More" menu.
+  const handleLoadMoreClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handlePopoverClose = () => {
+    setAnchorEl(null);
+  };
+
+  // When a feature is selected in the popover, move it to the displayed features
+  const handleAddFeature = (feature: [keyof CalculationResults, number]) => {
+    setDisplayedFeatures((prev) => sortFeatures([...prev, feature]));
+    setHiddenFeatures((prev) => sortFeatures(prev.filter((f) => f[0] !== feature[0])));
+    setAnchorEl(null);
+  };
+
+  const openPopover = Boolean(anchorEl);
 
   useEffect(() => {
     handleSourceData();
@@ -258,6 +312,7 @@ const CreateLookalikePage: React.FC = () => {
     return <CustomizedProgressBar />;
   }
 
+  // Transform source type (similar to previous implementation)
   const toNormalText = (sourceType: string) =>
     sourceType
       .split(",")
@@ -458,7 +513,7 @@ const CreateLookalikePage: React.FC = () => {
                   </Box>
                 )}
 
-                {/* Calculate button aligned to the right */}
+                {/* Calculate button aligned to the right (content remains visible when clicked) */}
                 {selectedSize && !calculatedResults && (
                   <Box
                     sx={{
@@ -481,57 +536,143 @@ const CreateLookalikePage: React.FC = () => {
                         },
                       }}
                     >
-                      <Typography
-                        sx={{
-                          ...smartAudiences.textButton,
-                          color: "rgba(255, 255, 255, 1)",
-                        }}
-                      >
+                      <Typography sx={{ ...smartAudiences.textButton, color: "rgba(255,255,255,1)" }}>
                         Calculate
                       </Typography>
                     </Button>
                   </Box>
                 )}
 
-                {/* Calculation results block */}
+                {/* Calculation results block rendered with flex layout */}
                 {calculatedResults && (
                   <Box
-                    sx={{
-                      marginTop: 2,
-                      padding: "16px 20px",
-                      borderRadius: "6px",
-                      border: "1px solid #E4E4E4",
-                      backgroundColor: "white",
-                    }}
-                  >
-                    <Typography
-                      variant="body1"
-                      sx={{ marginBottom: 2 }}
-                      
+                  sx={{
+                    marginTop: 2,
+                    padding: "16px 20px",
+                    borderRadius: "6px",
+                    border: "1px solid #E4E4E4",
+                    backgroundColor: "white",
+                  }}
+                >
+                  <Typography variant="body1" sx={{ marginBottom: 2 }}>
+                    Calculation Results: {calculatedResults.count_matched_persons.toLocaleString("en-US")}
+                  </Typography>
+                  <Box>
+                  {displayedFeatures.map(([key, value]) => {
+                  const percentValue = (value * 100).toFixed(1);
+                  return (
+                    <Grid
+                      container
+                      key={String(key)}
+                      alignItems="center"
+                      spacing={1}
+                      sx={{
+                        padding: "4px 16px",
+                        borderBottom: "1px solid #E4E4E4",
+                        cursor: "pointer",
+                        maxWidth: "600px",
+                        "&:hover": { backgroundColor: "rgba(247, 247, 247, 1)" },
+                        "&:hover .delete-button": { opacity: 1 },
+                      }}
                     >
-                      Calculation Results: {selectSourceData[0]?.matched_records.toLocaleString("en-US")}
-                    </Typography>
-                    <TableContainer>
-                      <Table>
-                        <TableBody>
-                        {getSortedCalculatedEntries(calculatedResults).map(([key, value]) => {
+                      {/* Feature key column fixed at 350px */}
+                      <Grid
+                        item
+                        sx={{
+                          flexBasis: "350px",
+                          maxWidth: "350px",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {formatCalcKey(String(key))}
+                        </Typography>
+                      </Grid>
+                      {/* Percentage value column */}
+                      <Grid
+                        item
+                        sx={{
+                          flexBasis: "120px",
+                          maxWidth: "102px",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Typography variant="body2">{percentValue}%</Typography>
+                      </Grid>
+                      {/* Delete button column aligned to the right */}
+                      <Grid item sx={{ textAlign: "right", ml: "auto" }}>
+                        <IconButton
+                          size="small"
+                          className="delete-button"
+                          sx={{
+                            opacity: 0,
+                            transition: "opacity 0.2s",
+                            color: "rgba(80, 82, 178, 1)",
+                          }}
+                          onClick={() => handleDeleteFeature(key)}
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+
+                  );
+                })}
+
+                </Box>
+                  {/* "Add More" link if there are hidden features */}
+                  {hiddenFeatures.length > 0 && (
+                    <Box sx={{ mt: 1 }}>
+                      <Button
+                        variant="text"
+                        className="second-sub-title"
+                        sx={{
+                          textTransform: "none",
+                          textDecoration: "underline",
+                          color: "rgba(80, 82, 178, 1) !important",
+                        }}
+                        onClick={handleLoadMoreClick}
+                      >
+                        + Add More
+                      </Button>
+                      <Popover
+                        open={openPopover}
+                        anchorEl={anchorEl}
+                        onClose={handlePopoverClose}
+                        anchorOrigin={{
+                          vertical: "bottom",
+                          horizontal: "left",
+                        }}
+                        slotProps={{
+                          paper: {
+                            sx: { maxHeight: 200, overflowY: "auto", padding: "8px" },
+                          },
+                        }}
+                      >
+                        {hiddenFeatures.map(([key, value]) => {
                           const percentValue = (value * 100).toFixed(1);
                           return (
-                            <TableRow key={String(key)}>
-                              <TableCell sx={{ }}>
-                                {formatCalcKey(String(key))}
-                              </TableCell>
-                              <TableCell>{percentValue}%</TableCell>
-                            </TableRow>
+                            <Box
+                              key={String(key)}
+                              sx={{
+                                padding: "8px",
+                                cursor: "pointer",
+                                "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
+                              }}
+                              onClick={() => handleAddFeature([key, value])}
+                            >
+                              <Typography variant="body2">
+                                {formatCalcKey(String(key))} — {percentValue}%
+                              </Typography>
+                            </Box>
                           );
                         })}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
-                  </Box>
-                )}
-
-                {/* Create name block */}
+                      </Popover>
+                    </Box>
+                  )}
+                </Box>
+              )}
+                {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
                 {currentStep >= 2 && (
                   <Box
                     sx={{
@@ -545,10 +686,8 @@ const CreateLookalikePage: React.FC = () => {
                     }}
                   >
                     <Typography
-                      className="first-sub-title"
                       variant="body1"
                       sx={{
-                        fontWeight: "bold",
                         fontSize: "18px",
                         fontFamily: "Nunito Sans",
                         letterSpacing: "0%",
@@ -612,7 +751,9 @@ const CreateLookalikePage: React.FC = () => {
                     variant="outlined"
                     onClick={handleCancel}
                   >
-                    <Typography padding={"0.5rem 2rem"} fontSize={"0.8rem"}>Cancel</Typography>
+                    <Typography padding={"0.5rem 2rem"} fontSize={"0.8rem"}>
+                      Cancel
+                    </Typography>
                   </Button>
                   <Button
                     sx={{

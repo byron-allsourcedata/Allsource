@@ -5,6 +5,7 @@ from uuid import UUID
 import pytz
 from pydantic.v1 import UUID4
 
+from enums import LookalikeSize
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
@@ -13,7 +14,7 @@ from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
 from typing import Optional, List
 import math
-from sqlalchemy import asc, desc, or_
+from sqlalchemy import asc, desc, or_, func
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
@@ -222,7 +223,7 @@ class AudienceLookalikesPersistence:
 
         return dict(query._asdict()) if query else None
 
-    def calculate_lookalikes(self, user_id: int, source_uuid: UUID) -> List[AudienceData]:
+    def calculate_lookalikes(self, user_id: int, source_uuid: UUID, lookalike_size: str) -> List[AudienceData]:
         audience_source = (
             self.db.query(AudienceSource)
             .filter(
@@ -233,6 +234,27 @@ class AudienceLookalikesPersistence:
         )
         if not audience_source:
             raise HTTPException(status_code=404, detail="Audience source not found or access denied")
+
+        total_matched = self.db.query(func.count(AudienceSourcesMatchedPerson.id)).filter(
+            AudienceSourcesMatchedPerson.source_id == str(source_uuid)
+        ).scalar()
+
+        def get_number_users(lookalike_size: str, size: int) -> int:
+            if lookalike_size == LookalikeSize.ALMOST.value:
+                number = size * 0.2
+            elif lookalike_size == LookalikeSize.EXTREMELY.value:
+                number = size * 0.4
+            elif lookalike_size == LookalikeSize.VERY.value:
+                number = size * 0.6
+            elif lookalike_size == LookalikeSize.QUITE.value:
+                number = size * 0.8
+            elif lookalike_size == LookalikeSize.BROAD.value:
+                number = size * 1
+            else:
+                number = size * 1
+            return int(number)
+
+        number_required = get_number_users(lookalike_size, total_matched)
 
         rows = (
             self.db.query(
@@ -269,6 +291,8 @@ class AudienceLookalikesPersistence:
                 EnrichmentUser.id == AudienceSourcesMatchedPerson.enrichment_user_id
             )
             .filter(AudienceSource.id == str(source_uuid))
+            .order_by(AudienceSourcesMatchedPerson.value_score.desc())
+            .limit(number_required)
             .all()
         )
 

@@ -2,9 +2,9 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
-from pydantic.v1 import UUID4
 
 from dependencies import get_lookalikes_service, check_user_authorization_without_pixel, get_similar_audience_service
+from schemas.lookalikes import CalculateRequest
 from schemas.similar_audiences import AudienceFeatureImportance
 from services.lookalikes import AudienceLookalikesService
 from pydantic import BaseModel
@@ -143,9 +143,10 @@ def get_processing_lookalike(
     
     return lookalike_service.get_processing_lookalike(id)
 
-@router.get("/calculate-lookalikes", response_model=AudienceFeatureImportance)
+@router.get("/calculate-lookalikes", response_model=CalculateRequest)
 async def calculate_lookalikes(
     uuid_of_source: UUID = Query(..., description="UUID of source"),
+    lookalike_size: str = Query(..., description="Number of records to select for lookalike"),
     lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
     similar_audience_service: SimilarAudienceService = Depends(get_similar_audience_service),
     user: dict = Depends(check_user_authorization_without_pixel)
@@ -153,6 +154,8 @@ async def calculate_lookalikes(
     result = lookalike_service.calculate_lookalike(
         similar_audience_service=similar_audience_service,
         user=user,
-        uuid_of_source=uuid_of_source
+        uuid_of_source=uuid_of_source,
+        lookalike_size=lookalike_size
     )
     return result
+

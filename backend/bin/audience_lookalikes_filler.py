@@ -77,21 +77,6 @@ def get_max_ids(lookalike_size):
     return num_users
 
 
-def get_number_users(lookalike_size, size):
-    if lookalike_size == 'almost_identical':
-        number = size * 0.2
-    elif lookalike_size == 's':
-        number = size * 0.4
-    elif lookalike_size == 'very_similar':
-        number = size * 0.6
-    elif lookalike_size == 'broad':
-        number = size * 1
-    else:
-        number = size * 0.8
-
-    return number
-
-
 async def aud_sources_reader(message: IncomingMessage, db_session: Session, connection, similar_audience_service: SimilarAudienceService):
     try:
         message_body = json.loads(message.body)

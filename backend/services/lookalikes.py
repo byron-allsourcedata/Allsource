@@ -8,6 +8,7 @@ from enums import BaseEnum
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
+from schemas.lookalikes import CalculateRequest
 from schemas.similar_audiences import AudienceFeatureImportance
 from services.similar_audiences import SimilarAudienceService
 
@@ -100,20 +101,29 @@ class AudienceLookalikesService:
         limited_results = list(results)[:10]
         return limited_results
 
-    def calculate_lookalike(self, similar_audience_service: SimilarAudienceService, user: dict, uuid_of_source: UUID) -> AudienceFeatureImportance:
+    def calculate_lookalike(
+        self,
+        similar_audience_service: SimilarAudienceService,
+        user: dict,
+        uuid_of_source: UUID,
+        lookalike_size: str
+    ) -> CalculateRequest:
         audience_data = self.lookalikes_persistence_service.calculate_lookalikes(
             user_id=user.get("id"),
-            source_uuid=uuid_of_source
+            source_uuid=uuid_of_source,
+            lookalike_size=lookalike_size
         )
         audience_feature = similar_audience_service.get_audience_feature_importance(audience_data)
         audience_feature_dict = audience_feature.dict()
-
         rounded_feature = {
             key: round(value * 1000) / 1000 if isinstance(value, (int, float)) else value
             for key, value in audience_feature_dict.items()
         }
 
-        return AudienceFeatureImportance(**rounded_feature)
+        return CalculateRequest(
+            count_matched_persons = len(audience_data),
+            audience_feature_importance = AudienceFeatureImportance(**rounded_feature)
+        )
 
     
     def get_processing_lookalike(self, id: str):
