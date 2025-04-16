@@ -131,23 +131,18 @@ class DashboardAudienceService:
         data_syncs_chain = self.calculate_chain_data_sync(user_id=user.get('id'))
         sources, lookalikes = self.dashboard_persistence.get_last_sources_and_lookalikes(user_id=user.get('id'), limit=self.LIMIT)
         last_sources = self.merge_and_sort(
-            datasets=[
-                (sources, 'source', ['id', 'source_name', 'created_at', 'source_type', 'matched_records']),
-                ([lookalike for lookalike in lookalikes if lookalike[0]], 'lookalike', ['id', 'source_name', 'lookalike_name', 'created_at'])
-            ],
+            datasets=[(sources, 'source', ['id', 'source_name', 'created_at', 'source_type', 'matched_records'])],
             limit=self.LIMIT
         )
         smart_audiences, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
         
         last_lookalikes = self.merge_and_sort(
-            datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size']), 
-                      ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['id', 'lookalike_name', 'audience_name', 'created_at']),],
+            datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size'])],
             limit=self.LIMIT
         )
         
         last_audience_smart = self.merge_and_sort(
-            datasets=[(smart_audiences, 'smart_audience', ['id', 'audience_name', 'created_at', 'use_case', 'active_segment', 'include_names', 'exclude_names']), 
-                      (data_syncs, 'data_syncs', ['id', 'audience_name', 'created_at', 'status'])],
+            datasets=[(smart_audiences, 'smart_audience', ['id', 'audience_name', 'created_at', 'use_case', 'active_segment', 'include_names', 'exclude_names'])],
             limit=self.LIMIT
         )
         
