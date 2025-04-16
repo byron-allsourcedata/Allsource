@@ -38,13 +38,36 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
+interface Recency {
+  days: number;
+}
+
+interface EmailValidation {
+  recency?: Recency;
+  mx?: {};
+  delivery?: {};
+}
+
+interface PhoneValidation {
+  last_update_date?: {};
+  confirmation?: {};
+}
+
+interface PostalValidation {
+  cas_office_address?: {};
+  cas_home_address?: {};
+}
+
+interface LinkedInValidation {
+  job_validation?: {};
+}
+
 interface ValidationData {
-  recency_params: { [key: string]: string };
-  personal_email: string[];
-  business_email: string[];
-  phone: string[];
-  postal_cas: string[];
-  linked_in: string[];
+  personal_email: EmailValidation[];
+  business_email: EmailValidation[];
+  phone: PhoneValidation[];
+  postal_cas: PostalValidation[];
+  linked_in: LinkedInValidation[];
 }
 
 interface SelectedData {
