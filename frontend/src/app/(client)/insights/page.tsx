@@ -1,0 +1,245 @@
+"use client";
+import { Box, Typography, Button, Tabs, Tab } from "@mui/material";
+import React, { useState, useEffect, Suspense } from "react";
+import CustomTooltip from "@/components/customToolTip";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import Image from "next/image";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import axiosInstance from "../../../axios/axiosInterceptorInstance";
+import { AxiosError } from "axios";
+import { useRouter } from "next/navigation";
+import { insightsStyle } from "./insightsStyles";
+
+const centerContainerStyles = {
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+  border: "1px solid rgba(235, 235, 235, 1)",
+  borderRadius: 2,
+  padding: 3,
+  boxSizing: "border-box",
+  width: "100%",
+  textAlign: "center",
+  flex: 1,
+  "& img": {
+    width: "auto",
+    height: "auto",
+    maxWidth: "100%",
+  },
+};
+import { useNotification } from "@/context/NotificationContext";
+import { IconFillIndicator } from "./components/CustomChart";
+import { DateRangeIcon } from "@mui/x-date-pickers";
+import { dashboardStyles } from "../dashboard/dashboardStyles";
+import { TabPanel } from "@/components/TabPanel";
+import StaticticsTab from "./components/StaticticsTab";
+
+interface DataSyncProps {
+  service_name?: string;
+}
+
+const Insights = () => {
+  const router = useRouter();
+  const { hasNotification } = useNotification();
+  const [tabIndex, setTabIndex] = useState(0);
+
+  const [status, setStatus] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
+    setTabIndex(newIndex);
+  };
+
+  if (isLoading) {
+    return <CustomizedProgressBar />;
+  }
+
+  return (
+    <Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          position: "sticky",
+          top: 0,
+          pt: "12px",
+          pb: "12px",
+          pr: "1.5rem",
+          pl: 0,
+          zIndex: 1,
+          backgroundColor: "#fff",
+          justifyContent: "space-between",
+          width: "100%",
+          "@media (max-width: 600px)": {
+            flexDirection: "column",
+            display: "flex",
+            alignItems: "flex-start",
+            zIndex: 1,
+            width: "100%",
+            pr: 1.5,
+          },
+          "@media (max-width: 440px)": {
+            flexDirection: "column",
+            pt: hasNotification ? "3rem" : "0.75rem",
+            top: hasNotification ? "4.5rem" : "",
+            zIndex: 1,
+            justifyContent: "flex-start",
+          },
+          "@media (max-width: 400px)": {
+            pt: hasNotification ? "4.25rem" : "",
+            pb: "6px",
+          },
+        }}
+      >
+        <Typography
+          variant="h4"
+          component="h1"
+          className="first-sub-title"
+          sx={{
+            ...insightsStyle.title,
+            position: "fixed",
+            mt: 1,
+            "@media (max-width: 600px)": {
+              display: "none",
+            },
+          }}
+        >
+          Dashboard{" "}
+          <CustomTooltip
+            title={
+              "Indicates the count of resolved identities and revenue figures for the specified time"
+            }
+            linkText="Learn More"
+            linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/dashboard"
+          />
+        </Typography>
+        <Box
+          sx={{
+            display: "none",
+            width: "100%",
+            justifyContent: "space-between",
+            alignItems: "start",
+            "@media (max-width: 600px)": {
+              display: "flex",
+            },
+          }}
+        >
+          <Typography
+            variant="h4"
+            component="h1"
+            className="first-sub-title"
+            sx={dashboardStyles.title}
+          >
+            Dashboard
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            width: "100%",
+            justifyContent: "center",
+            alignItems: "start",
+            "@media (max-width: 600px)": {
+              width: "100%",
+              mt: hasNotification ? 1 : 2,
+            },
+          }}
+        >
+          <Tabs
+            value={tabIndex}
+            onChange={handleTabChange}
+            sx={{
+              textTransform: "none",
+              minHeight: 0,
+              alignItems: "start",
+              "& .MuiTabs-indicator": {
+                backgroundColor: "rgba(80, 82, 178, 1)",
+                height: "1.4px",
+              },
+              "@media (max-width: 600px)": {
+                border: "1px solid rgba(228, 228, 228, 1)",
+                borderRadius: "4px",
+                width: "100%",
+                "& .MuiTabs-indicator": {
+                  height: "0",
+                },
+              },
+            }}
+            aria-label="insights tabs"
+          >
+            <Tab
+              className="main-text"
+              sx={{
+                textTransform: "none",
+                padding: "4px 24px",
+                flexGrow: 1,
+                minHeight: "auto",
+                minWidth: "auto",
+                fontSize: "14px",
+                fontWeight: 700,
+                lineHeight: "19.1px",
+                textAlign: "left",
+                "&.Mui-selected": {
+                  color: "rgba(80, 82, 178, 1)",
+                },
+                "@media (max-width: 600px)": {
+                  mr: 0,
+                  borderRadius: "4px",
+                  "&.Mui-selected": {
+                    backgroundColor: "rgba(249, 249, 253, 1)",
+                    border: "1px solid rgba(220, 220, 239, 1)",
+                  },
+                },
+              }}
+              label="Statistics"
+            />
+            <Tab
+              className="main-text"
+              sx={{
+                textTransform: "none",
+                padding: "4px 10px",
+                minHeight: "auto",
+                flexGrow: 1,
+                textAlign: "center",
+                fontSize: "14px",
+                fontWeight: 700,
+                lineHeight: "19.1px",
+                minWidth: "auto",
+                "&.Mui-selected": {
+                  color: "rgba(80, 82, 178, 1)",
+                },
+                "@media (max-width: 600px)": {
+                  mr: 0,
+                  borderRadius: "4px",
+                  "&.Mui-selected": {
+                    backgroundColor: "rgba(249, 249, 253, 1)",
+                    border: "1px solid rgba(220, 220, 239, 1)",
+                  },
+                },
+              }}
+              label="Predictable fields"
+            />
+          </Tabs>
+        </Box>
+      </Box>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          overflow: "auto",
+          flexGrow: 1,
+        }}
+      >
+        <TabPanel value={tabIndex} index={0}>
+          <StaticticsTab />
+        </TabPanel>
+        <TabPanel value={tabIndex} index={1}></TabPanel>
+      </Box>
+    </Box>
+  );
+};
+
+export default Insights;

@@ -231,7 +231,7 @@ body {
   font-weight: 600;
   line-height: 140%;
   letter-spacing: 0%;
-  color: rgba(74,74,74,1)
+  color: rgba(74,74,74,1) !important
 }
 .dashboard-card-text {
   font-family: 'Nunito Sans';
