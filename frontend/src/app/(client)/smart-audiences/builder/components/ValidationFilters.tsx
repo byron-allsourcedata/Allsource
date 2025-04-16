@@ -30,13 +30,36 @@ interface ExpandableFilterProps {
   onEdit: () => void;
 }
 
+interface Recency {
+  days: number;
+}
+
+interface EmailValidation {
+  recency?: Recency;
+  mx?: {};
+  delivery?: {};
+}
+
+interface PhoneValidation {
+  last_update_date?: {};
+  confirmation?: {};
+}
+
+interface PostalValidation {
+  cas_office_address?: {};
+  cas_home_address?: {};
+}
+
+interface LinkedInValidation {
+  job_validation?: {};
+}
+
 interface FilterData {
-  recency_params: { [key: string]: string };
-  personal_email: string[];
-  business_email: string[];
-  phone: string[];
-  postal_cas: string[];
-  linked_in: string[];
+  personal_email: EmailValidation[];
+  business_email: EmailValidation[];
+  phone: PhoneValidation[];
+  postal_cas: PostalValidation[];
+  linked_in: LinkedInValidation[];
 }
 
 const AllFilters: React.FC<ExpandableFilterProps> = ({
@@ -169,6 +192,30 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
     };
   };
 
+  const toSnakeCase = (str: string) => {
+    return str.split(" ").join("_").toLowerCase();
+  };
+
+  const convertStrInObject = (el: string) => {
+    return {[toSnakeCase(el)]: {}}
+  }
+
+  const convertValidation = (array: string[]) => {
+    return array.map(convertStrInObject);
+  }
+
+  const convertValidationWithRecency = (array: string[], value: string) => {
+    if (!value) return convertValidation(array)
+
+    const filteredArray = array
+      .filter(name => !["Recency", "RecencyBusiness"].includes(name))
+      .map(convertStrInObject);
+  
+    const recencyObject = { recency: { days: Number(value.replace(/[^\d]/g, "")) } };
+  
+    return [...filteredArray, recencyObject];
+  };
+
   const handleValidate = () => {
     setValidate(true);
     setIsOpenPersonalEmail(false);
@@ -177,12 +224,11 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
     setIsOpenPostalCAS(false);
     setIsOpenLinkedIn(false);
     onValidate({
-      personal_email: selectedOptionsPersonalEmail,
-      business_email: selectedOptionsBusinessEmail,
-      phone: selectedOptionsPhone,
-      postal_cas: selectedOptionsPostalCAS,
-      linked_in: selectedOptionsLinkedIn,
-      recency_params: nestedSelections,
+      personal_email: convertValidationWithRecency(selectedOptionsPersonalEmail, nestedSelections["Recency"]),
+      business_email: convertValidationWithRecency(selectedOptionsBusinessEmail, nestedSelections["RecencyBusiness"]),
+      phone: convertValidation(selectedOptionsPhone),
+      postal_cas: convertValidation(selectedOptionsPostalCAS),
+      linked_in: convertValidation(selectedOptionsLinkedIn),
     });
   };
 
