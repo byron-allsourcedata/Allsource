@@ -267,7 +267,7 @@ class BingAdsIntegrationsService:
             factory = campaign_service.factory
             customer_list = factory.create('CustomerList')
             customer_list.Name = list.name
-            customer_list.Description = '"List of customers by Maximiz app"'
+            customer_list.Description = 'List of customers by Maximiz app'
             customer_list.MembershipDuration = 300
             customer_list.Scope = 'Account'
             customer_list.Type = 'CustomerList'

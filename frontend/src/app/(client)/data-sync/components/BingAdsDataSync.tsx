@@ -73,6 +73,12 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
     const [inputCampaignListName, setInputCampaignListName] = useState(data?.name ?? '');
     const [audienceList, setAudienceList] = useState<AudienceList[]>([]);
     const [campaignList, setCampaignList] = useState<CampaignList[]>([]);
+    const [formValues, setFormValues] = useState<FormValues>({
+        campaignName: '',
+        campaignObjective: '',
+        bidAmount: 1,
+        dailyBudget: 100,
+    });
 
     const [customersInfo, setCustomersInfo] = useState<Customers[]>([
         {
@@ -336,12 +342,12 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                     leads_type: selectedRadioValue,
                     data_map: rows
                 };
-                
+
                 if (selectedOptionCampaign?.campaign_name && selectedOptionCampaign?.campaign_id) {
                     requestBody.campaign_name = selectedOptionCampaign.campaign_name;
                     requestBody.campaign_id = selectedOptionCampaign.campaign_id;
                 }
-                
+
                 const response = await axiosInstance.post('/data-sync/sync', requestBody, {
                     params: { service_name: 'bing_ads' }
                 });
@@ -1415,93 +1421,95 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                     flexDirection: 'column',
                                                                     gap: '24px',
                                                                     p: 2,
-                                                                    width: anchorElCampaign ? `${anchorElCampaign.clientWidth}px` : '538px',
-                                                                    pt: 0
+                                                                    width: anchorEl ? `${anchorEl.clientWidth}px` : '538px',
+                                                                    pt: 0,
                                                                 }}>
-                                                                    <Box
-                                                                        sx={{
-                                                                            mt: 1,
-                                                                            display: 'flex',
-                                                                            justifyContent: 'space-between',
-                                                                            gap: '16px',
-                                                                            '@media (max-width: 600px)': {
-                                                                                flexDirection: 'column'
-                                                                            },
-                                                                        }}
-                                                                    >
-                                                                        <TextField
-                                                                            label="Campaign List Name"
-                                                                            variant="outlined"
-                                                                            value={newCampaignListName}
-                                                                            onChange={handleNewListChange}
-                                                                            size="small"
-                                                                            fullWidth
-                                                                            onKeyDown={(e) => e.stopPropagation()}
-                                                                            error={listNameError}
-                                                                            helperText={listNameErrorMessage}
-                                                                            InputLabelProps={{
-                                                                                sx: {
-                                                                                    fontFamily: 'Nunito Sans',
-                                                                                    fontSize: '12px',
-                                                                                    lineHeight: '16px',
-                                                                                    fontWeight: '400',
-                                                                                    color: 'rgba(17, 17, 19, 0.60)',
-                                                                                    '&.Mui-focused': {
-                                                                                        color: '#0000FF',
-                                                                                    },
-                                                                                }
-                                                                            }}
-                                                                            InputProps={{
 
-                                                                                endAdornment: (
-                                                                                    newCampaignListName && (
-                                                                                        <InputAdornment position="end">
-                                                                                            <IconButton
-                                                                                                edge="end"
-                                                                                                onClick={() => setNewCampaignListName('')}
-                                                                                            >
-                                                                                                <Image
-                                                                                                    src='/close-circle.svg'
-                                                                                                    alt='close-circle'
-                                                                                                    height={18}
-                                                                                                    width={18}
-                                                                                                />
-                                                                                            </IconButton>
-                                                                                        </InputAdornment>
-                                                                                    )
-                                                                                ),
-                                                                                sx: {
-                                                                                    '&.MuiOutlinedInput-root': {
-                                                                                        height: '32px',
-                                                                                        '& .MuiOutlinedInput-input': {
-                                                                                            padding: '5px 16px 4px 16px',
-                                                                                            fontFamily: 'Roboto',
-                                                                                            color: '#202124',
-                                                                                            fontSize: '14px',
-                                                                                            fontWeight: '400',
-                                                                                            lineHeight: '20px'
-                                                                                        },
-                                                                                        '& .MuiOutlinedInput-notchedOutline': {
-                                                                                            borderColor: '#A3B0C2',
-                                                                                        },
-                                                                                        '&:hover .MuiOutlinedInput-notchedOutline': {
-                                                                                            borderColor: '#A3B0C2',
-                                                                                        },
-                                                                                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                                            borderColor: '#0000FF',
-                                                                                        },
-                                                                                    },
-                                                                                    '&+.MuiFormHelperText-root': {
-                                                                                        marginLeft: '0',
-                                                                                    },
-                                                                                }
+                                                                    <Box sx={{ textAlign: 'right' }}>
+                                                                        <TextField
+                                                                            label="Campaign Name"
+                                                                            variant="outlined"
+                                                                            name="campaignName"
+                                                                            value={formValues.campaignName}
+                                                                            onKeyDown={(e) => e.stopPropagation()}
+                                                                            onChange={handleInputChange}
+                                                                            fullWidth
+                                                                            margin="normal"
+                                                                            sx={{
+                                                                                fontFamily: 'Nunito Sans',
+                                                                                '& .MuiInputBase-input': {
+                                                                                    fontSize: '14px',
+                                                                                    lineHeight: '16px',
+                                                                                },
+                                                                                '& .MuiInputLabel-root': {
+                                                                                    fontSize: '14px',
+                                                                                },
+                                                                                '& .MuiOutlinedInput-root': {
+                                                                                    fontSize: '14px',
+                                                                                },
                                                                             }}
                                                                         />
-
-                                                                    </Box>
-                                                                    <Box sx={{ textAlign: 'right' }}>
-                                                                        <Button variant="contained" onClick={handleCampaignSave}
-                                                                            disabled={listNameError || !newCampaignListName}
+                                                                        <FormControl variant="outlined" fullWidth margin="normal" sx={{ fontSize: '10px' }}>
+                                                                            <InputLabel sx={{ fontSize: '14px' }}>Campaign goal</InputLabel>
+                                                                            <Select
+                                                                                name="campaignObjective"
+                                                                                value={formValues.campaignObjective}
+                                                                                onChange={handleInputChange}
+                                                                                label="Campaign goal"
+                                                                                sx={{
+                                                                                    fontSize: '16px',
+                                                                                    textAlign: 'left',
+                                                                                    justifyContent: 'flex-start',
+                                                                                    '& .MuiSelect-select': {
+                                                                                        fontSize: '16px',
+                                                                                    },
+                                                                                }}
+                                                                            >
+                                                                                <MenuItem
+                                                                                    value="LINK_CLICKS"
+                                                                                    sx={{ fontSize: '14px' }}
+                                                                                >
+                                                                                    link clicks
+                                                                                </MenuItem>
+                                                                                <MenuItem
+                                                                                    value="LANDING_PAGE_VIEWS"
+                                                                                    sx={{ fontSize: '14px' }}
+                                                                                >
+                                                                                    landing page views
+                                                                                </MenuItem>
+                                                                            </Select>
+                                                                        </FormControl>
+                                                                        <TextField
+                                                                            label="Bid Amount"
+                                                                            variant="outlined"
+                                                                            name="bidAmount"
+                                                                            type="number"
+                                                                            value={formValues.bidAmount}
+                                                                            onChange={handleInputChange}
+                                                                            fullWidth
+                                                                            margin="normal"
+                                                                            InputProps={{
+                                                                                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                                                            }}
+                                                                        />
+                                                                        <TextField
+                                                                            label="Daily Budget"
+                                                                            variant="outlined"
+                                                                            name="dailyBudget"
+                                                                            type="number"
+                                                                            value={formValues.dailyBudget}
+                                                                            onChange={handleInputChange}
+                                                                            fullWidth
+                                                                            margin="normal"
+                                                                            InputProps={{
+                                                                                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                                                                            }}
+                                                                        />
+                                                                        <Typography variant="body2" color="textSecondary" paragraph>
+                                                                            We will not run your campaign. Maximiz will create a campaign template in your ad account. We won&apos;t run anything without your confirmation.
+                                                                        </Typography>
+                                                                        <Button variant="contained" onClick={handleSaveCampaign}
+                                                                            disabled={!isChecked}
                                                                             sx={{
                                                                                 borderRadius: '4px',
                                                                                 border: '1px solid #5052B2',
@@ -1518,14 +1526,17 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                                     background: 'transparent'
                                                                                 },
                                                                                 '&.Mui-disabled': {
-                                                                                    background: 'transparent',
-                                                                                    color: '#5052b2'
+                                                                                    backgroundColor: '#E4E4E4',
+                                                                                    color: '#808080'
                                                                                 }
                                                                             }}>
                                                                             Save
                                                                         </Button>
                                                                     </Box>
                                                                 </Box>
+
+
+                                                                {/* Add a Divider to separate form from options */}
                                                                 <Divider sx={{ borderColor: '#cdcdcd' }} />
                                                             </Box>
                                                         )}
