@@ -439,6 +439,15 @@ def get_campaigns(service_name: str = Query(...),
     with integration_service as service:
         service = getattr(service, service_name)
         return service.get_campaigns(domain.id, customer_id, user.get('id'))
+
+@router.post('/create-campaign', status_code=201)
+async def create_campaign(campaign_data: CreateCampaignList,
+                      service_name: str = Query(...),
+                      integrations_service: IntegrationService = Depends(get_integration_service),
+                      user=Depends(check_user_authorization), domain=Depends(check_domain)):
+    with integrations_service as service:
+        service = getattr(service, service_name)
+        return service.create_campaign(domain_id=domain.id, user_id=user.get('id'), campaign_list=campaign_data)
       
 @router.post("/kajabi")
 async def kajabi_webhook(request: Request, domain: str, persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):

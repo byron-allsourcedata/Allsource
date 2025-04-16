@@ -7,6 +7,8 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.domains import UserDomainsPersistence
 from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
+from bingads.v13.bulk.entities.audiences import BulkCampaignCustomerListAssociation
+from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters
 from schemas.integrations.integrations import *
 from fastapi import HTTPException
 from faker import Faker
@@ -233,6 +235,49 @@ class BingAdsIntegrationsService:
         except Exception as e:
             logger.error(f"An unexpected error occurred: {e}")
             return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
+    def create_campaign(self, domain_id: int, user_id: int, campaign_list) -> int:
+        credentials = self.get_credentials(domain_id, user_id)
+        if not credentials:
+            return
+        
+        campaign_service = self._setup_campaign_service(account_id=campaign_list.customer_id, refresh_token=credentials.access_token)
+        bidding_scheme = campaign_service.factory.create('EnhancedCpcBiddingScheme')
+        
+        campaign = campaign_service.factory.create('Campaign')
+        
+        target_setting_detail = campaign_service.factory.create('TargetSettingDetail')
+        target_setting_detail.CriterionTypeGroup = 'Audience'
+        target_setting_detail.TargetAndBid = True
+        campaign.TargetSetting = [target_setting_detail]
+
+        campaign.Name = campaign_list.name
+        campaign.DailyBudget = campaign_list.daily_budget
+        campaign.BudgetType = 'DailyBudgetStandard'
+        campaign.Status = 'Paused'
+        campaign.BiddingScheme = bidding_scheme
+        campaign.CampaignType = campaign_list.type
+        campaign.Languages = {'string': ['All']}
+        campaigns = campaign_service.factory.create('ArrayOfCampaign')
+        campaigns.Campaign.append(campaign)
+
+        try:
+            response = campaign_service.AddCampaigns(
+                AccountId=campaign_service.authorization_data.account_id,
+                Campaigns=campaigns
+            )
+            if response and response.CampaignIds and response.CampaignIds['long']:
+                return {'status': IntegrationsStatus.SUCCESS.value, 'channel': {'campaign_id': response.CampaignIds['long'][0], 'campaign_name': campaign_list.name}}
+            else:
+                if response and response.PartialErrors and response.PartialErrors['BatchError']:
+                    for error in response.PartialErrors['BatchError']:
+                        if error.Code == 1115:
+                            return {'status': IntegrationsStatus.ALREADY_EXIST.value, 'message': "A campaign with the same name already exists. Please choose a different name."}
+                        else:
+                            raise Exception(f"Error {error.Code}: {error.Message}")
+                        
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {e}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
         
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         client_id = os.getenv("AZURE_CLIENT_ID")
@@ -286,9 +331,49 @@ class BingAdsIntegrationsService:
         except Exception as e:
             logger.error(f"An unexpected error occurred: {e}")
             return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
+    
+    def add_customer_list_to_campaign_bulk(self, access_token: str, customer_id: int, campaign_id: int, list_id: int,
+                                           list_name: str, campaign_name: str) -> None:
+      
+        campaign_service = self._setup_campaign_service(account_id=customer_id, refresh_token=access_token)
+        factory = campaign_service.factory
+        bcc = factory.create('BiddableCampaignCriterion')
+        bcc.Status = 'Paused'
+        bcc.CampaignId = campaign_id
+        bcc.Criterion = factory.create('AudienceCriterion')
+        bcc.Criterion.Type = None
+        bcc.Criterion.AudienceId = list_id
+        bcc.CriterionBid = factory.create('BidMultiplier')
+        bcc.CriterionBid.Type = None
+        bcc.CriterionBid.Multiplier = 0.0
+        assoc = BulkCampaignCustomerListAssociation(
+            biddable_campaign_criterion=bcc,
+            campaign_name=campaign_name,
+            audience_name=list_name
+        )
+        bulk_manager = BulkServiceManager(
+            authorization_data=campaign_service.authorization_data,
+            environment='production'
+        )
+        result_file_name = f"bulk_{list_name}_{campaign_name}_results.csv"
+        upload_params = EntityUploadParameters(
+            entities=[assoc],
+            result_file_directory='.',
+            result_file_name=result_file_name,
+            overwrite_result_file=True,
+            response_mode='ErrorsAndResults'
+        )
+
+        for bulk_entity in bulk_manager.upload_entities(upload_params):
+            if getattr(bulk_entity, 'has_error', False):
+                raise Exception(f"Error when adding CustomerList: {bulk_entity.error_message}")
+
+        logger.info("CustomerList has been successfully added to the campaign via the Bulk API")
             
     async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = [], campaign_id: str = None, campaign_name: str = None):
         credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+        if campaign_id is not None:
+            self.add_customer_list_to_campaign_bulk(access_token=credentials.access_token, customer_id=customer_id, campaign_id=campaign_id, list_id=list_id, list_name=list_name, campaign_name=campaign_name)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,

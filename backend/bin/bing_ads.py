@@ -33,10 +33,10 @@ REDIRECT_URI = 'http://localhost:3000/bing-ads-landing'
 SCOPE = 'https://ads.microsoft.com/.default'
 
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger('suds.client').setLevel(logging.DEBUG)
-logging.getLogger('suds.transport.http').setLevel(logging.DEBUG)
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
+# logging.getLogger('suds.client').setLevel(logging.DEBUG)
+# logging.getLogger('suds.transport.http').setLevel(logging.DEBUG)
 
 def get_access_token():
     token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
@@ -211,10 +211,6 @@ from suds import WebFault
 from typing import List, Optional
 
 
-import requests
-from typing import Optional, List
-from datetime import date
-
 def create_campaign(
     developer_token: str,
     client_id: str,
@@ -222,13 +218,11 @@ def create_campaign(
     refresh_token: str,
     campaign_name: str,
     daily_budget: float,
+    campaign_type: str = 'Search',
     budget_type: str = 'DailyBudgetStandard',
-    time_zone: str = 'EasternTimeUSCanada',
-    languages: Optional[List[str]] = None,
-    start_date: Optional[date] = None,
-    end_date: Optional[date] = None
+    languages: Optional[List[str]] = None
 ) -> int:
-    # 1. Obtain OAuth tokens
+    # 1. Аутентификация
     auth = OAuthWebAuthCodeGrant(
         client_id=client_id,
         client_secret=client_secret,
@@ -236,125 +230,305 @@ def create_campaign(
     )
     auth.request_oauth_tokens_by_refresh_token(refresh_token)
 
-    # 2. Prepare the request body
-    campaigns = [{
-        "Name": campaign_name,
-        "DailyBudget": daily_budget,
-        "BudgetType": budget_type,
-        "TimeZone": time_zone,
-        "Status": "Paused",
-        "BiddingScheme": {"Type": "EnhancedCpcBiddingScheme"},
-        "CampaignType": ["Search"],
-        "Languages": languages if languages else ["Russian"],
-        "StartDate": start_date.isoformat() if start_date else None,
-        "EndDate": end_date.isoformat() if end_date else None
-    }]
+    # 2. Формируем AuthorizationData
+    authorization_data = AuthorizationData(
+        developer_token=developer_token,
+        authentication=auth
+    )
 
-    # 3. Set headers
-    headers = {
-        'Authorization': f'Bearer {auth.authentication_token}',
-        'CustomerId': str(auth.customer_id),
-        'DeveloperToken': developer_token,
-        'CustomerAccountId': str(auth.account_id),
-        'Content-Type': 'application/json'
-    }
+    # 3. Получаем customer_id и account_id
+    cust_svc = ServiceClient(
+        service='CustomerManagementService',
+        version=13,
+        authorization_data=authorization_data,
+        environment='production'
+    )
+    user = cust_svc.GetUser().User
+    authorization_data.customer_id = user.CustomerId
 
-    # 4. Make the API call
-    url = 'https://api.bingads.microsoft.com/v13/campaignmanagement/AddCampaigns'
-    response = requests.post(url, json={"AccountId": auth.account_id, "Campaigns": campaigns}, headers=headers)
+    accounts = cust_svc.SearchAccounts(
+        Predicates={'Predicate': [{
+            'Field': 'UserId',
+            'Operator': 'Equals',
+            'Value': user.Id
+        }]},
+        PageInfo={'Index': 0, 'Size': 100}
+    )
+    authorization_data.account_id = accounts.AdvertiserAccount[0].Id
 
-    # 5. Handle the response
-    if response.status_code == 200:
-        response_data = response.json()
-        campaign_ids = response_data.get('CampaignIds', [])
-        if campaign_ids:
-            return campaign_ids[0]
+    # 4. Инициализируем CampaignManagementService
+    campaign_service = ServiceClient(
+        service='CampaignManagementService',
+        version=13,
+        authorization_data=authorization_data,
+        environment='production'
+    )
+
+    # Создание схемы ставок
+    bidding_scheme = campaign_service.factory.create('EnhancedCpcBiddingScheme')
+    # Создание объекта кампании
+    campaign = campaign_service.factory.create('Campaign')
+    target_setting_detail = campaign_service.factory.create('TargetSettingDetail')
+    target_setting_detail.CriterionTypeGroup = 'Audience'
+    target_setting_detail.TargetAndBid = True
+    campaign.TargetSetting = [target_setting_detail]
+    
+    campaign.Name = campaign_name
+    campaign.DailyBudget = daily_budget
+    campaign.BudgetType = budget_type
+    campaign.Status = 'Paused'
+    campaign.BiddingScheme = bidding_scheme
+    campaign.CampaignType = ['Search']
+    campaign.Languages = {'string': ['All']}
+
+    # Добавление кампании
+    campaigns = campaign_service.factory.create('ArrayOfCampaign')
+    campaigns.Campaign.append(campaign)
+
+    try:
+        response = campaign_service.AddCampaigns(
+            AccountId=authorization_data.account_id,
+            Campaigns=campaigns
+        )
+        if response and response.CampaignIds and response.CampaignIds['long']:
+            return response.CampaignIds['long'][0]
         else:
-            raise Exception("Failed to create campaign. No campaign ID returned.")
-    else:
-        raise Exception(f"API call failed with status code {response.status_code}: {response.text}")
+            # Check for partial errors
+            if response and response.PartialErrors and response.PartialErrors['BatchError']:
+                for error in response.PartialErrors['BatchError']:
+                    if error.Code == 1115:
+                        raise Exception("A campaign with the same name already exists. Please choose a different name.")
+                    else:
+                        raise Exception(f"Error {error.Code}: {error.Message}")
+            else:
+                raise Exception("Failed to create campaign. API response does not contain campaign ID.")
+    except WebFault as e:
+        raise Exception(f"Error creating campaign: {e}")
+
+from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters
+from bingads.v13.bulk.entities import BulkAdGroup
+
+from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters
+from bingads.v13.bulk.entities import BulkAdGroup
+from bingads.authorization import OAuthWebAuthCodeGrant
+from bingads import AuthorizationData
+
+from bingads.authorization import OAuthWebAuthCodeGrant, AuthorizationData
+from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters
+from bingads.v13.bulk.entities import BulkAdGroup
+
+
+from bingads.authorization import OAuthWebAuthCodeGrant, AuthorizationData
+from bingads.service_client import ServiceClient
+from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters
+from bingads.v13.bulk.entities import BulkAdGroup
+
+def create_ad_group_bulk(developer_token: str, client_id: str, client_secret: str, refresh_token: str,
+                         campaign_id: int, ad_group_name: str) -> int:
+    # Аутентификация и авторизация
+    auth = OAuthWebAuthCodeGrant(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirection_uri='http://localhost:3000/bing-ads-landing'
+    )
+    auth.request_oauth_tokens_by_refresh_token(refresh_token)
+    authorization_data = AuthorizationData(
+        developer_token=developer_token,
+        authentication=auth
+    )
+
+    # 2. Через CustomerManagementService получаем CustomerId и AccountId
+    cust_svc = ServiceClient(
+        service='CustomerManagementService',
+        version=13,
+        authorization_data=authorization_data
+    )
+    user = cust_svc.GetUser().User
+    authorization_data.customer_id = user.CustomerId
+
+    accounts = cust_svc.SearchAccounts(
+        Predicates={'Predicate': [{
+            'Field': 'UserId',
+            'Operator': 'Equals',
+            'Value': user.Id
+        }]},
+        PageInfo={'Index': 0, 'Size': 100}
+    )
+    # Выбираем нужный аккаунт (например, первый в списке)
+    account = accounts.AdvertiserAccount[0]
+    authorization_data.account_id = account.Id
+
+    # Формирование AuthorizationData
+    authorization_data = AuthorizationData(
+        account_id=authorization_data.account_id,
+        customer_id=authorization_data.customer_id,
+        developer_token=developer_token,
+        authentication=auth
+    )
+
+    # Инициализация BulkServiceManager
+    bulk_service_manager = BulkServiceManager(
+        authorization_data=authorization_data,
+        environment='production'
+    )
+
+    # Инициализация клиента службы Campaign Management
+    campaign_service = ServiceClient(
+        service='CampaignManagementService',
+        version=13,
+        authorization_data=authorization_data,
+        environment='production'
+    )
+
+    # Создание экземпляра AdGroup с использованием фабрики клиента
+    ad_group = campaign_service.factory.create('AdGroup')
+    ad_group.Name = ad_group_name
+    ad_group.Status = 'Paused'
+    ad_group.Language = 'All'
+    ad_group.CpcBid = campaign_service.factory.create('Bid')
+    ad_group.CpcBid.Amount = 0.25
+
+    # Создание BulkAdGroup и присвоение AdGroup
+    bulk_ad_group = BulkAdGroup()
+    bulk_ad_group.campaign_id = campaign_id
+    bulk_ad_group.ad_group = ad_group
+
+    # Параметры загрузки
+    upload_parameters = EntityUploadParameters([bulk_ad_group])
+
+    # Загрузка данных
+    upload_result = bulk_service_manager.upload_entities(upload_parameters)
+    for result in upload_result:
+        # Assuming the result contains the uploaded BulkAdGroup
+        uploaded_ad_group = result
+        print(f"Uploaded AdGroup ID: {uploaded_ad_group.ad_group}")
 
 
 
 
 
 
-# def add_audiences_to_campaign(developer_token: str,
-#                               client_id: str,
-#                               client_secret: str,
-#                               refresh_token: str,
-#                               campaign_id: int,
-#                               audience_ids: List[int]) -> None:
-#     """
-#     Ассоциирует список аудиторий (audience_ids) с кампанией campaign_id.
 
-#     Использует метод AddCampaignCriterions с CriterionType='Audience' :contentReference[oaicite:1]{index=1}.
-#     """
-#     # 1. Аутентификация и AuthorizationData
-#     auth = OAuthWebAuthCodeGrant(
-#         client_id=client_id,
-#         client_secret=client_secret,
-#         redirection_uri='http://localhost:3000/bing-ads-landing'
-#     )
-#     auth.request_oauth_tokens_by_refresh_token(refresh_token)
-#     authorization_data = AuthorizationData(
-#         developer_token=developer_token,
-#         authentication=auth
-#     )
 
-#     # 2. Получаем customer_id и account_id
-#     cust_svc = ServiceClient(
-#         service='CustomerManagementService',
-#         version=13,
-#         authorization_data=authorization_data
-#     )
-#     user = cust_svc.GetUser().User
-#     authorization_data.customer_id = user.CustomerId
 
-#     accounts = cust_svc.SearchAccounts(
-#         Predicates={'Predicate': [{
-#             'Field': 'UserId',
-#             'Operator': 'Equals',
-#             'Value': user.Id
-#         }]},
-#         PageInfo={'Index': 0, 'Size': 100}
-#     )
-#     authorization_data.account_id = accounts.AdvertiserAccount[0].Id
 
-#     # 3. Инициализация CampaignManagementService
-#     campaign_svc = ServiceClient(
-#         service='CampaignManagementService',
-#         version=13,
-#         authorization_data=authorization_data,
-#         environment='production'
-#     )
-#     factory = campaign_svc.factory
 
-#     # 4. Формируем массив критериев для аудиторий
-#     arr_criteria = factory.create('ArrayOfCampaignCriterion')
-#     arr_criteria.CampaignCriterion = []
-#     for aud_id in audience_ids:
-#         bcc = factory.create('BiddableCampaignCriterion')
-#         bcc.CampaignId = campaign_id
-#         aud = factory.create('AudienceCriterion')
-#         aud.AudienceId = aud_id
-#         bcc.Criterion = aud
-#         arr_criteria.CampaignCriterion.append(bcc)
 
-#     # 5. Добавляем аудитории к кампании
-#     resp = campaign_svc.AddCampaignCriterions(
-#         CampaignCriterions=arr_criteria,
-#         CriterionType='Audience'
-#     )
-#     if hasattr(resp, 'NestedPartialErrors') and resp.NestedPartialErrors:
-#         raise Exception("Не удалось добавить аудитории. См. NestedPartialErrors.")
+
+
+def add_customer_list_to_campaign_bulk(
+    developer_token: str,
+    client_id: str,
+    client_secret: str,
+    refresh_token: str,
+    campaign_id: int,
+    customer_list_id: int,
+    bid_adjustment: float = 0.0,
+    result_file_directory: str = '.',
+    result_file_name: str = 'bulk_results.csv'
+) -> None:
+    # 1. Аутентификация и подготовка AuthorizationData
+    auth = OAuthWebAuthCodeGrant(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirection_uri='http://localhost:3000/bing-ads-landing'
+    )
+    auth.request_oauth_tokens_by_refresh_token(refresh_token)
+    authorization_data = AuthorizationData(
+        developer_token=developer_token,
+        authentication=auth
+    )
+
+    # 2. Через CustomerManagementService получаем CustomerId и AccountId
+    cust_svc = ServiceClient(
+        service='CustomerManagementService',
+        version=13,
+        authorization_data=authorization_data
+    )
+    user = cust_svc.GetUser().User
+    authorization_data.customer_id = user.CustomerId
+
+    accounts = cust_svc.SearchAccounts(
+        Predicates={'Predicate': [{
+            'Field': 'UserId',
+            'Operator': 'Equals',
+            'Value': user.Id
+        }]},
+        PageInfo={'Index': 0, 'Size': 100}
+    )
+    # Выбираем нужный аккаунт (например, первый в списке)
+    account = accounts.AdvertiserAccount[0]
+    authorization_data.account_id = account.Id
+
+    # 3. Создаём через CampaignManagementService фабрику для BiddableCampaignCriterion
+    campaign_svc = ServiceClient(
+        service='CampaignManagementService',
+        version=13,
+        authorization_data=authorization_data,
+        environment='production'
+    )
+    factory = campaign_svc.factory
+
+    # 4. Строим BiddableCampaignCriterion
+    bcc = factory.create('BiddableCampaignCriterion')
+    bcc.Status = 'Paused'
+    bcc.CampaignId = campaign_id
+
+    bcc.Criterion = factory.create('AudienceCriterion')
+    bcc.Criterion.Type = None
+    bcc.Criterion.AudienceId = customer_list_id
+
+    bcc.CriterionBid = factory.create('BidMultiplier')
+    bcc.CriterionBid.Type = None
+    bcc.CriterionBid.Multiplier = bid_adjustment
+
+    # 5. Оборачиваем в BulkCampaignCustomerListAssociation
+    assoc = BulkCampaignCustomerListAssociation(
+        biddable_campaign_criterion=bcc,
+        campaign_name=None,
+        audience_name=None
+    )
+
+    # 6. Инициализируем BulkServiceManager и параметры загрузки
+    bulk_manager = BulkServiceManager(
+        authorization_data=authorization_data,
+        environment='production'
+    )
+    upload_params = EntityUploadParameters(
+        entities=[assoc],
+        result_file_directory=result_file_directory,
+        result_file_name=result_file_name,
+        overwrite_result_file=True,
+        response_mode='ErrorsAndResults'
+    )
+
+    # 7. Загружаем и проверяем результат
+    for bulk_entity in bulk_manager.upload_entities(upload_params):
+        if isinstance(bulk_entity, BulkCampaignCustomerListAssociation):
+            if hasattr(bulk_entity, 'has_errors') and bulk_entity.has_errors:
+                print("Ошибки при загрузке:")
+                for error in bulk_entity.errors:
+                    for attr in dir(error):
+                        if not attr.startswith('_'):
+                            value = getattr(error, attr)
+                            print(f"{attr}: {value}")
+            else:
+                print(f"Success: CampaignId={bulk_entity.biddable_campaign_criterion.CampaignId}, "
+                      f"AudienceId={bulk_entity.biddable_campaign_criterion.Criterion.AudienceId}, "
+                      f"Status={bulk_entity.biddable_campaign_criterion.Status}")
+        else:
+            print(f"Received unexpected entity type: {type(bulk_entity)}")
+
+    print("CustomerList успешно добавлен к кампании через Bulk API")
 
 
 
 # Пример использования:
 async def main():
     refresh_token = '1.AQwAoMOu-2xxzUSHxit-r-dIM4Ptp6kjpBNHnTQjJkaFg4HdAM8MAA.AgABAwEAAABVrSpeuWamRam2jAF1XRQEAwDs_wUA9P_-g8ZHqXoih_Zz0tYRVRrzFKeA6Wh8c5uwnBcEtqSg4zVHClEnwmZ2nQbIboy4tm3WksZcR9VOBBjHJVTGjNcsHqsmy9QQCkjo49407sk21tqwJ2BSyu__HeIdOaRdnY03M60ONWvksU-LrH62XPUnnN9gNFhkZFrULsFGKQaBONYLy8ten2dM8urPIeX0Z4oxxQUDQ1_ARh5lGJ__XydZTdXz9kVCr6T7U_4PsdchZgx5g7eq8xJHeSVdDkaLcJ8eM3pQ529qZcU50kt5eGURM7k4uoYKV0NH6MZk-2Wuf3lBq1m77DPg5sHnKRXD-IykWtOTvK0j8DxUjbAn6wvTV_24Ul1OgTZc1YeT246bNWNUY44WZfb0CQ4aOcepgx_hpbGd2eNlPntnF8IHQInp4EfHznBRiSrf-BWL2AwjgIZoGfUg1biNE2IFoUh3Va4zqIWd1N8TpWiFP50o2ZUPFw6EfZiXfjuuo4spYfvlxungfvBDtEhh5STxNGHYIUJicBG5rIZeMSLJe42wEA5GepbyU9GTo9RccifVFWzo-JimS7twA8oNhvwd054WCeiruUDVkOijwMi7SPdGFQbx3hDIYbhD3oQLh9MBfLAJDcSMm98JFBhZXj8_Rrr0NHutD6W_XEjZSGMNVsjguNEwp0bTQDtdcTFvlLhaWrFWUcyK5YfbtTuOfNor7o6rTznEM_35mSmAWVztnhNe1SHNc3IaIBbUcc_RNarGWjYWX2LXMLytR38LGm0qII_Xd4WcE_mTR-CpiDZ-r-uI__ejXvX3TumB1FsiHB0PBa02PivPca5sMhR6'
-    print(create_campaign(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token, 'campaign_name', 100.0))
+    #create_campaign(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token, 'teww', 123)
+    create_ad_group_bulk(DEVELOPER_TOKEN,CLIENT_ID,CLIENT_SECRET,refresh_token, 569722874, 'ad_name')
+    add_customer_list_to_campaign_bulk(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET,refresh_token,569722874,822093753)
 # Запуск асинхронного main
 if __name__ == "__main__":
     asyncio.run(main())

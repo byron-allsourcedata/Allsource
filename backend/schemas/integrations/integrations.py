@@ -112,6 +112,12 @@ class SyncCreate(BaseModel):
     campaign_name: Optional[str] = None,
     campaign: Optional[Campaign] = None
 
+class CreateCampaignList(BaseModel):
+    name: str
+    daily_budget: int
+    type: str
+    customer_id: str
+
 class CreateListOrTags(BaseModel):
     name: str
     customer_id: Optional[str] = None

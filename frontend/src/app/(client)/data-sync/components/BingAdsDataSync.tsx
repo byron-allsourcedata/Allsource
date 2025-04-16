@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Drawer, Box, Typography, IconButton, TextField, Divider, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
+import { Drawer, Box, Typography, IconButton, TextField, FormHelperText, Divider, Select, InputLabel, FormControlLabel, FormControl, FormLabel, Radio, Button, Link, Tab, Tooltip, RadioGroup, MenuItem, Popover, Menu, ListItemText, ClickAwayListener, InputAdornment, Grid, LinearProgress } from '@mui/material';
 import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
@@ -19,6 +19,12 @@ interface BingAdsDataSyncProps {
 type AudienceList = {
     audience_id: string;
     audience_name: string;
+}
+
+interface FormValues {
+    name: string;
+    dailyBudget: number;
+    type: string
 }
 
 type CampaignList = {
@@ -73,11 +79,13 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
     const [inputCampaignListName, setInputCampaignListName] = useState(data?.name ?? '');
     const [audienceList, setAudienceList] = useState<AudienceList[]>([]);
     const [campaignList, setCampaignList] = useState<CampaignList[]>([]);
+    const [errorBudget, setErrorBudget] = useState(false);
+    const [errorCampaignName, setErrorCampaignName] = useState(false);
+    const [errorCampaignType, setErrorCampaignType] = useState(false);
     const [formValues, setFormValues] = useState<FormValues>({
-        campaignName: '',
-        campaignObjective: '',
-        bidAmount: 1,
-        dailyBudget: 100,
+        name: '',
+        type: '',
+        dailyBudget: 1,
     });
 
     const [customersInfo, setCustomersInfo] = useState<Customers[]>([
@@ -399,6 +407,62 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
         setShowCreateForm(false);
         setShowCreateFormCampaign(false)
         setIsDropdownOpen(false);
+    };
+
+    const handleInputChange = (e: any) => {
+        const { name, value } = e.target;
+        if (name == 'dailyBudget') {
+            setErrorBudget(Number(value) < 1);
+        }
+        if (name === 'name') {
+            setErrorCampaignName(value.trim() === '');
+        }
+
+        if (name === 'type') {
+            setErrorCampaignType(value.trim() === '');
+        }
+
+        setFormValues((prevValues) => ({
+            ...prevValues,
+            [name]: value,
+        }));
+    };
+
+    const handleSaveCampaign = async () => {
+        const budget = Number(formValues.dailyBudget);
+        const campaignName = formValues.name
+        const campaignType = formValues.type
+        if (!isNaN(budget) && budget < 1 && campaignName && campaignType) {
+            return;
+        }
+        try {
+            setLoading(true)
+            const newListResponse = await axiosInstance.post('integrations/create-campaign', {
+                name: formValues.name,
+                customer_id: String(selectedAccountId),
+                daily_budget: formValues.dailyBudget,
+                type: formValues.type,
+            }, {
+                params: {
+                    service_name: 'bing_ads'
+                }
+            });
+
+            if (newListResponse.data.status !== 'SUCCESS') {
+                showErrorToast(newListResponse.data.message)
+                return
+            }
+            showToast('List saved successfully');
+            setSelectedOptionCampaign(newListResponse.data.channel);
+            setInputCampaignListName(newListResponse.data.channel.campaign_name)
+            setCampaignList(prevList => [...prevList, newListResponse.data.channel]);
+            setShowCreateFormCampaign(false);
+            setIsDropdownCampaignValid(true);
+            handleClose()
+        }
+        finally {
+            setLoading(false)
+        }
     };
 
     const handleSelectOption = (value: AudienceList | string) => {
@@ -1429,9 +1493,11 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                         <TextField
                                                                             label="Campaign Name"
                                                                             variant="outlined"
-                                                                            name="campaignName"
-                                                                            value={formValues.campaignName}
+                                                                            name="name"
+                                                                            value={formValues.name}
                                                                             onKeyDown={(e) => e.stopPropagation()}
+                                                                            error={errorCampaignName}
+                                                                            helperText={errorCampaignName ? 'Campaign name is required' : ''}
                                                                             onChange={handleInputChange}
                                                                             fullWidth
                                                                             margin="normal"
@@ -1452,10 +1518,10 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                         <FormControl variant="outlined" fullWidth margin="normal" sx={{ fontSize: '10px' }}>
                                                                             <InputLabel sx={{ fontSize: '14px' }}>Campaign goal</InputLabel>
                                                                             <Select
-                                                                                name="campaignObjective"
-                                                                                value={formValues.campaignObjective}
+                                                                                name="type"
+                                                                                value={formValues.type}
                                                                                 onChange={handleInputChange}
-                                                                                label="Campaign goal"
+                                                                                label="Campaign type"
                                                                                 sx={{
                                                                                     fontSize: '16px',
                                                                                     textAlign: 'left',
@@ -1466,37 +1532,29 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                                 }}
                                                                             >
                                                                                 <MenuItem
-                                                                                    value="LINK_CLICKS"
+                                                                                    value="Audience"
                                                                                     sx={{ fontSize: '14px' }}
                                                                                 >
-                                                                                    link clicks
+                                                                                    Audience
                                                                                 </MenuItem>
                                                                                 <MenuItem
-                                                                                    value="LANDING_PAGE_VIEWS"
+                                                                                    value="Search"
                                                                                     sx={{ fontSize: '14px' }}
                                                                                 >
-                                                                                    landing page views
+                                                                                    Search
                                                                                 </MenuItem>
                                                                             </Select>
+                                                                            {errorCampaignType && (
+                                                                                <FormHelperText>{'Campaign type is required'}</FormHelperText>
+                                                                            )}
                                                                         </FormControl>
-                                                                        <TextField
-                                                                            label="Bid Amount"
-                                                                            variant="outlined"
-                                                                            name="bidAmount"
-                                                                            type="number"
-                                                                            value={formValues.bidAmount}
-                                                                            onChange={handleInputChange}
-                                                                            fullWidth
-                                                                            margin="normal"
-                                                                            InputProps={{
-                                                                                startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                                                                            }}
-                                                                        />
                                                                         <TextField
                                                                             label="Daily Budget"
                                                                             variant="outlined"
                                                                             name="dailyBudget"
-                                                                            type="number"
+                                                                            type="string"
+                                                                            error={errorBudget}
+                                                                            helperText={errorBudget ? 'Minimum budget — $1' : ''}
                                                                             value={formValues.dailyBudget}
                                                                             onChange={handleInputChange}
                                                                             fullWidth
@@ -1509,7 +1567,6 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({ open, onClose, data, 
                                                                             We will not run your campaign. Maximiz will create a campaign template in your ad account. We won&apos;t run anything without your confirmation.
                                                                         </Typography>
                                                                         <Button variant="contained" onClick={handleSaveCampaign}
-                                                                            disabled={!isChecked}
                                                                             sx={{
                                                                                 borderRadius: '4px',
                                                                                 border: '1px solid #5052B2',
