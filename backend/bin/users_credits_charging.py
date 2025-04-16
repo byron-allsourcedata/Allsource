@@ -6,6 +6,12 @@ import os
 import sys
 from collections import defaultdict
 
+logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -29,7 +35,6 @@ from dependencies import (PlansPersistence)
 from dotenv import load_dotenv
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO)
 
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 EMAIL_NOTIFICATIONS = 'email_notifications'
@@ -110,7 +115,7 @@ async def on_message_received(message, session, subscription_service):
             if user.is_leads_auto_charging:
                 logging.info(f"is_leads_auto_charging true")
                 if lead_user_count >= QUANTITY:
-                    logging.info(f"{user.full_name} charge {QUANTITY} leads by {contact_credits.price}")
+                    logging.info(f"{user.full_name} user_id {user.id} charge {QUANTITY} leads by {contact_credits.price}")
                     last_payment_intent = get_last_payment_intent(customer_id)
                     if last_payment_intent:
                         users_inlocked_five_x_five_user = session.query(UsersUnlockedFiveXFiveUser)\
