@@ -18,7 +18,9 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
+from models.audience_settings import AudienceSetting
 from models.enrichment_users import EnrichmentUser
+from models.enrichment_contacts import EnrichmentContact
 from models.emails_enrichment import EmailEnrichment
 from models.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -26,7 +28,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_EMAIL_VALIDATION = 'aud_email_validation'
+AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 
 def setup_logging(level):
@@ -55,30 +57,44 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
         aud_smart_id = message_body.get("aud_smart_id")
+        validation_params = message_body.get("validation_params")
 
         try:
+            priority = (
+                db_session.query(AudienceSetting.value)
+                .filter(AudienceSetting.alias == "validation_priority")
+                .first()
+            )
+
+
             enrichment_users = (
                 db_session.query(
                     AudienceSmartPerson.enrichment_user_id,
                     AudienceSmartPerson.id.label("audience_smart_person_id"),
-                    Email.email.label("email"),
+                    EnrichmentContact.mobile_phone_dnc,
                 )
                 .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
-                .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
-                .outerjoin(Email, Email.id == EmailEnrichment.email_id)
+                .join(EnrichmentContact, EnrichmentUser.id == EnrichmentContact.enrichment_user_id)
                 .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
                 .all()
             )
-            
+            # enrichment_users = (
+            #     db_session.query(
+            #         AudienceSmartPerson.enrichment_user_id,
+            #         AudienceSmartPerson.id.label("audience_smart_person_id"),
+            #         Email.email.label("email"),
+            #     )
+            #     .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
+            #     .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
+            #     .outerjoin(Email, Email.id == EmailEnrichment.email_id)
+            #     .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
+            #     .all()
+            # )
 
             if not enrichment_users:
                 logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}.")
                 await message.ack()
                 return
-
-            # verifier_service = MillionVerifierIntegrationsService(
-            #     million_verifier_persistence=db_session
-            # )
 
             random_count = random.randint(1, len(enrichment_users))
             selected_records = random.sample(enrichment_users, random_count)
@@ -102,18 +118,6 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
             await send_sse(connection, user_id, {"smart_audience_id": aud_smart_id, "total": random_count})
             logging.info(f"sent sse with total count")
 
-            # results = []
-            # for record in enrichment_users:
-            #     try:
-            #         is_valid = verifier_service.is_email_verify(record.email)
-            #         results.append({"id": record.audience_smart_person_id, "is_valid": is_valid})
-            #     except Exception as e:
-            #         logging.error(f"Failed to validate email {record.email}: {e}", exc_info=True)
-
-            # db_session.bulk_update_mappings(
-            #     AudienceSmartPerson,
-            #     [{"id": r["id"], "is_valid": r["is_valid"]} for r in results]
-            # )
             db_session.commit()
 
             logging.info(f"Processed email validation for aud_smart_id {aud_smart_id}.")                            
@@ -159,7 +163,7 @@ async def main():
         db_session = Session()
 
         queue = await channel.declare_queue(
-            name=AUDIENCE_EMAIL_VALIDATION,
+            name=AUDIENCE_VALIDATION_FILLER,
             durable=True,
         )
         await queue.consume(

@@ -46,6 +46,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
         data_sources = data.get('data_sources')
         active_segment = data.get('active_segment')
         need_validate = data.get('need_validate')
+        validation_params = data.get('validation_params')
 
         logging.info(f"For smart audience with {aud_smart_id} need_validate = {need_validate}")
 
@@ -131,6 +132,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
                     'aud_smart_id': str(aud_smart_id),
                     'user_id': user_id,
                     'need_validate': need_validate,
+                    'validation_params': validation_params,
                     'count_iterations': common_count,
                     'count': count,
                     'enrichment_users_ids': [str(person_id) for person_id in persons]
