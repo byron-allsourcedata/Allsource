@@ -120,6 +120,10 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
     smartLookaLikeProgress[tableData[0].id] || null,
     fetchData
   );
+
+  const setSourceOrigin = (sourceOrigin: string) => {
+    return sourceOrigin === "pixel" ? "Pixel" : "CSV File";
+  };
   
 
   return (
@@ -185,7 +189,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
           {tableData.map((row, index) => (
             <TableRow key={index}>
               <TableCell>{row.lookalike_name}</TableCell>
-              <TableCell>{setSourceType(row.source)}</TableCell>
+              <TableCell>{setSourceOrigin(row.source)}</TableCell>
               <TableCell sx={{ maxWidth: "6.25rem" }}>
                 <Box>
                   <Tooltip
@@ -295,7 +299,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               sx={{ display: "flex", flexDirection: "column", gap: ".25rem" }}
             >
               <Box>Name: {row.lookalike_name}</Box>
-              <Box> Source: {row.source}</Box>
+              <Box> Source: {setSourceOrigin(row.source)}</Box>
               <Box> Source Type: {row.type}</Box>
               <Box> Target Type: {row.source_target_schema.toUpperCase()}</Box>
               <Box> Lookalike Size: {row.lookalike_size}</Box>

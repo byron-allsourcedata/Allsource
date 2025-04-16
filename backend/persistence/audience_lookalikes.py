@@ -1,20 +1,27 @@
 from datetime import datetime
+from decimal import Decimal
+from uuid import UUID
 
 import pytz
+from pydantic.v1 import UUID4
 
+from enums import LookalikeSize
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from models.enrichment_users import EnrichmentUser
 from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 import math
-from sqlalchemy import asc, desc, or_
+from sqlalchemy import asc, desc, or_, func
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
 from uuid import UUID
 
 from models.users import Users
+from schemas.similar_audiences import AudienceData, AudienceFeatureImportance
 
 
 class AudienceLookalikesPersistence:
@@ -105,12 +112,17 @@ class AudienceLookalikesPersistence:
         return result, count, max_page
 
     def create_lookalike(self, uuid_of_source, user_id, lookalike_size,
-                         lookalike_name, created_by_user_id):
+                         lookalike_name, created_by_user_id, audience_feature_importance: AudienceFeatureImportance):
         source_info = self.get_source_info(uuid_of_source, user_id)
         if not source_info:
             raise HTTPException(status_code=404, detail="Source not found or access denied")
 
         sources, created_by = source_info
+
+        audience_feature_dict = audience_feature_importance.__dict__
+        for key in audience_feature_dict.keys():
+            audience_feature_dict[key] = round(audience_feature_dict[key] * 1000) / 1000
+        sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
 
         lookalike = AudienceLookalikes(
             name=lookalike_name,
@@ -119,6 +131,7 @@ class AudienceLookalikesPersistence:
             created_date=datetime.utcnow(),
             created_by_user_id=created_by_user_id,
             source_uuid=uuid_of_source,
+            significant_fields=sorted_dict
         )
         self.db.add(lookalike)
         self.db.commit()
@@ -209,4 +222,108 @@ class AudienceLookalikesPersistence:
         ).first()
 
         return dict(query._asdict()) if query else None
+
+    def calculate_lookalikes(self, user_id: int, source_uuid: UUID, lookalike_size: str) -> List[AudienceData]:
+        audience_source = (
+            self.db.query(AudienceSource)
+            .filter(
+                AudienceSource.id == str(source_uuid),
+                AudienceSource.user_id == user_id
+            )
+            .first()
+        )
+        if not audience_source:
+            raise HTTPException(status_code=404, detail="Audience source not found or access denied")
+
+        total_matched = self.db.query(func.count(AudienceSourcesMatchedPerson.id)).filter(
+            AudienceSourcesMatchedPerson.source_id == str(source_uuid)
+        ).scalar()
+
+        def get_number_users(lookalike_size: str, size: int) -> int:
+            if lookalike_size == LookalikeSize.ALMOST.value:
+                number = size * 0.2
+            elif lookalike_size == LookalikeSize.EXTREMELY.value:
+                number = size * 0.4
+            elif lookalike_size == LookalikeSize.VERY.value:
+                number = size * 0.6
+            elif lookalike_size == LookalikeSize.QUITE.value:
+                number = size * 0.8
+            elif lookalike_size == LookalikeSize.BROAD.value:
+                number = size * 1
+            else:
+                number = size * 1
+            return int(number)
+
+        number_required = get_number_users(lookalike_size, total_matched)
+
+        rows = (
+            self.db.query(
+                AudienceSourcesMatchedPerson.email.label("EmailAddress"),
+                EnrichmentUser.age.label("age"),
+                EnrichmentUser.gender.label("PersonGender"),
+                EnrichmentUser.estimated_household_income_code.label("EstimatedHouseholdIncomeCode"),
+                EnrichmentUser.estimated_current_home_value_code.label("EstimatedCurrentHomeValueCode"),
+                EnrichmentUser.homeowner_status.label("HomeownerStatus"),
+                EnrichmentUser.has_children.label("HasChildren"),
+                EnrichmentUser.number_of_children.label("NumberOfChildren"),
+                EnrichmentUser.credit_rating.label("CreditRating"),
+                EnrichmentUser.net_worth_code.label("NetWorthCode"),
+                EnrichmentUser.zip_code5.label("ZipCode5"),
+                EnrichmentUser.lat.label("Latitude"),
+                EnrichmentUser.lon.label("Longitude"),
+                EnrichmentUser.has_credit_card.label("HasCreditCard"),
+                EnrichmentUser.length_of_residence_years.label("LengthOfResidenceYears"),
+                EnrichmentUser.marital_status.label("MaritalStatus"),
+                EnrichmentUser.occupation_group_code.label("OccupationGroupCode"),
+                EnrichmentUser.is_book_reader.label("IsBookReader"),
+                EnrichmentUser.is_online_purchaser.label("IsOnlinePurchaser"),
+                EnrichmentUser.state_abbr.label("StateAbbr"),
+                EnrichmentUser.is_traveler.label("IsTraveler"),
+                AudienceSourcesMatchedPerson.value_score.label("customer_value")
+            )
+            .select_from(AudienceSource)
+            .join(
+                AudienceSourcesMatchedPerson,
+                AudienceSourcesMatchedPerson.source_id == AudienceSource.id
+            )
+            .join(
+                EnrichmentUser,
+                EnrichmentUser.id == AudienceSourcesMatchedPerson.enrichment_user_id
+            )
+            .filter(AudienceSource.id == str(source_uuid))
+            .order_by(AudienceSourcesMatchedPerson.value_score.desc())
+            .limit(number_required)
+            .all()
+        )
+
+        audience_data_list = []
+        for row in rows:
+            ad = AudienceData(
+                EmailAddress=row.EmailAddress,
+                PersonExactAge=str(row.age),
+                PersonGender=str(row.PersonGender),
+                EstimatedHouseholdIncomeCode=str(row.EstimatedHouseholdIncomeCode),
+                EstimatedCurrentHomeValueCode=str(row.EstimatedCurrentHomeValueCode),
+                HomeownerStatus=str(row.HomeownerStatus),
+                HasChildren=str(row.HasChildren),
+                NumberOfChildren=str(row.NumberOfChildren),
+                CreditRating=str(row.CreditRating),
+                NetWorthCode=str(row.NetWorthCode),
+                ZipCode5=str(row.ZipCode5),
+                Latitude=str(row.Latitude),
+                Longitude=str(row.Longitude),
+                HasCreditCard=str(row.HasCreditCard),
+                LengthOfResidenceYears=str(row.LengthOfResidenceYears),
+                MaritalStatus=str(row.MaritalStatus),
+                OccupationGroupCode=row.OccupationGroupCode,
+                IsBookReader=str(row.IsBookReader),
+                IsOnlinePurchaser=str(row.IsOnlinePurchaser),
+                StateAbbr=str(row.StateAbbr),
+                IsTraveler=str(row.IsTraveler),
+                customer_value=Decimal(row.customer_value)
+            )
+            audience_data_list.append(ad)
+
+        return audience_data_list
+
 

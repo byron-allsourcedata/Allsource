@@ -9,6 +9,13 @@ class EmailType(Enum):
     PERSONAL = "personal"
     ADDITIONAL_PERSONAL = "additional_personal"
 
+class LookalikeSize(Enum):
+    ALMOST = "almost"
+    EXTREMELY = "extremely"
+    VERY = "very"
+    QUITE = "quite"
+    BROAD = "broad"
+
 class QueueName(Enum):
     AUDIENCE_SOURCE_MATCHING = 'aud_sources_matching'
     AUDIENCE_SOURCES_READER = 'aud_sources_files'
