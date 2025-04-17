@@ -34,6 +34,23 @@ class UserDomainsService:
             self.domain_mapped(domain)
             for i, domain in enumerate(sorted_domains)
         ]
+    
+    def get_domains_with_leads(self, user):
+        domains = self.domain_persistence.get_domains_with_leads(user.get("id"))
+        return [
+            {
+                'id': domain[0],
+                'name': domain[1],
+                'pixel_installed': domain[2],
+                'converted_sales_count': domain[3],
+                'viewed_product_count': domain[4],
+                'visitor_count': domain[5],
+                'abandoned_cart_count': domain[6],
+                'total_count': domain[7],
+            }
+            for domain in domains
+        ]
+
         
     def update_domain_name(self, domain_id: int, domain_name: str):
         self.domain_persistence.update_domain_name(domain_id, domain_name)

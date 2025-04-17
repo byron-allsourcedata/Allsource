@@ -21,6 +21,7 @@ from services.similar_audiences.audience_data_normalization import AudienceDataN
 
 from schemas.similar_audiences import AudienceData, NormalizationConfig
 from services.similar_audiences import SimilarAudienceService
+from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 
 
 def read_csv_transactions(file_path: str):

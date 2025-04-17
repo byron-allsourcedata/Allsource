@@ -142,7 +142,7 @@ const EmailVerificate: React.FC = () => {
       />
       <Box sx={emailStyles.headers}>
         <Box sx={emailStyles.logoContainer}>
-          <Image src='/logo.svg' alt='logo' height={80} width={60} />
+          <Image src='/logo.svg' alt='logo' height={31} width={130} />
         </Box>
         <Button
           aria-controls={open ? "profile-menu" : undefined}

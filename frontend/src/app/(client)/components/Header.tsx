@@ -16,11 +16,13 @@ import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
 import PersonIcon from '@mui/icons-material/Person';
 import { fetchUserData } from "@/services/meService";
 import CustomNotification from "@/components/CustomNotification";
+import { usePathname } from 'next/navigation';
 
 const headerStyles = {
   headers: {
     display: 'flex',
     padding: '1.125rem 1.5rem',
+    pl: '.75rem',
     justifyContent: 'space-between',
     alignItems: 'center',
     minHeight: '4.25rem',
@@ -38,7 +40,6 @@ const headerStyles = {
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: '3.45rem'
   },
 }
 
@@ -50,6 +51,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationData, onDismissNotification }) => {
+  const pathname = usePathname()
   const [hasNotification, setHasNotification] = useState(NewRequestNotification);
   const router = useRouter();
   const { newNotification } = useSSE();
@@ -165,8 +167,8 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
       </Box>
       <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
         <Box sx={headerStyles.logoContainer}>
-          <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' } }}>
-            <Image priority src="/logo.svg" alt="logo" height={30} width={50} />
+          <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' }, cursor: 'pointer', padding: '2px' }}>
+            <Image priority src="/logo.svg" alt="logo" height={30} width={130} />
           </IconButton>
           {visibleButton && (
             <Button
@@ -186,7 +188,13 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
               Return to main
             </Button>
           )}
-          <DomainButton />
+          <Box sx={{ display: 'flex', ml: 3 }}>
+  {!pathname.includes('audience-dashboard') &&
+    (pathname.includes('dashboard') || 
+     pathname.includes('leads') || 
+     pathname.includes('company') || 
+     pathname.includes('suppressions')) && <DomainButton />}
+</Box>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <TrialStatus />

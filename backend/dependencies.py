@@ -19,13 +19,18 @@ from config.database import SessionLocal
 from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from models.users import Users as User
+from persistence.audience_dashboard import DashboardAudiencePersistence
+from persistence.audience_sources import AudienceSourcesPersistence
+from persistence.audience_smarts import AudienceSmartsPersistence
 from persistence.company_persistence import CompanyPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.million_verifier import MillionVerifierPersistence
 from services.companies import CompanyService
+from services.lookalikes import AudienceLookalikesService
 from services.payouts import PayoutsService
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from services.integrations.slack import SlackService
@@ -39,12 +44,16 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
+from persistence.audience_sources_matched_persons import AudienceSourcesMatchedPersonsPersistence
 from persistence.partners_asset_persistence import PartnersAssetPersistence
 from persistence.partners_persistence import PartnersPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 from persistence.referral_discount_code_persistence import ReferralDiscountCodesPersistence
 from schemas.auth_token import Token
+from services.audience_sources import AudienceSourceService
+from services.audience_smarts import AudienceSmartsService
+from services.audience_dashboard import DashboardAudienceService
 from services.accounts import AccountsService
 from services.admin_customers import AdminCustomersService
 from services.audience import AudienceService
@@ -60,6 +69,8 @@ from services.payments_plans import PaymentsPlans
 from services.pixel_installation import PixelInstallationService
 from services.plans import PlansService
 from services.settings import SettingsService
+from services.similar_audiences import SimilarAudienceService
+from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 from services.sse_events import SseEventsService
 from services.subscriptions import SubscriptionService
 from services.stripe_service import StripeService, get_stripe_payment_url
@@ -82,6 +93,7 @@ def get_db():
     finally:
         db.close()
 
+
 async def verify_signature(request: Request):
     logger.debug("Starting verification")
     verifier = SignatureVerifier(os.getenv('SLACK_SIGNING_SECRET'))
@@ -89,6 +101,19 @@ async def verify_signature(request: Request):
     if verifier.is_valid_request(raw_body, dict(request.headers)) == False:
         logger.debug("Error verification")
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
+
+
+def get_audience_sources_persistence(db: Session = Depends(get_db)):
+    return AudienceSourcesPersistence(db)
+
+
+def get_audience_sources_matched_persons_persistence(db: Session = Depends(get_db)):
+    return AudienceSourcesMatchedPersonsPersistence(db)
+
+
+def get_audience_smarts_persistence(db: Session = Depends(get_db)):
+    return AudienceSmartsPersistence(db)
+
 
 def get_partners_asset_persistence(db: Session = Depends(get_db)) -> PartnersAssetPersistence:
     return PartnersAssetPersistence(db)
@@ -109,20 +134,27 @@ def get_referral_discount_codes_persistence(db: Session = Depends(get_db)) -> Re
 def get_plans_persistence(db: Session = Depends(get_db)):
     return PlansPersistence(db=db)
 
+
 def get_million_verifier_persistence(db: Session = Depends(get_db)):
     return MillionVerifierPersistence(db=db)
+
 
 def get_referral_payouts_persistence(db: Session = Depends(get_db)):
     return ReferralPayoutsPersistence(db=db)
 
-def get_million_verifier_service(million_verifier_persistence: MillionVerifierPersistence = Depends(get_million_verifier_persistence)):
+
+def get_million_verifier_service(
+        million_verifier_persistence: MillionVerifierPersistence = Depends(get_million_verifier_persistence)):
     return MillionVerifierIntegrationsService(million_verifier_persistence=million_verifier_persistence)
+
 
 def get_leads_persistence(db: Session = Depends(get_db)):
     return LeadsPersistence(db=db)
 
+
 def get_company_persistence(db: Session = Depends(get_db)):
     return CompanyPersistence(db=db)
+
 
 def get_suppression_persistence(db: Session = Depends(get_db)) -> SuppressionPersistence:
     return SuppressionPersistence(db)
@@ -144,6 +176,10 @@ def get_user_persistence_service(db: Session = Depends(get_db)):
     return UserPersistence(db=db)
 
 
+def get_dashboard_audience_persistence(db: Session = Depends(get_db)):
+    return DashboardAudiencePersistence(db)
+
+
 def get_audience_persistence(db: Session = Depends(get_db)):
     return AudiencePersistence(db=db)
 
@@ -154,6 +190,7 @@ def get_user_integrations_presistence(db: Session = Depends(get_db)) -> Integrat
 
 def get_lead_orders_persistence(db: Session = Depends(get_db)) -> LeadsPersistence:
     return LeadOrdersPersistence(db)
+
 
 def get_integrations_user_sync_persistence(db: Session = Depends(get_db)) -> IntegrationsUserSyncPersistence:
     return IntegrationsUserSyncPersistence(db)
@@ -171,6 +208,10 @@ def get_notification_persistence(db: Session = Depends(get_db)):
     return NotificationPersistence(db)
 
 
+def get_lookalikes_persistence(db: Session = Depends(get_db)):
+    return AudienceLookalikesPersistence(db=db)
+
+
 def get_accounts_service(
         referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence),
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
@@ -182,6 +223,27 @@ def get_accounts_service(
 def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
     return AWSService(s3_client)
 
+
+def get_audience_sources_service(
+        audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence),
+        audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence = Depends(
+            get_audience_sources_matched_persons_persistence),
+        domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
+    return AudienceSourceService(audience_sources_persistence=audience_sources_persistence,
+                                 domain_persistence=domain_persistence,
+                                 audience_sources_matched_persons_persistence=audience_sources_matched_persons_persistence)
+
+
+def get_audience_smarts_service(
+        audience_smarts_persistence: AudienceSmartsPersistence = Depends(get_audience_smarts_persistence),
+        lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(get_lookalikes_persistence),
+        audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence)
+):
+    return AudienceSmartsService(audience_smarts_persistence=audience_smarts_persistence,
+                                 lookalikes_persistence_service=lookalikes_persistence_service,
+                                 audience_sources_persistence=audience_sources_persistence)
+
+
 def get_slack_service(
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
         lead_persistence: LeadsPersistence = Depends(get_leads_persistence),
@@ -189,11 +251,13 @@ def get_slack_service(
         sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence),
         million_verifier_integrations: MillionVerifierIntegrationsService = Depends(get_million_verifier_service)):
     return SlackService(user_persistence=user_persistence, user_integrations_persistence=user_integrations_persistence,
-                        sync_persistence=sync_persistence, lead_persistence=lead_persistence, million_verifier_integrations=million_verifier_integrations)
+                        sync_persistence=sync_persistence, lead_persistence=lead_persistence,
+                        million_verifier_integrations=million_verifier_integrations)
 
 
 def get_stripe_service():
     return StripeService()
+
 
 def get_referral_service(
         referral_persistence_discount_code: ReferralDiscountCodesPersistence = Depends(
@@ -245,9 +309,8 @@ def check_domain(
         if user.get('is_company_details_filled') is False:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FILL_COMPANY_DETAILS'})
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'status': "DOMAIN_NOT_FOUND"})
-    
-    return current_domain[0]
 
+    return current_domain[0]
 
 
 def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
@@ -297,7 +360,8 @@ def get_integration_service(db: Session = Depends(get_db),
                                 get_suppression_persistence),
                             user_persistence: UserPersistence = Depends(get_user_persistence_service),
                             epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence),
-                            million_verifier_integrations: MillionVerifierIntegrationsService = Depends(get_million_verifier_service)
+                            million_verifier_integrations: MillionVerifierIntegrationsService = Depends(
+                                get_million_verifier_service)
                             ):
     return IntegrationService(db=db,
                               integration_persistence=integration_presistence,
@@ -440,6 +504,7 @@ def check_user_setting_access(Authorization: Annotated[str, Header()],
         )
     return user
 
+
 def check_user_partner(Authorization: Annotated[str, Header()],
                        user_persistence_service: UserPersistence = Depends(
                            get_user_persistence_service)) -> Token:
@@ -450,7 +515,6 @@ def check_user_partner(Authorization: Annotated[str, Header()],
             detail={'status': 'Aссess Forbidden'}
         )
     return user
-
 
 
 def check_team_access_standard_user(user: dict = Depends(check_user_authentication)):
@@ -468,7 +532,6 @@ def check_team_access_standard_user(user: dict = Depends(check_user_authenticati
     return user
 
 
-
 def get_users_service(user=Depends(check_user_authentication),
                       user_persistence: UserPersistence = Depends(get_user_persistence_service),
                       plan_persistence: PlansPersistence = Depends(get_plans_persistence),
@@ -477,7 +540,8 @@ def get_users_service(user=Depends(check_user_authentication),
                       leads_persistence: LeadsPersistence = Depends(get_lead_orders_persistence)
                       ):
     return UsersService(user=user, user_persistence_service=user_persistence, plan_persistence=plan_persistence,
-                        subscription_service=subscription_service, domain_persistence=domain_persistence, leads_persistence=leads_persistence)
+                        subscription_service=subscription_service, domain_persistence=domain_persistence,
+                        leads_persistence=leads_persistence)
 
 
 def get_notification_service(notification_persistence: NotificationPersistence = Depends(get_notification_persistence),
@@ -522,6 +586,12 @@ def get_dashboard_service(domain: UserDomains = Depends(check_pixel_install_doma
                             leads_persistence_service=leads_persistence_service)
 
 
+def get_audience_dashboard_service(dashboard_audience_persistence:
+                                   DashboardAudiencePersistence = Depends(get_dashboard_audience_persistence)
+                                   ):
+    return DashboardAudienceService(dashboard_audience_persistence=dashboard_audience_persistence)
+
+
 def get_payouts_service(
         referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence),
         referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence),
@@ -533,7 +603,8 @@ def get_payouts_service(
 
 
 def get_pixel_installation_service(db: Session = Depends(get_db),
-                                    send_grid_persistence_service: SendgridPersistence = Depends(get_send_grid_persistence_service)
+                                   send_grid_persistence_service: SendgridPersistence = Depends(
+                                       get_send_grid_persistence_service)
                                    ):
     return PixelInstallationService(db=db, send_grid_persistence_service=send_grid_persistence_service)
 
@@ -623,3 +694,16 @@ def check_api_key(maximiz_api_key=Header(None),
             return domains[0]
         raise HTTPException(status_code=404, detail={'status': DomainStatus.DOMAIN_NOT_FOUND.value})
     raise HTTPException(status_code=401, detail={'status': UserAuthorizationStatus.INVALID_API_KEY.value})
+
+
+def get_lookalikes_service(
+        lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(get_lookalikes_persistence)):
+    return AudienceLookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)
+
+def get_audience_data_normalization():
+    return AudienceDataNormalizationService()
+
+def get_similar_audience_service(
+        audience_data_normalization_service: AudienceDataNormalizationService = Depends(get_audience_data_normalization)
+):
+    return SimilarAudienceService(normalizer=audience_data_normalization_service)

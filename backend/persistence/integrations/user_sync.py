@@ -1,11 +1,14 @@
+from models.audience_smarts import AudienceSmart
 from models.integrations.integrations_users_sync import IntegrationUserSync
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from models.users import Users
 from enums import SourcePlatformEnum
 from models.users_domains import UserDomains
 from models.subscriptions import UserSubscriptions
-from sqlalchemy import func
+from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
+from sqlalchemy import func, desc
 from models.integrations.users_domains_integrations import UserIntegration
+
 
 class IntegrationsUserSyncPersistence:
 
@@ -17,7 +20,7 @@ class IntegrationsUserSyncPersistence:
         self.db.add(sync)
         self.db.commit()
         return sync
-    
+
     def edit_sync(self, data: dict, integrations_users_sync_id: int) -> IntegrationUserSync:
         self.try_reset_error(integrations_users_sync_id)
         sync = self.db.query(IntegrationUserSync).filter_by(id=integrations_users_sync_id).first()
@@ -26,19 +29,41 @@ class IntegrationsUserSyncPersistence:
                 setattr(sync, key, value)
             self.db.commit()
         return sync
-    
+
     def delete_sync(self, domain_id, list_id):
-        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
+        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id,
+                                                         IntegrationUserSync.domain_id == domain_id).first()
         if sync:
             self.db.delete(sync)
             self.db.commit()
             return True
         return False
 
+    def delete_smart_audience_sync(self, user_id, list_id):
+        sync = (
+            self.db.query(IntegrationUserSync)
+                .join(UserIntegration, IntegrationUserSync.integration_id == UserIntegration.id)
+                .filter(IntegrationUserSync.id == list_id, UserIntegration.user_id == user_id)
+                .first()
+        )
+        if sync:
+            audience = (
+                self.db.query(AudienceSmart)
+                    .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id)
+                    .filter(IntegrationUserSync.id == list_id)
+                    .first()
+            )
+            if audience:
+                audience.status = 'ready'
+            self.db.delete(sync)
+            self.db.commit()
+            return True
+        return False
 
     def switch_sync_toggle(self, domain_id, list_id):
         active = False
-        sync = self.db.query(IntegrationUserSync).filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
+        sync = self.db.query(IntegrationUserSync) \
+            .filter(IntegrationUserSync.id == list_id, IntegrationUserSync.domain_id == domain_id).first()
         if sync:
             if sync.is_active == False:
                 active = True
@@ -47,10 +72,26 @@ class IntegrationsUserSyncPersistence:
                 sync.is_active = active
             self.db.commit()
             return active
-    
+
+    def switch_toggle_smart_sync(self, user_id, list_id):
+        active = False
+        sync = self.db.query(IntegrationUserSync) \
+            .join(UserIntegration, IntegrationUserSync.integration_id == UserIntegration.id) \
+            .filter(IntegrationUserSync.id == list_id, UserIntegration.user_id == user_id) \
+            .first()
+        print(sync)
+        if sync:
+            if sync.is_active == False:
+                active = True
+                sync.is_active = active
+            else:
+                sync.is_active = active
+            self.db.commit()
+            return active
+
     def get_all(self):
         return self.db.query(IntegrationUserSync).all()
-    
+
     def get_limits_integrations(self, user_id, domain_id):
         user_subscription = self.db.query(UserSubscriptions.integrations_limit) \
             .join(Users, Users.current_subscription_id == UserSubscriptions.id) \
@@ -63,16 +104,18 @@ class IntegrationsUserSyncPersistence:
             return None, None
 
         domain_integrations_count = self.db.query(func.count(UserIntegration.id)) \
-            .filter(UserIntegration.domain_id == domain_id, UserIntegration.service_name != SourcePlatformEnum.SHOPIFY.value, UserIntegration.service_name != SourcePlatformEnum.BIG_COMMERCE.value) \
+            .filter(UserIntegration.domain_id == domain_id,
+                    UserIntegration.service_name != SourcePlatformEnum.SHOPIFY.value,
+                    UserIntegration.service_name != SourcePlatformEnum.BIG_COMMERCE.value) \
             .scalar()
 
         return integration_limit, domain_integrations_count
 
     def get_filter_by(self, domain_id, service_name: str = None, integrations_users_sync_id: str = None):
         query = self.db.query(
-            IntegrationUserSync.id, 
-            IntegrationUserSync.created_at, 
-            IntegrationUserSync.is_active, 
+            IntegrationUserSync.id,
+            IntegrationUserSync.created_at,
+            IntegrationUserSync.is_active,
             IntegrationUserSync.last_sync_date,
             IntegrationUserSync.leads_type,
             IntegrationUserSync.integration_id,
@@ -93,7 +136,7 @@ class IntegrationsUserSyncPersistence:
             UserIntegration.error_message,
             UserIntegration.is_failed
         ).join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
-        .filter(IntegrationUserSync.domain_id == domain_id)
+            .filter(IntegrationUserSync.domain_id == domain_id)
 
         if service_name:
             query = query.filter(UserIntegration.service_name == service_name)
@@ -124,7 +167,7 @@ class IntegrationsUserSyncPersistence:
                     'hook_url': sync.hook_url,
                     'method': sync.method
                 }
-        syncs = query.order_by(IntegrationUserSync.id).all()
+        syncs = query.order_by(desc(IntegrationUserSync.created_at)).all()
         return [{
             'id': sync.id,
             'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
@@ -150,23 +193,94 @@ class IntegrationsUserSyncPersistence:
             'method': sync.method
         } for sync in syncs]
 
+    def get_all_audience_sync(self, user_id: int, service_name: str = None, integrations_users_sync_id: str = None):
+        ImportedLeads = aliased(AudienceDataSyncImportedPersons)
+
+        query = self.db.query(
+            IntegrationUserSync.id,
+            IntegrationUserSync.created_at,
+            IntegrationUserSync.is_active,
+            IntegrationUserSync.last_sync_date,
+            IntegrationUserSync.integration_id,
+            IntegrationUserSync.sync_status,
+            IntegrationUserSync.no_of_contacts,
+            IntegrationUserSync.sent_contacts,
+            IntegrationUserSync.created_by,
+            IntegrationUserSync.list_id,
+            IntegrationUserSync.data_map,
+            UserIntegration.service_name,
+            UserIntegration.is_failed,
+            AudienceSmart.name,
+            func.count(ImportedLeads.id).filter(ImportedLeads.status != 'sent').label("imported_count")
+        ).join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
+            .join(AudienceSmart, IntegrationUserSync.smart_audience_id == AudienceSmart.id) \
+            .outerjoin(ImportedLeads, ImportedLeads.data_sync_id == IntegrationUserSync.id) \
+            .filter(UserIntegration.user_id == user_id) \
+            .group_by(IntegrationUserSync.id, UserIntegration.service_name, UserIntegration.is_failed,
+                      AudienceSmart.name,
+                      AudienceSmart.active_segment_records, AudienceSmart.total_records)
+
+        if service_name:
+            query = query.filter(UserIntegration.service_name == service_name)
+
+        if integrations_users_sync_id:
+            sync = query.filter(IntegrationUserSync.id == integrations_users_sync_id).first()
+            if sync:
+                return {
+                    'id': sync.id,
+                    'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
+                    'name': sync.name,
+                    'lastSync': sync.last_sync_date.strftime('%b %d, %Y') if sync.last_sync_date else None,
+                    'platform': sync.service_name.lower(),
+                    'integration_id': sync.integration_id,
+                    'dataSync': sync.is_active,
+                    'contacts': sync.no_of_contacts,
+                    'createdBy': sync.created_by,
+                    'data_map': sync.data_map,
+                    'syncStatus': False if sync.is_failed else sync.sync_status,
+                    'integration_is_failed': sync.is_failed,
+                    'list_id': sync.list_id,
+                    'active_segment': sync.sent_contacts,
+                    'records_synced': sync.no_of_contacts,
+                    'is_progress': sync.imported_count < sync.sent_contacts if sync.sent_contacts else False
+                }
+
+        syncs = query.order_by(desc(IntegrationUserSync.created_at)).all()
+
+        return [{
+            'id': sync.id,
+            'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
+            'name': sync.name,
+            'lastSync': sync.last_sync_date.strftime('%b %d, %Y') if sync.last_sync_date else None,
+            'platform': sync.service_name.lower(),
+            'integration_id': sync.integration_id,
+            'dataSync': sync.is_active,
+            'createdBy': sync.created_by,
+            'data_map': sync.data_map,
+            'syncStatus': False if sync.is_failed else sync.sync_status,
+            'integration_is_failed': sync.is_failed,
+            'list_id': sync.list_id,
+            'active_segments': sync.sent_contacts,
+            'records_synced': sync.no_of_contacts,
+            'is_progress': sync.imported_count < sync.sent_contacts if sync.sent_contacts else False
+        } for sync in syncs]
+
     def get_data_sync_filter_by(self, **filter_by):
         return self.db.query(IntegrationUserSync).filter_by(**filter_by).all()
-    
+
     def get_user_by_shop_domain(self, shop_domain):
         user = (
             self.db.query(Users)
-            .join(UserDomains, UserDomains.user_id == Users.id)
-            .join(UserIntegration, UserIntegration.domain_id == UserDomains.id)
-            .filter(UserIntegration.shop_domain == shop_domain)
-            .first()
+                .join(UserDomains, UserDomains.user_id == Users.id)
+                .join(UserIntegration, UserIntegration.domain_id == UserDomains.id)
+                .filter(UserIntegration.shop_domain == shop_domain)
+                .first()
         )
         return user
 
-    
     def update_sync(self, update_data: dict, counter, **filter_by):
         update_data['no_of_contacts'] = IntegrationUserSync.no_of_contacts + counter
-        update = self.db.query(IntegrationUserSync).filter_by(**filter_by).update(update_data) 
+        update = self.db.query(IntegrationUserSync).filter_by(**filter_by).update(update_data)
         self.db.commit()
         return update
 
@@ -189,4 +303,6 @@ class IntegrationsUserSyncPersistence:
         return False
 
     def get_integration_by_sync_id(self, sync_id: int):
-        return self.db.query(UserIntegration).join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id).filter(IntegrationUserSync.id == sync_id).first()
+        return self.db.query(UserIntegration) \
+            .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id) \
+            .filter(IntegrationUserSync.id == sync_id).first()

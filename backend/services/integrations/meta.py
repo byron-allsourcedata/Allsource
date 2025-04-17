@@ -1,5 +1,5 @@
-
-
+import json
+import re
 import hashlib
 from schemas.integrations.meta import AdAccountScheme
 from models.five_x_five_users import FiveXFiveUser
@@ -9,11 +9,14 @@ from persistence.leads_persistence import LeadsPersistence
 from persistence.domains import UserDomainsPersistence
 import httpx
 import os
+from faker import Faker
+from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
 from datetime import datetime, timedelta
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
+from models.enrichment_users import EnrichmentUser
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from datetime import datetime
 from utils import extract_first_email
@@ -21,6 +24,7 @@ from schemas.integrations.integrations import IntegrationCredentials, DataMap, L
 from utils import format_phone_number
 from typing import List
 from config.meta import MetaConfig
+from uuid import UUID
 
 APP_SECRET = MetaConfig.app_secret
 APP_ID = MetaConfig.app_piblic
@@ -55,6 +59,10 @@ class MetaIntegrationsService:
     def get_credentials(self, domain_id: int, user_id: int):
         return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.META.value)
 
+    def get_smart_credentials(self, user_id: int):
+        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.META.value)
+        return credential
+
     def get_info_by_access_token(self, access_token: str):
         url = 'https://graph.facebook.com/v20.0/me'
         params = {
@@ -84,7 +92,8 @@ class MetaIntegrationsService:
             'full_name': user.get('full_name'),
             'expire_access_token': access_token.get('expires_in'),
             'last_access_token_update': datetime.now(),
-            'service_name': SourcePlatformEnum.META.value
+            'service_name': SourcePlatformEnum.META.value,
+            'limit': IntegrationLimit.META.value
         }
 
         if common_integration:
@@ -195,8 +204,8 @@ class MetaIntegrationsService:
             credentials.error_message = 'Connection Error'
             self.integrations_persisntece.db.commit()
             return
-        audience_lists = [self.__mapped_meta_list(audience) for audience in response_audience.json().get('data')]
-        campaign_lists = [self.__mapped_meta_list(campaign) for campaign in response_campaign.json().get('data')]
+        audience_lists = [self.__mapped_meta_list(audience) for audience in response_audience.json().get('data')] if response_audience else []
+        campaign_lists = [self.__mapped_meta_list(campaign) for campaign in response_campaign.json().get('data')] if response_campaign else []
         return {
             'audience_lists': audience_lists,
             'campaign_lists': campaign_lists
@@ -298,97 +307,119 @@ class MetaIntegrationsService:
             'created_by': created_by
         })
         return sync
+    
+    def create_smart_audience_sync(self, customer_id: int, created_by: str, user: dict, smart_audience_id: UUID, sent_contacts: int, campaign = {}, data_map: List[DataMap] = None, list_id: str = None, list_name: str = None,):
+        credentials = self.get_smart_credentials(user_id=user.get('id'))
+        campaign_id = campaign.get('campaign_id')        
+        if campaign_id == -1 and campaign.get('campaign_name'):
+            campaign_id = self.create_campaign(campaign['campaign_name'], campaign['daily_budget'], credentials.access_token, customer_id)
+        if campaign_id and campaign_id != -1:
+            self.create_adset(customer_id, campaign['campaign_name'], campaign_id, credentials.access_token, list_id, campaign['campaign_objective'], campaign['bid_amount'])
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
+            'customer_id': customer_id,
+            'sent_contacts': sent_contacts,
+            'campaign_id': campaign_id,
+            'campaign_name': campaign.get('campaign_name'),
+            'sync_type': DataSyncType.AUDIENCE.value,
+            'smart_audience_id': smart_audience_id,
+            'data_map': data_map if data_map else None,
+            'created_by': created_by
+        })
+        return sync
         
-    async def process_data_sync(self, five_x_five_user, user_integration, integration_data_sync, lead_user):
-        profile = self.__create_user(five_x_five_user=five_x_five_user, custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token)
-        
-        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
-        
-        if profile.get('error'):
-            if profile.get('error').get('type') == 'OAuthException':
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+    async def process_data_sync(self, user_integration, integration_data_sync, enrichment_users: EnrichmentUser):
+        profiles = []
+        for enrichment_user in enrichment_users:
+            profile = self.__hash_mapped_meta_user(enrichment_user)
+            profiles.append(profile)
+            
+        return self.__create_user(custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token, profiles=profiles)
 
-        return ProccessDataSyncResult.SUCCESS.value
-
-    def __create_user(self, five_x_five_user, custom_audience_id: str, access_token: str):
-        profile = self.__hash_mapped_meta_user(five_x_five_user)
-        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
+    def __create_user(self, custom_audience_id: str, access_token: str, profiles: List[dict]):
         payload = {
-            "schema": [
-                "EMAIL",
-                "PHONE",
-                "GEN",
-                "LN",
-                "FN",
-                "ST",
-                "CT",
-                "ZIP"
-            ],
-            "data": [profile]
+            "schema": ["EMAIL", "PHONE", "GEN", "DOBY", "DOBM", "DOBD", "LN", "FN", "ST", "CT", "ZIP"],
+            "data":   profiles
+        }
+        session = {
+            "session_id": 1,
+            "batch_seq": 1,
+            "last_batch_flag": True,
+            "estimated_num_total": len(profiles)
         }
         url = f'https://graph.facebook.com/v20.0/{custom_audience_id}/users'
         response = self.__handle_request(method='POST', url=url, params={'access_token': access_token}, data={
-            'payload': payload,
+            "session": json.dumps(session),
+            'payload': json.dumps(payload),
             'app_id': APP_ID
             })
-        return response.json()
+        
+        result = response.json()
+        
+        if result.get('error',{}).get('type') == 'OAuthException':
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        
+        return ProccessDataSyncResult.SUCCESS.value
+    
+    def get_birth_date_from_age(self, age_range):
+        if age_range is None or age_range.lower is None:
+            return None, None, None
+        
+        age = age_range.lower
+        current_year = datetime.now().year
+        birth_year = current_year - age
+        return str(birth_year), '01', '01'
 
-    def __hash_mapped_meta_user(self, five_x_five_user: FiveXFiveUser):
-        email_fields = [
-            'business_email', 
-            'personal_emails', 
-            'additional_personal_emails',
-        ]
+    def __hash_mapped_meta_user(self, enrichment_user: EnrichmentUser):
+        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
+        first_email = get_valid_email(emails_list)
         
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
-                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                                return e.strip()
-                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
-                                return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        # first_phone = get_valid_phone(five_x_five_user)
+        # address_parts = get_valid_location(five_x_five_user)
+        fake = Faker()
 
-        first_email = get_valid_email(five_x_five_user)
+        first_phone = fake.phone_number()
+        address_parts = fake.address().split("\n")
+        city_state_zip = address_parts[-1]
+
+        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
+
+        if match:
+            city = match.group(1).strip()
+            state = match.group(2) if match.group(2) else ''
+            zip_code = match.group(3) if match.group(3) else ''
+        else:
+            city, state, zip_code = '', '', ''
+            
+        gender = ''
         
-        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return first_email
-        
-        first_phone = (
-            getattr(five_x_five_user, 'mobile_phone') or 
-            getattr(five_x_five_user, 'personal_phone') or 
-            getattr(five_x_five_user, 'direct_number') or 
-            getattr(five_x_five_user, 'company_phone', None)
-        )
-        first_phone = format_phone_number(first_phone)
+        if enrichment_user.gender == 1:
+            gender = 'm'
+        elif enrichment_user.gender == 2:
+            gender = 'f'
+            
+        first_name = fake.first_name()
+        last_name = fake.last_name()
 
         def hash_value(value):
             return hashlib.sha256(value.encode('utf-8')).hexdigest() if value else ""
+        
+        birth_year, birth_month, birth_day = self.get_birth_date_from_age(enrichment_user.age)
+
         return [
                 hash_value(first_email),                                                           # EMAIL
                 hash_value(first_phone),                                                           # PHONE
-                hash_value(five_x_five_user.gender),                                               # GEN
-                hash_value(five_x_five_user.last_name),                                            # LN
-                hash_value(five_x_five_user.first_name),                                           # FN
-                hash_value(five_x_five_user.personal_state),                                       # ST
-                hash_value(five_x_five_user.personal_city),                                        # CT
-                hash_value(five_x_five_user.personal_zip),                                         # ZIP
+                hash_value(gender),                                                                # GEN
+                hash_value(birth_year),                                                            # DOBY
+                hash_value(birth_month),                                                           # DOBM
+                hash_value(birth_day),                                                             # DOBD
+                hash_value(first_name),                                                            # LN
+                hash_value(last_name),                                                             # FN
+                hash_value(state),                                                                 # ST
+                hash_value(city),                                                                  # CT
+                hash_value(zip_code),                                                              # ZIP
             ]
             
     def __mapped_meta_list(self, list):

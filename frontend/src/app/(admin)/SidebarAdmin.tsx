@@ -5,20 +5,16 @@ import {
     List,
     ListItemIcon,
     ListItemText,
-    LinearProgress,
-    Typography,
     ListItemButton
 } from '@mui/material';
 import {useRouter} from 'next/navigation';
 import {usePathname} from 'next/navigation';
-import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import LeadsIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import Image from 'next/image';
-import { display, width } from '@mui/system';
+
 
 const sidebarStyles = {
     container: {

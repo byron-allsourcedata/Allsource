@@ -1,7 +1,12 @@
 from datetime import datetime, timezone
+
+from models.five_x_five_users import FiveXFiveUser
 from models.users_domains import UserDomains
-from sqlalchemy.orm import Session
-from sqlalchemy import func
+from models.leads_users import LeadUser
+from models.leads_users_added_to_cart import LeadsUsersAddedToCart
+from models.leads_users_ordered import LeadsUsersOrdered
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy import func, case, and_, or_, distinct
 from fastapi import HTTPException
 import re
 
@@ -15,6 +20,101 @@ class UserDomainsPersistence:
         query = self.db.query(UserDomains).filter_by(user_id=user_id)
         if domain_substr:
             query = query.filter(UserDomains.domain == domain_substr)
+        return query.all()
+
+    def get_domain_name(self, domain_id: int):
+        query = self.db.query(UserDomains.domain).filter(UserDomains.id == domain_id)
+        result = query.first()
+
+        return result.domain if result else None
+
+    def get_domains_with_leads(self, user_id: int):
+        added_to_cart = aliased(LeadsUsersAddedToCart)
+        ordered = aliased(LeadsUsersOrdered)
+
+        converted_sales = func.count(distinct(case(
+            (
+                or_(
+                    and_(
+                        LeadUser.behavior_type != "product_added_to_cart",
+                        LeadUser.is_converted_sales == True
+                    ),
+                    and_(
+                        LeadUser.is_converted_sales == True,
+                        added_to_cart.added_at < ordered.ordered_at
+                    )
+                ),
+                FiveXFiveUser.id
+            )
+            ,
+            else_=None
+        )))
+
+        viewed_product = func.count(distinct(case(
+            (
+                and_(
+                    LeadUser.behavior_type == "viewed_product",
+                    LeadUser.is_converted_sales == False
+                ),
+                FiveXFiveUser.id
+            )
+            ,
+            else_=None
+        )))
+
+        visitor = func.count(distinct(case(
+            (
+                and_(
+                    LeadUser.behavior_type == "visitor",
+                    LeadUser.is_converted_sales == False
+                ),
+                FiveXFiveUser.id
+            )
+            ,
+            else_=None
+        )))
+
+        abandoned_cart = func.count(distinct(case(
+            (
+                and_(
+                    LeadUser.behavior_type == "product_added_to_cart",
+                    LeadUser.is_converted_sales == False,
+                ),
+                FiveXFiveUser.id
+            ),
+            (
+                and_(
+                    LeadUser.behavior_type == "product_added_to_cart",
+                    LeadUser.is_converted_sales == True,
+                    added_to_cart.added_at > ordered.ordered_at
+                ),
+                FiveXFiveUser.id
+            )
+            ,
+            else_=None
+        )))
+
+        total_count = converted_sales + viewed_product + visitor + abandoned_cart
+
+        query = (
+            self.db.query(
+                UserDomains.id,
+                UserDomains.domain,
+                UserDomains.is_pixel_installed,
+                converted_sales.label("converted_sales"),
+                viewed_product.label("viewed_product"),
+                visitor.label("visitor"),
+                abandoned_cart.label("abandoned_cart"),
+                total_count.label("total_count")
+            )
+            .outerjoin(LeadUser, UserDomains.id == LeadUser.domain_id)
+            .outerjoin(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+            .outerjoin(added_to_cart, added_to_cart.lead_user_id == LeadUser.id)
+            .outerjoin(ordered, ordered.lead_user_id == LeadUser.id)
+            .filter(UserDomains.user_id == user_id)
+            .group_by(UserDomains.id, UserDomains.domain, UserDomains.is_pixel_installed)
+        )
+
         return query.all()
 
     def get_domain_by_filter(self, **filter_by):
@@ -39,13 +139,13 @@ class UserDomainsPersistence:
 
     def count_domain(self, user_id: int):
         return self.db.query(func.count(UserDomains.id)).filter_by(user_id=user_id).scalar()
-    
+
     def update_domain_name(self, domain_id: int, domain_name: str):
         self.db.query(UserDomains).filter(
             UserDomains.id == domain_id
         ).update({UserDomains.domain: domain_name})
         self.db.commit()
-    
+
     def update_first_domain_by_user_id(self, user_id: int, new_domain):
         domain_query = self.db.query(UserDomains).filter(UserDomains.user_id == user_id).first()
 
@@ -59,7 +159,7 @@ class UserDomainsPersistence:
             raise HTTPException(status_code=404, detail={'status': 'NOT_FOUND'})
         self.db.delete(domain)
         self.db.commit()
-    
+
     def update_pixel_installation(self, domain_id: int, is_pixel_install):
         self.db.query(UserDomains).filter(
             UserDomains.id == domain_id

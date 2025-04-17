@@ -25,16 +25,35 @@ export const CustomInfoToast = ({ message }: { message: string }) => (
   </div>
 );
 
-export const CustomErrorToast = ({ message }: { message: string }) => (
-  <div style={{ color: 'rgba(255, 245, 245, 1)' }}>
-    <Typography style={{ fontWeight: '700', color: 'rgba(224, 49, 48, 1)', fontFamily: 'Nunito Sans', fontSize: '16px' }}>
-      Error
-    </Typography>
-    <Typography variant="body2" sx={{ color: 'rgba(224, 49, 48, 1)', fontWeight: '400', fontFamily: 'Nunito Sans', fontSize: '12px' }}>
-      {message}
-    </Typography>
-  </div>
-);
+export const CustomErrorToast = ({ message }: { message: string }) => {
+  const formattedMessage = message.replace(
+    "Support team",
+    `<a href="https://maximizai.zohodesk.eu/portal/en/newticket" 
+        style="color: inherit" 
+        target="_blank" rel="noopener noreferrer">
+      Support team
+    </a>`
+  );
+
+  return (
+    <div style={{ color: 'rgba(255, 245, 245, 1)' }}>
+      <Typography style={{ fontWeight: '700', color: 'rgba(224, 49, 48, 1)', fontFamily: 'Nunito Sans', fontSize: '16px' }}>
+        Error
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{
+          color: 'rgba(224, 49, 48, 1)',
+          fontWeight: '400',
+          fontFamily: 'Nunito Sans',
+          fontSize: '12px',
+        }}
+        dangerouslySetInnerHTML={{ __html: formattedMessage }}
+      />
+    </div>
+  );
+};
+
 
 export const showToast = (message: string, options: ToastOptions = {}) => {
   toast.success(<CustomToast message={message} />, {

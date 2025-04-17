@@ -1,4 +1,7 @@
 .DS_Store
 backend/.DS_Store
+.env*
 
 .idea/*
+
+catboost_info/

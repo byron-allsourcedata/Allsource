@@ -43,6 +43,7 @@ Index('leads_users_domain_id_is_confirmed_idx', LeadUser.is_confirmed, LeadUser.
 Index('leads_users_domain_id_is_active_is_confirmed_idx', LeadUser.domain_id, LeadUser.is_active, LeadUser.is_confirmed)
 Index('leads_users_five_x_five_user_id_domain_id_idx', LeadUser.five_x_five_user_id, LeadUser.domain_id)
 Index('leads_users_five_x_five_user_id_user_id_idx', LeadUser.five_x_five_user_id, LeadUser.user_id)
+Index("leads_users_user_created_at", LeadUser.user_id, LeadUser.created_at)
 
 
 event.listen(LeadUser, "before_insert", create_timestamps)

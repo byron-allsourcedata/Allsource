@@ -42,6 +42,27 @@ async def get_integrations_service(type: str | None = Query(None), data_sync: bo
     return persistence.get_integrations_service(**filter)
 
 
+@router.get('/smart-audience-sync')
+@router.get('/smart-audience-sync/')
+async def get_integrations_smart_audinece_sync(
+        type: str | None = Query(None), 
+        data_sync: bool | None = Query(None), 
+        integration_list: str | None = Query(None),
+        user=Depends(check_user_authentication),
+        persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)
+    ):
+    filter = {}
+    if type:
+        filter['type'] = type
+    if data_sync is not None:
+        filter['data_sync'] = data_sync
+    
+    if integration_list:
+        filter['service_name'] = integration_list.split(',')
+
+    return persistence.get_integrations_service(**filter)
+
+
 @router.get('/credentials/')
 async def get_integrations_credentials(integration_serivce: IntegrationService = Depends(get_integration_service),
                                        user=Depends(check_user_authorization),
@@ -157,6 +178,15 @@ async def create_list(list_data: CreateListOrTags,
     with integrations_service as service:
         service = getattr(service, service_name)
         return service.create_list(list_data, domain.id, user.get('id'))
+
+@router.post('/sync/campaign/', status_code=201)
+async def create_campaign(list_data: CreateCampaign,
+                      service_name: str = Query(...),
+                      integrations_service: IntegrationService = Depends(get_integration_service),
+                      user=Depends(check_user_authorization), domain=Depends(check_domain)):
+    with integrations_service as service:
+        service = getattr(service, service_name)
+        return service.create_campaign(list_data, domain_id=domain.id, user_id=user.get('id'))
     
 @router.get('/sync/sender', status_code=200)
 async def get_sender(integrations_service: IntegrationService = Depends(get_integration_service), user = Depends(check_user_authorization), domain = Depends(check_domain)):

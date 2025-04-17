@@ -49,9 +49,13 @@ const Settings: React.FC = () => {
     };
 
     return (
-        <Box sx={{overflow: 'hidden' }}>
+        <Box sx={{position: 'relative', width: '100%' }}>
+            <Box sx={{width: '100%', position:'sticky', top:0, zIndex:1, pl:0.5}}>
+
+
             <Box sx={{
                 display: 'flex',
+                width: '100%',
                 flexDirection: 'row',
                 alignItems: 'center',
                 gap: 1,
@@ -61,9 +65,6 @@ const Settings: React.FC = () => {
                 top: 0,
                 background: '#fff',
                 zIndex: 10,
-                paddingLeft: '30px',
-                paddingRight: '24px',
-                mx: '-24px',
                 '@media (max-width: 1199px)': {
                     paddingTop: '1rem'
                 },
@@ -127,6 +128,7 @@ const Settings: React.FC = () => {
                 </Button> */}
                 </Box>
             </Box>
+            </Box>
 
 
 
@@ -135,11 +137,9 @@ const Settings: React.FC = () => {
             ) : (
                 <Box sx={{
                     flexGrow: 1,
-                    overflow: 'auto',
-                    height: 'calc(100vh - 7.75rem)',
-                    "@media (max-width: 900px)": {
-                        height: 'calc(100vh - 11rem)',
-                    }
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    pl:1
                 }}>
                     {activeSection === 'accountDetails' && accountDetails && (
                         <SettingsAccountDetails accountDetails={accountDetails} />

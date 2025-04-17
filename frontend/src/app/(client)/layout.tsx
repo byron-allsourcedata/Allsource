@@ -19,7 +19,7 @@ interface ClientLayoutProps {
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const pathname = usePathname(); // Get the current path
-  const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/forgot-password', '/thanks-installed-app'];
+  const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/forgot-password',];
   const isAuthenticated = !excludedPaths.includes(pathname);
   const [showSlider, setSlider] = useState(false);
   const { newNotification, NotificationData } = useSSE();
@@ -110,10 +110,10 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         <Grid item xs={12} md="auto" lg="auto" sx={{
           padding: "0px",
           display: { xs: 'none', md: 'block' },
-          flexBasis: '142px',
+          flexBasis: '170px',
           flexShrink: 0,
-          minWidth: '142px',
-          maxWidth: '142px',
+          minWidth: '170px',
+          maxWidth: '170px',
           position: 'fixed',
           top: latestNotification || newNotification ? 'calc(7.125rem)' : '4.25rem',
         }}>
@@ -127,8 +127,8 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             flexGrow: 1,
             padding: '0px 0px 0px 24px',
             minWidth: 0,
-            overflowY: 'hidden',
-            marginLeft: '142px',
+            overflowY: 'auto',
+            marginLeft: '170px',
             '@media (max-width: 899px)': {
               overflowY: 'hidden',
               padding: '0 0 16px 16px',

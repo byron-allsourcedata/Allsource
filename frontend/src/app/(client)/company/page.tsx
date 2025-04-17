@@ -166,6 +166,13 @@ const Leads: React.FC = () => {
                 }
             });
             handleCalendarClose();
+        } else {
+            setAppliedDates({ start: null, end: null });
+            setFormattedDates('');
+            setSelectedDates({ start: null, end: null })
+            setSelectedFilters(prevFilters => {
+                return prevFilters.filter(filter => filter.label !== 'Dates');
+            });
         }
     };
 
@@ -735,7 +742,7 @@ const Leads: React.FC = () => {
             }}/>}
             {!companyEmployeesOpen && 
             <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%', pr:'16px',
+                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%', pr:2.5,
                 '@media (max-width: 900px)': {
                     paddingRight: 0,
                     minHeight: '100vh'

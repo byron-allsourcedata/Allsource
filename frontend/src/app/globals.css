@@ -29,7 +29,7 @@ body {
 
 @media (max-width: 900px) {
   .page-container {
-    overflow: hidden;
+    overflow: auto;
     max-height: 100vh;
   }
 }
@@ -146,6 +146,22 @@ body {
   color: #5F6368;
 }
 
+.black-table-data {
+  font-family: 'Roboto';
+  font-size: 12px;
+  line-height: normal;
+  font-weight: 400;
+  color: #202124;
+}
+
+.black-table-header {
+  font-family: 'Roboto';
+  font-size: 14px;
+  line-height: normal;
+  font-weight: 400;
+  color: #202124;
+}
+
 .left-nav {
   font-family: 'Nunito Sans';
   font-size: 14px;
@@ -208,6 +224,22 @@ body {
   font-size: 14px;
   line-height: 20px;
   color: #707071;
+}
+.dashboard-card-heading {
+  font-family: 'Nunito Sans';
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 140%;
+  letter-spacing: 0%;
+  color: rgba(74,74,74,1)
+}
+.dashboard-card-text {
+  font-family: 'Nunito Sans';
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 140%;
+  letter-spacing: 0%;
+  color: rgba(74,74,74,1)
 }
 .MuiInputLabel.MuiInputLabel-outlined {
   color: rgba(17, 17, 19, 0.6);

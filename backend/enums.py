@@ -1,9 +1,26 @@
 from enum import Enum
 
-
 class BaseEnum(Enum):
     SUCCESS = 'SUCCESS'
     FAILURE = 'FAILURE'
+
+class EmailType(Enum):
+    BUSINESS = "business"
+    PERSONAL = "personal"
+    ADDITIONAL_PERSONAL = "additional_personal"
+
+class LookalikeSize(Enum):
+    ALMOST = "almost"
+    EXTREMELY = "extremely"
+    VERY = "very"
+    QUITE = "quite"
+    BROAD = "broad"
+
+class QueueName(Enum):
+    AUDIENCE_SOURCE_MATCHING = 'aud_sources_matching'
+    AUDIENCE_SOURCES_READER = 'aud_sources_files'
+    AUDIENCE_SMARTS_AGENT = 'aud_smarts_agent'
+    AUDIENCE_SMARTS_FILLER = 'aud_smarts_filler'
     
 class OauthShopify(Enum):
     USER_NOT_FOUND = 'USER_NOT_FOUND'
@@ -12,9 +29,57 @@ class OauthShopify(Enum):
     ERROR_SHOPIFY_TOKEN = 'ERROR_SHOPIFY_TOKEN'
     NON_SHOPIFY_ACCOUNT = 'NON_SHOPIFY_ACCOUNT'
 
+class TypeOfCustomer(Enum):
+    CUSTOMER_CONVERSIONS = 'customer_conversions'
+    FAILED_LEADS = 'failed_leads'
+    INTEREST = 'interest'
+    VISITOR = 'visitor'
+    VIEW_PRODUCT = 'view_product'
+    ABANDONED_CART = 'abandoned_cart'
+    CONVERTED_SALES = 'converted_sales'
+
+class TypeOfSourceOrigin(Enum):
+    CSV = 'csv'
+    PIXEL = 'pixel'
+
+class DataSyncType(Enum):
+    AUDIENCE = 'audience'
+    PIXEL = 'pixel'
+
+class IntegrationLimit(Enum):
+    MAILCHIMP = 10000
+    SALESFORCE = 10000
+    BING_ADS = 100000
+    GOOGLE_ADS = 5000
+    META = 5000
+    HUBSPOT = 100
+    S3 = 10000
+
 class BusinessType(Enum):
     D2C = 'd2c'
     B2B = 'b2b'
+
+class LeadStatus(Enum):
+    ABANDONED_CART = 'abandoned_cart'
+    VIEW_PRODUCT = 'view_product'
+    CONVERTED_SALES = 'converted_sales'
+    VISITOR = 'visitor'
+
+class SourceType(Enum):
+    CSV = 'csv'
+    PIXEL = 'pixel'
+
+class AudienceSmartDataSource(Enum):
+    INCLUDE = 'include'
+    EXCLUDE = 'exclude'
+
+class AudienceSmartStatuses(Enum):
+    UNVALIDATED = 'unvalidated'
+    VALIDATING = 'validating'
+    READY = 'ready'
+    SYNCED = 'synced'
+    N_A = 'n_a'
+    DATA_SYNCING = 'data_syncing'
 
 class CreateDataSync(Enum):
     ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
@@ -203,6 +268,15 @@ class VerifyToken(Enum):
     EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED'
     INCORRECT_TOKEN = 'INCORRECT_TOKEN'
 
+class LeadStatus(Enum):
+    ABANDONED_CART = 'abandoned_cart'
+    VIEWED_PRODUCT = 'viewed_product'
+    CONVERTED_SALES = 'converted_sales'
+    VISITOR = 'visitor'
+    
+class SourceType(Enum):
+    CSV = 'csv'
+    PIXEL = 'pixel'
 
 class DomainStatus(Enum):
     LAST_DOMAIN = 'LAST_DOMAIN'
@@ -212,6 +286,7 @@ class DomainStatus(Enum):
 class NotificationTitles(Enum):
     PLAN_LIMIT_EXCEEDED = 'plan_limit_exceeded'
     AUTHENTICATION_INTEGRATION_FAILED = 'authentication_integration_failed'
+    PAYMENT_INTEGRATION_REQUIRED = 'payment_integration_required'
     DATA_SYNC_ERROR = 'data_sync_error'
     PAYMENT_FAILED = 'payment_failed'
     CONTACT_LIMIT_APPROACHING = 'contact_limit_approaching'
@@ -258,6 +333,7 @@ class ProccessDataSyncResult(Enum):
     AUTHENTICATION_FAILED = 'authentication_failed'
     TOO_MANY_REQUESTS = 'too_many_requests'
     VERIFY_EMAIL_FAILED = 'verify_email_failed'
+    PAYMENT_REQUIRED = 'payment_required'
     
 class PlanAlias(Enum):
     PARTNERS = 'partners'

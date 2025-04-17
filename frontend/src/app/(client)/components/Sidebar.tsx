@@ -1,6 +1,6 @@
 'use client';
 import React, { Dispatch, SetStateAction, useEffect, useRef, useState } from 'react';
-import { Box, List, ListItem, ListItemIcon, ListItemText, LinearProgress, Typography } from '@mui/material';
+import { Box, List, ListItem, ListItemIcon, ListItemText, LinearProgress, Typography, Collapse } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
@@ -11,10 +11,18 @@ import BusinessIcon from '@mui/icons-material/Business';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
 import SettingsIcon from '@mui/icons-material/Settings';
 import AccountBoxIcon from '@mui/icons-material/AccountBox';
+import AllInboxIcon from '@mui/icons-material/AllInbox';
 import Image from 'next/image';
 import { AxiosError } from 'axios';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { useUser } from '@/context/UserContext';
+import ContactsIcon from '@mui/icons-material/Contacts';
+import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
+import LegendToggleIcon from '@mui/icons-material/LegendToggle';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import InsightsIcon from '@mui/icons-material/Insights';
+import { display } from '@mui/system';
 
 const sidebarStyles = {
     container: {
@@ -36,7 +44,7 @@ const sidebarStyles = {
     menu: {
         alignItems: 'center',
         paddingTop: '0 !important',
-        paddingBottom: '2.75rem !important',
+        pb: 0,
         '& .MuiListItem-root': {
             paddingBottom: '1rem',
             paddingTop: '1rem',
@@ -118,15 +126,17 @@ const containerStyles = (hasNotification: boolean) => ({
     container: {
         width: '100%',
         flexShrink: 0,
+        flexGrow: 1,
         fontFamily: 'Nunito Sans',
         fontSize: '14px',
         fontWeight: '400',
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
         height: hasNotification ? 'calc(100vh - 6.85rem)' : 'calc(100vh - 4.25rem)',
-        maxWidth: '146px',
+        maxWidth: '170px',
         display: 'flex',
         overflow: 'hidden',
+        overflowY: 'auto',
         flexDirection: 'column',
         justifyContent: 'start',
         position: 'relative'
@@ -203,7 +213,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
     }, []);
 
     const checkPartner = () => {
-        
+
         const storedMe = localStorage.getItem('account_info');
         let partner = false
         if (storedMe) {
@@ -270,30 +280,128 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
         }
     };
 
+    const isActive = (path: string) => pathname.startsWith(path);
 
-    const isActive = (path: string) => pathname === path;
+    const [open, setOpen] = useState(false);
+    const isPixelActive = isActive('/leads') || isActive('/company') || isActive('/suppressions') || isActive('/dashboard');
+    const handleClick = () => {
+        setOpen(!open);
+    };
 
     return (
-        <Box sx={containerStyles(hasNotification).container} >
-            <List sx={sidebarStyles.menu}>
-                <ListItem button onClick={() => handleNavigation('/dashboard')} sx={isActive('/dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+        <Box sx={{
+            ...containerStyles(hasNotification).container,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+        }}>
+            {/* Audience-dashboard */}
+            <List sx={{
+                ...sidebarStyles.menu,
+                flexGrow: 1,
+                overflowY: 'auto',
+                overflowX: 'hidden'
+            }}>
+                <ListItem button onClick={() => handleNavigation('/audience-dashboard')} sx={isActive('/audience-dashboard') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <SpaceDashboardIcon />
                     </ListItemIcon>
                     <ListItemText primary="Dashboard" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/leads')} sx={isActive('/leads') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                {/* PIXEL */}
+                <List sx={{ width: 250, p: 0 }}>
+                    <ListItem
+                        button
+                        onClick={handleClick}
+                        sx={isPixelActive ? sidebarStyles.activeItem : sidebarStyles.ListItem}
+                    >
+
+                        <Box sx={{ display: "flex", alignItems: 'center', justifyContent: 'space-between' }}>
+                            <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                                <LegendToggleIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Pixel" sx={{ marginRight: 2 }} />
+                            {open ? (
+                                <ExpandLessIcon />
+                            ) : (
+                                <ExpandMoreIcon />
+                            )}
+                        </Box>
+                    </ListItem>
+                    <Collapse in={open} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding>
+                            {/* Insights */}
+                            <ListItem
+                                button
+                                onClick={() => handleNavigation('/dashboard')}
+                                sx={isActive('/dashboard') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
+                            >
+                                <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                                    <InsightsIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Insights" />
+                            </ListItem>
+
+                            {/* Contacts */}
+                            <ListItem
+                                button
+                                onClick={() => handleNavigation('/leads')}
+                                sx={isActive('/leads') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
+                            >
+                                <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                                    <LeadsIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Contacts" />
+                            </ListItem>
+
+                            {/* Company */}
+                            <ListItem
+                                button
+                                onClick={() => handleNavigation('/company')}
+                                sx={isActive('/company') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
+                            >
+                                <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                                    <BusinessIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Company" />
+                            </ListItem>
+
+                            {/* Suppressions */}
+                            <ListItem
+                                button
+                                onClick={() => handleNavigation('/suppressions')}
+                                sx={isActive('/suppressions') ? { ...sidebarStyles.activeItem, pl: 4 } : { ...sidebarStyles.ListItem, pl: 4 }}
+                            >
+                                <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                                    <FeaturedPlayListIcon />
+                                </ListItemIcon>
+                                <ListItemText primary="Suppressions" />
+                            </ListItem>
+                        </List>
+                    </Collapse>
+                </List>
+                {/* Source */}
+                <ListItem button onClick={() => handleNavigation('/sources')} sx={isActive(`/sources`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <LeadsIcon />
+                        <AllInboxIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Contacts" />
+                    <ListItemText primary="Sources" />
                 </ListItem>
-                <ListItem button onClick={() => handleNavigation('/company')} sx={isActive('/company') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                {/* Lookalikes */}
+                <ListItem button onClick={() => handleNavigation('/lookalikes')} sx={isActive(`/lookalikes`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <BusinessIcon />
+                        <ContactsIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Company" />
+                    <ListItemText primary="Lookalikes" />
                 </ListItem>
+                {/* Smart-audience */}
+                <ListItem button onClick={() => handleNavigation('/smart-audiences')} sx={isActive(`/smart-audiences`) ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                        <AutoFixHighIcon sx={{ rotate: '275deg', mb: 1 }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Smart Audiences" sx={{ whiteSpace: 'nowrap' }} />
+                </ListItem>
+                {/* Data-synce */}
                 <ListItem button onClick={() => handleNavigation('/data-sync')} sx={isActive('/data-sync') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <CategoryIcon />
@@ -306,6 +414,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Prospect" />
                 </ListItem> */}
+                {/* integrations */}
                 <ListItem button onClick={() => handleNavigation('/integrations')} sx={isActive('/integrations') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <IntegrationsIcon />
@@ -318,12 +427,7 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
                 </ListItem> */}
-                <ListItem button onClick={() => handleNavigation('/suppressions')} sx={isActive('/suppressions') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <FeaturedPlayListIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Suppressions" />
-                </ListItem>
+                {/* partners */}
                 {isPartnerAvailable && <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AccountBoxIcon />
@@ -336,26 +440,16 @@ const Sidebar: React.FC<SidebarProps> = ({ setShowSlider, setLoading, hasNotific
                     </ListItemIcon>
                     <ListItemText primary="Rules" />
                 </ListItem> */}
-                {/* <ListItem button onClick={() => handleNavigation('/partners')} sx={isActive('/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <AccountBoxIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Partners" />
-                </ListItem> */}
             </List>
             <Box sx={{
-                position: 'absolute',
-                bottom: '0',
-                left: '0',
-                right: '0',
-                width: '100%',
-                '@media (max-height: 600px)': {
-                    position: 'relative',
-                }
+                position: 'sticky',
+                bottom: 0,
+                backgroundColor: 'white',
+                zIndex: 10
             }}>
                 <SetupSection percent_steps={activatePercent ? activatePercent : 0} />
                 <Box sx={sidebarStyles.settings}>
-                    <ListItem button onClick={() => handleNavigation('settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
+                    <ListItem button onClick={() => handleNavigation('/settings?section=accountDetails')} sx={isActive('/settings') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                         <ListItemIcon sx={sidebarStyles.listItemIcon}>
                             <SettingsIcon />
                         </ListItemIcon>

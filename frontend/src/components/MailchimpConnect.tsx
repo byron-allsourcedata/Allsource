@@ -12,6 +12,7 @@ import { showErrorToast, showToast } from "./ToastNotification";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface CreateOmnisendProps {
+    fromAudience?: boolean
     handleClose: () => void
     onSave?: (new_integration: any) => void
     open: boolean
@@ -59,39 +60,39 @@ const klaviyoStyles = {
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
             color: '#0000FF',
-        },
+          },
     },
     formInput: {
         '&.MuiOutlinedInput-root': {
-            height: '48px',
-            '& .MuiOutlinedInput-input': {
-                padding: '12px 16px 13px 16px',
-                fontFamily: 'Roboto',
-                color: '#202124',
-                fontSize: '14px',
-                lineHeight: '20px',
-                fontWeight: '400'
-            },
-            '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#A3B0C2',
-            },
-            '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#A3B0C2',
-            },
-            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#0000FF',
-            },
-            '&.Mui-error .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'red',
-            },
+          height: '48px',
+          '& .MuiOutlinedInput-input': {
+            padding: '12px 16px 13px 16px',
+            fontFamily: 'Roboto',
+            color: '#202124',
+            fontSize: '14px',
+            lineHeight: '20px',
+            fontWeight: '400'
+          },
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#A3B0C2',
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#A3B0C2',
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#0000FF',
+          },
+          '&.Mui-error .MuiOutlinedInput-notchedOutline': {
+            borderColor: 'red',
+        },
         },
         '&+.MuiFormHelperText-root': {
             marginLeft: '0',
         },
-    },
+      },
 }
 
-const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key }: CreateOmnisendProps) => {
+const MailchimpConnect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxShadow, invalid_api_key}: CreateOmnisendProps) => {
     const { triggerSync } = useIntegrationContext();
     const [apiKey, setApiKey] = useState('');
     const [apiKeyError, setApiKeyError] = useState(false);
@@ -114,12 +115,12 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, in
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setChecked(event.target.checked);
-    };
+      };
 
     const handleApiKeyChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         setApiKey(value);
-        setApiKeyError(!value.trim());
+        setApiKeyError(!value.trim()); 
     };
 
     const instructions: any[] = [
@@ -159,66 +160,71 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, in
                             ]
                             : [segment]
                     )
-                    : [part]
+                    : [part] 
             );
         });
 
         return <>{parts}</>;
     };
 
-    const handleApiKeySave = async () => {
-        try {
-            setDisableButton(true)
-            setLoading(true)
-            const response = await axiosInstance.post('/integrations/', {
-                mailchimp: {
-                    api_key: apiKey
-                }
-            }, { params: { service_name: 'mailchimp' } })
-            if (response.status === 200 && response.data.status !== "CREDENTIALS_INVALID") {
-                showToast('Integration Mailchimp Successfully')
-                if (onSave) {
-                    onSave({ 'service_name': 'mailchimp', 'is_failed': false, access_token: apiKey })
-                }
-                triggerSync();
-                handleNextTab()
-            } else {
-                showErrorToast("Invalid API Key")
+    const handleApiKeySave = async() => {
+        try{
+        setDisableButton(true)
+        setLoading(true)
+        const response = await axiosInstance.post('/integrations/', {
+            mailchimp: {
+                api_key: apiKey
             }
-        } catch (error) {
+        }, {params: {service_name: 'mailchimp'}})
+        if(response.status === 200 && response.data.status !== "CREDENTIALS_INVALID") {
+            showToast('Integration Mailchimp Successfully')
+            if(onSave){
+                onSave({'service_name': 'mailchimp', 'is_failed': false, access_token: apiKey})
+            }
+            triggerSync();
+            if (fromAudience) {
+                handleClose()
+            }
+            else {
+                handleNextTab();
+            }
+        } else {
+            showErrorToast("Invalid API Key")
         }
-        finally {
-            setDisableButton(false)
-            setLoading(false)
-        }
+    } catch (error) {
+    }
+    finally{
+        setDisableButton(false)
+        setLoading(false)
+    }
     }
 
     const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' },
-        'Settings': { color: '#707071', fontWeight: '500' },
-        'Create Private API Key': { color: '#707071', fontWeight: '500' },
-        'Lists': { color: '#707071', fontWeight: '500' },
-        'Profiles': { color: '#707071', fontWeight: '500' },
-        'Metrics': { color: '#707071', fontWeight: '500' },
-        'Events': { color: '#707071', fontWeight: '500' },
+        'Klaviyo': { color: '#5052B2', fontWeight: '500' }, 
+        'Settings': { color: '#707071', fontWeight: '500' }, 
+        'Create Private API Key': { color: '#707071', fontWeight: '500' }, 
+        'Lists': { color: '#707071', fontWeight: '500' }, 
+        'Profiles': { color: '#707071', fontWeight: '500' }, 
+        'Metrics': { color: '#707071', fontWeight: '500' }, 
+        'Events': { color: '#707071', fontWeight: '500' }, 
         'Templates': { color: '#707071', fontWeight: '500' },
-        'Create': { color: '#707071', fontWeight: '500' },
-        'API Key': { color: '#707071', fontWeight: '500' },
-        'Connect': { color: '#707071', fontWeight: '500' },
-        'Export': { color: '#707071', fontWeight: '500' }
+        'Create': { color: '#707071', fontWeight: '500' }, 
+        'API Key': { color: '#707071', fontWeight: '500' }, 
+        'Connect': { color: '#707071', fontWeight: '500' }, 
+        'Export': { color: '#707071', fontWeight: '500' } 
     };
 
-    const handleNextTab = async () => {
-
-        if (value === '1') {
-            setValue((prevValue) => {
-                const nextValue = String(Number(prevValue) + 1);
-                return nextValue;
+    const handleNextTab = async() => {
+        
+        if(value === '1') {
+          setValue((prevValue) => {
+              const nextValue = String(Number(prevValue) + 1);
+              return nextValue;
             })
         }
     };
 
-    const handleSave = async () => {
+    const handleSave = async() => {
         handleClose()
     }
 
@@ -240,7 +246,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, in
                             color: "#fff",
                             textTransform: 'none',
                             padding: '10px 24px',
-                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
                                 backgroundColor: '#5052B2'
                             },
@@ -265,7 +271,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, in
                             color: "#fff",
                             textTransform: 'none',
                             padding: '10px 24px',
-                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                            boxShadow:'0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
                                 backgroundColor: '#5052B2'
                             },
@@ -280,208 +286,202 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, in
         }
     };
 
-    return (
+    return ( 
         <>
-            {loading && (
-                <Box
-                    sx={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: 'rgba(0, 0, 0, 0.2)',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: 1400,
-                        overflow: 'hidden'
-                    }}
-                >
-                    <Box sx={{ width: '100%', top: 0, height: '100vh' }}>
-                        <LinearProgress />
-                    </Box>
-                </Box>
-            )}
-            <Drawer
-                anchor="right"
-                open={open}
-                onClose={handleClose}
-                PaperProps={{
-                    sx: {
-                        width: '620px',
-                        position: 'fixed',
-                        zIndex: 1301,
-                        top: 0,
-                        boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
-                        bottom: 0,
-                        msOverflowStyle: 'none',
-                        scrollbarWidth: 'none',
-                        '&::-webkit-scrollbar': {
-                            display: 'none',
-                        },
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        }
-                    },
-                }}
-                slotProps={{
-                    backdrop: {
-                        sx: {
-                            backgroundColor: boxShadow ? boxShadow : 'rgba(0, 0, 0, 0.01)'
-                        }
-                    }
+        {loading && (
+            <Box
+                sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'rgba(0, 0, 0, 0.2)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 1400,
+                    overflow: 'hidden'
                 }}
             >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
-                    <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
-                        Connect to Mailchimp
-                    </Typography>
-                    <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href={initApiKey ?
-                            "" :
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-mailchimp-to-maximiz"
-                        }
-                            target="_blank"
-                            rel="noopener refferer"
-                            sx={{
-                                fontFamily: 'Nunito Sans',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                lineHeight: '20px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
-                            }}>Tutorial</Link>
-                        <IconButton onClick={handleClose} sx={{ p: 0 }}>
-                            <CloseIcon sx={{ width: '20px', height: '20px' }} />
-                        </IconButton>
-                    </Box>
+            <Box sx={{width: '100%', top: 0, height: '100vh'}}>
+                <LinearProgress />
+            </Box>
+            </Box>
+        )}
+        <Drawer
+            anchor="right"
+            open={open}
+            onClose={handleClose}
+            PaperProps={{
+                sx: {
+                    width: '620px',
+                    position: 'fixed',
+                    zIndex: 1301,
+                    top: 0,
+                    boxShadow: boxShadow ? '0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)' : 'none',
+                    bottom: 0,
+                    msOverflowStyle: 'none',
+                    scrollbarWidth: 'none',
+                    '&::-webkit-scrollbar': {
+                        display: 'none',
+                    },
+                    '@media (max-width: 600px)': {
+                        width: '100%',
+                    }
+                },
+            }}
+            slotProps={{
+                backdrop: {
+                  sx: {
+                    backgroundColor: boxShadow? boxShadow : 'rgba(0, 0, 0, 0.01)'
+                  }
+                }
+              }}
+        >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 2.85, px: 2, borderBottom: '1px solid #e4e4e4' }}>
+                <Typography variant="h6" sx={{ textAlign: 'center', color: '#202124', fontFamily: 'Nunito Sans', fontWeight: '600', fontSize: '16px', lineHeight: 'normal' }}>
+                    Connect to Mailchimp
+                </Typography>
+                <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
+                    <Link href={initApiKey ?
+                        "" :
+                        "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-mailchimp-to-maximiz"
+                    }
+                    target="_blank"
+                    rel="noopener refferer"
+                    sx={{
+                        fontFamily: 'Nunito Sans',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        lineHeight: '20px',
+                        color: '#5052b2',
+                        textDecorationColor: '#5052b2'
+                    }}>Tutorial</Link>
+                    <IconButton onClick={handleClose} sx={{ p: 0 }}>
+                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                    </IconButton>
                 </Box>
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
-                    <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
-                        <TabContext value={value}>
-                            <Box sx={{ pb: 4 }}>
-                                <TabList centered aria-label="Connect to Mailchimp Tabs"
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
-                                    sx={{
-                                        "& .MuiTabs-scroller": {
-                                            overflowX: 'auto !important',
-                                        },
-                                        "& .MuiTabs-flexContainer": {
-                                            justifyContent: 'center',
-                                            '@media (max-width: 600px)': {
-                                                gap: '16px',
-                                                justifyContent: 'flex-start'
-                                            }
-                                        }
-                                    }}>
-                                    <Tab label="API Key" value="1" sx={{ ...klaviyoStyles.tabHeading, cursor: 'pointer' }} />
-                                    <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />
-                                </TabList>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
+                <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
+                <TabContext value={value}>
+                    <Box sx={{pb: 4}}>
+                        <TabList centered aria-label="Connect to Mailchimp Tabs"
+                        TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
+                        sx={{
+                            "& .MuiTabs-scroller": {
+                                overflowX: 'auto !important',
+                            },
+                            "& .MuiTabs-flexContainer": {
+                            justifyContent:'center',
+                            '@media (max-width: 600px)': {
+                                gap: '16px',
+                                justifyContent:'flex-start'
+                            }
+                        }}}>
+                        <Tab label="API Key" value="1" sx={{...klaviyoStyles.tabHeading, cursor: 'pointer'}} />
+                        {!fromAudience && <Tab label="Suppression Sync" value="2" sx={klaviyoStyles.tabHeading} />}
+                        </TabList>
+                    </Box>
+                    <TabPanel value="1" sx={{p: 0}}>
+                        <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <Image src='/mailchimp-icon.svg' alt='mailchimp' height={26} width={32} />
+                                <Typography variant="h6" sx={{
+                                    fontFamily: 'Nunito Sans',
+                                    fontSize: '16px',
+                                    fontWeight: '600',
+                                    color: '#202124'
+                                }}>API Key</Typography>
+                                <Tooltip title="Enter the API key provided by Mailchimp" placement="right">
+                                    <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
+                                </Tooltip>
                             </Box>
-                            <TabPanel value="1" sx={{ p: 0 }}>
-                                <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Image src='/mailchimp-icon.svg' alt='mailchimp' height={26} width={32} />
-                                        <Typography variant="h6" sx={{
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '16px',
-                                            fontWeight: '600',
-                                            color: '#202124'
-                                        }}>API Key</Typography>
-                                        <Tooltip title="Enter the API key provided by Mailchimp" placement="right">
-                                            <Image src='/baseline-info-icon.svg' alt='baseline-info-icon' height={16} width={16} />
-                                        </Tooltip>
-                                    </Box>
-                                    <TextField
-                                        label="Enter API Key"
-                                        variant="outlined"
-                                        fullWidth
-                                        margin="normal"
-                                        error={invalid_api_key}
-                                        helperText={invalid_api_key ? 'Invalid API Key' : ''}
-                                        value={apiKey}
-                                        onChange={handleApiKeyChange}
-                                        InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
-                                        InputProps={{
-                                            sx: {
-                                                ...klaviyoStyles.formInput,
-                                                borderColor: invalid_api_key ? 'red' : 'inherit',
-                                            },
-                                        }}
-                                    />
+                            <TextField
+                                label="Enter API Key"
+                                variant="outlined"
+                                fullWidth
+                                margin="normal"
+                                error={apiKeyError || invalid_api_key}
+                                helperText={apiKeyError ? 'API Key is required' : ''}
+                                value={apiKey}
+                                onChange={handleApiKeyChange}
+                                InputLabelProps={{ sx: klaviyoStyles.inputLabel }}
+                                InputProps={{ sx: klaviyoStyles.formInput }}
+                            />
+                        </Box>
+                        {instructions.length > 0 && ( <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
+                            
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
+                                <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
+                                <Typography variant="subtitle1" sx={{
+                                    fontFamily: 'Nunito Sans',
+                                    fontSize: '16px',
+                                    fontWeight: '600',
+                                    color: '#202124',
+                                    lineHeight: 'normal'
+                                }}>How to integrate Mailchimp</Typography>
+                            </Box>
+                            <List dense sx={{ p: 0 }}>
+                                {instructions.map((instruction, index) => (
+                                    <ListItem key={instruction.id} sx={{ p: 0, alignItems: 'flex-start' }}>
+                                        <Typography
+                                            variant="body1"
+                                            sx={{
+                                                display: 'inline-block',
+                                                marginRight: '4px',
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                color: '#808080',
+                                                lineHeight: '24px'
+                                            }}
+                                        >
+                                            {index + 1}.
+                                        </Typography>
+                                        <Typography
+                                            variant="body1"
+                                            sx={{
+                                                display: 'inline',
+                                                fontFamily: 'Roboto',
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                color: '#808080',
+                                                lineHeight: '24px'
+                                            }}
+                                        >
+                                            {highlightText(instruction.text, highlightConfig)}
+                                        </Typography>
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Box>)
+                            }
+                    </TabPanel>
+                    <TabPanel value="2" sx={{ p: 0 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection:'column', gap: '16px' }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Image src='/mailchimp-icon.svg' alt='mailchimp' height={26} width={32} />
+                                    <Typography variant="h6" sx={{
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        color: '#202124',
+                                        lineHeight: 'normal'
+                                    }}>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
                                 </Box>
-                                {instructions.length > 0 && (<Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
-
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
-                                        <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
-                                        <Typography variant="subtitle1" sx={{
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '16px',
-                                            fontWeight: '600',
-                                            color: '#202124',
-                                            lineHeight: 'normal'
-                                        }}>How to integrate Mailchimp</Typography>
-                                    </Box>
-                                    <List dense sx={{ p: 0 }}>
-                                        {instructions.map((instruction, index) => (
-                                            <ListItem key={instruction.id} sx={{ p: 0, alignItems: 'flex-start' }}>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        display: 'inline-block',
-                                                        marginRight: '4px',
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        color: '#808080',
-                                                        lineHeight: '24px'
-                                                    }}
-                                                >
-                                                    {index + 1}.
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        display: 'inline',
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        color: '#808080',
-                                                        lineHeight: '24px'
-                                                    }}
-                                                >
-                                                    {highlightText(instruction.text, highlightConfig)}
-                                                </Typography>
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                </Box>)
-                                }
-                            </TabPanel>
-                            <TabPanel value="2" sx={{ p: 0 }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Image src='/mailchimp-icon.svg' alt='mailchimp' height={26} width={32} />
-                                            <Typography variant="h6" sx={{
-                                                fontFamily: 'Nunito Sans',
-                                                fontSize: '16px',
-                                                fontWeight: '600',
-                                                color: '#202124',
-                                                lineHeight: 'normal'
-                                            }}>Eliminate Redundancy: Stop Paying for Contacts You Already Own</Typography>
-                                        </Box>
-                                        <Typography variant="subtitle1" sx={{
-                                            fontFamily: 'Roboto',
-                                            fontSize: '12px',
-                                            fontWeight: '400',
-                                            color: '#808080',
-                                            lineHeight: '20px',
-                                            letterSpacing: '0.06px'
-                                        }}>Sync your current list to avoid collecting contacts you already possess.
-                                            Newly added contacts in Mailchimp will be automatically suppressed each day.</Typography>
-
+                                <Typography variant="subtitle1" sx={{
+                                        fontFamily: 'Roboto',
+                                        fontSize: '12px',
+                                        fontWeight: '400',
+                                        color: '#808080',
+                                        lineHeight: '20px',
+                                        letterSpacing: '0.06px'
+                                    }}>Sync your current list to avoid collecting contacts you already possess.
+                                    Newly added contacts in Mailchimp will be automatically suppressed each day.</Typography>
+                                
 
                                         <Box sx={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
                                             <Typography variant="subtitle1" sx={{
@@ -529,7 +529,7 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, in
                                                             opacity: checked ? '1' : '1',
                                                             '& .MuiSwitch-track.Mui-checked': {
                                                                 backgroundColor: checked ? '#5052b2' : '#7b7b7b',
-                                                                opacity: checked ? '1' : '1',
+                                                            opacity: checked ? '1' : '1',
                                                             }
                                                         },
                                                     }}
@@ -586,32 +586,32 @@ const MailchimpConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, in
 
 
 
-                                    </Box>
-                                    <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
-                                            <Typography variant="subtitle1" sx={{
-                                                fontFamily: 'Roboto',
-                                                fontSize: '12px',
-                                                fontWeight: '400',
-                                                color: '#808080',
-                                                lineHeight: '20px',
-                                                letterSpacing: '0.06px'
-                                            }}>By performing this action, all your Mailchimp contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
-                                        </Box>
-                                    </Box>
+                            </Box>
+                            <Box sx={{ background: '#efefef', borderRadius: '4px', px: 1.5, py: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
+                                    <Typography variant="subtitle1" sx={{
+                                        fontFamily: 'Roboto',
+                                        fontSize: '12px',
+                                        fontWeight: '400',
+                                        color: '#808080',
+                                        lineHeight: '20px',
+                                        letterSpacing: '0.06px'
+                                    }}>By performing this action, all your Mailchimp contacts will be added to your Grow suppression list, and new contacts will be imported daily around 6pm EST.</Typography>
                                 </Box>
-                            </TabPanel>
-                        </TabContext>
+                            </Box>
+                        </Box>
+                    </TabPanel>
+                    </TabContext>
                     </Box>
                     <Box sx={{ px: 2, py: 2, width: '100%', borderTop: '1px solid #e4e4e4' }}>
                         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-                            {getButton(value)}
+                                {getButton(value)}
                         </Box>
                     </Box>
-                </Box>
-            </Drawer>
-        </>
+                    </Box>
+                    </Drawer>
+                    </>
     );
 }
 

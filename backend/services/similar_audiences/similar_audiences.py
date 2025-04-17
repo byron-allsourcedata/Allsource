@@ -1,4 +1,5 @@
-from typing import List, Annotated, Dict
+from typing import Dict
+from typing import List, Annotated
 
 import pandas as pd
 from catboost import CatBoostRegressor

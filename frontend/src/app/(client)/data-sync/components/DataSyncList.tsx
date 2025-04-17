@@ -23,6 +23,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ConnectKlaviyo from "./ConnectKlaviyo";
 import ConnectSalesForce from "./ConnectSalesForce";
 import ConnectMeta from "./ConnectMeta";
@@ -75,7 +76,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
   const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(false);
-  const [Loading, setLoading] = useState(true);
+  const [Loading, setLoading] = useState(false);
   const [data, setData] = useState<any[]>([]);
   const [allData, setAllData] = useState<any[]>([]);
   const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
@@ -116,7 +117,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const handleCloseIntegrate = () => {
     setOpenMetaConnect(false);
     setOpenKlaviyoConnect(false);
-    setOpenSalesForceConnect(false)
+    setOpenSalesForceConnect(false);
     setOpenShopifyConnect(false);
     setAttentiveConnect(false);
     setOpenBigcommerceConnect(false);
@@ -124,7 +125,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     setOpenSendlaneConnect(false);
     setOpenS3Connect(false);
     setOPenZapierComnect(false);
-    setOpenSlackConnect(false)
+    setOpenSlackConnect(false);
   };
   const handleSortRequest = (property: string) => {
     const isAsc = orderBy === property && order === "asc";
@@ -132,21 +133,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     setOrderBy(property);
   };
 
-
   useEffect(() => {
     handleIntegrationsSync();
-    setLoading(false)
   }, []);
-
-  useEffect(() => {
-  }, [data]);
 
   useEffect(() => {
     if (needsSync) {
       handleIntegrationsSync();
       setNeedsSync(false);
     }
-  }, [needsSync, setNeedsSync]);
+  }, [needsSync]);
 
   const handleIntegrationsSync = async () => {
     try {
@@ -157,9 +153,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           service_name: service_name,
         };
       }
-      const response = await axiosInstance.get("/data-sync/sync", {
-        params: params,
-      });
+      const response = await axiosInstance.get(
+        "/data-sync/get-smart-audience-sync",
+        {
+          params: params,
+        }
+      );
       const { length: count } = response.data;
       setAllData(response.data);
       setTotalRows(count);
@@ -184,9 +183,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       setRowsPerPageOptions(newRowsPerPageOptions);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
-        const status = error.response.data.status
-        if (status === 'NEED_BOOK_CALL') {
-          sessionStorage.setItem('is_slider_opened', 'true');
+        const status = error.response.data.status;
+        if (status === "NEED_BOOK_CALL") {
+          sessionStorage.setItem("is_slider_opened", "true");
         }
       }
     } finally {
@@ -243,41 +242,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     }
   }, [filters, allData]);
 
-  const statusIcon = (status: boolean) => {
-    if (status)
-      return <CheckCircleIcon sx={{ color: "green", fontSize: "16px" }} />;
-    else
-      return (
-        <Tooltip
-          title={"Please choose repair sync in action section."}
-          placement="bottom-end"
-          componentsProps={{
-            tooltip: {
-              sx: {
-                backgroundColor: "rgba(217, 217, 217, 1)",
-                color: "rgba(128, 128, 128, 1)",
-                fontFamily: "Roboto",
-                fontWeight: "400",
-                fontSize: "10px",
-                boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
-                border: "0.2px solid rgba(240, 240, 240, 1)",
-                borderRadius: "4px",
-                maxWidth: "100%",
-                padding: "8px 10px",
-              },
-            },
-          }}
-        >
-          <Image
-            src={"/danger-icon.svg"}
-            alt="klaviyo"
-            width={16}
-            height={16}
-          />
-        </Tooltip>
-      );
-  };
-
   const platformIcon = (platform: string) => {
     switch (platform) {
       case "klaviyo":
@@ -320,12 +284,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           <Image src={"/zapier-icon.svg"} alt="zapier" width={18} height={18} />
         );
       case "s3":
-        return (
-          <Image src={"/s3-icon.svg"} alt="s3" width={18} height={18} />
-        );
+        return <Image src={"/s3.svg"} alt="s3" width={18} height={18} />;
       case "webhook":
         return (
-          <Image src={"/webhook-icon.svg"} alt="webhook" width={18} height={18} />
+          <Image
+            src={"/webhook-icon.svg"}
+            alt="webhook"
+            width={18}
+            height={18}
+          />
         );
       case "slack":
         return (
@@ -337,11 +304,21 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         );
       case "google_ads":
         return (
-          <Image src={"/google-ads.svg"} alt="googleAds" width={18} height={18} />
+          <Image
+            src={"/google-ads.svg"}
+            alt="googleAds"
+            width={18}
+            height={18}
+          />
         );
       case "sales_force":
         return (
-          <Image src={"/salesforce-icon.svg"} alt="salesForce" width={18} height={18} />
+          <Image
+            src={"/salesforce-icon.svg"}
+            alt="salesForce"
+            width={18}
+            height={18}
+          />
         );
       default:
         return null;
@@ -364,7 +341,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   // Action
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedId, setSelectedId] = useState<number | null>(null);
-  const [confirmAnchorEl, setConfirmAnchorEl] = useState<null | HTMLElement>(null);
+  const [confirmAnchorEl, setConfirmAnchorEl] = useState<null | HTMLElement>(
+    null
+  );
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
   const handleClick = (event: any, id: number) => {
@@ -384,7 +363,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     try {
       setIsLoading(true);
       const response = await axiosInterceptorInstance.post(
-        `/data-sync/sync/switch-toggle`,
+        `/data-sync/sync/switch-toggle-smart-audience-sync`,
         {
           list_id: String(selectedId),
         }
@@ -438,7 +417,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           )
         );
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const handleSalesForceIconPopupClose = async () => {
@@ -456,7 +435,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           )
         );
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const handleMetaIconPopupClose = async () => {
@@ -473,7 +452,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           )
         );
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const handleMailchimpIconPopupClose = async () => {
@@ -490,7 +469,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           )
         );
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const handleOmnisendIconPopupClose = async () => {
@@ -507,7 +486,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           )
         );
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const handleEdit = async () => {
@@ -526,7 +505,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       } else if (dataSyncPlatform === "sendlane") {
         setOpenSendlaneIconPopup(true);
       } else if (dataSyncPlatform === "s3") {
-        setOpenS3IconPopup(true)
+        setOpenS3IconPopup(true);
       } else if (dataSyncPlatform === "slack") {
         setOpenSlackIconPopup(true);
       } else if (dataSyncPlatform === "google_ads") {
@@ -577,7 +556,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     try {
       setIsLoading(true);
       const response = await axiosInterceptorInstance.delete(
-        `/data-sync/sync`,
+        `/data-sync/delete-smart-audience-sync`,
         {
           params: {
             list_id: selectedId,
@@ -617,15 +596,18 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   const handleRepairSync = async () => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       const response = await axiosInstance.get("/integrations/credentials/");
       if (response.status === 200) {
         setIntegrationsCredentials(response.data);
       }
       const foundItem = data.find((item) => item.id === selectedId);
       const dataSyncPlatform = foundItem ? foundItem.platform : null;
-      if (foundItem.type_error === "Invalid API Key" || foundItem.integration_is_failed) {
-        setIsInvalidApiKey(true)
+      if (
+        foundItem.type_error === "Invalid API Key" ||
+        foundItem.integration_is_failed
+      ) {
+        setIsInvalidApiKey(true);
         if (dataSyncPlatform) {
           if (dataSyncPlatform === "klaviyo") {
             setOpenKlaviyoConnect(true);
@@ -638,7 +620,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           } else if (dataSyncPlatform === "sendlane") {
             setOpenSendlaneConnect(true);
           } else if (dataSyncPlatform === "s3") {
-            setOpenS3Connect(true)
+            setOpenS3Connect(true);
           } else if (dataSyncPlatform === "google_ads") {
             setOpenGoogleADSConnect(true);
           } else if (dataSyncPlatform === "webhook") {
@@ -678,22 +660,55 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           setAnchorEl(null);
         }
       }
-    } catch (error) { }
+    } catch (error) {}
   };
 
   if (Loading) {
-    return (
-      <CustomizedProgressBar />
-    );
+    return <CustomizedProgressBar />;
   }
 
-  const formatFunnelText = (text: boolean) => {
-    if (text === true) {
-      return "Enable";
+  const formatStatusText = (row: any) => {
+    if (row.dataSync === false) {
+      return "Disabled";
     }
-    if (text === false) {
-      return "Disable";
+    if (row.syncStatus === false) {
+      return "Failed";
     }
+    if (row.is_progress === true) {
+      return "In Progress";
+    }
+    if (row.is_progress === false) {
+      return "Synced";
+    }
+    return "--";
+  };
+
+  const getStatusStyle = (row: any) => {
+    if (row.dataSync === false) {
+      return {
+        background: "rgba(219, 219, 219, 1)",
+        color: "rgba(74, 74, 74, 1) !important",
+      };
+    }
+    if (row.syncStatus === false) {
+      return {
+        background: "rgba(252, 205, 200, 1)",
+        color: "rgba(200, 62, 46, 1) !important",
+      };
+    }
+    if (row.is_progress) {
+      return {
+        background: "rgba(0, 129, 251, 0.2)",
+        color: "rgba(0, 129, 251, 1)!important",
+      };
+    }
+    if (row.is_progress === false) {
+      return {
+        background: "rgba(234, 248, 221, 1)",
+        color: "rgba(43, 91, 0, 1) !important",
+      };
+    }
+    return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
   };
 
   if (service_name && data.length < 1) {
@@ -716,6 +731,32 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         return null;
     }
   };
+
+  const handleDownloadPersons = async () => {
+    setIsLoading(true);
+    try {
+
+        const response = await axiosInstance.post(`/data-sync/download-persons?id=${selectedId}`, {
+            responseType: 'blob'
+        });
+
+        if (response.status === 200) {
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'data.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(url);
+        } else {
+            showErrorToast(`Error downloading file`);
+        }
+    } catch {
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <>
@@ -752,7 +793,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             fontSize={"16px"}
             fontWeight={600}
             fontFamily={"Nunito Sans"}
-            textTransform={'capitalize'}
+            textTransform={"capitalize"}
           >
             {service_name} Sync Detail
           </Typography>
@@ -777,39 +818,42 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             sx={{
               border: "1px solid rgba(235, 235, 235, 1)",
               overflowY: "auto",
-              height: '73vh'
+              maxHeight: "73vh",
             }}
           >
-            <Table stickyHeader aria-label="datasync table" >
+            <Table stickyHeader aria-label="datasync table">
               <TableHead>
                 <TableRow>
                   {[
-                    { key: "list_name", label: "List Name" },
-                    { key: "list_type", label: "List Type" },
-                    { key: "number_of_contacts", label: "No. of Contacts" },
-                    { key: "created_by", label: "Created By" },
                     {
-                      key: "created_date",
-                      label: "Created Date",
+                      key: "smart_audience_name",
+                      label: "Smart Audience Name",
+                    },
+                    {
+                      key: "created",
+                      label: "Created",
                       sortable: true,
                     },
-                    { key: "platform", label: "Platform" },
-                    { key: "data_sync", label: "Data Sync" },
                     { key: "last_sync", label: "Last Sync" },
-                    { key: "sync_status", label: "Sync Status" },
-                    { key: "action", label: "Action" },
+                    { key: "platform", label: "Sync" },
+                    { key: "data_sync", label: "Active Segments" },
+                    { key: "record_synced", label: "Records Synced" },
+                    { key: "sync_status", label: "Status" },
+                    { key: "action", label: "Actions" },
                   ].map(({ key, label, sortable = false }) => (
                     <TableCell
                       key={key}
                       sx={{
                         ...datasyncStyle.table_column,
                         backgroundColor: "#fff",
-                        ...(key === "list_name" && {
+                        ...(key === "smart_audience_name" && {
                           position: "sticky",
                           left: 0,
                           zIndex: 99,
                         }),
                         ...(key === "action" && {
+                          maxWidth: "50px",
+                          position: "relative",
                           "::after": {
                             content: "none",
                           },
@@ -857,139 +901,133 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  data
-                    .slice(page * rowsPerPage, (page + 1) * rowsPerPage)
-                    .map((row, index) => (
-                      <TableRow
-                        key={row.id}
-                        sx={{
-                          "&:hover": {
+                  data.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      sx={{
+                        "&:hover": {
+                          backgroundColor: "rgba(247, 247, 247, 1)",
+                          "& .sticky-cell": {
                             backgroundColor: "rgba(247, 247, 247, 1)",
-                            "& .sticky-cell": {
-                              backgroundColor: "rgba(247, 247, 247, 1)",
-                            },
                           },
+                        },
+                      }}
+                    >
+                      <TableCell
+                        className="sticky-cell"
+                        sx={{
+                          ...datasyncStyle.table_array,
+                          position: "sticky",
+                          left: "0",
+                          zIndex: 9,
+                          backgroundColor: "#fff",
                         }}
                       >
-                        <TableCell
-                          className="sticky-cell"
+                        {row.name || "--"}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...datasyncStyle.table_array,
+                          display: "flex",
+                          flexDirection: "column",
+                          pr: 0,
+                        }}
+                      >
+                        <span>{row.createdBy || "--"}</span>
+                        <span>{row.createdDate || "--"}</span>
+                      </TableCell>
+                      <TableCell sx={datasyncStyle.table_array}>
+                        {row.lastSync || "--"}
+                      </TableCell>
+                      <TableCell sx={datasyncStyle.table_array}>
+                        <Box
                           sx={{
-                            ...datasyncStyle.table_array,
-                            position: "sticky",
-                            left: "0",
-                            zIndex: 9,
-                            backgroundColor: "#fff",
+                            display: "flex",
+                            justifyContent: "center",
                           }}
                         >
-                          {row.name || "--"}
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          {listType(row.type) || "--"}
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          {row.contacts || "--"}
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          {row.createdBy || "--"}
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          {row.createdDate || "--"}
-                        </TableCell>
-                        <TableCell>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              padding: "2px 8px",
-                              borderRadius: "2px",
-                              justifyContent: "center",
-                              textTransform: "capitalize",
-                            }}
-                          >
-                            {platformIcon(row.platform) || "--"}
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              borderRadius: "2px",
-                              justifyContent: "start",
-                              textTransform: "capitalize",
-                            }}
-                          >
-                            <Typography
-                              className="paragraph"
-                              sx={{
-                                fontFamily: "Roboto",
-                                fontSize: "12px",
-                                color: row.dataSync
-                                  ? "rgba(43, 91, 0, 1) !important"
-                                  : "rgba(74, 74, 74, 1)!important",
-                                backgroundColor: row.dataSync
-                                  ? "rgba(234, 248, 221, 1) !important"
-                                  : "rgba(219, 219, 219, 1) !important",
-                                padding: "3px 14.5px",
-                                maxHeight: "1.25rem",
-                              }}
-                            >
-                              {formatFunnelText(row.dataSync) || "--"}
-                            </Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          {row.lastSync || "--"}
-                        </TableCell>
-                        <TableCell
+                          {platformIcon(row.platform) || "--"}
+                        </Box>
+                      </TableCell>
+                      <TableCell sx={datasyncStyle.table_array}>
+                        {new Intl.NumberFormat("en-US").format(
+                          row.active_segments
+                        ) || "--"}
+                      </TableCell>
+                      <TableCell sx={datasyncStyle.table_array}>
+                        {new Intl.NumberFormat("en-US").format(
+                          row.records_synced
+                        )}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...datasyncStyle.table_array,
+                          position: "relative",
+                          padding: 0,
+                          textAlign: "center",
+                        }}
+                      >
+                        <Box
                           sx={{
-                            ...datasyncStyle.table_column,
-                            position: "relative",
+                            display: "flex",
+                            justifyContent: "center",
                           }}
                         >
                           <Box
                             sx={{
-                              display: "flex",
-                              padding: "2px 8px",
+                              display: "inline-flex",
                               borderRadius: "2px",
+                              textTransform: "capitalize",
+                              minWidth: "80px",
                               justifyContent: "center",
                             }}
                           >
-                            {statusIcon(row.integration_is_failed ? false : row.syncStatus) || "--"}
-
+                            {(() => {
+                              const { color, background } = getStatusStyle(row);
+                              return (
+                                <Typography
+                                  className="paragraph"
+                                  sx={{
+                                    fontFamily: "Roboto",
+                                    fontSize: "12px",
+                                    color: color,
+                                    backgroundColor: background,
+                                    padding: "3px 12px",
+                                    height: "24px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    width: "100%",
+                                    boxSizing: "border-box",
+                                    borderRadius: "2px",
+                                  }}
+                                >
+                                  {formatStatusText(row) || "--"}
+                                </Typography>
+                              );
+                            })()}
                           </Box>
-                        </TableCell>
-                        <TableCell sx={datasyncStyle.table_array}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              padding: "2px 8px",
-                              borderRadius: "2px",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              textTransform: "capitalize",
-                              paddingLeft: 0,
-                            }}
-                          >
-                            {row.suppression}
-                            <IconButton
-                              sx={{
-                                padding: 0,
-                                margin: 0,
-                                borderRadius: 4,
-                                justifyContent: "start",
-                              }}
-                              onClick={(e) => handleClick(e, row.id)}
-                            >
-                              <Image
-                                src={"more.svg"}
-                                alt="more"
-                                width={20}
-                                height={20}
-                              />
-                            </IconButton>
-                          </Box>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                        </Box>
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...datasyncStyle.table_array,
+                          maxWidth: "40px",
+                          padding: "8px",
+                          textAlign: "center",
+                          position: "relative",
+                        }}
+                      >
+                        <IconButton
+                          sx={{ pt: 0.25, pb: 0.25, padding: 0 }}
+                          onClick={(event) => {
+                            handleClick(event, row.id)}}
+                        >
+                          <MoreVertIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>
@@ -1014,6 +1052,24 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                 maxWidth: "160px",
               }}
             >
+              <Button
+                sx={{
+                  justifyContent: "flex-start",
+                  width: "100%",
+                  textTransform: "none",
+                  fontFamily: "Nunito Sans",
+                  fontSize: "14px",
+                  color: "rgba(32, 33, 36, 1)",
+                  fontWeight: 600,
+                  ":hover": {
+                    color: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                  },
+                }}
+                onClick={handleDownloadPersons}
+              >
+                Download
+              </Button>
               <Button
                 sx={{
                   justifyContent: "flex-start",
@@ -1093,7 +1149,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                     },
                   }}
                 >
-                  <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
+                  <Typography
+                    className="first-sub-title"
+                    sx={{ paddingLeft: 2, pt: 1, pb: 0 }}
+                  >
                     Confirm Deletion
                   </Typography>
                   <DialogContent sx={{ padding: 2 }}>
@@ -1150,25 +1209,25 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
               </>
               {data.find((row) => row.id === selectedId)?.syncStatus ===
                 false && (
-                  <Button
-                    sx={{
-                      justifyContent: "flex-start",
-                      width: "100%",
-                      color: "rgba(32, 33, 36, 1)",
-                      textTransform: "none",
-                      fontFamily: "Nunito Sans",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                      ":hover": {
-                        color: "rgba(80, 82, 178, 1)",
-                        backgroundColor: "background: rgba(80, 82, 178, 0.1)",
-                      },
-                    }}
-                    onClick={handleRepairSync}
-                  >
-                    Repair Sync
-                  </Button>
-                )}
+                <Button
+                  sx={{
+                    justifyContent: "flex-start",
+                    width: "100%",
+                    color: "rgba(32, 33, 36, 1)",
+                    textTransform: "none",
+                    fontFamily: "Nunito Sans",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    ":hover": {
+                      color: "rgba(80, 82, 178, 1)",
+                      backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+                    },
+                  }}
+                  onClick={handleRepairSync}
+                >
+                  Repair Sync
+                </Button>
+              )}
             </Box>
           </Popover>
           {totalRows > 10 && (
@@ -1310,36 +1369,123 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                     onClose={() => setOpenBigcommerceConnect(false)}
                 />
          */}
-        <MailchimpConnect open={openMailchimpConnect} handleClose={() => { setOpenMailchimpConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
-        <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => { setOpenKlaviyoConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
-        <SalesForceIntegrationPopup open={openSalesForceConnect} handleClose={() => { setOpenSalesForceConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
-        <OmnisendConnect open={openOmnisendConnect} handleClose={() => { setOpenOmnisendConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'omnisend')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+        <MailchimpConnect
+          open={openMailchimpConnect}
+          handleClose={() => {
+            setOpenMailchimpConnect(false), setIsInvalidApiKey(false);
+          }}
+          initApiKey={
+            integrationsCredentials.find(
+              (integartion) => integartion.service_name === "mailchimp"
+            )?.access_token
+          }
+          invalid_api_key={isInvalidApiKey}
+          boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+        <KlaviyoIntegrationPopup
+          open={openKlaviyoConnect}
+          handleClose={() => {
+            setOpenKlaviyoConnect(false), setIsInvalidApiKey(false);
+          }}
+          initApiKey={
+            integrationsCredentials.find(
+              (integartion) => integartion.service_name === "klaviyo"
+            )?.access_token
+          }
+          invalid_api_key={isInvalidApiKey}
+          boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+        <SalesForceIntegrationPopup
+          open={openSalesForceConnect}
+          handleClose={() => {
+            setOpenSalesForceConnect(false), setIsInvalidApiKey(false);
+          }}
+          initApiKey={
+            integrationsCredentials.find(
+              (integartion) => integartion.service_name === "sales_force"
+            )?.access_token
+          }
+          invalid_api_key={isInvalidApiKey}
+          boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+        <OmnisendConnect
+          open={openOmnisendConnect}
+          handleClose={() => {
+            setOpenOmnisendConnect(false), setIsInvalidApiKey(false);
+          }}
+          initApiKey={
+            integrationsCredentials.find(
+              (integartion) => integartion.service_name === "omnisend"
+            )?.access_token
+          }
+          invalid_api_key={isInvalidApiKey}
+          boxShadow="rgba(0, 0, 0, 0.01)"
+        />
         <SendlaneConnect
           open={openSendlaneConnect}
-          handleClose={() => { setOpenSendlaneConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sendlane')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+          handleClose={() => {
+            setOpenSendlaneConnect(false), setIsInvalidApiKey(false);
+          }}
+          initApiKey={
+            integrationsCredentials.find(
+              (integartion) => integartion.service_name === "sendlane"
+            )?.access_token
+          }
+          invalid_api_key={isInvalidApiKey}
+          boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <S3Connect
           open={openS3Connect}
-          handleClose={() => { setOpenS3Connect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 's3')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+          handleClose={() => {
+            setOpenS3Connect(false), setIsInvalidApiKey(false);
+          }}
+          initApiKey={
+            integrationsCredentials.find(
+              (integartion) => integartion.service_name === "s3"
+            )?.access_token
+          }
+          invalid_api_key={isInvalidApiKey}
+          boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <SlackConnectPopup
           open={openSlackConnect}
-          handlePopupClose={() => { setOpenSlackConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+          handlePopupClose={() => {
+            setOpenSlackConnect(false), setIsInvalidApiKey(false);
+          }}
+          initApiKey={
+            integrationsCredentials.find(
+              (integartion) => integartion.service_name === "slack"
+            )?.access_token
+          }
+          invalid_api_key={isInvalidApiKey}
+          boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <GoogleADSConnectPopup
           open={openGoogleADSConnect}
-          handlePopupClose={() => { setOpenGoogleADSConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+          handlePopupClose={() => {
+            setOpenGoogleADSConnect(false), setIsInvalidApiKey(false);
+          }}
+          initApiKey={
+            integrationsCredentials.find(
+              (integartion) => integartion.service_name === "google_ads"
+            )?.access_token
+          }
+          invalid_api_key={isInvalidApiKey}
+          boxShadow="rgba(0, 0, 0, 0.01)"
         />
-        <WebhookConnectPopup open={openWebhookConnect} handleClose={() => { setOpenWebhookConnect(false), setIsInvalidApiKey(false) }}
-          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
+        <WebhookConnectPopup
+          open={openWebhookConnect}
+          handleClose={() => {
+            setOpenWebhookConnect(false), setIsInvalidApiKey(false);
+          }}
+          initApiKey={
+            integrationsCredentials.find(
+              (integartion) => integartion.service_name === "webhook"
+            )?.access_token
+          }
+          invalid_api_key={isInvalidApiKey}
+          boxShadow="rgba(0, 0, 0, 0.01)"
+        />
         <ZapierConnectPopup
           open={openZapierConnect}
           handlePopupClose={handleCloseIntegrate}
@@ -1351,6 +1497,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   );
 });
 
-DataSyncList.displayName = 'DataSyncList';
+DataSyncList.displayName = "DataSyncList";
 
 export default DataSyncList;

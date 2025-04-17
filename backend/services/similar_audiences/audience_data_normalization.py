@@ -81,6 +81,7 @@ class AudienceDataNormalizationService:
         x, y = self.filter_columns(df, config)
         return x, y
 
+
     def convert_int_columns(self, df: DataFrame, int_columns: List[str]):
         for name in int_columns:
             df[name] = df[name].map(convert_to_int).astype('Int64')

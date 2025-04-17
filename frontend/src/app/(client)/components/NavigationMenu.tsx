@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useRef, useEffect } from 'react';
-import { Box, colors, IconButton, List, ListItem, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material';
+import { Box, Collapse, colors, IconButton, List, ListItem, ListItemIcon, ListItemText, Menu, MenuItem, Typography } from '@mui/material';
 import { useRouter, usePathname } from 'next/navigation';
 import MenuIcon from '@mui/icons-material/Menu';
 import CloseIcon from '@mui/icons-material/Close';
@@ -26,6 +26,14 @@ import DomainButtonSelect from './NavigationDomainButton';
 import BusinessIcon from '@mui/icons-material/Business';
 import DnsIcon from '@mui/icons-material/Dns';
 import QuestionMarkOutlinedIcon from '@mui/icons-material/QuestionMarkOutlined';
+import AllInboxIcon from '@mui/icons-material/AllInbox';
+import ContactsIcon from '@mui/icons-material/Contacts';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CheckIcon from '@mui/icons-material/Check'; 
+import LeadsIcon from '@mui/icons-material/People';
+import LegendToggleIcon from '@mui/icons-material/LegendToggle';
+import InsightsIcon from '@mui/icons-material/Insights';
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -46,11 +54,12 @@ const navigationmenuStyles = {
     position: 'fixed',
     top: 0,
     width: '100%',
-    height: '100%',
+    height: 'calc(100vh - 4.25rem)',
     backgroundColor: '#fff',
     transition: 'left 0.3s ease-in-out',
     zIndex: 100,
     marginTop: '4.5rem', // Adjust for the header height
+    overflow: 'auto',
   },
   activeItem: {
     borderLeft: '0.25rem solid rgba(80, 82, 178, 1)',
@@ -126,6 +135,12 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
   const [notificationIconPopupOpen, setNotificationIconPopupOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const isAuthorized = useRef(false);
+
+  const [openPixel, setOpenPixel] = useState(false);
+
+  const handleTogglePixel = () => {
+    setOpenPixel((prev) => !prev);
+  };
 
   const toggleDrawer = () => {
     setOpen(!open);
@@ -215,7 +230,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
         </IconButton>
 
         {/* Centered Logo (Adjust src to your logo) */}
-        <Image src="/logo.svg" priority alt="logo" height={20} width={32} />
+        <Image src="/logo.svg" priority alt="logo" height={30} width={130} />
         </Box>
 
 
@@ -320,7 +335,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
       }}>
         <List sx={{ paddingTop: 0 }}>
 
-
+        {!pathname.includes('sources') && !pathname.includes('lookalikes') && 
           <ListItem
             sx={{
               ...navigationmenuStyles.mobileDomainList,
@@ -328,34 +343,130 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
             }}>
             <DomainButtonSelect />
           </ListItem>
+        }
 
-
-          <ListItem button onClick={() => handleNavigation('/dashboard')}
+          <ListItem button onClick={() => handleNavigation('/audience-dashboard')}
             sx={{
-              ...(isActive('/dashboard') ? navigationmenuStyles.activeItem : {}),
+              ...(isActive('/audience-dashboard') ? navigationmenuStyles.activeItem : {}),
               ...navigationmenuStyles.mobileDrawerList
             }}>
             <ListItemIcon><DashboardIcon /></ListItemIcon>
             <ListItemText
               primary="Dashboard" />
           </ListItem>
-          <ListItem button onClick={() => handleNavigation('/leads')}
+          <ListItem
+            button
+            onClick={handleTogglePixel}
             sx={{
-              ...(isActive('/leads') ? navigationmenuStyles.activeItem : {}),
-              ...navigationmenuStyles.mobileDrawerList
-            }}>
-            <ListItemIcon><PeopleIcon /></ListItemIcon>
-            <ListItemText primary="Contacts" />
+              ...((isActive('/pixel') ||
+                  isActive('/dashboard') ||
+                  isActive('/leads') ||
+                  isActive('/company') ||
+                  isActive('/supression')) 
+                ? navigationmenuStyles.activeItem 
+                : {}),
+              ...navigationmenuStyles.mobileDrawerList,
+            }}
+          >
+            <ListItemIcon>
+              <LegendToggleIcon />
+            </ListItemIcon>
+            <ListItemText primary="Pixel" />
+            {/* Иконка для открытия/закрытия располагается справа */}
+            <ListItemIcon sx={{ minWidth: 'auto' }}>
+              {openPixel ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </ListItemIcon>
           </ListItem>
-          <ListItem button onClick={() => handleNavigation('/company')} sx={{
-              ...(isActive('/company') ? navigationmenuStyles.activeItem : {}),
+
+          <Collapse in={openPixel} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding>
+            <ListItem
+                button
+                onClick={() => handleNavigation('/dashboard')}
+                sx={{
+                  ...(isActive('/dashboard') ? navigationmenuStyles.activeItem : {}),
+                  ...navigationmenuStyles.mobileDrawerList,
+                  pl: 4,
+                }}
+              >
+                <ListItemIcon>
+                  <InsightsIcon />
+                </ListItemIcon>
+                <ListItemText primary="Insights" />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => handleNavigation('/leads')}
+                sx={{
+                  ...(isActive('/leads') ? navigationmenuStyles.activeItem : {}),
+                  ...navigationmenuStyles.mobileDrawerList,
+                  pl: 4,
+                }}
+              >
+                <ListItemIcon>
+                  <LeadsIcon />
+                </ListItemIcon>
+                <ListItemText primary="Contacts" />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => handleNavigation('/company')}
+                sx={{
+                  ...(isActive('/company') ? navigationmenuStyles.activeItem : {}),
+                  ...navigationmenuStyles.mobileDrawerList,
+                  pl: 4,
+                }}
+              >
+                <ListItemIcon>
+                  <BusinessIcon />
+                </ListItemIcon>
+                <ListItemText primary="Company" />
+              </ListItem>
+              <ListItem
+                button
+                onClick={() => handleNavigation('/supression')}
+                sx={{
+                  ...(isActive('/supression') ? navigationmenuStyles.activeItem : {}),
+                  ...navigationmenuStyles.mobileDrawerList,
+                  pl: 4,
+                }}
+              >
+                <ListItemIcon>
+                  <FeaturedPlayListIcon />
+                </ListItemIcon>
+                <ListItemText primary="Supression" />
+              </ListItem>
+            </List>
+          </Collapse>
+          <ListItem button onClick={() => handleNavigation('/sources')}
+            sx={{
+              ...(isActive('/sources') ? navigationmenuStyles.activeItem : {}),
               ...navigationmenuStyles.mobileDrawerList
             }}>
-                    <ListItemIcon>
-                        <BusinessIcon />
-                    </ListItemIcon>
-                    <ListItemText primary="Company" />
-                </ListItem>
+            <ListItemIcon><AllInboxIcon /></ListItemIcon>
+            <ListItemText
+              primary="Sources" />
+          </ListItem>
+          <ListItem button onClick={() => handleNavigation('/lookalikes')}
+            sx={{
+              ...(isActive('/lookalikes') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+            <ListItemIcon><ContactsIcon /></ListItemIcon>
+            <ListItemText
+              primary="Lookalikes" />
+          </ListItem>
+          <ListItem button onClick={() => handleNavigation('/smart-audiences')}
+            sx={{
+              ...(isActive('/smart-audiences') ? navigationmenuStyles.activeItem : {}),
+              ...navigationmenuStyles.mobileDrawerList
+            }}>
+            <ListItemIcon>
+              <Image src={ isActive(`/smart-audiences`) ? "./magic-stick_active.svg" : "./magic-stick.svg"} alt="Smart Audiences" width={22} height={22}/>
+            </ListItemIcon>
+            <ListItemText
+              primary="Smart Audiences"/>
+          </ListItem>
           <ListItem button onClick={() => handleNavigation('/data-sync')}
             sx={{
               ...(isActive('/data-sync') ? navigationmenuStyles.activeItem : {}),
@@ -392,20 +503,12 @@ const NavigationMenu: React.FC<NavigationProps> = ({ NewRequestNotification }) =
             <ListItemIcon><AnalyticsIcon /></ListItemIcon>
             <ListItemText primary="Analytics" />
           </ListItem> */}
-          <ListItem button onClick={() => handleNavigation('/suppressions')}
-            sx={{
-              ...(isActive('/suppressions') ? navigationmenuStyles.activeItem : {}),
-              ...navigationmenuStyles.mobileDrawerList
-            }}>
-            <ListItemIcon><FeaturedPlayListIcon /></ListItemIcon>
-            <ListItemText primary="Suppressions" />
-          </ListItem>
           {partner && <ListItem button onClick={() => handleNavigation('/partners')}
             sx={{
               ...(isActive('/partners') ? navigationmenuStyles.activeItem : {}),
               ...navigationmenuStyles.mobileDrawerList
             }}>
-            <ListItemIcon><FeaturedPlayListIcon /></ListItemIcon>
+            <ListItemIcon><AccountBoxIcon /></ListItemIcon>
             <ListItemText primary="Partners" />
           </ListItem>}
           {/* <ListItem button onClick={() => handleNavigation('/rules')}

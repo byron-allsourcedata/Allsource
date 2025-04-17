@@ -83,7 +83,7 @@ const ResetPassword: React.FC = () => {
   return (
     <>
       <Box sx={resetStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={30} width={50} />
+        <Image src='/logo.svg' alt='logo' height={30} width={130} />
       </Box>
 
       <Box sx={resetStyles.mainContent}>

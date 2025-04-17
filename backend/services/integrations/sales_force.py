@@ -1,4 +1,9 @@
 import os
+import re
+import csv
+import logging
+import io
+import hashlib
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -7,14 +12,18 @@ from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.sales_force import SalesForceProfile
 from fastapi import HTTPException
+from faker import Faker
+from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
 from datetime import datetime, timedelta
 from utils import extract_first_email
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 import httpx
+from models.enrichment_users import EnrichmentUser
 import json
 from utils import format_phone_number
 from typing import List
 from utils import validate_and_format_phone, format_phone_number
+from uuid import UUID
 
 
 class SalesForceIntegrationsService:
@@ -45,6 +54,10 @@ class SalesForceIntegrationsService:
     def get_credentials(self, domain_id: int, user_id: int):
         credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.SALES_FORCE.value)
         return credential
+
+    def get_smart_credentials(self, user_id: int):
+        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.SALES_FORCE.value)
+        return credential
         
 
     def __save_integrations(self, api_key: str, instance_url: str, domain_id: int, user: dict):
@@ -61,7 +74,8 @@ class SalesForceIntegrationsService:
             'access_token': api_key,
             'full_name': user.get('full_name'),
             'instance_url': instance_url,
-            'service_name': SourcePlatformEnum.SALES_FORCE.value
+            'service_name': SourcePlatformEnum.SALES_FORCE.value,
+            'limit': IntegrationLimit.SALESFORCE.value
         }
 
         if common_integration:
@@ -106,23 +120,61 @@ class SalesForceIntegrationsService:
         response = self.__handle_request(method='POST', url="https://login.salesforce.com/services/oauth2/token", data=data, headers=headers)
         return response.json().get("access_token")
     
-    def update_lead(self, instance_url: str, access_token: str, lead_id: int, data: dict):
-        url = f"{instance_url}/services/data/v59.0/sobjects/Lead/{lead_id}"
-        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        response = self.__handle_request(method='PATCH', url=url, json=data, headers=headers)
-        return response
+    
+    def _to_csv(self, records: list[dict]) -> str:
+        if not records:
+            return ""
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=records[0].keys(), lineterminator='\n')
+        writer.writeheader()
+        for rec in records:
+            writer.writerow(rec)
+        return output.getvalue()
+    
+    def generate_external_id(self, profile: dict) -> str:
+        unique_value = profile.get('email')
+        if not unique_value:
+            unique_value = str(profile)
+            
+        return hashlib.md5(unique_value.encode('utf-8')).hexdigest()
 
-    def create_or_update_lead(self, instance_url: str, access_token: str, data: dict):
-        url = f"{instance_url}/services/data/v59.0/sobjects/Lead"
-        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        response = self.__handle_request(method='POST', url=url, json=data, headers=headers)
+    def bulk_upsert_leads(self, profiles: list[dict], instance_url: str, access_token: str) -> str:
+        try:
+            for profile in profiles:
+                profile['External_Contact_ID__c'] = profile.get('Email')
+                    
+            job_payload = {
+                "object": "Lead",
+                "operation": "upsert",
+                "externalIdFieldName": 'External_Contact_ID__c',
+                "contentType": "CSV"
+            }
+            base_url = f"{instance_url}/services/data/v59.0/jobs/ingest"
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json"
+            }
+            job_resp = self.__handle_request(method='POST', url=base_url, json=job_payload, headers=headers)
+            job_resp.raise_for_status()
+            job_id = job_resp.json()['id']
+
+            csv_data = self._to_csv(profiles)
+            upload_headers = {
+                'Authorization': headers['Authorization'],
+                'Content-Type': 'text/csv'
+            }
+            upload_url = f"{base_url}/{job_id}/batches"
+            upload_resp = self.__handle_request(method='PUT', url=upload_url, data=csv_data, headers=upload_headers)
+            upload_resp.raise_for_status()
+            close_url = f"{base_url}/{job_id}"
+            close_payload = {"state": "UploadComplete"}
+            close_resp = self.__handle_request(method='PATCH', url=close_url, json=close_payload, headers=headers)
+            close_resp.raise_for_status()
+        except Exception as e:
+            logging.error(e)
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         
-        if response.status_code == 400:
-            error_data = response.json()
-            lead_id = error_data[0]["duplicateResult"]["matchResults"][0]["matchRecords"][0]["record"]["Id"]
-            return self.update_lead(instance_url=instance_url, access_token=access_token, lead_id=lead_id, data=data)
-
-        return response
+        return ProccessDataSyncResult.SUCCESS.value
     
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         client_id = os.getenv("SALES_FORCE_TOKEN")
@@ -158,52 +210,42 @@ class SalesForceIntegrationsService:
             'created_by': created_by,
         })
         return sync
-
-    async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
-        profile = self.__create_profile(five_x_five_user=five_x_five_user, access_token=user_integration.access_token, instance_url=user_integration.instance_url)
-        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
-            
-        return ProccessDataSyncResult.SUCCESS.value
-
-    def __create_profile(self, five_x_five_user: FiveXFiveUser, access_token: str, instance_url: str):
-        profile = self.__mapped_sales_force_profile(five_x_five_user)
-        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
-
-        json_data = {
-            'FirstName': profile.FirstName,
-            'LastName': profile.LastName,
-            'Email': profile.Email,
-            'Phone': profile.Phone,
-            'MobilePhone': profile.MobilePhone,
-            'Company': profile.Company,
-            'Title': profile.Title,
-            'Industry': profile.Industry,
-            'LeadSource': profile.LeadSource,
-            'Street': profile.Street,
-            'City': profile.City,
-            'State': profile.State,
-            'Country': profile.Country,
-            'NumberOfEmployees': profile.NumberOfEmployees,
-            'AnnualRevenue': profile.AnnualRevenue,
-            'Description': profile.Description
+    
+    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, created_by: str, user: dict, data_map: List[DataMap] = []):
+        credentials = self.get_smart_credentials(user_id=user.get('id'))
+        sync = self.sync_persistence.create_sync({
+            'integration_id': credentials.id,
+            'sent_contacts': sent_contacts,
+            'sync_type': DataSyncType.AUDIENCE.value,
+            'smart_audience_id': smart_audience_id,
+            'data_map': data_map,
+            'created_by': created_by,
+        })
+        return sync
+    
+    def get_failed_results(self, job_id: str, instance_url: str, access_token: str) -> str:
+        url = f"{instance_url}/services/data/v59.0/jobs/ingest/{job_id}/failedResults"
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json"
         }
+        response = self.__handle_request(method='GET', url=url, headers=headers)
+        response.raise_for_status()
+        return response.text
+
+    async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
+        profiles = []
+        access_token = self.get_access_token(user_integration.access_token)
+        if not access_token:
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         
-        json_data = {k: v for k, v in json_data.items() if v is not None}
-        try:
-            access_token = self.get_access_token(access_token)
-            if not access_token:
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-        except Exception:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value 
-        
-        response = self.create_or_update_lead(instance_url=instance_url, access_token=access_token, data=json_data)
-        
-        if response.status_code == 400:
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        if response.status_code == 401:
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        for enrichment_user in enrichment_users:
+            profile = self.__mapped_sales_force_profile(enrichment_user, data_sync.data_map)
+            profiles.append(profile)
+            
+        response_result = self.bulk_upsert_leads(profiles=profiles, instance_url=user_integration.instance_url, access_token=access_token)
+        if response_result in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value):
+            return profile
             
         return ProccessDataSyncResult.SUCCESS.value
                 
@@ -229,106 +271,78 @@ class SalesForceIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
         return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
     
-    def __mapped_sales_force_profile(self, five_x_five_user: FiveXFiveUser) -> SalesForceProfile:
-        email_fields = [
-            'business_email', 
-            'personal_emails', 
-            'additional_personal_emails',
-        ]
+    def __map_properties(self, enrichment_user: EnrichmentUser, data_map: List[DataMap]) -> dict:
+        properties = {}
+        for mapping in data_map:
+            five_x_five_field = mapping.get("type")  
+            new_field = mapping.get("value")  
+            value_field = getattr(enrichment_user, five_x_five_field, None)
+            
+            if value_field is not None: 
+                properties[new_field] = value_field.isoformat() if isinstance(value_field, datetime) else value_field
+            else:
+                properties[new_field] = None
+            
+        return properties
+    
+    def __mapped_sales_force_profile(self, enrichment_user: EnrichmentUser, data_map: dict) -> dict:
+        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
+        properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
+        first_email = get_valid_email(emails_list)
         
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
-                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                                return e.strip()
-                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
-                                return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        fake = Faker()
 
-        first_email = get_valid_email(five_x_five_user)
+        first_phone = fake.phone_number()
+        address_parts = fake.address()
+        city_state_zip = address_parts.split("\n")[-1]
+
+        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
+
+        if match:
+            city = match.group(1).strip()
+            state = match.group(2) if match.group(2) else ''
+            zip_code = match.group(3) if match.group(3) else ''
+        else:
+            city, state, zip_code = '', '', ''
+            
+        company_name = fake.company()
+        first_name = fake.first_name()
+        last_name = fake.last_name()
         
-        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return first_email
-        
-        company_name = getattr(five_x_five_user, 'company_name', None)
-        if not company_name:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        
-        first_phone = (
-            getattr(five_x_five_user, 'mobile_phone') or 
-            getattr(five_x_five_user, 'personal_phone') or 
-            getattr(five_x_five_user, 'direct_number') or 
-            getattr(five_x_five_user, 'company_phone', None)
-        )
-        phone_number = validate_and_format_phone(first_phone)
-        mobile_phone = getattr(five_x_five_user, 'mobile_phone', None)
-        
-        location = {
-            "address1": getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address', None),
-            "city": getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
-            "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
-            "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
+            
+        json_data = {
+            'FirstName': first_name,
+            'LastName': last_name,
+            'Email': first_email,
+            'Phone': first_phone,
+            'MobilePhone': first_phone,
+            'Street': address_parts,
+            'City': city,
+            'State': state,
+            'Country': 'USA',
+            'Company': company_name,
+            'Age__c': properties.get('Age', None),
+            'Gender__c': properties.get('Gender', None),
+            'Estimated_Household_Income_Code__c': properties.get('Estimated household income code', None),
+            'Estimated_Current_Home_Value_Code__c': properties.get('Estimated current home value code', None),
+            'Homeowner_Status__c': properties.get('Homeowner status', None),
+            'Has_Children__c': properties.get('Has children', None),
+            'Number_of_Children__c': properties.get('Number of children', None),
+            'Credit_Rating__c': properties.get('Credit rating', None),
+            'Net_Worth_Code__c': properties.get('Net worth code', None),
+            'Zip_Code__c': properties.get('Zipcode 5', None),
+            'Latitude__c': properties.get('Lat', None),
+            'Longitude__c': properties.get('Lon', None),
+            'Has_Credit_Card__c': properties.get('Has credit card', None),
+            'Length_of_Residence_Years__c': properties.get('Length of residence years', None),
+            'Marital_Status__c': properties.get('Marital status', None),
+            'Occupation_Group_Code__c': properties.get('Occupation group code', None),
+            'Is_Book_Reader__c': properties.get('Is book reader', None),
+            'Is_Online_Purchaser__c': properties.get('Is online purchaser', None),
+            'Is_Traveler__c': properties.get('Is traveler', None),
+            'Rec_Id__c': properties.get('Rec id', None)
         }
         
-        description = getattr(five_x_five_user, 'company_description', None)
-        if description:
-            description = description[:9999]
+        json_data = {k: v for k, v in json_data.items() if v is not None}
             
-        company_employee_count = getattr(five_x_five_user, 'company_employee_count', None)
-        if company_employee_count:
-            company_employee_count = str(company_employee_count).replace('+', '')
-            if 'to' in company_employee_count:
-                start, end = company_employee_count.split(' to ')
-                company_employee_count = (int(start) + int(end)) // 2
-            else:
-                company_employee_count = int(company_employee_count)
-            company_employee_count = str(company_employee_count)
-            
-        company_revenue = getattr(five_x_five_user, 'company_revenue', None)
-        if company_revenue:
-            try:
-                company_revenue = str(company_revenue).replace('+', '').split(' to ')[-1]
-                if 'Billion' in company_revenue:
-                    cleaned_value = float(company_revenue.split()[0]) * 10**9
-                elif 'Million' in company_revenue:
-                    cleaned_value = float(company_revenue.split()[0]) * 10**6
-                elif company_revenue.isdigit():
-                    cleaned_value = float(company_revenue)
-                else:
-                    cleaned_value = 0
-            except:
-                cleaned_value = 0
-                
-            company_revenue = str(cleaned_value)
-            
-        return SalesForceProfile(
-            FirstName=getattr(five_x_five_user, 'first_name', None),
-            LastName=getattr(five_x_five_user, 'last_name', None),
-            Email=first_email,
-            Phone=', '.join(phone_number.split(', ')[-3:]) if phone_number else None,
-            MobilePhone=', '.join(mobile_phone.split(', ')[-3:]) if mobile_phone else None,
-            Company=company_name,
-            Title=getattr(five_x_five_user, 'job_title', None),
-            Industry=getattr(five_x_five_user, 'primary_industry', None),
-            LeadSource='Web',
-            City=location.get('city'),
-            State=location.get('region'),
-            Country='USA',
-            NumberOfEmployees=company_employee_count,
-            AnnualRevenue=company_revenue,
-            Description=description 
-        )
+        return json_data

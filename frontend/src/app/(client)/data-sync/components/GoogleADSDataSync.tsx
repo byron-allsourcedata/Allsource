@@ -37,7 +37,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             list_id: data?.list_id ?? '',
             list_name: data?.name ?? '',
         }
-        ?? null);
+        );
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>(data?.name ?? '');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
@@ -59,14 +59,14 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             customer_id: data?.customer_id ?? '',
             customer_name: data?.customer_id ?? '',
         }
-    ] ?? []);
+    ]);
 
     const [selectedAccountId, setSelectedAccountId] = useState<string>(data?.customer_id ?? '');
     const [listNameErrorMessage, setListNameErrorMessage] = useState('')
     const [savedList, setSavedList] = useState<ChannelList | null>({
         list_id: data?.list_id ?? '',
         list_name: data?.name ?? '',
-    } ?? null);
+    });
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -1223,7 +1223,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     minWidth: '196px'
                                                 }
                                             }}>
-                                                <Image src='/logo.svg' alt='logo' height={15} width={24} />
+                                                <Image src='/logo-icon.svg' alt='logo' height={25} width={24} />
                                             </Grid>
                                             <Grid item xs="auto" sm={1} sx={{
                                                 '@media (max-width:599px)': {
@@ -1236,7 +1236,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     minWidth: '196px'
                                                 }
                                             }}>
-                                                <Image src='/google-ads.svg' alt='googleAds' height={20} width={24} />
+                                                <Image src='/google-ads.svg' alt='googleAds' height={25} width={24} />
                                             </Grid>
                                             <Grid item xs="auto" sm={1}>&nbsp;</Grid>
                                         </Grid>
