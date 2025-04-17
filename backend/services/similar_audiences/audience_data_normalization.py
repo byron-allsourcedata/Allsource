@@ -89,7 +89,7 @@ class AudienceDataNormalizationService:
 
     def convert_categorials(self, df: DataFrame, cat_columns: List[str]):
         for name in cat_columns:
-            df[name] = df[name].astype('category')
+            df[name] = df[name].astype('object')
 
 
     def add_missing_indicators(self, df: DataFrame, cat_columns: List[str]):
