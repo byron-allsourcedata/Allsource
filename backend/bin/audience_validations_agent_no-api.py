@@ -6,6 +6,7 @@ import functools
 import json
 import boto3
 import random
+from datetime import datetime
 from sqlalchemy import update
 from aio_pika import IncomingMessage, Message
 from sqlalchemy.exc import IntegrityError
@@ -50,56 +51,85 @@ async def send_sse(connection, user_id: int, data: dict):
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
 
-async def aud_email_validation(message: IncomingMessage, db_session: Session, connection):
+async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Session, connection):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
         aud_smart_id = message_body.get("aud_smart_id")
+        batch = message_body.get("batch")
+        recency_days = message_body.get("recency_days")
+        validation_type = message_body.get("validation_type")
+        is_last_validation = message_body.get("is_last_validation", False) 
 
         try:
-            enrichment_users = (
-                db_session.query(
-                    AudienceSmartPerson.enrichment_user_id,
-                    AudienceSmartPerson.id.label("audience_smart_person_id"),
-                    Email.email.label("email"),
+
+            validation_rules = {
+                "personal_email_validation_status": lambda value: value.startswith("Valid"),
+                "business_email_validation_status": lambda value: value.startswith("Valid"),
+                "personal_email_last_seen": lambda value: value <= recency_days if value else False,
+                "business_email_last_seen_date": lambda value: value <= recency_days if value else False,
+                "mobile_phone_dnc": lambda value: value is False,
+            }
+
+            failed_ids = [
+                record["audience_smart_person_id"]
+                for record in batch
+                if not validation_rules[validation_type](record.get("value"))
+            ]
+
+            if failed_ids:
+                db_session.bulk_update_mappings(
+                    AudienceSmartPerson,
+                    [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
                 )
-                .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
-                .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
-                .outerjoin(Email, Email.id == EmailEnrichment.email_id)
-                .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
-                .all()
-            )
-
-            if not enrichment_users:
-                logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}.")
-                await message.ack()
-                return
-
-            random_count = random.randint(1, len(enrichment_users))
-            selected_records = random.sample(enrichment_users, random_count)
             
-            logging.info(f"Randomly selected {random_count} person.")
+            valid_ids = [
+                record["audience_smart_person_id"]
+                for record in batch
+                if validation_rules[validation_type](record.get("value"))
+            ]
 
-            db_session.bulk_update_mappings(
-                AudienceSmartPerson,
-                [{"id": record.audience_smart_person_id, "is_valid": True} for record in selected_records]
-            )
+            if valid_ids:
+                for person_id in valid_ids:
+                    person = db_session.query(AudienceSmartPerson).filter_by(id=person_id).first()
+                    if person:
+                        validations = json.loads(person.validations)
+                        for category in validations.values():
+                            for rule in category:
+                                if validation_type in rule:
+                                    rule[validation_type]["processed"] = True
+                        person.validations = json.dumps(validations)
 
-            db_session.query(AudienceSmart).filter(
-                AudienceSmart.id == aud_smart_id
-            ).update(
-                {
-                    "validated_records": random_count,
-                    "status": "ready",
-                }
-            )
-
-            await send_sse(connection, user_id, {"smart_audience_id": aud_smart_id, "total": random_count})
-            logging.info(f"sent sse with total count")
+            if is_last_validation:
+                db_session.query(AudienceSmartPerson).filter(
+                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                    AudienceSmartPerson.is_validation_processed == True
+                ).update({"is_valid": True})
 
             db_session.commit()
 
-            logging.info(f"Processed email validation for aud_smart_id {aud_smart_id}.")                            
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=f"validation_complete_{aud_smart_id}_{validation_type}",
+                message_body={
+                    "aud_smart_id": aud_smart_id,
+                    "validation_type": validation_type,
+                    "status": "validation_complete"
+                }
+            )
+            
+
+
+            # await send_sse(
+            #     connection,
+            #     user_id,
+            #     {
+            #         "smart_audience_id": aud_smart_id,
+            #         "total_validated": len(valid_records),
+            #     }
+            # )
+            # logging.info(f"sent sse with total count")
+                       
 
             await message.ack()
     
@@ -146,7 +176,7 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_email_validation, connection=connection, db_session=db_session)
+                functools.partial(aud_validation_agent_noapi, connection=connection, db_session=db_session)
             )
 
         await asyncio.Future()

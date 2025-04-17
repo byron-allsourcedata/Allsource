@@ -20,7 +20,7 @@ from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_settings import AudienceSetting
 from models.enrichment_users import EnrichmentUser
-from models.enrichment_contacts import EnrichmentContact
+from models.enrichment_users_contacts import EnrichmentUserContact
 from models.emails_enrichment import EmailEnrichment
 from models.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -29,6 +29,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 load_dotenv()
 
 AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
+AUDIENCE_VALIDATION_AGENT_NOAPI = 'aud_validation_agent_no-api'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 
 def setup_logging(level):
@@ -52,6 +53,19 @@ async def send_sse(connection, user_id: int, data: dict):
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
 
+async def wait_for_ping(connection, aud_smart_id, validation_type):
+    queue_name = f"validation_complete_{aud_smart_id}_{validation_type}"
+    channel = await connection.channel()
+    queue = await channel.declare_queue(queue_name, durable=True)
+
+    async with queue.iterator() as queue_iter:
+        async for message in queue_iter:
+            if message:
+                message_body = json.loads(message.body)
+                if message_body.get("status") == "validation_complete":
+                    await message.ack()
+                    break
+
 async def aud_email_validation(message: IncomingMessage, db_session: Session, connection):
     try:
         message_body = json.loads(message.body)
@@ -59,70 +73,109 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
         aud_smart_id = message_body.get("aud_smart_id")
         validation_params = message_body.get("validation_params")
 
+        recency_days = 0
+
+        logging.info(f"Processed email validation for aud_smart_id {aud_smart_id}.")    
+
         try:
-            priority = (
+            priority_record = (
                 db_session.query(AudienceSetting.value)
                 .filter(AudienceSetting.alias == "validation_priority")
                 .first()
             )
 
+            priority_values = priority_record.value.split(",")[:5]
 
-            enrichment_users = (
-                db_session.query(
-                    AudienceSmartPerson.enrichment_user_id,
-                    AudienceSmartPerson.id.label("audience_smart_person_id"),
-                    EnrichmentContact.mobile_phone_dnc,
-                )
-                .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
-                .join(EnrichmentContact, EnrichmentUser.id == EnrichmentContact.enrichment_user_id)
-                .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
-                .all()
-            )
-            # enrichment_users = (
-            #     db_session.query(
-            #         AudienceSmartPerson.enrichment_user_id,
-            #         AudienceSmartPerson.id.label("audience_smart_person_id"),
-            #         Email.email.label("email"),
-            #     )
-            #     .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
-            #     .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
-            #     .outerjoin(Email, Email.id == EmailEnrichment.email_id)
-            #     .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
-            #     .all()
-            # )
+            column_mapping = {
+                'personal_email-mx': 'personal_email_validation_status',
+                'personal_email-recency': 'personal_email_last_seen',
+                'business_email-mx': 'business_email_validation_status',
+                'business_email-recency': 'business_email_last_seen_date',
+                'phone-dnc_filter': 'mobile_phone_dnc'
+            }
 
-            if not enrichment_users:
-                logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}.")
-                await message.ack()
-                return
+            # {
+            #     "user_id": 110,
+            #     "aud_smart_id": "f5a4777a-cb64-4edd-a572-d9ead969b4fb", 
+            #     "validation_params": {
+            #     "personal_email": [
+            #         {"mx": {"processed": false}},
+            #         {"recency": {"days": 30, "processed": false}}
+            #     ],
+            #     "business_email": [
+            #         {"delivery": {"processed": false}},
+            #         {"recency": {"days": 60, "processed": false}}
+            #     ],
+            #     "phone": [
+            #         {"dnc_filter": {"processed": false}}
+            #     ],
+            #     "cas": [
+            #     ]
+            #     }
+            # }
 
-            random_count = random.randint(1, len(enrichment_users))
-            selected_records = random.sample(enrichment_users, random_count)
-            
-            logging.info(f"Randomly selected {random_count} person.")
 
-            db_session.bulk_update_mappings(
-                AudienceSmartPerson,
-                [{"id": record.audience_smart_person_id, "is_valid": True} for record in selected_records]
-            )
+            print("validation_params", validation_params)
+            i = 0
 
-            db_session.query(AudienceSmart).filter(
-                AudienceSmart.id == aud_smart_id
-            ).update(
-                {
-                    "validated_records": random_count,
-                    "status": "ready",
-                }
-            )
+            for value in priority_values:
+                validation, validation_type = value.split('-')[0], value.split('-')[1]
+                print("validation - ",  validation, "; validation_type - " , validation_type)
+                if validation in validation_params:
+                    validation_params_list = validation_params.get(validation)
+                    print("validation_params_list", validation_params_list)
+                    if any(validation_type in param for param in validation_params_list):
+                        column_name = column_mapping.get(value)
+                        print("column_name", column_name)
+                        if not column_name:
+                            continue
 
-            await send_sse(connection, user_id, {"smart_audience_id": aud_smart_id, "total": random_count})
-            logging.info(f"sent sse with total count")
+                        if validation_type == "recency":
+                            for param in validation_params_list:
+                                if "recency" in param:
+                                    recency_days = param["recency"].get("days")
+                                    break
+                                    
+                        enrichment_users = (
+                            db_session.query(
+                                AudienceSmartPerson.id.label("audience_smart_person_id"),
+                                getattr(EnrichmentUserContact, column_name),
+                            )
+                            .join(EnrichmentUserContact, EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id)
+                            .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id, AudienceSmartPerson.is_validation_processed == True)
+                            .all()
+                        )
 
-            db_session.commit()
+                        print("len", len(enrichment_users))
 
-            logging.info(f"Processed email validation for aud_smart_id {aud_smart_id}.")                            
+                        if not enrichment_users:
+                            logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}.")
+                            continue    
 
-            await message.ack()
+
+                        is_last_validation = i == len(priority_values) - 1
+
+                        for j in range(0, len(enrichment_users), 1000):
+                            batch = enrichment_users[j:j+1000]
+                            message_body = {
+                                'aud_smart_id': str(aud_smart_id),
+                                'user_id': user_id,
+                                'recency_days': recency_days,
+                                'batch': batch,
+                                "validation_type": validation_type,
+                                "is_last_validation": is_last_validation
+                            }
+                            await publish_rabbitmq_message(
+                                connection=connection,
+                                queue_name=AUDIENCE_VALIDATION_AGENT_NOAPI,
+                                message_body=message_body
+                            )
+
+                        await wait_for_ping(connection, aud_smart_id, validation_type)
+                        i += 1
+
+
+            await message.ack()                  
     
         except IntegrityError as e:
             logging.warning(f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping.")

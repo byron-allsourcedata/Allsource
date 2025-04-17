@@ -10,7 +10,7 @@ class EnrichmentUser(Base):
     __tablename__ = 'enrichment_users'
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
-    cid = Column(Integer, primary_key=True)
+    cid = Column(Integer, nullable=True)
     age = Column(INT4RANGE, nullable=False)
     gender = Column(SmallInteger, nullable=False)
     estimated_household_income_code = Column(SmallInteger, nullable=False)
