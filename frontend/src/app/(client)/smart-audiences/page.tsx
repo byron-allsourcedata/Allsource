@@ -213,7 +213,7 @@ const SmartAudiences: React.FC = () => {
                 end: appliedDates.end,
             }
         });
-    }, [orderBy, order, page, rowsPerPage, appliedDates]);
+    }, [orderBy, order, page, rowsPerPage, appliedDates, selectedFilters]);
 
     const clearPollingInterval = () => {
         if (intervalRef.current) {

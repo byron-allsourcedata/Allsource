@@ -43,6 +43,7 @@ interface TableRowData {
   created_date: Date;
   created_by: string;
   size: number;
+  processed_size: number;
   significant_fields: Record<string, any>;
   target_schema: string;
 }
