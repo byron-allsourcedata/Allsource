@@ -13,7 +13,7 @@ from uuid import UUID
 from schemas.audience import Row, SourcesObjectResponse, SourceResponse, NewSource, DomainsSourceResponse
 from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.domains import UserDomainsPersistence
-from enums import TypeOfCustomer, TypeOfSourceOrigin
+from enums import TypeOfCustomer, TypeOfSourceOrigin, BusinessType
 from persistence.audience_sources_matched_persons import AudienceSourcesMatchedPersonsPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import QueueName, SourceType
@@ -161,39 +161,63 @@ class AudienceSourceService:
 
         if audience_source.source_origin == TypeOfSourceOrigin.CSV.value:
             if audience_source.source_type == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
-                writer.writerow([
-                    'Email', 'TotalSpend', 'MinTotalSpend', 'MaxTotalSpend', 'Frequency', 'MinFrequency',
-                    'MaxFrequency', 'LastTransactionDate', 'Recency', 'MinRecency', 'MaxRecency', 'NormalizedRecency',
-                    'NormalizedFrequency', 'NormalizedTotalSpend', 'ValueScore'
-                ])
+                if audience_source.target_schema == BusinessType.B2C.value:
+                    writer.writerow([
+                        'Email', 'LastTransactionDate', 'Recency', 'MinRecency', 'MaxRecency', 'InvertedRecency',
+                        'MinInvertedRecency', 'MaxInvertedRecency', 'ValueScore'
+                    ])
 
-                writer.writerow([
-                    '', 'sum(Amount)', 'min(Amount)', 'max(Amount)', 'count(Transaction)', 'min(Frequency)',
-                    'max(Frequency)', 'max(Date)', '(reference_date - LastTransactionDate).days', 'min(Recency)',
-                    'max(Recency)', '(Recency - MinRecency) / (MaxRecency - MinRecency)',
-                    '(Frequency - MinFrequency) / (MaxFrequency - MinFrequency)'
-                    '(TotalsSpend - MinTotalSpend) / (MaxTotalSpend - MinTotalSpend)',
-                    'w1(1) * NormalizedTotalSpend + w2(1) * NormalizedFrequency - w3(1) * NormalizedRecency + 1'
-                ])
-                for person in audience_sources_matched_persons:
-                    relevant_data = [
-                        person.email or '',
-                        str(person.amount) if person.amount is not None else '',
-                        str(person.amount_min) if person.amount_min is not None else '',
-                        str(person.amount_max) if person.amount_max is not None else '',
-                        str(person.count) if person.count is not None else '',
-                        str(person.count_min) if person.count_min is not None else '',
-                        str(person.count_min) if person.count_min is not None else '',
-                        str(person.start_date) if person.start_date is not None else '',
-                        str(person.recency) if person.recency is not None else '',
-                        str(person.recency_min) if person.recency_min is not None else '',
-                        str(person.recency_max) if person.recency_max is not None else '',
-                        str(person.recency_score) if person.recency_score is not None else '',
-                        str(person.view_score) if person.view_score is not None else '',
-                        str(person.sum_score) if person.sum_score is not None else '',
-                        str(person.value_score) if person.value_score is not None else '',
-                    ]
-                    writer.writerow(relevant_data)
+                    writer.writerow([
+                        '', 'max(Date)', '(reference_date - LastTransactionDate).days', 'min(Recency)',
+                        'max(Recency)', '1 / (Recency + 1)', '1 / (MinInvertedRecency + 1)', '1 / (MaxInvertedRecency + 1)',
+                        '(InvertedRecency - MinInvertedRecency) / (MaxInvertedRecency - MinInvertedRecency)',
+                    ])
+                    for person in audience_sources_matched_persons:
+                        relevant_data = [
+                            person.email or '',
+                            str(person.start_date) if person.start_date is not None else '',
+                            str(person.recency) if person.recency is not None else '',
+                            str(person.recency_min) if person.recency_min is not None else '',
+                            str(person.recency_max) if person.recency_max is not None else '',
+                            str(person.inverted_recency) if person.inverted_recency is not None else '',
+                            str(person.inverted_recency_min) if person.inverted_recency_min is not None else '',
+                            str(person.inverted_recency_max) if person.inverted_recency_max is not None else '',
+                            str(person.value_score) if person.value_score is not None else '',
+                        ]
+                        writer.writerow(relevant_data)
+
+                if audience_source.target_schema == BusinessType.B2B.value:
+                    writer.writerow([
+                        'Email', 'LastTransactionDate', 'Recency', 'MinRecency', 'MaxRecency', 'InvertedRecency',
+                        'MinInvertedRecency', 'MaxInvertedRecency', 'RecencyScore', 'ProfessionalScore',
+                        'CompletenessScore', 'LeadValueScoreB2B'
+                    ])
+
+                    writer.writerow([
+                        '', 'max(Date)', '(reference_date - LastTransactionDate).days', 'min(Recency)',
+                        'max(Recency)', '1 / (Recency + 1)', '1 / (MinInvertedRecency + 1)',
+                        '1 / (MaxInvertedRecency + 1)',
+                        '(InvertedRecency - MinInvertedRecency) / (MaxInvertedRecency - MinInvertedRecency)',
+                        '(0.5 * JobLevelWeight + 0.3 * DepartmentWeight + 0.2 * CompanySizeWeight)',
+                        'sum(0.4 [if BUSINESS_EMAIL] + 0.3 [if LINKEDIN_URL] + 0.2 [if JobLevel] + 0.1 [Department])',
+                        '(0.4 * RecencyScore) + (0.4 * ProfessionalScore) + (0.2 * CompletenessScore)'
+                    ])
+                    for person in audience_sources_matched_persons:
+                        relevant_data = [
+                            person.email or '',
+                            str(person.start_date) if person.start_date is not None else '',
+                            str(person.recency) if person.recency is not None else '',
+                            str(person.recency_min) if person.recency_min is not None else '',
+                            str(person.recency_max) if person.recency_max is not None else '',
+                            str(person.inverted_recency) if person.inverted_recency is not None else '',
+                            str(person.inverted_recency_min) if person.inverted_recency_min is not None else '',
+                            str(person.inverted_recency_max) if person.inverted_recency_max is not None else '',
+                            str(person.recency_score) if person.value_score is not None else '',
+                            str(person.view_score) if person.view_score is not None else '',
+                            str(person.sum_score) if person.sum_score is not None else '',
+                            str(person.value_score) if person.value_score is not None else '',
+                        ]
+                        writer.writerow(relevant_data)
 
             if audience_source.source_type == TypeOfCustomer.FAILED_LEADS.value:
                 writer.writerow([
