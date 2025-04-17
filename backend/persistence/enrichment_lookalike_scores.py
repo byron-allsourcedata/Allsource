@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 
 from dependencies import Db
-from models.enrichment_lookalike_scores import EnrichmentLookalikeScores
+from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
 
 
 class EnrichmentLookalikeScoresPersistence:
@@ -17,7 +17,7 @@ class EnrichmentLookalikeScoresPersistence:
 
 
     def insert(self, lookalike_id: UUID, user_id: UUID, score: float):
-        new_score = EnrichmentLookalikeScores(
+        new_score = EnrichmentLookalikeScore(
             lookalike_id=lookalike_id,
             enrichment_user_id=user_id,
             score=score
@@ -28,7 +28,7 @@ class EnrichmentLookalikeScoresPersistence:
 
     def bulk_insert(self, lookalike_id: UUID, scores: List[Tuple[UUID, float]]):
         self.db.bulk_save_objects([
-            EnrichmentLookalikeScores(
+            EnrichmentLookalikeScore(
                 lookalike_id=lookalike_id,
                 enrichment_user_id=user_id,
                 score=score

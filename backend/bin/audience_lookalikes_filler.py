@@ -4,33 +4,29 @@ import sys
 import asyncio
 import functools
 import json
-from decimal import Decimal
-from pathlib import Path
-from typing import List
-
-import chardet
-import io
-import csv
-import boto3
+from sqlalchemy import desc, cast, String
+import statistics
 import aioboto3
 from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
-from itertools import islice
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-
-from schemas.similar_audiences import AudienceData
+from schemas.similar_audiences import NormalizationConfig
+from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService, \
+    map_letter_to_number, map_credit_rating, map_net_worth_code
+from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
+from services.similar_audiences.similar_audience_scores import SimilarAudiencesScoresService
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
-from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from services.similar_audiences import SimilarAudienceService
 from models.enrichment_users import EnrichmentUser
-from sqlalchemy import func, create_engine
+from sqlalchemy import create_engine
 from models.audience_lookalikes_persons import AudienceLookalikes
-import random
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
+from persistence.enrichment_models import EnrichmentModelsPersistence
+
 
 load_dotenv()
 
@@ -61,23 +57,22 @@ async def send_sse(connection, user_id: int, data: dict):
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
 
-def get_max_ids(lookalike_size):
+def get_max_size(lookalike_size):
     if lookalike_size == 'almost_identical':
-        max = 250000
-    if lookalike_size == 'extremely_similar':
-        max = 200000
-    if lookalike_size == 'very_similar':
-        max = 150000
-    if lookalike_size == 'broad':
-        max = 100000
-    else:
-        max = 250000
+        size = 10000
+    elif lookalike_size == 'extremely_similar':
+        size = 50000
+    elif lookalike_size == 'very_similar':
+        size = 100000
+    elif lookalike_size == 'quite_similar':
+        size = 200000
+    elif lookalike_size == 'broad':
+        size = 500000
         
-    num_users = random.randint(10000, max)
-    return num_users
+    return size
 
 
-async def aud_sources_reader(message: IncomingMessage, db_session: Session, connection, similar_audience_service: SimilarAudienceService):
+async def aud_sources_reader(message: IncomingMessage, db_session: Session, connection, similar_audience_service: SimilarAudiencesScoresService):
     try:
         message_body = json.loads(message.body)
         lookalike_id = message_body.get('lookalike_id')
@@ -88,22 +83,82 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
             await message.ack()
             return
         
-        total_rows = get_max_ids(audience_lookalike.lookalike_size)
+        total_rows = get_max_size(audience_lookalike.lookalike_size)
         processed_rows = 0
-
-        results = db_session.query(EnrichmentUser.id).limit(total_rows).all()
+        query = db_session.query(
+            EnrichmentUser.id,
+            EnrichmentUser.age.label("age"),
+            EnrichmentUser.gender.label("PersonGender"),
+            EnrichmentUser.estimated_household_income_code.label("EstimatedHouseholdIncomeCode"),
+            EnrichmentUser.estimated_current_home_value_code.label("EstimatedCurrentHomeValueCode"),
+            EnrichmentUser.homeowner_status.label("HomeownerStatus"),
+            EnrichmentUser.has_children.label("HasChildren"),
+            EnrichmentUser.number_of_children.label("NumberOfChildren"),
+            EnrichmentUser.credit_rating.label("CreditRating"),
+            EnrichmentUser.net_worth_code.label("NetWorthCode"),
+            cast(EnrichmentUser.zip_code5, String).label("ZipCode5"),
+            EnrichmentUser.lat.label("Latitude"),
+            EnrichmentUser.lon.label("Longitude"),
+            EnrichmentUser.has_credit_card.label("HasCreditCard"),
+            EnrichmentUser.length_of_residence_years.label("LengthOfResidenceYears"),
+            EnrichmentUser.marital_status.label("MaritalStatus"),
+            EnrichmentUser.occupation_group_code.label("OccupationGroupCode"),
+            EnrichmentUser.is_book_reader.label("IsBookReader"),
+            EnrichmentUser.is_online_purchaser.label("IsOnlinePurchaser"),
+            EnrichmentUser.state_abbr.label("StateAbbr"),
+            EnrichmentUser.is_traveler.label("IsTraveler"),
+        ).select_from(EnrichmentUser)
         
-        logging.info(f"Total row in pixel file: {total_rows}")
-        audience_lookalike.size = len(results)
+        config = NormalizationConfig(
+            numerical_features=[
+                'NumberOfChildren', 'LengthOfResidenceYears'
+            ],
+            unordered_features=[
+                'PersonGender', 'HasChildren', 'HomeownerStatus', 'MaritalStatus'
+            ],
+            ordered_features={
+                'EstimatedHouseholdIncomeCode': map_letter_to_number,
+                'EstimatedCurrentHomeValueCode': map_letter_to_number,
+                'CreditRating': map_credit_rating,
+                'NetWorthCode': map_net_worth_code
+            }
+        )
+
+        similar_audience_service.calculate_scores(lookalike_id=lookalike_id, query=query, user_id_key='id', config=config)
+        enrichment_lookalike_scores = (
+            db_session.query(EnrichmentLookalikeScore.score, EnrichmentLookalikeScore.enrichment_user_id)
+            .filter(EnrichmentLookalikeScore.lookalike_id == lookalike_id)
+            .order_by(desc(EnrichmentLookalikeScore.score))
+            .limit(total_rows)
+            .all()
+        )
+        logging.info(f"Total row in pixel file: {len(enrichment_lookalike_scores)}")
+        audience_lookalike.size = len(enrichment_lookalike_scores)
+        scores = [float(s.score) for s in enrichment_lookalike_scores if s.score is not None]
+        if scores:
+            similarity_score = {
+                "min": round(min(scores), 2),
+                "max": round(max(scores), 2),
+                "average": round(sum(scores) / len(scores), 2),
+                "median": round(statistics.median(scores), 2),
+            }
+        else:
+            similarity_score = {
+                "min": None,
+                "max": None,
+                "average": None,
+                "median": None,
+            }
+        audience_lookalike.similarity_score = similarity_score
         db_session.add(audience_lookalike)
         db_session.flush()
         await send_sse(connection, audience_lookalike.user_id, {"lookalike_id": str(audience_lookalike.id), "total": total_rows, "processed": processed_rows})
         
-        if not results:
+        if not enrichment_lookalike_scores:
             await message.ack()
             return
             
-        persons = [str(row[0]) for row in results]
+        persons = [str(enrichment_lookalike_score.enrichment_user_id) for enrichment_lookalike_score in enrichment_lookalike_scores]
         
         message_body = {
             'lookalike_id': str(audience_lookalike.id),
@@ -149,7 +204,7 @@ async def main():
         db_session = Session()
         s3_session = aioboto3.Session()
         similar_audience_data_normalization = AudienceDataNormalizationService()
-        similar_audience_service = SimilarAudienceService(normalizer=similar_audience_data_normalization)
+        similar_audience_service = SimilarAudiencesScoresService(normalization=similar_audience_data_normalization, db=db_session, models = EnrichmentModelsPersistence(db=db_session), scores = EnrichmentLookalikeScoresPersistence(db=db_session))
         reader_queue = await channel.declare_queue(
             name=AUDIENCE_LOOKALIKES_READER,
             durable=True,
