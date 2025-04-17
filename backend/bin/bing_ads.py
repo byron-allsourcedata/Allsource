@@ -33,10 +33,10 @@ REDIRECT_URI = 'http://localhost:3000/bing-ads-landing'
 SCOPE = 'https://ads.microsoft.com/.default'
 
 
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
-# logging.getLogger('suds.client').setLevel(logging.DEBUG)
-# logging.getLogger('suds.transport.http').setLevel(logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger('suds.client').setLevel(logging.DEBUG)
+logging.getLogger('suds.transport.http').setLevel(logging.DEBUG)
 
 def get_access_token():
     token_url = "https://login.microsoftonline.com/common/oauth2/v2.0/token"
@@ -98,33 +98,98 @@ def _setup_services(auth_data):
     return campaign_service
 
 
-def add_emails_to_audience(developer_token, client_id, client_secret, refresh_token,
+from bingads.v13.bulk import BulkServiceManager, FileUploadParameters, ResultFileType
+import hashlib
+
+def hash_emails(emails: list[str]) -> list[str]:
+    return [
+        hashlib.sha256(email.strip().lower().encode('utf-8')).hexdigest()
+        for email in emails
+    ]
+
+def add_emails_to_audience(developer_token, client_id, client_secret,
+                           refresh_token,
                            audience_id: int, emails: list[str]):
-    """
-    Добавляет список e‑mail в уже существующую аудиторию.
-    """
-    auth_data = _get_authorization_data(developer_token, client_id, client_secret, refresh_token)
-    campaign_service = _setup_services(auth_data)
-    factory = campaign_service.factory
+     # 1. Аутентификация
+    auth = OAuthWebAuthCodeGrant(
+        client_id=client_id,
+        client_secret=client_secret,
+        redirection_uri='http://localhost:3000/bing-ads-landing'
+    )
+    auth.request_oauth_tokens_by_refresh_token(refresh_token)
 
-    # Готовим объект CustomerList с ID аудитории
-    customer_list = factory.create('CustomerList')
-    customer_list.Id = audience_id
+    # 2. Формируем AuthorizationData
+    authorization_data = AuthorizationData(
+        developer_token=developer_token,
+        authentication=auth
+    )
 
-    # Формируем элементы списка
-    items_array = factory.create('ArrayOfCustomerListItem')
-    item_objs = []
-    for email in emails:
-        item = factory.create('CustomerListItem')
-        item.SubType = 'Email'
-        item.Text = email
-        item_objs.append(item)
-    items_array.CustomerListItem = item_objs
-    customer_list.CustomerListItems = items_array
+    # 3. Получаем customer_id и account_id
+    cust_svc = ServiceClient(
+        service='CustomerManagementService',
+        version=13,
+        authorization_data=authorization_data,
+        environment='production'
+    )
+    user = cust_svc.GetUser().User
+    authorization_data.customer_id = user.CustomerId
 
-    # Вызываем ApplyCustomerListItems для добавления контактов
-    response = campaign_service.ApplyCustomerListItems(CustomerListAudience=customer_list)
-    return response.PartialErrors  # пустой список при успешном добавлении
+    accounts = cust_svc.SearchAccounts(
+        Predicates={'Predicate': [{
+            'Field': 'UserId',
+            'Operator': 'Equals',
+            'Value': user.Id
+        }]},
+        PageInfo={'Index': 0, 'Size': 100}
+    )
+    authorization_data.account_id = accounts.AdvertiserAccount[0].Id
+
+    # 3. Инициализация BulkServiceManager
+    bulk_manager = BulkServiceManager(
+        authorization_data=authorization_data,
+        environment='production',
+        poll_interval_in_milliseconds=5000
+    )
+
+    # 4. Хешируем e‑mail’ы
+    sha256_hashes = [
+        hashlib.sha256(email.strip().lower().encode('utf-8')).hexdigest()
+        for email in emails
+    ]
+
+    # 5. Собираем сущности для загрузки
+    entities = [
+        BulkCustomerList(                    # ссылка на существующую аудиторию
+            CustomerList={'Id': audience_id},
+            Action='Replace'                 # Replace удалит старые и добавит новые
+        )
+    ]
+    for h in sha256_hashes:
+        entities.append(
+            BulkCustomerListItem(            # Item с SHA‑256‑хешем
+                CustomerListItem={
+                    'ParentId': audience_id,
+                    'SubType': 'Email',
+                    'Text': h
+                }
+            )
+        )
+
+    # 6. Загружаем файл и получаем результаты
+    upload_params = FileUploadParameters(
+        entities=entities,
+        result_file_directory='.',
+        result_file_name='results.csv',
+        response_mode='ErrorsAndResults'
+    )
+    result_path = bulk_manager.upload_file(upload_params)
+    results = bulk_manager.download_file(
+        download_entities=['CustomerList', 'CustomerListItem'],
+        download_file_path=result_path,
+        result_file_type=ResultFileType.upload
+    )
+
+    return results  # можно разобрать результаты в results.csv
     
 def set_bing_ads_audience_contacts(developer_token, client_id, client_secret, refresh_token,
                                    audience_id, contacts):
@@ -405,17 +470,6 @@ def create_ad_group_bulk(developer_token: str, client_id: str, client_secret: st
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 def add_customer_list_to_campaign_bulk(
     developer_token: str,
     client_id: str,
@@ -520,6 +574,8 @@ def add_customer_list_to_campaign_bulk(
             print(f"Received unexpected entity type: {type(bulk_entity)}")
 
     print("CustomerList успешно добавлен к кампании через Bulk API")
+    
+
 
 
 
@@ -527,8 +583,9 @@ def add_customer_list_to_campaign_bulk(
 async def main():
     refresh_token = '1.AQwAoMOu-2xxzUSHxit-r-dIM4Ptp6kjpBNHnTQjJkaFg4HdAM8MAA.AgABAwEAAABVrSpeuWamRam2jAF1XRQEAwDs_wUA9P_-g8ZHqXoih_Zz0tYRVRrzFKeA6Wh8c5uwnBcEtqSg4zVHClEnwmZ2nQbIboy4tm3WksZcR9VOBBjHJVTGjNcsHqsmy9QQCkjo49407sk21tqwJ2BSyu__HeIdOaRdnY03M60ONWvksU-LrH62XPUnnN9gNFhkZFrULsFGKQaBONYLy8ten2dM8urPIeX0Z4oxxQUDQ1_ARh5lGJ__XydZTdXz9kVCr6T7U_4PsdchZgx5g7eq8xJHeSVdDkaLcJ8eM3pQ529qZcU50kt5eGURM7k4uoYKV0NH6MZk-2Wuf3lBq1m77DPg5sHnKRXD-IykWtOTvK0j8DxUjbAn6wvTV_24Ul1OgTZc1YeT246bNWNUY44WZfb0CQ4aOcepgx_hpbGd2eNlPntnF8IHQInp4EfHznBRiSrf-BWL2AwjgIZoGfUg1biNE2IFoUh3Va4zqIWd1N8TpWiFP50o2ZUPFw6EfZiXfjuuo4spYfvlxungfvBDtEhh5STxNGHYIUJicBG5rIZeMSLJe42wEA5GepbyU9GTo9RccifVFWzo-JimS7twA8oNhvwd054WCeiruUDVkOijwMi7SPdGFQbx3hDIYbhD3oQLh9MBfLAJDcSMm98JFBhZXj8_Rrr0NHutD6W_XEjZSGMNVsjguNEwp0bTQDtdcTFvlLhaWrFWUcyK5YfbtTuOfNor7o6rTznEM_35mSmAWVztnhNe1SHNc3IaIBbUcc_RNarGWjYWX2LXMLytR38LGm0qII_Xd4WcE_mTR-CpiDZ-r-uI__ejXvX3TumB1FsiHB0PBa02PivPca5sMhR6'
     #create_campaign(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token, 'teww', 123)
-    create_ad_group_bulk(DEVELOPER_TOKEN,CLIENT_ID,CLIENT_SECRET,refresh_token, 569722874, 'ad_name')
-    add_customer_list_to_campaign_bulk(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET,refresh_token,569722874,822093753)
+    # create_ad_group_bulk(DEVELOPER_TOKEN,CLIENT_ID,CLIENT_SECRET,refresh_token, 569722874, 'ad_name')
+    # add_customer_list_to_campaign_bulk(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET,refresh_token,569722874,822093753)
+    add_emails_to_audience(DEVELOPER_TOKEN, CLIENT_ID, CLIENT_SECRET, refresh_token, 569722874, ["email@gmail.com", "email1@gmail.com", "email2@gmail.com"])
 # Запуск асинхронного main
 if __name__ == "__main__":
     asyncio.run(main())
