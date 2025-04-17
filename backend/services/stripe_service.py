@@ -264,6 +264,18 @@ def get_product_from_price_id(price_id):
 def get_price_from_price_id(price_id):
     return stripe.Price.retrieve(price_id)
 
+def get_last_payment_intent(customer_id):
+    params = {
+        'limit': 1,
+    }
+    if customer_id:
+        params['customer'] = customer_id
+
+    intents = stripe.PaymentIntent.list(**params)
+
+    if intents.data:
+        return intents.data[0]
+    return None
 
 def purchase_product(customer_id, price_id, quantity, product_description):
     result = {

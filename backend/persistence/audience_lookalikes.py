@@ -332,7 +332,6 @@ class AudienceLookalikesPersistence:
                 customer_value=Decimal(row.customer_value)
             )
             audience_data_list.append(ad)
-
         return audience_data_list
 
 

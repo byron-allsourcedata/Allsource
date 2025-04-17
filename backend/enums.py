@@ -58,6 +58,7 @@ class IntegrationLimit(Enum):
 class BusinessType(Enum):
     D2C = 'd2c'
     B2B = 'b2b'
+    B2C = 'b2c'
 
 class LeadStatus(Enum):
     ABANDONED_CART = 'abandoned_cart'
