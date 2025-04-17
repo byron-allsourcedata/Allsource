@@ -557,8 +557,6 @@ async def normalize_persons_customer_conversion(
 
 
     if updates:
-        logging.info(updates[0].get('inverted_recency'))
-        logging.info(updates)
         db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
         logging.info(f"Updated {len(updates)} persons with lead value scores.")
         db_session.flush()
