@@ -15,7 +15,7 @@ export const TabPanel: React.FC<TabPanelProps> = ({
   return (
     <div
       role="tabpanel"
-      hidden={value !== index}
+      style={{ display: value === index ? "block" : "none" }}
       id={`tabpanel-${index}`}
       aria-labelledby={`tab-${index}`}
       {...other}
@@ -24,9 +24,6 @@ export const TabPanel: React.FC<TabPanelProps> = ({
         <Box
           sx={{
             margin: 0,
-            pt: 3,
-            paddingLeft: "2.5rem",
-            paddingRight: "2.5rem",
             "@media (min-width: 1600px)": {
               paddingLeft: "4.25rem",
               paddingRight: "4.25rem",

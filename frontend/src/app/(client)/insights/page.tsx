@@ -65,7 +65,6 @@ const Insights = () => {
           position: "sticky",
           top: 0,
           pt: "12px",
-          pb: "12px",
           pr: "1.5rem",
           pl: 0,
           zIndex: 1,
@@ -106,14 +105,7 @@ const Insights = () => {
             },
           }}
         >
-          Dashboard{" "}
-          <CustomTooltip
-            title={
-              "Indicates the count of resolved identities and revenue figures for the specified time"
-            }
-            linkText="Learn More"
-            linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/dashboard"
-          />
+          Insights
         </Typography>
         <Box
           sx={{
@@ -229,7 +221,6 @@ const Insights = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          overflow: "auto",
           flexGrow: 1,
         }}
       >

@@ -24,7 +24,15 @@ export const VerticalGradientBarChart: React.FC<
   const maxPercent = Math.max(...data.map((d) => d.percent)) || 1;
 
   return (
-    <Box p={2} borderRadius={2} boxShadow={2} bgcolor="#fff">
+    <Box
+      p={2.5}
+      bgcolor="#fff"
+      sx={{
+        width: "100%",
+        borderRadius: "6px",
+        boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
+      }}
+    >
       <Typography className="dashboard-card-heading" mb={2}>
         {title}
       </Typography>

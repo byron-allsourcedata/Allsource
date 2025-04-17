@@ -15,19 +15,37 @@ export const IconFillIndicator = ({
   percentage,
   labels,
   totalIcons = 4,
-  iconSize = 48,
+  iconSize = 96,
 }: IconFillIndicatorProps) => {
   const fullIcons = Math.floor((percentage / 100) * totalIcons);
   const partialIconPercentage =
     ((percentage / 100) * totalIcons - fullIcons) * 100;
 
   return (
-    <Box p={2} borderRadius={2} boxShadow={1} sx={{ backgroundColor: "#fff" }}>
+    <Box
+      p={2}
+      sx={{
+        backgroundColor: "#fff",
+        width: "100%",
+        borderRadius: "6px",
+        boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+      }}
+    >
       <Typography className="dashboard-card-heading" mb={2}>
         {title}
       </Typography>
 
-      <Box display="flex" gap={2} mb={1} alignItems="center">
+      <Box
+        display="flex"
+        gap={3}
+        padding={2}
+        mb={1}
+        alignItems="center"
+        sx={{ width: "100%" }}
+      >
         {[...Array(totalIcons)].map((_, index) => {
           const isFullyColored = index < fullIcons;
           const isPartiallyColored =
