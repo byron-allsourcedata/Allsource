@@ -93,6 +93,7 @@ def get_db():
     finally:
         db.close()
 
+Db = Annotated[Session, Depends(get_db)]
 
 async def verify_signature(request: Request):
     logger.debug("Starting verification")

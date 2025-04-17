@@ -6,9 +6,11 @@ from catboost import CatBoostRegressor
 from fastapi import Depends
 from pandas import DataFrame
 from sklearn.model_selection import train_test_split
+from typing_extensions import deprecated
 
 from schemas.similar_audiences import AudienceData, AudienceFeatureImportance, NormalizationConfig
-from .audience_data_normalization import AudienceDataNormalizationService, AudienceDataNormalizationServiceDep
+from .audience_data_normalization import AudienceDataNormalizationService, AudienceDataNormalizationServiceDep, \
+    default_normalization_config
 
 
 class SimilarAudienceService:
@@ -16,23 +18,36 @@ class SimilarAudienceService:
         self.normalizer = normalizer
 
 
+    @deprecated("Use get_trained_model instead")
     def get_audience_feature_importance(self, audience_data: List[AudienceData]) -> AudienceFeatureImportance:
-        data, customer_value = self.normalizer.normalize(audience_data)
-        feature_importance = self.train_catboost(data, customer_value)
-        return self.audience_importance(feature_importance)
+        audience_data = [d.__dict__ for d in audience_data]
+        model = self.get_trained_model(audience_data, default_normalization_config())
+        return self.audience_importance(model)
 
+
+    def get_trained_model(self, audience_data: List[dict], config: NormalizationConfig) -> CatBoostRegressor:
+        df = pd.DataFrame(audience_data)
+        data, customer_value = self.normalizer.normalize_dataframe(df, config)
+        model = self.train_catboost(data, customer_value)
+        return model
 
 
     def get_audience_feature_importance_with_config(self, audience_data: List[dict], config: NormalizationConfig) -> Dict[str, float]:
-        df = pd.DataFrame(audience_data)
-        data, customer_value = self.normalizer.normalize_dataframe(df, config)
-        feature_importance = self.train_catboost(data, customer_value)
+        model = self.get_trained_model(audience_data, config)
+
+        feature_importance = pd.DataFrame({
+            'Feature': model.feature_names_,
+            'Importance': model.get_feature_importance()
+        })
+
+        feature_importance['Importance'] = feature_importance['Importance'] / 100
+
         return dict(zip(
             feature_importance['Feature'],
             feature_importance['Importance']
         ))
 
-    def train_catboost(self, df: DataFrame, amount: DataFrame) -> DataFrame:
+    def train_catboost(self, df: DataFrame, amount: DataFrame) -> CatBoostRegressor:
         x = df
         y = amount
 
@@ -50,21 +65,25 @@ class SimilarAudienceService:
 
         model.fit(x_train, y_train)
 
-        feature_importance_df = pd.DataFrame({
+        return model
+
+
+    def feature_importance(self, model: CatBoostRegressor):
+        feature_importance = pd.DataFrame({
             'Feature': model.feature_names_,
             'Importance': model.get_feature_importance()
         })
 
-        feature_importance_df['Importance'] = feature_importance_df['Importance'] / 100
+        feature_importance['Importance'] = feature_importance['Importance'] / 100
 
-        return feature_importance_df
-
-
-    def audience_importance(self, feature_importance: DataFrame) -> AudienceFeatureImportance:
-        feature_importance_dict = dict(zip(
+        return dict(zip(
             feature_importance['Feature'],
             feature_importance['Importance']
         ))
+
+
+    def audience_importance(self, model: CatBoostRegressor) -> AudienceFeatureImportance:
+        feature_importance_dict = self.feature_importance(model)
         return AudienceFeatureImportance(**feature_importance_dict)
 
 

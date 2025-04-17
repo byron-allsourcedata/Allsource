@@ -89,7 +89,7 @@ class AudienceDataNormalizationService:
 
     def convert_categorials(self, df: DataFrame, cat_columns: List[str]):
         for name in cat_columns:
-            df[name] = df[name].astype('category')
+            df[name] = df[name].astype('object')
 
 
     def add_missing_indicators(self, df: DataFrame, cat_columns: List[str]):
@@ -112,8 +112,8 @@ class AudienceDataNormalizationService:
         for cat in cat_columns:
             df.loc[:, cat] = df[cat].fillna('U')
 
-        if 'PersonExactAge' in df.columns:
-            df['PersonExactAge'] = df['PersonExactAge'].fillna(df['PersonExactAge'].median())
+        # if 'PersonExactAge' in df.columns:
+        #     df['PersonExactAge'] = df['PersonExactAge'].fillna(df['PersonExactAge'].median())
         if 'NumberOfChildren' in df.columns:
             df['NumberOfChildren'] = df['NumberOfChildren'].fillna(0)
         if 'LengthOfResidenceYears' in df.columns:
@@ -149,7 +149,10 @@ class AudienceDataNormalizationService:
         ] + numerical_features + ordered_features + zipcodes + cat_columns + cat_indicator_columns)
 
         df_final = df_with_geo[valid_columns]
-        value = df_with_geo['customer_value']
+
+        value = None
+        if 'customer_value' in df_with_geo.columns:
+            value = df_with_geo['customer_value']
 
         return df_final, value
 

@@ -1,0 +1,30 @@
+#!/bin/bash
+set -e
+
+if [ -z "$1" ]; then
+  echo "Usage: ./migrate.sh path/to/migration.sql"
+  exit 1
+fi
+
+PREFIX="$1"
+MATCHES=(migrations/"$PREFIX"*.sql)
+
+if [ ${#MATCHES[@]} -eq 0 ]; then
+  echo "No migration file starting with '$PREFIX' found."
+  exit 1
+fi
+
+MIGRATION_FILE="${MATCHES[0]}"
+
+if [[ -z "$DB_USERNAME" || -z "$DB_PASSWORD" || -z "$DB_NAME" || -z "$DB_HOST" ]]; then
+  echo "Missing required DB_* environment variables."
+  exit 1
+fi
+
+echo "Applying migration: $MIGRATION_FILE"
+
+PGUSER="$DB_USERNAME" \
+PGPASSWORD="$DB_PASSWORD" \
+PGDATABASE="$DB_NAME" \
+PGHOST="$DB_HOST" \
+psql -f "$MIGRATION_FILE"
