@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Callable, Dict, List
 from decimal import Decimal
 
 class AudienceData(BaseModel):
@@ -49,3 +49,17 @@ class AudienceFeatureImportance(BaseModel):
     ZipCode3: float
     state_name: float
     state_city: float
+
+OrderedFeatureRules = Dict[str, Callable[[str], int | None]]
+
+class NormalizationConfig(BaseModel):
+    """
+        numerical features: Age, NumberOfChildren
+        unordered features: ZipCode, Gender, HasChildren, IsBookReader
+        ordered features: IncomeCode, Credit Rating
+
+        ordered features require mapping to int
+    """
+    numerical_features: List[str]
+    unordered_features: List[str]
+    ordered_features: OrderedFeatureRules

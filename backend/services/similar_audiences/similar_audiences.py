@@ -1,13 +1,14 @@
+from typing import Dict
+from typing import List, Annotated
+
 import pandas as pd
-from pandas import DataFrame
-from typing import List, Tuple, Annotated
-from sklearn.model_selection import train_test_split
 from catboost import CatBoostRegressor
 from fastapi import Depends
+from pandas import DataFrame
+from sklearn.model_selection import train_test_split
 
-from schemas.similar_audiences import AudienceData, AudienceFeatureImportance
-from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService, \
-    AudienceDataNormalizationServiceDep
+from schemas.similar_audiences import AudienceData, AudienceFeatureImportance, NormalizationConfig
+from .audience_data_normalization import AudienceDataNormalizationService, AudienceDataNormalizationServiceDep
 
 
 class SimilarAudienceService:
@@ -21,11 +22,22 @@ class SimilarAudienceService:
         return self.audience_importance(feature_importance)
 
 
+
+    def get_audience_feature_importance_with_config(self, audience_data: List[dict], config: NormalizationConfig) -> Dict[str, float]:
+        df = pd.DataFrame(audience_data)
+        data, customer_value = self.normalizer.normalize_dataframe(df, config)
+        feature_importance = self.train_catboost(data, customer_value)
+        return dict(zip(
+            feature_importance['Feature'],
+            feature_importance['Importance']
+        ))
+
     def train_catboost(self, df: DataFrame, amount: DataFrame) -> DataFrame:
         x = df
         y = amount
 
         cat_features = x.select_dtypes(include=['object', 'category']).columns.tolist()
+
         x_train, x_test, y_train, y_test = train_test_split(x, y)
 
         model = CatBoostRegressor(

@@ -6,7 +6,11 @@ import os
 import sys
 from collections import defaultdict
 
-from sqlalchemy import create_engine
+logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -19,15 +23,18 @@ from models.account_notification import AccountNotification
 from models.users_account_notification import UserAccountNotification
 from models.leads_users import LeadUser
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine, select
+from sqlalchemy.orm import sessionmaker, aliased
+from services.subscriptions import SubscriptionService
 from models.users import Users
+from models.five_x_five_users import FiveXFiveUser
 from datetime import datetime, timezone
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
-from services.stripe_service import purchase_product
+from services.stripe_service import purchase_product, get_last_payment_intent
+from dependencies import (PlansPersistence)
 from dotenv import load_dotenv
 
 load_dotenv()
-logging.basicConfig(level=logging.INFO)
 
 QUEUE_CREDITS_CHARGING = 'credits_charging'
 EMAIL_NOTIFICATIONS = 'email_notifications'
@@ -49,19 +56,35 @@ async def save_account_notification(session, user_id, account_notification_id, p
     return account_notification
 
 
-async def on_message_received(message, session):
+async def on_message_received(message, session, subscription_service):
     try:
         message_json = json.loads(message.body)
         customer_id = message_json.get('customer_id')
         plan_id = message_json.get('plan_id')
-        account_notification = await get_account_notification_by_title(session, NotificationTitles.PAYMENT_FAILED.value)
-        message_text = account_notification.text
-        subscription_plan = session.query(SubscriptionPlan).filter_by(id=plan_id).first()
+        
+        
+        ContactCredits = aliased(SubscriptionPlan)
+        stmt = select(
+            ContactCredits.price.label('price'),
+            ContactCredits.stripe_price_id.label('stripe_price_id')
+        ).join(
+            SubscriptionPlan, SubscriptionPlan.contact_credit_plan_id == ContactCredits.id
+        ).where(
+            SubscriptionPlan.id == plan_id
+        )
+        
+        contact_credits = session.execute(stmt).first()
+        
         user = session.query(Users).filter_by(customer_id=customer_id).first()
-
-        if not user or not subscription_plan:
+        
+        if not subscription_service.is_user_has_active_subscription(user.id):
+            logging.info(f"Skip, subscription is not active for user {user.id}")
+            await message.ack()
+            return
+        
+        if not user or not contact_credits:
             logging.error("Invalid user or subscription plan", extra={'customer_id': customer_id, 'plan_id': plan_id})
-            await message.reject(requeue=True)
+            await message.ack()
             return
 
         lead_users = (
@@ -72,66 +95,97 @@ async def on_message_received(message, session):
         )
 
         lead_user_count = len(lead_users)
+        if lead_user_count <= 0:
+            logging.info(f"There are no blocked contacts here")
+            await message.ack()
+            return
+        
+        logging.info(f"user.leads_credits = {user.leads_credits}")
         logging.info(f"lead_user_count: {lead_user_count}")
-        if lead_user_count > 0:
-            logging.info(f"lead_user_count > 0")
-            logging.info(f"user.leads_credits = {user.leads_credits}")
-            if user.leads_credits > 0:
-                logging.info(f"leads_credits > 0")
-                activate_count = min(user.leads_credits, lead_user_count)
-                session.query(LeadUser).filter(
-                    LeadUser.id.in_([user.id for user in lead_users[:activate_count]])) \
-                    .update({"is_active": True}, synchronize_session=False)
+        if user.leads_credits > 0:
+            logging.info(f"leads_credits > 0")
+            activate_count = min(user.leads_credits, lead_user_count)
+            session.query(LeadUser).filter(
+                LeadUser.id.in_([user.id for user in lead_users[:activate_count]])) \
+                .update({"is_active": True}, synchronize_session=False)
 
-                user.leads_credits -= activate_count
-                session.commit()
-            else:
-                if user.is_leads_auto_charging:
-                    logging.info(f"is_leads_auto_charging true")
-                    if lead_user_count >= QUANTITY:
-                        result = purchase_product(customer_id, subscription_plan.stripe_price_id, QUANTITY,
-                                                  'leads_credits')
-                        if result['success']:
-                            stripe_payload = result['stripe_payload']
-                            transaction_id = stripe_payload.get("id")
-                            if not session.query(UsersUnlockedFiveXFiveUser).filter_by(
-                                    transaction_id=transaction_id).first():
-                                created_timestamp = stripe_payload.get("created")
-                                created_at = datetime.fromtimestamp(created_timestamp,
-                                                                    timezone.utc) if created_timestamp else None
-                                status = stripe_payload.get("status")
-                                logging.info(f"payment status {status}")
-                                if status == 'succeeded':
-                                    grouped_users = defaultdict(list)
-                                    for lead_user in lead_users[:QUANTITY]:
-                                        grouped_users[lead_user.domain_id].append(lead_user)
-                                    transaction_counter = 1
-                                    for domain_id, users in grouped_users.items():
-                                        transaction_id_with_iteration = f"{transaction_id}_{transaction_counter}"
-                                        payment_transaction_obj = UsersUnlockedFiveXFiveUser(
-                                            user_id=user.id,
-                                            transaction_id=transaction_id_with_iteration,
-                                            created_at=datetime.now(timezone.utc),
-                                            stripe_request_created_at=created_at,
-                                            status=status,
-                                            amount_credits=QUANTITY // len(grouped_users),
-                                            type='buy_leads',
-                                            domain_id=domain_id
-                                        )
-                                        session.add(payment_transaction_obj)
-                                        session.flush()
-                                        transaction_counter += 1
+            user.leads_credits -= activate_count
+            session.commit()
+        else:
+            if user.is_leads_auto_charging:
+                logging.info(f"is_leads_auto_charging true")
+                if lead_user_count >= QUANTITY:
+                    logging.info(f"{user.full_name} user_id {user.id} charge {QUANTITY} leads by {contact_credits.price}")
+                    last_payment_intent = get_last_payment_intent(customer_id)
+                    if last_payment_intent:
+                        users_inlocked_five_x_five_user = session.query(UsersUnlockedFiveXFiveUser)\
+                        .filter(UsersUnlockedFiveXFiveUser.transaction_id==last_payment_intent.id).first()
+                        if not users_inlocked_five_x_five_user:
+                            logging.error(f"users_inlocked_five_x_five_user is None, last_transaction_id {last_payment_intent.id}")
+                            await message.reject(requeue=True)
+                            return
+                    result = purchase_product(customer_id, contact_credits.stripe_price_id, QUANTITY,
+                                                'leads_credits')
+                    if result['success']:
+                        stripe_payload = result['stripe_payload']
+                        transaction_id = stripe_payload.get("id")
+                        if not session.query(UsersUnlockedFiveXFiveUser).filter_by(
+                                transaction_id=transaction_id).first():
+                            created_timestamp = stripe_payload.get("created")
+                            created_at = datetime.fromtimestamp(created_timestamp,
+                                                                timezone.utc) if created_timestamp else None
+                            status = stripe_payload.get("status")
+                            logging.info(f"payment status {status}")
+                            if status == 'succeeded':
+                                grouped_users = defaultdict(list)
+                                
+                                lead_subset = lead_users[:QUANTITY]
+                                five_x_five_ids = [user.five_x_five_user_id for user in lead_subset]
 
-                                    session.query(LeadUser).filter(
-                                        LeadUser.id.in_([user.id for user in lead_users[:QUANTITY]])) \
-                                        .update({"is_active": True}, synchronize_session=False)
-                                    session.commit()
-                        else:
-                            logging.error(f"Purchase failed: {result['error']}", exc_info=True)
+                                id_up_pairs = (
+                                    session
+                                    .query(FiveXFiveUser.id, FiveXFiveUser.up_id)
+                                    .filter(FiveXFiveUser.id.in_(five_x_five_ids))
+                                    .all()
+                                )
+                                id_to_up = dict(id_up_pairs)
+                                grouped_users = defaultdict(list)
+                                for u in lead_subset:
+                                    up = id_to_up.get(u.five_x_five_user_id)
+                                    grouped_users[u.domain_id].append(up)
+                                
+                                transaction_dicts = []
+                                for domain_id, up_ids in grouped_users.items():
+                                    for up_id in up_ids:
+                                        transaction_dicts.append({
+                                            'user_id': user.id,
+                                            'transaction_id': str(transaction_id),
+                                            'created_at': datetime.now(timezone.utc),
+                                            'updated_at': datetime.now(timezone.utc),
+                                            'stripe_request_created_at': created_at,
+                                            'status': status,
+                                            'amount_credits': contact_credits.price,
+                                            'type': 'buy_leads',
+                                            'domain_id': domain_id,
+                                            'five_x_five_up_id': up_id,
+                                        })
 
-                        account_notification = await save_account_notification(session, user.id,
-                                                                               account_notification.id)
-
+                                session.bulk_insert_mappings(
+                                    UsersUnlockedFiveXFiveUser,
+                                    transaction_dicts
+                                )
+                                session.commit()
+                                
+                                session.query(LeadUser).filter(
+                                    LeadUser.id.in_([user.id for user in lead_subset])) \
+                                    .update({"is_active": True}, synchronize_session=False)
+                                session.commit()
+                                logging.error(f"Purchase success")
+                    else:
+                        logging.error(f"Purchase failed: {result['error']}", exc_info=True)
+                        account_notification = await get_account_notification_by_title(session, NotificationTitles.PAYMENT_FAILED.value)
+                        user_account_notification = await save_account_notification(session, user.id,
+                                                                                account_notification.id)
                         queue_name = f'sse_events_{str(user.id)}'
                         rabbitmq_connection = RabbitMQConnection()
                         connection = await rabbitmq_connection.connect()
@@ -139,8 +193,8 @@ async def on_message_received(message, session):
                             await publish_rabbitmq_message(
                                 connection=connection,
                                 queue_name=queue_name,
-                                message_body={'notification_text': message_text,
-                                              'notification_id': account_notification.id}
+                                message_body={'notification_text': account_notification.text,
+                                                'notification_id': user_account_notification.id}
                             )
                         except:
                             await rabbitmq_connection.close()
@@ -150,10 +204,10 @@ async def on_message_received(message, session):
         logging.info(f"message ack")
         await message.ack()
     except Exception as e:
-        logging.error("Error occurred while processing message.", exc_info=True)
+        logging.error(f"Error occurred while processing message: {e}", exc_info=True)
         session.rollback()
         await asyncio.sleep(5)
-        await message.reject(requeue=True)
+        await message.ack()
 
 
 async def main():
@@ -186,8 +240,15 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
+        subscription_service = SubscriptionService(
+                    plans_persistence = PlansPersistence(db_session),
+                    user_persistence_service = None,
+                    referral_service = None,
+                    partners_persistence = None,
+                    db=db_session,
+                )
         await queue.consume(
-            functools.partial(on_message_received, session=db_session)
+            functools.partial(on_message_received, session=db_session, subscription_service=subscription_service)
         )
         await asyncio.Future()
     except Exception as err:
