@@ -349,11 +349,27 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   cursor: sortable ? "pointer" : "default",
                   ...(key === "name" && {
                     position: "sticky",
+                    maxWidth: "170px",
+                    width: "170px",
                     left: 0,
                     zIndex: 98,
                     top: 0,
                     boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
                   }),
+
+                  ...(key === "lookalike_size" && {
+                    minWidth: "60px",
+                    maxWidth: "60px",
+                    width: "60px",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    left: 0,
+                    zIndex: 98,
+                    top: 0,
+                    boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
+                  }),
+
                   ...(key === "actions" && {
                     maxWidth: "30px",
                     "::after": { content: "none" },
@@ -446,7 +462,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           alignItems: "center",
                           justifyContent: "space-between",
                           minWidth: "50px",
-                          maxWidth: "200px",
+                          maxWidth: "300px",
                           width: "100%",
                         }}
                       >
@@ -496,7 +512,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                             handleRename(event, row.id, row.name)
                           }
                         >
-                          <EditIcon sx={{ maxHeight: "18px" }} />
+                          <EditIcon sx={{ maxHeight: "16px", fontSize: "16px" }} />
                         </IconButton>
                       </Box>
                     )}
