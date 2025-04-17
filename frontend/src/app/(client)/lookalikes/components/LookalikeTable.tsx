@@ -18,10 +18,13 @@ import {
   TextField,
   InputAdornment,
   LinearProgress,
+  Collapse,
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import dayjs from "dayjs";
 import { useSearchParams } from "next/navigation";
@@ -34,6 +37,7 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { audienceStyles } from "../../audience/audienceStyles";
 import TableCustomCell from "../../sources/components/table/TableCustomCell";
 import { useSSE } from "@/context/SSEContext";
+import { padding } from "@mui/system";
 
 interface TableRowData {
   id: string;
@@ -46,6 +50,7 @@ interface TableRowData {
   size: number;
   processed_size: number;
   significant_fields: Record<string, any>;
+  similarity_score: Record<string, any>;
   target_schema: string;
 }
 
@@ -55,7 +60,7 @@ interface LookalikeTableProps {
   orderBy?: keyof TableRowData;
   onSort: (column: keyof TableRowData) => void;
   refreshData: () => void;
-  loader_for_table: boolean
+  loader_for_table: boolean;
 }
 
 const audienceSize = [
@@ -100,7 +105,6 @@ const createCommonCellStyles = () => ({
   width: "150px",
 });
 
-
 const columns = (isDebug: boolean) => [
   { key: "name", label: "Name", sortable: true },
   { key: "source", label: "Source" },
@@ -110,7 +114,6 @@ const columns = (isDebug: boolean) => [
   { key: "created_date", label: "Created Date", sortable: true },
   { key: "created_by", label: "Created By" },
   { key: "size", label: "Size", sortable: true },
-  ...(isDebug ? [{ key: "significantField", label: "Significant field" }] : []),
   { key: "actions", label: "" },
 ];
 
@@ -120,7 +123,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
   orderBy,
   onSort,
   refreshData,
-  loader_for_table
+  loader_for_table,
 }) => {
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editedName, setEditedName] = useState<string>("");
@@ -136,6 +139,12 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
   const isDebug = searchParams.get("is_debug") === "true";
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { smartLookaLikeProgress } = useSSE();
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [openRowId, setOpenRowId] = useState<string | null>(null);
+
+  const toggleRow = (id: string) => {
+    setOpenRowId((prevId) => (prevId === id ? null : id));
+  };
 
   const handleRename = (
     event: React.MouseEvent<HTMLElement>,
@@ -153,36 +162,38 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
     setEditPopoverAnchorEl(null);
   };
 
-const clearPollingInterval = () => {
+  const clearPollingInterval = () => {
     if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-        console.log("interval cleared");
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+      console.log("interval cleared");
     }
-}
+  };
 
-useEffect(() => {
+  useEffect(() => {
     console.log("pooling");
 
     if (!intervalRef.current) {
-        console.log("pooling started");
-        intervalRef.current = setInterval(() => {
-            const hasPending = tableData.some(item => item.size !== item.processed_size);
+      console.log("pooling started");
+      intervalRef.current = setInterval(() => {
+        const hasPending = tableData.some(
+          (item) => item.size !== item.processed_size
+        );
 
-            if (hasPending) {
-                console.log("Fetching due to pending records");
-                refreshData();
-            } else {
-                console.log("No pending records, stopping interval");
-                clearPollingInterval()
-            }
-        }, 2000);
+        if (hasPending) {
+          console.log("Fetching due to pending records");
+          refreshData();
+        } else {
+          console.log("No pending records, stopping interval");
+          clearPollingInterval();
+        }
+      }, 2000);
     }
 
     return () => {
-        clearPollingInterval()
+      clearPollingInterval();
     };
-}, [tableData]);
+  }, [tableData]);
 
   const handleConfirmRename = async () => {
     if (!editingRowId || !editedName.trim()) return;
@@ -230,6 +241,7 @@ useEffect(() => {
     if (text !== "---") {
       navigator.clipboard.writeText(text);
     }
+    alert("Copied to clipboard");
   };
 
   const fullFormattedFields = (
@@ -275,7 +287,7 @@ useEffect(() => {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const [isScrolledX, setIsScrolledX] = useState(false);
   const [isScrolledY, setIsScrolledY] = useState(false);
-  
+
   useEffect(() => {
     if (tableContainerRef.current) {
       const container = tableContainerRef.current;
@@ -283,12 +295,12 @@ useEffect(() => {
         setIsScrolledX(container.scrollLeft > 0);
         setIsScrolledY(container.scrollTop > 0);
       };
-  
+
       container.addEventListener("scroll", checkScroll);
       window.addEventListener("resize", checkScroll);
-  
+
       checkScroll();
-  
+
       return () => {
         container.removeEventListener("scroll", checkScroll);
         window.removeEventListener("resize", checkScroll);
@@ -314,10 +326,10 @@ useEffect(() => {
         },
       }}
     >
-      <Table stickyHeader >
+      <Table stickyHeader>
         <TableHead sx={{ position: "relative" }}>
-          <TableRow sx={{height: "60px"}}>
-          {columns(isDebug).map(({ key, label, sortable = false }) =>(
+          <TableRow sx={{ height: "60px" }}>
+            {columns(isDebug).map(({ key, label, sortable = false }) => (
               <TableCell
                 key={key}
                 onClick={
@@ -331,9 +343,7 @@ useEffect(() => {
                     left: 0,
                     zIndex: 98,
                     top: 0,
-                    boxShadow: isScrolledX
-                      ? "3px 0px 3px #00000033"
-                      : "none",
+                    boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
                   }),
                   ...(key === "actions" && {
                     maxWidth: "30px",
@@ -351,17 +361,17 @@ useEffect(() => {
                   </Typography>
                   {sortable && (
                     <IconButton size="small">
-                    {orderBy === key ? (
-                      order === "asc" ? (
-                        <ArrowUpwardRoundedIcon fontSize="inherit" />
+                      {orderBy === key ? (
+                        order === "asc" ? (
+                          <ArrowUpwardRoundedIcon fontSize="inherit" />
+                        ) : (
+                          <ArrowDownwardRoundedIcon fontSize="inherit" />
+                        )
                       ) : (
-                        <ArrowDownwardRoundedIcon fontSize="inherit" />
-                      )
-                    ) : (
-                      <SwapVertIcon fontSize="inherit" />
-                    )}
-                  </IconButton>
-                )}
+                        <SwapVertIcon fontSize="inherit" />
+                      )}
+                    </IconButton>
+                  )}
                 </Box>
               </TableCell>
             ))}
@@ -401,468 +411,633 @@ useEffect(() => {
           {tableData.map((row) => {
             const progress = smartLookaLikeProgress[row.id];
             return (
-              <TableRow key={row.id} sx={{
-                backgroundColor:
-                  selectedRows.has(row.id) &&
-                  !loader_for_table
-                    ? "rgba(247, 247, 247, 1)"
-                    : "#fff",
-                "&:hover": {
-                  backgroundColor:
-                    "rgba(247, 247, 247, 1)",
-                  "& .sticky-cell": {
+              <>
+                <TableRow
+                  key={row.id}
+                  sx={{
                     backgroundColor:
-                      "rgba(247, 247, 247, 1)",
-                  },
-                },
-              }}>
-                <TableCustomCell
-                  renderContent={() => (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        gap: 2,
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        minWidth: '50px',
-                        maxWidth: '200px',
-                        width: '100%',
-                      }}
-                    >
-                      <Typography
-                        className="table-data"
-                        sx={{
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                          flexGrow: 1,
-                        }}
-                      >
-                        {row.name}
-                      </Typography>
-                      <IconButton
-                        className="edit-icon"
-                        sx={{
-                          pl: 0,
-                          pr: 0,
-                          pt: 0.25,
-                          pb: 0.25,
-                          margin: 0,
-                          opacity: 0,
-                          pointerEvents: 'none',
-                          transition: 'opacity 0.2s ease-in-out',
-                          '@media (max-width: 900px)': {
-                            opacity: 1,
-                          },
-                        }}
-                        onClick={(event) => handleRename(event, row.id, row.name)}
-                      >
-                        <EditIcon sx={{ maxHeight: '18px' }} />
-                      </IconButton>
-                    </Box>
-                  )}
-                  rowExample={row.name}
-                  customCellStyles={{
-                    ...lookalikesStyles.table_array,
-                    position: 'sticky',
-                    left: 0,
-                    zIndex: 8,
-                    backgroundColor: '#fff',
-                    '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' },
-                    minWidth: '150px',
-                    maxWidth: '150px',
-                    width: '150px',
-                    boxShadow: isScrolledX
-                        ? "3px 0px 3px #00000033"
-                        : "none",
-                  }}
-                />
-
-                <Popover
-                  open={isEditPopoverOpen}
-                  anchorEl={editPopoverAnchorEl}
-                  onClose={handleCloseEditPopover}
-                  anchorOrigin={{
-                    vertical: "center",
-                    horizontal: "center",
-                  }}
-                  transformOrigin={{
-                    vertical: "top",
-                    horizontal: "left",
-                  }}
-                  slotProps={{
-                    paper: {
-                      sx: {
-                        width: "15.875rem",
-                        boxShadow: 0,
-                        borderRadius: "4px",
-                        border: "0.5px solid rgba(175, 175, 175, 1)",
+                      selectedRows.has(row.id) && !loader_for_table
+                        ? "rgba(247, 247, 247, 1)"
+                        : "#fff",
+                    "&:hover": {
+                      backgroundColor: "rgba(247, 247, 247, 1)",
+                      "& .sticky-cell": {
+                        backgroundColor: "rgba(247, 247, 247, 1)",
                       },
                     },
                   }}
                 >
-                  <Box sx={{ p: 2 }}>
-                    <TextField
-                      value={editedName}
-                      onChange={(e) => setEditedName(e.target.value)}
-                      variant="outlined"
-                      label="Lookalike Name"
-                      size="small"
-                      fullWidth
-                      sx={{
-                        "& label.Mui-focused": {
-                          color: "rgba(80, 82, 178, 1)",
-                        },
-                        "& .MuiOutlinedInput-root:hover fieldset": {
-                          color: "rgba(80, 82, 178, 1)",
-                        },
-                        "& .MuiOutlinedInput-root": {
-                          "&:hover fieldset": {
-                            borderColor: "rgba(80, 82, 178, 1)",
-                            border: "1px solid rgba(80, 82, 178, 1)",
-                          },
-                          "&.Mui-focused fieldset": {
-                            borderColor: "rgba(80, 82, 178, 1)",
-                            border: "1px solid rgba(80, 82, 178, 1)",
-                          },
-                        },
-                      }}
-                      InputProps={{
-                        style: {
-                          fontFamily: "Roboto",
-                          fontSize: "14px",
-                        },
-                      }}
-                      InputLabelProps={{
-                        style: {
-                          fontSize: "14px",
-                          fontFamily: "Roboto",
-                        },
-                      }}
-                    />
-                    <Box
-                      sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}
-                    >
-                      <Button
-                        onClick={handleCloseEditPopover}
+                  <TableCustomCell
+                    renderContent={() => (
+                      <Box
                         sx={{
-                          backgroundColor: "#fff",
-                          color: "rgba(80, 82, 178, 1) !important",
-                          fontSize: "14px",
-                          textTransform: "none",
-                          padding: "0.75em 1em",
-                          maxWidth: "50px",
-                          maxHeight: "30px",
-                          mr: 0.5,
-                          "&:hover": {
-                            backgroundColor: "#fff",
-                            boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
-                          },
-                        }}
-                      >
-                        <Typography
-                          className="second-sub-title"
-                          sx={{ color: "rgba(80, 82, 178, 1) !important" }}
-                        >
-                          Cancel
-                        </Typography>
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          handleConfirmRename();
-                          handleCloseEditPopover();
-                        }}
-                        sx={{
-                          backgroundColor: "#fff",
-                          color: "rgba(80, 82, 178, 1) !important",
-                          fontSize: "14px",
-                          textTransform: "none",
-                          padding: "0.75em 1em",
-                          maxWidth: "50px",
-                          maxHeight: "30px",
-                          "&:hover": {
-                            backgroundColor: "#fff",
-                            boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
-                          },
-                        }}
-                      >
-                        <Typography
-                          className="second-sub-title"
-                          sx={{ color: "rgba(80, 82, 178, 1) !important" }}
-                        >
-                          Save
-                        </Typography>
-                      </Button>
-                    </Box>
-                  </Box>
-                </Popover>
-                
-                <TableCustomCell
-                customCellStyles={{ 
-                  ...lookalikesStyles.table_array, 
-                  position: "relative",
-                  ...createCommonCellStyles()
-                  
-                }}
-                  rowExample={row.source}
-                />
-
-                <TableCell
-                  sx={{
-                    ...lookalikesStyles.table_array,
-                    position: "relative",
-                    cursor: "default",
-                    
-                  }}
-                >
-                  <Box sx={{ display: "flex" }}>
-                    <Tooltip
-                      title={
-                        <Box
-                          sx={{
-                            backgroundColor: "#fff",
-                            margin: 0,
-                            padding: 0,
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                          }}
-                        >
-                          <Typography
-                            className="table-data"
-                            component="div"
-                            sx={{ fontSize: "12px !important" }}
-                          >
-                            {toNormalText(row.source_type)}
-                          </Typography>
-                        </Box>
-                      }
-                      sx={{ marginLeft: "0.5rem !important" }}
-                      componentsProps={{
-                        tooltip: {
-                          sx: {
-                            backgroundColor: "#fff",
-                            color: "#000",
-                            boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
-                            border: "0.2px solid rgba(255, 255, 255, 1)",
-                            borderRadius: "4px",
-                            maxHeight: "100%",
-                            maxWidth: "500px",
-                            padding: "11px 10px",
-                            marginLeft: "0.5rem !important",
-                          },
-                        },
-                      }}
-                      placement="right"
-                    >
-                      <Typography
-                        className="table-data"
-                        sx={{
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          maxWidth: "150px",
-                        }}
-                      >
-                        {truncateText(toNormalText(row.source_type), 30)}
-                      </Typography>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-                <TableCell
-                  sx={{ ...lookalikesStyles.table_array, position: "relative" }}
-                >
-                  {row.target_schema.toUpperCase()}
-                </TableCell>
-                <TableCell
-                  sx={{ ...lookalikesStyles.table_array, position: "relative" }}
-                >
-                  {(() => {
-                    const size = audienceSize.find(
-                      (size) => size.label === row.lookalike_size
-                    );
-                    return size
-                      ? `${toNormalText(size.label)} ${size.min_value}-${
-                          size.max_value
-                        }%`
-                      : row.lookalike_size;
-                  })()}
-                </TableCell>
-                <TableCell
-                  sx={{ ...lookalikesStyles.table_array, position: "relative" }}
-                >
-                  {dayjs(row.created_date).format("MMM D, YYYY")}
-                </TableCell>
-                <TableCell
-                  sx={{ ...lookalikesStyles.table_array, position: "relative" }}
-                >
-                  {row.created_by}
-                </TableCell>
-                <TableCell
-                  sx={{ ...lookalikesStyles.table_array, position: "relative" }}
-                >
-                  {row.processed_size === row.size 
-                    ? row.size.toLocaleString("en-US")
-                    : row?.processed_size > progress?.processed
-                      ? <ProgressBar progress={{ total: row?.size, processed: row?.processed_size}} />
-                      : <ProgressBar progress={{...progress}} />
-                  }
-                </TableCell>
-                {isDebug && (
-                  <TableCell
-                    sx={{
-                      ...lookalikesStyles.table_array,
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 9,
-                      backgroundColor: "#fff",
-                      maxWidth: "150px",
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          wordBreak: "break-word",
+                          display: "flex",
+                          flexDirection: "row",
+                          gap: 2,
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          minWidth: "50px",
+                          maxWidth: "200px",
                           width: "100%",
                         }}
                       >
-                        {fullFormattedFields(row.significant_fields)}
-                      </Typography>
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() =>
-                            handleCopy(
-                              fullFormattedFields(row.significant_fields)
-                            )
-                          }
-                          edge="end"
+                        <Typography
+                          className="table-data"
+                          sx={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            flexGrow: 1,
+                          }}
                         >
-                          <ContentCopyIcon fontSize="small" />
+                          {isDebug && (
+                            <IconButton
+                              size="small"
+                              onClick={() => toggleRow(row.id)}
+                            >
+                              {openRowId === row.id ? (
+                                <KeyboardArrowUpIcon />
+                              ) : (
+                                <KeyboardArrowDownIcon />
+                              )}
+                            </IconButton>
+                          )}
+                          {row.name}
+                        </Typography>
+                        <IconButton
+                          className="edit-icon"
+                          sx={{
+                            pl: 0,
+                            pr: 0,
+                            pt: 0.25,
+                            pb: 0.25,
+                            margin: 0,
+                            opacity: 0,
+                            pointerEvents: "none",
+                            transition: "opacity 0.2s ease-in-out",
+                            "@media (max-width: 900px)": {
+                              opacity: 1,
+                            },
+                          }}
+                          onClick={(event) =>
+                            handleRename(event, row.id, row.name)
+                          }
+                        >
+                          <EditIcon sx={{ maxHeight: "18px" }} />
                         </IconButton>
-                      </InputAdornment>
+                      </Box>
+                    )}
+                    rowExample={row.name}
+                    customCellStyles={{
+                      ...lookalikesStyles.table_array,
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 8,
+                      backgroundColor: "#fff",
+                      "&:hover .edit-icon": {
+                        opacity: 1,
+                        pointerEvents: "auto",
+                      },
+                      minWidth: "150px",
+                      maxWidth: "150px",
+                      width: "150px",
+                      boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
+                    }}
+                  />
+
+                  <Popover
+                    open={isEditPopoverOpen}
+                    anchorEl={editPopoverAnchorEl}
+                    onClose={handleCloseEditPopover}
+                    anchorOrigin={{
+                      vertical: "center",
+                      horizontal: "center",
+                    }}
+                    transformOrigin={{
+                      vertical: "top",
+                      horizontal: "left",
+                    }}
+                    slotProps={{
+                      paper: {
+                        sx: {
+                          width: "15.875rem",
+                          boxShadow: 0,
+                          borderRadius: "4px",
+                          border: "0.5px solid rgba(175, 175, 175, 1)",
+                        },
+                      },
+                    }}
+                  >
+                    <Box sx={{ p: 2 }}>
+                      <TextField
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        variant="outlined"
+                        label="Lookalike Name"
+                        size="small"
+                        fullWidth
+                        sx={{
+                          "& label.Mui-focused": {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                          "& .MuiOutlinedInput-root:hover fieldset": {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                          "& .MuiOutlinedInput-root": {
+                            "&:hover fieldset": {
+                              borderColor: "rgba(80, 82, 178, 1)",
+                              border: "1px solid rgba(80, 82, 178, 1)",
+                            },
+                            "&.Mui-focused fieldset": {
+                              borderColor: "rgba(80, 82, 178, 1)",
+                              border: "1px solid rgba(80, 82, 178, 1)",
+                            },
+                          },
+                        }}
+                        InputProps={{
+                          style: {
+                            fontFamily: "Roboto",
+                            fontSize: "14px",
+                          },
+                        }}
+                        InputLabelProps={{
+                          style: {
+                            fontSize: "14px",
+                            fontFamily: "Roboto",
+                          },
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "flex-end",
+                          mt: 2,
+                        }}
+                      >
+                        <Button
+                          onClick={handleCloseEditPopover}
+                          sx={{
+                            backgroundColor: "#fff",
+                            color: "rgba(80, 82, 178, 1) !important",
+                            fontSize: "14px",
+                            textTransform: "none",
+                            padding: "0.75em 1em",
+                            maxWidth: "50px",
+                            maxHeight: "30px",
+                            mr: 0.5,
+                            "&:hover": {
+                              backgroundColor: "#fff",
+                              boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                            },
+                          }}
+                        >
+                          <Typography
+                            className="second-sub-title"
+                            sx={{ color: "rgba(80, 82, 178, 1) !important" }}
+                          >
+                            Cancel
+                          </Typography>
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            handleConfirmRename();
+                            handleCloseEditPopover();
+                          }}
+                          sx={{
+                            backgroundColor: "#fff",
+                            color: "rgba(80, 82, 178, 1) !important",
+                            fontSize: "14px",
+                            textTransform: "none",
+                            padding: "0.75em 1em",
+                            maxWidth: "50px",
+                            maxHeight: "30px",
+                            "&:hover": {
+                              backgroundColor: "#fff",
+                              boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                            },
+                          }}
+                        >
+                          <Typography
+                            className="second-sub-title"
+                            sx={{ color: "rgba(80, 82, 178, 1) !important" }}
+                          >
+                            Save
+                          </Typography>
+                        </Button>
+                      </Box>
+                    </Box>
+                  </Popover>
+
+                  <TableCustomCell
+                    customCellStyles={{
+                      ...lookalikesStyles.table_array,
+                      position: "relative",
+                      ...createCommonCellStyles(),
+                    }}
+                    rowExample={row.source}
+                  />
+
+                  <TableCell
+                    sx={{
+                      ...lookalikesStyles.table_array,
+                      position: "relative",
+                      cursor: "default",
+                    }}
+                  >
+                    <Box sx={{ display: "flex" }}>
+                      <Tooltip
+                        title={
+                          <Box
+                            sx={{
+                              backgroundColor: "#fff",
+                              margin: 0,
+                              padding: 0,
+                              display: "flex",
+                              flexDirection: "row",
+                              alignItems: "center",
+                            }}
+                          >
+                            <Typography
+                              className="table-data"
+                              component="div"
+                              sx={{ fontSize: "12px !important" }}
+                            >
+                              {toNormalText(row.source_type)}
+                            </Typography>
+                          </Box>
+                        }
+                        sx={{ marginLeft: "0.5rem !important" }}
+                        componentsProps={{
+                          tooltip: {
+                            sx: {
+                              backgroundColor: "#fff",
+                              color: "#000",
+                              boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+                              border: "0.2px solid rgba(255, 255, 255, 1)",
+                              borderRadius: "4px",
+                              maxHeight: "100%",
+                              maxWidth: "500px",
+                              padding: "11px 10px",
+                              marginLeft: "0.5rem !important",
+                            },
+                          },
+                        }}
+                        placement="right"
+                      >
+                        <Typography
+                          className="table-data"
+                          sx={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            maxWidth: "150px",
+                          }}
+                        >
+                          {truncateText(toNormalText(row.source_type), 30)}
+                        </Typography>
+                      </Tooltip>
                     </Box>
                   </TableCell>
-                )}
-                <TableCell
-                  sx={{
-                    ...lookalikesStyles.table_array,
-                    maxWidth: "40px",
-                    minWidth: "40px",
-                    padding: "8px",
-                    textAlign: "center"
-                  }}
-                >
-                  <IconButton
+                  <TableCell
                     sx={{
-                      pl: 0,
-                      pr: 0,
-                      pt: 0.25,
-                      pb: 0.25,
-                      margin: 0,
+                      ...lookalikesStyles.table_array,
+                      position: "relative",
                     }}
-                    onClick={(event) => handleOpenConfirm(event, row.id, row.name)}
                   >
-                    <DeleteIcon sx={{ maxHeight: "18px" }} />
-                  </IconButton>
-                </TableCell>
-                <Popover
-                  open={isConfirmOpen}
-                  anchorEl={confirmAnchorEl}
-                  onClose={handleCloseConfirm}
-                  anchorOrigin={{
-                    vertical: "bottom",
-                    horizontal: "right",
-                  }}
-                  transformOrigin={{
-                    vertical: "top",
-                    horizontal: "center",
-                  }}
-                  PaperProps={{
-                    sx: {
-                      padding: "0.125rem",
-                      width: "15.875rem",
-                      boxShadow: 0,
-                      borderRadius: "8px",
-                      border: "0.5px solid rgba(175, 175, 175, 1)",
-                    },
-                  }}
-                >
-                  <Typography
-                    className="first-sub-title"
-                    sx={{ paddingLeft: 2, pt: 1, pb: 0 }}
+                    {row.target_schema.toUpperCase()}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      ...lookalikesStyles.table_array,
+                      position: "relative",
+                    }}
                   >
-                    Confirm Deletion
-                  </Typography>
-                  <DialogContent sx={{ padding: 2 }}>
-                    <DialogContentText className="table-data">
-                      Are you sure you want to delete the lookalike named{" "}
-                      <strong
-                        style={{ fontWeight: 500, color: "rgba(32, 33, 36, 1)" }}
-                      >
-                        {editedName}
-                      </strong>{" "}
-                      ?
-                    </DialogContentText>
-                  </DialogContent>
-                  <DialogActions>
-                    <Button
-                      className="second-sub-title"
+                    {(() => {
+                      const size = audienceSize.find(
+                        (size) => size.label === row.lookalike_size
+                      );
+                      return size
+                        ? `${toNormalText(size.label)} ${size.min_value}-${
+                            size.max_value
+                          }%`
+                        : row.lookalike_size;
+                    })()}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      ...lookalikesStyles.table_array,
+                      position: "relative",
+                    }}
+                  >
+                    {dayjs(row.created_date).format("MMM D, YYYY")}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      ...lookalikesStyles.table_array,
+                      position: "relative",
+                    }}
+                  >
+                    {row.created_by}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      ...lookalikesStyles.table_array,
+                      position: "relative",
+                    }}
+                  >
+                    {row.processed_size === row.size ? (
+                      row.size.toLocaleString("en-US")
+                    ) : row?.processed_size > progress?.processed ? (
+                      <ProgressBar
+                        progress={{
+                          total: row?.size,
+                          processed: row?.processed_size,
+                        }}
+                      />
+                    ) : (
+                      <ProgressBar progress={{ ...progress }} />
+                    )}
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      ...lookalikesStyles.table_array,
+                      maxWidth: "40px",
+                      minWidth: "40px",
+                      padding: "8px",
+                      textAlign: "center",
+                    }}
+                  >
+                    <IconButton
                       sx={{
-                        backgroundColor: "#fff",
-                        color: "rgba(80, 82, 178, 1) !important",
-                        fontSize: "14px",
-                        textTransform: "none",
-                        padding: "0.75em 1em",
-                        border: "1px solid rgba(80, 82, 178, 1)",
-                        maxWidth: "50px",
-                        maxHeight: "30px",
-                        "&:hover": {
+                        pl: 0,
+                        pr: 0,
+                        pt: 0.25,
+                        pb: 0.25,
+                        margin: 0,
+                      }}
+                      onClick={(event) =>
+                        handleOpenConfirm(event, row.id, row.name)
+                      }
+                    >
+                      <DeleteIcon sx={{ maxHeight: "18px" }} />
+                    </IconButton>
+                  </TableCell>
+                  <Popover
+                    open={isConfirmOpen}
+                    anchorEl={confirmAnchorEl}
+                    onClose={handleCloseConfirm}
+                    anchorOrigin={{
+                      vertical: "bottom",
+                      horizontal: "right",
+                    }}
+                    transformOrigin={{
+                      vertical: "top",
+                      horizontal: "center",
+                    }}
+                    PaperProps={{
+                      sx: {
+                        padding: "0.125rem",
+                        width: "15.875rem",
+                        boxShadow: 0,
+                        borderRadius: "8px",
+                        border: "0.5px solid rgba(175, 175, 175, 1)",
+                      },
+                    }}
+                  >
+                    <Typography
+                      className="first-sub-title"
+                      sx={{ paddingLeft: 2, pt: 1, pb: 0 }}
+                    >
+                      Confirm Deletion
+                    </Typography>
+                    <DialogContent sx={{ padding: 2 }}>
+                      <DialogContentText className="table-data">
+                        Are you sure you want to delete the lookalike named{" "}
+                        <strong
+                          style={{
+                            fontWeight: 500,
+                            color: "rgba(32, 33, 36, 1)",
+                          }}
+                        >
+                          {editedName}
+                        </strong>{" "}
+                        ?
+                      </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                      <Button
+                        className="second-sub-title"
+                        sx={{
                           backgroundColor: "#fff",
-                          boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
-                        },
-                      }}
-                      onClick={handleCloseConfirm}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      className="second-sub-title"
-                      sx={{
-                        backgroundColor: "rgba(80, 82, 178, 1)",
-                        color: "#fff !important",
-                        fontSize: "14px",
-                        textTransform: "none",
-                        padding: "0.75em 1em",
-                        border: "1px solid rgba(80, 82, 178, 1)",
-                        maxWidth: "60px",
-                        maxHeight: "30px",
-                        "&:hover": {
+                          color: "rgba(80, 82, 178, 1) !important",
+                          fontSize: "14px",
+                          textTransform: "none",
+                          padding: "0.75em 1em",
+                          border: "1px solid rgba(80, 82, 178, 1)",
+                          maxWidth: "50px",
+                          maxHeight: "30px",
+                          "&:hover": {
+                            backgroundColor: "#fff",
+                            boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+                          },
+                        }}
+                        onClick={handleCloseConfirm}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="second-sub-title"
+                        sx={{
                           backgroundColor: "rgba(80, 82, 178, 1)",
-                          boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
-                        },
-                      }}
-                      onClick={() => {
-                        handleDelete(editingRowId || "");
-                        handleCloseConfirm();
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </DialogActions>
-                </Popover>
-              </TableRow>
-            )
+                          color: "#fff !important",
+                          fontSize: "14px",
+                          textTransform: "none",
+                          padding: "0.75em 1em",
+                          border: "1px solid rgba(80, 82, 178, 1)",
+                          maxWidth: "60px",
+                          maxHeight: "30px",
+                          "&:hover": {
+                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+                          },
+                        }}
+                        onClick={() => {
+                          handleDelete(editingRowId || "");
+                          handleCloseConfirm();
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </DialogActions>
+                  </Popover>
+                </TableRow>
+
+                {isDebug && (
+                  <>
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          ...lookalikesStyles.table_array,
+                          position: "relative",
+                        }}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                      >
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 1 }}>
+                            <Typography className="table-data">
+                              Significant field
+                            </Typography>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...lookalikesStyles.table_array,
+                          textWrap: "wrap",
+                          position: "relative",
+                          pr: 0,
+                          pl: 0,
+                        }}
+                        colSpan={7}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                      >
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 1 }}>
+                            <Typography className="table-data">
+                              {fullFormattedFields(row.significant_fields)}
+                            </Typography>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...lookalikesStyles.table_array,
+                          position: "relative",
+                          maxWidth: "44px",
+                          minWidth: "44px",
+                          padding: "8px",
+                          textAlign: "center",
+                        }}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                      >
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 0, mr: 1 }}>
+                            <IconButton
+                              sx={{
+                                pl: 0,
+                                pr: 0.5,
+                                pt: 0.25,
+                                pb: 0.25,
+                                margin: 0,
+                              }}
+                              onClick={() =>
+                                handleCopy(
+                                  fullFormattedFields(row.significant_fields)
+                                )
+                              }
+                            >
+                              <ContentCopyIcon sx={{ maxHeight: "18px" }} />
+                            </IconButton>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell
+                        sx={{
+                          ...lookalikesStyles.table_array,
+                          position: "relative",
+                        }}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                      >
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 1 }}>
+                            <Typography className="table-data">
+                              Similarity score
+                            </Typography>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...lookalikesStyles.table_array,
+                          textWrap: "wrap",
+                          position: "relative",
+                          pr: 0,
+                          pl: 0,
+                        }}
+                        colSpan={7}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                      >
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 1 }}>
+                            <Typography className="table-data">
+                              {fullFormattedFields(row.similarity_score)}
+                            </Typography>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...lookalikesStyles.table_array,
+                          position: "relative",
+                          maxWidth: "44px",
+                          minWidth: "44px",
+                          padding: "8px",
+                          textAlign: "center",
+                        }}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                      >
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 0, mr: 1 }}>
+                            <IconButton
+                              sx={{
+                                pl: 0,
+                                pr: 0.5,
+                                pt: 0.25,
+                                pb: 0.25,
+                                margin: 0,
+                              }}
+                              onClick={() =>
+                                handleCopy(
+                                  fullFormattedFields(row.similarity_score)
+                                )
+                              }
+                            >
+                              <ContentCopyIcon sx={{ maxHeight: "18px" }} />
+                            </IconButton>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
+                  </>
+                )}
+              </>
+            );
           })}
         </TableBody>
       </Table>
