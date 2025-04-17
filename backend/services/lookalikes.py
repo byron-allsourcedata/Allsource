@@ -17,13 +17,45 @@ class AudienceLookalikesService:
     def __init__(self, lookalikes_persistence_service: AudienceLookalikesPersistence):
         self.lookalikes_persistence_service = lookalikes_persistence_service
 
-    def get_lookalikes(self, user, page, per_page, from_date, to_date, sort_by, sort_order,
-                       lookalike_size, lookalike_type, search_query):
-        lookalikes, count, max_page = self.lookalikes_persistence_service.\
-            get_lookalikes(user_id=user.get('id'), page=page, per_page=per_page, sort_by=sort_by, sort_order=sort_order,
-                           from_date=from_date, to_date=to_date, lookalike_size=lookalike_size,
-                           lookalike_type=lookalike_type, search_query=search_query)
-        return lookalikes, count, max_page
+    def get_lookalikes(self, user, page, per_page, from_date, to_date,
+                   sort_by, sort_order, lookalike_size,
+                   lookalike_type, search_query):
+        result_query, total, max_page = (
+            self.lookalikes_persistence_service.get_lookalikes(
+                user_id=user.get('id'),
+                page=page,
+                per_page=per_page,
+                sort_by=sort_by,
+                sort_order=sort_order,
+                from_date=from_date,
+                to_date=to_date,
+                lookalike_size=lookalike_size,
+                lookalike_type=lookalike_type,
+                search_query=search_query,
+            )
+        )
+
+        result = []
+        for (
+            lookalike,
+            source_name,
+            source_type,
+            created_by,
+            source_origin,
+            domain,
+            target_schema
+        ) in result_query:
+            result.append({
+                **lookalike.__dict__,
+                "source": source_name,
+                "source_type": source_type,
+                "created_by": created_by,
+                "source_origin": source_origin,
+                "domain": domain,
+                "target_schema": target_schema
+            })
+
+        return result, total, max_page
 
     def get_source_info(self, uuid_of_source, user):
         source_info = self.lookalikes_persistence_service.get_source_info(uuid_of_source, user.get('id'))

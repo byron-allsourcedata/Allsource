@@ -253,6 +253,15 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
       .join(", ");
   };
 
+  const fullFormattedFieldsPercent = (
+    fields: Record<string, number> | null
+  ): string => {
+    if (!fields || typeof fields !== "object") return "---";
+    return Object.entries(fields)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join("%, ");
+  };
+
   const handleOpenConfirm = (
     event: React.MouseEvent<HTMLElement>,
     rowId: string,
@@ -992,7 +1001,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         >
                           <Box sx={{ margin: 1 }}>
                             <Typography className="table-data">
-                              {fullFormattedFields(row.similarity_score)}
+                              {fullFormattedFieldsPercent(row.similarity_score)}%
                             </Typography>
                           </Box>
                         </Collapse>
