@@ -461,15 +461,19 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         >
                           {isDebug && (
                             <IconButton
-                              size="small"
-                              onClick={() => toggleRow(row.id)}
-                            >
-                              {openRowId === row.id ? (
-                                <KeyboardArrowUpIcon />
-                              ) : (
-                                <KeyboardArrowDownIcon />
-                              )}
-                            </IconButton>
+                            size="small"
+                            onClick={() => toggleRow(row.id)}
+                            sx={{
+                              color: '#202124',
+                              marginRight: '16px',
+                            }}
+                          >
+                            {openRowId === row.id ? (
+                              <KeyboardArrowUpIcon />
+                            ) : (
+                              <KeyboardArrowDownIcon />
+                            )}
+                          </IconButton>                          
                           )}
                           {row.name}
                         </Typography>
