@@ -23,7 +23,7 @@ sys.path.append(parent_dir)
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users import FiveXFiveUser
-from enums import TypeOfCustomer, ProccessDataSyncResult, EmailType
+from enums import TypeOfCustomer, ProccessDataSyncResult, EmailType, BusinessType
 from utils import get_utc_aware_date, get_valid_email_without_million
 from models.leads_visits import LeadsVisits
 from models.emails import Email
@@ -458,39 +458,45 @@ async def normalize_persons_customer_conversion(
     db_session: Session,
     source_schema: str
 ):
-    logging.info(f"Processing normalization data for source_id {source_id}")
+
+    min_recency = Decimal(
+        str(data_for_normalize.min_recency)) if data_for_normalize.min_recency is not None else Decimal("0.0")
+    max_recency = Decimal(
+        str(data_for_normalize.max_recency)) if data_for_normalize.max_recency is not None else Decimal("1.0")
 
     updates = []
-    reference_date = datetime.now()
 
-    if source_schema.lower() == 'b2c':
+    min_inv = AudienceSourceMath.inverted_decimal(Decimal(min_recency))
+    max_inv = AudienceSourceMath.inverted_decimal(Decimal(max_recency))
+
+    if min_inv > max_inv:
+        min_inv, max_inv = max_inv, min_inv
+
+    if source_schema.lower() == BusinessType.B2C.value:
         # B2C Algorithm:
         # For B2C, the LeadValueScore is based solely on the recency of failed lead attempts.
         # We use the "start_date" field as LastFailedDate.
         inverted_values = []
         for person in persons:
-            if person.start_date:
-                recency_days = (reference_date - person.start_date).days
-            else:
-                recency_days = 0  # If no date is provided, assume the failure occurred today.
-            inv = Decimal("1") / Decimal(recency_days + 1)
+            inv = AudienceSourceMath.inverted_decimal(Decimal(person.recency))
             inverted_values.append(inv)
-        # Compute global minimum and maximum for normalization
-        min_inv = min(inverted_values) if inverted_values else Decimal("0")
-        max_inv = max(inverted_values) if inverted_values else Decimal("1")
+
         for person, inv in zip(persons, inverted_values):
-            # Normalize the inverted recency value to a range between 0 and 1.
             normalized_value = AudienceSourceMath.normalize_decimal(value=inv, min_val=min_inv, max_val=max_inv)
             update_data = {
                 'id': person.id,
                 'source_id': source_id,
                 'email': person.email,
-                # New field for B2C: LeadValueScore
+                'recency_min': min_recency,
+                'recency_max': max_recency,
+                'inverted_recency': inv,
+                'inverted_recency_min': min_inv,
+                'inverted_recency_max': max_inv,
                 'value_score': normalized_value,
             }
             updates.append(update_data)
 
-    elif source_schema.lower() == 'b2b':
+    elif source_schema.lower() == BusinessType.B2B.value:
         # B2B Algorithm:
         # For B2B, the score is a combination of three components:
         # 1. Recency Score based on BUSINESS_EMAIL_LAST_SEEN_DATE.
@@ -498,32 +504,17 @@ async def normalize_persons_customer_conversion(
         # 3. Completeness Score based on the presence of a valid business email, LinkedIn URL,
         #    and non-null professional attributes.
         inverted_values = []
-        recency_list = []  # List to store recency (in days) based on BUSINESS_EMAIL_LAST_SEEN_DATE.
+
         for person in persons:
-            # Assuming the person object has a 'business_email_last_seen_date' attribute.
-            if hasattr(person, 'business_email_last_seen_date') and person.business_email_last_seen_date:
-                recency_days = (reference_date - person.business_email_last_seen_date).days
-            else:
-                recency_days = None
-            recency_list.append(recency_days)
-        # For records without a date, set recency to (max_recency + 1)
-        non_null = [r for r in recency_list if r is not None]
-        max_rec = max(non_null) if non_null else 0
-        recency_list = [r if r is not None else max_rec + 1 for r in recency_list]
-        for r in recency_list:
-            inv = Decimal("1") / Decimal(r + 1)
+            inv = AudienceSourceMath.inverted_decimal(Decimal(person.recency))
             inverted_values.append(inv)
-        min_inv = min(inverted_values) if inverted_values else Decimal("0")
-        max_inv = max(inverted_values) if inverted_values else Decimal("1")
-        # Define mappings for professional evaluation
+
         job_level_map = {'Executive': Decimal("1.0"), 'Senior': Decimal("0.8"), 'Manager': Decimal("0.6"), 'Entry': Decimal("0.4")}
         department_map = {'Sales': Decimal("1.0"), 'Marketing': Decimal("0.8"), 'Engineering': Decimal("0.6")}
         company_size_map = {'1000+': Decimal("1.0"), '501-1000': Decimal("0.8"), '101-500': Decimal("0.6"), '51-100': Decimal("0.4")}
         for idx, person in enumerate(persons):
-            # Calculate Recency Score by normalizing the inverted recency value.
             recency_inv = inverted_values[idx]
             recency_score = AudienceSourceMath.normalize_decimal(value=recency_inv, min_val=min_inv, max_val=max_inv)
-            # Calculate Professional Score using weighted mappings.
             job_level = getattr(person, 'job_level', None)
             department = getattr(person, 'department', None)
             company_size = getattr(person, 'company_size', None)
@@ -533,7 +524,6 @@ async def normalize_persons_customer_conversion(
             professional_score = (Decimal("0.5") * job_level_weight +
                                   Decimal("0.3") * department_weight +
                                   Decimal("0.2") * company_size_weight)
-            # Calculate Completeness Score by checking the availability of key data.
             completeness_score = Decimal("0.0")
             if getattr(person, 'business_email', None) and getattr(person, 'business_email_validation_status', None) == 'Valid':
                 completeness_score += Decimal("0.4")
@@ -543,8 +533,6 @@ async def normalize_persons_customer_conversion(
                 completeness_score += Decimal("0.2")
             if department:
                 completeness_score += Decimal("0.1")
-            # Combine the component scores with their respective weights:
-            # 40% Recency, 40% Professional, and 20% Completeness.
             lead_value_score_b2b = (Decimal("0.4") * recency_score +
                                     Decimal("0.4") * professional_score +
                                     Decimal("0.2") * completeness_score)
@@ -552,16 +540,28 @@ async def normalize_persons_customer_conversion(
                 'id': person.id,
                 'source_id': source_id,
                 'email': person.email,
-                # New field for B2B: LeadValueScoreB2B
+                'recency_min': min_recency,
+                'recency_max': max_recency,
+                'inverted_recency': inverted_values[idx],
+                'inverted_recency_min': min_inv,
+                'inverted_recency_max': max_inv,
+                'recency_score': recency_score,
+                'view_score': professional_score,
+                'sum_score': completeness_score,
                 'value_score': lead_value_score_b2b,
             }
             updates.append(update_data)
     else:
         logging.warning(f"Unknown source_schema: {source_schema}. No lead value score computed.")
 
+
+
     if updates:
+        logging.info(updates[0].get('inverted_recency'))
+        logging.info(updates)
         db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
         logging.info(f"Updated {len(updates)} persons with lead value scores.")
+        db_session.flush()
         db_session.commit()
 
     logging.info(

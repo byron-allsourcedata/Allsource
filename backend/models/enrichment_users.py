@@ -4,6 +4,8 @@ from sqlalchemy.inspection import inspect
 from .base import Base
 from sqlalchemy.orm import relationship
 from models.emails_enrichment import EmailEnrichment
+from models.enrichment_user_contact import EnrichmentUserContact
+from models.professional_profile import ProfessionalProfile
 
 
 class EnrichmentUser(Base):
@@ -46,7 +48,11 @@ class EnrichmentUser(Base):
 
     emails_enrichment = relationship("EmailEnrichment", back_populates="enrichment_user", cascade="all, delete-orphan")
     contacts = relationship("EnrichmentUserContact", back_populates="enrichment_user", cascade="all, delete-orphan")
-    professional_profile = relationship("ProfessionalProfile", back_populates="enrichment_user", uselist=False)
+    professional_profiles = relationship(
+        "ProfessionalProfile",
+        back_populates="enrichment_user",
+        cascade="all, delete-orphan"
+    )
 
     @classmethod
     def get_fields(cls, exclude_fields=None):

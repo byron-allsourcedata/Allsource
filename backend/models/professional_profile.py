@@ -18,4 +18,7 @@ class ProfessionalProfile(Base):
     primary_industry = Column(TEXT, nullable=True)
     annual_sales = Column(TEXT, nullable=True)
 
-    enrichment_user = relationship("EnrichmentUser", back_populates="professional_profile")
+    enrichment_user = relationship(
+        "EnrichmentUser",
+        back_populates="professional_profiles"
+    )
