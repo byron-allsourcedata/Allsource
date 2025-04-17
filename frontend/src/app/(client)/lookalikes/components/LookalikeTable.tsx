@@ -66,31 +66,31 @@ interface LookalikeTableProps {
 const audienceSize = [
   {
     label: "almost_identical",
-    text: "Lookalike size 0-3%",
+    text: "Lookalike size: 10,000 contacts",
     min_value: 0,
     max_value: 3,
   },
   {
     label: "extremely_similar",
-    text: "Lookalike size 0-7%",
+    text: "Lookalike size: 50,000 contacts",
     min_value: 0,
     max_value: 7,
   },
   {
     label: "very_similar",
-    text: "Lookalike size 0-10%",
+    text: "Lookalike size: 100,000 contacts",
     min_value: 0,
     max_value: 10,
   },
   {
     label: "quite_similar",
-    text: "Lookalike size 0-15%",
+    text: "Lookalike size: 200,000 contacts",
     min_value: 0,
     max_value: 15,
   },
   {
     label: "broad",
-    text: "Lookalike size 0-20%",
+    text: "Lookalike size: 500,000 contacts",
     min_value: 0,
     max_value: 20,
   },
