@@ -45,6 +45,15 @@ class AudienceLookalikesService:
             domain,
             target_schema
         ) in result_query:
+            significant_fields = getattr(lookalike, 'significant_fields', None)
+            if significant_fields and isinstance(significant_fields, dict):
+                processed_fields = {}
+                for key, value in significant_fields.items():
+                    if value:
+                        scaled = round(value * 100, 3)
+                        if scaled != 0:
+                            processed_fields[key] = scaled
+                lookalike.significant_fields = processed_fields
             result.append({
                 **lookalike.__dict__,
                 "source": source_name,
