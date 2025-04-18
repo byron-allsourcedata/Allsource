@@ -75,7 +75,7 @@ async def main():
         normalization=normalizer
    )
 
-    lookalike_id = UUID("c655c8c5-851a-4989-90b1-31e94786d227")
+    lookalike_id = UUID("8fe7c5e1-6d17-4571-af60-f6e3855dff67")
 
     dict_enrichment = [v.__dict__ for v in transactions]
 

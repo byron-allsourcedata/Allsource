@@ -31,7 +31,9 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import LookalikeContainer from "../components/LookalikeContainer";
 import { smartAudiences } from "../../smart-audiences/smartAudiences";
 import { lookalikesStyles } from "../components/lookalikeStyles";
-import FeatureImportanceTable, { FeatureObject } from "../components/FeatureImportanceTable";
+import FeatureImportanceTable, {
+  FeatureObject,
+} from "../components/FeatureImportanceTable";
 import DragAndDropTable, { Field } from "../components/DragAndDropTable";
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 
@@ -158,7 +160,6 @@ interface CalculationResponse {
   audience_feature_importance: CalculationResults;
 }
 
-
 // Helper: clone and sort features array (descending order by value)
 const sortFeatures = (
   features: [keyof CalculationResults, number][]
@@ -182,18 +183,18 @@ const CreateLookalikePage: React.FC = () => {
   const [isTableVisible, setIsTableVisible] = useState(false);
   const [search, setSearch] = useState("");
   const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
-  const [calculatedResults, setCalculatedResults] = useState<CalculationResponse | null>(null);
+  const [calculatedResults, setCalculatedResults] =
+    useState<CalculationResponse | null>(null);
   // States for calculated features: those displayed and those hidden.
-  const [displayedFeatures, setDisplayedFeatures] = useState<[keyof CalculationResults, number][]>([]);
-  const [hiddenFeatures, setHiddenFeatures] = useState<[keyof CalculationResults, number][]>([]);
+  const [displayedFeatures, setDisplayedFeatures] = useState<
+    [keyof CalculationResults, number][]
+  >([]);
+  const [hiddenFeatures, setHiddenFeatures] = useState<
+    [keyof CalculationResults, number][]
+  >([]);
   // State for the "Load More" popover anchor.
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   // const [_, setFields] = useState<Field[]>([]);
-
-  // const handleOrderChange = (newOrder: Field[]) => {
-  //   console.log('New order:', newOrder);
-  //   setFields(newOrder);
-  // };
   // formatCalcKey: removes underscores, adds spaces before uppercase letters,
   // collapses extra spaces, trims, and capitalizes the first letter.
   const formatCalcKey = (key: string) =>
@@ -203,7 +204,6 @@ const CreateLookalikePage: React.FC = () => {
       .replace(/\s+/g, " ") // collapse multiple spaces
       .trim() // trim spaces
       .replace(/^./, (char) => char.toUpperCase()); // capitalize first letter
-
 
   const [financialData, setFinancialData] = useState<FinancialResults>({
     IncomeRange: 0,
@@ -315,8 +315,11 @@ const CreateLookalikePage: React.FC = () => {
   useEffect(() => {
     setDndFields(computedFields);
   }, [computedFields]);
+
   // Returns sorted (descending) features from the given CalculationResults
-  const getAllCalculatedEntries = (results: CalculationResults): [keyof CalculationResults, number][] => {
+  const getAllCalculatedEntries = (
+    results: CalculationResults
+  ): [keyof CalculationResults, number][] => {
     const order: (keyof CalculationResults)[] = [
       "PersonExactAge",
       "PersonGender",
@@ -357,7 +360,10 @@ const CreateLookalikePage: React.FC = () => {
     );
 
   const toSnakeCase = (str: string) =>
-    str.replace(/\s+/g, "_").replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase();
+    str
+      .replace(/\s+/g, "_")
+      .replace(/([a-z])([A-Z])/g, "$1_$2")
+      .toLowerCase();
 
   const filteredData = getFilteredData(sourceData);
 
@@ -379,14 +385,18 @@ const CreateLookalikePage: React.FC = () => {
   const handleSourceData = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/audience-lookalikes/get-sources`);
+      const response = await axiosInstance.get(
+        `/audience-lookalikes/get-sources`
+      );
       if (response.data) {
         setSourceData(
           Array.isArray(response.data) ? response.data : [response.data]
         );
       }
     } catch {
-      showErrorToast("An error occurred while loading sources. Please try again later.");
+      showErrorToast(
+        "An error occurred while loading sources. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
@@ -402,7 +412,7 @@ const CreateLookalikePage: React.FC = () => {
 
   const handlePrevStep = () => {
     setCurrentStep(currentStep - 1);
-  }
+  };
 
   const handleCalculate = async () => {
     if (selectSourceData[0]?.matched_records === 0) {
@@ -416,7 +426,9 @@ const CreateLookalikePage: React.FC = () => {
       );
       if (response.data) {
         setCalculatedResults(response.data);
-        const allEntries = getAllCalculatedEntries(response.data.audience_feature_importance);
+        const allEntries = getAllCalculatedEntries(
+          response.data.audience_feature_importance
+        );
         const nonZeroEntries = allEntries.filter(([, value]) => value > 0);
         const zeroEntries = allEntries.filter(([, value]) => value === 0);
         setDisplayedFeatures(nonZeroEntries);
@@ -424,7 +436,9 @@ const CreateLookalikePage: React.FC = () => {
         setCurrentStep(2);
       }
     } catch {
-      showErrorToast("An error occurred while calculating lookalikes. Please try again later.");
+      showErrorToast(
+        "An error occurred while calculating lookalikes. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
@@ -447,7 +461,7 @@ const CreateLookalikePage: React.FC = () => {
   };
   const handleNextStep = () => {
     setCurrentStep(currentStep + 1);
-  }
+  };
   const handleGenerateLookalike = async () => {
     try {
       setLoading(true);
@@ -455,16 +469,21 @@ const CreateLookalikePage: React.FC = () => {
         uuid_of_source: selectedSourceId,
         lookalike_size: toSnakeCase(selectedLabel),
         lookalike_name: sourceName,
-        audience_feature_importance: displayedFeatures,
+        audience_feature_importance: Object.fromEntries(displayedFeatures),
       };
-      const response = await axiosInstance.post("/audience-lookalikes/builder", requestData);
+      const response = await axiosInstance.post(
+        "/audience-lookalikes/builder",
+        requestData
+      );
       if (response.data.status === "SUCCESS") {
         showToast("Lookalike was created successfully!");
         createLookalikeData(response.data);
         setIsLookalikeCreated(true);
       }
     } catch {
-      showErrorToast("An error occurred while creating a new lookalike. Please try again later.");
+      showErrorToast(
+        "An error occurred while creating a new lookalike. Please try again later."
+      );
       setLookalikeData([]);
     } finally {
       setLoading(false);
@@ -473,8 +492,12 @@ const CreateLookalikePage: React.FC = () => {
 
   // Delete a feature from the displayed list and add it to the hidden list.
   const handleDeleteFeature = (keyToDelete: keyof CalculationResults) => {
-    setDisplayedFeatures((prev) => sortFeatures(prev.filter(([key]) => key !== keyToDelete)));
-    const deletedFeature = displayedFeatures.find(([key]) => key === keyToDelete);
+    setDisplayedFeatures((prev) =>
+      sortFeatures(prev.filter(([key]) => key !== keyToDelete))
+    );
+    const deletedFeature = displayedFeatures.find(
+      ([key]) => key === keyToDelete
+    );
     if (deletedFeature) {
       setHiddenFeatures((prev) => sortFeatures([...prev, deletedFeature]));
     }
@@ -492,7 +515,9 @@ const CreateLookalikePage: React.FC = () => {
   // When a feature is selected in the popover, move it to the displayed features
   const handleAddFeature = (feature: [keyof CalculationResults, number]) => {
     setDisplayedFeatures((prev) => sortFeatures([...prev, feature]));
-    setHiddenFeatures((prev) => sortFeatures(prev.filter((f) => f[0] !== feature[0])));
+    setHiddenFeatures((prev) =>
+      sortFeatures(prev.filter((f) => f[0] !== feature[0]))
+    );
     setAnchorEl(null);
   };
 
@@ -528,7 +553,16 @@ const CreateLookalikePage: React.FC = () => {
         overflow: "auto",
       }}
     >
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, pt: 1, overflow: "auto" }}>
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          pt: 1,
+          overflow: "auto",
+        }}
+      >
         {!isLookalikeCreated ? (
           <>
             <Box
@@ -581,7 +615,15 @@ const CreateLookalikePage: React.FC = () => {
                     >
                       Choose your source
                     </Typography>
-                    <Box sx={{ display: "flex", width: "100%", flexDirection: "column", pt: 2, gap: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        width: "100%",
+                        flexDirection: "column",
+                        pt: 2,
+                        gap: 2,
+                      }}
+                    >
                       <Box sx={{ width: "100%" }}>
                         <TextField
                           fullWidth
@@ -599,23 +641,48 @@ const CreateLookalikePage: React.FC = () => {
                               </InputAdornment>
                             ),
                             endAdornment: (
-                              <IconButton onClick={() => setIsTableVisible(!isTableVisible)}>
-                                {isTableVisible ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                              <IconButton
+                                onClick={() =>
+                                  setIsTableVisible(!isTableVisible)
+                                }
+                              >
+                                {isTableVisible ? (
+                                  <ExpandLessIcon />
+                                ) : (
+                                  <ExpandMoreIcon />
+                                )}
                               </IconButton>
                             ),
                           }}
                           sx={{ pb: "2px" }}
                         />
                         {isTableVisible && (
-                          <TableContainer component={Paper} sx={{ maxHeight: "32vh" }}>
+                          <TableContainer
+                            component={Paper}
+                            sx={{ maxHeight: "32vh" }}
+                          >
                             <Table>
                               <TableHead>
                                 <TableRow
-                                  sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                  }}
                                 >
-                                  <TableCell sx={{ flex: 1, textAlign: "start" }}>Name</TableCell>
-                                  <TableCell sx={{ flex: 1, textAlign: "start" }}>Type</TableCell>
-                                  <TableCell sx={{ flex: 1, textAlign: "end" }}>Size</TableCell>
+                                  <TableCell
+                                    sx={{ flex: 1, textAlign: "start" }}
+                                  >
+                                    Name
+                                  </TableCell>
+                                  <TableCell
+                                    sx={{ flex: 1, textAlign: "start" }}
+                                  >
+                                    Type
+                                  </TableCell>
+                                  <TableCell sx={{ flex: 1, textAlign: "end" }}>
+                                    Size
+                                  </TableCell>
                                 </TableRow>
                               </TableHead>
                               <TableBody>
@@ -631,12 +698,22 @@ const CreateLookalikePage: React.FC = () => {
                                     }}
                                     onClick={() => handleSelectRow(row)}
                                   >
-                                    <TableCell sx={{ flex: 1, textAlign: "start" }}>{row.name}</TableCell>
-                                    <TableCell sx={{ flex: 1, textAlign: "start" }}>
+                                    <TableCell
+                                      sx={{ flex: 1, textAlign: "start" }}
+                                    >
+                                      {row.name}
+                                    </TableCell>
+                                    <TableCell
+                                      sx={{ flex: 1, textAlign: "start" }}
+                                    >
                                       {toNormalText(row.type)}
                                     </TableCell>
-                                    <TableCell sx={{ flex: 1, textAlign: "right" }}>
-                                      {row.matched_records.toLocaleString("en-US")}
+                                    <TableCell
+                                      sx={{ flex: 1, textAlign: "right" }}
+                                    >
+                                      {row.matched_records.toLocaleString(
+                                        "en-US"
+                                      )}
                                     </TableCell>
                                   </TableRow>
                                 ))}
@@ -703,7 +780,10 @@ const CreateLookalikePage: React.FC = () => {
                     >
                       Select Audience Size
                     </Typography>
-                    <AudienceSizeSelector onSelectSize={handleSelectSize} selectedSize={selectedSize} />
+                    <AudienceSizeSelector
+                      onSelectSize={handleSelectSize}
+                      selectedSize={selectedSize}
+                    />
                   </Box>
                 )}
 
@@ -730,7 +810,12 @@ const CreateLookalikePage: React.FC = () => {
                         },
                       }}
                     >
-                      <Typography sx={{ ...smartAudiences.textButton, color: "rgba(255,255,255,1)" }}>
+                      <Typography
+                        sx={{
+                          ...smartAudiences.textButton,
+                          color: "rgba(255,255,255,1)",
+                        }}
+                      >
                         Calculate
                       </Typography>
                     </Button>
@@ -771,7 +856,6 @@ const CreateLookalikePage: React.FC = () => {
                           verticalAlign: 'middle',
                         }}
                       />
-
                       {/* Шаг 2 серый, если не выбран*/}
                       <Typography
                         variant="h6"
@@ -939,7 +1023,6 @@ const CreateLookalikePage: React.FC = () => {
                       mt: 2,
                     }}
                   >
-
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ml: 1 }}>
                       {/* Шаг 1 всегда чёрный */}
                       <Typography
@@ -1025,20 +1108,23 @@ const CreateLookalikePage: React.FC = () => {
                     </Grid>
                     <Grid container spacing={2}>
                       {/* Левая колонка: все пять таблиц */}
-                      <Grid item xs={12} md={6} direction="column" spacing={1} >
-
+                      <Grid item xs={12} md={6} direction="column" spacing={1}>
                         {/* Real Estate */}
                         <Grid item xs={12} md={6}>
                           <DragAndDropTable
                             fields={dndFields}
                             onOrderChange={(newOrder) => setDndFields(newOrder)}
-
                           />
                         </Grid>
                       </Grid>
                       <Grid item xs={12} md={1}></Grid>
                       {/* Правая колонка: инструктивный текст */}
-                      <Grid item xs={12} md={5} sx={{ borderLeft: "1px solid #E4E4E4" }}>
+                      <Grid
+                        item
+                        xs={12}
+                        md={5}
+                        sx={{ borderLeft: "1px solid #E4E4E4" }}
+                      >
                         <Box sx={{ p: 0, bgcolor: "transparent" }}>
                           <Typography
                             variant="body2"
@@ -1064,9 +1150,10 @@ const CreateLookalikePage: React.FC = () => {
                               mb: 2,
                             }}
                           >
-                            By customizing these fields and organizing them effectively, you ca
-                            n build more accurate and impactful audience segments for your marketing efforts
-                            or research.
+                            By customizing these fields and organizing them
+                            effectively, you ca n build more accurate and
+                            impactful audience segments for your marketing
+                            efforts or research.
                           </Typography>
 
                           <Typography
@@ -1087,7 +1174,6 @@ const CreateLookalikePage: React.FC = () => {
                     </Grid>
                   </Box>
                 )}
-
 
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
                 {currentStep >= 4 && (
@@ -1162,7 +1248,10 @@ const CreateLookalikePage: React.FC = () => {
                       backgroundColor: "#FFFFFF",
                       textTransform: "none",
                       mt: 1,
-                      "&:hover": { border: "1px #5052B2 solid", backgroundColor: "#FFFFFF" },
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#FFFFFF",
+                      },
                     }}
                     variant="outlined"
                     onClick={handlePrevStep}
@@ -1179,8 +1268,16 @@ const CreateLookalikePage: React.FC = () => {
                       textTransform: "none",
                       gap: 0,
                       mt: 1,
-                      "&:hover": { border: "1px #5052B2 solid", backgroundColor: "#5052B2" },
-                      "&.Mui-disabled": { color: "#FFFFFF", border: "1px #5052B2 solid", backgroundColor: "#5052B2", opacity: 0.6 },
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                      },
+                      "&.Mui-disabled": {
+                        color: "#FFFFFF",
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                        opacity: 0.6,
+                      },
                     }}
                     variant="outlined"
                     onClick={handleNextStep}
@@ -1212,7 +1309,10 @@ const CreateLookalikePage: React.FC = () => {
                       backgroundColor: "#FFFFFF",
                       textTransform: "none",
                       mt: 1,
-                      "&:hover": { border: "1px #5052B2 solid", backgroundColor: "#FFFFFF" },
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#FFFFFF",
+                      },
                     }}
                     variant="outlined"
                     onClick={handlePrevStep}
@@ -1229,8 +1329,16 @@ const CreateLookalikePage: React.FC = () => {
                       textTransform: "none",
                       gap: 0,
                       mt: 1,
-                      "&:hover": { border: "1px #5052B2 solid", backgroundColor: "#5052B2" },
-                      "&.Mui-disabled": { color: "#FFFFFF", border: "1px #5052B2 solid", backgroundColor: "#5052B2", opacity: 0.6 },
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                      },
+                      "&.Mui-disabled": {
+                        color: "#FFFFFF",
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                        opacity: 0.6,
+                      },
                     }}
                     variant="outlined"
                     onClick={handleNextStep}
@@ -1262,7 +1370,10 @@ const CreateLookalikePage: React.FC = () => {
                       backgroundColor: "#FFFFFF",
                       textTransform: "none",
                       mt: 1,
-                      "&:hover": { border: "1px #5052B2 solid", backgroundColor: "#FFFFFF" },
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#FFFFFF",
+                      },
                     }}
                     variant="outlined"
                     onClick={handleCancel}
@@ -1280,16 +1391,39 @@ const CreateLookalikePage: React.FC = () => {
                       gap: 0,
                       mt: 1,
                       opacity: sourceName.trim() === "" ? 0.6 : 1,
-                      "&:hover": { border: "1px #5052B2 solid", backgroundColor: "#5052B2" },
-                      "&.Mui-disabled": { color: "#FFFFFF", border: "1px #5052B2 solid", backgroundColor: "#5052B2", opacity: 0.6 },
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                      },
+                      "&.Mui-disabled": {
+                        color: "#FFFFFF",
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                        opacity: 0.6,
+                      },
                     }}
                     variant="outlined"
                     disabled={sourceName.trim() === ""}
                     onClick={handleGenerateLookalike}
                   >
-                    <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", padding: "0.5rem 1rem", gap: 1 }}>
-                      <Image src={"/stars-icon.svg"} alt="Stars icon" width={15} height={15} />
-                      <Typography fontSize={"0.8rem"}>Generate lookalike</Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        padding: "0.5rem 1rem",
+                        gap: 1,
+                      }}
+                    >
+                      <Image
+                        src={"/stars-icon.svg"}
+                        alt="Stars icon"
+                        width={15}
+                        height={15}
+                      />
+                      <Typography fontSize={"0.8rem"}>
+                        Generate lookalike
+                      </Typography>
                     </Box>
                   </Button>
                 </Box>
@@ -1298,7 +1432,9 @@ const CreateLookalikePage: React.FC = () => {
           </>
         ) : (
           <Box>
-            <Box sx={{ width: "100%", padding: 3, pt: 1, pl: 1, color: "#202124" }}>
+            <Box
+              sx={{ width: "100%", padding: 3, pt: 1, pl: 1, color: "#202124" }}
+            >
               <Typography
                 variant="h1"
                 sx={{
@@ -1318,7 +1454,15 @@ const CreateLookalikePage: React.FC = () => {
               ) : (
                 <Typography>No Lookalike data available</Typography>
               )}
-              <Box sx={{ display: "flex", justifyContent: "end", gap: 2, mt: 1, alignItems: "center" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "end",
+                  gap: 2,
+                  mt: 1,
+                  alignItems: "center",
+                }}
+              >
                 <Button
                   variant="outlined"
                   onClick={() => router.push("/lookalikes")}
@@ -1331,7 +1475,10 @@ const CreateLookalikePage: React.FC = () => {
                     fontWeight: "500",
                     color: "#5052B2 !important",
                     borderColor: "#5052B2",
-                    "&:hover": { backgroundColor: "#fff", borderColor: "#5052B2" },
+                    "&:hover": {
+                      backgroundColor: "#fff",
+                      borderColor: "#5052B2",
+                    },
                   }}
                 >
                   All Lookalikes
@@ -1346,7 +1493,10 @@ const CreateLookalikePage: React.FC = () => {
                     color: "#fff !important",
                     ":hover": { backgroundColor: "rgba(80, 82, 178, 1)" },
                     ":active": { backgroundColor: "rgba(80, 82, 178, 1)" },
-                    ":disabled": { backgroundColor: "rgba(80, 82, 178, 1)", opacity: 0.6 },
+                    ":disabled": {
+                      backgroundColor: "rgba(80, 82, 178, 1)",
+                      opacity: 0.6,
+                    },
                   }}
                 >
                   Generate Smart Audience

@@ -7,6 +7,7 @@ import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
 import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
 import { PieChartWithLegend } from "../CircularChart";
 import { MultiIconFillIndicator } from "../MultiIconChart";
+import { MapIndicator } from "../Map";
 
 const B2CPersonal = () => {
   return (
@@ -54,23 +55,34 @@ const B2CPersonal = () => {
 
           <Box sx={{ display: "flex", width: "100%" }}>
             {/* Map chart here */}
-            <PieChartWithLegend
-              title="Home Status"
-              data={[
+            <MapIndicator
+              title="Location"
+              mapImage="/us_map.png"
+              regions={[
                 {
-                  label: "Home Owners",
-                  value: 60000,
-                  color: "rgba(98, 178, 253, 1)",
+                  label: "Nebraska",
+                  percentage: 45,
+                  fillColor: "rgba(2, 103, 198, 1)",
                 },
                 {
-                  label: "Rent home",
-                  value: 35000,
-                  color: "rgba(249, 155, 171, 1)",
+                  label: "Kansas",
+                  percentage: 25,
+                  fillColor: "rgba(31, 132, 221, 1)",
                 },
                 {
-                  label: "Unknown",
-                  value: 5000,
-                  color: "rgba(155, 223, 196, 1)",
+                  label: "Oklahoma",
+                  percentage: 17,
+                  fillColor: "rgba(78, 162, 232, 1)",
+                },
+                {
+                  label: "Texas",
+                  percentage: 10,
+                  fillColor: "rgba(141, 198, 250, 1)",
+                },
+                {
+                  label: "Other",
+                  percentage: 3,
+                  fillColor: "rgba(199, 228, 255, 1)",
                 },
               ]}
             />
