@@ -42,7 +42,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
       const parts = value.split(",").map((entry) => entry.trim());
 
       return (
-        <Box key={label} mb={1}>
+        <Box>
           <Box display="flex" alignItems="center" mb={0.5}>
             {LabelIcon && (
               <LabelIcon
@@ -51,7 +51,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
             )}
             <Typography className="dashboard-card-text">{label}</Typography>
           </Box>
-          <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
+          <Box display="flex" flexWrap="wrap" gap={1}>
             {parts.map((part, i) => {
               const match = part.match(/^(.*?)\s*\((.*?)\)$/);
               const name = match?.[1] || part;
@@ -64,12 +64,6 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
               const textColor = isLookalike
                 ? "rgba(224, 176, 5, 1)"
                 : "rgba(80, 82, 178, 1)";
-
-              const icon = isInclude ? (
-                <PlaylistAddIcon sx={{ fontSize: 20, mr: 0.25 }} />
-              ) : isExclude ? (
-                <PlaylistRemoveIcon sx={{ fontSize: 16, mr: 0.5 }} />
-              ) : null;
 
               return (
                 <Box
@@ -94,7 +88,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
 
     // Обычные значения
     return (
-      <Box key={label} mb={1}>
+      <Box>
         <Typography className="dashboard-card-text">{label}</Typography>
         <Typography className="dashboard-card-heading">
           {typeof value === "number" ? value.toLocaleString() : value}
@@ -130,6 +124,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
             height: "100%",
             display: "flex",
             flexDirection: "column",
+            gap: 1,
           }}
         >
           {nameEntry && (
@@ -137,7 +132,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
               <Typography className="dashboard-card-text">Name</Typography>
               <Typography
                 className="dashboard-card-heading"
-                sx={{ textWrap: "wrap", maxWidth: "100%" }}
+                sx={{ textWrap: "wrap", maxWidth: "100%", mb: 0 }}
               >
                 {typeof nameEntry[1] === "number"
                   ? nameEntry[1].toLocaleString()
@@ -153,13 +148,14 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
                 <Box
                   key={i}
                   display="flex"
-                  gap={2}
-                  mb={1}
-                  sx={{ width: "100%" }}
+                  justifyContent="space-between"
+                  sx={{ width: "100%", gap: 2 }}
                 >
-                  {pair.map(([label, value]) =>
-                    renderLabeledValue(label, value)
-                  )}
+                  {pair.map(([label, value]) => (
+                    <Box key={label} sx={{ width: "50%" }}>
+                      {renderLabeledValue(label, value)}
+                    </Box>
+                  ))}
                 </Box>
               );
             }
@@ -226,7 +222,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
         padding: "1rem 1.5rem",
         maxWidth: "100%",
-        minHeight: 235,
+        minHeight: "auto",
         margin: 0.25,
       }}
     >
@@ -268,7 +264,9 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
           >
             {renderSection(
               left,
-              ["Created", "Audience Created"].includes(status)
+              ["Created", "Audience Created", "Data Sync Finished"].includes(
+                status
+              )
             )}
           </Box>
 

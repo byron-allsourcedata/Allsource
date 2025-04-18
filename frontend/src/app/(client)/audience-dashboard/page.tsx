@@ -215,7 +215,11 @@ const AudienceDashboard: React.FC = () => {
               Array.isArray(value)
             ) {
               const list = value
-                .map((item) => (item.name ? `${item.name}` : null))
+                .map((item) =>
+                  item.name
+                    ? `${item.name}${item.type ? ` (${item.type})` : ""}`
+                    : null
+                )
                 .filter(Boolean)
                 .join(", ");
 
@@ -284,9 +288,7 @@ const AudienceDashboard: React.FC = () => {
               if (!excludeKeys.includes(key)) {
                 let formattedKey = formatKey(key);
 
-                if (
-                  /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
-                ) {
+                if (/^(source|lookalike|data_sync|audience)_name$/.test(key)) {
                   formattedKey = "Name";
                 }
 
@@ -321,9 +323,7 @@ const AudienceDashboard: React.FC = () => {
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
                 let formattedKey = formatKey(key);
-                if (
-                  /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
-                ) {
+                if (/^(source|lookalike|data_sync|audience)_name$/.test(key)) {
                   formattedKey = "Name";
                 }
                 if (
@@ -361,14 +361,10 @@ const AudienceDashboard: React.FC = () => {
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
                 let formattedKey = formatKey(key);
-                if (
-                  /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
-                ) {
+                if (/^(source|lookalike|data_sync|audience)_name$/.test(key)) {
                   formattedKey = "Name";
                 }
-                if (
-                  /^(source|lookalike|data_sync|smart_audience)_type$/.test(key)
-                ) {
+                if (/^(source|lookalike|data_sync|audience)_type$/.test(key)) {
                   formattedKey = "Type";
                 }
                 if (value !== null && value !== undefined && value !== "") {
@@ -635,11 +631,21 @@ const AudienceDashboard: React.FC = () => {
             }}
           >
             {selectedCard ? (
-              <Box>
+              <Box paddingBottom={2}>
                 <Grid container spacing={2}>
                   {currentTabData.map((card: any, index) => (
-                    <Grid item xs={12} sm={6} md={6} lg={6} key={index}>
-                      <InfoCard data={card} />
+                    <Grid
+                      item
+                      xs={12}
+                      sm={6}
+                      md={6}
+                      lg={6}
+                      key={index}
+                      sx={{ height: "100%" }}
+                    >
+                      <Box sx={{ height: "100%" }}>
+                        <InfoCard data={card} />
+                      </Box>
                     </Grid>
                   ))}
                 </Grid>
