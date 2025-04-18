@@ -209,30 +209,24 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
               filters.from_date === null ||
               filters.to_date === null ||
               (lastSync >= filters.from_date && lastSync <= filters.to_date);
-            const statusMatch =
-              filters.selectedStatus.length !== 1 ||
-              (filters.selectedStatus.length === 1 &&
-                filters.selectedStatus.includes(
-                  item.dataSync ? "Enable" : "Disable"
-                ));
             const platformMatch =
-              filters.selectedFunnels.length === 0 ||
-              filters.selectedFunnels
+              filters.selected_status.length === 0 ||
+              filters.selected_status
                 .map((funnel: string) => funnel.toLowerCase())
                 .includes(item.platform.toLowerCase());
 
             const itemType = item.type ? item.type.toLowerCase() : null;
 
             const listTypeMatch =
-              filters.selectedListType.length === 0 ||
-              filters.selectedListType
+              filters.selected_destination.length === 0 ||
+              filters.selected_destination
                 .map(
                   (funnel: any) =>
                     typeMapping[funnel]?.toLowerCase() || funnel.toLowerCase()
                 )
                 .includes(itemType);
 
-            return dateMatch && statusMatch && platformMatch && listTypeMatch;
+            return dateMatch && platformMatch && listTypeMatch;
           });
         };
         setData(filterData());
@@ -735,28 +729,30 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const handleDownloadPersons = async () => {
     setIsLoading(true);
     try {
-
-        const response = await axiosInstance.post(`/data-sync/download-persons?id=${selectedId}`, {
-            responseType: 'blob'
-        });
-
-        if (response.status === 200) {
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', 'data.csv');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
-        } else {
-            showErrorToast(`Error downloading file`);
+      const response = await axiosInstance.post(
+        `/data-sync/download-persons?id=${selectedId}`,
+        {
+          responseType: "blob",
         }
+      );
+
+      if (response.status === 200) {
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", "data.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        showErrorToast(`Error downloading file`);
+      }
     } catch {
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -1021,7 +1017,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                         <IconButton
                           sx={{ pt: 0.25, pb: 0.25, padding: 0 }}
                           onClick={(event) => {
-                            handleClick(event, row.id)}}
+                            handleClick(event, row.id);
+                          }}
                         >
                           <MoreVertIcon />
                         </IconButton>

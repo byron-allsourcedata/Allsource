@@ -450,11 +450,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                 }}
               >
                 {[
-                  { label: "Almost identical", value: "0-3%" },
-                  { label: "Extremely Similar", value: "0-7%" },
-                  { label: "Very similar", value: "0-10%" },
-                  { label: "Quite similar", value: "0-15%" },
-                  { label: "Broad", value: "0-20%" },
+                  { label: "Almost identical", value: "0-3" },
+                  { label: "Extremely Similar", value: "0-7" },
+                  { label: "Very similar", value: "0-10" },
+                  { label: "Quite similar", value: "0-15" },
+                  { label: "Broad", value: "0-20" },
                 ].map(({ label, value }) => {
                   const isSelected = selectedSize.includes(label);
                   return (
