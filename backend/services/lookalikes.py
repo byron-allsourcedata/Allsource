@@ -54,6 +54,17 @@ class AudienceLookalikesService:
                         if scaled != 0:
                             processed_fields[key] = scaled
                 lookalike.significant_fields = processed_fields
+                
+            similarity_score = getattr(lookalike, 'similarity_score', None)
+            if similarity_score and isinstance(similarity_score, dict):
+                similarity_scores = {}
+                for key, value in similarity_score.items():
+                    if value:
+                        scaled = round(value * 100, 3)
+                        if scaled != 0:
+                                similarity_scores[key] = scaled
+                lookalike.similarity_score = similarity_scores
+                
             result.append({
                 **lookalike.__dict__,
                 "source": source_name,
