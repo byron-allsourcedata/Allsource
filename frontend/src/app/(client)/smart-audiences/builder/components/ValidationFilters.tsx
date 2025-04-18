@@ -197,22 +197,24 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
   };
 
   const convertStrInObject = (el: string) => {
-    return {[toSnakeCase(el)]: {}}
-  }
+    return { [toSnakeCase(el)]: {} };
+  };
 
   const convertValidation = (array: string[]) => {
     return array.map(convertStrInObject);
-  }
+  };
 
   const convertValidationWithRecency = (array: string[], value: string) => {
-    if (!value) return convertValidation(array)
+    if (!value) return convertValidation(array);
 
     const filteredArray = array
-      .filter(name => !["Recency", "RecencyBusiness"].includes(name))
+      .filter((name) => !["Recency", "RecencyBusiness"].includes(name))
       .map(convertStrInObject);
-  
-    const recencyObject = { recency: { days: Number(value.replace(/[^\d]/g, "")) } };
-  
+
+    const recencyObject = {
+      recency: { days: Number(value.replace(/[^\d]/g, "")) },
+    };
+
     return [...filteredArray, recencyObject];
   };
 
@@ -224,8 +226,14 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
     setIsOpenPostalCAS(false);
     setIsOpenLinkedIn(false);
     onValidate({
-      personal_email: convertValidationWithRecency(selectedOptionsPersonalEmail, nestedSelections["Recency"]),
-      business_email: convertValidationWithRecency(selectedOptionsBusinessEmail, nestedSelections["RecencyBusiness"]),
+      personal_email: convertValidationWithRecency(
+        selectedOptionsPersonalEmail,
+        nestedSelections["Recency"]
+      ),
+      business_email: convertValidationWithRecency(
+        selectedOptionsBusinessEmail,
+        nestedSelections["RecencyBusiness"]
+      ),
       phone: convertValidation(selectedOptionsPhone),
       postal_cas: convertValidation(selectedOptionsPostalCAS),
       linked_in: convertValidation(selectedOptionsLinkedIn),
@@ -281,7 +289,11 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 
     if (useCaseType === "Tele Marketing") {
       if (targetAudience === "Both" || targetAudience === "B2B") {
-        setSelectedOptionsPhone(["Last updated date", "Confirmation", "DNC filter"]);
+        setSelectedOptionsPhone([
+          "Last updated date",
+          "Confirmation",
+          "DNC filter",
+        ]);
       } else if (targetAudience === "B2C") {
         setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
       }
@@ -1179,12 +1191,16 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 }
                                 sx={{
                                   padding: 0,
+                                  pb: index === 2 ? 1 : 0,
                                   "&.Mui-checked": {
                                     color: "rgba(80, 82, 178, 1)",
                                   },
                                 }}
                               />
-                              <Typography className="form-input">
+                              <Typography
+                                className="form-input"
+                                sx={{ pb: index === 2 ? 1 : 0 }}
+                              >
                                 {option}
                               </Typography>
                               {isRecommended && (
@@ -1197,7 +1213,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                               )}
                             </Box>
                           </Box>
-                          {index === 0 && <Divider />}
+                          {(index === 0 || index === 1) && <Divider />}
                         </React.Fragment>
                       );
                     }

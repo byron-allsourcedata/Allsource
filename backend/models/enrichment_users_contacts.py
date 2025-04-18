@@ -1,13 +1,13 @@
-from sqlalchemy import Column, TEXT, UUID, ForeignKey, TIMESTAMP
+from sqlalchemy import Column, TEXT, UUID, ForeignKey, TIMESTAMP, BOOLEAN
 from .base import Base
-from models.enrichment_users import EnrichmentUser
+
 
 
 class EnrichmentUserContact(Base):
     __tablename__ = 'enrichment_users_contacts'
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default="gen_random_uuid()")
-    enrichment_user_id = Column(UUID(as_uuid=True), ForeignKey(EnrichmentUser.id), nullable=True)
+    enrichment_user_id = Column(UUID(as_uuid=True), ForeignKey("enrichment_users.id"), nullable=True)
     asid = Column(UUID(as_uuid=True), nullable=False)
     up_id = Column(TEXT, nullable=False)
     business_email_last_seen_date = Column(TIMESTAMP, nullable=False)
@@ -23,7 +23,7 @@ class EnrichmentUserContact(Base):
     other_emails = Column(TEXT, nullable=True)
     phone_mobile1 = Column(TEXT, nullable=True)
     phone_mobile2 = Column(TEXT, nullable=True)
-    mobile_phone_dnc = Column(TEXT, nullable=True)
+    mobile_phone_dnc = Column(BOOLEAN, nullable=True)
     business_email_validation_status = Column(TEXT, nullable=True)
     personal_email_validation_status = Column(TEXT, nullable=True)
     linkedin_url = Column(TEXT, nullable=True)
