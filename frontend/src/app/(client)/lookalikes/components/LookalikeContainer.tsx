@@ -43,33 +43,23 @@ interface PollingData {
 const audienceSize = [
   {
     label: "Almost identical",
-    text: "Lookalike size: 10,000 contacts",
-    min_value: 0,
-    max_value: 3,
+    text: "10K",
   },
   {
     label: "Extremely similar",
-    text: "Lookalike size: 50,000 contacts",
-    min_value: 0,
-    max_value: 7,
+    text: "50K",
   },
   {
     label: "Very similar",
-    text: "Lookalike size: 100,000 contacts",
-    min_value: 0,
-    max_value: 10,
+    text: "100K",
   },
   {
     label: "Quite similar",
-    text: "Lookalike size: 200,000 contacts",
-    min_value: 0,
-    max_value: 15,
+    text: "200K",
   },
   {
     label: "Broad",
-    text: "Lookalike size: 500,000 contacts",
-    min_value: 0,
-    max_value: 20,
+    text: "500K",
   },
 ];
 
@@ -253,9 +243,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
                     (size) => size.label === row.lookalike_size
                   );
                   return size
-                    ? `${setSourceType(size.label)} ${size.min_value}-${
-                        size.max_value
-                      }%`
+                    ? `${setSourceType(size.label)} ${size.text}`
                     : row.lookalike_size;
                 })()}
               </TableCell>

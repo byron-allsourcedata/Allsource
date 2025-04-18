@@ -66,33 +66,23 @@ interface LookalikeTableProps {
 const audienceSize = [
   {
     label: "almost_identical",
-    text: "Lookalike size: 10,000 contacts",
-    min_value: 0,
-    max_value: 3,
+    text: "10K"
   },
   {
     label: "extremely_similar",
-    text: "Lookalike size: 50,000 contacts",
-    min_value: 0,
-    max_value: 7,
+    text: "50K"
   },
   {
     label: "very_similar",
-    text: "Lookalike size: 100,000 contacts",
-    min_value: 0,
-    max_value: 10,
+    text: "100K",
   },
   {
     label: "quite_similar",
-    text: "Lookalike size: 200,000 contacts",
-    min_value: 0,
-    max_value: 15,
+    text: "200K",
   },
   {
     label: "broad",
-    text: "Lookalike size: 500,000 contacts",
-    min_value: 0,
-    max_value: 20,
+    text: "500K",
   },
 ];
 
@@ -245,15 +235,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
   };
 
   const fullFormattedFields = (
-    fields: Record<string, number> | null
-  ): string => {
-    if (!fields || typeof fields !== "object") return "---";
-    return Object.entries(fields)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join(", ");
-  };
-
-  const fullFormattedFieldsPercent = (
     fields: Record<string, number> | null
   ): string => {
     if (!fields || typeof fields !== "object") return "---";
@@ -746,9 +727,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         (size) => size.label === row.lookalike_size
                       );
                       return size
-                        ? `${toNormalText(size.label)} ${size.min_value}-${
-                            size.max_value
-                          }%`
+                        ? `${toNormalText(size.label)} ${size.text}`
                         : row.lookalike_size;
                     })()}
                   </TableCell>
@@ -941,7 +920,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         >
                           <Box sx={{ margin: 1 }}>
                             <Typography className="table-data">
-                              {fullFormattedFields(row.significant_fields)}
+                              {fullFormattedFields(row.significant_fields)}%
                             </Typography>
                           </Box>
                         </Collapse>
@@ -1021,7 +1000,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         >
                           <Box sx={{ margin: 1 }}>
                             <Typography className="table-data">
-                              {fullFormattedFieldsPercent(row.similarity_score)}%
+                              {fullFormattedFields(row.similarity_score)}%
                             </Typography>
                           </Box>
                         </Collapse>

@@ -31,11 +31,11 @@ const audienceType = [
 ]
 
 const audienceSize = [
-    { id: "almost", label: "Almost identical", text: 'Lookalike size 0-3%', min_value: 0, max_value: 3 },
-    { id: "extremely", label: "Extremely Similar", text: 'Lookalike size 3-7%', min_value: 3, max_value: 7 },
-    { id: "very", label: "Very similar", text: 'Lookalike size 7-10%', min_value: 7, max_value: 10 },
-    { id: "quite", label: "Quite similar", text: 'Lookalike size 10-15%', min_value: 10, max_value: 15 },
-    { id: "broad", label: "Broad", text: 'Lookalike size 15-20%', min_value: 15, max_value: 20 },
+    { id: "almost", label: "Almost identical", text: 'Lookalike size: 10K contacts', min_value: 10, max_value: 10 },
+    { id: "extremely", label: "Extremely Similar", text: 'Lookalike size: 50K contacts', min_value: 10, max_value: 10 },
+    { id: "very", label: "Very similar", text: 'Lookalike size: 100K contacts', min_value: 7, max_value: 10 },
+    { id: "quite", label: "Quite similar", text: 'Lookalike size: 200K contacts', min_value: 10, max_value: 15 },
+    { id: "broad", label: "Broad", text: 'Lookalike size: 500K contacts', min_value: 15, max_value: 20 },
 ];
 
 interface AudienceData {
