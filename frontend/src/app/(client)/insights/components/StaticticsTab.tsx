@@ -8,6 +8,7 @@ import { SemiCircularGradientChart } from "./SemiCircularGradientChart";
 import { PieChartWithLegend } from "./CircularChart";
 import { MultiIconFillIndicator } from "./MultiIconChart";
 import B2CTabs from "./B2CTabs";
+import B2BTabs from "./B2BTabs";
 
 const StaticticsTab = () => {
   const [targetIndex, setTargetIndex] = useState(0);
@@ -137,7 +138,9 @@ const StaticticsTab = () => {
           flexGrow: 1,
         }}
       >
-        <TabPanel value={targetIndex} index={0}></TabPanel>
+        <TabPanel value={targetIndex} index={0}>
+          <B2BTabs />
+        </TabPanel>
         <TabPanel value={targetIndex} index={1}>
           <B2CTabs />
         </TabPanel>
