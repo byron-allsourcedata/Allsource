@@ -97,7 +97,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
 
             # {
             #     "user_id": 110,
-            #     "aud_smart_id": "f5a4777a-cb64-4edd-a572-d9ead969b4fb", 
+            #     "aud_smart_id": "30261e2e-9f36-47e4-b9ee-ac2bc206a99e", 
             #     "validation_params": {
             #     "personal_email": [
             #         {"mx": {"processed": false}},
@@ -138,19 +138,18 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                 if "recency" in param:
                                     recency_days = param["recency"].get("days")
                                     break
+
                                     
                         enrichment_users = [
                             {
                                 "audience_smart_person_id": user.audience_smart_person_id,
                                 column_name: (
-                                    getattr(user, column_name).isoformat() 
-                                    if isinstance(getattr(user, column_name), datetime) 
-                                    else getattr(user, column_name)
+                                    user.value.isoformat() if isinstance(user.value, datetime) else user.value
                                 ),
                             }
                             for user in db_session.query(
                                 AudienceSmartPerson.id.label("audience_smart_person_id"),
-                                getattr(EnrichmentUserContact, column_name),
+                                getattr(EnrichmentUserContact, column_name).label("value"),
                             )
                             .join(
                                 EnrichmentUserContact,
@@ -160,6 +159,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
                                 AudienceSmartPerson.is_validation_processed == True,
                             )
+                            .distinct()
                             .all()
                         ]
 

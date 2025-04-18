@@ -65,11 +65,16 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
         try:
 
             validation_rules = {
-                "personal_email_validation_status": lambda value: value.startswith("Valid") if value else False,
-                "business_email_validation_status": lambda value: value.startswith("Valid") if value else False,
-                "personal_email_last_seen": lambda value: value <= recency_days if value else False,
-                "business_email_last_seen_date": lambda value: value <= recency_days if value else False,
-                "mobile_phone_dnc": lambda value: value is False,
+                "personal_email_validation_status": lambda value: True,
+                "business_email_validation_status": lambda value: True,
+                "personal_email_last_seen": lambda value: True,
+                "business_email_last_seen_date": lambda value: True,
+                "mobile_phone_dnc": lambda value: True,
+                # "personal_email_validation_status": lambda value: value.startswith("Valid") if value else False,
+                # "business_email_validation_status": lambda value: value.startswith("Valid") if value else False,
+                # "personal_email_last_seen": lambda value: (datetime.now() - value).days <= recency_days if value else False,
+                # "business_email_last_seen_date": lambda value: (datetime.now() - value).days <= recency_days if value else False,
+                # "mobile_phone_dnc": lambda value: value is False,
             }
 
             failed_ids = [
@@ -84,22 +89,22 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                     [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
                 )
             
-            valid_ids = [
-                record["audience_smart_person_id"]
-                for record in batch
-                if validation_rules[validation_type](record.get("value"))
-            ]
+            # valid_ids = [
+            #     record["audience_smart_person_id"]
+            #     for record in batch
+            #     if validation_rules[validation_type](record.get("value"))
+            # ]
 
-            if valid_ids:
-                for person_id in valid_ids:
-                    person = db_session.query(AudienceSmartPerson).filter_by(id=person_id).first()
-                    if person:
-                        validations = json.loads(person.validations)
-                        for category in validations.values():
-                            for rule in category:
-                                if validation_type in rule:
-                                    rule[validation_type]["processed"] = True
-                        person.validations = json.dumps(validations)
+            # if valid_ids:
+            #     for person_id in valid_ids:
+            #         person = db_session.query(AudienceSmartPerson).filter_by(id=person_id).first()
+            #         if person:
+            #             validations = json.loads(person.validations)
+            #             for category in validations.values():
+            #                 for rule in category:
+            #                     if validation_type in rule:
+            #                         rule[validation_type]["processed"] = True
+            #             person.validations = json.dumps(validations)
 
             if is_last_iteration_in_last_validation:
                 print("is last validation")
