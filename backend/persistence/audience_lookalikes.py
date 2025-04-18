@@ -18,6 +18,7 @@ from sqlalchemy import asc, desc, or_, func
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
+from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from uuid import UUID
 
 from models.users import Users
@@ -33,11 +34,32 @@ class AudienceLookalikesPersistence:
             .filter(AudienceSource.id == uuid_of_source, AudienceSource.user_id == user_id).first()
 
         return source
+    
+    def generate_similarity_score(self) -> dict:
+        import random
+
+        min_score = round(random.uniform(10.0, 40.0), 1)
+        max_score = round(random.uniform(70.0, 100.0), 1)
+
+        average_score = round(random.uniform(min_score + 1.0, max_score - 1.0), 1)
+        median_score = round(random.uniform(min_score + 1.0, max_score - 1.0), 1)
+
+        values = sorted([min_score, average_score, median_score, max_score])
+        min_score, average_score, median_score, max_score = values
+
+        return {
+            "min": min_score,
+            "average": average_score,
+            "median": median_score,
+            "max": max_score
+        }
+
 
     def get_lookalikes(self, user_id: int, page: Optional[int] = None, per_page: Optional[int] = None, from_date: Optional[int] = None, to_date: Optional[int] = None,
                        sort_by: Optional[str] = None, sort_order: Optional[str] = None,
                        lookalike_size: Optional[str] = None, lookalike_type: Optional[str] = None,
                        search_query: Optional[str] = None):
+        
         query = self.db.query(
             AudienceLookalikes,
             AudienceSource.name,
@@ -93,23 +115,10 @@ class AudienceLookalikesPersistence:
             query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
-        lookalikes = query.limit(per_page).offset(offset).all()
+        result_query = query.limit(per_page).offset(offset).all()
         count = query.count()
         max_page = math.ceil(count / per_page)
-        result = [
-            {
-                **lookalike.__dict__,
-                "source": source_name,
-                "source_type": source_type,
-                "created_by": created_by,
-                "source_origin": source_origin,
-                "domain": domain,
-                "target_schema": source_schema,
-            }
-            for lookalike, source_name, source_type, created_by, source_origin, domain, source_schema in lookalikes
-        ]
-        
-        return result, count, max_page
+        return result_query, count, max_page
 
     def create_lookalike(self, uuid_of_source, user_id, lookalike_size,
                          lookalike_name, created_by_user_id, audience_feature_importance: AudienceFeatureImportance):
@@ -123,7 +132,6 @@ class AudienceLookalikesPersistence:
         for key in audience_feature_dict.keys():
             audience_feature_dict[key] = round(audience_feature_dict[key] * 1000) / 1000
         sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
-
         lookalike = AudienceLookalikes(
             name=lookalike_name,
             lookalike_size=lookalike_size,
@@ -131,7 +139,8 @@ class AudienceLookalikesPersistence:
             created_date=datetime.utcnow(),
             created_by_user_id=created_by_user_id,
             source_uuid=uuid_of_source,
-            significant_fields=sorted_dict
+            significant_fields=sorted_dict,
+            similarity_score=self.generate_similarity_score()
         )
         self.db.add(lookalike)
         self.db.commit()
@@ -323,7 +332,6 @@ class AudienceLookalikesPersistence:
                 customer_value=Decimal(row.customer_value)
             )
             audience_data_list.append(ad)
-
         return audience_data_list
 
 

@@ -39,6 +39,10 @@ const setSourceType = (sourceType: string) => {
     .join(", ");
 };
 
+const setSourceOrigin = (sourceOrigin: string) => {
+  return sourceOrigin === "pixel" ? "Pixel" : "CSV File";
+};
+
 const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
   return (
     <TableContainer
@@ -101,7 +105,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
             <TableRow key={index}>
               <TableCell>{row.name}</TableCell>
               <TableCell>{row.target_schema.toUpperCase()}</TableCell>
-              <TableCell>{setSourceType(row.source)}</TableCell>
+              <TableCell>{setSourceOrigin(row.source)}</TableCell>
               <TableCell>{setSourceType(row.type)}</TableCell>
               <TableCell>
                 {dayjs(row.created_date).format("MMM D, YYYY")}
@@ -220,11 +224,11 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
                   color: "#5F6368",
                 }}
               >
-                {setSourceType(row.source)}
+                {setSourceOrigin(row.source)}
               </Typography>
             </Box>
             <Box
-              sx={{
+              sx={{ 
                 display: "flex",
                 justifyContent: "space-between",
                 flexWrap: "wrap",

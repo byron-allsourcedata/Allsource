@@ -6,16 +6,23 @@ import sys
 from decimal import Decimal
 from dotenv import load_dotenv
 
+
+load_dotenv()
+
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from config.folders import Folders
 
-from schemas.similar_audiences import AudienceData
+from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService, \
+    map_letter_to_number, map_credit_rating, map_net_worth_code
+
+from schemas.similar_audiences import AudienceData, NormalizationConfig
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 
-load_dotenv()
 
 def read_csv_transactions(file_path: str):
     user_profiles = []
@@ -31,10 +38,25 @@ def read_csv_transactions(file_path: str):
     return user_profiles
 
 async def main():
-    transactions = read_csv_transactions(parent_dir+'/data/enrichment.csv')
+    config =  NormalizationConfig(
+        numerical_features=['PersonExactAge', 'NumberOfChildren', 'LengthOfResidenceYears'],
+        unordered_features=[
+            'PersonGender', 'HasChildren', 'HomeownerStatus', 'MaritalStatus'
+        ],
+        ordered_features={
+            'EstimatedHouseholdIncomeCode': map_letter_to_number,
+            'EstimatedCurrentHomeValueCode': map_letter_to_number,
+            'CreditRating': map_credit_rating,
+            'NetWorthCode': map_net_worth_code
+        }
+    )
+
+    transactions = read_csv_transactions(Folders.data('enrichment.csv'))
     normalizer = AudienceDataNormalizationService()
     service = SimilarAudienceService(normalizer=normalizer)
-    scores = service.get_audience_feature_importance(transactions)
+
+    dict_enrichment = [v.__dict__ for v in transactions]
+    scores = service.get_audience_feature_importance_with_config(dict_enrichment, config)
 
     print(scores)
 

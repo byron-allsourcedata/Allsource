@@ -18,6 +18,8 @@ from enums import AudienceSmartStatuses
 logger = logging.getLogger(__name__)
 
 class AudienceSmartsService:
+    VALID_DAYS = {30, 60, 90}
+
     def __init__(self, audience_smarts_persistence: AudienceSmartsPersistence,
                  lookalikes_persistence_service: AudienceLookalikesPersistence,
                  audience_sources_persistence: AudienceSourcesPersistence
@@ -147,6 +149,11 @@ class AudienceSmartsService:
             logger.error(f"Failed to publish message to {queue_name}. Error: {e}")
         finally:
             await rabbitmq_connection.close()
+    
+    def validate_recency_days(self, days: int):
+        if days not in self.VALID_DAYS:
+            raise ValueError(f"Invalid recency days: {days}.")
+
 
     async def create_audience_smart(
             self,
@@ -171,13 +178,22 @@ class AudienceSmartsService:
             need_validate = True
             status = AudienceSmartStatuses.VALIDATING.value
 
+        if validation_params:            
+            for key in validation_params.keys():
+                for item in validation_params[key]:
+                    if "recency" in item:
+                        self.validate_recency_days(item["recency"]["days"])
+                        item["recency"]["processed"] = False
+                    else:
+                        for sub_key in item.keys():
+                            item[sub_key]["processed"] = False
 
         created_data = self.audience_smarts_persistence.create_audience_smart(
             name=name,
             user_id=user.get('id'),
             created_by_user_id=created_by_user_id,
             use_case_alias=use_case_alias,
-            validation_params=validation_params,
+            validation_params=json.dumps(validation_params),
             data_sources=data_sources,
             active_segment_records=active_segment_records,
             total_records=total_records,
@@ -225,18 +241,26 @@ class AudienceSmartsService:
         sources, count = self.audience_sources_persistence.get_sources(
             user_id=user.get("id"), page=1, per_page=50
         )
-
-        lookalike_list = [
-            {
-                'id': l.get('id'),
-                'name': l.get('name'),
-                'source_type': l.get('source_type'),
-                'source_origin': l.get('source_origin'),
-                'domain': l.get('domain'),
-                'size': l.get('size'),
-            }
-            for l in lookalikes
-        ]
+        
+        lookalike_list = []
+        for (
+            lookalike,
+            source_name,
+            source_type,
+            created_by,
+            source_origin,
+            domain,
+            target_schema
+        ) in lookalikes:
+            lookalike_list.append({
+                **lookalike.__dict__,
+                "source": source_name,
+                "source_type": source_type,
+                "created_by": created_by,
+                "source_origin": source_origin,
+                "domain": domain,
+                "target_schema": target_schema
+            })
 
         source_list = [
             {
