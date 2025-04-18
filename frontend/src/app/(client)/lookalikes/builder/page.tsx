@@ -12,7 +12,6 @@ import {
   IconButton,
   InputAdornment,
   Paper,
-  Popover,
   TableContainer,
   Table,
   TableHead,
@@ -24,7 +23,6 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import DeleteIcon from "@mui/icons-material/Delete";
 import AudienceSizeSelector from "@/app/(client)/lookalikes/components/SizeSelector";
 import SourceTableContainer from "@/app/(client)/lookalikes/components/SourceTableContainer";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
@@ -32,7 +30,6 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import LookalikeContainer from "../components/LookalikeContainer";
 import { smartAudiences } from "../../smart-audiences/smartAudiences";
-import { lookalikesStyles } from "../components/lookalikeStyles";
 import FeatureImportanceTable, {
   FeatureObject,
 } from "../components/FeatureImportanceTable";
@@ -41,7 +38,7 @@ import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import ProgressBar from "@/components/ProgressBar";
 export const dynamic = 'force-dynamic';
 interface TableData {
-  id: string; 
+  id: string;
   name: string;
   target_schema: string;
   source: string;
@@ -164,13 +161,6 @@ interface CalculationResponse {
   audience_feature_importance: CalculationResults;
 }
 
-// Helper: clone and sort features array (descending order by value)
-const sortFeatures = (
-  features: [keyof CalculationResults, number][]
-): [keyof CalculationResults, number][] => {
-  return [...features].sort((a, b) => b[1] - a[1]);
-};
-
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -179,7 +169,6 @@ const CreateLookalikePage: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedLabel, setSelectedLabel] = useState<string>("");
   const [sliderValue, setSliderValue] = useState<number[]>([0, 0]);
-  // currentStep: 0 = choose source; 1 = select audience size; 2 = show name input & generate button.
   const [currentStep, setCurrentStep] = useState(0);
   const [sourceName, setSourceName] = useState("");
   const [sourceData, setSourceData] = useState<TableData[]>([]);
@@ -198,18 +187,6 @@ const CreateLookalikePage: React.FC = () => {
   const [hiddenFeatures, setHiddenFeatures] = useState<
     [keyof CalculationResults, number][]
   >([]);
-  // State for the "Load More" popover anchor.
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  // const [_, setFields] = useState<Field[]>([]);
-  // formatCalcKey: removes underscores, adds spaces before uppercase letters,
-  // collapses extra spaces, trims, and capitalizes the first letter.
-  const formatCalcKey = (key: string) =>
-    key
-      .replace(/_/g, " ") // replace underscores with spaces
-      .replace(/(?!^)([A-Z])/g, " $1") // insert space before uppercase letters (except first character)
-      .replace(/\s+/g, " ") // collapse multiple spaces
-      .trim() // trim spaces
-      .replace(/^./, (char) => char.toUpperCase()); // capitalize first letter
 
   const [financialData, setFinancialData] = useState<FinancialResults>({
     IncomeRange: 0,
@@ -322,7 +299,6 @@ const CreateLookalikePage: React.FC = () => {
     setDndFields(computedFields);
   }, [computedFields]);
 
-  // Returns sorted (descending) features from the given CalculationResults
   const getAllCalculatedEntries = (
     results: CalculationResults
   ): [keyof CalculationResults, number][] => {
@@ -496,39 +472,6 @@ const CreateLookalikePage: React.FC = () => {
     }
   };
 
-  // Delete a feature from the displayed list and add it to the hidden list.
-  const handleDeleteFeature = (keyToDelete: keyof CalculationResults) => {
-    setDisplayedFeatures((prev) =>
-      sortFeatures(prev.filter(([key]) => key !== keyToDelete))
-    );
-    const deletedFeature = displayedFeatures.find(
-      ([key]) => key === keyToDelete
-    );
-    if (deletedFeature) {
-      setHiddenFeatures((prev) => sortFeatures([...prev, deletedFeature]));
-    }
-  };
-
-  // Popover handlers for the "Load More" menu.
-  const handleLoadMoreClick = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handlePopoverClose = () => {
-    setAnchorEl(null);
-  };
-
-  // When a feature is selected in the popover, move it to the displayed features
-  const handleAddFeature = (feature: [keyof CalculationResults, number]) => {
-    setDisplayedFeatures((prev) => sortFeatures([...prev, feature]));
-    setHiddenFeatures((prev) =>
-      sortFeatures(prev.filter((f) => f[0] !== feature[0]))
-    );
-    setAnchorEl(null);
-  };
-
-  const openPopover = Boolean(anchorEl);
-
   useEffect(() => {
     handleSourceData();
   }, []);
@@ -542,7 +485,6 @@ const CreateLookalikePage: React.FC = () => {
     }
   }, [preselectedUuid, sourceData]);
 
-  // Transform source type (similar to previous implementation)
   const toNormalText = (sourceType: string) =>
     sourceType
       .split(",")
@@ -934,7 +876,6 @@ const CreateLookalikePage: React.FC = () => {
                     </Grid>
 
                     <Grid container spacing={2}>
-                      {/* Левая колонка — пять таблиц с чекбоксами */}
                       <Grid item xs={12} md={6} direction="column" spacing={2}>
                         <Grid item>
                           <FeatureImportanceTable
@@ -1038,7 +979,6 @@ const CreateLookalikePage: React.FC = () => {
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ml: 1 }}>
-                      {/* Шаг 1 всегда чёрный */}
                       <Typography
                         variant="h6"
                         sx={{
@@ -1052,7 +992,6 @@ const CreateLookalikePage: React.FC = () => {
                         Step 1
                       </Typography>
 
-                      {/* Стрелка побольше */}
                       <ArrowRightAltIcon
                         sx={{
                           fontSize: '28px',
@@ -1062,7 +1001,6 @@ const CreateLookalikePage: React.FC = () => {
                         }}
                       />
 
-                      {/* Шаг 2 серый, если не выбран*/}
                       <Typography
                         variant="h6"
                         sx={{
@@ -1076,7 +1014,6 @@ const CreateLookalikePage: React.FC = () => {
                       </Typography>
                     </Box>
                     <Grid container spacing={2} sx={{ mb: 2 }}>
-                      {/* Заголовок + описание */}
                       <Grid item xs={7}>
                         <Typography
                           variant="h6"
@@ -1103,7 +1040,6 @@ const CreateLookalikePage: React.FC = () => {
                           You can configure the predictable fields that will be used for audience building yourself.
                         </Typography>
                       </Grid>
-                      {/* Правый заголовок */}
                       <Grid item xs={5}>
                         <Typography
                           variant="h6"
@@ -1121,9 +1057,7 @@ const CreateLookalikePage: React.FC = () => {
                       </Grid>
                     </Grid>
                     <Grid container spacing={2}>
-                      {/* Левая колонка: все пять таблиц */}
                       <Grid item xs={12} md={6} direction="column" spacing={1}>
-                        {/* Real Estate */}
                         <Grid item xs={12} md={6}>
                           <DragAndDropTable
                             fields={dndFields}
@@ -1132,7 +1066,6 @@ const CreateLookalikePage: React.FC = () => {
                         </Grid>
                       </Grid>
                       <Grid item xs={12} md={1}></Grid>
-                      {/* Правая колонка: инструктивный текст */}
                       <Grid
                         item
                         xs={12}
@@ -1462,11 +1395,11 @@ const CreateLookalikePage: React.FC = () => {
 };
 
 const CreateLookalike: React.FC = () => {
-    return (
-        <Suspense fallback={<ProgressBar />}>
-            <CreateLookalikePage />
-        </Suspense>
-    );
+  return (
+    <Suspense fallback={<ProgressBar />}>
+      <CreateLookalikePage />
+    </Suspense>
+  );
 };
 
 export default CreateLookalike;
