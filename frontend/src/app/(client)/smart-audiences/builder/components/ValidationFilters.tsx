@@ -281,9 +281,9 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 
     if (useCaseType === "Tele Marketing") {
       if (targetAudience === "Both" || targetAudience === "B2B") {
-        setSelectedOptionsPhone(["Last updated date", "Confirmation", "DNC Filter"]);
+        setSelectedOptionsPhone(["Last updated date", "Confirmation", "DNC filter"]);
       } else if (targetAudience === "B2C") {
-        setSelectedOptionsPhone(["Last updated date", "DNC Filter"]);
+        setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
       }
       setValidate(false);
     }
@@ -1142,7 +1142,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                     pb: 0.75,
                   }}
                 >
-                  {["Last updated date", "Confirmation", "DNC Filter"].map(
+                  {["Last updated date", "Confirmation", "DNC filter"].map(
                     (option, index) => {
                       const isRecommended =
                         useCaseType === "Tele Marketing" &&
