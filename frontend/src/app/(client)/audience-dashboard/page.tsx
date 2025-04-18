@@ -304,8 +304,7 @@ const AudienceDashboard: React.FC = () => {
               }
             });
           } else {
-            if (event.lookalike_name)
-              leftInfo["Lookalike Name"] = event.lookalike_name;
+            if (event.lookalike_name) leftInfo["Name"] = event.lookalike_name;
             if (event.lookalike_size)
               leftInfo["Lookalike Size"] = formatLookalikeSize(
                 event.lookalike_size
@@ -354,7 +353,7 @@ const AudienceDashboard: React.FC = () => {
               leftInfo["Audience Name"] = event.audience_name;
             if (event.destination) leftInfo["Destination"] = event.destination;
             if (event.synced_contacts)
-              rightInfo["Synced contacts"] = event.synced_contacts;
+              leftInfo["Synced contacts"] = event.synced_contacts;
           }
         } else if (tabType === "sources") {
           if (isMainType) {
