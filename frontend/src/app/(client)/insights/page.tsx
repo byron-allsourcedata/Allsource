@@ -169,7 +169,7 @@ const Insights = () => {
                 padding: "4px 24px",
                 flexGrow: 1,
                 minHeight: "auto",
-                minWidth: "auto",
+                minWidth: "120px",
                 fontSize: "14px",
                 fontWeight: 700,
                 lineHeight: "19.1px",
@@ -199,7 +199,7 @@ const Insights = () => {
                 fontSize: "14px",
                 fontWeight: 700,
                 lineHeight: "19.1px",
-                minWidth: "auto",
+                minWidth: "120px",
                 "&.Mui-selected": {
                   color: "rgba(80, 82, 178, 1)",
                 },

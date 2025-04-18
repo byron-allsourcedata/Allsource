@@ -31,7 +31,7 @@ const StaticticsTab = () => {
           zIndex: 100,
           backgroundColor: "#fff",
           justifyContent: "space-between",
-          width: "100%",
+          width: "97%",
           "@media (max-width: 600px)": {
             flexDirection: "column",
             display: "flex",
@@ -81,12 +81,11 @@ const StaticticsTab = () => {
                 padding: "4px 24px",
                 flexGrow: 1,
                 minHeight: "auto",
-                minWidth: "auto",
+                minWidth: "76px",
                 fontSize: "14px",
                 fontWeight: 700,
                 lineHeight: "19.1px",
                 textAlign: "left",
-                mr: 1,
                 "&.Mui-selected": {
                   color: "rgba(80, 82, 178, 1)",
                 },
@@ -105,14 +104,14 @@ const StaticticsTab = () => {
               className="main-text"
               sx={{
                 textTransform: "none",
-                padding: "4px 10px",
+                padding: "4px 24px",
                 minHeight: "auto",
                 flexGrow: 1,
                 textAlign: "center",
                 fontSize: "14px",
                 fontWeight: 700,
                 lineHeight: "19.1px",
-                minWidth: "auto",
+                minWidth: "76px",
                 "&.Mui-selected": {
                   color: "rgba(80, 82, 178, 1)",
                 },

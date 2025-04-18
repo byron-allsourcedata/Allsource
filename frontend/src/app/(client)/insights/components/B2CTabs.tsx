@@ -2,6 +2,7 @@ import { TabPanel } from "@/components/TabPanel";
 import { Box, Tabs, Tab, Typography } from "@mui/material";
 import { useState } from "react";
 import B2CPersonal from "./B2CTabComponents/B2CPersonal";
+import B2CLifestyle from "./B2CTabComponents/B2CLifestyle";
 
 const B2CTabs = () => {
   const [tabIndex, setIndex] = useState(0);
@@ -22,7 +23,7 @@ const B2CTabs = () => {
           zIndex: 100,
           backgroundColor: "#fff",
           justifyContent: "space-between",
-          width: "100%",
+          width: "98%",
           "@media (max-width: 600px)": {
             flexDirection: "column",
             display: "flex",
@@ -123,7 +124,9 @@ const B2CTabs = () => {
           <B2CPersonal />
         </TabPanel>
         <TabPanel value={tabIndex} index={1}></TabPanel>
-        <TabPanel value={tabIndex} index={2}></TabPanel>
+        <TabPanel value={tabIndex} index={2}>
+          <B2CLifestyle />
+        </TabPanel>
         <TabPanel value={tabIndex} index={3}></TabPanel>
       </Box>
     </Box>
