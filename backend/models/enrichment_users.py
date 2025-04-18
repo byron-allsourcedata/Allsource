@@ -11,8 +11,8 @@ from models.professional_profile import ProfessionalProfile
 class EnrichmentUser(Base):
     __tablename__ = 'enrichment_users'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False,
-                server_default=text("gen_random_uuid()"))
+
+    id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, server_default=text("gen_random_uuid()"))
     cid = Column(Integer, nullable=True)
     age = Column(INT4RANGE, nullable=False)
     gender = Column(SmallInteger, nullable=False)

@@ -22,7 +22,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 load_dotenv()
 
 AUDIENCE_SMARTS_AGENT = 'aud_smarts_agent'
-AUDIENCE_EMAIL_VALIDATION = 'aud_email_validation'
+AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 AUDIENCE_SMARTS_PROGRESS = "AUDIENCE_SMARTS_PROGRESS"
 
 def setup_logging(level):
@@ -57,6 +57,7 @@ async def aud_smarts_matching(message: IncomingMessage, db_session: Session, con
         need_validate = message_body.get("need_validate")
         count_iterations = message_body.get("count_iterations")
         count = message_body.get("count")
+        validation_params = message_body.get("validation_params")
 
         try:
             bulk_data = [
@@ -88,11 +89,12 @@ async def aud_smarts_matching(message: IncomingMessage, db_session: Session, con
             if count_iterations == count and need_validate:
                 message_body = {
                     'aud_smart_id': str(aud_smart_id),
-                    'user_id': user_id
+                    'user_id': user_id,
+                    'validation_params': validation_params
                 }
                 await publish_rabbitmq_message(
                     connection=connection,
-                    queue_name=AUDIENCE_EMAIL_VALIDATION,
+                    queue_name=AUDIENCE_VALIDATION_FILLER,
                     message_body=message_body
                 )
 
