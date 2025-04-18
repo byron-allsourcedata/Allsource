@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -35,6 +35,7 @@ import FeatureImportanceTable, {
   FeatureObject,
 } from "../components/FeatureImportanceTable";
 import DragAndDropTable, { Field } from "../components/DragAndDropTable";
+import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 
 interface TableData {
   name: string;
@@ -87,24 +88,71 @@ interface CalculationResults {
 }
 
 interface FinancialResults extends FeatureObject {
+  [key: string]: number;
   CreditScore: number;
-  DebtToIncomeRatio: number;
-  Income: number;
+  IncomeRange: number;
+  NetWorth: number;
+  CreditRating: number;
+  CreditCards: number;
+  BankCard: number;
+  CreditCardPremium: number;
+  CreditCardNewIssue: number;
+  CreditLines: number;
+  CreditRangeOfNewCredit: number;
+  Donor: number;
+  Investor: number;
+  MailOrderDonor: number;
 }
 interface LifestylesResults extends FeatureObject {
-  IsFrequentTraveler: number;
-  IsBookReader: number;
-  IsOnlineGamer: number;
+  [key: string]: number;
+  Pets: number;
+  CookingEnthusiast: number;
+  Travel: number;
+  MailOrderBuyer: number;
+  OnlinePurchaser: number;
+  BookReader: number;
+  HealthAndBeauty: number;
+  Fitness: number;
+  OutdoorEnthusiast: number;
+  TechEnthusiast: number;
+  DIY: number;
+  Gardening: number;
+  AutomotiveBuff: number;
+  GolfEnthusiasts: number;
+  BeautyCosmetics: number;
+  Smoker: number;
 }
 interface VoterResults extends FeatureObject {
-  RegisteredParty: number;
-  LastVotedYear: number;
-  VotingFrequency: number;
+  [key: string]: number;
+  PartyAffiliation: number;
+  VotingPropensity: number;
+  CongressionalDistrict: number;
 }
 interface RealEstateResults extends FeatureObject {
-  HomeValueEstimate: number;
-  YearsAtAddress: number;
-  MortgageBalance: number;
+  [key: string]: number;
+  URN: number;
+  SiteStreetAddress: number;
+  SiteCity: number;
+  SiteState: number;
+  SiteZipCode: number;
+  OwnerFullName: number;
+  EstimatedHomeValue: number;
+  HomeValueNumeric: number;
+  Equity: number;
+  EquityNumeric: number;
+  MortgageAmount: number;
+  MortgageDate: number;
+  LenderName: number;
+  PurchasePrice: number;
+  PurchaseDate: number;
+  OwnerOccupied: number;
+  LandUseCode: number;
+  YearBuilt: number;
+  LotSizeSqFt: number;
+  BuildingTotalSqFt: number;
+  AssessedValue: number;
+  MarketValue: number;
+  TaxAmount: number;
 }
 
 interface CalculationResponse {
@@ -146,12 +194,7 @@ const CreateLookalikePage: React.FC = () => {
   >([]);
   // State for the "Load More" popover anchor.
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [fields, setFields] = useState<Field[]>([]);
-
-  const handleOrderChange = (newOrder: Field[]) => {
-    console.log("New order:", newOrder);
-    setFields(newOrder);
-  };
+  // const [_, setFields] = useState<Field[]>([]);
   // formatCalcKey: removes underscores, adds spaces before uppercase letters,
   // collapses extra spaces, trims, and capitalizes the first letter.
   const formatCalcKey = (key: string) =>
@@ -163,54 +206,115 @@ const CreateLookalikePage: React.FC = () => {
       .replace(/^./, (char) => char.toUpperCase()); // capitalize first letter
 
   const [financialData, setFinancialData] = useState<FinancialResults>({
+    IncomeRange: 0,
+    NetWorth: 0,
+    CreditRating: 0,
+    CreditCards: 0,
+    BankCard: 0,
+    CreditCardPremium: 0,
+    CreditCardNewIssue: 0,
+    CreditLines: 0,
+    CreditRangeOfNewCredit: 0,
+    Donor: 0,
+    Investor: 0,
+    MailOrderDonor: 0,
     CreditScore: 0,
     DebtToIncomeRatio: 0,
     Income: 0,
   });
+
   const [lifestylesData, setLifestylesData] = useState<LifestylesResults>({
-    IsFrequentTraveler: 0,
-    IsBookReader: 0,
-    IsOnlineGamer: 0,
+    Pets: 0,
+    CookingEnthusiast: 0,
+    Travel: 0,
+    MailOrderBuyer: 0,
+    OnlinePurchaser: 0,
+    BookReader: 0,
+    HealthAndBeauty: 0,
+    Fitness: 0,
+    OutdoorEnthusiast: 0,
+    TechEnthusiast: 0,
+    DIY: 0,
+    Gardening: 0,
+    AutomotiveBuff: 0,
+    GolfEnthusiasts: 0,
+    BeautyCosmetics: 0,
+    Smoker: 0,
   });
+
   const [voterData, setVoterData] = useState<VoterResults>({
-    RegisteredParty: 0,
-    LastVotedYear: 0,
-    VotingFrequency: 0,
+    PartyAffiliation: 0,
+    VotingPropensity: 0,
+    CongressionalDistrict: 0,
   });
+
   const [realEstateData, setRealEstateData] = useState<RealEstateResults>({
-    HomeValueEstimate: 0,
-    YearsAtAddress: 0,
-    MortgageBalance: 0,
+    URN: 0,
+    SiteStreetAddress: 0,
+    SiteCity: 0,
+    SiteState: 0,
+    SiteZipCode: 0,
+    OwnerFullName: 0,
+    EstimatedHomeValue: 0,
+    HomeValueNumeric: 0,
+    Equity: 0,
+    EquityNumeric: 0,
+    MortgageAmount: 0,
+    MortgageDate: 0,
+    LenderName: 0,
+    PurchasePrice: 0,
+    PurchaseDate: 0,
+    OwnerOccupied: 0,
+    LandUseCode: 0,
+    YearBuilt: 0,
+    LotSizeSqFt: 0,
+    BuildingTotalSqFt: 0,
+    AssessedValue: 0,
+    MarketValue: 0,
+    TaxAmount: 0,
   });
 
-  React.useEffect(() => {
-    if (!calculatedResults) return;
+  const [personalKeys, setPersonalKeys] = useState<(keyof CalculationResults)[]>([]);
+  const [financialKeys, setFinancialKeys] = useState<(keyof FinancialResults)[]>([]);
+  const [lifestylesKeys, setLifestylesKeys] = useState<(keyof LifestylesResults)[]>([]);
+  const [voterKeys, setVoterKeys] = useState<(keyof VoterResults)[]>([]);
+  const [realEstateKeys, setRealEstateKeys] = useState<(keyof RealEstateResults)[]>([]);
+  const computedFields = useMemo<Field[]>(() => {
+    const toFields = <T extends FeatureObject>(keys: (keyof T)[], src: T) =>
+      keys.map(k => ({
+        id: String(k),
+        name: String(k),
+        value: `${(src[k] * 100).toFixed(1)}%`,
+      }));
 
-    // объединяем все объекты важности в один
-    const merged: Record<string, number> = {
-      ...calculatedResults.audience_feature_importance,
-      ...financialData,
-      ...lifestylesData,
-      ...voterData,
-      ...realEstateData,
-    };
+    const personalSrc = calculatedResults?.audience_feature_importance ?? {} as CalculationResults;
 
-    // превращаем в Field[]
-    const allFields: Field[] = Object.entries(merged).map(([key, value]) => ({
-      id: key,
-      name: formatCalcKey(key),
-      // если value это доля, умножаем на 100
-      value: `${(value * 100).toFixed(2)}%`,
-    }));
-
-    setFields(allFields);
+    return [
+      ...toFields(personalKeys, personalSrc),
+      ...toFields(financialKeys, financialData),
+      ...toFields(lifestylesKeys, lifestylesData),
+      ...toFields(voterKeys, voterData),
+      ...toFields(realEstateKeys, realEstateData),
+    ];
   }, [
+    personalKeys,
+    financialKeys,
+    lifestylesKeys,
+    voterKeys,
+    realEstateKeys,
     calculatedResults,
     financialData,
     lifestylesData,
     voterData,
     realEstateData,
   ]);
+
+
+  const [dndFields, setDndFields] = useState<Field[]>([]);
+
+  useEffect(() => {
+    setDndFields(computedFields);
+  }, [computedFields]);
 
   // Returns sorted (descending) features from the given CalculationResults
   const getAllCalculatedEntries = (
@@ -729,105 +833,147 @@ const CreateLookalikePage: React.FC = () => {
                       mt: 2,
                     }}
                   >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: "22.5px",
-                        marginBottom: 2,
-                        marginLeft: 1,
-                      }}
-                    >
-                      Step 1
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ml: 1 }}>
+                      {/* Шаг 1 всегда чёрный */}
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontFamily: 'Nunito Sans',
+                          fontWeight: 500,
+                          fontSize: '16px',
+                          lineHeight: '22.5px',
+                        }}
+                      >
+                        Step 1
+                      </Typography>
+
+                      {/* Стрелка побольше */}
+                      <ArrowRightAltIcon
+                        sx={{
+                          fontSize: '28px',
+                          color: "text.disabled",
+                          mx: 1,
+                          verticalAlign: 'middle',
+                        }}
+                      />
+                      {/* Шаг 2 серый, если не выбран*/}
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontFamily: 'Nunito Sans',
+                          fontWeight: 500,
+                          fontSize: '16px',
+                          lineHeight: '22.5px',
+                          color: "text.disabled",
+                        }}
+                      >
+                        Step 2
+                      </Typography>
+                    </Box>
+
+                    <Grid container sx={{ mb: 2 }}>
+                      <Grid item xs={7}>
+
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontFamily: "Nunito Sans",
+                            fontWeight: 500,
+                            fontSize: "16px",
+                            lineHeight: "22.5px",
+                            mb: 1,
+                            ml: 1,
+                          }}
+                        >
+                          Select and order predictable fields
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: "14px",
+                            color: "text.secondary",
+                            mb: 1,
+                            ml: 1,
+                          }}
+                        >
+                          You can configure the predictable fields that will be used for audience building yourself.
+                        </Typography>
+
+                      </Grid>
+                      <Grid item xs={5}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontFamily: "Nunito Sans",
+                            fontWeight: 500,
+                            fontSize: "16px",
+                            lineHeight: "22.5px",
+                            mb: 1,
+                            ml: 1,
+                          }}
+                        >
+                          How do Lookalikes work?
+                        </Typography>
+                      </Grid>
+                    </Grid>
+
                     <Grid container spacing={2}>
-                      {/* Левая колонка: все пять таблиц */}
-                      <Grid item xs={12} md={6} direction="column" spacing={1}>
-                        {/* Personal Profile */}
+                      {/* Левая колонка — пять таблиц с чекбоксами */}
+                      <Grid item xs={12} md={6} direction="column" spacing={2}>
                         <Grid item>
                           <FeatureImportanceTable
                             title="Personal Profile"
-                            features={
-                              calculatedResults.audience_feature_importance
-                            }
-                            columnHeaders={["Field", "Importance"]}
+                            features={calculatedResults?.audience_feature_importance ?? {} as any}
+                            onChangeDisplayed={setPersonalKeys}
                           />
                         </Grid>
-
-                        {/* Financial */}
                         <Grid item>
                           <FeatureImportanceTable
                             title="Financial"
                             features={financialData}
-                            columnHeaders={["Field", "Importance"]}
+                            onChangeDisplayed={setFinancialKeys}
                           />
                         </Grid>
-
-                        {/* Lifestyles */}
                         <Grid item>
                           <FeatureImportanceTable
                             title="Lifestyles"
                             features={lifestylesData}
-                            columnHeaders={["Field", "Importance"]}
+                            onChangeDisplayed={setLifestylesKeys}
                           />
                         </Grid>
-
-                        {/* Voter */}
                         <Grid item>
                           <FeatureImportanceTable
                             title="Voter"
                             features={voterData}
-                            columnHeaders={["Field", "Importance"]}
+                            onChangeDisplayed={setVoterKeys}
                           />
                         </Grid>
-
-                        {/* Real Estate */}
-                        <Grid item>
+                        <Grid item >
                           <FeatureImportanceTable
                             title="Real Estate"
                             features={realEstateData}
-                            columnHeaders={["Field", "Importance"]}
+                            onChangeDisplayed={setRealEstateKeys}
                           />
                         </Grid>
                       </Grid>
                       <Grid item xs={12} md={1}></Grid>
-                      {/* Правая колонка: инструктивный текст */}
-                      <Grid
-                        item
-                        xs={12}
-                        md={5}
-                        sx={{ borderLeft: "1px solid #E4E4E4" }}
-                      >
+                      <Grid item xs={12} md={5} sx={{ borderLeft: "1px solid #E4E4E4" }}>
                         <Box sx={{ p: 0, bgcolor: "transparent" }}>
-                          <Typography
-                            sx={{
-                              fontFamily: "Nunito Sans",
-                              fontWeight: 500,
-                              fontSize: "16px",
-                              lineHeight: "22.5px",
-                              marginBottom: 2,
-                            }}
-                          >
-                            How lookalikes works
-                          </Typography>
                           <Typography
                             variant="body2"
                             paragraph
                             sx={{
                               fontSize: "16px",
-                              color: "text.secondary", // делает текст бледнее
+                              color: "text.secondary",
                               mb: 2,
                             }}
                           >
-                            When building an audience, it&apos;s important to
-                            work with the right data. You have the flexibility
-                            to configure which predictable fields you want to
-                            use based on your specific goals. These fields might
-                            include things like age, location, interests,
-                            purchase behavior, or other relevant data points
-                            that help define your audience more precisely.
+                            When building an audience, it&apos;s important to work with the right
+                            data. You have the flexibility to configure which predictable
+                            fields you want to use based on your specific goals. These fields
+                            might include things like age, location, interests, purchase
+                            behavior, or other relevant data points that help define your
+                            audience more precisely.
                           </Typography>
 
                           <Typography
@@ -839,14 +985,12 @@ const CreateLookalikePage: React.FC = () => {
                               mb: 2,
                             }}
                           >
-                            To get started, simply click on &quot;Add More&quot;
-                            to open the full list of available fields. From
-                            there, you can select the ones that are most
-                            relevant to your campaign. The fields are usually
-                            organized into categories (such as demographics,
-                            behavior, engagement, etc.), so be sure to make
-                            selections within each category to create a
-                            well-rounded profile of your audience.
+                            To get started, simply click on &quot;Add More&quot; to open the full list
+                            of available fields. From there, you can select the ones that are
+                            most relevant to your campaign. The fields are usually organized
+                            into categories (such as demographics, behavior, engagement,
+                            etc.), so be sure to make selections within each category to
+                            create a well-rounded profile of your audience.
                           </Typography>
 
                           <Typography
@@ -854,7 +998,7 @@ const CreateLookalikePage: React.FC = () => {
                             href="#"
                             sx={{
                               fontSize: "16px",
-                              color: "primary.main",
+                              color: 'rgba(80, 82, 178, 1)',
                               textDecoration: "underline",
                               cursor: "pointer",
                               display: "inline-block",
@@ -879,27 +1023,97 @@ const CreateLookalikePage: React.FC = () => {
                       mt: 2,
                     }}
                   >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: "22.5px",
-                        marginBottom: 2,
-                        marginLeft: 1,
-                      }}
-                    >
-                      Step 2: Order your fields
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ml: 1 }}>
+                      {/* Шаг 1 всегда чёрный */}
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontFamily: 'Nunito Sans',
+                          fontWeight: 500,
+                          fontSize: '16px',
+                          lineHeight: '22.5px',
+                          color: "text.disabled",
+                        }}
+                      >
+                        Step 1
+                      </Typography>
+
+                      {/* Стрелка побольше */}
+                      <ArrowRightAltIcon
+                        sx={{
+                          fontSize: '28px',
+                          color: "text.disabled",
+                          mx: 1,
+                          verticalAlign: 'middle',
+                        }}
+                      />
+
+                      {/* Шаг 2 серый, если не выбран*/}
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontFamily: 'Nunito Sans',
+                          fontWeight: 500,
+                          fontSize: '16px',
+                          lineHeight: '22.5px',
+                        }}
+                      >
+                        Step 2
+                      </Typography>
+                    </Box>
+                    <Grid container spacing={2} sx={{ mb: 2 }}>
+                      {/* Заголовок + описание */}
+                      <Grid item xs={7}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontWeight: 500,
+                            fontSize: '16px',
+                            lineHeight: '22.5px',
+                            mb: 1,
+                            ml: 1,
+                          }}
+                        >
+                          Select and order predictable fields
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontSize: '14px',
+                            color: 'text.secondary',
+                            mb: 1,
+                            ml: 1,
+                          }}
+                        >
+                          You can configure the predictable fields that will be used for audience building yourself.
+                        </Typography>
+                      </Grid>
+                      {/* Правый заголовок */}
+                      <Grid item xs={5}>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontWeight: 500,
+                            fontSize: '16px',
+                            lineHeight: '22.5px',
+                            mb: 1,
+                            ml: 1,
+                          }}
+                        >
+                          How to order your fields?
+                        </Typography>
+                      </Grid>
+                    </Grid>
                     <Grid container spacing={2}>
                       {/* Левая колонка: все пять таблиц */}
                       <Grid item xs={12} md={6} direction="column" spacing={1}>
                         {/* Real Estate */}
-                        <Grid item>
+                        <Grid item xs={12} md={6}>
                           <DragAndDropTable
-                            fields={fields}
-                            onOrderChange={(newOrder) => setFields(newOrder)}
+                            fields={dndFields}
+                            onOrderChange={(newOrder) => setDndFields(newOrder)}
                           />
                         </Grid>
                       </Grid>
@@ -917,17 +1131,14 @@ const CreateLookalikePage: React.FC = () => {
                             paragraph
                             sx={{
                               fontSize: "16px",
-                              color: "text.secondary", // делает текст бледнее
+                              color: "text.secondary",
                               mb: 2,
                             }}
                           >
-                            Once you&apos;ve selected the fields you want to
-                            work with, you&apos;ll move on to the next step,
-                            where you can sort, prioritize, or filter these
-                            fields further. This step allows you to fine-tune
-                            your audience structure, ensuring that you&apos;re
-                            targeting the right group of people based on the
-                            criteria that matter most to you.
+                            Once you&apos;ve selected the fields you want to work with, you&apos;ll move on to the next
+                            step, where you can sort, prioritize, or filter these fields further. This step
+                            allows you to fine-tune your audience structure, ensuring that you&apos;re targeting
+                            the right group of people based on the criteria that matter most to you.
                           </Typography>
 
                           <Typography
@@ -950,7 +1161,7 @@ const CreateLookalikePage: React.FC = () => {
                             href="#"
                             sx={{
                               fontSize: "16px",
-                              color: "primary.main",
+                              color: 'rgba(80, 82, 178, 1)',
                               textDecoration: "underline",
                               cursor: "pointer",
                               display: "inline-block",
@@ -1071,21 +1282,7 @@ const CreateLookalikePage: React.FC = () => {
                     variant="outlined"
                     onClick={handleNextStep}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "0.5rem 1rem",
-                        gap: 1,
-                      }}
-                    >
-                      <Image
-                        src={"/stars-icon.svg"}
-                        alt="Stars icon"
-                        width={15}
-                        height={15}
-                      />
+                    <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", padding: "0.5rem 1rem", gap: 1 }}>
                       <Typography fontSize={"0.8rem"}>Continue</Typography>
                     </Box>
                   </Button>
@@ -1146,21 +1343,7 @@ const CreateLookalikePage: React.FC = () => {
                     variant="outlined"
                     onClick={handleNextStep}
                   >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        flexDirection: "row",
-                        alignItems: "center",
-                        padding: "0.5rem 1rem",
-                        gap: 1,
-                      }}
-                    >
-                      <Image
-                        src={"/stars-icon.svg"}
-                        alt="Stars icon"
-                        width={15}
-                        height={15}
-                      />
+                    <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", padding: "0.5rem 1rem", gap: 1 }}>
                       <Typography fontSize={"0.8rem"}>Continue</Typography>
                     </Box>
                   </Button>
