@@ -6,6 +6,7 @@ import functools
 import json
 import boto3
 import random
+from datetime import datetime
 from sqlalchemy import update
 from aio_pika import IncomingMessage, Message
 from sqlalchemy.exc import IntegrityError
@@ -100,23 +101,25 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
             #     "validation_params": {
             #     "personal_email": [
             #         {"mx": {"processed": false}},
-            #         {"recency": {"days": 30, "processed": false}}
+            #         {"recency": {"days": 90, "processed": false}}
             #     ],
             #     "business_email": [
             #         {"delivery": {"processed": false}},
-            #         {"recency": {"days": 60, "processed": false}}
+            #         {"recency": {"days": 90, "processed": false}}
             #     ],
             #     "phone": [
             #         {"dnc_filter": {"processed": false}}
             #     ],
-            #     "cas": [
+            #     "postal_cas": [
+            #     ],
+            #     "linked_in": [
             #     ]
             #     }
             # }
 
 
             print("validation_params", validation_params)
-            i = 0
+            i = 1
 
             for value in priority_values:
                 validation, validation_type = value.split('-')[0], value.split('-')[1]
@@ -136,17 +139,31 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                     recency_days = param["recency"].get("days")
                                     break
                                     
-                        enrichment_users = (
-                            db_session.query(
+                        enrichment_users = [
+                            {
+                                "audience_smart_person_id": user.audience_smart_person_id,
+                                column_name: (
+                                    getattr(user, column_name).isoformat() 
+                                    if isinstance(getattr(user, column_name), datetime) 
+                                    else getattr(user, column_name)
+                                ),
+                            }
+                            for user in db_session.query(
                                 AudienceSmartPerson.id.label("audience_smart_person_id"),
                                 getattr(EnrichmentUserContact, column_name),
                             )
-                            .join(EnrichmentUserContact, EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id)
-                            .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id, AudienceSmartPerson.is_validation_processed == True)
+                            .join(
+                                EnrichmentUserContact,
+                                EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id,
+                            )
+                            .filter(
+                                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                                AudienceSmartPerson.is_validation_processed == True,
+                            )
                             .all()
-                        )
+                        ]
 
-                        print("len", len(enrichment_users))
+                        print("count person which will processed validation", len(enrichment_users))
 
                         if not enrichment_users:
                             logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}.")
@@ -155,15 +172,27 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
 
                         is_last_validation = i == len(priority_values) - 1
 
-                        for j in range(0, len(enrichment_users), 1000):
-                            batch = enrichment_users[j:j+1000]
+                        logging.info(f"is_last_validation {is_last_validation}")
+
+                        for j in range(0, len(enrichment_users), 100):
+                            batch = enrichment_users[j:j+100]
+                            serialized_batch = [
+                                {
+                                    "audience_smart_person_id": str(user["audience_smart_person_id"]),
+                                    column_name: user[column_name]
+                                }
+                                for user in batch
+                            ]
+
+                            is_last_iteration_in_last_validation = (i == len(priority_values) - 1) and (j + 100 >= len(enrichment_users))
+
                             message_body = {
                                 'aud_smart_id': str(aud_smart_id),
                                 'user_id': user_id,
                                 'recency_days': recency_days,
-                                'batch': batch,
-                                "validation_type": validation_type,
-                                "is_last_validation": is_last_validation
+                                'batch': serialized_batch,
+                                'validation_type': column_name,
+                                'is_last_iteration_in_last_validation': is_last_iteration_in_last_validation
                             }
                             await publish_rabbitmq_message(
                                 connection=connection,
@@ -171,7 +200,9 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                 message_body=message_body
                             )
 
-                        await wait_for_ping(connection, aud_smart_id, validation_type)
+                        await wait_for_ping(connection, aud_smart_id, column_name)
+
+                        logging.info(f"ping came {aud_smart_id}.")
                         i += 1
 
 

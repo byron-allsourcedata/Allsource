@@ -10,7 +10,7 @@ from datetime import datetime
 from sqlalchemy import update
 from aio_pika import IncomingMessage, Message
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
@@ -20,6 +20,7 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.enrichment_users import EnrichmentUser
+from models.enrichment_users_contacts import EnrichmentUserContact
 from models.emails_enrichment import EmailEnrichment
 from models.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -59,13 +60,13 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
         batch = message_body.get("batch")
         recency_days = message_body.get("recency_days")
         validation_type = message_body.get("validation_type")
-        is_last_validation = message_body.get("is_last_validation", False) 
+        is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation", False) 
 
         try:
 
             validation_rules = {
-                "personal_email_validation_status": lambda value: value.startswith("Valid"),
-                "business_email_validation_status": lambda value: value.startswith("Valid"),
+                "personal_email_validation_status": lambda value: value.startswith("Valid") if value else False,
+                "business_email_validation_status": lambda value: value.startswith("Valid") if value else False,
                 "personal_email_last_seen": lambda value: value <= recency_days if value else False,
                 "business_email_last_seen_date": lambda value: value <= recency_days if value else False,
                 "mobile_phone_dnc": lambda value: value is False,
@@ -100,11 +101,48 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                                     rule[validation_type]["processed"] = True
                         person.validations = json.dumps(validations)
 
-            if is_last_validation:
+            if is_last_iteration_in_last_validation:
+                print("is last validation")
+
+                # with db_session.begin():
+                #==========================
+                subquery = select(EnrichmentUserContact.enrichment_user_id).filter(
+                    EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id
+                )
+
                 db_session.query(AudienceSmartPerson).filter(
                     AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True
-                ).update({"is_valid": True})
+                    AudienceSmartPerson.is_validation_processed == True,
+                    AudienceSmartPerson.enrichment_user_id.in_(subquery)
+                ).update({"is_valid": True}, synchronize_session=False)
+
+                total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
+                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                    AudienceSmartPerson.is_validation_processed == True,
+                    AudienceSmartPerson.enrichment_user_id.in_(subquery)
+                ).scalar()
+
+                db_session.commit()
+                #==========================
+
+                db_session.query(AudienceSmart).filter(
+                    AudienceSmart.id == aud_smart_id
+                ).update(
+                    {
+                        "validated_records": total_validated,
+                        "status": "ready",
+                    }
+                )
+
+                await send_sse(
+                    connection,
+                    user_id,
+                    {
+                        "smart_audience_id": aud_smart_id,
+                        "total_validated": total_validated,
+                    }
+                )
+                logging.info(f"sent sse with total count")
 
             db_session.commit()
 
@@ -117,18 +155,11 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                     "status": "validation_complete"
                 }
             )
+
+            logging.info(f"send ping {aud_smart_id}.")
             
 
 
-            # await send_sse(
-            #     connection,
-            #     user_id,
-            #     {
-            #         "smart_audience_id": aud_smart_id,
-            #         "total_validated": len(valid_records),
-            #     }
-            # )
-            # logging.info(f"sent sse with total count")
                        
 
             await message.ack()
