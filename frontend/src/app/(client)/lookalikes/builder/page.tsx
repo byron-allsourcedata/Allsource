@@ -977,11 +977,10 @@ const CreateLookalikePage: React.FC = () => {
                         <Box sx={{ p: 0, bgcolor: "transparent" }}>
                           <Typography
                             variant="body2"
-                            paragraph
                             sx={{
-                              fontSize: "16px",
+                              fontSize: "14px",
                               color: "text.secondary",
-                              mb: 2,
+                              mb: 2
                             }}
                           >
                             When building an audience, it&apos;s important to work with the right
@@ -994,11 +993,10 @@ const CreateLookalikePage: React.FC = () => {
 
                           <Typography
                             variant="body2"
-                            paragraph
                             sx={{
-                              fontSize: "16px",
+                              fontSize: "14px",
                               color: "text.secondary",
-                              mb: 2,
+                              mb: 2
                             }}
                           >
                             To get started, simply click on &quot;Add More&quot; to open the full list
@@ -1013,7 +1011,7 @@ const CreateLookalikePage: React.FC = () => {
                             component="a"
                             href="#"
                             sx={{
-                              fontSize: "16px",
+                              fontSize: "14px",
                               color: 'rgba(80, 82, 178, 1)',
                               textDecoration: "underline",
                               cursor: "pointer",
@@ -1144,11 +1142,10 @@ const CreateLookalikePage: React.FC = () => {
                         <Box sx={{ p: 0, bgcolor: "transparent" }}>
                           <Typography
                             variant="body2"
-                            paragraph
                             sx={{
-                              fontSize: "16px",
+                              fontSize: "14px",
                               color: "text.secondary",
-                              mb: 2,
+                              mb: 2
                             }}
                           >
                             Once you&apos;ve selected the fields you want to work with, you&apos;ll move on to the next
@@ -1159,11 +1156,10 @@ const CreateLookalikePage: React.FC = () => {
 
                           <Typography
                             variant="body2"
-                            paragraph
                             sx={{
-                              fontSize: "16px",
+                              fontSize: "14px",
                               color: "text.secondary",
-                              mb: 2,
+                              mb: 2
                             }}
                           >
                             By customizing these fields and organizing them
@@ -1176,7 +1172,7 @@ const CreateLookalikePage: React.FC = () => {
                             component="a"
                             href="#"
                             sx={{
-                              fontSize: "16px",
+                              fontSize: "14px",
                               color: 'rgba(80, 82, 178, 1)',
                               textDecoration: "underline",
                               cursor: "pointer",
