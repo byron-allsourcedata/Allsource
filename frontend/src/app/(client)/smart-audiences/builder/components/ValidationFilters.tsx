@@ -1191,12 +1191,16 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 }
                                 sx={{
                                   padding: 0,
+                                  pb: index === 2 ? 1 : 0,
                                   "&.Mui-checked": {
                                     color: "rgba(80, 82, 178, 1)",
                                   },
                                 }}
                               />
-                              <Typography className="form-input">
+                              <Typography
+                                className="form-input"
+                                sx={{ pb: index === 2 ? 1 : 0 }}
+                              >
                                 {option}
                               </Typography>
                               {isRecommended && (
