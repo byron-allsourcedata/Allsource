@@ -1,13 +1,13 @@
 import logging
+import statistics
 import os
 import sys
 import asyncio
 import functools
 import json
 import boto3
-from sqlalchemy import update
+from sqlalchemy import update, select, func, create_engine
 from aio_pika import IncomingMessage
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
@@ -15,6 +15,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_lookalikes import AudienceLookalikes
+from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from models.audience_lookalikes_persons import AudienceLookALikePerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
@@ -74,6 +75,30 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             .returning(AudienceLookalikes.processed_size, AudienceLookalikes.size)
         ).fetchone()
                     
+        if processed_size == total_records:
+            db_session.execute(
+                update(AudienceLookalikes)
+                .where(AudienceLookalikes.id == lookalike_id)
+                .values(similarity_score="complete")
+            )
+            scores_query = select(EnrichmentLookalikeScore.score).where(
+                EnrichmentLookalikeScore.lookalike_id == lookalike_id
+            )
+            scores_result = db_session.execute(scores_query).scalars().all()
+
+            if scores_result:
+                score_stats = {
+                    "min": min(scores_result),
+                    "max": max(scores_result),
+                    "average": sum(scores_result) / len(scores_result),
+                    "median": statistics.median(scores_result),
+                }
+                logging.info(f"Stats for lookalike_id {lookalike_id}: {score_stats}")
+            else:
+                logging.warning(f"No scores found for lookalike_id {lookalike_id}")
+
+            logging.info(f"Source_id {lookalike_id} processing complete.")
+            
         db_session.commit()
             
         await send_sse(connection, user_id, {"lookalike_id": lookalike_id, "total": total_records, "processed": processed_size})

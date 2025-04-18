@@ -14,18 +14,28 @@ from dotenv import load_dotenv
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from schemas.similar_audiences import NormalizationConfig
+from decimal import Decimal
+from schemas.similar_audiences import NormalizationConfig, AudienceData
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService, \
     map_letter_to_number, map_credit_rating, map_net_worth_code
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from services.similar_audiences.similar_audience_scores import SimilarAudiencesScoresService
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
+from services.similar_audiences import SimilarAudienceService
 from models.enrichment_users import EnrichmentUser
 from sqlalchemy import create_engine
+from models.audience_sources import AudienceSource
 from models.audience_lookalikes_persons import AudienceLookalikes
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
 from persistence.enrichment_models import EnrichmentModelsPersistence
+from typing import Dict, List, Tuple
+from decimal import Decimal
+from datetime import datetime
+from sqlalchemy import cast, String
+from sqlalchemy.orm import Session
+
 
 
 load_dotenv()
@@ -71,8 +81,151 @@ def get_max_size(lookalike_size):
         
     return size
 
+def get_enrichment_user_column_map() -> dict[str, EnrichmentUser]:
+    return {
+        "PersonGender": EnrichmentUser.gender.label("PersonGender"),
+        "EstimatedHouseholdIncomeCode": EnrichmentUser.estimated_household_income_code.label("EstimatedHouseholdIncomeCode"),
+        "EstimatedCurrentHomeValueCode": EnrichmentUser.estimated_current_home_value_code.label("EstimatedCurrentHomeValueCode"),
+        "HomeownerStatus": EnrichmentUser.homeowner_status.label("HomeownerStatus"),
+        "HasChildren": EnrichmentUser.has_children.label("HasChildren"),
+        "HasCreditCard": EnrichmentUser.has_credit_card.label("HasCreditCard"),
+        "NumberOfChildren": EnrichmentUser.number_of_children.label("NumberOfChildren"),
+        "CreditRating": EnrichmentUser.credit_rating.label("CreditRating"),
+        "NetWorthCode": EnrichmentUser.net_worth_code.label("NetWorthCode"),
+        "ZipCode5": cast(EnrichmentUser.zip_code5, String).label("ZipCode5"),
+        "LengthOfResidenceYears": EnrichmentUser.length_of_residence_years.label("LengthOfResidenceYears"),
+        "MaritalStatus": EnrichmentUser.marital_status.label("MaritalStatus"),
+        "OccupationGroupCode": EnrichmentUser.occupation_group_code.label("OccupationGroupCode"),
+        "IsBookReader": EnrichmentUser.is_book_reader.label("IsBookReader"),
+        "IsOnlinePurchaser": EnrichmentUser.is_online_purchaser.label("IsOnlinePurchaser"),
+        "IsTraveler": EnrichmentUser.is_traveler.label("IsTraveler"),
+    }
 
-async def aud_sources_reader(message: IncomingMessage, db_session: Session, connection, similar_audience_service: SimilarAudiencesScoresService):
+def build_dynamic_query_and_config(
+    db_session: Session,
+    sig: Dict[str, float]
+) -> Tuple:
+
+    column_map = get_enrichment_user_column_map()
+    dynamic_cols = [column_map[name] for name in sig if name in column_map]
+    select_cols = [EnrichmentUser.id] + dynamic_cols
+
+    query = db_session.query(*select_cols).select_from(EnrichmentUser)
+
+    numerical = {"NumberOfChildren", "LengthOfResidenceYears"}
+    unordered = {"IsOnlinePurchaser", "IsTraveler", "PersonGender", "HasChildren", "HomeownerStatus", "MaritalStatus", "OccupationGroupCode", "HasCreditCard", "PersonExactAge"}
+    ordered = {
+        "EstimatedHouseholdIncomeCode": map_letter_to_number,
+        "EstimatedCurrentHomeValueCode": map_letter_to_number,
+        "CreditRating": map_credit_rating,
+        "NetWorthCode": map_net_worth_code,
+    }
+    config = NormalizationConfig(
+        numerical_features=[n for n in sig if n in numerical],
+        unordered_features=[n for n in sig if n in unordered],
+        ordered_features={n: ordered[n] for n in sig if n in ordered}
+    )
+    return query, config
+
+
+def fetch_user_profiles(
+    db_session: Session,
+    audience_lookalike: AudienceLookalikes
+) -> List[AudienceData]:
+    sig_fields = audience_lookalike.significant_fields or {}
+        
+    column_map = {
+        "EmailAddress": AudienceSourcesMatchedPerson.email.label("EmailAddress"),
+        "customer_value": (AudienceSourcesMatchedPerson.value_score.label("customer_value")),
+        **get_enrichment_user_column_map()
+    }
+    select_cols = [column_map["EmailAddress"]]
+    for fld in sig_fields:
+        if fld in column_map:
+            select_cols.append(column_map[fld])
+    select_cols.append(column_map["customer_value"])
+
+    rows = (
+        db_session.query(*select_cols)
+        .select_from(AudienceSource)
+        .join(AudienceSourcesMatchedPerson, AudienceSourcesMatchedPerson.source_id == AudienceSource.id)
+        .join(EnrichmentUser, EnrichmentUser.id == AudienceSourcesMatchedPerson.enrichment_user_id)
+        .filter(AudienceSource.id == audience_lookalike.source_uuid).all()
+    )
+    profiles: List[AudienceData] = []
+    for row in rows:
+        data_kwargs = {}
+        for label, value in row._mapping.items():
+            if label == "customer_value":
+                data_kwargs[label] = Decimal(str(value))
+            else:
+                data_kwargs[label] = str(value)
+
+        profiles.append(AudienceData(**data_kwargs))
+        
+    return profiles
+
+
+def train_and_save_model(
+    lookalike_id: int,
+    user_profiles: List[AudienceData],
+    config: NormalizationConfig,
+    similar_audiences_scores_service: SimilarAudiencesScoresService,
+    similar_audience_service: SimilarAudienceService
+):
+    dict_enrichment = [
+        {k: str(v) if v is not None else "None" for k, v in profile.__dict__.items()}
+        for profile in user_profiles
+    ]
+    model = similar_audience_service.get_trained_model(dict_enrichment, config)
+    similar_audiences_scores_service.save_enrichment_model(
+        lookalike_id=lookalike_id,
+        model=model
+    )
+    return model
+
+
+def calculate_and_store_scores(
+    model,
+    lookalike_id: int,
+    query,
+    similar_audiences_scores_service: SimilarAudiencesScoresService,
+    config
+):
+    similar_audiences_scores_service.calculate_scores(
+        model=model,
+        lookalike_id=lookalike_id,
+        query=query,
+        user_id_key="id",
+        config=config
+    )
+
+def process_lookalike_pipeline(
+    db_session: Session,
+    audience_lookalike: AudienceLookalikes,
+    similar_audiences_scores_service: SimilarAudiencesScoresService,
+    similar_audience_service: SimilarAudienceService
+):
+    sig = audience_lookalike.significant_fields or {}
+    query, config = build_dynamic_query_and_config(db_session, sig)
+    profiles = fetch_user_profiles(db_session, audience_lookalike)
+    model = train_and_save_model(
+        lookalike_id=audience_lookalike.id,
+        user_profiles=profiles,
+        config=config,
+        similar_audiences_scores_service=similar_audiences_scores_service,
+        similar_audience_service=similar_audience_service
+    )
+
+    calculate_and_store_scores(
+        model=model,
+        lookalike_id=audience_lookalike.id,
+        query=query,
+        similar_audiences_scores_service=similar_audiences_scores_service,
+        config=config
+    )
+
+async def aud_sources_reader(message: IncomingMessage, db_session: Session, connection, similar_audiences_scores_service: SimilarAudiencesScoresService, similar_audience_service: SimilarAudienceService):
     try:
         message_body = json.loads(message.body)
         lookalike_id = message_body.get('lookalike_id')
@@ -84,47 +237,8 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
             return
         
         total_rows = get_max_size(audience_lookalike.lookalike_size)
-        processed_rows = 0
-        query = db_session.query(
-            EnrichmentUser.id,
-            EnrichmentUser.age.label("age"),
-            EnrichmentUser.gender.label("PersonGender"),
-            EnrichmentUser.estimated_household_income_code.label("EstimatedHouseholdIncomeCode"),
-            EnrichmentUser.estimated_current_home_value_code.label("EstimatedCurrentHomeValueCode"),
-            EnrichmentUser.homeowner_status.label("HomeownerStatus"),
-            EnrichmentUser.has_children.label("HasChildren"),
-            EnrichmentUser.number_of_children.label("NumberOfChildren"),
-            EnrichmentUser.credit_rating.label("CreditRating"),
-            EnrichmentUser.net_worth_code.label("NetWorthCode"),
-            cast(EnrichmentUser.zip_code5, String).label("ZipCode5"),
-            EnrichmentUser.lat.label("Latitude"),
-            EnrichmentUser.lon.label("Longitude"),
-            EnrichmentUser.has_credit_card.label("HasCreditCard"),
-            EnrichmentUser.length_of_residence_years.label("LengthOfResidenceYears"),
-            EnrichmentUser.marital_status.label("MaritalStatus"),
-            EnrichmentUser.occupation_group_code.label("OccupationGroupCode"),
-            EnrichmentUser.is_book_reader.label("IsBookReader"),
-            EnrichmentUser.is_online_purchaser.label("IsOnlinePurchaser"),
-            EnrichmentUser.state_abbr.label("StateAbbr"),
-            EnrichmentUser.is_traveler.label("IsTraveler"),
-        ).select_from(EnrichmentUser)
+        process_lookalike_pipeline(db_session=db_session, audience_lookalike=audience_lookalike, similar_audiences_scores_service=similar_audiences_scores_service, similar_audience_service=similar_audience_service)
         
-        config = NormalizationConfig(
-            numerical_features=[
-                'NumberOfChildren', 'LengthOfResidenceYears'
-            ],
-            unordered_features=[
-                'PersonGender', 'HasChildren', 'HomeownerStatus', 'MaritalStatus'
-            ],
-            ordered_features={
-                'EstimatedHouseholdIncomeCode': map_letter_to_number,
-                'EstimatedCurrentHomeValueCode': map_letter_to_number,
-                'CreditRating': map_credit_rating,
-                'NetWorthCode': map_net_worth_code
-            }
-        )
-
-        similar_audience_service.calculate_scores(lookalike_id=lookalike_id, query=query, user_id_key='id', config=config)
         enrichment_lookalike_scores = (
             db_session.query(EnrichmentLookalikeScore.score, EnrichmentLookalikeScore.enrichment_user_id)
             .filter(EnrichmentLookalikeScore.lookalike_id == lookalike_id)
@@ -152,7 +266,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
         audience_lookalike.similarity_score = similarity_score
         db_session.add(audience_lookalike)
         db_session.flush()
-        await send_sse(connection, audience_lookalike.user_id, {"lookalike_id": str(audience_lookalike.id), "total": total_rows, "processed": processed_rows})
+        await send_sse(connection, audience_lookalike.user_id, {"lookalike_id": str(audience_lookalike.id), "total": total_rows, "processed": 0})
         
         if not enrichment_lookalike_scores:
             await message.ack()
@@ -202,14 +316,15 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
-        s3_session = aioboto3.Session()
-        similar_audience_data_normalization = AudienceDataNormalizationService()
-        similar_audience_service = SimilarAudiencesScoresService(normalization=similar_audience_data_normalization, db=db_session, models = EnrichmentModelsPersistence(db=db_session), scores = EnrichmentLookalikeScoresPersistence(db=db_session))
+        audience_data_normalization_service = AudienceDataNormalizationService()
+        
+        similar_audience_service = SimilarAudienceService(audience_data_normalization_service=audience_data_normalization_service)
+        similar_audiences_scores_service = SimilarAudiencesScoresService(normalization_service=audience_data_normalization_service, db=db_session, enrichment_models_persistence = EnrichmentModelsPersistence(db=db_session), enrichment_lookalike_scores_persistence = EnrichmentLookalikeScoresPersistence(db=db_session))
         reader_queue = await channel.declare_queue(
             name=AUDIENCE_LOOKALIKES_READER,
             durable=True,
         )
-        await reader_queue.consume(functools.partial(aud_sources_reader, db_session=db_session, connection=connection, similar_audience_service=similar_audience_service))
+        await reader_queue.consume(functools.partial(aud_sources_reader, db_session=db_session, connection=connection, similar_audience_service=similar_audience_service, similar_audiences_scores_service=similar_audiences_scores_service))
 
         await asyncio.Future()
 

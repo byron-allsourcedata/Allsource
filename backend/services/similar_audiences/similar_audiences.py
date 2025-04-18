@@ -14,8 +14,8 @@ from .audience_data_normalization import AudienceDataNormalizationService, Audie
 
 
 class SimilarAudienceService:
-    def __init__(self, normalizer: AudienceDataNormalizationService):
-        self.normalizer = normalizer
+    def __init__(self, audience_data_normalization_service: AudienceDataNormalizationService):
+        self.audience_data_normalization_service = audience_data_normalization_service
 
 
     @deprecated("Use get_trained_model instead")
@@ -27,7 +27,7 @@ class SimilarAudienceService:
 
     def get_trained_model(self, audience_data: List[dict], config: NormalizationConfig) -> CatBoostRegressor:
         df = pd.DataFrame(audience_data)
-        data, customer_value = self.normalizer.normalize_dataframe(df, config)
+        data, customer_value = self.audience_data_normalization_service.normalize_dataframe(df, config)
         model = self.train_catboost(data, customer_value)
         return model
 
@@ -54,7 +54,6 @@ class SimilarAudienceService:
         cat_features = x.select_dtypes(include=['object', 'category']).columns.tolist()
 
         x_train, x_test, y_train, y_test = train_test_split(x, y)
-
         model = CatBoostRegressor(
             iterations=100,
             learning_rate=0.1,
@@ -87,7 +86,7 @@ class SimilarAudienceService:
         return AudienceFeatureImportance(**feature_importance_dict)
 
 
-def get_similar_audiences_service(normalizer: AudienceDataNormalizationServiceDep):
-    return SimilarAudienceService(normalizer=normalizer)
+def get_similar_audiences_service(audience_data_normalization_service: AudienceDataNormalizationServiceDep):
+    return SimilarAudienceService(audience_data_normalization_service=audience_data_normalization_service)
 
 SimilarAudienceServiceDep = Annotated[AudienceDataNormalizationService, Depends(get_similar_audiences_service)]
