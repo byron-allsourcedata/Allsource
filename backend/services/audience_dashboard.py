@@ -97,17 +97,23 @@ class DashboardAudienceService:
 
         for data, data_type, fields in datasets:
             for row in data:
-                if hasattr(row, '_asdict'):
+                # Если row уже словарь, используем его напрямую
+                if isinstance(row, dict):
+                    row_dict = row
+                elif hasattr(row, '_asdict'):
                     row_dict = row._asdict()
                 else:
                     row_dict = {field: getattr(row, field, None) for field in fields}
 
+                # Фильтруем только нужные поля
                 filtered_data = {field: row_dict.get(field) for field in fields}
                 filtered_data['type'] = data_type
                 combined.append(filtered_data)
 
+        # Сортируем по 'created_at' в порядке убывания
         sorted_combined = sorted(combined, key=lambda x: x.get('created_at'), reverse=True)
         return sorted_combined[:limit]
+
     
     def merge_data_with_chain(self, data, chains):
         result = []
@@ -135,14 +141,13 @@ class DashboardAudienceService:
             limit=self.LIMIT
         )
         smart_audiences, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
-        
         last_lookalikes = self.merge_and_sort(
             datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size'])],
             limit=self.LIMIT
         )
         
         last_audience_smart = self.merge_and_sort(
-            datasets=[(smart_audiences, 'smart_audience', ['id', 'audience_name', 'created_at', 'use_case', 'active_segment', 'include_names', 'exclude_names'])],
+            datasets=[(smart_audiences, 'smart_audience', ['id', 'audience_name', 'created_at', 'use_case', 'active_segment', 'include', 'exclude'])],
             limit=self.LIMIT
         )
         
@@ -164,13 +169,13 @@ class DashboardAudienceService:
                            
                 'lookalikes': self.merge_and_sort(
                                     datasets=[(lookalikes, 'lookalikes', ['lookalike_size', 'lookalike_name', 'created_at', 'size']), 
-                                            ([smart_audience for smart_audience in smart_audiences if smart_audience.lookalike_name], 'smart_audience', ['lookalike_name', 'lookalike_size', 'size', 'audience_name', 'use_case', 'active_segment', 'created_at']),],
+                                            ([smart_audience for smart_audience in smart_audiences if smart_audience.get('lookalike_name')], 'smart_audience', ['lookalike_name', 'lookalike_size', 'size', 'audience_name', 'use_case', 'active_segment', 'created_at']),],
                                     limit=self.LIMIT
                                 ),
                 
                 'smart_audiences': self.merge_and_sort(
                                         datasets=[(data_syncs, 'data_syncs', ['audience_name', 'created_at', 'status', 'synced_contacts', 'destination']), 
-                                                ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['audience_name', 'use_case', 'active_segment', 'created_at', 'include_names', 'exclude_names']),],
+                                                ([smart_audience for smart_audience in smart_audiences], 'smart_audience', ['audience_name', 'use_case', 'active_segment', 'created_at', 'include', 'exclude']),],
                                         limit=self.LIMIT
                                     ),
                 

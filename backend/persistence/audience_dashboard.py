@@ -1,6 +1,6 @@
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
-from sqlalchemy.sql import func, select, union_all, literal_column, extract, case
+from sqlalchemy.sql import func, select, union_all, literal_column, extract, case, literal
 from sqlalchemy.orm import aliased
 from enums import AudienceSmartStatuses
 from models.audience_lookalikes import AudienceLookalikes
@@ -207,20 +207,39 @@ class DashboardAudiencePersistence:
         include_subquery = (
             self.db.query(
                 AudienceSmartsDataSources.smart_audience_id.label('smart_audience_id'),
-                func.string_agg(AudienceSource.name, ', ').label('include_names')
+                literal('Source').label('type'),
+                AudienceSource.name.label('name')
             )
             .join(AudienceSource, AudienceSmartsDataSources.source_id == AudienceSource.id)
-            .group_by(AudienceSmartsDataSources.smart_audience_id)
-        ).subquery()
+            .filter(AudienceSmartsDataSources.source_id.isnot(None))
+        )
 
         exclude_subquery = (
             self.db.query(
                 AudienceSmartsDataSources.smart_audience_id.label('smart_audience_id'),
-                func.string_agg(AudienceLookalikes.name, ', ').label('exclude_names')
+                literal('Lookalike').label('type'),
+                AudienceLookalikes.name.label('name')
             )
             .join(AudienceLookalikes, AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id)
-            .group_by(AudienceSmartsDataSources.smart_audience_id)
-        ).subquery()
+            .filter(AudienceSmartsDataSources.lookalike_id.isnot(None))
+        )
+        
+        combined_subquery = include_subquery.union_all(exclude_subquery).subquery()
+
+        aggregated_subquery = (
+            self.db.query(
+                combined_subquery.c.smart_audience_id,
+                func.json_agg(
+                    func.json_build_object(
+                        'type', combined_subquery.c.type,
+                        'name', combined_subquery.c.name
+                    )
+                ).label('audience_data')
+            )
+            .group_by(combined_subquery.c.smart_audience_id)
+            .subquery()
+        )
+
         
         lookalike_subquery = (
             self.db.query(
@@ -241,21 +260,41 @@ class DashboardAudiencePersistence:
                 AudienceSmart.name.label('audience_name'),
                 AudienceSmartsUseCase.name.label('use_case'),
                 AudienceSmart.active_segment_records.label('active_segment'),
-                include_subquery.c.include_names,
-                exclude_subquery.c.exclude_names,
+                aggregated_subquery.c.audience_data,
                 lookalike_subquery.c.lookalike_name,
                 lookalike_subquery.c.lookalike_size,
                 lookalike_subquery.c.size
             )
             .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)
-            .outerjoin(include_subquery, include_subquery.c.smart_audience_id == AudienceSmart.id)
-            .outerjoin(exclude_subquery, exclude_subquery.c.smart_audience_id == AudienceSmart.id)
+            .outerjoin(aggregated_subquery, aggregated_subquery.c.smart_audience_id == AudienceSmart.id)
             .outerjoin(lookalike_subquery, lookalike_subquery.c.smart_audience_id == AudienceSmart.id)
             .filter(AudienceSmart.user_id == user_id)
             .order_by(AudienceSmart.created_at.desc())
             .limit(limit)
             .all()
         )
+        processed_audience_smart = []
+        for audience in audience_smart:
+            include = []
+            exclude = []
+            if audience.audience_data:
+                for item in audience.audience_data:
+                    if item['type'] == 'Source':
+                        include.append(item)
+                    elif item['type'] == 'Lookalike':
+                        exclude.append(item)
+            processed_audience_smart.append({
+                'id': audience.id,
+                'created_at': audience.created_at,
+                'lookalike_name': audience.lookalike_name,
+                'audience_name': audience.audience_name,
+                'lookalike_size': audience.lookalike_size,
+                'size': audience.size,
+                'use_case': audience.use_case,
+                'active_segment': audience.active_segment,
+                'include': include,
+                'exclude': exclude
+            })
 
         data_syncs = self.db.query(
                         IntegrationUserSync.id.label('id'),
@@ -273,7 +312,7 @@ class DashboardAudiencePersistence:
                     )\
                     .order_by(IntegrationUserSync.last_sync_date.desc()).limit(limit).all()
                     
-        return audience_smart, data_syncs
+        return processed_audience_smart, data_syncs
 
     def get_contacts_for_pixel_contacts_by_domain_id(
             self,
