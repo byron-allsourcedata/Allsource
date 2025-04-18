@@ -179,11 +179,11 @@ const AudienceDashboard: React.FC = () => {
 
       const formatLookalikeSize = (value: string): string => {
         const map: Record<string, string> = {
-          almost_identical: "Lookalike size: 10K contacts",
-          extremely_similar: "Lookalike size: 50K contacts",
-          very_similar: "Lookalike size: 100K contacts",
-          quite_similar: "Lookalike size: 200K contacts",
-          broad: "Lookalike size: 500K contacts",
+          almost_identical: "Almost Identical 0–3%",
+          extremely_similar: "Extremely Similar 0–7%",
+          very_similar: "Very Similar 0–10%",
+          quite_similar: "Quite Similar 0–15%",
+          broad: "Broad 0–20%",
         };
 
         return map[value] ?? value;
