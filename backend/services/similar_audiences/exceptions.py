@@ -1,0 +1,2 @@
+class EqualTrainTargets(Exception):
+    pass
