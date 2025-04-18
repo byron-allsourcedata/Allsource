@@ -1567,7 +1567,7 @@ const Sources: React.FC = () => {
                                               onClick={() => {
                                                 handleClosePopover();
                                                 router.push(
-                                                  `/lookalikes/${selectedRowData?.id}/builder`
+                                                  `/lookalikes/builder?source_uuid=${selectedRowData?.id}`
                                                 );
                                               }}
                                             >
