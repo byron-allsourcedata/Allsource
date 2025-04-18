@@ -66,11 +66,11 @@ interface LookalikeTableProps {
 const audienceSize = [
   {
     label: "almost_identical",
-    text: "10K"
+    text: "10K",
   },
   {
     label: "extremely_similar",
-    text: "50K"
+    text: "50K",
   },
   {
     label: "very_similar",
@@ -203,7 +203,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
       }
       setEditingRowId(null);
       setIsEditPopoverOpen(false);
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const handleDelete = async (rowId: string) => {
@@ -461,8 +461,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                               size="small"
                               onClick={() => toggleRow(row.id)}
                               sx={{
-                                color: '#202124',
-                                marginRight: '16px',
+                                color: "#202124",
+                                marginRight: "16px",
                               }}
                             >
                               {openRowId === row.id ? (
@@ -493,7 +493,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                             handleRename(event, row.id, row.name)
                           }
                         >
-                          <EditIcon sx={{ maxHeight: "16px", fontSize: "16px" }} />
+                          <EditIcon
+                            sx={{ maxHeight: "16px", fontSize: "16px" }}
+                          />
                         </IconButton>
                       </Box>
                     )}
@@ -882,7 +884,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
 
                 {isDebug && openRowId == row.id && (
                   <>
-                    <TableRow sx={{ '& > *': { borderBottom: '1px solid #e0e0e0' } }}>
+                    <TableRow
+                      sx={{ "& > *": { borderBottom: "1px solid #e0e0e0" } }}
+                    >
                       <TableCell
                         sx={{
                           ...lookalikesStyles.table_array,
@@ -966,22 +970,34 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                       <TableCell
                         sx={{
                           ...lookalikesStyles.table_array,
+                          p: 0.25,
+                          pl: 1,
                           position: "relative",
+                          "&::after": {
+                            content: '""',
+                            display: "block",
+                            position: "absolute",
+                            top: "10px",
+                            bottom: "10px",
+                            right: 0,
+                            width: "1px",
+                            backgroundColor: "rgba(235, 235, 235, 1)",
+                          },
                         }}
-                        style={{ paddingBottom: 0, paddingTop: 0 }}
                       >
                         <Collapse
                           in={openRowId === row.id}
                           timeout="auto"
                           unmountOnExit
                         >
-                          <Box sx={{ margin: 1 }}>
+                          <Box sx={{ pl: 2, py: 1 }}>
                             <Typography className="table-data">
                               Similarity score
                             </Typography>
                           </Box>
                         </Collapse>
                       </TableCell>
+
                       <TableCell
                         sx={{
                           ...lookalikesStyles.table_array,
@@ -989,6 +1005,16 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           position: "relative",
                           pr: 0,
                           pl: 0,
+                          "&::after": {
+                            content: '""',
+                            display: "block",
+                            position: "absolute",
+                            top: "10px",
+                            bottom: "10px",
+                            right: 0,
+                            width: "1px",
+                            backgroundColor: "rgba(235, 235, 235, 1)",
+                          },
                         }}
                         colSpan={7}
                         style={{ paddingBottom: 0, paddingTop: 0 }}
