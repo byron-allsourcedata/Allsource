@@ -453,19 +453,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           </ListItemIcon>
           <ListItemText primary="Sources" />
         </ListItem>
-        <ListItem
-          onClick={() => handleNavigation("/insights")}
-          sx={
-            isActive("/insights")
-              ? { ...sidebarStyles.activeItem }
-              : { ...sidebarStyles.ListItem }
-          }
-        >
-          <ListItemIcon sx={sidebarStyles.listItemIcon}>
-            <InsightsIcon />
-          </ListItemIcon>
-          <ListItemText primary="Insights" />
-        </ListItem>
         {/* Lookalikes */}
         <ListItem
           button
@@ -480,6 +467,20 @@ const Sidebar: React.FC<SidebarProps> = ({
             <ContactsIcon />
           </ListItemIcon>
           <ListItemText primary="Lookalikes" />
+        </ListItem>
+        {/* Insights */}
+        <ListItem
+          onClick={() => handleNavigation("/insights")}
+          sx={
+            isActive("/insights")
+              ? { ...sidebarStyles.activeItem }
+              : { ...sidebarStyles.ListItem }
+          }
+        >
+          <ListItemIcon sx={sidebarStyles.listItemIcon}>
+            <InsightsIcon />
+          </ListItemIcon>
+          <ListItemText primary="Insights" />
         </ListItem>
         {/* Smart-audience */}
         <ListItem

@@ -498,15 +498,6 @@ const NavigationMenu: React.FC<NavigationProps> = ({
             <ListItemText primary="Sources" />
           </ListItem>
           <ListItem
-            onClick={() => handleNavigation("/insights")}
-            sx={isActive("/insights") ? navigationmenuStyles.activeItem : {}}
-          >
-            <ListItemIcon>
-              <InsightsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Insights" />
-          </ListItem>
-          <ListItem
             button
             onClick={() => handleNavigation("/lookalikes")}
             sx={{
@@ -520,6 +511,15 @@ const NavigationMenu: React.FC<NavigationProps> = ({
               <ContactsIcon />
             </ListItemIcon>
             <ListItemText primary="Lookalikes" />
+          </ListItem>
+          <ListItem
+            onClick={() => handleNavigation("/insights")}
+            sx={isActive("/insights") ? navigationmenuStyles.activeItem : {}}
+          >
+            <ListItemIcon>
+              <InsightsIcon />
+            </ListItemIcon>
+            <ListItemText primary="Insights" />
           </ListItem>
           <ListItem
             button
