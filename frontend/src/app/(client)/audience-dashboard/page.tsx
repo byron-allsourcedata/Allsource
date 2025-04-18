@@ -210,6 +210,16 @@ const AudienceDashboard: React.FC = () => {
               acc["Lookalike Size"] = formatLookalikeSize(value);
             } else if (key === "source_type" && typeof value === "string") {
               acc["Type"] = toNormalText(value);
+            } else if (
+              (key === "include" || key === "exclude") &&
+              Array.isArray(value)
+            ) {
+              const list = value
+                .map((item) => (item.name ? `${item.name}` : null))
+                .filter(Boolean)
+                .join(", ");
+
+              acc[formattedKey] = list;
             } else {
               acc[formattedKey] = value;
             }
@@ -308,7 +318,6 @@ const AudienceDashboard: React.FC = () => {
           }
         } else if (tabType === "smart_audience") {
           if (isMainType) {
-            // Для smart_audience на своей вкладке - все данные слева
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
                 let formattedKey = formatKey(key);
@@ -317,7 +326,25 @@ const AudienceDashboard: React.FC = () => {
                 ) {
                   formattedKey = "Name";
                 }
-                if (value !== null && value !== undefined && value !== "") {
+                if (
+                  (key === "include" || key === "exclude") &&
+                  Array.isArray(value)
+                ) {
+                  const list = value
+                    .map((item) =>
+                      item.name
+                        ? `${item.name}${item.type ? ` (${item.type})` : ""}`
+                        : null
+                    )
+                    .filter(Boolean)
+                    .join(", ");
+                  formattedKey = key === "include" ? "Included" : "Excluded";
+                  leftInfo[formattedKey] = list;
+                } else if (
+                  value !== null &&
+                  value !== undefined &&
+                  value !== ""
+                ) {
                   leftInfo[formattedKey] = value;
                 }
               }

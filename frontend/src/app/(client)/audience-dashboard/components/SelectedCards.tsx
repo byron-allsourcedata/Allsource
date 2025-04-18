@@ -30,72 +30,75 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
   const color = getStatusColor(status, tabType);
 
   const renderLabeledValue = (label: string, value: string | number) => {
-    const isInclude = label.includes("Include Names");
-    const isExclude = label.includes("Exclude Names");
+    const isInclude = label.includes("Included");
+    const isExclude = label.includes("Excluded");
+    const LabelIcon = isInclude
+      ? PlaylistAddIcon
+      : isExclude
+      ? PlaylistRemoveIcon
+      : null;
 
-    const isLookalike = Math.random() > 0.5;
+    if (typeof value === "string" && (isInclude || isExclude)) {
+      const parts = value.split(",").map((entry) => entry.trim());
 
-    const bgColor = isLookalike
-      ? "rgba(224, 176, 5, 0.2)"
-      : "rgba(80, 82, 178, 0.2)";
-    const textColor = isLookalike
-      ? "rgba(224, 176, 5, 1)"
-      : "rgba(80, 82, 178, 1)";
-    const icon = isInclude ? (
-      <PlaylistAddIcon sx={{ fontSize: 20, mr: 0.25 }} />
-    ) : isExclude ? (
-      <PlaylistRemoveIcon sx={{ fontSize: 16, mr: 0.5 }} />
-    ) : null;
-
-    return (
-      <Box key={label} flex={1} mb={1}>
-        <Typography
-          className="dashboard-card-text"
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            textWrap: "nowrap",
-          }}
-        >
-          {icon}
-          {label}
-        </Typography>
-
-        {typeof value === "string" && (isInclude || isExclude) ? (
-          <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
-            {value.split(",").map((item, index) => (
-              <Box
-                key={index}
-                sx={{
-                  backgroundColor: bgColor,
-                  color: `${textColor} !important`,
-                  px: 1,
-                  py: 0.5,
-                  borderRadius: 1,
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  maxWidth: "100%",
-                  wordBreak: "break-word",
-                }}
-              >
-                {item.trim()}
-              </Box>
-            ))}
+      return (
+        <Box key={label} mb={1}>
+          <Box display="flex" alignItems="center" mb={0.5}>
+            {LabelIcon && (
+              <LabelIcon
+                sx={{ fontSize: 20, mr: 0.5, color: "rgba(74, 74, 74, 1)" }}
+              />
+            )}
+            <Typography className="dashboard-card-text">{label}</Typography>
           </Box>
-        ) : (
-          <Typography
-            sx={{
-              fontWeight: 400,
-              fontFamily: "Roboto",
-              fontSize: "12px",
-              textWrap: "wrap",
-              maxWidth: "100%",
-              mt: 0.5,
-            }}
-          >
-            {typeof value === "number" ? value.toLocaleString() : value}
-          </Typography>
-        )}
+          <Box display="flex" flexWrap="wrap" gap={1} mt={0.5}>
+            {parts.map((part, i) => {
+              const match = part.match(/^(.*?)\s*\((.*?)\)$/);
+              const name = match?.[1] || part;
+              const type = match?.[2] || "";
+
+              const isLookalike = type.toLowerCase() === "lookalike";
+              const bgColor = isLookalike
+                ? "rgba(224, 176, 5, 0.2)"
+                : "rgba(80, 82, 178, 0.2)";
+              const textColor = isLookalike
+                ? "rgba(224, 176, 5, 1)"
+                : "rgba(80, 82, 178, 1)";
+
+              const icon = isInclude ? (
+                <PlaylistAddIcon sx={{ fontSize: 20, mr: 0.25 }} />
+              ) : isExclude ? (
+                <PlaylistRemoveIcon sx={{ fontSize: 16, mr: 0.5 }} />
+              ) : null;
+
+              return (
+                <Box
+                  key={`${name}-${i}`}
+                  sx={{
+                    px: 1,
+                    py: 0.5,
+                    backgroundColor: bgColor,
+                    color: textColor,
+                    borderRadius: 1,
+                    fontSize: 14,
+                  }}
+                >
+                  {name}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+      );
+    }
+
+    // Обычные значения
+    return (
+      <Box key={label} mb={1}>
+        <Typography className="dashboard-card-text">{label}</Typography>
+        <Typography className="dashboard-card-heading">
+          {typeof value === "number" ? value.toLocaleString() : value}
+        </Typography>
       </Box>
     );
   };
