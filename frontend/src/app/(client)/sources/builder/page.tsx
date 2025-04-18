@@ -988,6 +988,10 @@ const SourcesImport: React.FC = () => {
                             fontSize: "16px",
                             fontWeight: "600",
                             color: "rgba(32, 33, 36, 1)",
+                            maxWidth: "13.75rem",
+                            overflow: "hidden",
+                            textWrap: "wrap",
+                            textOverflow: "ellipsis",
                           }}
                         >
                           {fileName}
@@ -1713,10 +1717,9 @@ const SourcesImport: React.FC = () => {
                     value={sourceName}
                     onChange={(e) => {
                       if (e.target.value.length < 128) {
-                        setSourceName(e.target.value)
-                      }
-                      else {
-                        showErrorToast("Your name is too long!")
+                        setSourceName(e.target.value);
+                      } else {
+                        showErrorToast("Your name is too long!");
                       }
                     }}
                   />

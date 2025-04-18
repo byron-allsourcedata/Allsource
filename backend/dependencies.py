@@ -93,6 +93,7 @@ def get_db():
     finally:
         db.close()
 
+Db = Annotated[Session, Depends(get_db)]
 
 async def verify_signature(request: Request):
     logger.debug("Starting verification")
@@ -706,4 +707,4 @@ def get_audience_data_normalization():
 def get_similar_audience_service(
         audience_data_normalization_service: AudienceDataNormalizationService = Depends(get_audience_data_normalization)
 ):
-    return SimilarAudienceService(normalizer=audience_data_normalization_service)
+    return SimilarAudienceService(audience_data_normalization_service=audience_data_normalization_service)

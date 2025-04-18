@@ -31,6 +31,10 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import LookalikeContainer from "../components/LookalikeContainer";
 import { smartAudiences } from "../../smart-audiences/smartAudiences";
 import { lookalikesStyles } from "../components/lookalikeStyles";
+import FeatureImportanceTable, {
+  FeatureObject,
+} from "../components/FeatureImportanceTable";
+import DragAndDropTable, { Field } from "../components/DragAndDropTable";
 
 interface TableData {
   name: string;
@@ -58,6 +62,7 @@ interface LookalikeData {
 }
 
 interface CalculationResults {
+  [key: string]: number;
   PersonExactAge: number;
   PersonGender: number;
   EstimatedHouseholdIncomeCode: number;
@@ -79,6 +84,27 @@ interface CalculationResults {
   ZipCode3: number;
   state_name: number;
   state_city: number;
+}
+
+interface FinancialResults extends FeatureObject {
+  CreditScore: number;
+  DebtToIncomeRatio: number;
+  Income: number;
+}
+interface LifestylesResults extends FeatureObject {
+  IsFrequentTraveler: number;
+  IsBookReader: number;
+  IsOnlineGamer: number;
+}
+interface VoterResults extends FeatureObject {
+  RegisteredParty: number;
+  LastVotedYear: number;
+  VotingFrequency: number;
+}
+interface RealEstateResults extends FeatureObject {
+  HomeValueEstimate: number;
+  YearsAtAddress: number;
+  MortgageBalance: number;
 }
 
 interface CalculationResponse {
@@ -109,14 +135,23 @@ const CreateLookalikePage: React.FC = () => {
   const [isTableVisible, setIsTableVisible] = useState(false);
   const [search, setSearch] = useState("");
   const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
-  const [calculatedResults, setCalculatedResults] = useState<CalculationResponse | null>(null);
-
+  const [calculatedResults, setCalculatedResults] =
+    useState<CalculationResponse | null>(null);
   // States for calculated features: those displayed and those hidden.
-  const [displayedFeatures, setDisplayedFeatures] = useState<[keyof CalculationResults, number][]>([]);
-  const [hiddenFeatures, setHiddenFeatures] = useState<[keyof CalculationResults, number][]>([]);
+  const [displayedFeatures, setDisplayedFeatures] = useState<
+    [keyof CalculationResults, number][]
+  >([]);
+  const [hiddenFeatures, setHiddenFeatures] = useState<
+    [keyof CalculationResults, number][]
+  >([]);
   // State for the "Load More" popover anchor.
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [fields, setFields] = useState<Field[]>([]);
 
+  const handleOrderChange = (newOrder: Field[]) => {
+    console.log("New order:", newOrder);
+    setFields(newOrder);
+  };
   // formatCalcKey: removes underscores, adds spaces before uppercase letters,
   // collapses extra spaces, trims, and capitalizes the first letter.
   const formatCalcKey = (key: string) =>
@@ -127,8 +162,60 @@ const CreateLookalikePage: React.FC = () => {
       .trim() // trim spaces
       .replace(/^./, (char) => char.toUpperCase()); // capitalize first letter
 
+  const [financialData, setFinancialData] = useState<FinancialResults>({
+    CreditScore: 0,
+    DebtToIncomeRatio: 0,
+    Income: 0,
+  });
+  const [lifestylesData, setLifestylesData] = useState<LifestylesResults>({
+    IsFrequentTraveler: 0,
+    IsBookReader: 0,
+    IsOnlineGamer: 0,
+  });
+  const [voterData, setVoterData] = useState<VoterResults>({
+    RegisteredParty: 0,
+    LastVotedYear: 0,
+    VotingFrequency: 0,
+  });
+  const [realEstateData, setRealEstateData] = useState<RealEstateResults>({
+    HomeValueEstimate: 0,
+    YearsAtAddress: 0,
+    MortgageBalance: 0,
+  });
+
+  React.useEffect(() => {
+    if (!calculatedResults) return;
+
+    // объединяем все объекты важности в один
+    const merged: Record<string, number> = {
+      ...calculatedResults.audience_feature_importance,
+      ...financialData,
+      ...lifestylesData,
+      ...voterData,
+      ...realEstateData,
+    };
+
+    // превращаем в Field[]
+    const allFields: Field[] = Object.entries(merged).map(([key, value]) => ({
+      id: key,
+      name: formatCalcKey(key),
+      // если value это доля, умножаем на 100
+      value: `${(value * 100).toFixed(2)}%`,
+    }));
+
+    setFields(allFields);
+  }, [
+    calculatedResults,
+    financialData,
+    lifestylesData,
+    voterData,
+    realEstateData,
+  ]);
+
   // Returns sorted (descending) features from the given CalculationResults
-  const getAllCalculatedEntries = (results: CalculationResults): [keyof CalculationResults, number][] => {
+  const getAllCalculatedEntries = (
+    results: CalculationResults
+  ): [keyof CalculationResults, number][] => {
     const order: (keyof CalculationResults)[] = [
       "PersonExactAge",
       "PersonGender",
@@ -169,7 +256,10 @@ const CreateLookalikePage: React.FC = () => {
     );
 
   const toSnakeCase = (str: string) =>
-    str.replace(/\s+/g, "_").replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase();
+    str
+      .replace(/\s+/g, "_")
+      .replace(/([a-z])([A-Z])/g, "$1_$2")
+      .toLowerCase();
 
   const filteredData = getFilteredData(sourceData);
 
@@ -191,14 +281,18 @@ const CreateLookalikePage: React.FC = () => {
   const handleSourceData = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.get(`/audience-lookalikes/get-sources`);
+      const response = await axiosInstance.get(
+        `/audience-lookalikes/get-sources`
+      );
       if (response.data) {
         setSourceData(
           Array.isArray(response.data) ? response.data : [response.data]
         );
       }
     } catch {
-      showErrorToast("An error occurred while loading sources. Please try again later.");
+      showErrorToast(
+        "An error occurred while loading sources. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
@@ -210,6 +304,10 @@ const CreateLookalikePage: React.FC = () => {
 
   const handleCancel = () => {
     router.push("/sources");
+  };
+
+  const handlePrevStep = () => {
+    setCurrentStep(currentStep - 1);
   };
 
   const handleCalculate = async () => {
@@ -224,7 +322,9 @@ const CreateLookalikePage: React.FC = () => {
       );
       if (response.data) {
         setCalculatedResults(response.data);
-        const allEntries = getAllCalculatedEntries(response.data.audience_feature_importance);
+        const allEntries = getAllCalculatedEntries(
+          response.data.audience_feature_importance
+        );
         const nonZeroEntries = allEntries.filter(([, value]) => value > 0);
         const zeroEntries = allEntries.filter(([, value]) => value === 0);
         setDisplayedFeatures(nonZeroEntries);
@@ -232,7 +332,9 @@ const CreateLookalikePage: React.FC = () => {
         setCurrentStep(2);
       }
     } catch {
-      showErrorToast("An error occurred while calculating lookalikes. Please try again later.");
+      showErrorToast(
+        "An error occurred while calculating lookalikes. Please try again later."
+      );
     } finally {
       setLoading(false);
     }
@@ -253,7 +355,9 @@ const CreateLookalikePage: React.FC = () => {
     }));
     setLookalikeData(lookalikeData);
   };
-
+  const handleNextStep = () => {
+    setCurrentStep(currentStep + 1);
+  };
   const handleGenerateLookalike = async () => {
     try {
       setLoading(true);
@@ -261,16 +365,21 @@ const CreateLookalikePage: React.FC = () => {
         uuid_of_source: selectedSourceId,
         lookalike_size: toSnakeCase(selectedLabel),
         lookalike_name: sourceName,
-        audience_feature_importance: calculatedResults?.audience_feature_importance,
+        audience_feature_importance: Object.fromEntries(displayedFeatures),
       };
-      const response = await axiosInstance.post("/audience-lookalikes/builder", requestData);
+      const response = await axiosInstance.post(
+        "/audience-lookalikes/builder",
+        requestData
+      );
       if (response.data.status === "SUCCESS") {
         showToast("Lookalike was created successfully!");
         createLookalikeData(response.data);
         setIsLookalikeCreated(true);
       }
     } catch {
-      showErrorToast("An error occurred while creating a new lookalike. Please try again later.");
+      showErrorToast(
+        "An error occurred while creating a new lookalike. Please try again later."
+      );
       setLookalikeData([]);
     } finally {
       setLoading(false);
@@ -279,8 +388,12 @@ const CreateLookalikePage: React.FC = () => {
 
   // Delete a feature from the displayed list and add it to the hidden list.
   const handleDeleteFeature = (keyToDelete: keyof CalculationResults) => {
-    setDisplayedFeatures((prev) => sortFeatures(prev.filter(([key]) => key !== keyToDelete)));
-    const deletedFeature = displayedFeatures.find(([key]) => key === keyToDelete);
+    setDisplayedFeatures((prev) =>
+      sortFeatures(prev.filter(([key]) => key !== keyToDelete))
+    );
+    const deletedFeature = displayedFeatures.find(
+      ([key]) => key === keyToDelete
+    );
     if (deletedFeature) {
       setHiddenFeatures((prev) => sortFeatures([...prev, deletedFeature]));
     }
@@ -298,7 +411,9 @@ const CreateLookalikePage: React.FC = () => {
   // When a feature is selected in the popover, move it to the displayed features
   const handleAddFeature = (feature: [keyof CalculationResults, number]) => {
     setDisplayedFeatures((prev) => sortFeatures([...prev, feature]));
-    setHiddenFeatures((prev) => sortFeatures(prev.filter((f) => f[0] !== feature[0])));
+    setHiddenFeatures((prev) =>
+      sortFeatures(prev.filter((f) => f[0] !== feature[0]))
+    );
     setAnchorEl(null);
   };
 
@@ -307,6 +422,10 @@ const CreateLookalikePage: React.FC = () => {
   useEffect(() => {
     handleSourceData();
   }, []);
+
+  if (loading) {
+    return <CustomizedProgressBar />;
+  }
 
   // Transform source type (similar to previous implementation)
   const toNormalText = (sourceType: string) =>
@@ -321,8 +440,7 @@ const CreateLookalikePage: React.FC = () => {
       .join(", ");
 
   return (
-    <>
-      <Box
+    <Box
       sx={{
         display: "flex",
         flexDirection: "column",
@@ -330,13 +448,17 @@ const CreateLookalikePage: React.FC = () => {
         width: "100%",
         overflow: "auto",
       }}
+    >
+      <Box
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          gap: 2,
+          pt: 1,
+          overflow: "auto",
+        }}
       >
-      {loading && (
-        <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 1200 }}>
-          <CustomizedProgressBar />
-        </Box>
-      )}
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, pt: 1, overflow: "auto" }}>
         {!isLookalikeCreated ? (
           <>
             <Box
@@ -389,7 +511,15 @@ const CreateLookalikePage: React.FC = () => {
                     >
                       Choose your source
                     </Typography>
-                    <Box sx={{ display: "flex", width: "100%", flexDirection: "column", pt: 2, gap: 2 }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        width: "100%",
+                        flexDirection: "column",
+                        pt: 2,
+                        gap: 2,
+                      }}
+                    >
                       <Box sx={{ width: "100%" }}>
                         <TextField
                           fullWidth
@@ -407,23 +537,48 @@ const CreateLookalikePage: React.FC = () => {
                               </InputAdornment>
                             ),
                             endAdornment: (
-                              <IconButton onClick={() => setIsTableVisible(!isTableVisible)}>
-                                {isTableVisible ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                              <IconButton
+                                onClick={() =>
+                                  setIsTableVisible(!isTableVisible)
+                                }
+                              >
+                                {isTableVisible ? (
+                                  <ExpandLessIcon />
+                                ) : (
+                                  <ExpandMoreIcon />
+                                )}
                               </IconButton>
                             ),
                           }}
                           sx={{ pb: "2px" }}
                         />
                         {isTableVisible && (
-                          <TableContainer component={Paper} sx={{ maxHeight: "32vh" }}>
+                          <TableContainer
+                            component={Paper}
+                            sx={{ maxHeight: "32vh" }}
+                          >
                             <Table>
                               <TableHead>
                                 <TableRow
-                                  sx={{ display: "flex", justifyContent: "space-between", width: "100%" }}
+                                  sx={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                  }}
                                 >
-                                  <TableCell sx={{ flex: 1, textAlign: "start" }}>Name</TableCell>
-                                  <TableCell sx={{ flex: 1, textAlign: "start" }}>Type</TableCell>
-                                  <TableCell sx={{ flex: 1, textAlign: "end" }}>Size</TableCell>
+                                  <TableCell
+                                    sx={{ flex: 1, textAlign: "start" }}
+                                  >
+                                    Name
+                                  </TableCell>
+                                  <TableCell
+                                    sx={{ flex: 1, textAlign: "start" }}
+                                  >
+                                    Type
+                                  </TableCell>
+                                  <TableCell sx={{ flex: 1, textAlign: "end" }}>
+                                    Size
+                                  </TableCell>
                                 </TableRow>
                               </TableHead>
                               <TableBody>
@@ -439,12 +594,22 @@ const CreateLookalikePage: React.FC = () => {
                                     }}
                                     onClick={() => handleSelectRow(row)}
                                   >
-                                    <TableCell sx={{ flex: 1, textAlign: "start" }}>{row.name}</TableCell>
-                                    <TableCell sx={{ flex: 1, textAlign: "start" }}>
+                                    <TableCell
+                                      sx={{ flex: 1, textAlign: "start" }}
+                                    >
+                                      {row.name}
+                                    </TableCell>
+                                    <TableCell
+                                      sx={{ flex: 1, textAlign: "start" }}
+                                    >
                                       {toNormalText(row.type)}
                                     </TableCell>
-                                    <TableCell sx={{ flex: 1, textAlign: "right" }}>
-                                      {row.matched_records.toLocaleString("en-US")}
+                                    <TableCell
+                                      sx={{ flex: 1, textAlign: "right" }}
+                                    >
+                                      {row.matched_records.toLocaleString(
+                                        "en-US"
+                                      )}
                                     </TableCell>
                                   </TableRow>
                                 ))}
@@ -511,7 +676,10 @@ const CreateLookalikePage: React.FC = () => {
                     >
                       Select Audience Size
                     </Typography>
-                    <AudienceSizeSelector onSelectSize={handleSelectSize} selectedSize={selectedSize} />
+                    <AudienceSizeSelector
+                      onSelectSize={handleSelectSize}
+                      selectedSize={selectedSize}
+                    />
                   </Box>
                 )}
 
@@ -538,7 +706,12 @@ const CreateLookalikePage: React.FC = () => {
                         },
                       }}
                     >
-                      <Typography sx={{ ...smartAudiences.textButton, color: "rgba(255,255,255,1)" }}>
+                      <Typography
+                        sx={{
+                          ...smartAudiences.textButton,
+                          color: "rgba(255,255,255,1)",
+                        }}
+                      >
                         Calculate
                       </Typography>
                     </Button>
@@ -546,136 +719,253 @@ const CreateLookalikePage: React.FC = () => {
                 )}
 
                 {/* Calculation results block rendered with flex layout */}
-                {calculatedResults && (
+                {currentStep == 2 && calculatedResults && (
                   <Box
-                  sx={{
-                    marginTop: 2,
-                    padding: "16px 20px",
-                    borderRadius: "6px",
-                    border: "1px solid #E4E4E4",
-                    backgroundColor: "white",
-                  }}
-                >
-                  <Typography variant="body1" sx={{ marginBottom: 2 }}>
-                    Calculation Results: {calculatedResults.count_matched_persons.toLocaleString("en-US")}
-                  </Typography>
-                  <Box>
-                  {displayedFeatures.map(([key, value]) => {
-                  const percentValue = (value * 100).toFixed(1);
-                  return (
-                    <Grid
-                      container
-                      key={String(key)}
-                      alignItems="center"
-                      spacing={1}
+                    sx={{
+                      border: "1px solid #E4E4E4",
+                      borderRadius: "6px",
+                      bgcolor: "white",
+                      p: 2,
+                      mt: 2,
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
                       sx={{
-                        padding: "4px 16px",
-                        borderBottom: "1px solid #E4E4E4",
-                        cursor: "pointer",
-                        maxWidth: "600px",
-                        "&:hover": { backgroundColor: "rgba(247, 247, 247, 1)" },
-                        "&:hover .delete-button": { opacity: 1 },
+                        fontFamily: "Nunito Sans",
+                        fontWeight: 500,
+                        fontSize: "16px",
+                        lineHeight: "22.5px",
+                        marginBottom: 2,
+                        marginLeft: 1,
                       }}
                     >
-                      {/* Feature key column fixed at 350px */}
+                      Step 1
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {/* Левая колонка: все пять таблиц */}
+                      <Grid item xs={12} md={6} direction="column" spacing={1}>
+                        {/* Personal Profile */}
+                        <Grid item>
+                          <FeatureImportanceTable
+                            title="Personal Profile"
+                            features={
+                              calculatedResults.audience_feature_importance
+                            }
+                            columnHeaders={["Field", "Importance"]}
+                          />
+                        </Grid>
+
+                        {/* Financial */}
+                        <Grid item>
+                          <FeatureImportanceTable
+                            title="Financial"
+                            features={financialData}
+                            columnHeaders={["Field", "Importance"]}
+                          />
+                        </Grid>
+
+                        {/* Lifestyles */}
+                        <Grid item>
+                          <FeatureImportanceTable
+                            title="Lifestyles"
+                            features={lifestylesData}
+                            columnHeaders={["Field", "Importance"]}
+                          />
+                        </Grid>
+
+                        {/* Voter */}
+                        <Grid item>
+                          <FeatureImportanceTable
+                            title="Voter"
+                            features={voterData}
+                            columnHeaders={["Field", "Importance"]}
+                          />
+                        </Grid>
+
+                        {/* Real Estate */}
+                        <Grid item>
+                          <FeatureImportanceTable
+                            title="Real Estate"
+                            features={realEstateData}
+                            columnHeaders={["Field", "Importance"]}
+                          />
+                        </Grid>
+                      </Grid>
+                      <Grid item xs={12} md={1}></Grid>
+                      {/* Правая колонка: инструктивный текст */}
                       <Grid
                         item
-                        sx={{
-                          flexBasis: "350px",
-                          maxWidth: "350px",
-                          flexShrink: 0,
-                        }}
+                        xs={12}
+                        md={5}
+                        sx={{ borderLeft: "1px solid #E4E4E4" }}
                       >
-                        <Typography variant="body2">
-                          {formatCalcKey(String(key))}
-                        </Typography>
-                      </Grid>
-                      {/* Percentage value column */}
-                      <Grid
-                        item
-                        sx={{
-                          flexBasis: "120px",
-                          maxWidth: "102px",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Typography variant="body2">{percentValue}%</Typography>
-                      </Grid>
-                      {/* Delete button column aligned to the right */}
-                      <Grid item sx={{ textAlign: "right", ml: "auto" }}>
-                        <IconButton
-                          size="small"
-                          className="delete-button"
-                          sx={{
-                            opacity: 0,
-                            transition: "opacity 0.2s",
-                            color: "rgba(80, 82, 178, 1)",
-                          }}
-                          onClick={() => handleDeleteFeature(key)}
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
+                        <Box sx={{ p: 0, bgcolor: "transparent" }}>
+                          <Typography
+                            sx={{
+                              fontFamily: "Nunito Sans",
+                              fontWeight: 500,
+                              fontSize: "16px",
+                              lineHeight: "22.5px",
+                              marginBottom: 2,
+                            }}
+                          >
+                            How lookalikes works
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            paragraph
+                            sx={{
+                              fontSize: "16px",
+                              color: "text.secondary", // делает текст бледнее
+                              mb: 2,
+                            }}
+                          >
+                            When building an audience, it&apos;s important to
+                            work with the right data. You have the flexibility
+                            to configure which predictable fields you want to
+                            use based on your specific goals. These fields might
+                            include things like age, location, interests,
+                            purchase behavior, or other relevant data points
+                            that help define your audience more precisely.
+                          </Typography>
+
+                          <Typography
+                            variant="body2"
+                            paragraph
+                            sx={{
+                              fontSize: "16px",
+                              color: "text.secondary",
+                              mb: 2,
+                            }}
+                          >
+                            To get started, simply click on &quot;Add More&quot;
+                            to open the full list of available fields. From
+                            there, you can select the ones that are most
+                            relevant to your campaign. The fields are usually
+                            organized into categories (such as demographics,
+                            behavior, engagement, etc.), so be sure to make
+                            selections within each category to create a
+                            well-rounded profile of your audience.
+                          </Typography>
+
+                          <Typography
+                            component="a"
+                            href="#"
+                            sx={{
+                              fontSize: "16px",
+                              color: "primary.main",
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                              display: "inline-block",
+                            }}
+                          >
+                            Learn more
+                          </Typography>
+                        </Box>
                       </Grid>
                     </Grid>
+                  </Box>
+                )}
 
-                  );
-                })}
+                {/* Calculation results block rendered with flex layout */}
+                {currentStep == 3 && (
+                  <Box
+                    sx={{
+                      border: "1px solid #E4E4E4",
+                      borderRadius: "6px",
+                      bgcolor: "white",
+                      p: 2,
+                      mt: 2,
+                    }}
+                  >
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontFamily: "Nunito Sans",
+                        fontWeight: 500,
+                        fontSize: "16px",
+                        lineHeight: "22.5px",
+                        marginBottom: 2,
+                        marginLeft: 1,
+                      }}
+                    >
+                      Step 2: Order your fields
+                    </Typography>
+                    <Grid container spacing={2}>
+                      {/* Левая колонка: все пять таблиц */}
+                      <Grid item xs={12} md={6} direction="column" spacing={1}>
+                        {/* Real Estate */}
+                        <Grid item>
+                          <DragAndDropTable
+                            fields={fields}
+                            onOrderChange={(newOrder) => setFields(newOrder)}
+                          />
+                        </Grid>
+                      </Grid>
+                      <Grid item xs={12} md={1}></Grid>
+                      {/* Правая колонка: инструктивный текст */}
+                      <Grid
+                        item
+                        xs={12}
+                        md={5}
+                        sx={{ borderLeft: "1px solid #E4E4E4" }}
+                      >
+                        <Box sx={{ p: 0, bgcolor: "transparent" }}>
+                          <Typography
+                            variant="body2"
+                            paragraph
+                            sx={{
+                              fontSize: "16px",
+                              color: "text.secondary", // делает текст бледнее
+                              mb: 2,
+                            }}
+                          >
+                            Once you&apos;ve selected the fields you want to
+                            work with, you&apos;ll move on to the next step,
+                            where you can sort, prioritize, or filter these
+                            fields further. This step allows you to fine-tune
+                            your audience structure, ensuring that you&apos;re
+                            targeting the right group of people based on the
+                            criteria that matter most to you.
+                          </Typography>
 
-                </Box>
-                  {/* "Add More" link if there are hidden features */}
-                  {hiddenFeatures.length > 0 && (
-                    <Box sx={{ mt: 1 }}>
-                      <Button
-                        variant="text"
-                        className="second-sub-title"
-                        sx={{
-                          textTransform: "none",
-                          textDecoration: "underline",
-                          color: "rgba(80, 82, 178, 1) !important",
-                        }}
-                        onClick={handleLoadMoreClick}
-                      >
-                        + Add More
-                      </Button>
-                      <Popover
-                        open={openPopover}
-                        anchorEl={anchorEl}
-                        onClose={handlePopoverClose}
-                        anchorOrigin={{
-                          vertical: "bottom",
-                          horizontal: "left",
-                        }}
-                        slotProps={{
-                          paper: {
-                            sx: { maxHeight: 200, overflowY: "auto", padding: "8px" },
-                          },
-                        }}
-                      >
-                        {hiddenFeatures.map(([key, value]) => {
-                          const percentValue = (value * 100).toFixed(1);
-                          return (
-                            <Box
-                              key={String(key)}
-                              sx={{
-                                padding: "8px",
-                                cursor: "pointer",
-                                "&:hover": { backgroundColor: "rgba(0,0,0,0.04)" },
-                              }}
-                              onClick={() => handleAddFeature([key, value])}
-                            >
-                              <Typography variant="body2">
-                                {formatCalcKey(String(key))} — {percentValue}%
-                              </Typography>
-                            </Box>
-                          );
-                        })}
-                      </Popover>
-                    </Box>
-                  )}
-                </Box>
-              )}
+                          <Typography
+                            variant="body2"
+                            paragraph
+                            sx={{
+                              fontSize: "16px",
+                              color: "text.secondary",
+                              mb: 2,
+                            }}
+                          >
+                            By customizing these fields and organizing them
+                            effectively, you ca n build more accurate and
+                            impactful audience segments for your marketing
+                            efforts or research.
+                          </Typography>
+
+                          <Typography
+                            component="a"
+                            href="#"
+                            sx={{
+                              fontSize: "16px",
+                              color: "primary.main",
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                              display: "inline-block",
+                            }}
+                          >
+                            Learn more
+                          </Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                )}
+
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
-                {currentStep >= 2 && (
+                {currentStep >= 4 && (
                   <Box
                     sx={{
                       display: "flex",
@@ -726,8 +1016,7 @@ const CreateLookalikePage: React.FC = () => {
                   </Box>
                 )}
               </Box>
-
-              {currentStep >= 2 && (
+              {currentStep == 2 && (
                 <Box
                   sx={{
                     width: "100%",
@@ -748,7 +1037,160 @@ const CreateLookalikePage: React.FC = () => {
                       backgroundColor: "#FFFFFF",
                       textTransform: "none",
                       mt: 1,
-                      "&:hover": { border: "1px #5052B2 solid", backgroundColor: "#FFFFFF" },
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#FFFFFF",
+                      },
+                    }}
+                    variant="outlined"
+                    onClick={handlePrevStep}
+                  >
+                    <Typography padding={"0.5rem 2rem"} fontSize={"0.8rem"}>
+                      Go Back
+                    </Typography>
+                  </Button>
+                  <Button
+                    sx={{
+                      border: "1px #5052B2 solid",
+                      color: "#FFFFFF",
+                      backgroundColor: "#5052B2",
+                      textTransform: "none",
+                      gap: 0,
+                      mt: 1,
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                      },
+                      "&.Mui-disabled": {
+                        color: "#FFFFFF",
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                        opacity: 0.6,
+                      },
+                    }}
+                    variant="outlined"
+                    onClick={handleNextStep}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        padding: "0.5rem 1rem",
+                        gap: 1,
+                      }}
+                    >
+                      <Image
+                        src={"/stars-icon.svg"}
+                        alt="Stars icon"
+                        width={15}
+                        height={15}
+                      />
+                      <Typography fontSize={"0.8rem"}>Continue</Typography>
+                    </Box>
+                  </Button>
+                </Box>
+              )}
+              {currentStep == 3 && (
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "end",
+                    alignItems: "end",
+                    gap: 2,
+                    borderTop: "1px solid rgba(228, 228, 228, 1)",
+                    pr: 2,
+                    pt: "0.5rem",
+                    pb: 1,
+                  }}
+                >
+                  <Button
+                    sx={{
+                      border: "1px #5052B2 solid",
+                      color: "#5052B2",
+                      backgroundColor: "#FFFFFF",
+                      textTransform: "none",
+                      mt: 1,
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#FFFFFF",
+                      },
+                    }}
+                    variant="outlined"
+                    onClick={handlePrevStep}
+                  >
+                    <Typography padding={"0.5rem 2rem"} fontSize={"0.8rem"}>
+                      Go Back
+                    </Typography>
+                  </Button>
+                  <Button
+                    sx={{
+                      border: "1px #5052B2 solid",
+                      color: "#FFFFFF",
+                      backgroundColor: "#5052B2",
+                      textTransform: "none",
+                      gap: 0,
+                      mt: 1,
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                      },
+                      "&.Mui-disabled": {
+                        color: "#FFFFFF",
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                        opacity: 0.6,
+                      },
+                    }}
+                    variant="outlined"
+                    onClick={handleNextStep}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        padding: "0.5rem 1rem",
+                        gap: 1,
+                      }}
+                    >
+                      <Image
+                        src={"/stars-icon.svg"}
+                        alt="Stars icon"
+                        width={15}
+                        height={15}
+                      />
+                      <Typography fontSize={"0.8rem"}>Continue</Typography>
+                    </Box>
+                  </Button>
+                </Box>
+              )}
+              {currentStep >= 4 && (
+                <Box
+                  sx={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "end",
+                    alignItems: "end",
+                    gap: 2,
+                    borderTop: "1px solid rgba(228, 228, 228, 1)",
+                    pr: 2,
+                    pt: "0.5rem",
+                    pb: 1,
+                  }}
+                >
+                  <Button
+                    sx={{
+                      border: "1px #5052B2 solid",
+                      color: "#5052B2",
+                      backgroundColor: "#FFFFFF",
+                      textTransform: "none",
+                      mt: 1,
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#FFFFFF",
+                      },
                     }}
                     variant="outlined"
                     onClick={handleCancel}
@@ -766,16 +1208,39 @@ const CreateLookalikePage: React.FC = () => {
                       gap: 0,
                       mt: 1,
                       opacity: sourceName.trim() === "" ? 0.6 : 1,
-                      "&:hover": { border: "1px #5052B2 solid", backgroundColor: "#5052B2" },
-                      "&.Mui-disabled": { color: "#FFFFFF", border: "1px #5052B2 solid", backgroundColor: "#5052B2", opacity: 0.6 },
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                      },
+                      "&.Mui-disabled": {
+                        color: "#FFFFFF",
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#5052B2",
+                        opacity: 0.6,
+                      },
                     }}
                     variant="outlined"
                     disabled={sourceName.trim() === ""}
                     onClick={handleGenerateLookalike}
                   >
-                    <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", padding: "0.5rem 1rem", gap: 1 }}>
-                      <Image src={"/stars-icon.svg"} alt="Stars icon" width={15} height={15} />
-                      <Typography fontSize={"0.8rem"}>Generate lookalike</Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        padding: "0.5rem 1rem",
+                        gap: 1,
+                      }}
+                    >
+                      <Image
+                        src={"/stars-icon.svg"}
+                        alt="Stars icon"
+                        width={15}
+                        height={15}
+                      />
+                      <Typography fontSize={"0.8rem"}>
+                        Generate lookalike
+                      </Typography>
                     </Box>
                   </Button>
                 </Box>
@@ -784,7 +1249,9 @@ const CreateLookalikePage: React.FC = () => {
           </>
         ) : (
           <Box>
-            <Box sx={{ width: "100%", padding: 3, pt: 1, pl: 1, color: "#202124" }}>
+            <Box
+              sx={{ width: "100%", padding: 3, pt: 1, pl: 1, color: "#202124" }}
+            >
               <Typography
                 variant="h1"
                 sx={{
@@ -804,7 +1271,15 @@ const CreateLookalikePage: React.FC = () => {
               ) : (
                 <Typography>No Lookalike data available</Typography>
               )}
-              <Box sx={{ display: "flex", justifyContent: "end", gap: 2, mt: 1, alignItems: "center" }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "end",
+                  gap: 2,
+                  mt: 1,
+                  alignItems: "center",
+                }}
+              >
                 <Button
                   variant="outlined"
                   onClick={() => router.push("/lookalikes")}
@@ -817,7 +1292,10 @@ const CreateLookalikePage: React.FC = () => {
                     fontWeight: "500",
                     color: "#5052B2 !important",
                     borderColor: "#5052B2",
-                    "&:hover": { backgroundColor: "#fff", borderColor: "#5052B2" },
+                    "&:hover": {
+                      backgroundColor: "#fff",
+                      borderColor: "#5052B2",
+                    },
                   }}
                 >
                   All Lookalikes
@@ -832,7 +1310,10 @@ const CreateLookalikePage: React.FC = () => {
                     color: "#fff !important",
                     ":hover": { backgroundColor: "rgba(80, 82, 178, 1)" },
                     ":active": { backgroundColor: "rgba(80, 82, 178, 1)" },
-                    ":disabled": { backgroundColor: "rgba(80, 82, 178, 1)", opacity: 0.6 },
+                    ":disabled": {
+                      backgroundColor: "rgba(80, 82, 178, 1)",
+                      opacity: 0.6,
+                    },
                   }}
                 >
                   Generate Smart Audience
@@ -843,7 +1324,6 @@ const CreateLookalikePage: React.FC = () => {
         )}
       </Box>
     </Box>
-    </>
   );
 };
 

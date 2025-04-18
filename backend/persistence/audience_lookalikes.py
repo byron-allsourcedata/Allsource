@@ -18,6 +18,7 @@ from sqlalchemy import asc, desc, or_, func
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
+from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from uuid import UUID
 
 from models.users import Users
@@ -33,11 +34,12 @@ class AudienceLookalikesPersistence:
             .filter(AudienceSource.id == uuid_of_source, AudienceSource.user_id == user_id).first()
 
         return source
-
+    
     def get_lookalikes(self, user_id: int, page: Optional[int] = None, per_page: Optional[int] = None, from_date: Optional[int] = None, to_date: Optional[int] = None,
                        sort_by: Optional[str] = None, sort_order: Optional[str] = None,
                        lookalike_size: Optional[str] = None, lookalike_type: Optional[str] = None,
                        search_query: Optional[str] = None):
+        
         query = self.db.query(
             AudienceLookalikes,
             AudienceSource.name,
@@ -93,23 +95,10 @@ class AudienceLookalikesPersistence:
             query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
-        lookalikes = query.limit(per_page).offset(offset).all()
+        result_query = query.limit(per_page).offset(offset).all()
         count = query.count()
         max_page = math.ceil(count / per_page)
-        result = [
-            {
-                **lookalike.__dict__,
-                "source": source_name,
-                "source_type": source_type,
-                "created_by": created_by,
-                "source_origin": source_origin,
-                "domain": domain,
-                "target_schema": source_schema,
-            }
-            for lookalike, source_name, source_type, created_by, source_origin, domain, source_schema in lookalikes
-        ]
-        
-        return result, count, max_page
+        return result_query, count, max_page
 
     def create_lookalike(self, uuid_of_source, user_id, lookalike_size,
                          lookalike_name, created_by_user_id, audience_feature_importance: AudienceFeatureImportance):
@@ -118,12 +107,12 @@ class AudienceLookalikesPersistence:
             raise HTTPException(status_code=404, detail="Source not found or access denied")
 
         sources, created_by = source_info
-
-        audience_feature_dict = audience_feature_importance.__dict__
-        for key in audience_feature_dict.keys():
-            audience_feature_dict[key] = round(audience_feature_dict[key] * 1000) / 1000
+        audience_feature_dict = {
+            key: round(value * 1000) / 1000
+            for key, value in audience_feature_importance.__dict__.items()
+            if value is not None
+        }
         sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
-
         lookalike = AudienceLookalikes(
             name=lookalike_name,
             lookalike_size=lookalike_size,
@@ -323,7 +312,6 @@ class AudienceLookalikesPersistence:
                 customer_value=Decimal(row.customer_value)
             )
             audience_data_list.append(ad)
-
         return audience_data_list
 
 

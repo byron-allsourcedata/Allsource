@@ -27,15 +27,31 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
   const { status, date, left, right, tabType } = data;
   const color = getStatusColor(status, tabType);
 
-  const renderSection = (sectionData: Record<string, string | number>) =>
-    Object.entries(sectionData).map(([label, value]) => (
+  const renderSection = (sectionData: Record<string, string | number>) => {
+    const entries = Object.entries(sectionData).filter(([key, value]) => {
+      if (["id", "chain_ids"].includes(key)) return false;
+      if (typeof value === "number") return true;
+      if (typeof value === "string") return value.trim() !== "";
+      return false;
+    });
+
+    const nameEntry = entries.find(([label]) => label === "Name");
+    const otherEntries = entries.filter(([label]) => label !== "Name");
+
+    const allEntries = nameEntry ? [nameEntry, ...otherEntries] : otherEntries;
+
+    return allEntries.map(([label, value]) => (
       <Box key={label} mb={1}>
         <Typography className="dashboard-card-text">{label}</Typography>
-        <Typography className="dashboard-card-heading">
+        <Typography
+          className="dashboard-card-heading"
+          sx={{ textWrap: "wrap", maxWidth: "100%" }}
+        >
           {typeof value === "number" ? value.toLocaleString() : value}
         </Typography>
       </Box>
     ));
+  };
 
   return (
     <Card

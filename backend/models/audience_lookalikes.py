@@ -16,6 +16,7 @@ class AudienceLookalikes(Base):
     size = Column(Integer, default=0, nullable=False)
     source_uuid = Column(UUID(as_uuid=True), ForeignKey(AudienceSource.id, ondelete='cascade'), nullable=False)
     significant_fields = Column(JSON, nullable=False)
+    similarity_score = Column(JSON, nullable=False)
 
 
 Index("audiencelookalikes_user_created_date", AudienceLookalikes.user_id, AudienceLookalikes.created_date)

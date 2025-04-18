@@ -243,18 +243,26 @@ class AudienceSmartsService:
         sources, count = self.audience_sources_persistence.get_sources(
             user_id=user.get("id"), page=1, per_page=50
         )
-
-        lookalike_list = [
-            {
-                'id': l.get('id'),
-                'name': l.get('name'),
-                'source_type': l.get('source_type'),
-                'source_origin': l.get('source_origin'),
-                'domain': l.get('domain'),
-                'size': l.get('size'),
-            }
-            for l in lookalikes
-        ]
+        
+        lookalike_list = []
+        for (
+            lookalike,
+            source_name,
+            source_type,
+            created_by,
+            source_origin,
+            domain,
+            target_schema
+        ) in lookalikes:
+            lookalike_list.append({
+                **lookalike.__dict__,
+                "source": source_name,
+                "source_type": source_type,
+                "created_by": created_by,
+                "source_origin": source_origin,
+                "domain": domain,
+                "target_schema": target_schema
+            })
 
         source_list = [
             {

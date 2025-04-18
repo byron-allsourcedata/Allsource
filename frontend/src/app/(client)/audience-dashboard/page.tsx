@@ -110,14 +110,25 @@ const AudienceDashboard: React.FC = () => {
         "data_sync",
       ] as const;
 
-      const formatDate = (dateStr: string) =>
-        new Date(dateStr).toLocaleString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          month: "long",
-          day: "numeric",
-          year: "numeric",
-        });
+      const formatDate = (dateStr: string) => {
+        const date = new Date(dateStr);
+        const parts = date
+          .toLocaleString("en-US", {
+            hour: "2-digit",
+            minute: "2-digit",
+            month: "short",
+            day: "numeric",
+            hour12: true,
+          })
+          .replace(",", "")
+          .split(" ");
+
+        const month = parts[0].toUpperCase();
+        const day = parts[1];
+        const time = `${parts[2]} ${parts[3]}`;
+
+        return `${day} ${month} ${time}`;
+      };
 
       const normalize = (str: string) => str.toLowerCase().replace(/s$/, "");
 
@@ -168,11 +179,11 @@ const AudienceDashboard: React.FC = () => {
 
       const formatLookalikeSize = (value: string): string => {
         const map: Record<string, string> = {
-          almost_identical: "Almost Identical 0–3%",
-          extremely_similar: "Extremely Similar 0–7%",
-          very_similar: "Very Similar 0–10%",
-          quite_similar: "Quite Similar 0–15%",
-          broad: "Broad 0–20%",
+          almost_identical: "Lookalike size: 10K contacts",
+          extremely_similar: "Lookalike size: 50K contacts",
+          very_similar: "Lookalike size: 100K contacts",
+          quite_similar: "Lookalike size: 200K contacts",
+          broad: "Lookalike size: 500K contacts",
         };
 
         return map[value] ?? value;
@@ -189,7 +200,13 @@ const AudienceDashboard: React.FC = () => {
             ([, value]) => value !== null && value !== undefined && value !== ""
           )
           .reduce((acc, [key, value]) => {
-            const formattedKey = formatKey(key);
+            let formattedKey = formatKey(key);
+
+            if (
+              /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
+            ) {
+              formattedKey = "Name";
+            }
 
             if (key === "lookalike_size" && typeof value === "string") {
               acc["Lookalike Size"] = formatLookalikeSize(value);
@@ -248,7 +265,14 @@ const AudienceDashboard: React.FC = () => {
           if (isMainType) {
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
-                const formattedKey = formatKey(key);
+                let formattedKey = formatKey(key);
+
+                if (
+                  /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
+                ) {
+                  formattedKey = "Name";
+                }
+
                 if (key === "lookalike_size") {
                   leftInfo[formattedKey] = formatLookalikeSize(value);
                 } else if (
@@ -261,8 +285,6 @@ const AudienceDashboard: React.FC = () => {
               }
             });
           } else {
-            // Если это не lookalike (например, smart_audience созданный из lookalike)
-            // То lookalike данные слева, остальное справа
             if (event.lookalike_name)
               leftInfo["Lookalike Name"] = event.lookalike_name;
             if (event.lookalike_size)
@@ -271,7 +293,6 @@ const AudienceDashboard: React.FC = () => {
               );
             if (event.size) leftInfo["Size"] = event.size;
 
-            // Правая часть - данные созданного ресурса
             if (event.audience_name)
               rightInfo["Audience Name"] = event.audience_name;
             if (event.use_case) rightInfo["Use Case"] = event.use_case;
@@ -283,7 +304,12 @@ const AudienceDashboard: React.FC = () => {
             // Для smart_audience на своей вкладке - все данные слева
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
-                const formattedKey = formatKey(key);
+                let formattedKey = formatKey(key);
+                if (
+                  /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
+                ) {
+                  formattedKey = "Name";
+                }
                 if (value !== null && value !== undefined && value !== "") {
                   leftInfo[formattedKey] = value;
                 }
@@ -300,15 +326,20 @@ const AudienceDashboard: React.FC = () => {
           if (isMainType) {
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
-                const formattedKey = formatKey(key);
+                let formattedKey = formatKey(key);
+                if (
+                  /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
+                ) {
+                  formattedKey = "Name";
+                }
                 if (value !== null && value !== undefined && value !== "") {
                   leftInfo[formattedKey] = value;
                 }
               }
             });
           } else {
-            if (event.source_name) leftInfo["Source Name"] = event.source_name;
-            if (event.source_type) leftInfo["Source Type"] = event.source_type;
+            if (event.source_name) leftInfo["Name"] = event.source_name;
+            if (event.source_type) leftInfo["Type"] = event.source_type;
             if (event.matched_records)
               leftInfo["Matched Records"] = event.matched_records;
 
@@ -323,7 +354,12 @@ const AudienceDashboard: React.FC = () => {
         } else {
           Object.entries(event).forEach(([key, value]) => {
             if (!excludeKeys.includes(key)) {
-              const formattedKey = formatKey(key);
+              let formattedKey = formatKey(key);
+              if (
+                /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
+              ) {
+                formattedKey = "Name";
+              }
               if (key === "lookalike_size") {
                 leftInfo[formattedKey] = formatLookalikeSize(value);
               } else if (

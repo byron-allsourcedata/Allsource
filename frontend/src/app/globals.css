@@ -6,7 +6,9 @@
   font-family: 'Roboto', sans-serif;
 }
 
-*, ::after, ::before {
+*,
+::after,
+::before {
   box-sizing: border-box;
 }
 
@@ -19,7 +21,7 @@ body {
   padding: 0;
   overflow-y: hidden;
   -ms-overflow-style: none;
-  
+
 }
 
 .page-container {
@@ -64,14 +66,17 @@ body {
 .Toastify__toast-container.customToastContainer {
   width: 24rem;
 }
-.Toastify__close-button > svg {
+
+.Toastify__close-button>svg {
   width: 1.25rem;
   height: 1.25rem;
 }
+
 .customToastSuccess .Toastify__close-button {
   color: #6EC125;
   opacity: 1;
 }
+
 .customToastError .Toastify__close-button {
   color: #E03130;
   opacity: 1;
@@ -81,7 +86,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-family: 'Roboto'; 
+  font-family: 'Roboto';
   font-size: 12px;
   font-weight: 400;
   line-height: 16px;
@@ -97,6 +102,20 @@ body {
 }
 
 /* Design Style guide */
+
+.tab-filled-button {
+  font-family: 'Nunito Sans';
+  text-transform: none;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 18px;
+  min-height: 32px;
+  min-width: 120px;
+  padding: 6px 16px;
+  border-radius: 4px;
+  color: rgba(95, 99, 104, 1);
+  border: 1px solid rgba(220, 220, 239, 1);
+}
 
 .heading-text {
   font-family: 'Nunito Sans';
@@ -114,7 +133,7 @@ body {
   color: #202124;
 }
 
-.second-sub-title{
+.second-sub-title {
   font-family: 'Nunito Sans';
   font-size: 14px;
   line-height: normal;
@@ -218,6 +237,7 @@ body {
   line-height: 20px;
   color: #202124;
 }
+
 .form-input-label {
   font-family: 'Roboto';
   font-weight: 400;
@@ -225,22 +245,25 @@ body {
   line-height: 20px;
   color: #707071;
 }
+
 .dashboard-card-heading {
   font-family: 'Nunito Sans';
   font-size: 16px;
   font-weight: 600;
   line-height: 140%;
   letter-spacing: 0%;
-  color: rgba(74,74,74,1)
+  color: rgba(74, 74, 74, 1) !important
 }
+
 .dashboard-card-text {
   font-family: 'Nunito Sans';
   font-size: 14px;
   font-weight: 500;
   line-height: 140%;
   letter-spacing: 0%;
-  color: rgba(74,74,74,1)
+  color: rgba(74, 74, 74, 1)
 }
+
 .MuiInputLabel.MuiInputLabel-outlined {
   color: rgba(17, 17, 19, 0.6);
   font-family: 'Nunito Sans';
@@ -248,6 +271,7 @@ body {
   font-size: 12px;
   line-height: 16px;
 }
+
 .MuiOutlinedInput-root {
   height: 48px;
 }
@@ -263,7 +287,7 @@ body {
 }
 
 .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
-  border-color: rgba(208, 213, 221, 1); 
+  border-color: rgba(208, 213, 221, 1);
 }
 
 .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
@@ -290,7 +314,8 @@ body {
   }
 }
 
-input:-webkit-autofill, textarea:-webkit-autofill {
+input:-webkit-autofill,
+textarea:-webkit-autofill {
   -webkit-box-shadow: 0 0 0 1000px white inset !important;
   box-shadow: 0 0 0 1000px white inset !important;
   background-color: transparent !important;
