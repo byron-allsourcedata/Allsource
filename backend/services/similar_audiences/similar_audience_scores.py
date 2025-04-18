@@ -28,26 +28,25 @@ def is_uuid(value):
 
 
 class SimilarAudiencesScoresService:
-    models: EnrichmentModelsPersistence
-    scores: EnrichmentLookalikeScoresPersistence
-    normalization: AudienceDataNormalizationService
+    enrichment_models_persistence: EnrichmentModelsPersistence
+    enrichment_lookalike_scores_persistence: EnrichmentLookalikeScoresPersistence
+    normalization_service: AudienceDataNormalizationService
     db: Session
 
-    def __init__(self, db: Session, models: EnrichmentModelsPersistence, scores: EnrichmentLookalikeScoresPersistence, normalization: AudienceDataNormalizationService):
-        self.models = models
-        self.scores = scores
-        self.normalization = normalization
+    def __init__(self, db: Session, enrichment_models_persistence: EnrichmentModelsPersistence, enrichment_lookalike_scores_persistence: EnrichmentLookalikeScoresPersistence, 
+                 normalization_service: AudienceDataNormalizationService):
+        self.enrichment_models_persistence = enrichment_models_persistence
+        self.enrichment_lookalike_scores_persistence = enrichment_lookalike_scores_persistence
+        self.normalization_service = normalization_service
         self.db = db
+    
+    
+    def save_enrichment_model(self, lookalike_id: UUID, model: CatBoostRegressor):
+        return self.enrichment_models_persistence.save(lookalike_id, model)
 
 
-    def calculate_scores(self, lookalike_id: UUID, query: Query, config: NormalizationConfig, user_id_key: str = 'user_id'):
+    def calculate_scores(self, model: CatBoostRegressor, lookalike_id: UUID, query: Query, config: NormalizationConfig, user_id_key: str = 'user_id'):
         compiled = query.statement.compile(dialect=dialect(), compile_kwargs={"literal_binds": True})
-
-        enrichment_model = self.models.by_lookalike_id(lookalike_id)
-        if enrichment_model is None:
-            raise ValueError("No model found for lookalike_id")
-
-        model = CatBoostRegressor().load_model(blob=enrichment_model.model)
 
         count = 0
         with self.db.connection() as conn:
@@ -97,7 +96,7 @@ class SimilarAudiencesScoresService:
                     user_ids: List[UUID] = [row[user_id_key] for row in dict_rows]
 
 
-                    self.scores.bulk_insert(lookalike_id, list(zip(user_ids, scores)))
+                    self.enrichment_lookalike_scores_persistence.bulk_insert(lookalike_id, list(zip(user_ids, scores)))
 
                     print("done insert")
                     self.db.flush()
@@ -113,7 +112,7 @@ class SimilarAudiencesScoresService:
 
 
     def calculate_score_batches(self, model: CatBoostRegressor, persons: DataFrame, config: NormalizationConfig) -> List[float]:
-        persons, values = self.normalization.normalize_dataframe(persons, config=config)
+        persons, values = self.normalization_service.normalize_dataframe(persons, config=config)
         result: np.ndarray = model.predict(persons)
 
         return result.tolist()

@@ -62,7 +62,7 @@ export const usePolling = (
       }
     };
 
-    intervalRef.current = setInterval(poll, 2000);
+    intervalRef.current = setInterval(poll, 10000);
     poll();
 
     return () => {

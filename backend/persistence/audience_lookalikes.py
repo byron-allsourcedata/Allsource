@@ -35,26 +35,6 @@ class AudienceLookalikesPersistence:
 
         return source
     
-    def generate_similarity_score(self) -> dict:
-        import random
-
-        min_score = round(random.uniform(10.0, 40.0), 1)
-        max_score = round(random.uniform(70.0, 100.0), 1)
-
-        average_score = round(random.uniform(min_score + 1.0, max_score - 1.0), 1)
-        median_score = round(random.uniform(min_score + 1.0, max_score - 1.0), 1)
-
-        values = sorted([min_score, average_score, median_score, max_score])
-        min_score, average_score, median_score, max_score = values
-
-        return {
-            "min": min_score,
-            "average": average_score,
-            "median": median_score,
-            "max": max_score
-        }
-
-
     def get_lookalikes(self, user_id: int, page: Optional[int] = None, per_page: Optional[int] = None, from_date: Optional[int] = None, to_date: Optional[int] = None,
                        sort_by: Optional[str] = None, sort_order: Optional[str] = None,
                        lookalike_size: Optional[str] = None, lookalike_type: Optional[str] = None,
@@ -127,10 +107,11 @@ class AudienceLookalikesPersistence:
             raise HTTPException(status_code=404, detail="Source not found or access denied")
 
         sources, created_by = source_info
-
-        audience_feature_dict = audience_feature_importance.__dict__
-        for key in audience_feature_dict.keys():
-            audience_feature_dict[key] = round(audience_feature_dict[key] * 1000) / 1000
+        audience_feature_dict = {
+            key: round(value * 1000) / 1000
+            for key, value in audience_feature_importance.__dict__.items()
+            if value is not None
+        }
         sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
         lookalike = AudienceLookalikes(
             name=lookalike_name,
@@ -139,8 +120,7 @@ class AudienceLookalikesPersistence:
             created_date=datetime.utcnow(),
             created_by_user_id=created_by_user_id,
             source_uuid=uuid_of_source,
-            significant_fields=sorted_dict,
-            similarity_score=self.generate_similarity_score()
+            significant_fields=sorted_dict
         )
         self.db.add(lookalike)
         self.db.commit()

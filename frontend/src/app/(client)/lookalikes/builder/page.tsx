@@ -365,7 +365,7 @@ const CreateLookalikePage: React.FC = () => {
         uuid_of_source: selectedSourceId,
         lookalike_size: toSnakeCase(selectedLabel),
         lookalike_name: sourceName,
-        audience_feature_importance: displayedFeatures,
+        audience_feature_importance: Object.fromEntries(displayedFeatures),
       };
       const response = await axiosInstance.post(
         "/audience-lookalikes/builder",

@@ -707,4 +707,4 @@ def get_audience_data_normalization():
 def get_similar_audience_service(
         audience_data_normalization_service: AudienceDataNormalizationService = Depends(get_audience_data_normalization)
 ):
-    return SimilarAudienceService(normalizer=audience_data_normalization_service)
+    return SimilarAudienceService(audience_data_normalization_service=audience_data_normalization_service)
