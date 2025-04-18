@@ -7,6 +7,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Checkbox,
+  useTheme,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
@@ -33,6 +34,8 @@ function FeatureImportanceTable<T extends FeatureObject>({
   onChangeDisplayed,
   columnHeaders = ["Field", "Importance"],
 }: Props<T>) {
+  const theme = useTheme();
+  
   // Prepare sorted pairs descending
   const allPairs = useMemo(() => {
     return Object.entries(features)
@@ -40,15 +43,19 @@ function FeatureImportanceTable<T extends FeatureObject>({
       .sort((a, b) => b[1] - a[1]);
   }, [features]);
 
-  // Initialize selected first 14 keys
+  // Determine non-zero pairs and max selectable count
+  const nonZeroPairs = allPairs.filter(([, v]) => v > 0);
+  const maxSelectable = Math.min(allPairs.length, 14);
+
+  // Initialize selected only from non-zero, up to maxSelectable
   const initialSelected = useMemo(
-    () => allPairs.slice(0, 14).map(([k]) => k),
-    [allPairs]
+    () => nonZeroPairs.slice(0, maxSelectable).map(([k]) => k),
+    [nonZeroPairs, maxSelectable]
   );
 
   const [selectedKeys, setSelectedKeys] = useState<(keyof T)[]>(initialSelected);
 
-  // Notify parent
+  // Notify parent on change
   useEffect(() => {
     onChangeDisplayed?.(selectedKeys);
   }, [selectedKeys, onChangeDisplayed]);
@@ -59,6 +66,9 @@ function FeatureImportanceTable<T extends FeatureObject>({
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
     );
   };
+
+  // Header text color based on any selected
+  const headerColor = selectedKeys.length > 0 ? 'rgba(80, 82, 178, 1)' : theme.palette.text.disabled;
 
   return (
     <Accordion
@@ -82,36 +92,29 @@ function FeatureImportanceTable<T extends FeatureObject>({
         }}
       >
         <Grid container alignItems="center" sx={{ maxWidth: 600 }}>
-          {/* Checkbox column header */}
-          <Grid item sx={{ width: 40, flexShrink: 0 }}>
-            {/* empty for alignment */}
-          </Grid>
+          <Grid item sx={{ width: 40, flexShrink: 0 }} />
           <Grid item sx={{ flexBasis: 350, maxWidth: 350, flexShrink: 0 }}>
             <Typography variant="body1">{title}</Typography>
           </Grid>
           <Grid
             item
             sx={{
-              flexBasis: 120,
-              maxWidth: 120,
+              flexBasis: 155,
+              maxWidth: 155,
               flexShrink: 0,
               textAlign: "left",
             }}
           >
-            <Typography variant="body1">{selectedKeys.length} Selected</Typography>
+            <Typography variant="body1" sx={{ color: headerColor }}>
+              {`${selectedKeys.length}/${maxSelectable} fields selected`}
+            </Typography>
           </Grid>
           <Grid item sx={{ ml: "auto" }} />
         </Grid>
       </AccordionSummary>
 
       <AccordionDetails sx={{ p: 0 }}>
-        <Box
-          sx={{
-            pt: 2,
-            px: 2,
-            pb: 0,
-          }}
-        >
+        <Box sx={{ pt: 2, px: 2, pb: 0 }}>
           {/* Column headers */}
           <Grid
             container
@@ -124,9 +127,7 @@ function FeatureImportanceTable<T extends FeatureObject>({
               maxWidth: 600,
             }}
           >
-            <Grid item sx={{ width: 40, flexShrink: 0 }}>
-              {/* empty for checkbox header */}
-            </Grid>
+            <Grid item sx={{ width: 40, flexShrink: 0 }} />
             <Grid item sx={{ flexBasis: 350, maxWidth: 350, flexShrink: 0 }}>
               <Typography variant="body2" fontWeight={600}>
                 {columnHeaders[0]}
@@ -143,7 +144,6 @@ function FeatureImportanceTable<T extends FeatureObject>({
           {/* Data rows */}
           {allPairs.map(([k, v]) => {
             const checked = selectedKeys.includes(k);
-            // Display raw importance value as received
             const displayValue = `${(v * 100).toFixed(1)}%`;
 
             return (
