@@ -1,6 +1,7 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+
+import React, { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   Box,
@@ -36,7 +37,8 @@ import FeatureImportanceTable, {
 } from "../components/FeatureImportanceTable";
 import DragAndDropTable, { Field } from "../components/DragAndDropTable";
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
-
+import ProgressBar from "@/components/ProgressBar";
+export const dynamic = 'force-dynamic';
 interface TableData {
   name: string;
   target_schema: string;
@@ -1510,4 +1512,12 @@ const CreateLookalikePage: React.FC = () => {
   );
 };
 
-export default CreateLookalikePage;
+const CreateLookalike: React.FC = () => {
+    return (
+        <Suspense fallback={<ProgressBar />}>
+            <CreateLookalikePage />
+        </Suspense>
+    );
+};
+
+export default CreateLookalike;
