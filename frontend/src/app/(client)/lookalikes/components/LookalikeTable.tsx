@@ -880,14 +880,13 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   </Popover>
                 </TableRow>
 
-                {isDebug && (
+                {isDebug && openRowId == row.id && (
                   <>
-                    <TableRow>
+                    <TableRow sx={{ '& > *': { borderBottom: '1px solid #e0e0e0' } }}>
                       <TableCell
                         sx={{
                           ...lookalikesStyles.table_array,
                           position: "relative",
-                          p: 0,
                         }}
                         style={{ paddingBottom: 0, paddingTop: 0 }}
                       >
@@ -896,7 +895,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           timeout="auto"
                           unmountOnExit
                         >
-                          <Box sx={{ p: 1 }}>
+                          <Box sx={{ margin: 1 }}>
                             <Typography className="table-data">
                               Significant field
                             </Typography>
@@ -919,7 +918,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           timeout="auto"
                           unmountOnExit
                         >
-                          <Box sx={{ p: 1 }}>
+                          <Box sx={{ margin: 1 }}>
                             <Typography className="table-data">
                               {fullFormattedFields(row.significant_fields)}%
                             </Typography>
@@ -933,24 +932,23 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           maxWidth: "44px",
                           minWidth: "44px",
                           padding: "8px",
-                          p: 0,
                           textAlign: "center",
                         }}
-
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
                       >
                         <Collapse
                           in={openRowId === row.id}
                           timeout="auto"
                           unmountOnExit
                         >
-                          <Box sx={{ m: 0, mr: 1 }}>
+                          <Box sx={{ margin: 0, mr: 1 }}>
                             <IconButton
                               sx={{
                                 pl: 0,
                                 pr: 0.5,
                                 pt: 0.25,
                                 pb: 0.25,
-                                m: 0,
+                                margin: 0,
                               }}
                               onClick={() =>
                                 handleCopy(
@@ -966,49 +964,80 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                     </TableRow>
                     <TableRow>
                       <TableCell
-                        colSpan={columns(isDebug).length}
                         sx={{
-                          p: 0,
-                          borderBottom: "none",
+                          ...lookalikesStyles.table_array,
+                          position: "relative",
                         }}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
                       >
-                        <Collapse in={openRowId === row.id} timeout="auto" unmountOnExit>
-                          <Box sx={{ px: 2, py: 1 }}>
-                            <Typography className="table-data" sx={{ fontWeight: 500, mb: 0.5 }}>
-                              Significant field
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Typography className="table-data">
-                                {fullFormattedFields(row.significant_fields)}%
-                              </Typography>
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleCopy(fullFormattedFields(row.significant_fields))
-                                }
-                                sx={{ ml: 1 }}
-                              >
-                                <ContentCopyIcon sx={{ maxHeight: "18px" }} />
-                              </IconButton>
-                            </Box>
-
-                            <Typography className="table-data" sx={{ fontWeight: 500, mt: 2, mb: 0.5 }}>
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 1 }}>
+                            <Typography className="table-data">
                               Similarity score
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Typography className="table-data">
-                                {fullFormattedFields(row.similarity_score)}%
-                              </Typography>
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleCopy(fullFormattedFields(row.similarity_score))
-                                }
-                                sx={{ ml: 1 }}
-                              >
-                                <ContentCopyIcon sx={{ maxHeight: "18px" }} />
-                              </IconButton>
-                            </Box>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...lookalikesStyles.table_array,
+                          textWrap: "wrap",
+                          position: "relative",
+                          pr: 0,
+                          pl: 0,
+                        }}
+                        colSpan={7}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                      >
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 1 }}>
+                            <Typography className="table-data">
+                              {fullFormattedFields(row.similarity_score)}%
+                            </Typography>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...lookalikesStyles.table_array,
+                          position: "relative",
+                          maxWidth: "44px",
+                          minWidth: "44px",
+                          padding: "8px",
+                          textAlign: "center",
+                        }}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                      >
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 0, mr: 1 }}>
+                            <IconButton
+                              sx={{
+                                pl: 0,
+                                pr: 0.5,
+                                pt: 0.25,
+                                pb: 0.25,
+                                margin: 0,
+                              }}
+                              onClick={() =>
+                                handleCopy(
+                                  fullFormattedFields(row.similarity_score)
+                                )
+                              }
+                            >
+                              <ContentCopyIcon sx={{ maxHeight: "18px" }} />
+                            </IconButton>
                           </Box>
                         </Collapse>
                       </TableCell>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Suspense, useEffect, useMemo, useState } from "react";
+
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
@@ -40,6 +41,7 @@ import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import ProgressBar from "@/components/ProgressBar";
 export const dynamic = 'force-dynamic';
 interface TableData {
+  id: string; 
   name: string;
   target_schema: string;
   source: string;
@@ -171,6 +173,8 @@ const sortFeatures = (
 
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const preselectedUuid = searchParams.get("source_uuid");
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedLabel, setSelectedLabel] = useState<string>("");
@@ -529,9 +533,14 @@ const CreateLookalikePage: React.FC = () => {
     handleSourceData();
   }, []);
 
-  if (loading) {
-    return <CustomizedProgressBar />;
-  }
+  useEffect(() => {
+    if (preselectedUuid && sourceData.length) {
+      const match = sourceData.find((r) => r.id === preselectedUuid);
+      if (match) {
+        handleSelectRow(match);
+      }
+    }
+  }, [preselectedUuid, sourceData]);
 
   // Transform source type (similar to previous implementation)
   const toNormalText = (sourceType: string) =>
@@ -555,6 +564,11 @@ const CreateLookalikePage: React.FC = () => {
         overflow: "auto",
       }}
     >
+      {loading && (
+        <Box sx={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 1200 }}>
+          <CustomizedProgressBar />
+        </Box>
+      )}
       <Box
         sx={{
           flex: 1,
@@ -595,7 +609,7 @@ const CreateLookalikePage: React.FC = () => {
                 </Typography>
 
                 {/* "Choose your source" block */}
-                {currentStep === 0 && (
+                {!preselectedUuid && currentStep === 0 && (
                   <Box
                     sx={{
                       textAlign: "left",
@@ -1178,7 +1192,7 @@ const CreateLookalikePage: React.FC = () => {
                 )}
 
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
-                {currentStep >= 4 && (
+                {currentStep >= 3 && (
                   <Box
                     sx={{
                       display: "flex",
@@ -1290,68 +1304,7 @@ const CreateLookalikePage: React.FC = () => {
                   </Button>
                 </Box>
               )}
-              {currentStep == 3 && (
-                <Box
-                  sx={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "end",
-                    alignItems: "end",
-                    gap: 2,
-                    borderTop: "1px solid rgba(228, 228, 228, 1)",
-                    pr: 2,
-                    pt: "0.5rem",
-                    pb: 1,
-                  }}
-                >
-                  <Button
-                    sx={{
-                      border: "1px #5052B2 solid",
-                      color: "#5052B2",
-                      backgroundColor: "#FFFFFF",
-                      textTransform: "none",
-                      mt: 1,
-                      "&:hover": {
-                        border: "1px #5052B2 solid",
-                        backgroundColor: "#FFFFFF",
-                      },
-                    }}
-                    variant="outlined"
-                    onClick={handlePrevStep}
-                  >
-                    <Typography padding={"0.5rem 2rem"} fontSize={"0.8rem"}>
-                      Go Back
-                    </Typography>
-                  </Button>
-                  <Button
-                    sx={{
-                      border: "1px #5052B2 solid",
-                      color: "#FFFFFF",
-                      backgroundColor: "#5052B2",
-                      textTransform: "none",
-                      gap: 0,
-                      mt: 1,
-                      "&:hover": {
-                        border: "1px #5052B2 solid",
-                        backgroundColor: "#5052B2",
-                      },
-                      "&.Mui-disabled": {
-                        color: "#FFFFFF",
-                        border: "1px #5052B2 solid",
-                        backgroundColor: "#5052B2",
-                        opacity: 0.6,
-                      },
-                    }}
-                    variant="outlined"
-                    onClick={handleNextStep}
-                  >
-                    <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", padding: "0.5rem 1rem", gap: 1 }}>
-                      <Typography fontSize={"0.8rem"}>Continue</Typography>
-                    </Box>
-                  </Button>
-                </Box>
-              )}
-              {currentStep >= 4 && (
+              {currentStep >= 3 && (
                 <Box
                   sx={{
                     width: "100%",

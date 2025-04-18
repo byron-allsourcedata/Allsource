@@ -4,6 +4,8 @@ import os
 import random
 import sys
 from decimal import Decimal
+
+from catboost import CatBoostError
 from dotenv import load_dotenv
 
 
@@ -32,6 +34,7 @@ def read_csv_transactions(file_path: str):
         for row in reader:
             children = 0 if row['NumberOfChildren'] == '' else int(row['NumberOfChildren'])
             # in real code provide amount calculated from transactions
+            # amount = 100
             amount = children * random.randint(0, 5) * 50 + 100
             user_profiles.append(AudienceData(**row, customer_value=Decimal(amount)))
 
@@ -53,12 +56,20 @@ async def main():
 
     transactions = read_csv_transactions(Folders.data('enrichment.csv'))
     normalizer = AudienceDataNormalizationService()
-    service = SimilarAudienceService(normalizer=normalizer)
+    service = SimilarAudienceService(audience_data_normalization_service=normalizer)
 
     dict_enrichment = [v.__dict__ for v in transactions]
-    scores = service.get_audience_feature_importance_with_config(dict_enrichment, config)
 
-    print(scores)
+    try:
+        scores = service.get_audience_feature_importance_with_config(dict_enrichment, config)
+        print(scores)
+    except CatBoostError as e:
+        if "All train targets are equal" in str(e):
+            print("All train targets are equal")
+
+
+
+
 
 
 if __name__ == "__main__":

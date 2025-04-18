@@ -164,13 +164,13 @@ class DashboardAudienceService:
                            
                 'lookalikes': self.merge_and_sort(
                                     datasets=[(lookalikes, 'lookalikes', ['lookalike_size', 'lookalike_name', 'created_at', 'size']), 
-                                            ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['lookalike_name', 'lookalike_size', 'size', 'audience_name', 'use_case', 'active_segment', 'created_at']),],
+                                            ([smart_audience for smart_audience in smart_audiences if smart_audience.lookalike_name], 'smart_audience', ['lookalike_name', 'lookalike_size', 'size', 'audience_name', 'use_case', 'active_segment', 'created_at']),],
                                     limit=self.LIMIT
                                 ),
                 
                 'smart_audiences': self.merge_and_sort(
                                         datasets=[(data_syncs, 'data_syncs', ['audience_name', 'created_at', 'status', 'synced_contacts', 'destination']), 
-                                                ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['audience_name', 'use_case', 'active_segment', 'created_at', 'include', 'exclude']),],
+                                                ([smart_audience for smart_audience in smart_audiences if smart_audience[0]], 'smart_audience', ['audience_name', 'use_case', 'active_segment', 'created_at', 'include_names', 'exclude_names']),],
                                         limit=self.LIMIT
                                     ),
                 
