@@ -1,6 +1,7 @@
 from sqlalchemy import Column, TEXT, UUID, ForeignKey, TIMESTAMP
 from .base import Base
 from models.enrichment_users import EnrichmentUser
+from sqlalchemy.orm import relationship
 
 
 class EnrichmentUserContact(Base):
@@ -28,3 +29,5 @@ class EnrichmentUserContact(Base):
     personal_email_validation_status = Column(TEXT, nullable=True)
     linkedin_url = Column(TEXT, nullable=True)
     email = Column(TEXT, nullable=True)
+
+    enrichment_user = relationship("EnrichmentUser", back_populates="contacts")

@@ -1,0 +1,1 @@
+CREATE ROLE maximiz_dev;

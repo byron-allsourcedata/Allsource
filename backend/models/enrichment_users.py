@@ -4,7 +4,7 @@ from sqlalchemy.inspection import inspect
 from .base import Base
 from sqlalchemy.orm import relationship
 from models.emails_enrichment import EmailEnrichment
-from models.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment_users_contacts import EnrichmentUserContact
 from models.professional_profile import ProfessionalProfile
 
 
