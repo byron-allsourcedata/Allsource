@@ -655,7 +655,6 @@ const CreateLookalikePage: React.FC = () => {
                         <Grid item >
                           <FeatureImportanceTable
                             title="Personal Profile"
-                            total={calculatedResults.count_matched_persons}
                             features={calculatedResults.audience_feature_importance}
                             columnHeaders={["Field", "Importance"]}
                           />
@@ -701,6 +700,16 @@ const CreateLookalikePage: React.FC = () => {
                       {/* Правая колонка: инструктивный текст */}
                       <Grid item xs={12} md={5} sx={{ borderLeft: "1px solid #E4E4E4" }}>
                         <Box sx={{ p: 0, bgcolor: "transparent" }}>
+                        <Typography
+                          sx={{
+                            fontFamily: "Nunito Sans",
+                            fontWeight: 500,
+                            fontSize: "16px",
+                            lineHeight: "22.5px",
+                            marginBottom: 2,
+                          }}>
+                          How lookalikes works
+                        </Typography>
                           <Typography
                             variant="body2"
                             paragraph

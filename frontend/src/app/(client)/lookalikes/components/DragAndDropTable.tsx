@@ -19,38 +19,36 @@ export default function LookalikeFieldsGrid({
   fields,
   onOrderChange,
 }: LookalikeFieldsGridProps) {
-  const [rows, setRows] = React.useState<Field[]>(fields);
+  // Инициализация один раз, сортируем по value
+  const [rows, setRows] = React.useState<Field[]>(() =>
+    [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value))
+  );
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
 
-  React.useEffect(() => {
-    setRows(fields);
-  }, [fields]);
-
-  // Начало перетаскивания: span.draggable
   const handleDragStart = (
     event: React.DragEvent<HTMLSpanElement>,
     index: number
   ) => {
     setDragIndex(index);
     const rowElem = event.currentTarget.closest('.row') as HTMLElement;
-    // ставим всю строку в качестве "drag image"
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', String(index));
     if (rowElem) {
-      // смещение так, чтобы курсор оставался на одном месте
       const rect = rowElem.getBoundingClientRect();
-      event.dataTransfer.setDragImage(rowElem, event.clientX - rect.left, event.clientY - rect.top);
+      event.dataTransfer.setDragImage(
+        rowElem,
+        event.clientX - rect.left,
+        event.clientY - rect.top
+      );
     }
   };
 
-  // Конец перетаскивания
   const handleDragEnd = () => {
     setDragIndex(null);
     setDragOverIndex(null);
   };
 
-  // Когда drag идёт над строкой
   const handleDragOver = (
     event: React.DragEvent<HTMLDivElement>,
     index: number
@@ -60,7 +58,6 @@ export default function LookalikeFieldsGrid({
     event.dataTransfer.dropEffect = 'move';
   };
 
-  // Когда отпустили над строкой
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const src = event.dataTransfer.getData('text/plain');
@@ -69,7 +66,7 @@ export default function LookalikeFieldsGrid({
     const to = dragOverIndex;
     if (isNaN(from) || to === null || from === to) return;
 
-    setRows(prev => {
+    setRows((prev) => {
       const updated = [...prev];
       const [moved] = updated.splice(from, 1);
       updated.splice(to, 0, moved);
@@ -82,46 +79,46 @@ export default function LookalikeFieldsGrid({
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 600, margin: '0 auto' }}>
-      <div>
-        {rows.map((row, index) => (
-          <div
-            key={row.id}
-            className="row"
-            onDragOver={e => handleDragOver(e, index)}
-            onDrop={handleDrop}
-            style={{
-              display: 'flex',
+    <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto' }}>
+      {rows.map((row, index) => (
+        <Box
+          key={row.id}
+          className="row"
+          onDragOver={(e) => handleDragOver(e, index)}
+          onDrop={handleDrop}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            p: 1.5,
+            bgcolor: dragOverIndex === index ? 'action.hover' : 'background.paper',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Box
+            component="span"
+            draggable
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragEnd={handleDragEnd}
+            sx={{
+              display: 'inline-flex',
               alignItems: 'center',
-              padding: '8px 12px',
-              background: dragOverIndex === index ? 'rgba(0,0,0,0.04)' : 'white',
-              borderBottom: '1px solid rgba(224,224,224,1)',
+              justifyContent: 'center',
+              width: 24,
+              height: 24,
+              mr: 1.5,
+              cursor: 'grab',
             }}
           >
-            {/* drag-handle */}
-            <span
-              draggable
-              onDragStart={e => handleDragStart(e, index)}
-              onDragEnd={handleDragEnd}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 24,
-                height: 24,
-                marginRight: 12,
-                cursor: 'grab',
-              }}
-            >
-              <DragIndicatorIcon fontSize="small" />
-            </span>
+            <DragIndicatorIcon fontSize="small" />
+          </Box>
 
-            {/* Контент строки */}
-            <div style={{ flex: 1 }}>{row.name}</div>
-            <div style={{ width: 150, textAlign: 'right' }}>{row.value}</div>
-          </div>
-        ))}
-      </div>
+          <Box sx={{ flex: 1, typography: 'body2' }}>{row.name}</Box>
+          <Box sx={{ width: 150, textAlign: 'right', typography: 'body2' }}>
+            {row.value}
+          </Box>
+        </Box>
+      ))}
     </Box>
   );
 }
