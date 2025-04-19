@@ -1,6 +1,3 @@
-// components/AudienceFieldsSelector.tsx
-"use client";
-
 import React from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
