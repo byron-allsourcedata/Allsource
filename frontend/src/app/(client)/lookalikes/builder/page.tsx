@@ -30,136 +30,11 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import LookalikeContainer from "../components/LookalikeContainer";
 import { smartAudiences } from "../../smart-audiences/smartAudiences";
-import FeatureImportanceTable, {
-  FeatureObject,
-} from "../components/FeatureImportanceTable";
-import DragAndDropTable, { Field } from "../components/DragAndDropTable";
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import ProgressBar from "@/components/ProgressBar";
+import {TableData, LookalikeData, CalculationResponse, CalculationResults, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject} from "@/types"
+import {FeatureImportanceTable, DragAndDropTable} from "../components"
 export const dynamic = 'force-dynamic';
-interface TableData {
-  id: string;
-  name: string;
-  target_schema: string;
-  source: string;
-  type: string;
-  source_target_schema: string;
-  created_date: string;
-  created_by: string;
-  number_of_customers: number;
-  matched_records: number;
-}
-
-interface LookalikeData {
-  id: string;
-  lookalike_name: string;
-  source: string;
-  type: string;
-  size_progress: number;
-  size: number;
-  source_target_schema: string;
-  lookalike_size: string;
-  created_date: string;
-  created_by: string;
-}
-
-interface CalculationResults {
-  [key: string]: number;
-  PersonExactAge: number;
-  PersonGender: number;
-  EstimatedHouseholdIncomeCode: number;
-  EstimatedCurrentHomeValueCode: number;
-  HomeownerStatus: number;
-  HasChildren: number;
-  NumberOfChildren: number;
-  CreditRating: number;
-  NetWorthCode: number;
-  HasCreditCard: number;
-  LengthOfResidenceYears: number;
-  MaritalStatus: number;
-  OccupationGroupCode: number;
-  IsBookReader: number;
-  IsOnlinePurchaser: number;
-  IsTraveler: number;
-  ZipCode5: number;
-  ZipCode4: number;
-  ZipCode3: number;
-  state_name: number;
-  state_city: number;
-}
-
-interface FinancialResults extends FeatureObject {
-  [key: string]: number;
-  CreditScore: number;
-  IncomeRange: number;
-  NetWorth: number;
-  CreditRating: number;
-  CreditCards: number;
-  BankCard: number;
-  CreditCardPremium: number;
-  CreditCardNewIssue: number;
-  CreditLines: number;
-  CreditRangeOfNewCredit: number;
-  Donor: number;
-  Investor: number;
-  MailOrderDonor: number;
-}
-interface LifestylesResults extends FeatureObject {
-  [key: string]: number;
-  Pets: number;
-  CookingEnthusiast: number;
-  Travel: number;
-  MailOrderBuyer: number;
-  OnlinePurchaser: number;
-  BookReader: number;
-  HealthAndBeauty: number;
-  Fitness: number;
-  OutdoorEnthusiast: number;
-  TechEnthusiast: number;
-  DIY: number;
-  Gardening: number;
-  AutomotiveBuff: number;
-  GolfEnthusiasts: number;
-  BeautyCosmetics: number;
-  Smoker: number;
-}
-interface VoterResults extends FeatureObject {
-  [key: string]: number;
-  PartyAffiliation: number;
-  VotingPropensity: number;
-  CongressionalDistrict: number;
-}
-interface RealEstateResults extends FeatureObject {
-  [key: string]: number;
-  URN: number;
-  SiteStreetAddress: number;
-  SiteCity: number;
-  SiteState: number;
-  SiteZipCode: number;
-  OwnerFullName: number;
-  EstimatedHomeValue: number;
-  HomeValueNumeric: number;
-  Equity: number;
-  EquityNumeric: number;
-  MortgageAmount: number;
-  MortgageDate: number;
-  LenderName: number;
-  PurchasePrice: number;
-  PurchaseDate: number;
-  OwnerOccupied: number;
-  LandUseCode: number;
-  YearBuilt: number;
-  LotSizeSqFt: number;
-  BuildingTotalSqFt: number;
-  AssessedValue: number;
-  MarketValue: number;
-  TaxAmount: number;
-}
-
-interface CalculationResponse {
-  count_matched_persons: number;
-  audience_feature_importance: CalculationResults;
-}
 
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
@@ -1288,10 +1163,10 @@ const CreateLookalikePage: React.FC = () => {
                       },
                     }}
                     variant="outlined"
-                    onClick={handlePrevStep}
+                    onClick={handleCancel}
                   >
                     <Typography padding={"0.5rem 2rem"} fontSize={"0.8rem"}>
-                      Go Back
+                      Cancel
                     </Typography>
                   </Button>
                   <Button

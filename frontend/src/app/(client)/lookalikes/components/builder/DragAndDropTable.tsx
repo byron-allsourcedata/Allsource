@@ -1,25 +1,12 @@
-'use client';
-
 import * as React from 'react';
 import { Box } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import {Field, LookalikeFieldsGridProps} from "@/types"
 
-export interface Field {
-  id: string;
-  name: string;
-  value: string;
-}
-
-interface LookalikeFieldsGridProps {
-  fields: Field[];
-  onOrderChange?: (newOrder: Field[]) => void;
-}
-
-export default function LookalikeFieldsGrid({
+export function DragAndDropTable({
   fields,
   onOrderChange,
 }: LookalikeFieldsGridProps) {
-  // Инициализация один раз, сортируем по value
   const [rows, setRows] = React.useState<Field[]>(() =>
     [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value))
   );

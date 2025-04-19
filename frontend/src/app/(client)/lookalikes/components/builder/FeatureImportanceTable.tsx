@@ -10,15 +10,8 @@ import {
   useTheme,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {FeatureObject, Props} from "@/types"
 
-export type FeatureObject = Record<string, number>;
-
-interface Props<T extends FeatureObject> {
-  features: T;
-  title: string;
-  onChangeDisplayed?: (selected: (keyof T)[]) => void;
-  columnHeaders?: [string, string];
-}
 
 const formatKey = (k: string) =>
   k
@@ -28,7 +21,7 @@ const formatKey = (k: string) =>
     .trim()
     .replace(/^./, (c) => c.toUpperCase());
 
-function FeatureImportanceTable<T extends FeatureObject>({
+export function FeatureImportanceTable<T extends FeatureObject>({
   features,
   title,
   onChangeDisplayed,
@@ -67,7 +60,6 @@ function FeatureImportanceTable<T extends FeatureObject>({
     );
   };
 
-  // Header text color based on any selected
   const headerColor = selectedKeys.length > 0 ? 'rgba(80, 82, 178, 1)' : theme.palette.text.disabled;
 
   return (
@@ -186,5 +178,3 @@ function FeatureImportanceTable<T extends FeatureObject>({
     </Accordion>
   );
 }
-
-export default FeatureImportanceTable;
