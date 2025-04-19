@@ -67,6 +67,8 @@ class SimilarAudienceService:
             model.fit(x_train, y_train)
         except CatBoostError as e:
             if "All train targets are equal" in str(e):
+                if y_train.nunique() <= 1:
+                    raise EqualTrainTargets("Cannot train CatBoost: all train targets are equal")
                 value = y_train[0]
                 raise EqualTrainTargets(f"All train targets are equal - customer value is same ({value}) for all rows, check if your data is valid)")
 

@@ -1,7 +1,10 @@
 import * as React from 'react';
 import { Box } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
-import {Field, LookalikeFieldsGridProps} from "@/types"
+import type { Field, LookalikeFieldsGridProps } from "@/types";
+
+const formatPercent = (value: string) =>
+  `${(parseFloat(value) * 100).toFixed(1)}%`;
 
 export function DragAndDropTable({
   fields,
@@ -66,7 +69,7 @@ export function DragAndDropTable({
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 600,  }}>
+    <Box sx={{ width: '100%', maxWidth: 600 }}>
       {rows.map((row, index) => (
         <Box
           key={row.id}
@@ -75,13 +78,12 @@ export function DragAndDropTable({
           onDrop={handleDrop}
           sx={{
             display: 'flex',
-            justifyContent: 'flex-start',     
-            alignItems: 'center',        
+            alignItems: 'center',
             p: 1.5,
             bgcolor: dragOverIndex === index ? 'action.hover' : 'background.paper',
             borderBottom: '1px solid',
             borderColor: 'divider',
-            textAlign: 'left',              
+            textAlign: 'left',
           }}
         >
           <Box
@@ -101,10 +103,11 @@ export function DragAndDropTable({
           >
             <DragIndicatorIcon fontSize="small" />
           </Box>
-
-          <Box sx={{ flex: 1, typography: 'body2', textAlign: 'left' }}>{row.name}</Box>
-          <Box sx={{ width: 150, textAlign: 'left', typography: 'body2' }}>
-            {row.value}
+          <Box sx={{ flex: 1, typography: 'body2', textAlign: 'left' }}>
+            {row.name}
+          </Box>
+          <Box sx={{ width: 150, typography: 'body2', textAlign: 'left' }}>
+            {formatPercent(row.value)}
           </Box>
         </Box>
       ))}
