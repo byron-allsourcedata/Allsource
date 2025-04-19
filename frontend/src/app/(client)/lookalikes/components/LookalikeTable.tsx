@@ -38,6 +38,7 @@ import { audienceStyles } from "../../audience/audienceStyles";
 import TableCustomCell from "../../sources/components/table/TableCustomCell";
 import { useSSE } from "@/context/SSEContext";
 import { padding } from "@mui/system";
+import { useScrollShadow } from "@/hooks/useScrollShadow";
 
 interface TableRowData {
   id: string;
@@ -275,30 +276,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
   };
 
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [isScrolledX, setIsScrolledX] = useState(false);
-  const [isScrolledY, setIsScrolledY] = useState(false);
-
-  useEffect(() => {
-    if (tableContainerRef.current) {
-      const container = tableContainerRef.current;
-      const checkScroll = () => {
-        setIsScrolledX(container.scrollLeft > 0);
-        setIsScrolledY(container.scrollTop > 0);
-      };
-
-      container.addEventListener("scroll", checkScroll);
-      window.addEventListener("resize", checkScroll);
-
-      checkScroll();
-
-      return () => {
-        container.removeEventListener("scroll", checkScroll);
-        window.removeEventListener("resize", checkScroll);
-      };
-    } else {
-      console.warn("TableContainer ref is still null");
-    }
-  }, [tableContainerRef.current]);
+  const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, tableData.length);
 
   return (
     <TableContainer
@@ -348,7 +326,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                     left: 0,
                     zIndex: 98,
                     top: 0,
-                    boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
                   }),
 
                   ...(key === "actions" && {

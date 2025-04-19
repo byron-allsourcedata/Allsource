@@ -54,6 +54,7 @@ import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SearchFilter";
 import CloseIcon from "@mui/icons-material/Close";
 import TableCustomCell from "./components/table/TableCustomCell";
+import { useScrollShadow } from "@/hooks/useScrollShadow";
 
 interface Source {
   id: string;
@@ -116,7 +117,6 @@ const Sources: React.FC = () => {
   >([]);
   const { sourceProgress } = useSSE();
   const [loaderForTable, setLoaderForTable] = useState(false);
-  const tableContainerRef = useRef<HTMLDivElement>(null);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [anchorElFullName, setAnchorElFullName] =
     React.useState<null | HTMLElement>(null);
@@ -129,8 +129,8 @@ const Sources: React.FC = () => {
   const [isMakeRequest, setIsMakeRequest] = useState(false);
   const searchParams = useSearchParams();
   const isDebug = searchParams.get("is_debug") === "true";
-  const [isScrolledX, setIsScrolledX] = useState(false);
-  const [isScrolledY, setIsScrolledY] = useState(false);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
   
   const columns = [
     {
@@ -213,28 +213,6 @@ const Sources: React.FC = () => {
       console.log("interval cleared");
     }
   };
-
-  useEffect(() => {
-    if (tableContainerRef.current) {
-      const container = tableContainerRef.current;
-      const checkScroll = () => {
-        setIsScrolledX(container.scrollLeft > 0);
-        setIsScrolledY(container.scrollTop > 0);
-      };
-  
-      container.addEventListener("scroll", checkScroll);
-      window.addEventListener("resize", checkScroll);
-  
-      checkScroll();
-  
-      return () => {
-        container.removeEventListener("scroll", checkScroll);
-        window.removeEventListener("resize", checkScroll);
-      };
-    } else {
-      console.warn("TableContainer ref is still null");
-    }
-  }, [tableContainerRef.current]);
 
   useEffect(() => {
     console.log("longpol");
