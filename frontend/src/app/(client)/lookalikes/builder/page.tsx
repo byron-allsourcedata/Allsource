@@ -688,29 +688,57 @@ const CreateLookalikePage: React.FC = () => {
                 {currentStep >= 1 && (
                   <Box
                     sx={{
-                      textAlign: "left",
-                      padding: "16px 20px 20px 20px",
-                      borderRadius: "6px",
-                      border: "1px solid #E4E4E4",
-                      backgroundColor: "white",
+                      position: 'relative',
+                      textAlign: 'left',
+                      padding: '16px 20px 20px 20px',
+                      borderRadius: '6px',
+                      border: '1px solid #E4E4E4',
+                      backgroundColor: 'white',
                       marginTop: 2,
+                      display: 'flex',
+                      flexDirection: 'column',
                     }}
                   >
                     <Typography
                       variant="h6"
                       sx={{
-                        fontFamily: "Nunito Sans",
+                        fontFamily: 'Nunito Sans',
                         fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: "22.5px",
+                        fontSize: '16px',
+                        lineHeight: '22.5px',
                         marginBottom: 2,
                       }}
                     >
                       Source
                     </Typography>
+
                     {selectSourceData.length > 0 && (
                       <SourceTableContainer tableData={selectSourceData} />
                     )}
+
+                    <Button
+                      onClick={() => setCurrentStep(0)}
+                      variant="outlined"
+                      sx={{
+                        ...smartAudiences.buttonform,
+                        borderColor: 'rgba(80, 82, 178, 1)',
+                        width: '92px',
+                        mt: 2,    
+                        alignSelf: 'flex-end',  
+                        ':hover': {
+                          backgroundColor: '#fff',
+                        },
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          ...smartAudiences.textButton,
+                          color: 'rgba(80, 82, 178, 1)',
+                        }}
+                      >
+                        Edit
+                      </Typography>
+                    </Button>
                   </Box>
                 )}
 
@@ -1260,10 +1288,10 @@ const CreateLookalikePage: React.FC = () => {
                       },
                     }}
                     variant="outlined"
-                    onClick={handleCancel}
+                    onClick={handlePrevStep}
                   >
                     <Typography padding={"0.5rem 2rem"} fontSize={"0.8rem"}>
-                      Cancel
+                      Go Back
                     </Typography>
                   </Button>
                   <Button
