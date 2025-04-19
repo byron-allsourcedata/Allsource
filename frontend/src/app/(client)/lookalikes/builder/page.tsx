@@ -1288,10 +1288,10 @@ const CreateLookalikePage: React.FC = () => {
                       },
                     }}
                     variant="outlined"
-                    onClick={handleCancel}
+                    onClick={handlePrevStep}
                   >
                     <Typography padding={"0.5rem 2rem"} fontSize={"0.8rem"}>
-                      Cancel
+                      Go Back
                     </Typography>
                   </Button>
                   <Button
