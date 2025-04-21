@@ -20,7 +20,7 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.enrichment_users import EnrichmentUser
-from models.enrichment_users_contacts import EnrichmentUserContact
+from models.enrichment_user_contact import EnrichmentUserContact
 from models.emails_enrichment import EmailEnrichment
 from models.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
