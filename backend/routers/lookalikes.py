@@ -1,10 +1,17 @@
+from typing import Optional
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Query
 
-from dependencies import get_lookalikes_service, check_user_authorization_without_pixel
+from dependencies import get_lookalikes_service, check_user_authorization_without_pixel, get_similar_audience_service
+from schemas.lookalikes import CalculateRequest
+from schemas.similar_audiences import AudienceFeatureImportance
 from services.lookalikes import AudienceLookalikesService
 from pydantic import BaseModel
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from fastapi import Body
+
+from services.similar_audiences import SimilarAudienceService
 
 AUDIENCE_LOOKALIKES_READER = 'audience_lookalikes_reader'
 
@@ -13,6 +20,7 @@ class LookalikeCreateRequest(BaseModel):
     uuid_of_source: str
     lookalike_size: str
     lookalike_name: str
+    audience_feature_importance: Optional[AudienceFeatureImportance]
 
 
 class UpdateLookalikeRequest(BaseModel):
@@ -71,7 +79,7 @@ async def get_all_sources(
 
 @router.post("/builder")
 async def create_lookalike(
-    request: LookalikeCreateRequest,
+    payload: LookalikeCreateRequest,
     lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
     user: dict = Depends(check_user_authorization_without_pixel)
 ):
@@ -82,10 +90,11 @@ async def create_lookalike(
 
     result = lookalike_service.create_lookalike(
         user=user,
-        uuid_of_source=request.uuid_of_source,
-        lookalike_size=request.lookalike_size,
-        lookalike_name=request.lookalike_name,
-        created_by_user_id=user_id
+        uuid_of_source=payload.uuid_of_source,
+        lookalike_size=payload.lookalike_size,
+        lookalike_name=payload.lookalike_name,
+        created_by_user_id=user_id,
+        audience_feature_importance=payload.audience_feature_importance
     )
     if result['status'] == 'SUCCESS':
         msg_body = {
@@ -93,9 +102,13 @@ async def create_lookalike(
         }
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
-        await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_READER, message_body=msg_body)
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=AUDIENCE_LOOKALIKES_READER,
+            message_body=msg_body
+        )
 
-    return result 
+    return result
 
 
 @router.delete("/delete-lookalike")
@@ -122,7 +135,6 @@ async def search_lookalikes(start_letter: str = Query(..., min_length=3),
                             user: dict = Depends(check_user_authorization_without_pixel)):
     return lookalike_service.search_lookalikes(start_letter, user=user)
 
-
 @router.get("/get-processing-lookalikes")
 def get_processing_lookalike(
         id: str = Query(...),
@@ -130,3 +142,20 @@ def get_processing_lookalike(
 ):
     
     return lookalike_service.get_processing_lookalike(id)
+
+@router.get("/calculate-lookalikes", response_model=CalculateRequest)
+async def calculate_lookalikes(
+    uuid_of_source: UUID = Query(..., description="UUID of source"),
+    lookalike_size: str = Query(..., description="Number of records to select for lookalike"),
+    lookalike_service: AudienceLookalikesService = Depends(get_lookalikes_service),
+    similar_audience_service: SimilarAudienceService = Depends(get_similar_audience_service),
+    user: dict = Depends(check_user_authorization_without_pixel)
+):
+    result = lookalike_service.calculate_lookalike(
+        similar_audience_service=similar_audience_service,
+        user=user,
+        uuid_of_source=uuid_of_source,
+        lookalike_size=lookalike_size
+    )
+    return result
+

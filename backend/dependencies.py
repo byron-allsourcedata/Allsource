@@ -69,6 +69,8 @@ from services.payments_plans import PaymentsPlans
 from services.pixel_installation import PixelInstallationService
 from services.plans import PlansService
 from services.settings import SettingsService
+from services.similar_audiences import SimilarAudienceService
+from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 from services.sse_events import SseEventsService
 from services.subscriptions import SubscriptionService
 from services.stripe_service import StripeService, get_stripe_payment_url
@@ -91,6 +93,7 @@ def get_db():
     finally:
         db.close()
 
+Db = Annotated[Session, Depends(get_db)]
 
 async def verify_signature(request: Request):
     logger.debug("Starting verification")
@@ -697,3 +700,11 @@ def check_api_key(maximiz_api_key=Header(None),
 def get_lookalikes_service(
         lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(get_lookalikes_persistence)):
     return AudienceLookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)
+
+def get_audience_data_normalization():
+    return AudienceDataNormalizationService()
+
+def get_similar_audience_service(
+        audience_data_normalization_service: AudienceDataNormalizationService = Depends(get_audience_data_normalization)
+):
+    return SimilarAudienceService(audience_data_normalization_service=audience_data_normalization_service)

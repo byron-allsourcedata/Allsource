@@ -30,13 +30,36 @@ interface ExpandableFilterProps {
   onEdit: () => void;
 }
 
+interface Recency {
+  days: number;
+}
+
+interface EmailValidation {
+  recency?: Recency;
+  mx?: {};
+  delivery?: {};
+}
+
+interface PhoneValidation {
+  last_update_date?: {};
+  confirmation?: {};
+}
+
+interface PostalValidation {
+  cas_office_address?: {};
+  cas_home_address?: {};
+}
+
+interface LinkedInValidation {
+  job_validation?: {};
+}
+
 interface FilterData {
-  recency_params: { [key: string]: string };
-  personal_email: string[];
-  business_email: string[];
-  phone: string[];
-  postal_cas: string[];
-  linked_in: string[];
+  personal_email: EmailValidation[];
+  business_email: EmailValidation[];
+  phone: PhoneValidation[];
+  postal_cas: PostalValidation[];
+  linked_in: LinkedInValidation[];
 }
 
 const AllFilters: React.FC<ExpandableFilterProps> = ({
@@ -169,6 +192,32 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
     };
   };
 
+  const toSnakeCase = (str: string) => {
+    return str.split(" ").join("_").toLowerCase();
+  };
+
+  const convertStrInObject = (el: string) => {
+    return { [toSnakeCase(el)]: {} };
+  };
+
+  const convertValidation = (array: string[]) => {
+    return array.map(convertStrInObject);
+  };
+
+  const convertValidationWithRecency = (array: string[], value: string) => {
+    if (!value) return convertValidation(array);
+
+    const filteredArray = array
+      .filter((name) => !["Recency", "RecencyBusiness"].includes(name))
+      .map(convertStrInObject);
+
+    const recencyObject = {
+      recency: { days: Number(value.replace(/[^\d]/g, "")) },
+    };
+
+    return [...filteredArray, recencyObject];
+  };
+
   const handleValidate = () => {
     setValidate(true);
     setIsOpenPersonalEmail(false);
@@ -177,12 +226,17 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
     setIsOpenPostalCAS(false);
     setIsOpenLinkedIn(false);
     onValidate({
-      personal_email: selectedOptionsPersonalEmail,
-      business_email: selectedOptionsBusinessEmail,
-      phone: selectedOptionsPhone,
-      postal_cas: selectedOptionsPostalCAS,
-      linked_in: selectedOptionsLinkedIn,
-      recency_params: nestedSelections,
+      personal_email: convertValidationWithRecency(
+        selectedOptionsPersonalEmail,
+        nestedSelections["Recency"]
+      ),
+      business_email: convertValidationWithRecency(
+        selectedOptionsBusinessEmail,
+        nestedSelections["RecencyBusiness"]
+      ),
+      phone: convertValidation(selectedOptionsPhone),
+      postal_cas: convertValidation(selectedOptionsPostalCAS),
+      linked_in: convertValidation(selectedOptionsLinkedIn),
     });
   };
 
@@ -235,9 +289,13 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 
     if (useCaseType === "Tele Marketing") {
       if (targetAudience === "Both" || targetAudience === "B2B") {
-        setSelectedOptionsPhone(["Last updated date", "Confirmation"]);
+        setSelectedOptionsPhone([
+          "Last updated date",
+          "Confirmation",
+          "DNC filter",
+        ]);
       } else if (targetAudience === "B2C") {
-        setSelectedOptionsPhone(["Last updated date"]);
+        setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
       }
       setValidate(false);
     }
@@ -1096,7 +1154,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                     pb: 0.75,
                   }}
                 >
-                  {["Last updated date", "Confirmation"].map(
+                  {["Last updated date", "Confirmation", "DNC filter"].map(
                     (option, index) => {
                       const isRecommended =
                         useCaseType === "Tele Marketing" &&
@@ -1133,12 +1191,16 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 }
                                 sx={{
                                   padding: 0,
+                                  pb: index === 2 ? 1 : 0,
                                   "&.Mui-checked": {
                                     color: "rgba(80, 82, 178, 1)",
                                   },
                                 }}
                               />
-                              <Typography className="form-input">
+                              <Typography
+                                className="form-input"
+                                sx={{ pb: index === 2 ? 1 : 0 }}
+                              >
                                 {option}
                               </Typography>
                               {isRecommended && (
@@ -1151,7 +1213,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                               )}
                             </Box>
                           </Box>
-                          {index === 0 && <Divider />}
+                          {(index === 0 || index === 1) && <Divider />}
                         </React.Fragment>
                       );
                     }

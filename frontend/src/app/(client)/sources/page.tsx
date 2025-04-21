@@ -54,6 +54,7 @@ import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SearchFilter";
 import CloseIcon from "@mui/icons-material/Close";
 import TableCustomCell from "./components/table/TableCustomCell";
+import { useScrollShadow } from "@/hooks/useScrollShadow";
 
 interface Source {
   id: string;
@@ -128,7 +129,9 @@ const Sources: React.FC = () => {
   const [isMakeRequest, setIsMakeRequest] = useState(false);
   const searchParams = useSearchParams();
   const isDebug = searchParams.get("is_debug") === "true";
-
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
+  
   const columns = [
     {
       key: "name",
@@ -673,32 +676,6 @@ const Sources: React.FC = () => {
       )
       .join(", ");
   };
-
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [isScrolledX, setIsScrolledX] = useState(false);
-  const [isScrolledY, setIsScrolledY] = useState(false);
-
-  useEffect(() => {
-    if (tableContainerRef.current) {
-      const container = tableContainerRef.current;
-      const checkScroll = () => {
-        setIsScrolledX(container.scrollLeft > 0);
-        setIsScrolledY(container.scrollTop > 0);
-      };
-
-      container.addEventListener("scroll", checkScroll);
-      window.addEventListener("resize", checkScroll);
-
-      checkScroll();
-
-      return () => {
-        container.removeEventListener("scroll", checkScroll);
-        window.removeEventListener("resize", checkScroll);
-      };
-    } else {
-      console.warn("TableContainer ref is still null");
-    }
-  }, [tableContainerRef.current]);
 
   return (
     <>
@@ -1568,7 +1545,7 @@ const Sources: React.FC = () => {
                                               onClick={() => {
                                                 handleClosePopover();
                                                 router.push(
-                                                  `/lookalikes/${selectedRowData?.id}/builder`
+                                                  `/lookalikes/builder?source_uuid=${selectedRowData?.id}`
                                                 );
                                               }}
                                             >

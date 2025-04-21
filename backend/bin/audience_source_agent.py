@@ -23,7 +23,7 @@ sys.path.append(parent_dir)
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users import FiveXFiveUser
-from enums import TypeOfCustomer, ProccessDataSyncResult, EmailType
+from enums import TypeOfCustomer, ProccessDataSyncResult, EmailType, BusinessType
 from utils import get_utc_aware_date, get_valid_email_without_million
 from models.leads_visits import LeadsVisits
 from models.emails import Email
@@ -452,73 +452,115 @@ async def process_and_send_chunks(db_session: Session, source_id: str, batch_siz
     logging.info(f"All chunks processed and messages sent for source_id {source_id}")
 
 async def normalize_persons_customer_conversion(
-    persons: List[PersonEntry], source_id: str, data_for_normalize: DataForNormalize, db_session: Session
+    persons: List[PersonEntry],
+    source_id: str,
+    data_for_normalize: DataForNormalize,
+    db_session: Session,
+    source_schema: str
 ):
-    logging.info(f"Processing normalization data for source_id {source_id}")
 
-    min_orders_amount = Decimal(str(data_for_normalize.min_amount)) if data_for_normalize.min_amount is not None else Decimal("0.0")
-    max_orders_amount = Decimal(str(data_for_normalize.max_amount)) if data_for_normalize.max_amount is not None else Decimal("1.0")
-    min_orders_count = Decimal(str(data_for_normalize.min_count))
-    max_orders_count = Decimal(str(data_for_normalize.max_count))
-    min_recency = Decimal(str(data_for_normalize.min_recency)) if data_for_normalize.min_recency is not None else Decimal("0.0")
-    max_recency = Decimal(str(data_for_normalize.max_recency)) if data_for_normalize.max_recency is not None else Decimal("1.0")
+    min_recency = Decimal(
+        str(data_for_normalize.min_recency)) if data_for_normalize.min_recency is not None else Decimal("0.0")
+    max_recency = Decimal(
+        str(data_for_normalize.max_recency)) if data_for_normalize.max_recency is not None else Decimal("1.0")
 
     updates = []
 
-    for person in persons:
-        if person.sum_amount is None:
-            logging.warning(f"Missing orders_amount for person with id {person.id}")
-            orders_amount = Decimal("0.0")
-        else:
-            orders_amount = Decimal(str(person.sum_amount))
+    min_inv = AudienceSourceMath.inverted_decimal(Decimal(min_recency))
+    max_inv = AudienceSourceMath.inverted_decimal(Decimal(max_recency))
 
-        if person.count is None:
-            logging.warning(f"Missing orders_count for person with id {person.id}")
-            orders_count = Decimal("0.0")
-        else:
-            orders_count = Decimal(str(person.count))
+    if min_inv > max_inv:
+        min_inv, max_inv = max_inv, min_inv
 
-        if person.recency is None:
-            logging.warning(f"Missing recency for person with id {person.id}")
-            recency = Decimal("0.0")
-        else:
-            recency = Decimal(str(person.recency))
+    if source_schema.lower() == BusinessType.B2C.value:
+        # B2C Algorithm:
+        # For B2C, the LeadValueScore is based solely on the recency of failed lead attempts.
+        # We use the "start_date" field as LastFailedDate.
+        inverted_values = []
+        for person in persons:
+            inv = AudienceSourceMath.inverted_decimal(Decimal(person.recency))
+            inverted_values.append(inv)
 
-        recency_normalized = AudienceSourceMath.normalize_decimal(value=recency, min_val=min_recency, max_val=max_recency)
-        orders_count_normalized = AudienceSourceMath.normalize_decimal(value=orders_count, min_val=min_orders_count, max_val=max_orders_count)
-        orders_amount_normalized = AudienceSourceMath.normalize_decimal(value=orders_amount, min_val=min_orders_amount, max_val=max_orders_amount)
+        for person, inv in zip(persons, inverted_values):
+            normalized_value = AudienceSourceMath.normalize_decimal(value=inv, min_val=min_inv, max_val=max_inv)
+            update_data = {
+                'id': person.id,
+                'source_id': source_id,
+                'email': person.email,
+                'recency_min': min_recency,
+                'recency_max': max_recency,
+                'inverted_recency': inv,
+                'inverted_recency_min': min_inv,
+                'inverted_recency_max': max_inv,
+                'value_score': normalized_value,
+            }
+            updates.append(update_data)
 
-        value_score = AudienceSourceMath.weighted_score(
-            first_data=orders_amount_normalized,
-            second_data=orders_count_normalized,
-            third_data=recency_normalized,
-            w1=Decimal("1"),
-            w2=Decimal("1"),
-            w3=Decimal("1"),
-            correction=Decimal("1")
-        )
+    elif source_schema.lower() == BusinessType.B2B.value:
+        # B2B Algorithm:
+        # For B2B, the score is a combination of three components:
+        # 1. Recency Score based on BUSINESS_EMAIL_LAST_SEEN_DATE.
+        # 2. Professional Score calculated from JobLevel, Department, and CompanySize.
+        # 3. Completeness Score based on the presence of a valid business email, LinkedIn URL,
+        #    and non-null professional attributes.
+        inverted_values = []
 
-        updates.append({
-            'id': person.id,
-            'source_id': source_id,
-            'email': person.email,
-            'amount_min': min_orders_amount,
-            'amount_max': max_orders_amount,
-            'count_min': min_orders_count,
-            'count_max': max_orders_count,
-            'recency_min': min_recency,
-            'recency_max': max_recency,
-            'recency_score': recency_normalized,
-            'view_score':orders_count_normalized,
-            'sum_score': orders_amount_normalized,
-            'value_score': value_score,
-        })
+        for person in persons:
+            inv = AudienceSourceMath.inverted_decimal(Decimal(person.recency))
+            inverted_values.append(inv)
+
+        job_level_map = {'Executive': Decimal("1.0"), 'Senior': Decimal("0.8"), 'Manager': Decimal("0.6"), 'Entry': Decimal("0.4")}
+        department_map = {'Sales': Decimal("1.0"), 'Marketing': Decimal("0.8"), 'Engineering': Decimal("0.6")}
+        company_size_map = {'1000+': Decimal("1.0"), '501-1000': Decimal("0.8"), '101-500': Decimal("0.6"), '51-100': Decimal("0.4")}
+        for idx, person in enumerate(persons):
+            recency_inv = inverted_values[idx]
+            recency_score = AudienceSourceMath.normalize_decimal(value=recency_inv, min_val=min_inv, max_val=max_inv)
+            job_level = getattr(person, 'job_level', None)
+            department = getattr(person, 'department', None)
+            company_size = getattr(person, 'company_size', None)
+            job_level_weight = job_level_map.get(job_level, Decimal("0.2"))
+            department_weight = department_map.get(department, Decimal("0.4"))
+            company_size_weight = company_size_map.get(company_size, Decimal("0.2"))
+            professional_score = (Decimal("0.5") * job_level_weight +
+                                  Decimal("0.3") * department_weight +
+                                  Decimal("0.2") * company_size_weight)
+            completeness_score = Decimal("0.0")
+            if getattr(person, 'business_email', None) and getattr(person, 'business_email_validation_status', None) == 'Valid':
+                completeness_score += Decimal("0.4")
+            if getattr(person, 'linkedin_url', None):
+                completeness_score += Decimal("0.3")
+            if job_level:
+                completeness_score += Decimal("0.2")
+            if department:
+                completeness_score += Decimal("0.1")
+            lead_value_score_b2b = (Decimal("0.4") * recency_score +
+                                    Decimal("0.4") * professional_score +
+                                    Decimal("0.2") * completeness_score)
+            update_data = {
+                'id': person.id,
+                'source_id': source_id,
+                'email': person.email,
+                'recency_min': min_recency,
+                'recency_max': max_recency,
+                'inverted_recency': inverted_values[idx],
+                'inverted_recency_min': min_inv,
+                'inverted_recency_max': max_inv,
+                'recency_score': recency_score,
+                'view_score': professional_score,
+                'sum_score': completeness_score,
+                'value_score': lead_value_score_b2b,
+            }
+            updates.append(update_data)
+    else:
+        logging.warning(f"Unknown source_schema: {source_schema}. No lead value score computed.")
+
+
 
     if updates:
         db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
-        logging.info(f"Updated {len(updates)} persons.")
-
-    db_session.commit()
+        logging.info(f"Updated {len(updates)} persons with lead value scores.")
+        db_session.flush()
+        db_session.commit()
 
     logging.info(
         f"RMQ message sent for matched records {data_for_normalize.matched_size} matched persons "
@@ -655,7 +697,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         if type == 'emails' and data_for_normalize:
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
                 await normalize_persons_customer_conversion(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
-                                                            db_session=db_session)
+                                                            db_session=db_session, source_schema=audience_source.target_schema)
 
             if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
                 await normalize_persons_failed_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,

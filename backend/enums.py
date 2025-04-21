@@ -9,6 +9,13 @@ class EmailType(Enum):
     PERSONAL = "personal"
     ADDITIONAL_PERSONAL = "additional_personal"
 
+class LookalikeSize(Enum):
+    ALMOST = "almost"
+    EXTREMELY = "extremely"
+    VERY = "very"
+    QUITE = "quite"
+    BROAD = "broad"
+
 class QueueName(Enum):
     AUDIENCE_SOURCE_MATCHING = 'aud_sources_matching'
     AUDIENCE_SOURCES_READER = 'aud_sources_files'
@@ -51,6 +58,7 @@ class IntegrationLimit(Enum):
 class BusinessType(Enum):
     D2C = 'd2c'
     B2B = 'b2b'
+    B2C = 'b2c'
 
 class LeadStatus(Enum):
     ABANDONED_CART = 'abandoned_cart'

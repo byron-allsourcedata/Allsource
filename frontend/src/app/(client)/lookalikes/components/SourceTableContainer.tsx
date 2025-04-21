@@ -8,8 +8,8 @@ import {
   Paper,
   TableContainer,
   Box,
+  Typography,
 } from "@mui/material";
-import ProgressBar from "./ProgressLoader";
 import dayjs from "dayjs";
 
 interface TableData {
@@ -39,6 +39,10 @@ const setSourceType = (sourceType: string) => {
     .join(", ");
 };
 
+const setSourceOrigin = (sourceOrigin: string) => {
+  return sourceOrigin === "pixel" ? "Pixel" : "CSV File";
+};
+
 const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
   return (
     <TableContainer
@@ -52,14 +56,12 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
         overflowX: "auto",
       }}
     >
+      {/* Десктопная версия */}
       <Table
         sx={{
           borderCollapse: "separate",
           width: "100%",
-          display: "table",
-          "@media (max-width: 600px)": {
-            display: "none",
-          },
+          display: { xs: "none", sm: "table" },
         }}
       >
         <TableHead
@@ -69,7 +71,6 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
               fontWeight: 600,
               fontSize: "12px",
               lineHeight: "16.8px",
-              letterSpacing: "0%",
               border: "none",
               padding: "8px",
               color: "#202124",
@@ -81,7 +82,7 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
             <TableCell>Target Type</TableCell>
             <TableCell>Source</TableCell>
             <TableCell>Type</TableCell>
-            <TableCell>Created date</TableCell>
+            <TableCell>Created Date</TableCell>
             <TableCell>Created By</TableCell>
             <TableCell>Number of Customers</TableCell>
             <TableCell>Matched Records</TableCell>
@@ -104,44 +105,267 @@ const SourceTableContainer: React.FC<TableContainerProps> = ({ tableData }) => {
             <TableRow key={index}>
               <TableCell>{row.name}</TableCell>
               <TableCell>{row.target_schema.toUpperCase()}</TableCell>
-              <TableCell>{setSourceType(row.source)}</TableCell>
+              <TableCell>{setSourceOrigin(row.source)}</TableCell>
               <TableCell>{setSourceType(row.type)}</TableCell>
               <TableCell>
                 {dayjs(row.created_date).format("MMM D, YYYY")}
               </TableCell>
               <TableCell>{row.created_by}</TableCell>
-              <TableCell>{row.number_of_customers.toLocaleString("en-US")}</TableCell>
-              <TableCell>{row.matched_records.toLocaleString("en-US")}</TableCell>
+              <TableCell>
+                {row.number_of_customers.toLocaleString("en-US")}
+              </TableCell>
+              <TableCell>
+                {row.matched_records.toLocaleString("en-US")}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
 
+      {/* Мобильная версия */}
       <Box
         sx={{
-          display: "none",
-          "@media (max-width: 600px)": {
-            display: "block",
-          },
+          display: { xs: "block", sm: "none" },
+          mt: 2,
         }}
       >
         {tableData.map((row, index) => (
-          <Box
+          <Paper
             key={index}
             sx={{
-              backgroundColor: "#FFF",
+              padding: "16px",
+              marginBottom: "16px",
+              border: "1px solid #EBEBEB",
+              borderRadius: "4px",
+              boxShadow: "none",
             }}
           >
-            <Box sx={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <Box>Name: {row.name}</Box>
-              <Box> Source: {row.source}</Box>
-              <Box> Type: {row.type}</Box>
-              <Box> Created Date: {row.created_date}</Box>
-              <Box> Created By: {row.created_by}</Box>
-              <Box> Number of Customers: {row.number_of_customers.toLocaleString("en-US")}</Box>
-              <Box> Matched Records: {row.matched_records.toLocaleString("en-US")}</Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                mb: 1,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: "Nunito Sans",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  color: "#202124",
+                }}
+              >
+                Name:
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "Roboto",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  color: "#5F6368",
+                }}
+              >
+                {row.name}
+              </Typography>
             </Box>
-          </Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                mb: 1,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: "Nunito Sans",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  color: "#202124",
+                }}
+              >
+                Target Type:
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "Roboto",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  color: "#5F6368",
+                }}
+              >
+                {row.target_schema.toUpperCase()}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                mb: 1,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: "Nunito Sans",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  color: "#202124",
+                }}
+              >
+                Source:
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "Roboto",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  color: "#5F6368",
+                }}
+              >
+                {setSourceOrigin(row.source)}
+              </Typography>
+            </Box>
+            <Box
+              sx={{ 
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                mb: 1,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: "Nunito Sans",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  color: "#202124",
+                }}
+              >
+                Type:
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "Roboto",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  color: "#5F6368",
+                }}
+              >
+                {setSourceType(row.type)}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                mb: 1,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: "Nunito Sans",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  color: "#202124",
+                }}
+              >
+                Created Date:
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "Roboto",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  color: "#5F6368",
+                }}
+              >
+                {dayjs(row.created_date).format("MMM D, YYYY")}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                mb: 1,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: "Nunito Sans",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  color: "#202124",
+                }}
+              >
+                Created By:
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "Roboto",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  color: "#5F6368",
+                }}
+              >
+                {row.created_by}
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                mb: 1,
+              }}
+            >
+              <Typography
+                sx={{
+                  fontFamily: "Nunito Sans",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  color: "#202124",
+                }}
+              >
+                Number of Customers:
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "Roboto",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  color: "#5F6368",
+                }}
+              >
+                {row.number_of_customers.toLocaleString("en-US")}
+              </Typography>
+            </Box>
+            <Box sx={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap" }}>
+              <Typography
+                sx={{
+                  fontFamily: "Nunito Sans",
+                  fontWeight: 600,
+                  fontSize: "12px",
+                  color: "#202124",
+                }}
+              >
+                Matched Records:
+              </Typography>
+              <Typography
+                sx={{
+                  fontFamily: "Roboto",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  color: "#5F6368",
+                }}
+              >
+                {row.matched_records.toLocaleString("en-US")}
+              </Typography>
+            </Box>
+          </Paper>
         ))}
       </Box>
     </TableContainer>

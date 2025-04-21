@@ -31,6 +31,7 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
 import EditIcon from '@mui/icons-material/Edit';
 import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
+import { useScrollShadow } from '@/hooks/useScrollShadow';
 
 interface Smarts {
     id: string
@@ -159,6 +160,9 @@ const SmartAudiences: React.FC = () => {
     const [editPopoverAnchorEl, setEditPopoverAnchorEl] = useState<null | HTMLElement>(null);
     const [isEditPopoverOpen, setIsEditPopoverOpen] = useState(false);
 
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
+
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const [dataSyncPopupOpen, setDataSyncPopupOpen] = useState(false);
@@ -187,7 +191,7 @@ const SmartAudiences: React.FC = () => {
                 end: appliedDates.end,
             }
         });
-    }, [orderBy, order, page, rowsPerPage, appliedDates]);
+    }, [orderBy, order, page, rowsPerPage, appliedDates, selectedFilters]);
 
     const clearPollingInterval = () => {
         if (intervalRef.current) {
@@ -604,32 +608,6 @@ const SmartAudiences: React.FC = () => {
           .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
           .join(" ")
     }
-
-    const tableContainerRef = useRef<HTMLDivElement>(null);
-    const [isScrolledX, setIsScrolledX] = useState(false);
-    const [isScrolledY, setIsScrolledY] = useState(false);
-    
-    useEffect(() => {
-      if (tableContainerRef.current) {
-        const container = tableContainerRef.current;
-        const checkScroll = () => {
-          setIsScrolledX(container.scrollLeft > 0);
-          setIsScrolledY(container.scrollTop > 0);
-        };
-    
-        container.addEventListener("scroll", checkScroll);
-        window.addEventListener("resize", checkScroll);
-    
-        checkScroll();
-    
-        return () => {
-          container.removeEventListener("scroll", checkScroll);
-          window.removeEventListener("resize", checkScroll);
-        };
-      } else {
-        console.warn("TableContainer ref is still null");
-      }
-    }, [tableContainerRef.current]);
 
     return (
         <>

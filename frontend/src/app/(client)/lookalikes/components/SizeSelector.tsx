@@ -5,39 +5,41 @@ const audienceSize = [
     {
         id: "almost",
         label: "Almost identical",
-        text: "Lookalike size 0-3%",
+        text: "Lookalike size: 10,000 contacts",
         min_value: 0,
         max_value: 3,
     },
     {
         id: "extremely",
         label: "Extremely similar",
-        text: "Lookalike size 0-7%",
+        text: "Lookalike size: 50,000 contacts",
         min_value: 0,
         max_value: 7,
     },
     {
         id: "very",
         label: "Very similar",
-        text: "Lookalike size 0-10%",
+        text: "Lookalike size: 100,000 contacts",
         min_value: 0,
         max_value: 10,
     },
     {
         id: "quite",
         label: "Quite similar",
-        text: "Lookalike size 0-15%",
+        text: "Lookalike size: 200,000 contacts",
         min_value: 0,
         max_value: 15,
     },
     {
         id: "broad",
         label: "Broad",
-        text: "Lookalike size 0-20%",
+        text: "Lookalike size: 500,000 contacts",
         min_value: 0,
         max_value: 20,
     },
 ];
+
+const RECOMMENDED_SIZE = "extremely";
 
 interface AudienceSizeSelectorProps {
     onSelectSize: (id: string, min: number, max: number, label: string) => void;
@@ -89,89 +91,94 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                         flexWrap: "wrap",
                     }}
                 >
-                    {audienceSize.map((source) => (
-                        <Box
-                            key={source.id}
-                            sx={{
-                                width: { xs: "100%", sm: "auto" },
-                                position: "relative",
-                            }}
-                        >
-                            {source.id === "extremely" && (
-                                <Box
-                                    sx={{
-                                        position: "absolute",
-                                        top: "-19px",
-                                        left: "0",
-                                        backgroundColor: "#009970",
-                                        color: "#FFFFFF",
-                                        fontSize: "10px",
-                                        fontWeight: "bold",
-                                        padding: "4px 8px",
-                                        borderRadius: "6px 6px 0 0",
-                                        whiteSpace: "nowrap",
-                                        minWidth: "80px",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    Recommended
-                                </Box>
-                            )}
-                            <Button
-                                onClick={() =>
-                                    onSelectSize(
-                                        source.id,
-                                        source.min_value,
-                                        source.max_value,
-                                        source.label
-                                    )
-                                }
+                    {audienceSize.map((source) => {
+                        const isRecommended = source.id === RECOMMENDED_SIZE;
+                        return (
+                            <Box
+                                key={source.id}
                                 sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    flex: 1,
-                                    minWidth: '12.125rem',
-                                    border:
-                                        selectedSize === source.id
-                                            ? "1px solid rgba(117, 168, 218, 1)"
-                                            : "1px solid rgba(208, 213, 221, 1)",
-                                    backgroundColor: selectedSize === source.id 
-                                    ? 'rgba(246, 248, 250, 1)'
-                                    : 'rgba(255, 255, 255, 1)',
-                                    padding: "0.6rem 0.5rem",
-                                    borderRadius: "4px",
-                                    textTransform: "none",
                                     width: { xs: "100%", sm: "auto" },
+                                    position: "relative",
                                 }}
                             >
-                                <Box
+                                {isRecommended && (
+                                    <Box
+                                        sx={{
+                                            position: "absolute",
+                                            top: "-19px",
+                                            left: "0",
+                                            backgroundColor: "#009970",
+                                            color: "#FFFFFF",
+                                            fontSize: "10px",
+                                            fontWeight: "bold",
+                                            padding: "4px 8px",
+                                            borderRadius: "6px 6px 0 0",
+                                            whiteSpace: "nowrap",
+                                            minWidth: "80px",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        Recommended
+                                    </Box>
+                                )}
+                                <Button
+                                    onClick={() =>
+                                        onSelectSize(
+                                            source.id,
+                                            source.min_value,
+                                            source.max_value,
+                                            source.label
+                                        )
+                                    }
                                     sx={{
                                         display: "flex",
-                                        width: '100%',
                                         flexDirection: "column",
-                                        alignItems: "flex-start",
-                                        justifyContent: 'start',
-                                        gap: "10px",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        flex: 1,
+                                        minWidth: '12.125rem',
+                                        border:
+                                            selectedSize === source.id
+                                                ? "1px solid rgba(117, 168, 218, 1)"
+                                                : "1px solid rgba(208, 213, 221, 1)",
+                                        backgroundColor: selectedSize === source.id
+                                            ? 'rgba(246, 248, 250, 1)'
+                                            : 'rgba(255, 255, 255, 1)',
+                                        padding: "0.6rem 0.5rem",
+                                        borderRadius: isRecommended
+                                            ? "0 4px 4px 4px"
+                                            : "4px",
+                                        textTransform: "none",
+                                        width: { xs: "100%", sm: "auto" },
                                     }}
                                 >
-                                    <Typography
-                                        className="paragraph"
-                                        sx={{ color: "rgba(32, 33, 36, 1)", }}
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            width: '100%',
+                                            flexDirection: "column",
+                                            alignItems: "flex-start",
+                                            justifyContent: 'start',
+                                            gap: "10px",
+                                        }}
                                     >
-                                        {source.label}
-                                    </Typography>
-                                    <Typography
-                                        className="paragraph"
-                                        sx={{ fontSize: "12px" }}
-                                    >
-                                        {source.text}
-                                    </Typography>
-                                </Box>
-                            </Button>
-                        </Box>
-                    ))}
+                                        <Typography
+                                            className="paragraph"
+                                            sx={{ color: "rgba(32, 33, 36, 1)", }}
+                                        >
+                                            {source.label}
+                                        </Typography>
+                                        <Typography
+                                            className="paragraph"
+                                            sx={{ fontSize: "12px" }}
+                                        >
+                                            {source.text}
+                                        </Typography>
+                                    </Box>
+                                </Button>
+                            </Box>
+                        );
+                    })}
                 </Box>
             </Box>
         </Box>
