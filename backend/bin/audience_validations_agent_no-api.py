@@ -69,7 +69,7 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
         recency_personal_days = message_body.get("recency_personal_days")
         recency_business_days = message_body.get("recency_business_days")
         validation_type = message_body.get("validation_type")
-        is_last_validation = message_body.get("is_last_validation")
+        is_last_validation_in_type = message_body.get("is_last_validation_in_type")
         is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation", False) 
 
         try:
@@ -100,7 +100,7 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                 )
 
 
-            if is_last_validation:
+            if is_last_validation_in_type:
                 aud_smart = db_session.query(AudienceSmart).filter_by(id=aud_smart_id).first()
                 if aud_smart:
                     validations = json.loads(aud_smart.validations)
@@ -110,39 +110,40 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                             if column_name in rule:
                                 rule[column_name]["processed"] = True
                     aud_smart.validations = json.dumps(validations)
+            
+
+            db_session.commit()
 
             if is_last_iteration_in_last_validation:
                 logging.info(f"is last validation")
 
-                # with db_session.begin():
-                #==========================
-                subquery = select(EnrichmentUserContact.enrichment_user_id).filter(
-                    EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id
-                )
+                with db_session.begin():
+                    subquery = select(EnrichmentUserContact.enrichment_user_id).filter(
+                        EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id
+                    )
 
-                db_session.query(AudienceSmartPerson).filter(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True,
-                    AudienceSmartPerson.enrichment_user_id.in_(subquery)
-                ).update({"is_valid": True}, synchronize_session=False)
+                    db_session.query(AudienceSmartPerson).filter(
+                        AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                        AudienceSmartPerson.is_validation_processed == True,
+                        AudienceSmartPerson.enrichment_user_id.in_(subquery)
+                    ).update({"is_valid": True}, synchronize_session=False)
 
-                total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True,
-                    AudienceSmartPerson.enrichment_user_id.in_(subquery)
-                ).scalar()
+                    total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
+                        AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                        AudienceSmartPerson.is_validation_processed == True,
+                        AudienceSmartPerson.enrichment_user_id.in_(subquery)
+                    ).scalar()
 
-                db_session.query(AudienceSmart).filter(
-                    AudienceSmart.id == aud_smart_id
-                ).update(
-                    {
-                        "validated_records": total_validated,
-                        "status": "ready",
-                    }
-                )
+                    db_session.query(AudienceSmart).filter(
+                        AudienceSmart.id == aud_smart_id
+                    ).update(
+                        {
+                            "validated_records": total_validated,
+                            "status": "ready",
+                        }
+                    )
 
-                db_session.commit()
-                #==========================
+                    db_session.commit()
 
                 await send_sse(
                     connection,
@@ -154,7 +155,6 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                 )
                 logging.info(f"sent sse with total count")
 
-            db_session.commit()
 
             await publish_rabbitmq_message(
                 connection=connection,

@@ -110,7 +110,10 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                     logging.info(f"validation_params_list {validation_params_list}")
                     
                     if len(validation_params_list) > 0:
+                        length_validations_type = len(validation_params_list)
+                        count_validations_type = 0
                         for param in validation_params_list:
+                            count_validations_type += 1
                             if validation_type in param:
                                 column_name = column_mapping.get(value)
                                 logging.info(f"column_name {column_name}")
@@ -157,9 +160,9 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                     continue    
 
                                 i += 1
-                                is_last_validation = i == count_validations
+                                is_last_validation_in_type = count_validations_type == length_validations_type
 
-                                logging.info(f"is_last_validation {is_last_validation}")
+                                logging.info(f"is last validation in type {is_last_validation_in_type}")
 
                                 for j in range(0, len(enrichment_users), 100):
                                     batch = enrichment_users[j:j+100]
@@ -171,7 +174,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         for user in batch
                                     ]
 
-                                    is_last_iteration_in_last_validation = is_last_validation and (j + 100 >= len(enrichment_users))
+                                    is_last_iteration_in_last_validation = (i == count_validations) and (j + 100 >= len(enrichment_users))
 
                                     # if i < 5: at available second worker
 
@@ -182,7 +185,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         'recency_business_days': recency_business_days,
                                         'batch': serialized_batch,
                                         'validation_type': column_name,
-                                        'is_last_validation': is_last_validation,
+                                        'is_last_validation_in_type': is_last_validation_in_type,
                                         'is_last_iteration_in_last_validation': is_last_iteration_in_last_validation
                                     }
                                     await publish_rabbitmq_message(

@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, BOOLEAN
-
+from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, BOOLEAN, Index 
 from models.audience_smarts import AudienceSmart
 from models.enrichment_users import EnrichmentUser
 from .base import Base
@@ -16,3 +15,9 @@ class AudienceSmartPerson(Base):
     is_validation_processed = Column(BOOLEAN, default=False, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        Index('audience_smarts_persons_is_validation_processed_idx', 'is_validation_processed'),
+        Index('audience_smarts_persons_smart_audience_id_idx', 'smart_audience_id'),
+        Index('audience_smarts_persons_enrichment_user_id_idx', 'enrichment_user_id'),
+    )
