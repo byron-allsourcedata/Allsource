@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TIMESTAMP,TEXT
+from sqlalchemy import Column, Integer, TIMESTAMP, TEXT, text, BigInteger, ForeignKey
 from sqlalchemy.dialects.postgresql import NUMERIC, VARCHAR
 from enums import PayoutsStatus, ConfirmationStatus
 from .base import Base
@@ -6,15 +6,54 @@ from .base import Base
 
 class ReferralPayouts(Base):
     __tablename__ = 'referral_payouts'
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    parent_id = Column(Integer, nullable=False)
-    user_id = Column(Integer, nullable=False)
-    plan_amount = Column(NUMERIC(18, 2), nullable=False)
-    reward_amount = Column(NUMERIC(18, 2), nullable=False)
-    reward_type = Column(VARCHAR(128), nullable=False)
-    created_at = Column(TIMESTAMP, nullable=False)
-    comment = Column(TEXT, nullable=True)
-    paid_at = Column(TIMESTAMP, nullable=True)
-    status = Column(VARCHAR(16), nullable=False, default=PayoutsStatus.PENDING.value)
-    confirmation_status = Column(VARCHAR(16), nullable=False, default=ConfirmationStatus.PENDING.value)
+
+    id = Column(
+        BigInteger,
+        primary_key=True,
+        nullable=False,
+        server_default=text("nextval('referral_payouts_id_seq'::regclass)")
+    )
+    parent_id = Column(
+        BigInteger,
+        ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    user_id = Column(
+        BigInteger,
+        ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    reward_amount = Column(
+        NUMERIC(18, 2),
+        nullable=False
+    )
+    reward_type = Column(
+        VARCHAR(128),
+        nullable=False
+    )
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False
+    )
+    status = Column(
+        VARCHAR(16),
+        nullable=False,
+        server_default=text("'pending'::character varying")
+    )
+    confirmation_status = Column(
+        VARCHAR(16),
+        nullable=False,
+        server_default=text("'pending'::character varying")
+    )
+    plan_amount = Column(
+        NUMERIC(18, 2),
+        nullable=False
+    )
+    paid_at = Column(
+        TIMESTAMP,
+        nullable=True
+    )
+    comment = Column(
+        TEXT,
+        nullable=True
+    )

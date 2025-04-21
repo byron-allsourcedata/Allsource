@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import case
-from models.plans import SubscriptionPlan
+from models import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import User
 from enums import SourcePlatformEnum
