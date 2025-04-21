@@ -79,7 +79,7 @@ export default function LookalikeFieldsGrid({
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 600, mx: 'auto' }}>
+    <Box sx={{ width: '100%', maxWidth: 600,  }}>
       {rows.map((row, index) => (
         <Box
           key={row.id}
@@ -88,11 +88,13 @@ export default function LookalikeFieldsGrid({
           onDrop={handleDrop}
           sx={{
             display: 'flex',
-            alignItems: 'center',
+            justifyContent: 'flex-start',     
+            alignItems: 'center',        
             p: 1.5,
             bgcolor: dragOverIndex === index ? 'action.hover' : 'background.paper',
             borderBottom: '1px solid',
             borderColor: 'divider',
+            textAlign: 'left',              
           }}
         >
           <Box
@@ -113,8 +115,8 @@ export default function LookalikeFieldsGrid({
             <DragIndicatorIcon fontSize="small" />
           </Box>
 
-          <Box sx={{ flex: 1, typography: 'body2' }}>{row.name}</Box>
-          <Box sx={{ width: 150, textAlign: 'right', typography: 'body2' }}>
+          <Box sx={{ flex: 1, typography: 'body2', textAlign: 'left' }}>{row.name}</Box>
+          <Box sx={{ width: 150, textAlign: 'left', typography: 'body2' }}>
             {row.value}
           </Box>
         </Box>

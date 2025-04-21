@@ -2,7 +2,7 @@ from typing import Dict
 from typing import List, Annotated
 
 import pandas as pd
-from catboost import CatBoostRegressor
+from catboost import CatBoostRegressor, CatBoostError
 from fastapi import Depends
 from pandas import DataFrame
 from sklearn.model_selection import train_test_split
@@ -11,6 +11,7 @@ from typing_extensions import deprecated
 from schemas.similar_audiences import AudienceData, AudienceFeatureImportance, NormalizationConfig
 from .audience_data_normalization import AudienceDataNormalizationService, AudienceDataNormalizationServiceDep, \
     default_normalization_config
+from .exceptions import EqualTrainTargets
 
 
 class SimilarAudienceService:
@@ -62,7 +63,13 @@ class SimilarAudienceService:
             verbose=0
         )
 
-        model.fit(x_train, y_train)
+        try:
+            model.fit(x_train, y_train)
+        except CatBoostError as e:
+            if "All train targets are equal" in str(e):
+                value = y_train[0]
+                raise EqualTrainTargets(f"All train targets are equal - customer value is same ({value}) for all rows, check if your data is valid)")
+
 
         return model
 

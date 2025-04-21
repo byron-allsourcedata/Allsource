@@ -38,6 +38,7 @@ import { audienceStyles } from "../../audience/audienceStyles";
 import TableCustomCell from "../../sources/components/table/TableCustomCell";
 import { useSSE } from "@/context/SSEContext";
 import { padding } from "@mui/system";
+import { useScrollShadow } from "@/hooks/useScrollShadow";
 
 interface TableRowData {
   id: string;
@@ -66,11 +67,11 @@ interface LookalikeTableProps {
 const audienceSize = [
   {
     label: "almost_identical",
-    text: "10K"
+    text: "10K",
   },
   {
     label: "extremely_similar",
-    text: "50K"
+    text: "50K",
   },
   {
     label: "very_similar",
@@ -203,7 +204,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
       }
       setEditingRowId(null);
       setIsEditPopoverOpen(false);
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const handleDelete = async (rowId: string) => {
@@ -275,30 +276,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
   };
 
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const [isScrolledX, setIsScrolledX] = useState(false);
-  const [isScrolledY, setIsScrolledY] = useState(false);
-
-  useEffect(() => {
-    if (tableContainerRef.current) {
-      const container = tableContainerRef.current;
-      const checkScroll = () => {
-        setIsScrolledX(container.scrollLeft > 0);
-        setIsScrolledY(container.scrollTop > 0);
-      };
-
-      container.addEventListener("scroll", checkScroll);
-      window.addEventListener("resize", checkScroll);
-
-      checkScroll();
-
-      return () => {
-        container.removeEventListener("scroll", checkScroll);
-        window.removeEventListener("resize", checkScroll);
-      };
-    } else {
-      console.warn("TableContainer ref is still null");
-    }
-  }, [tableContainerRef.current]);
+  const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, tableData.length);
 
   return (
     <TableContainer
@@ -348,7 +326,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                     left: 0,
                     zIndex: 98,
                     top: 0,
-                    boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
                   }),
 
                   ...(key === "actions" && {
@@ -461,8 +438,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                               size="small"
                               onClick={() => toggleRow(row.id)}
                               sx={{
-                                color: '#202124',
-                                marginRight: '16px',
+                                color: "#202124",
+                                marginRight: "16px",
                               }}
                             >
                               {openRowId === row.id ? (
@@ -493,7 +470,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                             handleRename(event, row.id, row.name)
                           }
                         >
-                          <EditIcon sx={{ maxHeight: "16px", fontSize: "16px" }} />
+                          <EditIcon
+                            sx={{ maxHeight: "16px", fontSize: "16px" }}
+                          />
                         </IconButton>
                       </Box>
                     )}
@@ -880,14 +859,15 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   </Popover>
                 </TableRow>
 
-                {isDebug && (
+                {isDebug && openRowId == row.id && (
                   <>
-                    <TableRow>
+                    <TableRow
+                      sx={{ "& > *": { borderBottom: "1px solid #e0e0e0" } }}
+                    >
                       <TableCell
                         sx={{
                           ...lookalikesStyles.table_array,
                           position: "relative",
-                          p: 0,
                         }}
                         style={{ paddingBottom: 0, paddingTop: 0 }}
                       >
@@ -896,7 +876,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           timeout="auto"
                           unmountOnExit
                         >
-                          <Box sx={{ p: 1 }}>
+                          <Box sx={{ margin: 1 }}>
                             <Typography className="table-data">
                               Significant field
                             </Typography>
@@ -919,7 +899,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           timeout="auto"
                           unmountOnExit
                         >
-                          <Box sx={{ p: 1 }}>
+                          <Box sx={{ margin: 1 }}>
                             <Typography className="table-data">
                               {fullFormattedFields(row.significant_fields)}%
                             </Typography>
@@ -933,24 +913,23 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           maxWidth: "44px",
                           minWidth: "44px",
                           padding: "8px",
-                          p: 0,
                           textAlign: "center",
                         }}
-
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
                       >
                         <Collapse
                           in={openRowId === row.id}
                           timeout="auto"
                           unmountOnExit
                         >
-                          <Box sx={{ m: 0, mr: 1 }}>
+                          <Box sx={{ margin: 0, mr: 1 }}>
                             <IconButton
                               sx={{
                                 pl: 0,
                                 pr: 0.5,
                                 pt: 0.25,
                                 pb: 0.25,
-                                m: 0,
+                                margin: 0,
                               }}
                               onClick={() =>
                                 handleCopy(
@@ -966,49 +945,102 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                     </TableRow>
                     <TableRow>
                       <TableCell
-                        colSpan={columns(isDebug).length}
                         sx={{
-                          p: 0,
-                          borderBottom: "none",
+                          ...lookalikesStyles.table_array,
+                          p: 0.25,
+                          pl: 1,
+                          position: "relative",
+                          "&::after": {
+                            content: '""',
+                            display: "block",
+                            position: "absolute",
+                            top: "10px",
+                            bottom: "10px",
+                            right: 0,
+                            width: "1px",
+                            backgroundColor: "rgba(235, 235, 235, 1)",
+                          },
                         }}
                       >
-                        <Collapse in={openRowId === row.id} timeout="auto" unmountOnExit>
-                          <Box sx={{ px: 2, py: 1 }}>
-                            <Typography className="table-data" sx={{ fontWeight: 500, mb: 0.5 }}>
-                              Significant field
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Typography className="table-data">
-                                {fullFormattedFields(row.significant_fields)}%
-                              </Typography>
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleCopy(fullFormattedFields(row.significant_fields))
-                                }
-                                sx={{ ml: 1 }}
-                              >
-                                <ContentCopyIcon sx={{ maxHeight: "18px" }} />
-                              </IconButton>
-                            </Box>
-
-                            <Typography className="table-data" sx={{ fontWeight: 500, mt: 2, mb: 0.5 }}>
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ pl: 2, py: 1 }}>
+                            <Typography className="table-data">
                               Similarity score
                             </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                              <Typography className="table-data">
-                                {fullFormattedFields(row.similarity_score)}%
-                              </Typography>
-                              <IconButton
-                                size="small"
-                                onClick={() =>
-                                  handleCopy(fullFormattedFields(row.similarity_score))
-                                }
-                                sx={{ ml: 1 }}
-                              >
-                                <ContentCopyIcon sx={{ maxHeight: "18px" }} />
-                              </IconButton>
-                            </Box>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          ...lookalikesStyles.table_array,
+                          textWrap: "wrap",
+                          position: "relative",
+                          pr: 0,
+                          pl: 0,
+                          "&::after": {
+                            content: '""',
+                            display: "block",
+                            position: "absolute",
+                            top: "10px",
+                            bottom: "10px",
+                            right: 0,
+                            width: "1px",
+                            backgroundColor: "rgba(235, 235, 235, 1)",
+                          },
+                        }}
+                        colSpan={7}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                      >
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 1 }}>
+                            <Typography className="table-data">
+                              {fullFormattedFields(row.similarity_score)}%
+                            </Typography>
+                          </Box>
+                        </Collapse>
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          ...lookalikesStyles.table_array,
+                          position: "relative",
+                          maxWidth: "44px",
+                          minWidth: "44px",
+                          padding: "8px",
+                          textAlign: "center",
+                        }}
+                        style={{ paddingBottom: 0, paddingTop: 0 }}
+                      >
+                        <Collapse
+                          in={openRowId === row.id}
+                          timeout="auto"
+                          unmountOnExit
+                        >
+                          <Box sx={{ margin: 0, mr: 1 }}>
+                            <IconButton
+                              sx={{
+                                pl: 0,
+                                pr: 0.5,
+                                pt: 0.25,
+                                pb: 0.25,
+                                margin: 0,
+                              }}
+                              onClick={() =>
+                                handleCopy(
+                                  fullFormattedFields(row.similarity_score)
+                                )
+                              }
+                            >
+                              <ContentCopyIcon sx={{ maxHeight: "18px" }} />
+                            </IconButton>
                           </Box>
                         </Collapse>
                       </TableCell>

@@ -251,10 +251,10 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
         scores = [float(s.score) for s in enrichment_lookalike_scores if s.score is not None]
         if scores:
             similarity_score = {
-                "min": round(min(scores), 2),
-                "max": round(max(scores), 2),
-                "average": round(sum(scores) / len(scores), 2),
-                "median": round(statistics.median(scores), 2),
+                "min": round(min(scores), 3),
+                "max": round(max(scores), 3),
+                "average": round(sum(scores) / len(scores), 3),
+                "median": round(statistics.median(scores), 3),
             }
         else:
             similarity_score = {

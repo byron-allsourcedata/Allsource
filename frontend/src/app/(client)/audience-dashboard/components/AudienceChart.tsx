@@ -553,6 +553,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
           alignItems: "start",
           display: "flex",
           flexDirection: "row",
+          mt: 2,
           mb: 1.5,
         }}
       >

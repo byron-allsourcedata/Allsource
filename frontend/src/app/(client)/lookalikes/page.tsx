@@ -408,7 +408,6 @@ const CreateLookalikePage: React.FC = () => {
         : "",
     };
 
-    // Применяем обновленные фильтры
     handleApplyFilters(newFilters);
   };
 

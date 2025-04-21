@@ -27,27 +27,27 @@ class AudienceData(BaseModel):
     customer_value: Decimal
 
 class AudienceFeatureImportance(BaseModel):
-    PersonExactAge: Optional[float] = None
-    PersonGender: Optional[float] = None
-    EstimatedHouseholdIncomeCode: Optional[float] = None
-    EstimatedCurrentHomeValueCode: Optional[float] = None
-    HomeownerStatus: Optional[float] = None
-    HasChildren: Optional[float] = None
-    NumberOfChildren: Optional[float] = None
-    CreditRating: Optional[float] = None
-    NetWorthCode: Optional[float] = None
-    HasCreditCard: Optional[float] = None
-    LengthOfResidenceYears: Optional[float] = None
-    MaritalStatus: Optional[float] = None
-    OccupationGroupCode: Optional[float] = None
-    IsBookReader: Optional[float] = None
-    IsOnlinePurchaser: Optional[float] = None
-    IsTraveler: Optional[float] = None
-    ZipCode5: Optional[float] = None
-    ZipCode4: Optional[float] = None
-    ZipCode3: Optional[float] = None
-    state_name: Optional[float] = None
-    state_city: Optional[float] = None
+    PersonExactAge: Optional[float] = 0
+    PersonGender: Optional[float] = 0
+    EstimatedHouseholdIncomeCode: Optional[float] = 0
+    EstimatedCurrentHomeValueCode: Optional[float] = 0
+    HomeownerStatus: Optional[float] = 0
+    HasChildren: Optional[float] = 0
+    NumberOfChildren: Optional[float] = 0
+    CreditRating: Optional[float] = 0
+    NetWorthCode: Optional[float] = 0
+    HasCreditCard: Optional[float] = 0
+    LengthOfResidenceYears: Optional[float] = 0
+    MaritalStatus: Optional[float] = 0
+    OccupationGroupCode: Optional[float] = 0
+    IsBookReader: Optional[float] = 0
+    IsOnlinePurchaser: Optional[float] = 0
+    IsTraveler: Optional[float] = 0
+    ZipCode5: Optional[float] = 0
+    ZipCode4: Optional[float] = 0
+    ZipCode3: Optional[float] = 0
+    state_name: Optional[float] = 0
+    state_city: Optional[float] = 0
 
 OrderedFeatureRules = Dict[str, Callable[[str], int | None]]
 

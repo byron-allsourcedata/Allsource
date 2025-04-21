@@ -601,7 +601,7 @@ const SourcesList: React.FC = () => {
                       createdData?.total_records
                   }
                   onClick={() =>
-                    router.push(`/lookalikes/${createdData?.id}/builder`)
+                    router.push(`/lookalikes/builder?source_uuid=${createdData?.id}`)
                   }
                   className="second-sub-title"
                   sx={{
@@ -700,7 +700,7 @@ const SourcesList: React.FC = () => {
                   }}
                   onClick={() => {
                     handleClosePopover();
-                    router.push(`/lookalikes/${createdData?.id}/builder`);
+                    router.push(`/lookalikes/builder?source_uuid=${createdData?.id}`);
                   }}
                 >
                   <ListItemText

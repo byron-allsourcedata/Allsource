@@ -7,9 +7,17 @@ import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
 import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
 import { PieChartWithLegend } from "../CircularChart";
 import { MultiIconFillIndicator } from "../MultiIconChart";
-import { MapIndicator } from "../Map";
+import { USHeatMapCard } from "../USMap";
 
 const B2CPersonal = () => {
+  const data = {
+    NE: 45,
+    KS: 25,
+    OK: 17,
+    TX: 10,
+    CA: 3,
+  };
+
   return (
     <Box>
       <Box
@@ -55,34 +63,38 @@ const B2CPersonal = () => {
 
           <Box sx={{ display: "flex", width: "100%" }}>
             {/* Map chart here */}
-            <MapIndicator
+            <USHeatMapCard
               title="Location"
-              mapImage="/us_map.png"
               regions={[
                 {
                   label: "Nebraska",
                   percentage: 45,
-                  fillColor: "rgba(2, 103, 198, 1)",
+                  fillColor: "#1E5FE0",
+                  state: "NE",
                 },
                 {
                   label: "Kansas",
                   percentage: 25,
-                  fillColor: "rgba(31, 132, 221, 1)",
+                  fillColor: "#438AF8",
+                  state: "KS",
                 },
                 {
                   label: "Oklahoma",
                   percentage: 17,
-                  fillColor: "rgba(78, 162, 232, 1)",
+                  fillColor: "#73A6F9",
+                  state: "OK",
                 },
                 {
                   label: "Texas",
                   percentage: 10,
-                  fillColor: "rgba(141, 198, 250, 1)",
+                  fillColor: "#A4C3FB",
+                  state: "TX",
                 },
                 {
                   label: "Other",
                   percentage: 3,
-                  fillColor: "rgba(199, 228, 255, 1)",
+                  fillColor: "#D4E0FC",
+                  state: "",
                 },
               ]}
             />

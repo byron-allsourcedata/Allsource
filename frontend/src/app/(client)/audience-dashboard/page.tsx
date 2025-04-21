@@ -7,7 +7,7 @@ import { useNotification } from "../../../context/NotificationContext";
 import CustomCards from "./components/CustomCards";
 import AudienceChart from "./components/AudienceChart";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
-import LookalikeCard from "./components/SelectedCards";
+import InfoCard from "./components/SelectedCards";
 import PixelCard from "./components/PixelCard";
 import MainSectionCard from "./components/MainSectionCards";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
@@ -179,11 +179,11 @@ const AudienceDashboard: React.FC = () => {
 
       const formatLookalikeSize = (value: string): string => {
         const map: Record<string, string> = {
-          almost_identical: "Lookalike size: 10K contacts",
-          extremely_similar: "Lookalike size: 50K contacts",
-          very_similar: "Lookalike size: 100K contacts",
-          quite_similar: "Lookalike size: 200K contacts",
-          broad: "Lookalike size: 500K contacts",
+          almost_identical: "Almost Identical 0–3%",
+          extremely_similar: "Extremely Similar 0–7%",
+          very_similar: "Very Similar 0–10%",
+          quite_similar: "Quite Similar 0–15%",
+          broad: "Broad 0–20%",
         };
 
         return map[value] ?? value;
@@ -202,16 +202,28 @@ const AudienceDashboard: React.FC = () => {
           .reduce((acc, [key, value]) => {
             let formattedKey = formatKey(key);
 
-            if (
-              /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
-            ) {
+            if (/^(source|lookalike|data_sync|audience)_name$/.test(key)) {
               formattedKey = "Name";
             }
 
             if (key === "lookalike_size" && typeof value === "string") {
               acc["Lookalike Size"] = formatLookalikeSize(value);
             } else if (key === "source_type" && typeof value === "string") {
-              acc[formattedKey] = toNormalText(value);
+              acc["Type"] = toNormalText(value);
+            } else if (
+              (key === "include" || key === "exclude") &&
+              Array.isArray(value)
+            ) {
+              const list = value
+                .map((item) =>
+                  item.name
+                    ? `${item.name}${item.type ? ` (${item.type})` : ""}`
+                    : null
+                )
+                .filter(Boolean)
+                .join(", ");
+
+              acc[formattedKey] = list;
             } else {
               acc[formattedKey] = value;
             }
@@ -247,6 +259,15 @@ const AudienceDashboard: React.FC = () => {
       });
       setEventCards(groupedCards);
 
+      const formatFullDate = (dateStr: string) =>
+        new Date(dateStr).toLocaleString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        });
+
       const fullEventInfoBuilder = (
         event: Record<string, any>,
         tabType: string
@@ -267,9 +288,7 @@ const AudienceDashboard: React.FC = () => {
               if (!excludeKeys.includes(key)) {
                 let formattedKey = formatKey(key);
 
-                if (
-                  /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
-                ) {
+                if (/^(source|lookalike|data_sync|audience)_name$/.test(key)) {
                   formattedKey = "Name";
                 }
 
@@ -285,8 +304,7 @@ const AudienceDashboard: React.FC = () => {
               }
             });
           } else {
-            if (event.lookalike_name)
-              leftInfo["Lookalike Name"] = event.lookalike_name;
+            if (event.lookalike_name) leftInfo["Name"] = event.lookalike_name;
             if (event.lookalike_size)
               leftInfo["Lookalike Size"] = formatLookalikeSize(
                 event.lookalike_size
@@ -301,16 +319,31 @@ const AudienceDashboard: React.FC = () => {
           }
         } else if (tabType === "smart_audience") {
           if (isMainType) {
-            // Для smart_audience на своей вкладке - все данные слева
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
                 let formattedKey = formatKey(key);
-                if (
-                  /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
-                ) {
+                if (/^(source|lookalike|data_sync|audience)_name$/.test(key)) {
                   formattedKey = "Name";
                 }
-                if (value !== null && value !== undefined && value !== "") {
+                if (
+                  (key === "include" || key === "exclude") &&
+                  Array.isArray(value)
+                ) {
+                  const list = value
+                    .map((item) =>
+                      item.name
+                        ? `${item.name}${item.type ? ` (${item.type})` : ""}`
+                        : null
+                    )
+                    .filter(Boolean)
+                    .join(", ");
+                  formattedKey = key === "include" ? "Included" : "Excluded";
+                  leftInfo[formattedKey] = list;
+                } else if (
+                  value !== null &&
+                  value !== undefined &&
+                  value !== ""
+                ) {
                   leftInfo[formattedKey] = value;
                 }
               }
@@ -320,17 +353,18 @@ const AudienceDashboard: React.FC = () => {
               leftInfo["Audience Name"] = event.audience_name;
             if (event.destination) leftInfo["Destination"] = event.destination;
             if (event.synced_contacts)
-              rightInfo["Synced contacts"] = event.synced_contacts;
+              leftInfo["Synced contacts"] = event.synced_contacts;
           }
         } else if (tabType === "sources") {
           if (isMainType) {
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
                 let formattedKey = formatKey(key);
-                if (
-                  /^(source|lookalike|data_sync|smart_audience)_name$/.test(key)
-                ) {
+                if (/^(source|lookalike|data_sync|audience)_name$/.test(key)) {
                   formattedKey = "Name";
+                }
+                if (/^(source|lookalike|data_sync|audience)_type$/.test(key)) {
+                  formattedKey = "Type";
                 }
                 if (value !== null && value !== undefined && value !== "") {
                   leftInfo[formattedKey] = value;
@@ -399,7 +433,7 @@ const AudienceDashboard: React.FC = () => {
           groupedSelectedCards[tabType].push({
             id: event.id,
             status: formatKey(buildStatus(type, tabType)),
-            date: formatDate(event.created_at),
+            date: formatFullDate(event.created_at),
             left_info: left,
             right_info: right,
             tabType:
@@ -596,20 +630,23 @@ const AudienceDashboard: React.FC = () => {
             }}
           >
             {selectedCard ? (
-              <Box>
-                <Grid
-                  container
-                  justifyContent="center"
-                  spacing={1}
-                  sx={{ mb: 2 }}
-                >
-                  {currentTabData.map(
-                    (card: any, index: React.Key | null | undefined) => (
-                      <Grid item xs={12} sm={6} key={index}>
-                        <LookalikeCard data={card} />
-                      </Grid>
-                    )
-                  )}
+              <Box paddingBottom={2}>
+                <Grid container spacing={2}>
+                  {currentTabData.map((card: any, index) => (
+                    <Grid
+                      item
+                      xs={12}
+                      sm={6}
+                      md={6}
+                      lg={6}
+                      key={index}
+                      sx={{ height: "100%" }}
+                    >
+                      <Box sx={{ height: "100%" }}>
+                        <InfoCard data={card} />
+                      </Box>
+                    </Grid>
+                  ))}
                 </Grid>
 
                 {selectedCard === "Pixel Contacts" && (

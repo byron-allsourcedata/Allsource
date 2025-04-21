@@ -74,31 +74,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             )
             .returning(AudienceLookalikes.processed_size, AudienceLookalikes.size)
         ).fetchone()
-                    
-        if processed_size == total_records:
-            db_session.execute(
-                update(AudienceLookalikes)
-                .where(AudienceLookalikes.id == lookalike_id)
-                .values(similarity_score="complete")
-            )
-            scores_query = select(EnrichmentLookalikeScore.score).where(
-                EnrichmentLookalikeScore.lookalike_id == lookalike_id
-            )
-            scores_result = db_session.execute(scores_query).scalars().all()
-
-            if scores_result:
-                score_stats = {
-                    "min": min(scores_result),
-                    "max": max(scores_result),
-                    "average": sum(scores_result) / len(scores_result),
-                    "median": statistics.median(scores_result),
-                }
-                logging.info(f"Stats for lookalike_id {lookalike_id}: {score_stats}")
-            else:
-                logging.warning(f"No scores found for lookalike_id {lookalike_id}")
-
-            logging.info(f"Source_id {lookalike_id} processing complete.")
-            
+                                
         db_session.commit()
             
         await send_sse(connection, user_id, {"lookalike_id": lookalike_id, "total": total_records, "processed": processed_size})

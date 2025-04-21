@@ -11,6 +11,7 @@ from fastapi import HTTPException
 from schemas.lookalikes import CalculateRequest
 from schemas.similar_audiences import AudienceFeatureImportance
 from services.similar_audiences import SimilarAudienceService
+from services.similar_audiences.exceptions import EqualTrainTargets
 
 
 class AudienceLookalikesService:
@@ -54,6 +55,17 @@ class AudienceLookalikesService:
                         if scaled != 0:
                             processed_fields[key] = scaled
                 lookalike.significant_fields = processed_fields
+                
+            similarity_score = getattr(lookalike, 'similarity_score', None)
+            if similarity_score and isinstance(similarity_score, dict):
+                similarity_scores = {}
+                for key, value in similarity_score.items():
+                    if value:
+                        scaled = round(value * 100, 3)
+                        if scaled != 0:
+                                similarity_scores[key] = scaled
+                lookalike.similarity_score = similarity_scores
+                
             result.append({
                 **lookalike.__dict__,
                 "source": source_name,
@@ -154,16 +166,23 @@ class AudienceLookalikesService:
             source_uuid=uuid_of_source,
             lookalike_size=lookalike_size
         )
-        audience_feature = similar_audience_service.get_audience_feature_importance(audience_data)
-        audience_feature_dict = audience_feature.dict()
-        rounded_feature = {
-            key: round(value * 1000) / 1000 if isinstance(value, (int, float)) else value
-            for key, value in audience_feature_dict.items()
-        }
+
+        try:
+            audience_feature = similar_audience_service.get_audience_feature_importance(audience_data)
+            audience_feature_dict = audience_feature.dict()
+            rounded_feature = {
+                key: round(value * 1000) / 1000 if isinstance(value, (int, float)) else value
+                for key, value in audience_feature_dict.items()
+            }
+
+            afi = AudienceFeatureImportance(**rounded_feature)
+
+        except EqualTrainTargets:
+            afi = AudienceFeatureImportance()
 
         return CalculateRequest(
-            count_matched_persons = len(audience_data),
-            audience_feature_importance = AudienceFeatureImportance(**rounded_feature)
+            count_matched_persons=len(audience_data),
+            audience_feature_importance=afi
         )
 
     

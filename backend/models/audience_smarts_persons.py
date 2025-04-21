@@ -12,7 +12,7 @@ class AudienceSmartPerson(Base):
     smart_audience_id = Column(UUID(as_uuid=True), ForeignKey(AudienceSmart.id, ondelete='cascade'), nullable=False)
     enrichment_user_id = Column(UUID(as_uuid=True), ForeignKey(EnrichmentUser.id), nullable=True)
     is_valid = Column(BOOLEAN, default=False, nullable=False)
-    is_validation_processed = Column(BOOLEAN, default=False, nullable=False)
+    is_validation_processed = Column(BOOLEAN, default=True, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
 

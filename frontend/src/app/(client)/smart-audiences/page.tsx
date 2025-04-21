@@ -31,6 +31,7 @@ import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
 import EditIcon from '@mui/icons-material/Edit';
 import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
+import { useScrollShadow } from '@/hooks/useScrollShadow';
 
 interface Smarts {
     id: string
@@ -160,30 +161,7 @@ const SmartAudiences: React.FC = () => {
     const [isEditPopoverOpen, setIsEditPopoverOpen] = useState(false);
 
     const tableContainerRef = useRef<HTMLDivElement>(null);
-    const [isScrolledX, setIsScrolledX] = useState(false);
-    const [isScrolledY, setIsScrolledY] = useState(false);
-    
-    useEffect(() => {
-      if (tableContainerRef.current) {
-        const container = tableContainerRef.current;
-        const checkScroll = () => {
-          setIsScrolledX(container.scrollLeft > 0);
-          setIsScrolledY(container.scrollTop > 0);
-        };
-    
-        container.addEventListener("scroll", checkScroll);
-        window.addEventListener("resize", checkScroll);
-    
-        checkScroll();
-    
-        return () => {
-          container.removeEventListener("scroll", checkScroll);
-          window.removeEventListener("resize", checkScroll);
-        };
-      } else {
-        console.warn("TableContainer ref is still null");
-      }
-    }, [tableContainerRef.current]);
+    const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
