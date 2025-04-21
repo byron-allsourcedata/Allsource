@@ -61,7 +61,7 @@ const SourcesList: React.FC = () => {
         if (!intervalRef.current) {
             console.log("pooling started");
             intervalRef.current = setInterval(() => {
-                const hasPending = createdData.active_segment_records !== createdData.processed_active_segment_records;
+                const hasPending = createdData.active_segment_records !== createdData.processed_active_segment_records || createdData.status === "validating";
                 
                 if (hasPending) {
                     console.log("Fetching due to pending records");

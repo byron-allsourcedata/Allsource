@@ -229,7 +229,7 @@ const SmartAudiences: React.FC = () => {
         if (!intervalRef.current) {
             console.log("pooling started");
             intervalRef.current = setInterval(() => {
-                const hasPending = data.some(item => item.active_segment_records !== item.processed_active_segment_records);
+                const hasPending = data.some(item => item.active_segment_records !== item.processed_active_segment_records || item.status === "validating");
     
                 if (hasPending) {
                     console.log("Fetching due to pending records");

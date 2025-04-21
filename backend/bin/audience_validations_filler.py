@@ -6,6 +6,7 @@ import functools
 import json
 import boto3
 import random
+from uuid import UUID
 from datetime import datetime
 from sqlalchemy import update
 from aio_pika import IncomingMessage, Message
@@ -31,7 +32,6 @@ load_dotenv()
 
 AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 AUDIENCE_VALIDATION_AGENT_NOAPI = 'aud_validation_agent_no-api'
-AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 
 def setup_logging(level):
     logging.basicConfig(
@@ -40,22 +40,8 @@ def setup_logging(level):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-async def send_sse(connection, user_id: int, data: dict):
-    try:
-        logging.info(f"send client throught SSE: {data, user_id}")
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=f'sse_events_{str(user_id)}',
-            message_body={
-                "status": AUDIENCE_VALIDATION_PROGRESS,
-                "data": data
-            }
-        )
-    except Exception as e:
-        logging.error(f"Error sending SSE: {e}")
-
-async def wait_for_ping(connection, aud_smart_id, validation_type):
-    queue_name = f"validation_complete_{aud_smart_id}_{validation_type}"
+async def wait_for_ping(connection: RabbitMQConnection, aud_smart_id: UUID, validation_type: str):
+    queue_name = f"validation_complete"
     channel = await connection.channel()
     queue = await channel.declare_queue(queue_name, durable=True)
 
@@ -63,18 +49,34 @@ async def wait_for_ping(connection, aud_smart_id, validation_type):
         async for message in queue_iter:
             if message:
                 message_body = json.loads(message.body)
-                if message_body.get("status") == "validation_complete":
+                if message_body.get("status") == "validation_complete" and message_body.get("aud_smart_id") == aud_smart_id and message_body.get("validation_type") == validation_type:
                     await message.ack()
                     break
 
-async def aud_email_validation(message: IncomingMessage, db_session: Session, connection):
+async def aud_email_validation(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
         aud_smart_id = message_body.get("aud_smart_id")
         validation_params = message_body.get("validation_params")
 
-        recency_days = 0
+        recency_personal_days = 0
+        recency_business_days = 0
+        def recursive_count(item):
+            nonlocal count_validations
+            if isinstance(item, dict):
+                for key, value in item.items():
+                    if key == 'processed' and value is False:
+                        count_validations += 1
+                    else:
+                        recursive_count(value)
+            elif isinstance(item, list):
+                for element in item:
+                    recursive_count(element)
+
+        count_validations = 0
+        recursive_count(validation_params)
+        logging.info("count_validations, {count_validations}")
 
         logging.info(f"Processed email validation for aud_smart_id {aud_smart_id}.")    
 
@@ -95,117 +97,104 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 'phone-dnc_filter': 'mobile_phone_dnc'
             }
 
-            # {
-            #     "user_id": 110,
-            #     "aud_smart_id": "f5a4777a-cb64-4edd-a572-d9ead969b4fb", 
-            #     "validation_params": {
-            #     "personal_email": [
-            #         {"mx": {"processed": false}},
-            #         {"recency": {"days": 90, "processed": false}}
-            #     ],
-            #     "business_email": [
-            #         {"delivery": {"processed": false}},
-            #         {"recency": {"days": 90, "processed": false}}
-            #     ],
-            #     "phone": [
-            #         {"dnc_filter": {"processed": false}}
-            #     ],
-            #     "postal_cas": [
-            #     ],
-            #     "linked_in": [
-            #     ]
-            #     }
-            # }
 
-
-            print("validation_params", validation_params)
-            i = 1
+            logging.info(f"validation_params {validation_params}")
+            i = 0
 
             for value in priority_values:
                 validation, validation_type = value.split('-')[0], value.split('-')[1]
-                print("validation - ",  validation, "; validation_type - " , validation_type)
+                logging.info(f"validation - {validation} ; validation_type - {validation_type}")
+                
                 if validation in validation_params:
                     validation_params_list = validation_params.get(validation)
-                    print("validation_params_list", validation_params_list)
-                    if any(validation_type in param for param in validation_params_list):
-                        column_name = column_mapping.get(value)
-                        print("column_name", column_name)
-                        if not column_name:
-                            continue
+                    logging.info(f"validation_params_list {validation_params_list}")
+                    
+                    if len(validation_params_list) > 0:
+                        for param in validation_params_list:
+                            if validation_type in param:
+                                column_name = column_mapping.get(value)
+                                logging.info(f"column_name {column_name}")
+                                
+                                if not column_name:
+                                    continue
 
-                        if validation_type == "recency":
-                            for param in validation_params_list:
-                                if "recency" in param:
-                                    recency_days = param["recency"].get("days")
-                                    break
-                                    
-                        enrichment_users = [
-                            {
-                                "audience_smart_person_id": user.audience_smart_person_id,
-                                column_name: (
-                                    getattr(user, column_name).isoformat() 
-                                    if isinstance(getattr(user, column_name), datetime) 
-                                    else getattr(user, column_name)
-                                ),
-                            }
-                            for user in db_session.query(
-                                AudienceSmartPerson.id.label("audience_smart_person_id"),
-                                getattr(EnrichmentUserContact, column_name),
-                            )
-                            .join(
-                                EnrichmentUserContact,
-                                EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id,
-                            )
-                            .filter(
-                                AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                                AudienceSmartPerson.is_validation_processed == True,
-                            )
-                            .all()
-                        ]
+                                if validation_type == "recency":
+                                    for param in validation_params_list:
+                                        if "recency" in param and validation == "personal_email":
+                                            recency_personal_days = param["recency"].get("days")
+                                            break
+                                        if "recency" in param and validation == "business_email":
+                                            recency_business_days = param["recency"].get("days")
+                                            break
+                                                
+                                enrichment_users = [
+                                    {
+                                        "audience_smart_person_id": user.audience_smart_person_id,
+                                        column_name: (
+                                            user.value.isoformat() if isinstance(user.value, datetime) else user.value
+                                        ),
+                                    }
+                                    for user in db_session.query(
+                                        AudienceSmartPerson.id.label("audience_smart_person_id"),
+                                        getattr(EnrichmentUserContact, column_name).label("value"),
+                                    )
+                                    .join(
+                                        EnrichmentUserContact,
+                                        EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id,
+                                    )
+                                    .filter(
+                                        AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                                        AudienceSmartPerson.is_validation_processed == True,
+                                    )
+                                    .distinct()
+                                    .all()
+                                ]
 
-                        print("count person which will processed validation", len(enrichment_users))
+                                logging.info(f"count person which will processed validation {len(enrichment_users)}")
 
-                        if not enrichment_users:
-                            logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}.")
-                            continue    
+                                if not enrichment_users:
+                                    logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}.")
+                                    continue    
 
+                                i += 1
+                                is_last_validation = i == count_validations
 
-                        is_last_validation = i == len(priority_values) - 1
+                                logging.info(f"is_last_validation {is_last_validation}")
 
-                        logging.info(f"is_last_validation {is_last_validation}")
+                                for j in range(0, len(enrichment_users), 100):
+                                    batch = enrichment_users[j:j+100]
+                                    serialized_batch = [
+                                        {
+                                            "audience_smart_person_id": str(user["audience_smart_person_id"]),
+                                            column_name: user[column_name]
+                                        }
+                                        for user in batch
+                                    ]
 
-                        for j in range(0, len(enrichment_users), 100):
-                            batch = enrichment_users[j:j+100]
-                            serialized_batch = [
-                                {
-                                    "audience_smart_person_id": str(user["audience_smart_person_id"]),
-                                    column_name: user[column_name]
-                                }
-                                for user in batch
-                            ]
+                                    is_last_iteration_in_last_validation = is_last_validation and (j + 100 >= len(enrichment_users))
 
-                            is_last_iteration_in_last_validation = (i == len(priority_values) - 1) and (j + 100 >= len(enrichment_users))
+                                    # if i < 5: at available second worker
 
-                            message_body = {
-                                'aud_smart_id': str(aud_smart_id),
-                                'user_id': user_id,
-                                'recency_days': recency_days,
-                                'batch': serialized_batch,
-                                'validation_type': column_name,
-                                'is_last_iteration_in_last_validation': is_last_iteration_in_last_validation
-                            }
-                            await publish_rabbitmq_message(
-                                connection=connection,
-                                queue_name=AUDIENCE_VALIDATION_AGENT_NOAPI,
-                                message_body=message_body
-                            )
+                                    message_body = {
+                                        'aud_smart_id': str(aud_smart_id),
+                                        'user_id': user_id,
+                                        'recency_personal_days': recency_personal_days,
+                                        'recency_business_days': recency_business_days,
+                                        'batch': serialized_batch,
+                                        'validation_type': column_name,
+                                        'is_last_validation': is_last_validation,
+                                        'is_last_iteration_in_last_validation': is_last_iteration_in_last_validation
+                                    }
+                                    await publish_rabbitmq_message(
+                                        connection=connection,
+                                        queue_name=AUDIENCE_VALIDATION_AGENT_NOAPI,
+                                        message_body=message_body
+                                    )
 
-                        await wait_for_ping(connection, aud_smart_id, column_name)
+                                await wait_for_ping(connection, aud_smart_id, column_name)
 
-                        logging.info(f"ping came {aud_smart_id}.")
-                        i += 1
-
-
+                                logging.info(f"ping came {aud_smart_id}.")
+                            
             await message.ack()                  
     
         except IntegrityError as e:
