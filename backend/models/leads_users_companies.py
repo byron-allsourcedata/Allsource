@@ -1,13 +1,22 @@
-from sqlalchemy import Column, Integer, ForeignKey, PrimaryKeyConstraint
+from sqlalchemy import Column, Integer, ForeignKey, PrimaryKeyConstraint, UniqueConstraint, BigInteger
 from .base import Base
 
 
 class LeadUserCompany(Base):
     __tablename__ = 'leads_users_companies'
-    
-    lead_company_id = Column(Integer, ForeignKey('leads_companies.id'), nullable=False)
-    first_lead_user_id = Column(Integer, ForeignKey('leads_users.id'), nullable=False)
-
     __table_args__ = (
-        PrimaryKeyConstraint('lead_company_id', 'first_lead_user_id'),
+        PrimaryKeyConstraint('lead_company_id', 'first_lead_user_id', name='leads_users_companies_pkey'),
+        UniqueConstraint('lead_company_id', 'first_lead_user_id',
+                         name='leads_users_companies_lead_company_id_lead_user_id_idx'),
+    )
+
+    lead_company_id = Column(
+        BigInteger,
+        ForeignKey('leads_companies.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    first_lead_user_id = Column(
+        BigInteger,
+        ForeignKey('leads_users.id', ondelete='CASCADE'),
+        nullable=False
     )

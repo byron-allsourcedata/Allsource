@@ -1,17 +1,44 @@
-from sqlalchemy import Column, Integer, BOOLEAN, TEXT, DateTime, Index
+from sqlalchemy import Column, Integer, BOOLEAN, TEXT, DateTime, Index, BigInteger, text, ForeignKey, Boolean
+from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.sql import func
 from .base import Base
 
 
 class UserAccountNotification(Base):
     __tablename__ = 'users_account_notifications'
+    __table_args__ = (
+        Index('user_notification', 'id', 'user_id', unique=True),
+        Index('users_account_notifications_user_id_notification_id_is_checked_', 'user_id', 'notification_id',
+              'is_checked'),
+    )
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, nullable=False)
-    notification_id = Column(Integer, nullable=False)
-    params = Column(TEXT, nullable=False)
-    is_checked = Column(BOOLEAN, nullable=False, default=False)
-    created_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
-    
-Index('user_notification', UserAccountNotification.user_id, UserAccountNotification.id)
-Index('users_account_notifications_user_id_notification_id_is_checked_', UserAccountNotification.user_id, UserAccountNotification.notification_id, UserAccountNotification.is_checked)
+    id = Column(
+        BigInteger,
+        primary_key=True,
+        nullable=False,
+        server_default=text("nextval('users_account_notifications_id_seq'::regclass)")
+    )
+    user_id = Column(
+        BigInteger,
+        ForeignKey('users.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    notification_id = Column(
+        BigInteger,
+        ForeignKey('account_notifications.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    params = Column(
+        TEXT,
+        nullable=True
+    )
+    is_checked = Column(
+        Boolean,
+        nullable=False,
+        server_default=text('false')
+    )
+    created_at = Column(
+        TIMESTAMP,
+        nullable=True,
+        server_default=func.now()
+    )

@@ -121,11 +121,13 @@ const sidebarStyles = {
     boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
   },
   ListItem: {
+    cursor: "pointer",
     minHeight: "4.5em",
     color: "rgba(59, 59, 59, 1)",
     ml: "3px",
   },
   activeItem: {
+    cursor: "pointer",
     borderLeft: "3px solid rgba(80, 82, 178, 1)",
     color: "rgba(80, 82, 178, 1)",
     minHeight: "4.5em",

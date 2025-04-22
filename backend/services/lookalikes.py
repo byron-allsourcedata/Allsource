@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from schemas.lookalikes import CalculateRequest
 from schemas.similar_audiences import AudienceFeatureImportance
 from services.similar_audiences import SimilarAudienceService
-from services.similar_audiences.exceptions import EqualTrainTargets
+from services.similar_audiences.exceptions import EqualTrainTargets, EmptyTrainDataset
 
 
 class AudienceLookalikesService:
@@ -177,7 +177,8 @@ class AudienceLookalikesService:
 
             afi = AudienceFeatureImportance(**rounded_feature)
 
-        except EqualTrainTargets:
+
+        except (EqualTrainTargets, EmptyTrainDataset):
             afi = AudienceFeatureImportance()
 
         return CalculateRequest(

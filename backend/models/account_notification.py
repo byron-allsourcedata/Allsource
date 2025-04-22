@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, BOOLEAN
+from sqlalchemy import Column, Integer, VARCHAR, BOOLEAN, Sequence, String, Boolean
 
 from .base import Base
 
@@ -6,9 +6,13 @@ from .base import Base
 class AccountNotification(Base):
     __tablename__ = 'account_notifications'
 
-    id = Column(Integer, primary_key=True, nullable=False)
-    title = Column(VARCHAR(64), nullable=False)
-    is_dismiss = Column(BOOLEAN, nullable=False, default=True)
-    sub_title = Column(VARCHAR(32), nullable=False)
-    text = Column(VARCHAR(256), nullable=False)
-
+    id = Column(
+        Integer,
+        Sequence('account_notifications_id_seq'),
+        primary_key=True,
+        nullable=False
+    )
+    title = Column(String(64), nullable=True)
+    text = Column(String(256), nullable=True)
+    sub_title = Column(String(64), nullable=True)
+    is_dismiss = Column(Boolean, nullable=False, server_default='true')

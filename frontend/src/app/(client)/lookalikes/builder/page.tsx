@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useMemo, useState } from "react";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { ReadonlyURLSearchParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import {
   Box,
@@ -30,136 +30,11 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import LookalikeContainer from "../components/LookalikeContainer";
 import { smartAudiences } from "../../smart-audiences/smartAudiences";
-import FeatureImportanceTable, {
-  FeatureObject,
-} from "../components/FeatureImportanceTable";
-import DragAndDropTable, { Field } from "../components/DragAndDropTable";
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import ProgressBar from "@/components/ProgressBar";
+import { TableData, LookalikeData, CalculationResponse, CalculationResults, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject } from "@/types"
+import { FeatureImportanceTable, DragAndDropTable, AudienceFieldsSelector, OrderFieldsStep } from "../components"
 export const dynamic = 'force-dynamic';
-interface TableData {
-  id: string;
-  name: string;
-  target_schema: string;
-  source: string;
-  type: string;
-  source_target_schema: string;
-  created_date: string;
-  created_by: string;
-  number_of_customers: number;
-  matched_records: number;
-}
-
-interface LookalikeData {
-  id: string;
-  lookalike_name: string;
-  source: string;
-  type: string;
-  size_progress: number;
-  size: number;
-  source_target_schema: string;
-  lookalike_size: string;
-  created_date: string;
-  created_by: string;
-}
-
-interface CalculationResults {
-  [key: string]: number;
-  PersonExactAge: number;
-  PersonGender: number;
-  EstimatedHouseholdIncomeCode: number;
-  EstimatedCurrentHomeValueCode: number;
-  HomeownerStatus: number;
-  HasChildren: number;
-  NumberOfChildren: number;
-  CreditRating: number;
-  NetWorthCode: number;
-  HasCreditCard: number;
-  LengthOfResidenceYears: number;
-  MaritalStatus: number;
-  OccupationGroupCode: number;
-  IsBookReader: number;
-  IsOnlinePurchaser: number;
-  IsTraveler: number;
-  ZipCode5: number;
-  ZipCode4: number;
-  ZipCode3: number;
-  state_name: number;
-  state_city: number;
-}
-
-interface FinancialResults extends FeatureObject {
-  [key: string]: number;
-  CreditScore: number;
-  IncomeRange: number;
-  NetWorth: number;
-  CreditRating: number;
-  CreditCards: number;
-  BankCard: number;
-  CreditCardPremium: number;
-  CreditCardNewIssue: number;
-  CreditLines: number;
-  CreditRangeOfNewCredit: number;
-  Donor: number;
-  Investor: number;
-  MailOrderDonor: number;
-}
-interface LifestylesResults extends FeatureObject {
-  [key: string]: number;
-  Pets: number;
-  CookingEnthusiast: number;
-  Travel: number;
-  MailOrderBuyer: number;
-  OnlinePurchaser: number;
-  BookReader: number;
-  HealthAndBeauty: number;
-  Fitness: number;
-  OutdoorEnthusiast: number;
-  TechEnthusiast: number;
-  DIY: number;
-  Gardening: number;
-  AutomotiveBuff: number;
-  GolfEnthusiasts: number;
-  BeautyCosmetics: number;
-  Smoker: number;
-}
-interface VoterResults extends FeatureObject {
-  [key: string]: number;
-  PartyAffiliation: number;
-  VotingPropensity: number;
-  CongressionalDistrict: number;
-}
-interface RealEstateResults extends FeatureObject {
-  [key: string]: number;
-  URN: number;
-  SiteStreetAddress: number;
-  SiteCity: number;
-  SiteState: number;
-  SiteZipCode: number;
-  OwnerFullName: number;
-  EstimatedHomeValue: number;
-  HomeValueNumeric: number;
-  Equity: number;
-  EquityNumeric: number;
-  MortgageAmount: number;
-  MortgageDate: number;
-  LenderName: number;
-  PurchasePrice: number;
-  PurchaseDate: number;
-  OwnerOccupied: number;
-  LandUseCode: number;
-  YearBuilt: number;
-  LotSizeSqFt: number;
-  BuildingTotalSqFt: number;
-  AssessedValue: number;
-  MarketValue: number;
-  TaxAmount: number;
-}
-
-interface CalculationResponse {
-  count_matched_persons: number;
-  audience_feature_importance: CalculationResults;
-}
 
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
@@ -168,7 +43,6 @@ const CreateLookalikePage: React.FC = () => {
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
   const [selectedSize, setSelectedSize] = useState<string>("");
   const [selectedLabel, setSelectedLabel] = useState<string>("");
-  const [sliderValue, setSliderValue] = useState<number[]>([0, 0]);
   const [currentStep, setCurrentStep] = useState(0);
   const [sourceName, setSourceName] = useState("");
   const [sourceData, setSourceData] = useState<TableData[]>([]);
@@ -180,13 +54,6 @@ const CreateLookalikePage: React.FC = () => {
   const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
   const [calculatedResults, setCalculatedResults] =
     useState<CalculationResponse | null>(null);
-  // States for calculated features: those displayed and those hidden.
-  const [displayedFeatures, setDisplayedFeatures] = useState<
-    [keyof CalculationResults, number][]
-  >([]);
-  const [hiddenFeatures, setHiddenFeatures] = useState<
-    [keyof CalculationResults, number][]
-  >([]);
 
   const [financialData, setFinancialData] = useState<FinancialResults>({
     IncomeRange: 0,
@@ -262,73 +129,35 @@ const CreateLookalikePage: React.FC = () => {
   const [lifestylesKeys, setLifestylesKeys] = useState<(keyof LifestylesResults)[]>([]);
   const [voterKeys, setVoterKeys] = useState<(keyof VoterResults)[]>([]);
   const [realEstateKeys, setRealEstateKeys] = useState<(keyof RealEstateResults)[]>([]);
-  const computedFields = useMemo<Field[]>(() => {
-    const toFields = <T extends FeatureObject>(keys: (keyof T)[], src: T) =>
+  const [dndFields, setDndFields] = useState<Field[]>([]);
+  const initialFields = useMemo<Field[]>(() => {
+    const toFields = <T extends FeatureObject>(
+      keys: (keyof T)[],
+      src: T
+    ): Field[] =>
       keys.map(k => ({
         id: String(k),
         name: String(k),
-        value: `${(src[k] * 100).toFixed(1)}%`,
+        value: `${src[k]}`,
       }));
-
-    const personalSrc = calculatedResults?.audience_feature_importance ?? {} as CalculationResults;
-
+  
     return [
-      ...toFields(personalKeys, personalSrc),
+      ...toFields(personalKeys, calculatedResults?.audience_feature_importance ?? {} as any),
       ...toFields(financialKeys, financialData),
       ...toFields(lifestylesKeys, lifestylesData),
       ...toFields(voterKeys, voterData),
       ...toFields(realEstateKeys, realEstateData),
     ];
   }, [
-    personalKeys,
-    financialKeys,
-    lifestylesKeys,
-    voterKeys,
-    realEstateKeys,
-    calculatedResults,
-    financialData,
-    lifestylesData,
-    voterData,
-    realEstateData,
+    personalKeys, financialKeys,
+    lifestylesKeys, voterKeys, realEstateKeys,
+    calculatedResults, financialData,
+    lifestylesData, voterData, realEstateData
   ]);
 
-
-  const [dndFields, setDndFields] = useState<Field[]>([]);
-
   useEffect(() => {
-    setDndFields(computedFields);
-  }, [computedFields]);
-
-  const getAllCalculatedEntries = (
-    results: CalculationResults
-  ): [keyof CalculationResults, number][] => {
-    const order: (keyof CalculationResults)[] = [
-      "PersonExactAge",
-      "PersonGender",
-      "EstimatedHouseholdIncomeCode",
-      "EstimatedCurrentHomeValueCode",
-      "HomeownerStatus",
-      "HasChildren",
-      "NumberOfChildren",
-      "CreditRating",
-      "NetWorthCode",
-      "HasCreditCard",
-      "LengthOfResidenceYears",
-      "MaritalStatus",
-      "OccupationGroupCode",
-      "IsBookReader",
-      "IsOnlinePurchaser",
-      "IsTraveler",
-      "ZipCode5",
-      "ZipCode4",
-      "ZipCode3",
-      "state_name",
-      "state_city",
-    ];
-    return order
-      .map((key): [keyof CalculationResults, number] => [key, results[key]])
-      .sort((a, b) => b[1] - a[1]); // sort descending by value
-  };
+    setDndFields(initialFields);
+  }, [initialFields]);
 
   const handleSelectRow = (row: any) => {
     setSelectedSourceId(row.id);
@@ -357,10 +186,7 @@ const CreateLookalikePage: React.FC = () => {
   ) => {
     setSelectedSize(id);
     setSelectedLabel(label);
-    setSliderValue([min_value, max_value]);
     setCalculatedResults(null);
-    setDisplayedFeatures([]);
-    setHiddenFeatures([]);
     setCurrentStep(1);
   };
 
@@ -388,10 +214,6 @@ const CreateLookalikePage: React.FC = () => {
     setSourceName(event.target.value);
   };
 
-  const handleCancel = () => {
-    router.push("/sources");
-  };
-
   const handlePrevStep = () => {
     setCurrentStep(currentStep - 1);
   };
@@ -408,13 +230,6 @@ const CreateLookalikePage: React.FC = () => {
       );
       if (response.data) {
         setCalculatedResults(response.data);
-        const allEntries = getAllCalculatedEntries(
-          response.data.audience_feature_importance
-        );
-        const nonZeroEntries = allEntries.filter(([, value]) => value > 0);
-        const zeroEntries = allEntries.filter(([, value]) => value === 0);
-        setDisplayedFeatures(nonZeroEntries);
-        setHiddenFeatures(zeroEntries);
         setCurrentStep(2);
       }
     } catch {
@@ -447,11 +262,14 @@ const CreateLookalikePage: React.FC = () => {
   const handleGenerateLookalike = async () => {
     try {
       setLoading(true);
+      const featureImportanceMap = Object.fromEntries(
+        dndFields.map(({ id, value }) => [id, parseFloat(value)])
+      );
       const requestData = {
         uuid_of_source: selectedSourceId,
         lookalike_size: toSnakeCase(selectedLabel),
         lookalike_name: sourceName,
-        audience_feature_importance: Object.fromEntries(displayedFeatures),
+        audience_feature_importance: featureImportanceMap,
       };
       const response = await axiosInstance.post(
         "/audience-lookalikes/builder",
@@ -495,6 +313,13 @@ const CreateLookalikePage: React.FC = () => {
           .join(" ")
       )
       .join(", ");
+
+  const handleEdit = () => {
+    const params = new URLSearchParams(searchParams as ReadonlyURLSearchParams);
+    params.delete("source_uuid");
+    router.replace(`${window.location.pathname}?${params.toString()}`);
+    setCurrentStep(0);
+  };
 
   return (
     <Box
@@ -717,14 +542,14 @@ const CreateLookalikePage: React.FC = () => {
                     )}
 
                     <Button
-                      onClick={() => setCurrentStep(0)}
+                      onClick={handleEdit}
                       variant="outlined"
                       sx={{
                         ...smartAudiences.buttonform,
                         borderColor: 'rgba(80, 82, 178, 1)',
                         width: '92px',
-                        mt: 2,    
-                        alignSelf: 'flex-end',  
+                        mt: 2,
+                        alignSelf: 'flex-end',
                         ':hover': {
                           backgroundColor: '#fff',
                         },
@@ -810,342 +635,26 @@ const CreateLookalikePage: React.FC = () => {
 
                 {/* Calculation results block rendered with flex layout */}
                 {currentStep == 2 && calculatedResults && (
-                  <Box
-                    sx={{
-                      border: "1px solid #E4E4E4",
-                      borderRadius: "6px",
-                      bgcolor: "white",
-                      p: 2,
-                      mt: 2,
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ml: 1 }}>
-                      {/* Шаг 1 всегда чёрный */}
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontFamily: 'Nunito Sans',
-                          fontWeight: 500,
-                          fontSize: '16px',
-                          lineHeight: '22.5px',
-                        }}
-                      >
-                        Step 1
-                      </Typography>
-
-                      {/* Стрелка побольше */}
-                      <ArrowRightAltIcon
-                        sx={{
-                          fontSize: '28px',
-                          color: "text.disabled",
-                          mx: 1,
-                          verticalAlign: 'middle',
-                        }}
-                      />
-                      {/* Шаг 2 серый, если не выбран*/}
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontFamily: 'Nunito Sans',
-                          fontWeight: 500,
-                          fontSize: '16px',
-                          lineHeight: '22.5px',
-                          color: "text.disabled",
-                        }}
-                      >
-                        Step 2
-                      </Typography>
-                    </Box>
-
-                    <Grid container sx={{ mb: 2 }}>
-                      <Grid item xs={7}>
-
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontFamily: "Nunito Sans",
-                            fontWeight: 500,
-                            fontSize: "16px",
-                            lineHeight: "22.5px",
-                            mb: 1,
-                            ml: 1,
-                          }}
-                        >
-                          Select and order predictable fields
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontSize: "14px",
-                            color: "text.secondary",
-                            mb: 1,
-                            ml: 1,
-                          }}
-                        >
-                          You can configure the predictable fields that will be used for audience building yourself.
-                        </Typography>
-
-                      </Grid>
-                      <Grid item xs={5}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontFamily: "Nunito Sans",
-                            fontWeight: 500,
-                            fontSize: "16px",
-                            lineHeight: "22.5px",
-                            mb: 1,
-                            ml: 1,
-                          }}
-                        >
-                          How do Lookalikes work?
-                        </Typography>
-                      </Grid>
-                    </Grid>
-
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6} direction="column" spacing={2}>
-                        <Grid item>
-                          <FeatureImportanceTable
-                            title="Personal Profile"
-                            features={calculatedResults?.audience_feature_importance ?? {} as any}
-                            onChangeDisplayed={setPersonalKeys}
-                          />
-                        </Grid>
-                        <Grid item>
-                          <FeatureImportanceTable
-                            title="Financial"
-                            features={financialData}
-                            onChangeDisplayed={setFinancialKeys}
-                          />
-                        </Grid>
-                        <Grid item>
-                          <FeatureImportanceTable
-                            title="Lifestyles"
-                            features={lifestylesData}
-                            onChangeDisplayed={setLifestylesKeys}
-                          />
-                        </Grid>
-                        <Grid item>
-                          <FeatureImportanceTable
-                            title="Voter"
-                            features={voterData}
-                            onChangeDisplayed={setVoterKeys}
-                          />
-                        </Grid>
-                        <Grid item >
-                          <FeatureImportanceTable
-                            title="Real Estate"
-                            features={realEstateData}
-                            onChangeDisplayed={setRealEstateKeys}
-                          />
-                        </Grid>
-                      </Grid>
-                      <Grid item xs={12} md={1}></Grid>
-                      <Grid item xs={12} md={5} sx={{ borderLeft: "1px solid #E4E4E4" }}>
-                        <Box sx={{ p: 0, bgcolor: "transparent" }}>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontSize: "14px",
-                              color: "text.secondary",
-                              mb: 2
-                            }}
-                          >
-                            When building an audience, it&apos;s important to work with the right
-                            data. You have the flexibility to configure which predictable
-                            fields you want to use based on your specific goals. These fields
-                            might include things like age, location, interests, purchase
-                            behavior, or other relevant data points that help define your
-                            audience more precisely.
-                          </Typography>
-
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontSize: "14px",
-                              color: "text.secondary",
-                              mb: 2
-                            }}
-                          >
-                            To get started, simply click on &quot;Add More&quot; to open the full list
-                            of available fields. From there, you can select the ones that are
-                            most relevant to your campaign. The fields are usually organized
-                            into categories (such as demographics, behavior, engagement,
-                            etc.), so be sure to make selections within each category to
-                            create a well-rounded profile of your audience.
-                          </Typography>
-
-                          <Typography
-                            component="a"
-                            href="#"
-                            sx={{
-                              fontSize: "14px",
-                              color: 'rgba(80, 82, 178, 1)',
-                              textDecoration: "underline",
-                              cursor: "pointer",
-                              display: "inline-block",
-                            }}
-                          >
-                            Learn more
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </Box>
+                  <AudienceFieldsSelector
+                  calculation={calculatedResults.audience_feature_importance}
+                  financialData={financialData}
+                  lifestylesData={lifestylesData}
+                  voterData={voterData}
+                  realEstateData={realEstateData}
+                  onPersonalChange={setPersonalKeys}
+                  onFinancialChange={setFinancialKeys}
+                  onLifestylesChange={setLifestylesKeys}
+                  onVoterChange={setVoterKeys}
+                  onRealEstateChange={setRealEstateKeys}
+                />
                 )}
 
                 {/* Calculation results block rendered with flex layout */}
                 {currentStep == 3 && (
-                  <Box
-                    sx={{
-                      border: "1px solid #E4E4E4",
-                      borderRadius: "6px",
-                      bgcolor: "white",
-                      p: 2,
-                      mt: 2,
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, ml: 1 }}>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontFamily: 'Nunito Sans',
-                          fontWeight: 500,
-                          fontSize: '16px',
-                          lineHeight: '22.5px',
-                          color: "text.disabled",
-                        }}
-                      >
-                        Step 1
-                      </Typography>
-
-                      <ArrowRightAltIcon
-                        sx={{
-                          fontSize: '28px',
-                          color: "text.disabled",
-                          mx: 1,
-                          verticalAlign: 'middle',
-                        }}
-                      />
-
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          fontFamily: 'Nunito Sans',
-                          fontWeight: 500,
-                          fontSize: '16px',
-                          lineHeight: '22.5px',
-                        }}
-                      >
-                        Step 2
-                      </Typography>
-                    </Box>
-                    <Grid container spacing={2} sx={{ mb: 2 }}>
-                      <Grid item xs={7}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontFamily: 'Nunito Sans',
-                            fontWeight: 500,
-                            fontSize: '16px',
-                            lineHeight: '22.5px',
-                            mb: 1,
-                            ml: 1,
-                          }}
-                        >
-                          Select and order predictable fields
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontSize: '14px',
-                            color: 'text.secondary',
-                            mb: 1,
-                            ml: 1,
-                          }}
-                        >
-                          You can configure the predictable fields that will be used for audience building yourself.
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={5}>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontFamily: 'Nunito Sans',
-                            fontWeight: 500,
-                            fontSize: '16px',
-                            lineHeight: '22.5px',
-                            mb: 1,
-                            ml: 1,
-                          }}
-                        >
-                          How to order your fields?
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                    <Grid container spacing={2}>
-                      <Grid item xs={12} md={6} direction="column" spacing={1}>
-                        <Grid item xs={12} md={6}>
-                          <DragAndDropTable
-                            fields={dndFields}
-                            onOrderChange={(newOrder) => setDndFields(newOrder)}
-                          />
-                        </Grid>
-                      </Grid>
-                      <Grid item xs={12} md={1}></Grid>
-                      <Grid
-                        item
-                        xs={12}
-                        md={5}
-                        sx={{ borderLeft: "1px solid #E4E4E4" }}
-                      >
-                        <Box sx={{ p: 0, bgcolor: "transparent" }}>
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontSize: "14px",
-                              color: "text.secondary",
-                              mb: 2
-                            }}
-                          >
-                            Once you&apos;ve selected the fields you want to work with, you&apos;ll move on to the next
-                            step, where you can sort, prioritize, or filter these fields further. This step
-                            allows you to fine-tune your audience structure, ensuring that you&apos;re targeting
-                            the right group of people based on the criteria that matter most to you.
-                          </Typography>
-
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontSize: "14px",
-                              color: "text.secondary",
-                              mb: 2
-                            }}
-                          >
-                            By customizing these fields and organizing them
-                            effectively, you ca n build more accurate and
-                            impactful audience segments for your marketing
-                            efforts or research.
-                          </Typography>
-
-                          <Typography
-                            component="a"
-                            href="#"
-                            sx={{
-                              fontSize: "14px",
-                              color: 'rgba(80, 82, 178, 1)',
-                              textDecoration: "underline",
-                              cursor: "pointer",
-                              display: "inline-block",
-                            }}
-                          >
-                            Learn more
-                          </Typography>
-                        </Box>
-                      </Grid>
-                    </Grid>
-                  </Box>
+                  <OrderFieldsStep
+                  fields={dndFields}
+                  onOrderChange={newOrder => setDndFields(newOrder)}
+                  />
                 )}
 
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}

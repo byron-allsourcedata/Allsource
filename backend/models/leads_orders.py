@@ -1,19 +1,27 @@
-from sqlalchemy import Column, Integer, VARCHAR, DECIMAL, TIMESTAMP
+from sqlalchemy import Column, Integer, VARCHAR, DECIMAL, TIMESTAMP, BigInteger, text, ForeignKey, Numeric
 from datetime import datetime, timezone
 from .base import Base
 
 
 class LeadOrders(Base):
     __tablename__ = 'leads_orders'
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    platform = Column(VARCHAR)
-    platform_user_id = Column(VARCHAR)
-    platform_order_id = Column(VARCHAR)
-    lead_user_id = Column(Integer)
-    total_price = Column(DECIMAL(10, 2))
-    currency_code = Column(VARCHAR)
-    created_at = Column(TIMESTAMP, default=datetime.now(timezone.utc))
-    platform_created_at = Column(TIMESTAMP)
-    platfrom_email = Column(VARCHAR)
 
+    id = Column(
+        BigInteger,
+        primary_key=True,
+        nullable=False,
+        server_default=text("nextval('leads_orders_id_seq'::regclass)")
+    )
+    platform_user_id = Column(BigInteger, nullable=True)
+    lead_user_id = Column(
+        BigInteger,
+        ForeignKey('leads_users.id', ondelete='CASCADE'),
+        nullable=True
+    )
+    platform_order_id = Column(BigInteger, nullable=True)
+    currency_code = Column(VARCHAR(8), nullable=True)
+    total_price = Column(Numeric(10, 2), nullable=True)
+    created_at = Column(TIMESTAMP, nullable=True)
+    platform_created_at = Column(TIMESTAMP, nullable=True)
+    platform = Column(VARCHAR, nullable=True)
+    platfrom_email = Column(VARCHAR, nullable=True)
