@@ -22,7 +22,6 @@ from .audience_smarts_use_cases import AudienceSmartsUseCase
 from .audience_sources import AudienceSource
 from .audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from .base import Base
-from .bob_orders import BobOrder
 from .data_sync_imported_leads import DataSyncImportedLead
 from .emails import Email
 from .emails_enrichment import EmailEnrichment
@@ -100,7 +99,6 @@ __all__ = [
     "AudienceSource",
     "AudienceSourcesMatchedPerson",
     "Base",
-    "BobOrder",
     "DataSyncImportedLead",
     "Email",
     "EmailEnrichment",
