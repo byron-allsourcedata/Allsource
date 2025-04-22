@@ -9,7 +9,7 @@ from models.professional_profile import ProfessionalProfile
 
 
 class EnrichmentUser(Base):
-    __tablename__ = 'enrichment_users'
+    __tablename__ = 'enrichment_users2'
     __table_args__ = (
         UniqueConstraint('asid', name='enrichment_users_idx'),
         CheckConstraint('credit_rating >= 0 AND credit_rating <= 26', name='enrichment_users_credit_rating_check'),
