@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, BOOLEAN, text, Index 
+from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, Boolean, text, Index 
 from models.audience_smarts import AudienceSmart
 from models.enrichment_users import EnrichmentUser
 from .base import Base
