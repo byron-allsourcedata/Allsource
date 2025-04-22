@@ -11,7 +11,7 @@ from typing_extensions import deprecated
 from schemas.similar_audiences import AudienceData, AudienceFeatureImportance, NormalizationConfig
 from .audience_data_normalization import AudienceDataNormalizationService, AudienceDataNormalizationServiceDep, \
     default_normalization_config
-from .exceptions import EqualTrainTargets
+from .exceptions import EqualTrainTargets, EmptyTrainDataset
 
 
 class SimilarAudienceService:
@@ -27,6 +27,9 @@ class SimilarAudienceService:
 
 
     def get_trained_model(self, audience_data: List[dict], config: NormalizationConfig) -> CatBoostRegressor:
+        if len(audience_data) == 0:
+            raise EmptyTrainDataset("Empty train dataset")
+
         df = pd.DataFrame(audience_data)
         data, customer_value = self.audience_data_normalization_service.normalize_dataframe(df, config)
         model = self.train_catboost(data, customer_value)
@@ -67,7 +70,7 @@ class SimilarAudienceService:
             model.fit(x_train, y_train)
         except CatBoostError as e:
             if "All train targets are equal" in str(e):
-                value = y_train[0]
+                value = y_train.iloc[0]
                 raise EqualTrainTargets(f"All train targets are equal - customer value is same ({value}) for all rows, check if your data is valid)")
 
 
