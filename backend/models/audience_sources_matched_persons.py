@@ -2,7 +2,7 @@ from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Inde
     VARCHAR, text, func
 
 from .audience_sources import AudienceSource
-from models.enrichment_users import EnrichmentUser
+from models.enrichment_user_ids import EnrichmentUserId
 from .base import Base, create_timestamps, update_timestamps
 from .five_x_five_users import FiveXFiveUser
 
@@ -10,7 +10,6 @@ from .five_x_five_users import FiveXFiveUser
 class AudienceSourcesMatchedPerson(Base):
     __tablename__ = 'audience_sources_matched_persons'
     __table_args__ = (
-        # Index('audience_sources_matched_persons_pkey', 'id'),
         Index('audience_sources_matched_persons_source_id_email_idx', 'source_id', 'email'),
         Index('audience_sources_matched_persons_source_id_idx', 'source_id'),
     )

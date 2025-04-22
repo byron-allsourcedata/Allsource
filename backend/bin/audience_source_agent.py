@@ -5,7 +5,7 @@ import asyncio
 import functools
 import json
 import pytz
-from collections import defaultdict
+from collections import defaultdict, Counter
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List, Union, Optional
@@ -15,6 +15,9 @@ from aio_pika import IncomingMessage, Connection
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
+
+from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
+from schemas.insights import InsightsByCategory, Personal, Financial, Lifestyle, Voter
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -28,6 +31,9 @@ from utils import get_utc_aware_date, get_valid_email_without_million
 from models.leads_visits import LeadsVisits
 from models.emails import Email
 from models.emails_enrichment import EmailEnrichment
+from models import EnrichmentUsersEmails, EnrichmentUserId, EnrichmentFinancialRecord, EnrichmentLifestyle, \
+    EnrichmentVoterRecord
+from models.enrichment_emails import EnrichmentEmails
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
 from services.audience_sources import AudienceSourceMath
@@ -102,28 +108,32 @@ async def process_email_leads(
     if not emails:
         logging.info("No valid emails found in input data.")
         return 0
-    
-    email_records = db_session.query(Email).filter(Email.email.in_(emails)).all()
-    
-    if not email_records:
-        logging.info("No matching emails found in FiveXFiveEmails table.")
+
+    rows = (
+        db_session.query(
+            func.lower(func.trim(EnrichmentEmails.email)),
+            EnrichmentUserId.id
+        )
+        .join(EnrichmentUsersEmails,
+              EnrichmentEmails.id == EnrichmentUsersEmails.email_id)
+        .join(EnrichmentUserId,
+              EnrichmentUsersEmails.enrichment_user_id == EnrichmentUserId.id)
+        .filter(func.lower(func.trim(EnrichmentEmails.email)).in_(emails))
+        .all()
+    )
+
+    if not rows:
+        logging.info("No matching emails found in enrichment_emails.")
         return 0
 
-    email_to_id = {record.email: record.id for record in email_records}
+    email_to_user_id = {email: user_id for email, user_id in rows}
 
-    email_ids = list(email_to_id.values())
-    user_records = db_session.query(EmailEnrichment.email_id, EmailEnrichment.enrichment_user_id).filter(
-        EmailEnrichment.email_id.in_(email_ids)
-    ).all()
-
-    email_id_to_user_id = {record.email_id: record.enrichment_user_id for record in user_records}
-
-    email_to_user_id = {email: email_id_to_user_id[email_id] for email, email_id in email_to_id.items() if
-                        email_id in email_id_to_user_id}
-
-    filtered_persons = [p for p in persons if p.email.strip().lower() in email_to_user_id]
+    filtered_persons = [
+        p for p in persons
+        if p.email and p.email.strip().lower() in email_to_user_id
+    ]
     if not filtered_persons:
-        logging.info("No valid persons left after filtering by existing emails.")
+        logging.info("No valid persons left after filtering by enrichment_emails.")
         return 0
 
     for person in filtered_persons:
@@ -675,6 +685,174 @@ async def normalize_persons_failed_leads(
         f"from {data_for_normalize.all_size} matched records."
     )
 
+
+def process_insights(source_id: str, db_session: Session, connection: Connection):
+    # 1) get all enrichment_user_id by source_id
+    user_ids = [
+        row[0]
+        for row in db_session.query(AudienceSourcesMatchedPerson.enrichment_user_id)
+        .filter(AudienceSourcesMatchedPerson.source_id == source_id)
+        .all()
+    ]
+    if not user_ids:
+        return InsightsByCategory(
+            personal_profile=Personal(**{}),
+            financial=Financial(**{}),
+            lifestyle=Lifestyle(**{}),
+            voter=Voter(**{})
+        )
+
+    # 2) convert to ASID
+    asids = [
+        row[0]
+        for row in db_session.query(EnrichmentUserId.asid)
+        .filter(EnrichmentUserId.id.in_(user_ids))
+        .all()
+    ]
+
+    # 3) PERSONAL
+    personal_rows = db_session.query(
+        EnrichmentPersonalProfiles.gender,
+        EnrichmentPersonalProfiles.age,
+        EnrichmentPersonalProfiles.birth_year,
+        EnrichmentPersonalProfiles.birth_day,
+        EnrichmentPersonalProfiles.birth_month,
+        EnrichmentPersonalProfiles.marital_status,
+        EnrichmentPersonalProfiles.has_children,
+        EnrichmentPersonalProfiles.religion,
+        EnrichmentPersonalProfiles.ethnicity,
+        EnrichmentPersonalProfiles.homeowner,
+        EnrichmentPersonalProfiles.language_code,
+    ).filter(EnrichmentPersonalProfiles.asid.in_(asids)).all()
+
+    gender_ct = Counter()
+    age_ct = Counter()
+    birthyear_ct = Counter()
+    marital_ct = Counter()
+    children_ct = Counter()
+    religion_ct = Counter()
+    ethnicity_ct = Counter()
+    home_ct = Counter()
+    lang_ct = Counter()
+
+    for (
+            g, age_range, by, bd, bm,
+            ms, hc, rel, eth, ho, lc
+    ) in personal_rows:
+        gender_ct[g] += 1
+        age_ct[str(age_range)] += 1
+        birthyear_ct[by] += 1
+        marital_ct[ms] += 1
+        children_ct[hc] += 1
+        religion_ct[rel] += 1
+        ethnicity_ct[eth] += 1
+        home_ct[ho] += 1
+        lang_ct[lc] += 1
+
+    personal = Personal(
+        gender= gender_ct,
+        age= age_ct,
+        marital_status=marital_ct,
+        have_children= children_ct,
+        religion= religion_ct,
+        ethnicity= ethnicity_ct,
+        home_status= home_ct,
+        language= lang_ct,
+        pets={}, # data not in table
+        children_ages={}, # data not in table
+        education_level={}, # data not in table
+        location={} # data not in table
+    )
+
+    # 4) FINANCIAL
+    fin_rows = db_session.query(
+        EnrichmentFinancialRecord.income_range,
+        EnrichmentFinancialRecord.net_worth,
+        EnrichmentFinancialRecord.credit_rating,
+        EnrichmentFinancialRecord.credit_cards,
+        EnrichmentFinancialRecord.bank_card,
+        EnrichmentFinancialRecord.credit_card_premium,
+        EnrichmentFinancialRecord.credit_card_new_issue,
+        EnrichmentFinancialRecord.credit_lines,
+        EnrichmentFinancialRecord.credit_range_of_new_credit_lines,
+        EnrichmentFinancialRecord.donor,
+        EnrichmentFinancialRecord.investor,
+        EnrichmentFinancialRecord.mail_order_donor,
+    ).filter(EnrichmentFinancialRecord.asid.in_(asids)).all()
+
+    fin_cts = defaultdict(Counter)
+    for (
+            inc, nw, cr, cc_txt, bc, ccp, ccn, cl, crn, donor, inv, mod
+    ) in fin_rows:
+        fin_cts['income_range'][inc] += 1
+        fin_cts['net_worth_range'][nw] += 1
+        fin_cts['credit_score_range'][cr] += 1
+        fin_cts['credit_cards'][cc_txt] += 1
+        fin_cts['bank_card'][bc] += 1
+        fin_cts['credit_card_premium'][ccp] += 1
+        fin_cts['credit_card_new_issue'][ccn] += 1
+        fin_cts['number_of_credit_lines'][cl] += 1
+        fin_cts['credit_range_of_new_credit'][crn] += 1
+        fin_cts['donor'][donor] += 1
+        fin_cts['investor'][inv] += 1
+        fin_cts['mail_order_donor'][mod] += 1
+
+    financial = Financial(**{k: dict(v) for k, v in fin_cts.items()})
+
+    # 5) LIFESTYLE
+    life_rows = db_session.query(
+        EnrichmentLifestyle.pets,
+        EnrichmentLifestyle.cooking_enthusiast,
+        EnrichmentLifestyle.travel,
+        EnrichmentLifestyle.mail_order_buyer,
+        EnrichmentLifestyle.online_purchaser,
+        EnrichmentLifestyle.book_reader,
+        EnrichmentLifestyle.health_and_beauty,
+        EnrichmentLifestyle.fitness,
+        EnrichmentLifestyle.outdoor_enthusiast,
+        EnrichmentLifestyle.tech_enthusiast,
+        EnrichmentLifestyle.diy,
+        EnrichmentLifestyle.automotive_buff,
+        EnrichmentLifestyle.golf_enthusiasts,
+        EnrichmentLifestyle.beauty_cosmetics,
+        EnrichmentLifestyle.smoker,
+    ).filter(EnrichmentLifestyle.asid.in_(asids)).all()
+
+    life_cts = defaultdict(Counter)
+    for row in life_rows:
+        for name, val in zip(
+                ['own_pets', 'cooking_interest', 'travel_interest', 'mail_order_buyer',
+                 'online_purchaser', 'book_reader', 'health_and_beauty_interest',
+                 'fitness_interest', 'outdoor_interest', 'tech_interest', 'diy_interest',
+                 'automotive', 'golf_interest', 'beauty_cosmetic_interest', 'smoker'],
+                row
+        ):
+            life_cts[name][val] += 1
+
+    lifestyle = Lifestyle(**{k: dict(v) for k, v in life_cts.items()})
+
+    # 6) VOTER
+    voter_rows = db_session.query(
+        EnrichmentVoterRecord.congressional_district,
+        EnrichmentVoterRecord.voting_propensity,
+        EnrichmentVoterRecord.party_affiliation
+    ).filter(EnrichmentVoterRecord.asid.in_(asids)).all()
+
+    voter_cts = defaultdict(Counter)
+    for cd, vp, pa in voter_rows:
+        voter_cts['congressional_district'][cd] += 1
+        voter_cts['voting_propensity'][vp] += 1
+        voter_cts['political_party'][pa] += 1
+
+    voter = Voter(**{k:  v for k, v in voter_cts.items()})
+
+    return InsightsByCategory(
+        personal_profile=personal,
+        financial=financial,
+        lifestyle=lifestyle,
+        voter=voter
+    )
+
 async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection):
     try:
         message_body_dict = json.loads(message.body)
@@ -748,6 +926,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         logging.info(f"Updated processed and matched records for source_id {source_id}.")
 
         if processed_records >= total_records:
+            process_insights(source_id=source_id, db_session=db_session, connection=connection)
             db_session.execute(
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)

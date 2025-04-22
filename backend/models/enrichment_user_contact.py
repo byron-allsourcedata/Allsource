@@ -14,7 +14,7 @@ class EnrichmentUserContact(Base):
     )
     enrichment_user_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("enrichment_users.id"),
+        ForeignKey("enrichment_users2.id"),
         nullable=False
     )
     asid = Column(

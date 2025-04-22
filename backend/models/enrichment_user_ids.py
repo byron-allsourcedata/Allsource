@@ -4,7 +4,7 @@ from .base import Base
 
 
 class EnrichmentUserId(Base):
-    __tablename__ = 'enrichment_user_ids'
+    __tablename__ = 'enrichment_users'
     __table_args__ = (
         UniqueConstraint('asid', name='enrichment_user_ids_asid_key'),
     )

@@ -23,7 +23,7 @@ class EnrichmentEmploymentHistory(Base):
     asid = Column(
         UUID(as_uuid=True),
         ForeignKey(
-            'enrichment_user_ids.asid',
+            'enrichment_users.asid',
             ondelete='CASCADE',
             onupdate='CASCADE'
         ),

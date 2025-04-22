@@ -36,6 +36,7 @@ class AudienceSource(Base):
         nullable=False,
         server_default=text("'b2c'")
     )
+    insights = Column(JSON, nullable=True)
 
 
 event.listen(AudienceSource, "before_insert", create_timestamps)
