@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TEXT, UUID, SmallInteger, Boolean, text
+from sqlalchemy import Column, Integer, TEXT, UUID, SmallInteger, Boolean, text, UniqueConstraint, CheckConstraint
 from sqlalchemy.dialects.postgresql import INT4RANGE
 from sqlalchemy.inspection import inspect
 from .base import Base
@@ -10,9 +10,19 @@ from models.professional_profile import ProfessionalProfile
 
 class EnrichmentUser(Base):
     __tablename__ = 'enrichment_users'
+    __table_args__ = (
+        UniqueConstraint('asid', name='enrichment_users_idx'),
+        CheckConstraint('credit_rating >= 0 AND credit_rating <= 26', name='enrichment_users_credit_rating_check'),
+        CheckConstraint('net_worth_code >= 0 AND net_worth_code <= 26', name='enrichment_users_net_worth_code_check'),
+        CheckConstraint('has_children = ANY (ARRAY[0,1,2])', name='enrichment_users_has_children_check'),
+        CheckConstraint('has_credit_card = ANY (ARRAY[0,1,2])', name='enrichment_users_has_credit_card_check'),
+        CheckConstraint('homeowner_status = ANY (ARRAY[0,1,2])', name='enrichment_users_homeowner_status_check'),
+        CheckConstraint('is_book_reader = ANY (ARRAY[0,1,2])', name='enrichment_users_is_book_reader_check'),
+        CheckConstraint('is_online_purchaser = ANY (ARRAY[0,1,2])', name='enrichment_users_is_online_purchaser_check'),
+        CheckConstraint('is_traveler = ANY (ARRAY[0,1,2])', name='enrichment_users_is_traveler_check'),
+    )
 
-    id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False,
-                server_default=text("gen_random_uuid()"))
+    id = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
     cid = Column(Integer, nullable=True)
     age = Column(INT4RANGE, nullable=False)
     gender = Column(SmallInteger, nullable=False)
@@ -35,7 +45,6 @@ class EnrichmentUser(Base):
     state_abbr = Column(TEXT, nullable=True)
     is_traveler = Column(SmallInteger, nullable=False)
     rec_id = Column(Integer, nullable=True)
-
     asid = Column(UUID(as_uuid=True), nullable=True, unique=True)
     birth_year = Column(Integer, nullable=True)
     birth_month = Column(Integer, nullable=True)
@@ -46,12 +55,23 @@ class EnrichmentUser(Base):
     religion_code = Column(TEXT, nullable=True)
     business_owner = Column(TEXT, nullable=True)
 
-    emails_enrichment = relationship("EmailEnrichment", back_populates="enrichment_user", cascade="all, delete-orphan")
-    contacts = relationship("EnrichmentUserContact", back_populates="enrichment_user", cascade="all, delete-orphan")
-    professional_profiles = relationship(
-        "ProfessionalProfile",
+    emails_enrichment = relationship(
+        EmailEnrichment,
         back_populates="enrichment_user",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        foreign_keys=[EmailEnrichment.enrichment_user_id]
+    )
+    contacts = relationship(
+        EnrichmentUserContact,
+        back_populates="enrichment_user",
+        cascade="all, delete-orphan",
+        foreign_keys=[EnrichmentUserContact.enrichment_user_id]
+    )
+    professional_profiles = relationship(
+        ProfessionalProfile,
+        back_populates="enrichment_user",
+        cascade="all, delete-orphan",
+        foreign_keys=[ProfessionalProfile.enrichment_user_id]
     )
 
     @classmethod
