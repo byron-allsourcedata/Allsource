@@ -11,7 +11,7 @@ from models.professional_profile import ProfessionalProfile
 class EnrichmentUser(Base):
     __tablename__ = 'enrichment_users'
     __table_args__ = (
-        # UniqueConstraint('asid', name='enrichment_users_idx'),
+        UniqueConstraint('asid', name='enrichment_users_idx'),
         CheckConstraint('credit_rating >= 0 AND credit_rating <= 26', name='enrichment_users_credit_rating_check'),
         CheckConstraint('net_worth_code >= 0 AND net_worth_code <= 26', name='enrichment_users_net_worth_code_check'),
         CheckConstraint('has_children = ANY (ARRAY[0,1,2])', name='enrichment_users_has_children_check'),

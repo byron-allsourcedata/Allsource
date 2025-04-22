@@ -22,11 +22,11 @@ class ProfessionalProfile(Base):
         nullable=True
     )
 
-    # asid = Column(
-    #     UUID(as_uuid=True),
-    #     ForeignKey("enrichment_users.asid", ondelete="CASCADE"),
-    #     nullable=True
-    # )
+    asid = Column(
+        UUID(as_uuid=True),
+        ForeignKey("enrichment_users.asid", ondelete="CASCADE"),
+        nullable=True
+    )
     asid = Column(UUID(as_uuid=True), nullable=True, unique=True)
     current_job_title = Column(TEXT, nullable=True)
     current_company_name = Column(TEXT, nullable=True)
