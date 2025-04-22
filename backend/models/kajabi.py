@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, JSON
+from sqlalchemy import Column, Integer, JSON, BigInteger, text
 
 from .base import Base
 
@@ -6,5 +6,13 @@ from .base import Base
 class Kajabi(Base):
     __tablename__ = 'kajabi'
 
-    id = Column(Integer, primary_key=True)
-    text = Column(JSON, nullable=True)
+    id = Column(
+        BigInteger,
+        primary_key=True,
+        nullable=False,
+        server_default=text("nextval('kajabi_id_seq'::regclass)")
+    )
+    text = Column(
+        JSON,
+        nullable=True
+    )

@@ -1,9 +1,19 @@
 from .base import Base
-from sqlalchemy import Column, Integer, ForeignKey
+from sqlalchemy import Column, Integer, ForeignKey, BigInteger
 
 
 class FiveXFiveUsersLocations(Base):
     __tablename__ = '5x5_users_locations'
 
-    five_x_five_user_id = Column(Integer, ForeignKey('5x5_users.id'), nullable=False, primary_key=True)
-    location_id = Column(Integer, ForeignKey('five_x_five_locations.id'), nullable=False, primary_key=True)
+    five_x_five_user_id = Column(
+        BigInteger,
+        ForeignKey('5x5_users.id', ondelete='CASCADE'),
+        primary_key=True,
+        nullable=False
+    )
+    location_id = Column(
+        BigInteger,
+        ForeignKey('5x5_locations.id'),
+        primary_key=True,
+        nullable=False
+    )

@@ -8,7 +8,7 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import class_mapper
 
 from models.audience_smarts import AudienceSmart
-from models.audience_lookalikes_persons import AudienceLookALikePerson
+from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts_use_cases import AudienceSmartsUseCase
@@ -41,7 +41,7 @@ class AudienceSmartsPersistence:
         return use_case[0] if use_case else None
     
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:   
-        AudienceLALP = aliased(AudienceLookALikePerson)
+        AudienceLALP = aliased(AudienceLookalikesPerson)
         AudienceSMP = aliased(AudienceSourcesMatchedPerson)
 
         lalp_query = (

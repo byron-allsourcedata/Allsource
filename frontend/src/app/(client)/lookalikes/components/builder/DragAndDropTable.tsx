@@ -1,25 +1,15 @@
-'use client';
-
 import * as React from 'react';
 import { Box } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import type { Field, LookalikeFieldsGridProps } from "@/types";
 
-export interface Field {
-  id: string;
-  name: string;
-  value: string;
-}
+const formatPercent = (value: string) =>
+  `${(parseFloat(value) * 100).toFixed(1)}%`;
 
-interface LookalikeFieldsGridProps {
-  fields: Field[];
-  onOrderChange?: (newOrder: Field[]) => void;
-}
-
-export default function LookalikeFieldsGrid({
+export function DragAndDropTable({
   fields,
   onOrderChange,
 }: LookalikeFieldsGridProps) {
-  // Инициализация один раз, сортируем по value
   const [rows, setRows] = React.useState<Field[]>(() =>
     [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value))
   );
@@ -79,7 +69,7 @@ export default function LookalikeFieldsGrid({
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 600,  }}>
+    <Box sx={{ width: '100%', maxWidth: 600 }}>
       {rows.map((row, index) => (
         <Box
           key={row.id}
@@ -88,13 +78,12 @@ export default function LookalikeFieldsGrid({
           onDrop={handleDrop}
           sx={{
             display: 'flex',
-            justifyContent: 'flex-start',     
-            alignItems: 'center',        
+            alignItems: 'center',
             p: 1.5,
             bgcolor: dragOverIndex === index ? 'action.hover' : 'background.paper',
             borderBottom: '1px solid',
             borderColor: 'divider',
-            textAlign: 'left',              
+            textAlign: 'left',
           }}
         >
           <Box
@@ -114,10 +103,11 @@ export default function LookalikeFieldsGrid({
           >
             <DragIndicatorIcon fontSize="small" />
           </Box>
-
-          <Box sx={{ flex: 1, typography: 'body2', textAlign: 'left' }}>{row.name}</Box>
-          <Box sx={{ width: 150, textAlign: 'left', typography: 'body2' }}>
-            {row.value}
+          <Box sx={{ flex: 1, typography: 'body2', textAlign: 'left' }}>
+            {row.name}
+          </Box>
+          <Box sx={{ width: 150, typography: 'body2', textAlign: 'left' }}>
+            {formatPercent(row.value)}
           </Box>
         </Box>
       ))}

@@ -1,60 +1,71 @@
-from sqlalchemy import Column, DateTime, event, Integer
+from sqlalchemy import Column, DateTime, event, Integer, Boolean, text, ForeignKey, BigInteger, Index
 from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR, ARRAY, JSON
 
 from .base import Base, create_timestamps, update_timestamps
 
 
 class Users(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, nullable=False)
+    __tablename__ = 'users'
+    __table_args__ = (
+        Index('users_email_idx', 'email', unique=True),
+        Index('users_data_provider_id_idx', 'data_provider_id', unique=True),
+    )
+
+    id = Column(
+        BigInteger,
+        primary_key=True,
+        nullable=False,
+        server_default=text("nextval('users_id_seq'::regclass)")
+    )
     email = Column(VARCHAR, nullable=True)
-    is_email_confirmed = Column(BOOLEAN, default=False, nullable=True)
-    is_with_card = Column(BOOLEAN, default=False, nullable=True)
-    is_company_details_filled = Column(BOOLEAN, default=False, nullable=True)
-    is_partner = Column(BOOLEAN, default=False, nullable=True)
+    is_email_confirmed = Column(Boolean, nullable=True, server_default=text('false'))
     password = Column(VARCHAR, nullable=True)
     full_name = Column(VARCHAR, nullable=True)
-    business_type = Column(VARCHAR, nullable=False, default='d2c')
-    team_owner_id = Column(BIGINT, nullable=True)
+    business_type = Column(VARCHAR, nullable=False, server_default=text("'d2c'::character varying"))
+    team_owner_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     image = Column(VARCHAR, nullable=True)
     company_name = Column(VARCHAR, nullable=True)
-    company_website = Column(VARCHAR, nullable=True)
-    company_email_address = Column(VARCHAR, nullable=True)
-    company_role = Column(VARCHAR(16), nullable=True)
-    company_website_visits = Column(VARCHAR(16), nullable=True)
-    employees_workers = Column(VARCHAR(16), nullable=True)
     created_at = Column(TIMESTAMP(precision=7), nullable=True)
     last_login = Column(TIMESTAMP(precision=7), nullable=True)
-    payment_status = Column(VARCHAR, default='pending', nullable=True)
+    payment_status = Column(VARCHAR, nullable=True, server_default=text("'PENDING'::character varying"))
     customer_id = Column(VARCHAR, nullable=True)
+    company_website = Column(VARCHAR, nullable=True)
     reset_password_sent_at = Column(DateTime, nullable=True)
-    pixel_code_sent_at = Column(DateTime, nullable=True)
-    verified_email_sent_at = Column(DateTime, nullable=True)
-    change_email_sent_at = Column(DateTime, nullable=True)
-    is_book_call_passed = Column(BOOLEAN, default=False, nullable=True)
+    is_with_card = Column(Boolean, nullable=True, server_default=text('false'))
+    is_company_details_filled = Column(Boolean, nullable=True, server_default=text('false'))
+    verified_email_sent_at = Column(TIMESTAMP(precision=7), nullable=True)
+    company_email_address = Column(VARCHAR, nullable=True)
+    employees_workers = Column(VARCHAR(256), nullable=True)
+    is_book_call_passed = Column(Boolean, nullable=False, server_default=text('false'))
     stripe_payment_url = Column(JSON, nullable=True)
     data_provider_id = Column(VARCHAR(64), nullable=True)
-    role = Column(ARRAY(VARCHAR(32)))
+    role = Column(ARRAY(VARCHAR(32)), nullable=True, server_default=text("ARRAY['customer']"))
+    company_role = Column(VARCHAR(16), nullable=True)
+    company_website_visits = Column(VARCHAR(16), nullable=True)
+    pixel_code_sent_at = Column(TIMESTAMP(precision=7), nullable=True)
     calendly_uuid = Column(VARCHAR(64), nullable=True)
     calendly_invitee_uuid = Column(VARCHAR(64), nullable=True)
-    activate_steps_percent = Column(INTEGER, nullable=True)
-    leads_credits = Column(INTEGER, nullable=True, default=0)
-    prospect_credits = Column(INTEGER, nullable=True, default=0)
-    is_leads_auto_charging = Column(BOOLEAN, default=True, nullable=False)
+    activate_steps_percent = Column(Integer, nullable=True, server_default=text('0'))
+    leads_credits = Column(Integer, nullable=False, server_default=text('0'))
+    prospect_credits = Column(Integer, nullable=False, server_default=text('0'))
+    change_email_sent_at = Column(TIMESTAMP(precision=7), nullable=True)
+    is_leads_auto_charging = Column(Boolean, nullable=False, server_default=text('false'))
     last_signed_in = Column(TIMESTAMP(precision=7), nullable=True)
-    team_access_level = Column(VARCHAR(32), nullable=True, default='owner')
-    invited_by_id = Column(VARCHAR(32), nullable=True)
+    team_access_level = Column(VARCHAR(32), nullable=True)
     added_on = Column(TIMESTAMP(precision=7), nullable=True)
-    current_subscription_id = Column(Integer, nullable=False)
+    invited_by_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
+    current_subscription_id = Column(BigInteger, ForeignKey('user_subscriptions.id', ondelete='SET NULL'),
+                                     nullable=True)
     awin_awc = Column(VARCHAR(128), nullable=True)
     source_platform = Column(VARCHAR(64), nullable=True)
-    charge_id = Column(VARCHAR(64), nullable=True)
+    connected_stripe_account_id = Column(VARCHAR, nullable=True)
     shop_id = Column(VARCHAR(64), nullable=True)
     shopify_token = Column(VARCHAR(64), nullable=True)
     shop_domain = Column(VARCHAR(64), nullable=True)
-    connected_stripe_account_id = Column(VARCHAR(128), nullable=True)
+    is_partner = Column(Boolean, nullable=True, server_default=text('false'))
+    charge_id = Column(VARCHAR(64), nullable=True)
     utm_params = Column(JSON, nullable=True)
-    is_stripe_connected = Column(BOOLEAN, default=False, nullable=False)
+    is_stripe_connected = Column(Boolean, nullable=False, server_default=text('false'))
     stripe_connected_email = Column(VARCHAR, nullable=True)
     stripe_connected_currently_due = Column(JSON, nullable=True)
 

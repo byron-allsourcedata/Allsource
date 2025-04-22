@@ -10,15 +10,7 @@ import {
   useTheme,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-
-export type FeatureObject = Record<string, number>;
-
-interface Props<T extends FeatureObject> {
-  features: T;
-  title: string;
-  onChangeDisplayed?: (selected: (keyof T)[]) => void;
-  columnHeaders?: [string, string];
-}
+import type { FeatureObject, Props } from "@/types";
 
 const formatKey = (k: string) =>
   k
@@ -28,47 +20,59 @@ const formatKey = (k: string) =>
     .trim()
     .replace(/^./, (c) => c.toUpperCase());
 
-function FeatureImportanceTable<T extends FeatureObject>({
+export function FeatureImportanceTable<T extends FeatureObject>({
   features,
   title,
   onChangeDisplayed,
   columnHeaders = ["Field", "Importance"],
 }: Props<T>) {
   const theme = useTheme();
-  
-  // Prepare sorted pairs descending
-  const allPairs = useMemo(() => {
-    return Object.entries(features)
-      .map(([k, v]) => [k as keyof T, v] as [keyof T, number])
-      .sort((a, b) => b[1] - a[1]);
-  }, [features]);
 
-  // Determine non-zero pairs and max selectable count
-  const nonZeroPairs = allPairs.filter(([, v]) => v > 0);
-  const maxSelectable = Math.min(allPairs.length, 14);
+  const allPairs = useMemo<[keyof T, number][]>(
+    () =>
+      Object.entries(features)
+        .map(([k, v]) => [k as keyof T, v] as [keyof T, number])
+        .sort((a, b) => b[1] - a[1]),
+    [features]
+  );
 
-  // Initialize selected only from non-zero, up to maxSelectable
-  const initialSelected = useMemo(
+  const nonZeroPairs = useMemo<[keyof T, number][]>(
+    () => allPairs.filter(([, v]) => v > 0),
+    [allPairs]
+  );
+
+  const maxSelectable = useMemo<number>(
+    () => Math.min(allPairs.length, 14),
+    [nonZeroPairs.length]
+  );
+
+  const initialSelected = useMemo<(keyof T)[]>(
     () => nonZeroPairs.slice(0, maxSelectable).map(([k]) => k),
     [nonZeroPairs, maxSelectable]
   );
 
   const [selectedKeys, setSelectedKeys] = useState<(keyof T)[]>(initialSelected);
 
-  // Notify parent on change
   useEffect(() => {
-    onChangeDisplayed?.(selectedKeys);
+    setSelectedKeys(initialSelected);
+  }, [initialSelected]);
+
+  useEffect(() => {
+    if (onChangeDisplayed) {
+      onChangeDisplayed(selectedKeys);
+    }
   }, [selectedKeys, onChangeDisplayed]);
 
-  // Toggle checkbox
   const onOptionToggle = (key: keyof T) => {
-    setSelectedKeys((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    setSelectedKeys(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
     );
   };
 
-  // Header text color based on any selected
-  const headerColor = selectedKeys.length > 0 ? 'rgba(80, 82, 178, 1)' : theme.palette.text.disabled;
+  const headerColor =
+    selectedKeys.length > 0
+      ? "rgba(80, 82, 178, 1)"
+      : theme.palette.text.disabled;
 
   return (
     <Accordion
@@ -106,16 +110,14 @@ function FeatureImportanceTable<T extends FeatureObject>({
             }}
           >
             <Typography variant="body1" sx={{ color: headerColor }}>
-              {`${selectedKeys.length}/${maxSelectable} fields selected`}
+              {`${selectedKeys.length}/${allPairs.length} fields selected`}
             </Typography>
           </Grid>
           <Grid item sx={{ ml: "auto" }} />
         </Grid>
       </AccordionSummary>
-
       <AccordionDetails sx={{ p: 0 }}>
         <Box sx={{ pt: 2, px: 2, pb: 0 }}>
-          {/* Column headers */}
           <Grid
             container
             alignItems="center"
@@ -140,12 +142,9 @@ function FeatureImportanceTable<T extends FeatureObject>({
             </Grid>
             <Grid item sx={{ ml: "auto" }} />
           </Grid>
-
-          {/* Data rows */}
           {allPairs.map(([k, v]) => {
             const checked = selectedKeys.includes(k);
             const displayValue = `${(v * 100).toFixed(1)}%`;
-
             return (
               <Grid
                 container
@@ -164,20 +163,22 @@ function FeatureImportanceTable<T extends FeatureObject>({
                     onChange={() => onOptionToggle(k)}
                     size="small"
                     sx={{
-                      fontSize: '12px',
-                      '&.Mui-checked': {
-                        color: 'rgba(80, 82, 178, 1)',
+                      fontSize: "12px",
+                      "&.Mui-checked": {
+                        color: "rgba(80, 82, 178, 1)",
                       },
                     }}
                   />
                 </Grid>
                 <Grid item sx={{ flexBasis: 350, maxWidth: 350, flexShrink: 0 }}>
-                  <Typography variant="body2">{formatKey(String(k))}</Typography>
+                  <Typography variant="body2">
+                    {formatKey(String(k))}
+                  </Typography>
                 </Grid>
                 <Grid item sx={{ flexBasis: 120, maxWidth: 120, flexShrink: 0 }}>
                   <Typography variant="body2">{displayValue}</Typography>
                 </Grid>
-                <Grid item sx={{ ml: 'auto' }} />
+                <Grid item sx={{ ml: "auto" }} />
               </Grid>
             );
           })}
@@ -186,5 +187,3 @@ function FeatureImportanceTable<T extends FeatureObject>({
     </Accordion>
   );
 }
-
-export default FeatureImportanceTable;

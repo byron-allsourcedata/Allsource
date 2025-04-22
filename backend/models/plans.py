@@ -1,42 +1,57 @@
-from sqlalchemy import Column, event, Integer, ForeignKey, Index
+from sqlalchemy import Column, event, Integer, ForeignKey, Index, BigInteger, text, Text, Numeric, Boolean
 from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, VARCHAR, JSONB
 
 from .base import Base, create_timestamps, update_timestamps
 
 
 class SubscriptionPlan(Base):
-    __tablename__ = "subscription_plans"
+    __tablename__ = 'subscription_plans'
+    __table_args__ = (
+        Index('subscription_plans_alias_idx', 'alias', unique=True),
+        Index('subscription_plans_contact_credit_plan_id_idx', 'contact_credit_plan_id'),
+        Index('subscription_plans_interval_is_active_idx', 'interval', 'is_active'),
+        Index('subscription_plans_platform_is_active_idx', 'platform', 'is_active'),
+        Index('subscription_plans_title_interval_idx', 'title', 'interval'),
+        Index('subscription_plans_title_price_idx', 'title', 'price'),
+    )
 
-    id = Column(Integer, primary_key=True, nullable=False)
-    contact_credit_plan_id = Column(Integer, ForeignKey('subscription_plans.id'), nullable=True)
-    title = Column(VARCHAR(32), nullable=True)
-    description = Column(VARCHAR(128), nullable=True)
+    id = Column(
+        BigInteger,
+        primary_key=True,
+        nullable=False,
+        server_default=text("nextval('subscription_plans_id_seq'::regclass)")
+    )
+    title = Column(VARCHAR(64), nullable=True)
+    description = Column(Text, nullable=True)
     interval = Column(VARCHAR(16), nullable=True)
-    stripe_price_id = Column(VARCHAR(64), nullable=True)
-    price = Column(NUMERIC(18, 2), nullable=True)
-    currency = Column(VARCHAR(8), default="usd", nullable=True)
-    trial_days = Column(INTEGER, default=7, nullable=True)
-    is_default = Column(BOOLEAN, default=False, nullable=True)
+    stripe_price_id = Column(VARCHAR(128), nullable=True)
+    price = Column(Numeric, nullable=True)
+    currency = Column(VARCHAR(8), nullable=True)
+    trial_days = Column(Integer, nullable=True)
+    is_default = Column(Boolean, nullable=True)
     coupon_id = Column(VARCHAR, nullable=True)
-    is_active = Column(BOOLEAN, default=False, nullable=True)
-    is_free_trial = Column(BOOLEAN, default=False, nullable=True)
+    is_active = Column(Boolean, nullable=True)
+    is_free_trial = Column(
+        Boolean,
+        nullable=False,
+        server_default=text('false')
+    )
     domains_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
-    leads_credits = Column(INTEGER, nullable=True)
-    prospect_credits = Column(INTEGER, nullable=True)
+    leads_credits = Column(BigInteger, nullable=True)
+    prospect_credits = Column(BigInteger, nullable=True)
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
-    priority = Column(INTEGER, nullable=False)
-    full_price = Column(NUMERIC(18, 2), nullable=True)
-    alias = Column(VARCHAR(64), nullable=False, unique=True)
+    priority = Column(Integer, nullable=True)
+    full_price = Column(Numeric(18, 2), nullable=True)
+    alias = Column(VARCHAR(64), nullable=False)
     platform = Column(VARCHAR(64), nullable=True)
-    
-Index('subscription_plans_title_interval_idx', SubscriptionPlan.title, SubscriptionPlan.interval)
-Index('subscription_plans_title_price_idx', SubscriptionPlan.title, SubscriptionPlan.price)
-Index('subscription_plans_alias_idx', SubscriptionPlan.alias)
-Index('subscription_plans_platform_is_active_idx', SubscriptionPlan.platform, SubscriptionPlan.is_active)
-Index('subscription_plans_interval_is_active_idx', SubscriptionPlan.interval, SubscriptionPlan.is_active)
-Index('subscription_plans_contact_credit_plan_id_idx', SubscriptionPlan.contact_credit_plan_id)
+    contact_credit_plan_id = Column(
+        BigInteger,
+        ForeignKey('subscription_plans.id', ondelete='SET NULL'),
+        nullable=True
+    )
+
 
 event.listen(SubscriptionPlan, "before_insert", create_timestamps)
 event.listen(SubscriptionPlan, "before_update", update_timestamps)

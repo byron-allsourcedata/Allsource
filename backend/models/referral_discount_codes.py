@@ -1,16 +1,34 @@
-from sqlalchemy import Column, Integer, VARCHAR, Boolean
+from sqlalchemy import Column, Integer, VARCHAR, Boolean, text, BigInteger
 from .base import Base
 
 
 class ReferralDiscountCode(Base):
     __tablename__ = 'referral_discount_codes'
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(VARCHAR(128), nullable=False)
-    discount_amount = Column(Integer, nullable=True)
-    is_percentage = Column(Boolean, nullable=True)
-    coupon = Column(VARCHAR(128), nullable=False)
-    
+
+    id = Column(
+        BigInteger,
+        primary_key=True,
+        nullable=False,
+        server_default=text("nextval('referral_discount_code_id_seq'::regclass)")
+    )
+    name = Column(
+        VARCHAR(128),
+        nullable=True
+    )
+    discount_amount = Column(
+        Integer,
+        nullable=True
+    )
+    is_percentage = Column(
+        Boolean,
+        nullable=False,
+        server_default=text('false')
+    )
+    coupon = Column(
+        VARCHAR(128),
+        nullable=True
+    )
+
     def to_dict(self):
         return {
             "id": self.id,

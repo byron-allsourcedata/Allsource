@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DATE, TIME, VARCHAR, ForeignKey
+from sqlalchemy import Column, Integer, DATE, TIME, VARCHAR, ForeignKey, Index, BigInteger, text, Date, Time
 
 from .base import Base
 from .five_x_five_users import FiveXFiveUser
@@ -7,16 +7,37 @@ from .users_domains import UserDomains
 
 class LeadsVisits(Base):
     __tablename__ = 'leads_visits'
+    __table_args__ = (
+        Index('leads_visits_five_x_five_user_id_domain_id_idx', 'five_x_five_user_id', 'domain_id'),
+        Index('leads_visits_pages_count_idx', 'pages_count'),
+    )
 
-    id = Column(Integer, primary_key=True)
-    start_date = Column(DATE, nullable=True)
-    start_time = Column(TIME, nullable=True)
-    end_date = Column(DATE, nullable=True)
-    end_time = Column(TIME, nullable=True)
-    pages_count = Column(Integer, nullable=True, unique=True)
-    average_time_sec = Column(Integer, nullable=True, default=10)
-    full_time_sec = Column(Integer, nullable=True, default=10)
-    lead_id = Column(Integer, ForeignKey('leads_users.id'), nullable=False)
+    id = Column(
+        BigInteger,
+        primary_key=True,
+        nullable=False,
+        server_default=text("nextval('leads_visits_id_seq'::regclass)")
+    )
+    start_date = Column(Date, nullable=True)
+    start_time = Column(Time, nullable=True)
+    end_date = Column(Date, nullable=True)
+    end_time = Column(Time, nullable=True)
+    pages_count = Column(Integer, nullable=True)
+    average_time_sec = Column(Integer, nullable=True)
+    full_time_sec = Column(Integer, nullable=True)
+    lead_id = Column(
+        BigInteger,
+        ForeignKey('leads_users.id', ondelete='CASCADE'),
+        nullable=True
+    )
     behavior_type = Column(VARCHAR, nullable=True)
-    domain_id = Column(Integer, ForeignKey(UserDomains.id), nullable=False)
-    five_x_five_user_id = Column(Integer, ForeignKey(FiveXFiveUser.id), nullable=False)
+    five_x_five_user_id = Column(
+        Integer,
+        ForeignKey('5x5_users.id', ondelete='SET NULL'),
+        nullable=True
+    )
+    domain_id = Column(
+        Integer,
+        ForeignKey('users_domains.id', ondelete='SET NULL'),
+        nullable=True
+    )
