@@ -290,6 +290,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
       );
       if (response.status === 200) {
         if (response.data == 0) {
+          showErrorToast("The selected source/lookalike does not contain matched persons!");
           setAudienceSize(null);
         } else {
           setAudienceSize(response.data);
