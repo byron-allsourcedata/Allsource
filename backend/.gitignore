@@ -19,6 +19,7 @@ Makefile
 .suo
 .vscode
 app/data/cities.json
+alembic/versions
 
 #User-specific stuff
 *.idea

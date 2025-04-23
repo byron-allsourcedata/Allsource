@@ -112,6 +112,16 @@ def search_audience_smart(
     return audience_smarts_service.search_audience_smart(start_letter, user=user)
 
 
+@router.get("/estimates-predictable-validation")
+def estimates_predictable_validation(
+        validations: List[str] = Query([]),
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
+):
+    if len(validations) == 1 and "," in validations[0]:
+        validations = validations[0].split(",")
+    return audience_smarts_service.estimates_predictable_validation(validations)
+
+
 @router.delete("/{id}", response_model=bool)
 def delete_audience_smart(
         id: UUID,

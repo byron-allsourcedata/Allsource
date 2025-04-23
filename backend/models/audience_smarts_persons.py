@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, Boolean, text, Index 
+from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, Boolean, text, Index, Text
 from models.audience_smarts import AudienceSmart
 from models.enrichment_users import EnrichmentUser
 from .base import Base
@@ -40,6 +40,10 @@ class AudienceSmartPerson(Base):
         Boolean,
         nullable=True,
         server_default=text('true')
+    )
+    valid_phone = Column(
+        Text,
+        nullable=True,
     )
     created_at = Column(
         TIMESTAMP,

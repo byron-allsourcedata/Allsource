@@ -34,6 +34,7 @@ from .enrichment_user_contact import EnrichmentUserContact
 from .enrichment_user_ids import EnrichmentUserId
 from .enrichment_users import EnrichmentUser
 from .enrichment_voter_record import EnrichmentVoterRecord
+from .enrichment_phones_verification import EnrichmentPhoneVerification
 from .five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from .five_x_five_emails import FiveXFiveEmails
 from .five_x_five_hems import FiveXFiveHems
@@ -111,6 +112,7 @@ __all__ = [
     "EnrichmentUserId",
     "EnrichmentUser",
     "EnrichmentVoterRecord",
+    "EnrichmentPhoneVerification",
     "FiveXFiveCookieSyncFile",
     "FiveXFiveEmails",
     "FiveXFiveHems",
