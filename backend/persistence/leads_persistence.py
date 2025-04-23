@@ -825,7 +825,7 @@ class LeadsPersistence:
                 ))
             query = query.filter(or_(*search_filters))
         
-        result_query = query.limit(1000).all()
+        result_query = query.limit(20000).all()
         
         if not result_query:
             return None, None, {}
