@@ -18,16 +18,15 @@ class ProfessionalProfile(Base):
     )
     enrichment_user_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("enrichment_users.id", ondelete="CASCADE"),
+        ForeignKey("enrichment_users2.id", ondelete="CASCADE"),
         nullable=True
     )
 
     asid = Column(
         UUID(as_uuid=True),
-        ForeignKey("enrichment_users.asid", ondelete="CASCADE"),
+        ForeignKey("enrichment_users2.asid", ondelete="CASCADE"),
         nullable=True
     )
-    asid = Column(UUID(as_uuid=True), nullable=True, unique=True)
     current_job_title = Column(TEXT, nullable=True)
     current_company_name = Column(TEXT, nullable=True)
     job_start_date = Column(TEXT, nullable=True)

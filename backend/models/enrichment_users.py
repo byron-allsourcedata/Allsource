@@ -61,12 +61,12 @@ class EnrichmentUser(Base):
         cascade="all, delete-orphan",
         foreign_keys=[EmailEnrichment.enrichment_user_id]
     )
-    contacts = relationship(
-        EnrichmentUserContact,
-        back_populates="enrichment_user",
-        cascade="all, delete-orphan",
-        foreign_keys=[EnrichmentUserContact.enrichment_user_id]
-    )
+    # contacts = relationship(
+    #     EnrichmentUserContact,
+    #     back_populates="enrichment_user",
+    #     cascade="all, delete-orphan",
+    #     foreign_keys=[EnrichmentUserContact.enrichment_user_id]
+    # )
     professional_profiles = relationship(
         ProfessionalProfile,
         back_populates="enrichment_user",

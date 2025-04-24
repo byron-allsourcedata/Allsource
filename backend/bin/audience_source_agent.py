@@ -5,10 +5,10 @@ import asyncio
 import functools
 import json
 import pytz
-from collections import defaultdict
+from collections import defaultdict, Counter
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Union, Optional
+from typing import List, Union, Optional, Any, Dict
 import boto3
 from sqlalchemy import update, func
 from aio_pika import IncomingMessage, Connection
@@ -20,6 +20,9 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+
+from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
+from schemas.insights import InsightsByCategory, Personal, Financial, Lifestyle, Voter
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users import FiveXFiveUser
@@ -28,6 +31,9 @@ from utils import get_utc_aware_date, get_valid_email_without_million
 from models.leads_visits import LeadsVisits
 from models.emails import Email
 from models.emails_enrichment import EmailEnrichment
+from models import EnrichmentUsersEmails, EnrichmentUserId, EnrichmentFinancialRecord, EnrichmentLifestyle, \
+    EnrichmentVoterRecord
+from models.enrichment_emails import EnrichmentEmails
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
 from services.audience_sources import AudienceSourceMath
@@ -102,28 +108,32 @@ async def process_email_leads(
     if not emails:
         logging.info("No valid emails found in input data.")
         return 0
-    
-    email_records = db_session.query(Email).filter(Email.email.in_(emails)).all()
-    
-    if not email_records:
-        logging.info("No matching emails found in FiveXFiveEmails table.")
+
+    rows = (
+        db_session.query(
+            func.lower(func.trim(EnrichmentEmails.email)),
+            EnrichmentUserId.id
+        )
+        .join(EnrichmentUsersEmails,
+              EnrichmentEmails.id == EnrichmentUsersEmails.email_id)
+        .join(EnrichmentUserId,
+              EnrichmentUsersEmails.enrichment_user_id == EnrichmentUserId.id)
+        .filter(func.lower(func.trim(EnrichmentEmails.email)).in_(emails))
+        .all()
+    )
+
+    if not rows:
+        logging.info("No matching emails found in enrichment_emails.")
         return 0
 
-    email_to_id = {record.email: record.id for record in email_records}
+    email_to_user_id = {email: user_id for email, user_id in rows}
 
-    email_ids = list(email_to_id.values())
-    user_records = db_session.query(EmailEnrichment.email_id, EmailEnrichment.enrichment_user_id).filter(
-        EmailEnrichment.email_id.in_(email_ids)
-    ).all()
-
-    email_id_to_user_id = {record.email_id: record.enrichment_user_id for record in user_records}
-
-    email_to_user_id = {email: email_id_to_user_id[email_id] for email, email_id in email_to_id.items() if
-                        email_id in email_id_to_user_id}
-
-    filtered_persons = [p for p in persons if p.email.strip().lower() in email_to_user_id]
+    filtered_persons = [
+        p for p in persons
+        if p.email and p.email.strip().lower() in email_to_user_id
+    ]
     if not filtered_persons:
-        logging.info("No valid persons left after filtering by existing emails.")
+        logging.info("No valid persons left after filtering by enrichment_emails.")
         return 0
 
     for person in filtered_persons:
@@ -675,6 +685,166 @@ async def normalize_persons_failed_leads(
         f"from {data_for_normalize.all_size} matched records."
     )
 
+
+def process_insights(source_id: str, db_session: Session, connection: Connection):
+    insights = InsightsByCategory()
+    
+    # 1) get all enrichment_user_id by source_id
+    user_ids: List[str] = [
+        uid for (uid,) in db_session
+        .query(AudienceSourcesMatchedPerson.enrichment_user_id)
+        .filter(AudienceSourcesMatchedPerson.source_id == source_id)
+        .all()
+    ]
+    if not user_ids:
+        return insights
+
+    # 2) convert to ASID
+    asids: List[str] = [
+        asid for (asid,) in db_session
+        .query(EnrichmentUserId.asid)
+        .filter(EnrichmentUserId.id.in_(user_ids))
+        .all()
+    ]
+
+    # 3) PERSONAL
+    personal_fields = [
+        'gender', 'age', 'marital_status', 'have_children',
+        'religion', 'ethnicity', 'home_status', 'language'
+    ]
+    personal_cts: defaultdict[str, Counter] = defaultdict(Counter)
+    rows = db_session.query(
+        EnrichmentPersonalProfiles.gender,
+        EnrichmentPersonalProfiles.age,
+        EnrichmentPersonalProfiles.marital_status,
+        EnrichmentPersonalProfiles.has_children,
+        EnrichmentPersonalProfiles.religion,
+        EnrichmentPersonalProfiles.ethnicity,
+        EnrichmentPersonalProfiles.homeowner,
+        EnrichmentPersonalProfiles.language_code,
+    ).filter(
+        EnrichmentPersonalProfiles.asid.in_(asids)
+    ).all()
+
+    for row in rows:
+        for field, val in zip(personal_fields, row):
+            personal_cts[field][str(val)] += 1
+
+    for field in personal_fields:
+        setattr(insights.personal_profile, field, dict(personal_cts[field]))
+
+    # 4) FINANCIAL
+    financial_fields = [
+        'income_range', 'net_worth_range', 'credit_score_range',
+        'credit_cards', 'bank_card', 'credit_card_premium',
+        'credit_card_new_issue', 'number_of_credit_lines',
+        'credit_range_of_new_credit', 'donor', 'investor',
+        'mail_order_donor'
+    ]
+    fin_cts: defaultdict[str, Counter] = defaultdict(Counter)
+    rows = db_session.query(
+        EnrichmentFinancialRecord.income_range,
+        EnrichmentFinancialRecord.net_worth,
+        EnrichmentFinancialRecord.credit_rating,
+        EnrichmentFinancialRecord.credit_cards,
+        EnrichmentFinancialRecord.bank_card,
+        EnrichmentFinancialRecord.credit_card_premium,
+        EnrichmentFinancialRecord.credit_card_new_issue,
+        EnrichmentFinancialRecord.credit_lines,
+        EnrichmentFinancialRecord.credit_range_of_new_credit_lines,
+        EnrichmentFinancialRecord.donor,
+        EnrichmentFinancialRecord.investor,
+        EnrichmentFinancialRecord.mail_order_donor,
+    ).filter(
+        EnrichmentFinancialRecord.asid.in_(asids)
+    ).all()
+
+    for row in rows:
+        for field, val in zip(financial_fields, row):
+            fin_cts[field][str(val)] += 1
+
+    for field in financial_fields:
+        setattr(insights.financial, field, dict(fin_cts[field]))
+
+    # 5) LIFESTYLE
+    lifestyle_fields = [
+        'own_pets', 'cooking_interest', 'travel_interest',
+        'mail_order_buyer', 'online_purchaser', 'book_reader',
+        'health_and_beauty_interest', 'fitness_interest',
+        'outdoor_interest', 'tech_interest', 'diy_interest',
+        'automotive', 'smoker', 'golf_interest',
+        'beauty_cosmetic_interest'
+    ]
+    life_cts: defaultdict[str, Counter] = defaultdict(Counter)
+    rows = db_session.query(
+        EnrichmentLifestyle.pets,
+        EnrichmentLifestyle.cooking_enthusiast,
+        EnrichmentLifestyle.travel,
+        EnrichmentLifestyle.mail_order_buyer,
+        EnrichmentLifestyle.online_purchaser,
+        EnrichmentLifestyle.book_reader,
+        EnrichmentLifestyle.health_and_beauty,
+        EnrichmentLifestyle.fitness,
+        EnrichmentLifestyle.outdoor_enthusiast,
+        EnrichmentLifestyle.tech_enthusiast,
+        EnrichmentLifestyle.diy,
+        EnrichmentLifestyle.automotive_buff,
+        EnrichmentLifestyle.smoker,
+        EnrichmentLifestyle.golf_enthusiasts,
+        EnrichmentLifestyle.beauty_cosmetics,
+    ).filter(
+        EnrichmentLifestyle.asid.in_(asids)
+    ).all()
+
+    for row in rows:
+        for field, val in zip(lifestyle_fields, row):
+            life_cts[field][str(val)] += 1
+
+    for field in lifestyle_fields:
+        setattr(insights.lifestyle, field, dict(life_cts[field]))
+
+    # 6) VOTER
+    voter_fields = ['congressional_district', 'voting_propensity', 'political_party']
+    voter_cts: defaultdict[str, Counter] = defaultdict(Counter)
+    rows = db_session.query(
+        EnrichmentVoterRecord.congressional_district,
+        EnrichmentVoterRecord.voting_propensity,
+        EnrichmentVoterRecord.party_affiliation,
+    ).filter(
+        EnrichmentVoterRecord.asid.in_(asids)
+    ).all()
+
+    for row in rows:
+        for field, val in zip(voter_fields, row):
+            voter_cts[field][str(val)] += 1
+
+    for field in voter_fields:
+        setattr(insights.voter, field, dict(voter_cts[field]))
+
+    return insights
+
+def merge_insights_json(
+    existing: Optional[Dict[str, Any]],
+    new_insights: InsightsByCategory
+) -> Dict[str, Any]:
+    existing_data = existing or {}
+    new_data: Dict[str, Any] = new_insights.dict()
+    merged: Dict[str, Any] = {}
+    for category, new_metrics in new_data.items():
+        old_metrics = existing_data.get(category, {}) or {}
+        merged_metrics: Dict[str, Dict[str, int]] = {}
+        # union of metric names in this category
+        for metric in set(old_metrics) | set(new_metrics):
+            old_bucket = old_metrics.get(metric, {}) or {}
+            new_bucket = new_metrics.get(metric, {}) or {}
+            # sum each individual key
+            merged_bucket: Dict[str, int] = {}
+            for key in set(old_bucket) | set(new_bucket):
+                merged_bucket[key] = old_bucket.get(key, 0) + new_bucket.get(key, 0)
+            merged_metrics[metric] = merged_bucket
+        merged[category] = merged_metrics
+    return merged
+
 async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection):
     try:
         message_body_dict = json.loads(message.body)
@@ -748,10 +918,20 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         logging.info(f"Updated processed and matched records for source_id {source_id}.")
 
         if processed_records >= total_records:
+            new_insights = process_insights(source_id=source_id, db_session=db_session, connection=connection)
+            
+            merged_insights = merge_insights_json(
+                existing=audience_source.insights,
+                new_insights=new_insights
+            )
+            
             db_session.execute(
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)
-                .values(matched_records_status="complete")
+                .values(
+                    insights=merged_insights,
+                    matched_records_status="complete"
+                )
             )
             logging.info(f"Source_id {source_id} processing complete.")
 

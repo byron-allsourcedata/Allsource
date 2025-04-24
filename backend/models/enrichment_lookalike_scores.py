@@ -22,7 +22,7 @@ class EnrichmentLookalikeScore(Base):
     )
     enrichment_user_id: Mapped[UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey('enrichment_users.id', ondelete='CASCADE'),
+        ForeignKey('enrichment_users2.id', ondelete='CASCADE'),
         nullable=False
     )
     score: Mapped[Decimal] = mapped_column(
