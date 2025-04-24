@@ -16,7 +16,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_lookalikes import AudienceLookalikes
 from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
-from models.audience_lookalikes_persons import AudienceLookALikePerson
+from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
@@ -56,7 +56,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         logging.info(f"Processing len: {len(enrichment_user_ids)}")
         lookalike_persons_to_add = []
         for enrichment_user_id in enrichment_user_ids:
-            matched_person = AudienceLookALikePerson(
+            matched_person = AudienceLookalikesPerson(
                 lookalike_id=lookalike_id,
                 enrichment_user_id=enrichment_user_id
             )
