@@ -1480,11 +1480,8 @@ const Leads: React.FC = () => {
                                                                             <div>
                                                                                 <Box
                                                                                     sx={{
-                                                                                        border: '1px solid #ccc',
-                                                                                        borderRadius: '6px',
                                                                                         overflow: 'hidden',
                                                                                         minWidth: 200,
-                                                                                        backgroundColor: '#f9f9f9',
                                                                                     }}
                                                                                 >
                                                                                     {row.page_visits.map(
@@ -1497,6 +1494,7 @@ const Leads: React.FC = () => {
                                                                                                 sx={{
                                                                                                     display: 'flex',
                                                                                                     justifyContent: 'space-between',
+                                                                                                    alignItems: 'center',
                                                                                                     px: 1,
                                                                                                     py: 0.5,
                                                                                                     gap: 2,
@@ -1505,7 +1503,7 @@ const Leads: React.FC = () => {
                                                                                             >
                                                                                                 <Typography
                                                                                                     className="table-data"
-                                                                                                    sx={{ fontSize: '12px', maxWidth: 340, textDecoration: 'none', color: 'rgba(80, 82, 178, 1) !important' }}
+                                                                                                    sx={{ fontSize: '12px', maxWidth: 500, textDecoration: 'none', color: 'rgba(80, 82, 178, 1) !important' }}
                                                                                                     component="a"
                                                                                                     href={visit.page.startsWith("http") ? visit.page : `https://${visit.page}`}
                                                                                                     target="_blank"
