@@ -103,7 +103,7 @@ def update_stats_validations(db_session: Session, validation_type: str, count_pe
         db_session.add(new_record)
 
 
-async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
+async def aud_validation_agent(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -181,10 +181,13 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                 logging.info(f"is last validation")
 
                 with db_session.begin():
-                    subquery = select(EnrichmentUserId.id).join(
-                        EnrichmentUserContact, EnrichmentUserId.asid == EnrichmentUserContact.asid).join(
+                    subquery = select(EnrichmentUserId.id).select_from(EnrichmentUserContact).join(
+                        EnrichmentUserId, EnrichmentUserId.asid == EnrichmentUserContact.asid).join(
                         AudienceSmartPerson, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id
                     )
+                    # subquery = select(EnrichmentUserContact.enrichment_user_id).filter(
+                    #     EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id
+                    # )
 
                     db_session.query(AudienceSmartPerson).filter(
                         AudienceSmartPerson.smart_audience_id == aud_smart_id,
@@ -230,9 +233,7 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                 }
             )
             
-
             logging.info(f"send ping {aud_smart_id}.")
-
                        
 
             await message.ack()
@@ -280,7 +281,7 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_validation_agent_noapi, connection=connection, db_session=db_session)
+                functools.partial(aud_validation_agent, connection=connection, db_session=db_session)
             )
 
         await asyncio.Future()

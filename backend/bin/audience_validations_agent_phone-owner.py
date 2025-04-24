@@ -48,7 +48,7 @@ def setup_logging(level):
     )
 
 
-async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Session):
+async def aud_validation_agent_phone_owner(message: IncomingMessage, db_session: Session):
     try:
         message_body = json.loads(message.body)
         batch = message_body.get("batch")
@@ -57,49 +57,63 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
         verifications = []
 
         for record in batch:
-            user_id = record.get("audience_smart_person_id")
-            company_name = record.get("company_name")
-            job_title = record.get("job_title")
-            linkedin_url = record.get("linkedin_url")
+            person_id = record.get("audience_smart_person_id")
+            full_name = record.get("full_name")
 
             for phone_field in ['phone_mobile1', 'phone_mobile2']:
                 phone_number = record.get(phone_field)
+                
+                is_verify = False
+
+                if not phone_number and phone_field == 'phone_mobile2':
+                    failed_ids.append(person_id)
+                
                 if not phone_number:
                     continue
 
-                response = requests.get(
-                    REAL_TIME_API_URL,
-                    params={
-                        "output": "json",
-                        "phone": phone_number,
-                        "token": REAL_TIME_API_KEY
-                    }
-                )
-                response_data = response.json()
+                existing_verification = db_session.query(EnrichmentPhoneVerification).filter_by(phone=phone_number).first()
 
-                logging.info(f"response: {response_data}")
-
-                if response.status_code != 200 or "error_text" in response_data:
-                    await message.nack()
-                    continue
-
-                caller_name = response_data.get("caller_name", "")
-                similarity = fuzz.ratio(full_name, caller_name)
-                is_verify = similarity > 70
-
-                logging.info(f"similarity: {full_name}-{caller_name} = {similarity}")
-
-
-                verifications.append(
-                    EnrichmentLinkedinVerification(
-                        audience_smart_person_id=user_id,
-                        linkedin_url=linkedin_url,
-                        is_verify=is_verify
+                if not existing_verification:
+                    response = requests.get(
+                        REAL_TIME_API_URL,
+                        params={
+                            "output": "json",
+                            "phone": phone_number,
+                            "token": REAL_TIME_API_KEY
+                        }
                     )
-                )
+                    response_data = response.json()
 
-                if not is_verify:
-                    failed_ids.append(user_id)
+                    logging.info(f"response: {response_data}")
+
+                    if response.status_code != 200 or "error_text" in response_data:
+                        await message.nack()
+                        continue
+
+                    caller_name = response_data.get("caller_name", "")
+                    similarity = fuzz.ratio(full_name, caller_name)
+                    is_verify = similarity > 70
+
+                    logging.info(f"similarity: {full_name} - {caller_name} = {similarity}")
+
+
+                    verifications.append(
+                        EnrichmentPhoneVerification(
+                            audience_smart_person_id=person_id,
+                            phone=phone_number,
+                            status=response_data.get("status", ""),
+                            is_verify=is_verify
+                        )
+                    )
+                else:
+                    is_verify = existing_verification.is_verify
+
+                if not is_verify and phone_field == 'phone_mobile2':
+                    failed_ids.append(person_id)
+                elif is_verify:
+                    break
+                else:
+                    continue
 
 
         if verifications:
@@ -155,7 +169,7 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_validation_agent_noapi, db_session=db_session)
+                functools.partial(aud_validation_agent_phone_owner, db_session=db_session)
             )
 
         await asyncio.Future()

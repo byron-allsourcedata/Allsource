@@ -45,7 +45,7 @@ def setup_logging(level):
     )
 
 
-async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Session):
+async def aud_validation_agent_linkedin_url(message: IncomingMessage, db_session: Session):
     try:
         message_body = json.loads(message.body)
         batch = message_body.get("batch")
@@ -54,48 +54,59 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
         verifications = []
 
         for record in batch:
-            user_id = record.get("audience_smart_person_id")
-            full_name = record.get("full_name")
+            person_id = record.get("audience_smart_person_id")
+            company_name = record.get("company_name")
+            job_title = record.get("job_title")
+            linkedin_url = record.get("linkedin_url")
 
-            for phone_field in ['phone_mobile1', 'phone_mobile2']:
-                phone_number = record.get(phone_field)
-                if not phone_number:
-                    continue
+            is_verify = False
 
+            if not linkedin_url:
+                failed_ids.append(person_id)
+                continue
+
+            existing_verification = db_session.query(EnrichmentLinkedinVerification).filter_by(linkedin_url=linkedin_url).first()
+
+            if not existing_verification:
                 response = requests.get(
                     REVERSE_CONTACT_API_URL,
                     params={
-                        "output": "json",
-                        "phone": phone_number,
-                        "token": REVERSE_CONTACT_API_KEY
+                        "linkedInUrl": linkedin_url,
+                        "apikey": REVERSE_CONTACT_API_KEY
                     }
                 )
                 response_data = response.json()
 
                 logging.info(f"response: {response_data}")
 
-                if response.status_code != 200 or "error_text" in response_data:
+                if response.status_code != 200:
                     await message.nack()
                     continue
 
-                caller_name = response_data.get("caller_name", "")
-                similarity = fuzz.ratio(full_name, caller_name)
-                is_verify = similarity > 70
+                positions = response_data.get("person", {}).get("positions", {}).get("positionHistory", [])
+                for position in positions:
+                    similarity_job_title = fuzz.ratio(job_title, position.title)
+                    similarity_company_name = fuzz.ratio(company_name, position.companyName)
+                    
+                    logging.info(f"similarity company: {company_name} - {position.companyName} = {similarity_company_name}")
+                    logging.info(f"similarity job: {job_title} - {position.title} = {similarity_job_title}")
 
-                logging.info(f"similarity: {full_name}-{caller_name} = {similarity}")
-
-
+                    if similarity_company_name > 70 and similarity_job_title > 70:
+                        is_verify = True
+                        break
+                
                 verifications.append(
                     EnrichmentLinkedinVerification(
-                        audience_smart_person_id=user_id,
-                        phone=phone_number,
-                        status=response_data.get("status"),
+                        audience_smart_person_id=person_id,
+                        linkedin_url=linkedin_url,
                         is_verify=is_verify
                     )
                 )
+            else: 
+                is_verify = existing_verification.is_verify
 
-                if not is_verify:
-                    failed_ids.append(user_id)
+            if not is_verify:
+                failed_ids.append(person_id)
 
 
         if verifications:
@@ -151,7 +162,7 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_validation_agent_noapi, db_session=db_session)
+                functools.partial(aud_validation_agent_linkedin_url, db_session=db_session)
             )
 
         await asyncio.Future()

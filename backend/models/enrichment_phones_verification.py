@@ -1,7 +1,8 @@
-from sqlalchemy import Column, TIMESTAMP, VARCHAR, Index, UUID, text, Boolean, Text
+from sqlalchemy import Column, TIMESTAMP, VARCHAR, Index, ForeignKey, UUID, text, Boolean, Text
 from .base import Base
 from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.sql import func
+from models.audience_smarts import AudienceSmart
 
 # enrichment_phone_verification_statuses = ENUM(
 #     'connected', 'connected-75', 'disconnected', 'disconnected-75', 'busy', 'unreachable', 'invalid phone', 'restricted'
@@ -19,6 +20,11 @@ class EnrichmentPhoneVerification(Base):
         primary_key=True,
         nullable=False,
         server_default=text('gen_random_uuid()')
+    )
+    audience_smart_person_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey(AudienceSmart.id, ondelete='CASCADE'),
+        nullable=False
     )
     phone = Column(
         Text, 
