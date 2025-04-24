@@ -72,7 +72,6 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
         {['Step 1', 'Step 2'].map((label, index) => (
           <Step key={label} sx={{pl: 0}}>
             <StepButton onClick={handleStep(index)} sx={{
-              
                 "&:after": {
                   content:'""',
                   backgroundColor: "rgba(212, 212, 212, 1)",
@@ -89,7 +88,7 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
                 fontSize: '14px',
                 },
                 '& .MuiStepIcon-root': {
-                color: index === activeStep ? 'rgba(80, 82, 178, 1)' : 'rgba(212, 212, 212, 1)',
+                color: index === activeStep ? 'rgba(80, 82, 178, 1) !important' : 'rgba(212, 212, 212, 1)',
                 },
             }}>
               {label}

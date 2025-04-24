@@ -46,7 +46,6 @@ export const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                 {['Step 1', 'Step 2'].map((label, index) => (
                 <Step key={label} sx={{pl: 0}}>
                     <StepButton onClick={handleStep(index)} sx={{
-                    
                         "&:after": {
                         content:'""',
                         backgroundColor: "rgba(212, 212, 212, 1)",
