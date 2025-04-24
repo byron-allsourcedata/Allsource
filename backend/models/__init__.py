@@ -76,6 +76,9 @@ from .users import Users
 from .users_account_notification import UserAccountNotification
 from .users_domains import UserDomains
 from .users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
+from .enrichment_emails import EmailType
+from .enrichment_users_emails import EnrichmentUsersEmails
+from .enrichment_personal_profiles import EnrichmentPersonalProfiles
 
 __all__ = [
     "BigCommerceUser",
@@ -154,4 +157,7 @@ __all__ = [
     "UserAccountNotification",
     "UserDomains",
     "UsersUnlockedFiveXFiveUser",
+    "EmailType",
+    "EnrichmentUsersEmails",
+    "EnrichmentPersonalProfiles"
 ]

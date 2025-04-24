@@ -14,7 +14,7 @@ class EnrichmentFinancialRecord(Base):
     )
     asid = Column(
         UUID(as_uuid=True),
-        ForeignKey('enrichment_user_ids.asid', ondelete='CASCADE', onupdate='CASCADE'),
+        ForeignKey('enrichment_users.asid', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False
     )
     income_range = Column(String(10), nullable=True)

@@ -646,6 +646,7 @@ const CreateLookalikePage: React.FC = () => {
                   onLifestylesChange={setLifestylesKeys}
                   onVoterChange={setVoterKeys}
                   onRealEstateChange={setRealEstateKeys}
+                  handleNextStep={handleNextStep}
                 />
                 )}
 
@@ -653,6 +654,7 @@ const CreateLookalikePage: React.FC = () => {
                 {currentStep == 3 && (
                   <OrderFieldsStep
                   fields={dndFields}
+                  handlePrevStep={handlePrevStep}
                   onOrderChange={newOrder => setDndFields(newOrder)}
                   />
                 )}
