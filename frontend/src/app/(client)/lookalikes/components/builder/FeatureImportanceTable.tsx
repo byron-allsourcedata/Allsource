@@ -155,7 +155,9 @@ export function FeatureImportanceTable<T extends FeatureObject>({
                   p: "4px 16px",
                   borderBottom: "1px solid #E4E4E4",
                   maxWidth: 600,
+                  cursor: "pointer"
                 }}
+                onClick={() => onOptionToggle(k)}
               >
                 <Grid item sx={{ width: 40, flexShrink: 0 }}>
                   <Checkbox
@@ -168,6 +170,7 @@ export function FeatureImportanceTable<T extends FeatureObject>({
                         color: "rgba(80, 82, 178, 1)",
                       },
                     }}
+                    onClick={e => e.stopPropagation()}
                   />
                 </Grid>
                 <Grid item sx={{ flexBasis: 350, maxWidth: 350, flexShrink: 0 }}>

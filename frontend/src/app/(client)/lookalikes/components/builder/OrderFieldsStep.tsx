@@ -43,7 +43,7 @@ export const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                 ml: 0,
                 }}
                 >
-                {['Step 1', 'Step 2'].map((label, index) => (
+                {['Select fields', 'Order fields'].map((label, index) => (
                 <Step key={label} sx={{pl: 0}}>
                     <StepButton onClick={handleStep(index)} sx={{
                         "&:after": {

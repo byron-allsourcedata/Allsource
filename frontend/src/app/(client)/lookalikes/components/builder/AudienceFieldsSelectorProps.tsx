@@ -23,6 +23,7 @@ interface AudienceFieldsSelectorProps {
   onLifestylesChange: (keys: (keyof LifestylesResults)[]) => void;
   onVoterChange: (keys: (keyof VoterResults)[]) => void;
   onRealEstateChange: (keys: (keyof RealEstateResults)[]) => void;
+  canProcessed: boolean
 }
 
 export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
@@ -37,19 +38,19 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   onLifestylesChange,
   onVoterChange,
   onRealEstateChange,
+  canProcessed
 }) => {
   const [activeStep, setActiveStep] = React.useState(0);
   const [completed, setCompleted] = React.useState<{
     [k: number]: boolean;
   }>({});
+  const canProceed = canProcessed;
 
   const handleStep = (step: number) => () => {
+    if (step === 1 && !canProceed) return;
     setActiveStep(step);
-    if (step === 1) {
-      handleNextStep();
-    }
+    if (step === 1) handleNextStep();
   };
-
 
   return (
   <Box
@@ -69,9 +70,9 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
           ml: 0,
         }}
         >
-        {['Step 1', 'Step 2'].map((label, index) => (
+        {['Select fields', 'Order fields'].map((label, index) => (
           <Step key={label} sx={{pl: 0}}>
-            <StepButton onClick={handleStep(index)} sx={{
+            <StepButton onClick={handleStep(index)} disabled={index === 1 && !canProceed} sx={{
                 "&:after": {
                   content:'""',
                   backgroundColor: "rgba(212, 212, 212, 1)",
