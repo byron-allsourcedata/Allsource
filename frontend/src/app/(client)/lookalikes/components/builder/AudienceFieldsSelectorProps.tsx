@@ -9,6 +9,7 @@ import type {
   RealEstateResults,
 } from "@/types";
 import { FeatureImportanceTable } from "./FeatureImportanceTable";
+import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 
 interface AudienceFieldsSelectorProps {
   calculation: CalculationResults;
@@ -16,6 +17,7 @@ interface AudienceFieldsSelectorProps {
   lifestylesData: LifestylesResults;
   voterData: VoterResults;
   realEstateData: RealEstateResults;
+  handleNextStep: () => void;
   onPersonalChange: (keys: (keyof CalculationResults)[]) => void;
   onFinancialChange: (keys: (keyof FinancialResults)[]) => void;
   onLifestylesChange: (keys: (keyof LifestylesResults)[]) => void;
@@ -29,12 +31,28 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   lifestylesData,
   voterData,
   realEstateData,
+  handleNextStep,
   onPersonalChange,
   onFinancialChange,
   onLifestylesChange,
   onVoterChange,
   onRealEstateChange,
-}) => (
+}) => {
+  const [activeStep, setActiveStep] = React.useState(0);
+  const [completed, setCompleted] = React.useState<{
+    [k: number]: boolean;
+  }>({});
+
+  const handleStep = (step: number) => () => {
+    console.log({step})
+    setActiveStep(step);
+    if (step === 1) {
+      handleNextStep();
+    }
+  };
+
+
+  return (
   <Box
     sx={{
       border: "1px solid #E4E4E4",
@@ -44,38 +62,43 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
       mt: 2,
     }}
   >
-    <Box sx={{ display: "flex", alignItems: "center", mb: 2, ml: 1 }}>
-      <Typography
-        variant="h6"
+    <Box sx={{ display: "flex", alignItems: "center", width: "400p", mb: 2, ml: 1 }}>
+      <Stepper 
+        activeStep={activeStep}
+        nonLinear
         sx={{
-          fontFamily: "Nunito Sans",
-          fontWeight: 500,
-          fontSize: "16px",
-          lineHeight: "22.5px",
+          ml: 0,
         }}
-      >
-        Step&nbsp;1
-      </Typography>
-      <ArrowRightAltIcon
-        sx={{
-          fontSize: 28,
-          color: "text.disabled",
-          mx: 1,
-          verticalAlign: "middle",
-        }}
-      />
-      <Typography
-        variant="h6"
-        sx={{
-          fontFamily: "Nunito Sans",
-          fontWeight: 500,
-          fontSize: "16px",
-          lineHeight: "22.5px",
-          color: "text.disabled",
-        }}
-      >
-        Step&nbsp;2
-      </Typography>
+        >
+        {['Step 1', 'Step 2'].map((label, index) => (
+          <Step key={label} sx={{pl: 0}}>
+            <StepButton onClick={handleStep(index)} sx={{
+              
+                "&:after": {
+                  content:'""',
+                  backgroundColor: "rgba(212, 212, 212, 1)",
+                  width: "80px",
+                  marginLeft: "8px",
+                  height: "1px",
+                  display: index === 0 ? "block" : "none",
+                },
+              
+              '& .MuiStepLabel-label': {
+                color: index === activeStep ? 'rgba(51, 51, 51, 1)' : 'rgba(212, 212, 212, 1)',
+                fontWeight: 500,
+                fontFamily: "Nunito Sans",
+                fontSize: '14px',
+                },
+                '& .MuiStepIcon-root': {
+                color: index === activeStep ? 'rgba(80, 82, 178, 1)' : 'rgba(212, 212, 212, 1)',
+                },
+            }}>
+              {label}
+            </StepButton>
+          </Step>
+        ))}
+      </Stepper>
+
     </Box>
 
     <Grid container sx={{ mb: 2 }}>
@@ -191,4 +214,4 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
       </Grid>
     </Grid>
   </Box>
-);
+)};
