@@ -1,10 +1,10 @@
-from typing import Optional
+
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query
 
 from dependencies import get_lookalikes_service, check_user_authorization_without_pixel, get_similar_audience_service
-from schemas.lookalikes import CalculateRequest
+from schemas.lookalikes import CalculateRequest, LookalikeCreateRequest, UpdateLookalikeRequest
 from schemas.similar_audiences import AudienceFeatureImportance
 from services.lookalikes import AudienceLookalikesService
 from pydantic import BaseModel
@@ -16,16 +16,7 @@ from services.similar_audiences import SimilarAudienceService
 AUDIENCE_LOOKALIKES_READER = 'audience_lookalikes_reader'
 
 
-class LookalikeCreateRequest(BaseModel):
-    uuid_of_source: str
-    lookalike_size: str
-    lookalike_name: str
-    audience_feature_importance: Optional[AudienceFeatureImportance]
 
-
-class UpdateLookalikeRequest(BaseModel):
-    uuid_of_lookalike: str
-    name_of_lookalike: str
 
 
 router = APIRouter()

@@ -39,8 +39,9 @@ const B2CTabs = () => {
             flexGrow: 1,
             display: "flex",
             pt: 2,
+            padding: "1rem 5rem 0rem",
             width: "100%",
-            justifyContent: "center",
+            justifyContent: "start",
             alignItems: "start",
           }}
         >
@@ -51,7 +52,7 @@ const B2CTabs = () => {
             sx={{
               minHeight: 0,
               display: "flex",
-              alignItems: "center",
+              alignItems: "start",
               padding: "2px",
               "& .MuiTabs-flexContainer": {
                 gap: "4px",

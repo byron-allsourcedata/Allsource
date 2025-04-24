@@ -75,19 +75,15 @@ export const PieChartWithLegend: React.FC<PieChartWithLegendProps> = ({
   title,
   data,
 }) => {
-  const total = data.reduce((sum, item) => sum + item.value, 0);
-
   const sortedData = [...data].sort((a, b) => b.value - a.value);
+  const maxItem = sortedData[0];
 
   const chartData = sortedData.map((item) => ({
     label: item.label,
     value: item.value,
   }));
+
   const colors = sortedData.map((item) => item.color);
-  const computed = sortedData.map((item) => ({
-    ...item,
-    percent: Math.round((item.value / total) * 100),
-  }));
 
   return (
     <Card
@@ -115,7 +111,16 @@ export const PieChartWithLegend: React.FC<PieChartWithLegendProps> = ({
                 innerRadius: 75,
                 outerRadius: 100,
                 paddingAngle: 0,
-                highlightScope: { faded: "global", highlighted: "item" },
+                highlightScope: { fade: "global", highlight: "item" },
+                faded: {
+                  innerRadius: 30,
+                  additionalRadius: -30,
+                  color: "gray",
+                },
+                valueFormatter: (value, context) => {
+                  const item = chartData[context.dataIndex];
+                  return `${item.value}%`;
+                },
               },
             ]}
             height={260}
@@ -125,12 +130,12 @@ export const PieChartWithLegend: React.FC<PieChartWithLegendProps> = ({
             }}
           >
             <PieCenterLabel
-              primaryText={total.toLocaleString()}
-              secondaryText="Total"
+              primaryText={`${maxItem.value}%`}
+              secondaryText={maxItem.label}
             />
           </PieChart>
         </Box>
-        {computed.map((item, index) => (
+        {sortedData.map((item, index) => (
           <Stack
             key={index}
             direction="row"
@@ -148,7 +153,7 @@ export const PieChartWithLegend: React.FC<PieChartWithLegendProps> = ({
                   sx={{ backgroundColor: item.color }}
                 />
                 <Typography className="dashboard-card-text">
-                  {item.percent}%
+                  {item.value}%
                 </Typography>
                 <Typography className="dashboard-card-text">
                   {item.label}

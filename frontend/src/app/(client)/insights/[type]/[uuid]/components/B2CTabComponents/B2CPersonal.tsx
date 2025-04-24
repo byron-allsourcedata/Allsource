@@ -123,17 +123,17 @@ const B2CPersonal = () => {
               data={[
                 {
                   label: "Home Owners",
-                  value: 60000,
+                  value: 57.5,
                   color: "rgba(98, 178, 253, 1)",
                 },
                 {
                   label: "Rent home",
-                  value: 35000,
+                  value: 32.5,
                   color: "rgba(249, 155, 171, 1)",
                 },
                 {
                   label: "Unknown",
-                  value: 5000,
+                  value: 10,
                   color: "rgba(155, 223, 196, 1)",
                 },
               ]}
