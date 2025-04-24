@@ -23,6 +23,8 @@ app/data/cities.json
 #User-specific stuff
 *.idea
 
+alembic/versions/*
+!alembic/versions/.gitkeep
 
 tmp/*
 !tmp/.gitkeep
