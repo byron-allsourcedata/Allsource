@@ -34,8 +34,6 @@ load_dotenv()
 
 AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 AUDIENCE_VALIDATION_AGENT_NOAPI = 'aud_validation_agent_no-api'
-AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
-AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = 'aud_validation_agent_phone-owner-api'
 
 def setup_logging(level):
     logging.basicConfig(
@@ -269,16 +267,9 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                     }
 
                                     
-                                    if i == 5:
-                                        queue_name=AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API                                   
-                                    elif i == 6:
-                                        queue_name=AUDIENCE_VALIDATION_AGENT_LINKEDIN_API    
-                                    else:
-                                        queue_name=AUDIENCE_VALIDATION_AGENT_NOAPI
-                                    
                                     await publish_rabbitmq_message(
                                         connection=connection,
-                                        queue_name=queue_name,
+                                        queue_name=AUDIENCE_VALIDATION_AGENT_NOAPI,
                                         message_body=message_body
                                     )
 

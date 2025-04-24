@@ -22,6 +22,7 @@ from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.enrichment_users import EnrichmentUser
 from models.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment_user_ids import EnrichmentUserId
 from models.emails_enrichment import EmailEnrichment
 from models.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -31,6 +32,8 @@ load_dotenv()
 
 AUDIENCE_VALIDATION_AGENT_NOAPI = 'aud_validation_agent_no-api'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
+AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
+AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = 'aud_validation_agent_phone-owner-api'
 
 COLUMN_MAPPING = {
     'personal_email_validation_status': 'mx',
@@ -114,7 +117,6 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
         is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation", False) 
 
         try:
-
             validation_rules = {
                 # "personal_email_validation_status": lambda value: True,
                 # "business_email_validation_status": lambda value: True,
@@ -127,18 +129,35 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                 "business_email_last_seen_date": lambda value: (datetime.now() - datetime.fromisoformat(value)).days <= recency_business_days if value else False,
                 "mobile_phone_dnc": lambda value: value is False,
             }
-
-            failed_ids = [
-                record["audience_smart_person_id"]
-                for record in batch
-                if not validation_rules[validation_type](record.get(validation_type))
-            ]
-
-            if failed_ids:
-                db_session.bulk_update_mappings(
-                    AudienceSmartPerson,
-                    [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
+                        
+            if validation_type == "confirmation":
+                await publish_rabbitmq_message(
+                    connection=connection,
+                    queue_name=AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
+                    message_body={
+                        "batch": batch,
+                    }
                 )
+            elif validation_type == "job_validation":
+                await publish_rabbitmq_message(
+                    connection=connection,
+                    queue_name=AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
+                    message_body={
+                        "batch": batch,
+                    }
+                )
+            else:
+                failed_ids = [
+                    record["audience_smart_person_id"]
+                    for record in batch
+                    if not validation_rules[validation_type](record.get(validation_type))
+                ]
+
+                if failed_ids:
+                    db_session.bulk_update_mappings(
+                        AudienceSmartPerson,
+                        [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
+                    )
 
 
             # update_stats_validations(db_session, validation_type, count_persons_before_validation, len(failed_ids))
@@ -162,9 +181,9 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                 logging.info(f"is last validation")
 
                 with db_session.begin():
-                    subquery = select(EnrichmentUser.id).join(
-                        EnrichmentUserContact,EnrichmentUserContact.asid == EnrichmentUser.asid).filter(
-                        EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id
+                    subquery = select(EnrichmentUserId.id).join(
+                        EnrichmentUserContact, EnrichmentUserId.asid == EnrichmentUserContact.asid).join(
+                        AudienceSmartPerson, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id
                     )
 
                     db_session.query(AudienceSmartPerson).filter(
