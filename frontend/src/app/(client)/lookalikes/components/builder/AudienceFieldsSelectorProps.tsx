@@ -44,7 +44,6 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   }>({});
 
   const handleStep = (step: number) => () => {
-    console.log({step})
     setActiveStep(step);
     if (step === 1) {
       handleNextStep();
