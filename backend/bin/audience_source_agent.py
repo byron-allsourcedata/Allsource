@@ -685,6 +685,22 @@ async def normalize_persons_failed_leads(
         f"from {data_for_normalize.all_size} matched records."
     )
 
+def bucket_age(age_range):
+    try:
+        age = age_range.lower
+    except AttributeError:
+        return "Other"
+    if 18 <= age <= 25:
+        return "18-25"
+    if 26 <= age <= 30:
+        return "26-30"
+    if 31 <= age <= 35:
+        return "31-35"
+    if 36 <= age <= 45:
+        return "36-45"
+    if 46 <= age <= 65:
+        return "46-65"
+    return "Other"
 
 def process_insights(source_id: str, db_session: Session, connection: Connection):
     insights = InsightsByCategory()
@@ -709,26 +725,36 @@ def process_insights(source_id: str, db_session: Session, connection: Connection
 
     # 3) PERSONAL
     personal_fields = [
-        'gender', 'age', 'marital_status', 'have_children',
-        'religion', 'ethnicity', 'home_status', 'language'
+        "gender", "state", "religion", "homeowner",
+        "age", "ethnicity", "languages",
+        "marital_status", "have_children",
+        "education_level", "children_ages", "pets"
     ]
+
     personal_cts: defaultdict[str, Counter] = defaultdict(Counter)
-    rows = db_session.query(
-        EnrichmentPersonalProfiles.gender,
-        EnrichmentPersonalProfiles.age,
-        EnrichmentPersonalProfiles.marital_status,
-        EnrichmentPersonalProfiles.has_children,
-        EnrichmentPersonalProfiles.religion,
-        EnrichmentPersonalProfiles.ethnicity,
-        EnrichmentPersonalProfiles.homeowner,
-        EnrichmentPersonalProfiles.language_code,
-    ).filter(
-        EnrichmentPersonalProfiles.asid.in_(asids)
-    ).all()
+    rows = (
+        db_session.query(
+            EnrichmentPersonalProfiles.gender,
+            EnrichmentPersonalProfiles.state_abbr,
+            EnrichmentPersonalProfiles.religion,
+            EnrichmentPersonalProfiles.homeowner,
+            EnrichmentPersonalProfiles.age,
+            EnrichmentPersonalProfiles.ethnicity,
+            EnrichmentPersonalProfiles.language_code,
+            EnrichmentPersonalProfiles.marital_status,
+            EnrichmentPersonalProfiles.has_children,
+        )
+        .filter(EnrichmentPersonalProfiles.asid.in_(asids))
+        .all()
+    )
 
     for row in rows:
         for field, val in zip(personal_fields, row):
-            personal_cts[field][str(val)] += 1
+            if field == "age":
+                key = bucket_age(val)
+            else:
+                key = str(val)
+            personal_cts[field][key] += 1
 
     for field in personal_fields:
         setattr(insights.personal_profile, field, dict(personal_cts[field]))

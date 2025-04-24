@@ -1,19 +1,21 @@
 from typing import Dict, Optional
 from pydantic import BaseModel, Field
 
+
 class Personal(BaseModel):
-    gender: Optional[Dict[str, int]] = Field(default_factory=dict)
-    location: Optional[Dict[str, int]] = Field(default_factory=dict)
-    religion: Optional[Dict[str, int]] = Field(default_factory=dict)
-    home_status: Optional[Dict[str, int]] = Field(default_factory=dict)
-    age: Optional[Dict[str, int]] = Field(default_factory=dict)
-    ethnicity: Optional[Dict[str, int]] = Field(default_factory=dict)
-    language: Optional[Dict[str, int]] = Field(default_factory=dict)
-    marital_status: Optional[Dict[str, int]] = Field(default_factory=dict)
-    have_children: Optional[Dict[str, int]] = Field(default_factory=dict)
-    children_ages: Optional[Dict[str, int]] = Field(default_factory=dict)
-    pets: Optional[Dict[str, int]] = Field(default_factory=dict)
-    education_level: Optional[Dict[str, int]] = Field(default_factory=dict)
+    gender: Dict[str, int] = Field(default_factory=dict)
+    state: Dict[str, int] = Field(default_factory=dict)
+    religion: Dict[str, int] = Field(default_factory=dict)
+    homeowner: Dict[str, int] = Field(default_factory=dict)
+    age: Dict[str, int] = Field(default_factory=dict)
+    ethnicity: Dict[str, int] = Field(default_factory=dict)
+    languages: Dict[str, int] = Field(default_factory=dict)
+    marital_status: Dict[str, int] = Field(default_factory=dict)
+    have_children: Dict[str, int] = Field(default_factory=dict)
+    education_level: Dict[str, int] = Field(default_factory=dict)
+    children_ages: Dict[str, int] = Field(default_factory=dict)
+    pets: Dict[str, int] = Field(default_factory=dict)
+
 
 class Financial(BaseModel):
     income_range: Optional[Dict[str, int]] = Field(default_factory=dict)
@@ -28,6 +30,7 @@ class Financial(BaseModel):
     credit_range_of_new_credit: Optional[Dict[str, int]] = Field(default_factory=dict)
     investor: Optional[Dict[str, int]] = Field(default_factory=dict)
     number_of_credit_lines: Optional[Dict[str, int]] = Field(default_factory=dict)
+
 
 class Lifestyle(BaseModel):
     own_pets: Optional[Dict[str, int]] = Field(default_factory=dict)
@@ -46,10 +49,12 @@ class Lifestyle(BaseModel):
     golf_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
     beauty_cosmetic_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
 
+
 class Voter(BaseModel):
     congressional_district: Optional[Dict[str, int]] = Field(default_factory=dict)
     voting_propensity: Optional[Dict[str, int]] = Field(default_factory=dict)
     political_party: Optional[Dict[str, int]] = Field(default_factory=dict)
+
 
 class InsightsByCategory(BaseModel):
     personal_profile: Optional[Personal] = Field(default_factory=Personal)
