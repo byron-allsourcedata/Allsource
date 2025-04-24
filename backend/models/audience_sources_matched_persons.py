@@ -36,6 +36,7 @@ class AudienceSourcesMatchedPerson(Base):
     recency_score = Column(DECIMAL(20, 5), nullable=True, server_default=text('0'))
     view_score = Column(DECIMAL(20, 5), nullable=True, server_default=text('0'))
     value_score = Column(DECIMAL(20, 5), nullable=True, server_default=text('0'))
+    sum_score = Column(DECIMAL(20, 5), nullable=True, server_default=text('0'))
     amount = Column(Integer, nullable=True, server_default=text('0'))
     amount_min = Column(Integer, nullable=True, server_default=text('0'))
     amount_max = Column(Integer, nullable=True, server_default=text('0'))
