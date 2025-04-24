@@ -631,23 +631,26 @@ const CreateLookalikePage: React.FC = () => {
                       </Typography>
                     </Button>
                   </Box>
-                )}
-
-                {/* Calculation results block rendered with flex layout */}
-                {currentStep == 2 && calculatedResults && (
-                  <AudienceFieldsSelector
-                  calculation={calculatedResults.audience_feature_importance}
-                  financialData={financialData}
-                  lifestylesData={lifestylesData}
-                  voterData={voterData}
-                  realEstateData={realEstateData}
-                  onPersonalChange={setPersonalKeys}
-                  onFinancialChange={setFinancialKeys}
-                  onLifestylesChange={setLifestylesKeys}
-                  onVoterChange={setVoterKeys}
-                  onRealEstateChange={setRealEstateKeys}
-                  handleNextStep={handleNextStep}
-                />
+                ) 
+                }
+                
+                {calculatedResults && (
+                  <Box hidden={currentStep !== 2}>
+                    <AudienceFieldsSelector
+                      
+                      calculation={calculatedResults!.audience_feature_importance}
+                      financialData={financialData}
+                      lifestylesData={lifestylesData}
+                      voterData={voterData}
+                      realEstateData={realEstateData}
+                      onPersonalChange={setPersonalKeys}
+                      onFinancialChange={setFinancialKeys}
+                      onLifestylesChange={setLifestylesKeys}
+                      onVoterChange={setVoterKeys}
+                      onRealEstateChange={setRealEstateKeys}
+                      handleNextStep={handleNextStep}
+                    />
+                  </Box>
                 )}
 
                 {/* Calculation results block rendered with flex layout */}
