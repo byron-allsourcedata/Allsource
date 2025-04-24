@@ -27,6 +27,20 @@ class AudienceInsightsService:
         raw_data = self.insights_persistence_service.get_lookalike_insights_info(lookalike_uuid, user.get('id'))
         return self._build_response(raw_data)
 
+    def get_data_sources(self, user: dict) -> dict:
+        user_id = user["id"]
+        sources = self.insights_persistence_service.get_recent_sources(user_id)
+        lookalikes = self.insights_persistence_service.get_recent_lookalikes(user_id)
+
+        return self._combine_limit_20(sources, lookalikes)
+
+    def search_data_sources(self, user: dict, query: str) -> dict:
+        user_id = user["id"]
+        sources = self.insights_persistence_service.search_sources(user_id, query)
+        lookalikes = self.insights_persistence_service.search_lookalikes(user_id, query)
+
+        return self._combine_limit_20(sources, lookalikes)
+
     def _build_response(self, data: dict) -> dict:
         parsed = AudienceInsightData(
             b2b={
@@ -35,10 +49,45 @@ class AudienceInsightsService:
                 "employment_history": data.get("employment_history", {}),
             },
             b2c={
-                "personal_info": data.get("personal_profiles", {}),
+                "personal_info": data.get("personal_profile", {}),
                 "financial_info": data.get("financial_info", {}),
                 "lifestyle_info": data.get("lifestyle_info", {}),
                 "voter_info": data.get("voter_info", {}),
             }
         )
         return parsed.dict()
+
+    def _combine_limit_20(self, sources: list, lookalikes: list) -> dict:
+        source_data = [
+            {
+                "id": str(item.id),
+                "name": item.name,
+                "type": item.type,
+                "data_source_type": "sources",
+                "size": item.matched_records,
+                "created_date": item.created_date.isoformat()
+            }
+            for item in sources
+        ]
+
+        lookalike_data = [
+            {
+                "id": str(item.id),
+                "name": item.name,
+                "type": item.type,
+                "data_source_type": "lookalikes",
+                "size": item.size,
+                "created_date": item.created_date.isoformat()
+            }
+            for item in lookalikes
+        ]
+
+        combined = source_data + lookalike_data
+        combined.sort(key=lambda x: x["created_date"], reverse=True)
+        combined = combined[:20]
+
+        return {
+            "source": [x for x in combined if x["data_source_type"] == "sources"],
+            "lookalike": [x for x in combined if x["data_source_type"] == "lookalikes"]
+        }
+

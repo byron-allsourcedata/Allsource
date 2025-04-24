@@ -34,8 +34,6 @@ class AudienceInsightsPersistence:
             AudienceSource.id == uuid_of_source,
             AudienceSource.user_id == user_id
         ).first()
-        print(source)
-
         if source and source.insights:
             return source.insights
         return {}
@@ -49,4 +47,73 @@ class AudienceInsightsPersistence:
         if lookalike and lookalike.insights:
             return lookalike.insights
         return {}
+
+    def get_recent_sources(self, user_id: int) -> list[dict]:
+        return (
+            self.db.query(
+                AudienceSource.id,
+                AudienceSource.name,
+                AudienceSource.source_type.label("type"),
+                AudienceSource.matched_records,
+                AudienceSource.created_at.label("created_date")
+            )
+                .filter(AudienceSource.user_id == user_id)
+                .order_by(AudienceSource.created_at.desc())
+                .limit(20)
+                .all()
+        )
+
+    def get_recent_lookalikes(self, user_id: int) -> list[dict]:
+        return (
+            self.db.query(
+                AudienceLookalikes.id,
+                AudienceLookalikes.name,
+                AudienceSource.source_type.label("type"),
+                AudienceLookalikes.size,
+                AudienceLookalikes.created_date
+            )
+                .join(AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid)
+                .filter(AudienceLookalikes.user_id == user_id)
+                .order_by(AudienceLookalikes.created_date.desc())
+                .limit(20)
+                .all()
+        )
+
+    def search_sources(self, user_id: int, query: str) -> list[dict]:
+        return (
+            self.db.query(
+                AudienceSource.id,
+                AudienceSource.name,
+                AudienceSource.source_type.label("type"),
+                AudienceSource.matched_records,
+                AudienceSource.created_at.label("created_date")
+            )
+                .filter(
+                AudienceSource.user_id == user_id,
+                AudienceSource.name.ilike(f"%{query}%")
+            )
+                .order_by(AudienceSource.created_at.desc())
+                .limit(20)
+                .all()
+        )
+
+    def search_lookalikes(self, user_id: int, query: str) -> list[dict]:
+        return (
+            self.db.query(
+                AudienceLookalikes.id,
+                AudienceLookalikes.name,
+                AudienceSource.source_type.label("type"),
+                AudienceLookalikes.size,
+                AudienceLookalikes.created_date
+            )
+                .join(AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid)
+                .filter(
+                AudienceLookalikes.user_id == user_id,
+                AudienceLookalikes.name.ilike(f"%{query}%")
+            )
+                .order_by(AudienceLookalikes.created_date.desc())
+                .limit(20)
+                .all()
+        )
+
 

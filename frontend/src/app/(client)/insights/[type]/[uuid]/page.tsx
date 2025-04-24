@@ -36,9 +36,6 @@ import { TabPanel } from "@/components/TabPanel";
 import StaticticsTab from "./components/StaticticsTab";
 import FeatureListTable, { FeatureObject } from "./components/FeatureListTable";
 
-interface DataSyncProps {
-  service_name?: string;
-}
 
 export interface CalculationResults {
   [key: string]: number;
