@@ -1,10 +1,12 @@
-from sqlalchemy import Column, Integer, TEXT, UUID, SmallInteger, TIMESTAMP, ForeignKey, text, Boolean
+from sqlalchemy import Column, Integer, TEXT, UUID, SmallInteger, TIMESTAMP, ForeignKey, text, Boolean, Index
 from sqlalchemy.orm import relationship
 from .base import Base
 
-
 class EnrichmentUserContact(Base):
     __tablename__ = 'enrichment_users_contacts'
+    __table_args__ = (
+        Index("ix_enrichment_users_contacts_asid", "asid"),
+    )
 
     id = Column(
         UUID(as_uuid=True),
@@ -12,14 +14,15 @@ class EnrichmentUserContact(Base):
         nullable=False,
         server_default=text("gen_random_uuid()")
     )
-    enrichment_user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("enrichment_users2.id"),
-        nullable=False
-    )
+    # enrichment_user_id = Column(
+    #     UUID(as_uuid=True),
+    #     ForeignKey("enrichment_users.id"),
+    #     nullable=False
+    # )
     asid = Column(
         UUID(as_uuid=True),
-        nullable=False
+        ForeignKey("enrichment_users.asid", ondelete="CASCADE"),
+        nullable=False,
     )
     up_id = Column(TEXT, nullable=False)
     rsid = Column(TEXT, nullable=True)
@@ -42,6 +45,7 @@ class EnrichmentUserContact(Base):
     email = Column(TEXT, nullable=True)
 
     enrichment_user = relationship(
-        "EnrichmentUser",
-        back_populates="contacts"
+        "EnrichmentUserId",
+        back_populates="contacts",
+        foreign_keys=[asid],
     )

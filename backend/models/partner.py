@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR, Index, text, ForeignKey, Boolean
+from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR, Index, text, ForeignKey, Boolean, inspect
 from sqlalchemy.orm import relationship
 
 from .base import Base, create_timestamps, update_timestamps
@@ -86,6 +86,12 @@ class Partner(Base):
         backref='children'
     )
     users = relationship('Users', backref='partners')
+
+    def to_dict(self) -> dict:
+        return {
+            c.key: getattr(self, c.key)
+            for c in inspect(self).mapper.column_attrs
+        }
 
 
 event.listen(Partner, "before_insert", create_timestamps)

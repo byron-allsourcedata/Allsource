@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import UniqueConstraint, text, ForeignKey
+from sqlalchemy import UniqueConstraint, text, ForeignKey, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -14,6 +14,8 @@ class EnrichmentUsersEmails(Base):
             "enrichment_user_id", "email_id",
             name="uq_enrichment_users_emails_user_email"
         ),
+        Index("ix_enrichment_users_emails_email_id", "email_id"),
+        Index("ix_enrichment_users_emails_user_id", "enrichment_user_id"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(

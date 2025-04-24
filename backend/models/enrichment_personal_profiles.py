@@ -43,7 +43,8 @@ class EnrichmentPersonalProfiles(Base):
     state_abbr: Mapped[str] = mapped_column(String(10))
     zip_code5: Mapped[int] = mapped_column(Integer)
 
-    user: Mapped["EnrichmentUsers"] = relationship(
-        "EnrichmentUsers",
-        back_populates="personal_profiles"
+    enrichment_user = relationship(
+        "EnrichmentUserId",
+        back_populates="personal_profiles",
+        foreign_keys=[asid]
     )

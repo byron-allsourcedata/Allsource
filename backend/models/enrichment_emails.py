@@ -1,7 +1,7 @@
 import enum
 import uuid
 
-from sqlalchemy import UniqueConstraint, text, String, Enum as SAEnum
+from sqlalchemy import UniqueConstraint, text, String, Enum as SAEnum, Index, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -16,6 +16,7 @@ class EnrichmentEmails(Base):
     __tablename__ = "enrichment_emails"
     __table_args__ = (
         UniqueConstraint("email", "email_type", name="uq_enrichment_emails_email_type"),
+        Index("ix_enrichment_emails_norm_email", func.lower(func.trim(text("email")))),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(
