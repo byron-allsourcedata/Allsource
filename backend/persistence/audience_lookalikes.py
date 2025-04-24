@@ -6,6 +6,8 @@ import pytz
 from pydantic.v1 import UUID4
 
 from enums import LookalikeSize
+from models import EnrichmentUserId, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
+    EnrichmentVoterRecord
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
@@ -245,73 +247,158 @@ class AudienceLookalikesPersistence:
 
         number_required = get_number_users(lookalike_size, total_matched)
 
-        rows = (
-            self.db.query(
-                AudienceSourcesMatchedPerson.email.label("EmailAddress"),
-                EnrichmentUser.age.label("age"),
-                EnrichmentUser.gender.label("PersonGender"),
-                EnrichmentUser.estimated_household_income_code.label("EstimatedHouseholdIncomeCode"),
-                EnrichmentUser.estimated_current_home_value_code.label("EstimatedCurrentHomeValueCode"),
-                EnrichmentUser.homeowner_status.label("HomeownerStatus"),
-                EnrichmentUser.has_children.label("HasChildren"),
-                EnrichmentUser.number_of_children.label("NumberOfChildren"),
-                EnrichmentUser.credit_rating.label("CreditRating"),
-                EnrichmentUser.net_worth_code.label("NetWorthCode"),
-                EnrichmentUser.zip_code5.label("ZipCode5"),
-                EnrichmentUser.lat.label("Latitude"),
-                EnrichmentUser.lon.label("Longitude"),
-                EnrichmentUser.has_credit_card.label("HasCreditCard"),
-                EnrichmentUser.length_of_residence_years.label("LengthOfResidenceYears"),
-                EnrichmentUser.marital_status.label("MaritalStatus"),
-                EnrichmentUser.occupation_group_code.label("OccupationGroupCode"),
-                EnrichmentUser.is_book_reader.label("IsBookReader"),
-                EnrichmentUser.is_online_purchaser.label("IsOnlinePurchaser"),
-                EnrichmentUser.state_abbr.label("StateAbbr"),
-                EnrichmentUser.is_traveler.label("IsTraveler"),
-                AudienceSourcesMatchedPerson.value_score.label("customer_value")
-            )
-            .select_from(AudienceSource)
-            .join(
-                AudienceSourcesMatchedPerson,
-                AudienceSourcesMatchedPerson.source_id == AudienceSource.id
-            )
-            .join(
-                EnrichmentUser,
-                EnrichmentUser.id == AudienceSourcesMatchedPerson.enrichment_user_id
-            )
-            .filter(AudienceSource.id == str(source_uuid))
-            .order_by(AudienceSourcesMatchedPerson.value_score.desc())
-            .limit(number_required)
-            .all()
-        )
+        U = EnrichmentUserId
+        P = EnrichmentPersonalProfiles
+        F = EnrichmentFinancialRecord
+        L = EnrichmentLifestyle
+        V = EnrichmentVoterRecord
+        M = AudienceSourcesMatchedPerson
 
-        audience_data_list = []
-        for row in rows:
-            ad = AudienceData(
-                EmailAddress=row.EmailAddress,
-                PersonExactAge=str(row.age),
-                PersonGender=str(row.PersonGender),
-                EstimatedHouseholdIncomeCode=str(row.EstimatedHouseholdIncomeCode),
-                EstimatedCurrentHomeValueCode=str(row.EstimatedCurrentHomeValueCode),
-                HomeownerStatus=str(row.HomeownerStatus),
-                HasChildren=str(row.HasChildren),
-                NumberOfChildren=str(row.NumberOfChildren),
-                CreditRating=str(row.CreditRating),
-                NetWorthCode=str(row.NetWorthCode),
-                ZipCode5=str(row.ZipCode5),
-                Latitude=str(row.Latitude),
-                Longitude=str(row.Longitude),
-                HasCreditCard=str(row.HasCreditCard),
-                LengthOfResidenceYears=str(row.LengthOfResidenceYears),
-                MaritalStatus=str(row.MaritalStatus),
-                OccupationGroupCode=row.OccupationGroupCode,
-                IsBookReader=str(row.IsBookReader),
-                IsOnlinePurchaser=str(row.IsOnlinePurchaser),
-                StateAbbr=str(row.StateAbbr),
-                IsTraveler=str(row.IsTraveler),
-                customer_value=Decimal(row.customer_value)
+        q = (
+            self.db.query(
+                M.email.label("EmailAddress"),
+                M.value_score.label("customer_value"),
+                P.age.label("AgeRange"),
+                P.gender.label("Gender"),
+                P.homeowner.label("HomeownerStatus"),
+                P.length_of_residence_years.label("LengthOfResidenceYears"),
+                P.marital_status.label("MaritalStatus"),
+                P.has_children.label("HasChildren"),
+                P.number_of_children.label("NumberOfChildren"),
+                P.business_owner.label("BusinessOwner"),
+                P.birth_day.label("BirthDay"),
+                P.birth_month.label("BirthMonth"),
+                P.birth_year.label("BirthYear"),
+                P.religion.label("Religion"),
+                P.ethnicity.label("Ethnicity"),
+                P.language_code.label("LanguageCode"),
+                P.state_abbr.label("StateAbbr_PP"),
+                P.zip_code5.label("ZipCode5_PP"),
+                F.income_range.label("IncomeRange"),
+                F.net_worth.label("NetWorth"),
+                F.credit_rating.label("CreditRating"),
+                F.credit_cards.label("CreditCards"),
+                F.bank_card.label("BankCard"),
+                F.credit_card_premium.label("CreditCardPremium"),
+                F.credit_card_new_issue.label("CreditCardNewIssue"),
+                F.credit_lines.label("CreditLines"),
+                F.credit_range_of_new_credit_lines.label("CreditRangeOfNewCreditLines"),
+                F.donor.label("Donor"),
+                F.investor.label("Investor"),
+                F.mail_order_donor.label("MailOrderDonor"),
+                L.pets.label("Pets"),
+                L.cooking_enthusiast.label("CookingEnthusiast"),
+                L.travel.label("Travel"),
+                L.mail_order_buyer.label("MailOrderBuyer"),
+                L.online_purchaser.label("OnlinePurchaser"),
+                L.book_reader.label("BookReader"),
+                L.health_and_beauty.label("HealthAndBeauty"),
+                L.fitness.label("Fitness"),
+                L.outdoor_enthusiast.label("OutdoorEnthusiast"),
+                L.tech_enthusiast.label("TechEnthusiast"),
+                L.diy.label("DIY"),
+                L.gardening.label("Gardening"),
+                L.automotive_buff.label("AutomotiveBuff"),
+                L.golf_enthusiasts.label("GolfEnthusiasts"),
+                L.beauty_cosmetics.label("BeautyCosmetics"),
+                L.smoker.label("Smoker"),
+                V.party_affiliation.label("PartyAffiliation"),
+                V.voting_propensity.label("VotingPropensity"),
+                V.congressional_district.label("CongressionalDistrict"),
             )
-            audience_data_list.append(ad)
-        return audience_data_list
+            .select_from(M)
+            .join(U, M.enrichment_user_id == U.id)
+            .outerjoin(P, P.asid == U.asid)
+            .outerjoin(F, F.asid == U.asid)
+            .outerjoin(L, L.asid == U.asid)
+            .outerjoin(V, V.asid == U.asid)
+            .filter(M.source_id == str(source_uuid))
+            .order_by(M.value_score.desc())
+            .limit(number_required)
+        )
+        rows = q.all()
+
+        result: List[AudienceData] = []
+        for r in rows:
+            result.append(AudienceData(
+                EmailAddress=r.EmailAddress,
+                PersonExactAge=str(r.AgeRange),
+                PersonGender=str(r.Gender),
+                HomeownerStatus=str(r.HomeownerStatus),
+                LengthOfResidenceYears=str(r.LengthOfResidenceYears),
+                MaritalStatus=str(r.MaritalStatus),
+                HasChildren=str(r.HasChildren),
+                NumberOfChildren=str(r.NumberOfChildren),
+                # BusinessOwner=str(r.BusinessOwner),
+                # BirthDay=str(r.BirthDay),
+                # BirthMonth=str(r.BirthMonth),
+                # BirthYear=str(r.BirthYear),
+                # Religion=r.Religion or "",
+                # Ethnicity=r.Ethnicity or "",
+                # LanguageCode=r.LanguageCode or "",
+                StateAbbr=r.StateAbbr_PP or "",
+                ZipCode5=str(r.ZipCode5_PP),
+
+                # IncomeRange=r.IncomeRange or "",
+                NetWorthCode=r.NetWorth or "",
+                CreditRating=r.CreditRating or "",
+                # CreditCards=r.CreditCards or "",
+                # BankCard=str(r.BankCard or 0),
+                # CreditCardPremium=str(r.CreditCardPremium or 0),
+                # CreditCardNewIssue=str(r.CreditCardNewIssue or 0),
+                # CreditLines=r.CreditLines or "",
+                # CreditRangeOfNewCreditLines=r.CreditRangeOfNewCreditLines or "",
+                # Donor=str(r.Donor or 0),
+                # Investor=str(r.Investor or 0),
+                # MailOrderDonor=str(r.MailOrderDonor or 0),
+
+                # Pets=str(r.Pets),
+                # CookingEnthusiast=str(r.CookingEnthusiast),
+                # Travel=str(r.Travel),
+                # MailOrderBuyer=str(r.MailOrderBuyer),
+                # OnlinePurchaser=str(r.OnlinePurchaser),
+                # BookReader=str(r.BookReader),
+                # HealthAndBeauty=str(r.HealthAndBeauty),
+                # Fitness=str(r.Fitness),
+                # OutdoorEnthusiast=str(r.OutdoorEnthusiast),
+                # TechEnthusiast=str(r.TechEnthusiast),
+                # DIY=str(r.DIY),
+                # Gardening=str(r.Gardening),
+                # AutomotiveBuff=str(r.AutomotiveBuff),
+                # GolfEnthusiasts=str(r.GolfEnthusiasts),
+                # BeautyCosmetics=str(r.BeautyCosmetics),
+                # Smoker=str(r.Smoker),
+                #
+                # PartyAffiliation=r.PartyAffiliation or "",
+                # VotingPropensity=r.VotingPropensity or "",
+                # CongressionalDistrict=str(r.CongressionalDistrict or ""),
+                #
+                # URN=str(r.URN or ""),
+                # SiteStreetAddress=r.SiteStreetAddress or "",
+                # SiteCity=r.SiteCity or "",
+                # SiteState=r.SiteState or "",
+                # SiteZipCode=str(r.SiteZipCode or ""),
+                # OwnerFullName=r.OwnerFullName or "",
+                # EstimatedHomeValue=str(r.EstimatedHomeValue or ""),
+                # HomeValueNumeric=str(r.HomeValueNumeric or ""),
+                # Equity=str(r.Equity or ""),
+                # EquityNumeric=str(r.EquityNumeric or ""),
+                # MortgageAmount=str(r.MortgageAmount or ""),
+                # MortgageDate=str(r.MortgageDate or ""),
+                # LenderName=r.LenderName or "",
+                # PurchasePrice=str(r.PurchasePrice or ""),
+                # PurchaseDate=str(r.PurchaseDate or ""),
+                # OwnerOccupied=str(r.OwnerOccupied),
+                # LandUseCode=r.LandUseCode or "",
+                # YearBuilt=str(r.YearBuilt or ""),
+                # LotSizeSqFt=str(r.LotSizeSqFt or ""),
+                # BuildingTotalSqFt=str(r.BuildingTotalSqFt or ""),
+                # AssessedValue=str(r.AssessedValue or ""),
+                # MarketValue=str(r.MarketValue or ""),
+                # TaxAmount=str(r.TaxAmount or ""),
+
+                customer_value=Decimal(r.customer_value)
+            ))
+        return result
 
 

@@ -11,6 +11,8 @@ from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
+from models import EnrichmentUserId
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -149,7 +151,7 @@ def fetch_user_profiles(
         db_session.query(*select_cols)
         .select_from(AudienceSource)
         .join(AudienceSourcesMatchedPerson, AudienceSourcesMatchedPerson.source_id == AudienceSource.id)
-        .join(EnrichmentUser, EnrichmentUser.id == AudienceSourcesMatchedPerson.enrichment_user_id)
+        .join(EnrichmentUserId, EnrichmentUserId.id == AudienceSourcesMatchedPerson.enrichment_user_id)
         .filter(AudienceSource.id == audience_lookalike.source_uuid).all()
     )
     profiles: List[AudienceData] = []
