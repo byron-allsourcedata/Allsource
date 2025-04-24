@@ -1,11 +1,13 @@
-from sqlalchemy import Column, Boolean, ForeignKey, text
+from sqlalchemy import Column, Boolean, ForeignKey, text, Index
 from sqlalchemy.dialects.postgresql import UUID
 from .base import Base
 
 
 class EnrichmentLifestyle(Base):
     __tablename__ = 'enrichment_lifestyles'
-
+    __table_args__ = (
+        Index("ix_lifestyle_asid", "asid"),
+    )
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,

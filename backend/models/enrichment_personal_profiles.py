@@ -1,7 +1,7 @@
 import uuid
 from typing import Any
 
-from sqlalchemy import UniqueConstraint, text, ForeignKey, SmallInteger, String, Integer
+from sqlalchemy import UniqueConstraint, text, ForeignKey, SmallInteger, String, Integer, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID, INT4RANGE
 
@@ -12,6 +12,7 @@ class EnrichmentPersonalProfiles(Base):
     __tablename__ = "enrichment_personal_profiles"
     __table_args__ = (
         UniqueConstraint("asid", name="enrichment_personal_profiles_asid_key"),
+        Index("ix_enrichment_personal_profiles_asid", "asid"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(

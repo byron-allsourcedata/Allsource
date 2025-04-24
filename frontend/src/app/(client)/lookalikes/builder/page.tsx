@@ -321,6 +321,10 @@ const CreateLookalikePage: React.FC = () => {
     setCurrentStep(0);
   };
 
+  const canProceed = personalKeys.length + financialKeys.length 
+                 + lifestylesKeys.length + voterKeys.length 
+                 + realEstateKeys.length >= 3;
+
   return (
     <Box
       sx={{
@@ -637,7 +641,6 @@ const CreateLookalikePage: React.FC = () => {
                 {calculatedResults && (
                   <Box hidden={currentStep !== 2}>
                     <AudienceFieldsSelector
-                      
                       calculation={calculatedResults!.audience_feature_importance}
                       financialData={financialData}
                       lifestylesData={lifestylesData}
@@ -649,6 +652,7 @@ const CreateLookalikePage: React.FC = () => {
                       onVoterChange={setVoterKeys}
                       onRealEstateChange={setRealEstateKeys}
                       handleNextStep={handleNextStep}
+                      canProcessed={canProceed}
                     />
                   </Box>
                 )}
@@ -767,6 +771,7 @@ const CreateLookalikePage: React.FC = () => {
                       },
                     }}
                     variant="outlined"
+                    disabled={!canProceed}
                     onClick={handleNextStep}
                   >
                     <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", padding: "0.5rem 1rem", gap: 1 }}>

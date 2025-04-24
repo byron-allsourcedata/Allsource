@@ -13,6 +13,7 @@ from fastapi.responses import FileResponse
 
 router = APIRouter(dependencies=[Depends(check_user_authorization_without_pixel)])
 
+
 @router.get("", response_model=SourcesObjectResponse)
 def get_sources(
         user=Depends(check_user_authorization_without_pixel),
@@ -66,7 +67,6 @@ def get_domains_with_leads(
         user=Depends(check_user_authorization_without_pixel),
         domains_service: UserDomainsService = Depends(get_domain_service)
 ):
-    
     return domains_service.get_domains_with_leads(user=user)
 
 
@@ -103,7 +103,7 @@ def get_sample_customers_list(
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
     file_path = sources_service.get_sample_customers_list(source_type)
-    
+
     return FileResponse(
         file_path, media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=sample-customers-list.csv"})
@@ -114,7 +114,6 @@ def get_processing_source(
         id: str = Query(...),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
-    
     return sources_service.get_processing_source(id)
 
 
@@ -125,5 +124,4 @@ def get_domains(
         per_page: int = Query(10, alias="per_page", ge=1, le=500, description="Items per page"),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service),
 ):
-    
     return sources_service.get_domains(user_id=user.get("id"), page=page, per_page=per_page)

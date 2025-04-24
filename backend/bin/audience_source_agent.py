@@ -473,38 +473,55 @@ async def normalize_persons_customer_conversion(
         str(data_for_normalize.min_recency)) if data_for_normalize.min_recency is not None else Decimal("0.0")
     max_recency = Decimal(
         str(data_for_normalize.max_recency)) if data_for_normalize.max_recency is not None else Decimal("1.0")
+    min_orders_amount = Decimal(data_for_normalize.min_amount) if data_for_normalize.min_amount is not None else Decimal("0.0")
+    max_orders_amount = Decimal(data_for_normalize.max_amount) if data_for_normalize.max_amount is not None else Decimal("1.0")
 
     updates = []
 
     min_inv = AudienceSourceMath.inverted_decimal(Decimal(min_recency))
     max_inv = AudienceSourceMath.inverted_decimal(Decimal(max_recency))
+    if min_orders_amount > max_orders_amount:
+        min_orders_amount, max_orders_amount = max_orders_amount, min_orders_amount
 
     if min_inv > max_inv:
         min_inv, max_inv = max_inv, min_inv
 
+    w1, w2 = Decimal("0.6"), Decimal("0.4")
     if source_schema.lower() == BusinessType.B2C.value:
         # B2C Algorithm:
         # For B2C, the LeadValueScore is based solely on the recency of failed lead attempts.
         # We use the "start_date" field as LastFailedDate.
-        inverted_values = []
+        denom_amt = max_orders_amount - min_orders_amount if max_orders_amount != min_orders_amount else Decimal("0")
         for person in persons:
             inv = AudienceSourceMath.inverted_decimal(Decimal(person.recency))
-            inverted_values.append(inv)
+            rec_score = AudienceSourceMath.normalize_decimal(
+                value=inv, min_val=min_inv, max_val=max_inv
+            )
 
-        for person, inv in zip(persons, inverted_values):
-            normalized_value = AudienceSourceMath.normalize_decimal(value=inv, min_val=min_inv, max_val=max_inv)
-            update_data = {
-                'id': person.id,
-                'source_id': source_id,
-                'email': person.email,
-                'recency_min': min_recency,
-                'recency_max': max_recency,
-                'inverted_recency': inv,
-                'inverted_recency_min': min_inv,
-                'inverted_recency_max': max_inv,
-                'value_score': normalized_value,
-            }
-            updates.append(update_data)
+            amt = Decimal(str(getattr(person, "sum_amount", 0) or 0))
+            if denom_amt == 0:
+                amt_score = Decimal("0")
+            else:
+                amt_score = (amt - min_orders_amount) / denom_amt
+
+            lead_value = w1 * rec_score + w2 * amt_score
+
+            updates.append({
+                "id": person.id,
+                "source_id": source_id,
+                "email": person.email,
+                "recency_min": min_recency,
+                "recency_max": max_recency,
+                "inverted_recency": inv,
+                "inverted_recency_min": min_inv,
+                "inverted_recency_max": max_inv,
+                "amount": amt,
+                "amount_min": min_orders_amount,
+                "amount_max": max_orders_amount,
+                "recency_score": rec_score,
+                "sum_score": amt_score,
+                "value_score": lead_value,
+            })
 
     elif source_schema.lower() == BusinessType.B2B.value:
         # B2B Algorithm:
@@ -752,8 +769,16 @@ def process_insights(source_id: str, db_session: Session, connection: Connection
         for field, val in zip(personal_fields, row):
             if field == "age":
                 key = bucket_age(val)
+            elif val is None:
+                if field in ("have_children", "gender", "marital_status", "homeowner"):
+                    key = "2"
+                elif field in ("religion", "ethnicity", "state"):
+                    key = "Other"
+                else:
+                    key = "None"
             else:
                 key = str(val)
+            key = key.lower()
             personal_cts[field][key] += 1
 
     for field in personal_fields:
@@ -787,7 +812,31 @@ def process_insights(source_id: str, db_session: Session, connection: Connection
 
     for row in rows:
         for field, val in zip(financial_fields, row):
-            fin_cts[field][str(val)] += 1
+            if val is None:
+                if field in {
+                    "donor",
+                    "credit_card_premium",
+                    "investor",
+                    "bank_card",
+                    "mail_order_donor",
+                    "credit_card_new_issue",
+                }:
+                    key = "2"
+                elif field in {
+                    "number_of_credit_lines",
+                    "income_range",
+                    "net_worth_range",
+                    "credit_score_range",
+                    "credit_cards",
+                    "credit_range_of_new_credit",
+                }:
+                    key = "Other"
+                else:
+                    key = "None"
+            else:
+                key = str(val)
+            key = key.lower()
+            fin_cts[field][key] += 1
 
     for field in financial_fields:
         setattr(insights.financial, field, dict(fin_cts[field]))
@@ -824,7 +873,12 @@ def process_insights(source_id: str, db_session: Session, connection: Connection
 
     for row in rows:
         for field, val in zip(lifestyle_fields, row):
-            life_cts[field][str(val)] += 1
+            if val is None:
+                key = "Other"
+            else:
+                key = str(val)
+            key = key.lower()
+            life_cts[field][key] += 1
 
     for field in lifestyle_fields:
         setattr(insights.lifestyle, field, dict(life_cts[field]))
@@ -842,7 +896,20 @@ def process_insights(source_id: str, db_session: Session, connection: Connection
 
     for row in rows:
         for field, val in zip(voter_fields, row):
-            voter_cts[field][str(val)] += 1
+            if field in ('congressional_district', 'voting_propensity'):
+                if val is None:
+                    key = "Other"
+                else:
+                    key = str(val)
+            elif field == 'political_party':
+                if val is None or str(val).upper() == 'UNKNOWN':
+                    key = "Other"
+                else:
+                    key = str(val)
+            else:
+                key = str(val)
+            key = key.lower()
+            voter_cts[field][key] += 1
 
     for field in voter_fields:
         setattr(insights.voter, field, dict(voter_cts[field]))
