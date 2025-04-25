@@ -21,9 +21,8 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_settings import AudienceSetting
-from models.enrichment_users import EnrichmentUser
+from models.enrichment_user_ids import EnrichmentUserId
 from models.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment_users import EnrichmentUser
 from models.enrichment_employment_history import EnrichmentEmploymentHistory
 from models.emails_enrichment import EmailEnrichment
 from models.emails import Email
@@ -72,22 +71,22 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUserContact.linkedin_url,
             )
             .join(
-                EnrichmentUser,
-                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUserId,
+                EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id,
             )
             .join(
                 EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
+                EnrichmentUserContact.asid == EnrichmentUserId.asid,
             )
             .join(
                 EnrichmentEmploymentHistory,
-                EnrichmentEmploymentHistory.asid == EnrichmentUser.asid,
+                EnrichmentEmploymentHistory.asid == EnrichmentUserId.asid,
             )
             .filter(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
                 AudienceSmartPerson.is_validation_processed == True,
             )
-            .distinct()
+            .distinct(EnrichmentUserContact.asid)
             .all()
         ]
     elif validation_type == "confirmation":
@@ -107,12 +106,12 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUserContact.last_name.label("last_name"),
             )
             .join(
-                EnrichmentUser,
-                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUserId,
+                EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id,
             )
             .join(
                 EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
+                EnrichmentUserContact.asid == EnrichmentUserId.asid,
             )
             .filter(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
@@ -134,12 +133,12 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 getattr(EnrichmentUserContact, column_name).label("value"),
             )
             .join(
-                EnrichmentUser,
-                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUserId,
+                EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id,
             )
             .join(
                 EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid,
+                EnrichmentUserContact.asid == EnrichmentUserId.asid,
             )
             .filter(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
@@ -185,22 +184,23 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 .first()
             )
 
-            priority_values_no_api = priority_record.value.split(",")[:5]
-            priority_values_api = priority_record.value.split(",")[5:7]
+            priority_values = priority_record.value.split(",")[:7]
 
             column_mapping = {
                 'personal_email-mx': 'personal_email_validation_status',
                 'personal_email-recency': 'personal_email_last_seen',
                 'business_email-mx': 'business_email_validation_status',
                 'business_email-recency': 'business_email_last_seen_date',
-                'phone-dnc_filter': 'mobile_phone_dnc'
+                'phone-dnc_filter': 'mobile_phone_dnc',
+                'linked_in-job_validation': 'job_validation',
+                'phone-confirmation': 'confirmation'
             }
 
 
             logging.info(f"validation_params {validation_params}")
             i = 0
 
-            for value in priority_values_no_api:
+            for value in priority_values:
                 validation, validation_type = value.split('-')[0], value.split('-')[1]
                 logging.info(f"validation - {validation} ; validation_type - {validation_type}")
                 
@@ -215,6 +215,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                             count_validations_type += 1
                             if validation_type in param:
                                 column_name = column_mapping.get(value)
+                                
                                 logging.info(f"column_name {column_name}")
                                 
                                 if not column_name:
@@ -231,6 +232,8 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                 
                                 enrichment_users = get_enrichment_users(db_session, validation_type, aud_smart_id, column_name)
 
+                                print("enrichment_users", enrichment_users)
+
                                 logging.info(f"count person which will processed validation {len(enrichment_users)}")
 
                                 if not enrichment_users:
@@ -246,12 +249,15 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                     batch = enrichment_users[j:j+100]
                                     serialized_batch = [
                                         {
+                                            **user,
                                             "audience_smart_person_id": str(user["audience_smart_person_id"]),
-                                            column_name: user[column_name]
+                                            # column_name: user[column_name]
                                         }
                                         for user in batch
                                     ]
-
+                                    # "audience_smart_person_id": "001aaede-6c17-4100-9a1e-b3486daaa87a"
+        
+                                    print("serialized_batch", serialized_batch)
                                     is_last_iteration_in_last_validation = (i == count_validations) and (j + 100 >= len(enrichment_users))
 
                                     message_body = {

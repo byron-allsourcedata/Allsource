@@ -33,7 +33,6 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 load_dotenv()
 
 AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
-AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 REVERSE_CONTACT_API_KEY = os.getenv('REVERSE_CONTACT_API_KEY')
 REVERSE_CONTACT_API_URL = os.getenv('REVERSE_CONTACT_API_URL')
 
@@ -59,6 +58,8 @@ async def aud_validation_agent_linkedin_url(message: IncomingMessage, db_session
             job_title = record.get("job_title")
             linkedin_url = record.get("linkedin_url")
 
+            print(person_id, linkedin_url)
+
             is_verify = False
 
             if not linkedin_url:
@@ -77,7 +78,7 @@ async def aud_validation_agent_linkedin_url(message: IncomingMessage, db_session
                 )
                 response_data = response.json()
 
-                logging.info(f"response: {response_data}")
+                # logging.info(f"response: {response_data}")
 
                 if response.status_code != 200:
                     await message.nack()
@@ -85,11 +86,13 @@ async def aud_validation_agent_linkedin_url(message: IncomingMessage, db_session
 
                 positions = response_data.get("person", {}).get("positions", {}).get("positionHistory", [])
                 for position in positions:
-                    similarity_job_title = fuzz.ratio(job_title, position.title)
-                    similarity_company_name = fuzz.ratio(company_name, position.companyName)
+                    title = position.get("title", "")
+                    company = position.get("companyName", "") 
+                    similarity_job_title = fuzz.ratio(job_title, title)
+                    similarity_company_name = fuzz.ratio(company_name, company)
                     
-                    logging.info(f"similarity company: {company_name} - {position.companyName} = {similarity_company_name}")
-                    logging.info(f"similarity job: {job_title} - {position.title} = {similarity_job_title}")
+                    logging.info(f"similarity company: {company_name} - {company} = {similarity_company_name}")
+                    logging.info(f"similarity job: {job_title} - {title} = {similarity_job_title}")
 
                     if similarity_company_name > 70 and similarity_job_title > 70:
                         is_verify = True
@@ -102,26 +105,26 @@ async def aud_validation_agent_linkedin_url(message: IncomingMessage, db_session
                         is_verify=is_verify
                     )
                 )
+
             else: 
                 is_verify = existing_verification.is_verify
+            
 
             if not is_verify:
                 failed_ids.append(person_id)
 
-
-        if verifications:
+        if len(verifications):
             db_session.bulk_save_objects(verifications)
             db_session.commit()
 
-
-        if failed_ids:
+        if len(failed_ids):
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
                 [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
             )
             db_session.commit()
             
-            await message.ack()
+        await message.ack()
 
 
     except Exception as e:

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, TIMESTAMP, ForeignKey, Index, UUID, text, Boolean, Text
 from .base import Base
 from sqlalchemy.sql import func
-from models.audience_smarts import AudienceSmart
+from models.audience_smarts_persons import AudienceSmartPerson
 
 
 class EnrichmentLinkedinVerification(Base):
@@ -18,7 +18,7 @@ class EnrichmentLinkedinVerification(Base):
     )
     audience_smart_person_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(AudienceSmart.id, ondelete='CASCADE'),
+        ForeignKey(AudienceSmartPerson.id, ondelete='CASCADE'),
         nullable=False
     )
     linkedin_url = Column(

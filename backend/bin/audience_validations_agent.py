@@ -131,6 +131,7 @@ async def aud_validation_agent(message: IncomingMessage, db_session: Session, co
             }
                         
             if validation_type == "confirmation":
+                logging.info("send to phone owner agent")
                 await publish_rabbitmq_message(
                     connection=connection,
                     queue_name=AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
@@ -139,6 +140,7 @@ async def aud_validation_agent(message: IncomingMessage, db_session: Session, co
                     }
                 )
             elif validation_type == "job_validation":
+                logging.info("send to job validation agent")
                 await publish_rabbitmq_message(
                     connection=connection,
                     queue_name=AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
@@ -181,10 +183,10 @@ async def aud_validation_agent(message: IncomingMessage, db_session: Session, co
                 logging.info(f"is last validation")
 
                 with db_session.begin():
-                    subquery = select(EnrichmentUserId.id).select_from(EnrichmentUserContact).join(
-                        EnrichmentUserId, EnrichmentUserId.asid == EnrichmentUserContact.asid).join(
-                        AudienceSmartPerson, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id
-                    )
+                    # subquery = select(EnrichmentUserId.id).select_from(EnrichmentUserContact).join(
+                    #     EnrichmentUserId, EnrichmentUserId.asid == EnrichmentUserContact.asid).join(
+                    #     AudienceSmartPerson, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id
+                    # )
                     # subquery = select(EnrichmentUserContact.enrichment_user_id).filter(
                     #     EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id
                     # )
@@ -192,13 +194,13 @@ async def aud_validation_agent(message: IncomingMessage, db_session: Session, co
                     db_session.query(AudienceSmartPerson).filter(
                         AudienceSmartPerson.smart_audience_id == aud_smart_id,
                         AudienceSmartPerson.is_validation_processed == True,
-                        AudienceSmartPerson.enrichment_user_id.in_(subquery)
+                        # AudienceSmartPerson.enrichment_user_id.in_(subquery)
                     ).update({"is_valid": True}, synchronize_session=False)
 
                     total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
                         AudienceSmartPerson.smart_audience_id == aud_smart_id,
                         AudienceSmartPerson.is_validation_processed == True,
-                        AudienceSmartPerson.enrichment_user_id.in_(subquery)
+                        # AudienceSmartPerson.enrichment_user_id.in_(subquery)
                     ).scalar()
 
                     db_session.query(AudienceSmart).filter(

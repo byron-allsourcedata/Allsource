@@ -1215,7 +1215,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                               <Checkbox
                                 size="small"
                                 // disabled={isValidate}
-                                disabled={option === "Last updated date" || option === "Confirmation"}
+                                disabled={option === "Last updated date"}
                                 checked={selectedOptionsPhone.includes(option)}
                                 onChange={() =>
                                   handleOptionClick(
@@ -1456,8 +1456,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
                         <Checkbox
-                          // disabled={isValidate}
-                          disabled={true}
+                          disabled={isValidate}
                           size="small"
                           checked={selectedOptionsLinkedIn.includes(
                             "Job validation"
