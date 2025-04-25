@@ -1163,8 +1163,8 @@ const Leads: React.FC = () => {
                                     className='paragraph'
                                     key={filter.label}
                                     label={`${filter.label}: ${filter.label === "PageUrl"
-                                            ? displayValue
-                                            : displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
+                                        ? displayValue
+                                        : displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
                                         }`}
                                     onDelete={() => handleDeleteFilter(filter)}
                                     deleteIcon={
@@ -1462,7 +1462,81 @@ const Leads: React.FC = () => {
                                                             e.stopPropagation();
                                                             handleOpenPopup(row)
                                                         }} sx={{ ...leadsStyles.table_array, position: 'relative', cursor: 'pointer', color: 'rgba(80, 82, 178, 1)' }}>
-                                                            {Array.isArray(row.page_visits) ? row.page_visits.length : '--'}
+                                                            <Box onClick={(e) => e.stopPropagation()}>
+                                                                <Tooltip
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation()
+                                                                    }}
+                                                                    componentsProps={{
+                                                                        tooltip: {
+                                                                            sx: {
+                                                                                backgroundColor: '#fff',
+                                                                                color: '#000',
+                                                                                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                                                border: ' 0.5px solid rgba(228, 228, 228, 1)',
+                                                                                borderRadius: '4px',
+                                                                                maxHeight: '100%',
+                                                                                maxWidth: '500px',
+                                                                                minWidth: '200px',
+                                                                                padding: '11px 10px',
+                                                                            },
+                                                                        },
+                                                                    }}
+                                                                    title={
+                                                                        Array.isArray(row.page_visits) && row.page_visits.length > 0 ? (
+                                                                            <div>
+                                                                                <Box
+                                                                                    sx={{
+                                                                                        overflow: 'hidden',
+                                                                                        minWidth: 200,
+                                                                                    }}
+                                                                                >
+                                                                                    {row.page_visits.map(
+                                                                                        (
+                                                                                            visit: { page: string; spent_time_sec: number },
+                                                                                            idx: number
+                                                                                        ) => (
+                                                                                            <Box
+                                                                                                key={idx}
+                                                                                                sx={{
+                                                                                                    display: 'flex',
+                                                                                                    justifyContent: 'space-between',
+                                                                                                    alignItems: 'center',
+                                                                                                    px: 1,
+                                                                                                    py: 0.5,
+                                                                                                    gap: 2,
+                                                                                                    borderBottom: idx !== row.page_visits.length - 1 ? '1px solid #eee' : 'none',
+                                                                                                }}
+                                                                                            >
+                                                                                                <Typography
+                                                                                                    className="table-data"
+                                                                                                    sx={{ fontSize: '12px', maxWidth: 500, textDecoration: 'none', color: 'rgba(80, 82, 178, 1) !important' }}
+                                                                                                    component="a"
+                                                                                                    href={visit.page.startsWith("http") ? visit.page : `https://${visit.page}`}
+                                                                                                    target="_blank"
+                                                                                                    rel="noopener noreferrer"
+                                                                                                >
+                                                                                                    {visit.page}
+                                                                                                </Typography>
+                                                                                                <Typography className="table-data" sx={{ fontSize: '12px' }}>
+                                                                                                    {visit.spent_time_sec}s
+                                                                                                </Typography>
+                                                                                            </Box>
+                                                                                        )
+                                                                                    )}
+                                                                                </Box>
+
+                                                                            </div>
+                                                                        ) : (
+                                                                            'No page visits'
+                                                                        )
+                                                                    }
+                                                                    placement="left"
+                                                                    arrow
+                                                                >
+                                                                    <span>{Array.isArray(row.page_visits) ? row.page_visits.length : '--'}</span>
+                                                                </Tooltip>
+                                                            </Box>
                                                         </TableCell>
 
                                                         <TableCell sx={{ ...leadsStyles.table_array, "::after": { content: 'none' } }}>
