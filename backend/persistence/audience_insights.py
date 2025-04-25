@@ -30,23 +30,38 @@ class AudienceInsightsPersistence:
         self.db = db
 
     def get_source_insights_info(self, uuid_of_source: UUID, user_id: int) -> dict:
-        source = self.db.query(AudienceSource.insights).filter(
+        source = self.db.query(
+            AudienceSource.insights,
+            AudienceSource.name
+        ).filter(
             AudienceSource.id == uuid_of_source,
             AudienceSource.user_id == user_id
         ).first()
+
         if source and source.insights:
-            return source.insights
-        return {}
+            return {
+                "insights": source.insights,
+                "name": source.name
+            }
+
+        return {"insights": {}, "name": ""}
 
     def get_lookalike_insights_info(self, uuid_of_lookalike: UUID, user_id: int) -> dict:
-        lookalike = self.db.query(AudienceLookalikes.insights).filter(
+        lookalike = self.db.query(
+            AudienceLookalikes.insights,
+            AudienceLookalikes.name
+        ).filter(
             AudienceLookalikes.id == uuid_of_lookalike,
             AudienceLookalikes.user_id == user_id
         ).first()
 
         if lookalike and lookalike.insights:
-            return lookalike.insights
-        return {}
+            return {
+                "insights": lookalike.insights,
+                "name": lookalike.name
+            }
+
+        return {"insights": {}, "name": ""}
 
     def get_recent_sources(self, user_id: int) -> list[dict]:
         return (
