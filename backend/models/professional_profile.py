@@ -7,7 +7,6 @@ class ProfessionalProfile(Base):
     __tablename__ = 'professional_profiles'
     __table_args__ = (
         UniqueConstraint('asid', name='professional_profiles_asid_key'),
-        UniqueConstraint('enrichment_user_id', name='professional_profiles_enrichment_user_id_key'),
     )
 
     id = Column(
@@ -16,15 +15,15 @@ class ProfessionalProfile(Base):
         nullable=False,
         server_default=text("gen_random_uuid()")
     )
-    enrichment_user_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("enrichment_users2.id", ondelete="CASCADE"),
-        nullable=True
-    )
+    # enrichment_user_id = Column(
+    #     UUID(as_uuid=True),
+    #     ForeignKey("enrichment_users2.id", ondelete="CASCADE"),
+    #     nullable=True
+    # )
 
     asid = Column(
         UUID(as_uuid=True),
-        ForeignKey("enrichment_users2.asid", ondelete="CASCADE"),
+        ForeignKey("enrichment_users.asid", ondelete="CASCADE"),
         nullable=True
     )
     current_job_title = Column(TEXT, nullable=True)
@@ -39,7 +38,7 @@ class ProfessionalProfile(Base):
     annual_sales = Column(TEXT, nullable=True)
 
     enrichment_user = relationship(
-        "EnrichmentUser",
+        "EnrichmentUserId",
         back_populates="professional_profiles",
-        foreign_keys=[enrichment_user_id]
+        foreign_keys=[asid],
     )

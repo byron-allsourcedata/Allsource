@@ -25,23 +25,21 @@ from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from services.similar_audiences.similar_audience_scores import SimilarAudiencesScoresService
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 from services.similar_audiences import SimilarAudienceService
-# from models.enrichment_users import EnrichmentUser
-from models import EnrichmentUserId
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes_persons import AudienceLookalikes
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
 from persistence.enrichment_models import EnrichmentModelsPersistence
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Any
 from decimal import Decimal
 from datetime import datetime
 from sqlalchemy import create_engine, cast, String
 from sqlalchemy.orm import Session
-from models.enrichment_user_ids import EnrichmentUserId as U
-from models.enrichment_personal_profiles import EnrichmentPersonalProfiles as P
-from models.enrichment_financial_records import EnrichmentFinancialRecord as F
-from models.enrichment_lifestyles import EnrichmentLifestyle as L
-from models.enrichment_voter_record import EnrichmentVoterRecord as V
+from models.enrichment_user_ids import EnrichmentUserId
+from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
+from models.enrichment_financial_records import EnrichmentFinancialRecord
+from models.enrichment_lifestyles import EnrichmentLifestyle
+from models.enrichment_voter_record import EnrichmentVoterRecord
 
 
 
@@ -88,23 +86,62 @@ def get_max_size(lookalike_size):
         
     return size
 
-def get_enrichment_user_column_map() -> dict[str, any]:
+def get_enrichment_user_column_map() -> Dict[str, Any]:
     return {
-        "PersonGender": P.gender.label("PersonGender"),
-        "EstimatedHouseholdIncomeCode": F.income_range.label("EstimatedHouseholdIncomeCode"),
-        "EstimatedCurrentHomeValueCode": F.net_worth.label("EstimatedCurrentHomeValueCode"),
-        "HomeownerStatus": P.homeowner.label("HomeownerStatus"),
-        "HasChildren": P.has_children.label("HasChildren"),
-        "HasCreditCard": F.bank_card.label("HasCreditCard"),
-        "NumberOfChildren": P.number_of_children.label("NumberOfChildren"),
-        "CreditRating": F.credit_rating.label("CreditRating"),
-        "NetWorthCode": F.net_worth.label("NetWorthCode"),
-        "ZipCode5": cast(P.zip_code5, String).label("ZipCode5"),
-        "LengthOfResidenceYears": P.length_of_residence_years.label("LengthOfResidenceYears"),
-        "MaritalStatus": P.marital_status.label("MaritalStatus"),
-        "IsBookReader": L.book_reader.label("IsBookReader"),
-        "IsOnlinePurchaser": L.online_purchaser.label("IsOnlinePurchaser"),
-        "IsTraveler": L.travel.label("IsTraveler"),
+        # — Personal Profiles —
+        "Age": EnrichmentPersonalProfiles.age.label("Age"),
+        "Gender": EnrichmentPersonalProfiles.gender.label("Gender"),
+        "HomeownerStatus": EnrichmentPersonalProfiles.homeowner.label("HomeownerStatus"),
+        "LengthOfResidenceYears": EnrichmentPersonalProfiles.length_of_residence_years.label("LengthOfResidenceYears"),
+        "MaritalStatus": EnrichmentPersonalProfiles.marital_status.label("MaritalStatus"),
+        "BusinessOwner": EnrichmentPersonalProfiles.business_owner.label("BusinessOwner"),
+        "BirthDay": EnrichmentPersonalProfiles.birth_day.label("BirthDay"),
+        "BirthMonth": EnrichmentPersonalProfiles.birth_month.label("BirthMonth"),
+        "BirthYear": EnrichmentPersonalProfiles.birth_year.label("BirthYear"),
+        "HasChildren": EnrichmentPersonalProfiles.has_children.label("HasChildren"),
+        "NumberOfChildren": EnrichmentPersonalProfiles.number_of_children.label("NumberOfChildren"),
+        "Religion": EnrichmentPersonalProfiles.religion.label("Religion"),
+        "Ethnicity": EnrichmentPersonalProfiles.ethnicity.label("Ethnicity"),
+        "LanguageCode": EnrichmentPersonalProfiles.language_code.label("LanguageCode"),
+        "StateAbbr": EnrichmentPersonalProfiles.state_abbr.label("StateAbbr"),
+        "ZipCode5": cast(EnrichmentPersonalProfiles.zip_code5, String).label("ZipCode5"),
+
+        # — Financial Records —
+        "IncomeRange": EnrichmentFinancialRecord.income_range.label("IncomeRange"),
+        "NetWorth": EnrichmentFinancialRecord.net_worth.label("NetWorth"),
+        "CreditRating": EnrichmentFinancialRecord.credit_rating.label("CreditRating"),
+        "CreditCards": EnrichmentFinancialRecord.credit_cards.label("CreditCards"),
+        "BankCard": EnrichmentFinancialRecord.bank_card.label("BankCard"),
+        "CreditCardPremium": EnrichmentFinancialRecord.credit_card_premium.label("CreditCardPremium"),
+        "CreditCardNewIssue": EnrichmentFinancialRecord.credit_card_new_issue.label("CreditCardNewIssue"),
+        "CreditLines": EnrichmentFinancialRecord.credit_lines.label("CreditLines"),
+        "CreditRangeOfNewCreditLines": EnrichmentFinancialRecord.credit_range_of_new_credit_lines.label("CreditRangeOfNewCreditLines"),
+        "Donor": EnrichmentFinancialRecord.donor.label("Donor"),
+        "Investor": EnrichmentFinancialRecord.investor.label("Investor"),
+        "MailOrderDonor": EnrichmentFinancialRecord.mail_order_donor.label("MailOrderDonor"),
+
+        # — Lifestyle —
+        "Pets": EnrichmentLifestyle.pets.label("Pets"),
+        "CookingEnthusiast": EnrichmentLifestyle.cooking_enthusiast.label("CookingEnthusiast"),
+        "Travel": EnrichmentLifestyle.travel.label("Travel"),
+        "MailOrderBuyer": EnrichmentLifestyle.mail_order_buyer.label("MailOrderBuyer"),
+        "OnlinePurchaser": EnrichmentLifestyle.online_purchaser.label("OnlinePurchaser"),
+        "BookReader": EnrichmentLifestyle.book_reader.label("BookReader"),
+        "HealthAndBeauty": EnrichmentLifestyle.health_and_beauty.label("HealthAndBeauty"),
+        "Fitness": EnrichmentLifestyle.fitness.label("Fitness"),
+        "OutdoorEnthusiast": EnrichmentLifestyle.outdoor_enthusiast.label("OutdoorEnthusiast"),
+        "TechEnthusiast": EnrichmentLifestyle.tech_enthusiast.label("TechEnthusiast"),
+        "Diy": EnrichmentLifestyle.diy.label("Diy"),
+        "Gardening": EnrichmentLifestyle.gardening.label("Gardening"),
+        "AutomotiveBuff": EnrichmentLifestyle.automotive_buff.label("AutomotiveBuff"),
+        "GolfEnthusiasts": EnrichmentLifestyle.golf_enthusiasts.label("GolfEnthusiasts"),
+        "BeautyCosmetics": EnrichmentLifestyle.beauty_cosmetics.label("BeautyCosmetics"),
+        "Smoker": EnrichmentLifestyle.smoker.label("Smoker"),
+
+        # — Voter Record —
+        "PartyAffiliation": EnrichmentVoterRecord.party_affiliation.label("PartyAffiliation"),
+        "CongressionalDistrict": EnrichmentVoterRecord.congressional_district.label("CongressionalDistrict"),
+        "VotingPropensity": EnrichmentVoterRecord.voting_propensity.label("VotingPropensity"),
     }
 
 def build_dynamic_query_and_config(
@@ -112,17 +149,32 @@ def build_dynamic_query_and_config(
     sig: Dict[str, float]
 ) -> Tuple:
     column_map = get_enrichment_user_column_map()
-    dynamic_cols = [column_map[name] for name in sig if name in column_map]
-    select_cols = [U.id.label("EnrichmentUserId")] + dynamic_cols
+    dynamic_columns = [column_map[name] for name in sig if name in column_map]
+    select_columns = [
+        EnrichmentUserId.id.label("EnrichmentUserId"),
+        *dynamic_columns
+    ]
 
     query = (
         db_session
-        .query(*select_cols)
-        .select_from(U)
-        .outerjoin(P, P.asid == U.asid)
-        .outerjoin(F, F.asid == U.asid)
-        .outerjoin(L, L.asid == U.asid)
-        .outerjoin(V, V.asid == U.asid)
+        .query(*select_columns)
+        .select_from(EnrichmentUserId)
+        .outerjoin(
+            EnrichmentPersonalProfiles,
+            EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
+        )
+        .outerjoin(
+            EnrichmentFinancialRecord,
+            EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+        )
+        .outerjoin(
+            EnrichmentLifestyle,
+            EnrichmentLifestyle.asid == EnrichmentUserId.asid
+        )
+        .outerjoin(
+            EnrichmentVoterRecord,
+            EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+        )
     )
 
     numerical = {"NumberOfChildren", "LengthOfResidenceYears"}
