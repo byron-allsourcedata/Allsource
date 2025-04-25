@@ -50,9 +50,9 @@ class AudienceInsightsService:
             },
             b2c={
                 "personal_info": data.get("personal_profile", {}),
-                "financial_info": data.get("financial_info", {}),
-                "lifestyle_info": data.get("lifestyle_info", {}),
-                "voter_info": data.get("voter_info", {}),
+                "financial": data.get("financial", {}),
+                "lifestyle": data.get("lifestyle", {}),
+                "voter": data.get("voter", {}),
             }
         )
         return parsed.dict()

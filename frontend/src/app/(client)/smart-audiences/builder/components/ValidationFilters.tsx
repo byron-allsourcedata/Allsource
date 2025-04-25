@@ -710,7 +710,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       >
                         <Checkbox
                           size="small"
-                          disabled={isValidate}
+                          // disabled={isValidate}
+                          disabled={true}
                           checked={selectedOptionsPersonalEmail.includes(
                             "Delivery"
                           )}
@@ -1045,7 +1046,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       >
                         <Checkbox
                           size="small"
-                          disabled={isValidate}
+                          // disabled={isValidate}
+                          disabled={true}
                           checked={selectedOptionsBusinessEmail.includes(
                             "Delivery"
                           )}
@@ -1181,7 +1183,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                             >
                               <Checkbox
                                 size="small"
-                                disabled={isValidate}
+                                // disabled={isValidate}
+                                disabled={option === "Last updated date" || option === "Confirmation"}
                                 checked={selectedOptionsPhone.includes(option)}
                                 onChange={() =>
                                   handleOptionClick(
@@ -1312,7 +1315,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                             >
                               <Checkbox
                                 size="small"
-                                disabled={isValidate}
+                                // disabled={isValidate}
+                                disabled={true}
                                 checked={selectedOptionsPostalCAS.includes(
                                   option
                                 )}
@@ -1421,7 +1425,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
                         <Checkbox
-                          disabled={isValidate}
+                          // disabled={isValidate}
+                          disabled={true}
                           size="small"
                           checked={selectedOptionsLinkedIn.includes(
                             "Job validation"

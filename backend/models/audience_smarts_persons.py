@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, BOOLEAN, text, Boolean
-
+from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, Boolean, text, Index 
 from models.audience_smarts import AudienceSmart
 from models.enrichment_users import EnrichmentUser
 from .base import Base
@@ -8,6 +7,12 @@ from sqlalchemy.sql import func
 
 class AudienceSmartPerson(Base):
     __tablename__ = 'audience_smarts_persons'
+    
+    __table_args__ = (
+      Index('audience_smarts_persons_is_validation_processed_idx', 'is_validation_processed'),
+      Index('audience_smarts_persons_smart_audience_id_idx', 'smart_audience_id'),
+      Index('audience_smarts_persons_enrichment_user_id_idx', 'enrichment_user_id'),
+    )
 
     id = Column(
         UUID(as_uuid=True),
@@ -18,12 +23,12 @@ class AudienceSmartPerson(Base):
     )
     smart_audience_id = Column(
         UUID(as_uuid=True),
-        ForeignKey('audience_smarts.id', ondelete='CASCADE'),
+        ForeignKey(AudienceSmart.id, ondelete='CASCADE'),
         nullable=False
     )
     enrichment_user_id = Column(
         UUID(as_uuid=True),
-        ForeignKey('enrichment_users.id'),
+        ForeignKey(EnrichmentUser.id),
         nullable=True
     )
     is_valid = Column(
@@ -47,3 +52,4 @@ class AudienceSmartPerson(Base):
         server_default=func.now(),
         onupdate=func.now()
     )
+    

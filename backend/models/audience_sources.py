@@ -34,7 +34,7 @@ class AudienceSource(Base):
     target_schema = Column(
         target_schemas,
         nullable=False,
-        server_default=text("'b2c'")
+        server_default="'b2c'"
     )
     insights = Column(JSON, nullable=True)
 

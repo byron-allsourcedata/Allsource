@@ -98,9 +98,7 @@ export const PieChartWithLegend: React.FC<PieChartWithLegendProps> = ({
       }}
     >
       <CardContent>
-        <Typography component="h2" variant="subtitle2">
-          {title}
-        </Typography>
+        <Typography className="dashboard-card-heading">{title}</Typography>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <PieChart
             colors={colors}
@@ -130,8 +128,8 @@ export const PieChartWithLegend: React.FC<PieChartWithLegendProps> = ({
             }}
           >
             <PieCenterLabel
-              primaryText={`${maxItem.value}%`}
-              secondaryText={maxItem.label}
+              primaryText={`${maxItem?.value}%`}
+              secondaryText={maxItem?.label}
             />
           </PieChart>
         </Box>

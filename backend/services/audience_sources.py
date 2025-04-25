@@ -163,14 +163,37 @@ class AudienceSourceService:
             if audience_source.source_type == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
                 if audience_source.target_schema == BusinessType.B2C.value:
                     writer.writerow([
-                        'Email', 'LastTransactionDate', 'Recency', 'MinRecency', 'MaxRecency', 'InvertedRecency',
-                        'MinInvertedRecency', 'MaxInvertedRecency', 'ValueScore'
+                        'Email',
+                        'LastTransactionDate',
+                        'Recency',
+                        'MinRecency',
+                        'MaxRecency',
+                        'InvertedRecency',
+                        'MinInvertedRecency',
+                        'MaxInvertedRecency',
+                        'RecencyScore',
+                        'OrderAmount',
+                        'MinOrderAmount',
+                        'MaxOrderAmount',
+                        'OrderAmountScore',
+                        'ValueScore'
                     ])
 
                     writer.writerow([
-                        '', 'max(Date)', '(reference_date - LastTransactionDate).days', 'min(Recency)',
-                        'max(Recency)', '1 / (Recency + 1)', '1 / (MinInvertedRecency + 1)', '1 / (MaxInvertedRecency + 1)',
+                        '',
+                        'max(Date)',
+                        '(reference_date - LastTransactionDate).days',
+                        'min(Recency)',
+                        'max(Recency)',
+                        '1 / (Recency + 1)',
+                        '1 / (MinInvertedRecency + 1)',
+                        '1 / (MaxInvertedRecency + 1)',
                         '(InvertedRecency - MinInvertedRecency) / (MaxInvertedRecency - MinInvertedRecency)',
+                        'sum(Amount)',
+                        'min(sum(Amount))',
+                        'max(sum(Amount))',
+                        '(OrderAmount - MinOrderAmount) / (MaxOrderAmount - MinOrderAmount)',
+                        '0.6 * RecencyScore + 0.4 * OrderAmountScore'
                     ])
                     for person in audience_sources_matched_persons:
                         relevant_data = [
@@ -182,6 +205,11 @@ class AudienceSourceService:
                             str(person.inverted_recency) if person.inverted_recency is not None else '',
                             str(person.inverted_recency_min) if person.inverted_recency_min is not None else '',
                             str(person.inverted_recency_max) if person.inverted_recency_max is not None else '',
+                            str(person.recency_score) if hasattr(person, 'recency_score') else '',
+                            str(person.amount) if hasattr(person, 'amount') else '',
+                            str(person.amount_min) if hasattr(person, 'amount_min') else '',
+                            str(person.amount_max) if hasattr(person, 'amount_max') else '',
+                            str(person.sum_score) if hasattr(person, 'sum_score') else '',
                             str(person.value_score) if person.value_score is not None else '',
                         ]
                         writer.writerow(relevant_data)

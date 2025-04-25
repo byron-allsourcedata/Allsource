@@ -5,12 +5,13 @@ import B2CTabs from "./B2CTabs";
 import B2BTabs from "./B2BTabs";
 import { useParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 type B2CData = {
-  personal_profiles: Record<string, number>;
-  financial: Record<string, number>;
-  lifestyles: Record<string, number>;
-  voter: Record<string, number>;
+  personal_info: Record<string, any>;
+  financial: Record<string, any>;
+  lifestyle: Record<string, any>;
+  voter: Record<string, any>;
 };
 
 type B2BData = {
@@ -32,9 +33,9 @@ const StaticticsTab = () => {
   const [targetIndex, setTargetIndex] = useState(0);
 
   const [b2cData, setB2CData] = useState<B2CData>({
-    personal_profiles: {},
+    personal_info: {},
     financial: {},
-    lifestyles: {},
+    lifestyle: {},
     voter: {},
   });
 
@@ -69,6 +70,10 @@ const StaticticsTab = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  if (loading) {
+    return <CustomizedProgressBar />;
+  }
 
   return (
     <Box>
@@ -192,7 +197,7 @@ const StaticticsTab = () => {
           <B2BTabs />
         </TabPanel>
         <TabPanel value={targetIndex} index={1}>
-          <B2CTabs />
+          <B2CTabs data={b2cData} />
         </TabPanel>
       </Box>
     </Box>

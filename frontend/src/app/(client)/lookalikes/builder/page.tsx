@@ -321,6 +321,10 @@ const CreateLookalikePage: React.FC = () => {
     setCurrentStep(0);
   };
 
+  const canProceed = personalKeys.length + financialKeys.length 
+                 + lifestylesKeys.length + voterKeys.length 
+                 + realEstateKeys.length >= 3;
+
   return (
     <Box
       sx={{
@@ -631,28 +635,33 @@ const CreateLookalikePage: React.FC = () => {
                       </Typography>
                     </Button>
                   </Box>
-                )}
-
-                {/* Calculation results block rendered with flex layout */}
-                {currentStep == 2 && calculatedResults && (
-                  <AudienceFieldsSelector
-                  calculation={calculatedResults.audience_feature_importance}
-                  financialData={financialData}
-                  lifestylesData={lifestylesData}
-                  voterData={voterData}
-                  realEstateData={realEstateData}
-                  onPersonalChange={setPersonalKeys}
-                  onFinancialChange={setFinancialKeys}
-                  onLifestylesChange={setLifestylesKeys}
-                  onVoterChange={setVoterKeys}
-                  onRealEstateChange={setRealEstateKeys}
-                />
+                ) 
+                }
+                
+                {calculatedResults && (
+                  <Box hidden={currentStep !== 2}>
+                    <AudienceFieldsSelector
+                      calculation={calculatedResults!.audience_feature_importance}
+                      financialData={financialData}
+                      lifestylesData={lifestylesData}
+                      voterData={voterData}
+                      realEstateData={realEstateData}
+                      onPersonalChange={setPersonalKeys}
+                      onFinancialChange={setFinancialKeys}
+                      onLifestylesChange={setLifestylesKeys}
+                      onVoterChange={setVoterKeys}
+                      onRealEstateChange={setRealEstateKeys}
+                      handleNextStep={handleNextStep}
+                      canProcessed={canProceed}
+                    />
+                  </Box>
                 )}
 
                 {/* Calculation results block rendered with flex layout */}
                 {currentStep == 3 && (
                   <OrderFieldsStep
                   fields={dndFields}
+                  handlePrevStep={handlePrevStep}
                   onOrderChange={newOrder => setDndFields(newOrder)}
                   />
                 )}
@@ -762,6 +771,7 @@ const CreateLookalikePage: React.FC = () => {
                       },
                     }}
                     variant="outlined"
+                    disabled={!canProceed}
                     onClick={handleNextStep}
                   >
                     <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", padding: "0.5rem 1rem", gap: 1 }}>

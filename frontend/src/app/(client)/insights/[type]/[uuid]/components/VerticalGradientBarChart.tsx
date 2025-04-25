@@ -26,6 +26,7 @@ export const VerticalGradientBarChart: React.FC<
   return (
     <Box
       p={2.5}
+      pb={0}
       bgcolor="#fff"
       sx={{
         width: "100%",
@@ -40,7 +41,7 @@ export const VerticalGradientBarChart: React.FC<
       <Stack
         direction="row"
         justifyContent="space-around"
-        alignItems="flex-end"
+        alignItems="start"
         spacing={2}
       >
         {data.map(({ label, percent }, index) => {
@@ -76,7 +77,6 @@ export const VerticalGradientBarChart: React.FC<
                 {/* Filled part */}
                 <Box
                   width="100%"
-                  // Считаем от 100, чтобы проценты всегда отображались корректно
                   height={`${percent}%`}
                   sx={{
                     background: getVerticalGradient(relative),
@@ -92,7 +92,7 @@ export const VerticalGradientBarChart: React.FC<
                   marginTop: 0.5,
                   textAlign: "center",
                   fontSize: 12,
-                  textWrap: "nowrap",
+                  textWrap: "wrap",
                 }}
               >
                 {label}
