@@ -67,12 +67,12 @@ class EnrichmentUser(Base):
     #     cascade="all, delete-orphan",
     #     foreign_keys=[EnrichmentUserContact.enrichment_user_id]
     # )
-    professional_profiles = relationship(
-        ProfessionalProfile,
-        back_populates="enrichment_user",
-        cascade="all, delete-orphan",
-        foreign_keys=[ProfessionalProfile.enrichment_user_id]
-    )
+    # professional_profiles = relationship(
+    #     ProfessionalProfile,
+    #     back_populates="enrichment_users",
+    #     cascade="all, delete-orphan",
+    #     foreign_keys=[ProfessionalProfile.enrichment_users]
+    # )
 
     @classmethod
     def get_fields(cls, exclude_fields=None):
