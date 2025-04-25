@@ -11,7 +11,7 @@ from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
-from models import EnrichmentUserId
+
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -25,8 +25,8 @@ from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from services.similar_audiences.similar_audience_scores import SimilarAudiencesScoresService
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 from services.similar_audiences import SimilarAudienceService
-from models.enrichment_users import EnrichmentUser
-from sqlalchemy import create_engine
+# from models.enrichment_users import EnrichmentUser
+from models import EnrichmentUserId
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes_persons import AudienceLookalikes
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
@@ -35,8 +35,13 @@ from persistence.enrichment_models import EnrichmentModelsPersistence
 from typing import Dict, List, Tuple
 from decimal import Decimal
 from datetime import datetime
-from sqlalchemy import cast, String
+from sqlalchemy import create_engine, cast, String
 from sqlalchemy.orm import Session
+from models.enrichment_user_ids import EnrichmentUserId as U
+from models.enrichment_personal_profiles import EnrichmentPersonalProfiles as P
+from models.enrichment_financial_records import EnrichmentFinancialRecord as F
+from models.enrichment_lifestyles import EnrichmentLifestyle as L
+from models.enrichment_voter_record import EnrichmentVoterRecord as V
 
 
 
@@ -83,39 +88,49 @@ def get_max_size(lookalike_size):
         
     return size
 
-def get_enrichment_user_column_map() -> dict[str, EnrichmentUser]:
+def get_enrichment_user_column_map() -> dict[str, any]:
     return {
-        "PersonGender": EnrichmentUser.gender.label("PersonGender"),
-        "EstimatedHouseholdIncomeCode": EnrichmentUser.estimated_household_income_code.label("EstimatedHouseholdIncomeCode"),
-        "EstimatedCurrentHomeValueCode": EnrichmentUser.estimated_current_home_value_code.label("EstimatedCurrentHomeValueCode"),
-        "HomeownerStatus": EnrichmentUser.homeowner_status.label("HomeownerStatus"),
-        "HasChildren": EnrichmentUser.has_children.label("HasChildren"),
-        "HasCreditCard": EnrichmentUser.has_credit_card.label("HasCreditCard"),
-        "NumberOfChildren": EnrichmentUser.number_of_children.label("NumberOfChildren"),
-        "CreditRating": EnrichmentUser.credit_rating.label("CreditRating"),
-        "NetWorthCode": EnrichmentUser.net_worth_code.label("NetWorthCode"),
-        "ZipCode5": cast(EnrichmentUser.zip_code5, String).label("ZipCode5"),
-        "LengthOfResidenceYears": EnrichmentUser.length_of_residence_years.label("LengthOfResidenceYears"),
-        "MaritalStatus": EnrichmentUser.marital_status.label("MaritalStatus"),
-        "OccupationGroupCode": EnrichmentUser.occupation_group_code.label("OccupationGroupCode"),
-        "IsBookReader": EnrichmentUser.is_book_reader.label("IsBookReader"),
-        "IsOnlinePurchaser": EnrichmentUser.is_online_purchaser.label("IsOnlinePurchaser"),
-        "IsTraveler": EnrichmentUser.is_traveler.label("IsTraveler"),
+        "PersonGender": P.gender.label("PersonGender"),
+        "EstimatedHouseholdIncomeCode": F.income_range.label("EstimatedHouseholdIncomeCode"),
+        "EstimatedCurrentHomeValueCode": F.net_worth.label("EstimatedCurrentHomeValueCode"),
+        "HomeownerStatus": P.homeowner.label("HomeownerStatus"),
+        "HasChildren": P.has_children.label("HasChildren"),
+        "HasCreditCard": F.bank_card.label("HasCreditCard"),
+        "NumberOfChildren": P.number_of_children.label("NumberOfChildren"),
+        "CreditRating": F.credit_rating.label("CreditRating"),
+        "NetWorthCode": F.net_worth.label("NetWorthCode"),
+        "ZipCode5": cast(P.zip_code5, String).label("ZipCode5"),
+        "LengthOfResidenceYears": P.length_of_residence_years.label("LengthOfResidenceYears"),
+        "MaritalStatus": P.marital_status.label("MaritalStatus"),
+        "IsBookReader": L.book_reader.label("IsBookReader"),
+        "IsOnlinePurchaser": L.online_purchaser.label("IsOnlinePurchaser"),
+        "IsTraveler": L.travel.label("IsTraveler"),
     }
 
 def build_dynamic_query_and_config(
     db_session: Session,
     sig: Dict[str, float]
 ) -> Tuple:
-
     column_map = get_enrichment_user_column_map()
     dynamic_cols = [column_map[name] for name in sig if name in column_map]
-    select_cols = [EnrichmentUser.id] + dynamic_cols
+    select_cols = [U.id.label("EnrichmentUserId")] + dynamic_cols
 
-    query = db_session.query(*select_cols).select_from(EnrichmentUser)
+    query = (
+        db_session
+        .query(*select_cols)
+        .select_from(U)
+        .outerjoin(P, P.asid == U.asid)
+        .outerjoin(F, F.asid == U.asid)
+        .outerjoin(L, L.asid == U.asid)
+        .outerjoin(V, V.asid == U.asid)
+    )
 
     numerical = {"NumberOfChildren", "LengthOfResidenceYears"}
-    unordered = {"IsOnlinePurchaser", "IsTraveler", "PersonGender", "HasChildren", "HomeownerStatus", "MaritalStatus", "OccupationGroupCode", "HasCreditCard", "PersonExactAge"}
+    unordered = {
+        "IsOnlinePurchaser", "IsTraveler", "PersonGender",
+        "HasChildren", "HomeownerStatus", "MaritalStatus",
+        "HasCreditCard"
+    }
     ordered = {
         "EstimatedHouseholdIncomeCode": map_letter_to_number,
         "EstimatedCurrentHomeValueCode": map_letter_to_number,
@@ -123,9 +138,9 @@ def build_dynamic_query_and_config(
         "NetWorthCode": map_net_worth_code,
     }
     config = NormalizationConfig(
-        numerical_features=[n for n in sig if n in numerical],
-        unordered_features=[n for n in sig if n in unordered],
-        ordered_features={n: ordered[n] for n in sig if n in ordered}
+        numerical_features=[name for name in sig if name in numerical],
+        unordered_features=[name for name in sig if name in unordered],
+        ordered_features={name: ordered[name] for name in sig if name in ordered},
     )
     return query, config
 
