@@ -39,6 +39,14 @@ AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 REAL_TIME_API_KEY = os.getenv('REAL_TIME_API_KEY')
 REAL_TIME_API_URL = os.getenv('REAL_TIME_API_URL')
 
+COLUMN_MAPPING = {
+    'personal_email_validation_status': 'mx',
+    'business_email_validation_status': 'mx',
+    'personal_email_last_seen': 'recency',
+    'business_email_last_seen_date': 'recency',
+    'mobile_phone_dnc': 'dnc_filter'
+}
+
 
 def setup_logging(level):
     logging.basicConfig(
@@ -47,11 +55,31 @@ def setup_logging(level):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
+async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
+    try:
+        logging.info(f"send client throught SSE: {data, user_id}")
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=f'sse_events_{str(user_id)}',
+            message_body={
+                "status": AUDIENCE_VALIDATION_PROGRESS,
+                "data": data
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error sending SSE: {e}")
 
-async def aud_validation_agent_phone_owner(message: IncomingMessage, db_session: Session):
+
+async def aud_validation_agent_phone_owner(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
     try:
         message_body = json.loads(message.body)
+        user_id = message_body.get("user_id")
+        aud_smart_id = message_body.get("aud_smart_id")
         batch = message_body.get("batch")
+        validation_type = message_body.get("validation_type")
+        count_persons_before_validation = message_body.get("count_persons_before_validation")
+        is_last_validation_in_type = message_body.get("is_last_validation_in_type")
+        is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation", False) 
 
         failed_ids = []
         verifications = []
@@ -86,8 +114,8 @@ async def aud_validation_agent_phone_owner(message: IncomingMessage, db_session:
 
                     logging.info(f"response: {response_data}")
 
-                    if response.status_code != 200 or "error_text" in response_data:
-                        await message.nack()
+                    if response.status_code != 200:
+                        # await message.nack()
                         continue
 
                     caller_name = response_data.get("caller_name", "")
@@ -115,21 +143,89 @@ async def aud_validation_agent_phone_owner(message: IncomingMessage, db_session:
                 else:
                     continue
 
-
-        if verifications:
+        if len(verifications):
             db_session.bulk_save_objects(verifications)
             db_session.commit()
 
-
-        if failed_ids:
+        if len(failed_ids):
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
                 [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
             )
             db_session.commit()
+        
+        # update_stats_validations(db_session, validation_type, count_persons_before_validation, len(failed_ids))
             
-            await message.ack()
+        if is_last_validation_in_type:
+            aud_smart = db_session.query(AudienceSmart).filter_by(id=aud_smart_id).first()
+            if aud_smart:
+                validations = json.loads(aud_smart.validations)
+                for category in validations.values():
+                    for rule in category:
+                        column_name = COLUMN_MAPPING.get(validation_type)
+                        if column_name in rule:
+                            rule[column_name]["processed"] = True
+                aud_smart.validations = json.dumps(validations)
+        
+            db_session.commit()
 
+        if is_last_iteration_in_last_validation:
+            logging.info(f"is last validation")
+
+            with db_session.begin():
+                # subquery = (
+                #     select(EnrichmentUserId.id)
+                #     .select_from(EnrichmentUserContact)
+                #     .join(EnrichmentUserId, EnrichmentUserId.asid == EnrichmentUserContact.asid)
+                #     .join(AudienceSmartPerson, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id)
+                # )
+
+                db_session.query(AudienceSmartPerson).filter(
+                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                    AudienceSmartPerson.is_validation_processed == True,
+                    # AudienceSmartPerson.enrichment_user_id.in_(subquery)
+                ).update({"is_valid": True}, synchronize_session=False)
+
+                total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
+                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                    AudienceSmartPerson.is_validation_processed == True,
+                    # AudienceSmartPerson.enrichment_user_id.in_(subquery)
+                ).scalar()
+
+                db_session.query(AudienceSmart).filter(
+                    AudienceSmart.id == aud_smart_id
+                ).update(
+                    {
+                        "validated_records": total_validated,
+                        "status": "ready",
+                    }
+                )
+
+                db_session.commit()
+
+            await send_sse(
+                connection,
+                user_id,
+                {
+                    "smart_audience_id": aud_smart_id,
+                    "total_validated": total_validated,
+                }
+            )
+            logging.info(f"sent sse with total count")
+
+
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=f"validation_complete",
+                message_body={
+                    "aud_smart_id": aud_smart_id,
+                    "validation_type": validation_type,
+                    "status": "validation_complete"
+                }
+            )
+            logging.info(f"sent ping {aud_smart_id}.")
+
+        await message.ack()
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
@@ -169,7 +265,7 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_validation_agent_phone_owner, db_session=db_session)
+                functools.partial(aud_validation_agent_phone_owner, connection=connection, db_session=db_session)
             )
 
         await asyncio.Future()

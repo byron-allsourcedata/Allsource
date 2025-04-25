@@ -228,7 +228,6 @@ async def aud_validation_agent_linkedin_url(message: IncomingMessage, db_session
             
         await message.ack()
 
-
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
         await message.nack()
