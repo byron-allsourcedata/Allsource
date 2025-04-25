@@ -229,7 +229,6 @@ class AudienceLookalikesPersistence:
         total_matched = self.db.query(func.count(AudienceSourcesMatchedPerson.id)).filter(
             AudienceSourcesMatchedPerson.source_id == str(source_uuid)
         ).scalar()
-
         def get_number_users(lookalike_size: str, size: int) -> int:
             if lookalike_size == LookalikeSize.ALMOST.value:
                 number = size * 0.2
