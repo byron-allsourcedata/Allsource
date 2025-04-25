@@ -33,6 +33,8 @@ load_dotenv()
 
 AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 AUDIENCE_VALIDATION_AGENT_NOAPI = 'aud_validation_agent_no-api'
+AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
+AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = 'aud_validation_agent_phone-owner-api'
 
 def setup_logging(level):
     logging.basicConfig(
@@ -117,7 +119,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
                 AudienceSmartPerson.is_validation_processed == True,
             )
-            .distinct()
+            .distinct(EnrichmentUserContact.asid)
             .all()
         ]
     else:
@@ -144,7 +146,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
                 AudienceSmartPerson.is_validation_processed == True,
             )
-            .distinct()
+            .distinct(EnrichmentUserContact.asid)
             .all()
         ]
     
@@ -255,16 +257,12 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         }
                                         for user in batch
                                     ]
-                                    # "audience_smart_person_id": "001aaede-6c17-4100-9a1e-b3486daaa87a"
         
-                                    print("serialized_batch", serialized_batch)
                                     is_last_iteration_in_last_validation = (i == count_validations) and (j + 100 >= len(enrichment_users))
 
                                     message_body = {
                                         'aud_smart_id': str(aud_smart_id),
                                         'user_id': user_id,
-                                        'recency_personal_days': recency_personal_days,
-                                        'recency_business_days': recency_business_days,
                                         'batch': serialized_batch,
                                         'validation_type': column_name,
                                         'count_persons_before_validation': len(enrichment_users),
@@ -272,12 +270,26 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         'is_last_iteration_in_last_validation': is_last_iteration_in_last_validation
                                     }
 
-                                    
-                                    await publish_rabbitmq_message(
-                                        connection=connection,
-                                        queue_name=AUDIENCE_VALIDATION_AGENT_NOAPI,
-                                        message_body=message_body
-                                    )
+                                    if column_name == "job_validation":
+                                        await publish_rabbitmq_message(
+                                            connection=connection,
+                                            queue_name=AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
+                                            message_body=message_body
+                                        )
+                                    elif column_name == "confirmation":
+                                        await publish_rabbitmq_message(
+                                            connection=connection,
+                                            queue_name=AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
+                                            message_body=message_body
+                                        )
+                                    else:
+                                        message_body["recency_business_days"] = recency_business_days
+                                        message_body["recency_personal_days"] = recency_personal_days
+                                        await publish_rabbitmq_message(
+                                            connection=connection,
+                                            queue_name=AUDIENCE_VALIDATION_AGENT_NOAPI,
+                                            message_body=message_body
+                                        )
 
                                 await wait_for_ping(connection, aud_smart_id, column_name)
 

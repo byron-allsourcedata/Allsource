@@ -7,6 +7,7 @@ import json
 import boto3
 import random
 from datetime import datetime
+from uuid import UUID
 from sqlalchemy import update
 from aio_pika import IncomingMessage, Message
 from sqlalchemy.exc import IntegrityError
@@ -129,37 +130,18 @@ async def aud_validation_agent(message: IncomingMessage, db_session: Session, co
                 "business_email_last_seen_date": lambda value: (datetime.now() - datetime.fromisoformat(value)).days <= recency_business_days if value else False,
                 "mobile_phone_dnc": lambda value: value is False,
             }
-                        
-            if validation_type == "confirmation":
-                logging.info("send to phone owner agent")
-                await publish_rabbitmq_message(
-                    connection=connection,
-                    queue_name=AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
-                    message_body={
-                        "batch": batch,
-                    }
-                )
-            elif validation_type == "job_validation":
-                logging.info("send to job validation agent")
-                await publish_rabbitmq_message(
-                    connection=connection,
-                    queue_name=AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
-                    message_body={
-                        "batch": batch,
-                    }
-                )
-            else:
-                failed_ids = [
-                    record["audience_smart_person_id"]
-                    for record in batch
-                    if not validation_rules[validation_type](record.get(validation_type))
-                ]
 
-                if failed_ids:
-                    db_session.bulk_update_mappings(
-                        AudienceSmartPerson,
-                        [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
-                    )
+            failed_ids = [
+                record["audience_smart_person_id"]
+                for record in batch
+                if not validation_rules[validation_type](record.get(validation_type))
+            ]
+
+            if failed_ids:
+                db_session.bulk_update_mappings(
+                    AudienceSmartPerson,
+                    [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
+                )
 
 
             # update_stats_validations(db_session, validation_type, count_persons_before_validation, len(failed_ids))
