@@ -89,7 +89,7 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
                 fontSize: '14px',
                 },
                 '& .MuiStepIcon-root': {
-                color: index === activeStep ? 'rgba(80, 82, 178, 1) !important' : 'rgba(212, 212, 212, 1)',
+                color: index === 0 ? 'rgba(80, 82, 178, 1) !important' : 'rgba(212, 212, 212, 1)',
                 },
             }}>
               {label}
