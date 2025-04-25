@@ -1,17 +1,49 @@
 import { TabPanel } from "@/components/TabPanel";
 import { Box, Tabs, Tab, Typography } from "@mui/material";
-import { useState } from "react";
-import { IconFillIndicator } from "./CustomChart";
-import { GradientBarChart } from "./GradientHorizontalBarChart";
-import { VerticalGradientBarChart } from "./VerticalGradientBarChart";
-import { SemiCircularGradientChart } from "./SemiCircularGradientChart";
-import { PieChartWithLegend } from "./CircularChart";
-import { MultiIconFillIndicator } from "./MultiIconChart";
+import { useEffect, useState } from "react";
 import B2CTabs from "./B2CTabs";
 import B2BTabs from "./B2BTabs";
+import { useParams } from "next/navigation";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+
+type B2CData = {
+  personal_info: Record<string, any>;
+  financial: Record<string, any>;
+  lifestyle: Record<string, any>;
+  voter: Record<string, any>;
+};
+
+type B2BData = {
+  professional_profile: Record<string, number>;
+  education_history: Record<string, number>;
+  employment_history: Record<string, number>;
+};
+
+type AudienceInsightsStatisticsResponse = {
+  b2b: B2BData;
+  b2c: B2CData;
+};
 
 const StaticticsTab = () => {
+  const params = useParams();
+  const type = params.type;
+  const uuid = params.uuid;
+  const [loading, setLoading] = useState(false);
   const [targetIndex, setTargetIndex] = useState(0);
+
+  const [b2cData, setB2CData] = useState<B2CData>({
+    personal_info: {},
+    financial: {},
+    lifestyle: {},
+    voter: {},
+  });
+
+  const [b2bData, setB2BData] = useState<B2BData>({
+    professional_profile: {},
+    education_history: {},
+    employment_history: {},
+  });
 
   const handleTargetChange = (
     event: React.SyntheticEvent,
@@ -19,6 +51,29 @@ const StaticticsTab = () => {
   ) => {
     setTargetIndex(newIndex);
   };
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response =
+        await axiosInstance.get<AudienceInsightsStatisticsResponse>(
+          `/audience-insights/${type}/${uuid}`
+        );
+      setB2BData(response.data.b2b);
+      setB2CData(response.data.b2c);
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return <CustomizedProgressBar />;
+  }
 
   return (
     <Box>
@@ -142,7 +197,7 @@ const StaticticsTab = () => {
           <B2BTabs />
         </TabPanel>
         <TabPanel value={targetIndex} index={1}>
-          <B2CTabs />
+          <B2CTabs data={b2cData} />
         </TabPanel>
       </Box>
     </Box>

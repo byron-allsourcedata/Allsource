@@ -84,7 +84,7 @@ export const USHeatMapCard: FC<USHeatMapCardProps> = ({ title, regions }) => {
           mb: 2,
         }}
       >
-        <Box sx={{ width: "406px", height: "263px", position: "relative" }}>
+        <Box sx={{ width: "707px", height: "458px", position: "relative" }}>
           <USAMap
             customStates={customStates}
             mapSettings={{
@@ -93,8 +93,8 @@ export const USHeatMapCard: FC<USHeatMapCardProps> = ({ title, regions }) => {
             }}
           />
           <svg
-            width={406}
-            height={263}
+            width={707}
+            height={458}
             style={{
               position: "absolute",
               top: 0,
@@ -175,27 +175,30 @@ export const USHeatMapCard: FC<USHeatMapCardProps> = ({ title, regions }) => {
 
       <Box>
         <Grid container spacing={1}>
-          {regions.map((region, index) => (
-            <Grid item xs={3.5} key={index}>
-              <Stack direction="row" alignItems="center" gap={1}>
-                <Box
-                  width={12}
-                  height={12}
-                  borderRadius="50%"
-                  sx={{ backgroundColor: region.fillColor }}
-                />
-                <Typography
-                  className="dashboard-card-text"
-                  sx={{ fontWeight: 500 }}
-                >
-                  {region.percentage}%
-                </Typography>
-                <Typography className="dashboard-card-text">
-                  {region.label}
-                </Typography>
-              </Stack>
-            </Grid>
-          ))}
+          {[...regions]
+            .sort((a, b) => b.percentage - a.percentage)
+            .slice(0, 5)
+            .map((region, index) => (
+              <Grid item xs={3.5} key={index}>
+                <Stack direction="row" alignItems="center" gap={1}>
+                  <Box
+                    width={12}
+                    height={12}
+                    borderRadius="50%"
+                    sx={{ backgroundColor: region.fillColor }}
+                  />
+                  <Typography
+                    className="dashboard-card-text"
+                    sx={{ fontWeight: 500 }}
+                  >
+                    {region.percentage}%
+                  </Typography>
+                  <Typography className="dashboard-card-text">
+                    {region.label}
+                  </Typography>
+                </Stack>
+              </Grid>
+            ))}
         </Grid>
       </Box>
     </Box>
