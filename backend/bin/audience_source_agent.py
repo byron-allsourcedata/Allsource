@@ -319,16 +319,18 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
                 continue
 
             email = email_entry[0]
-            enrichment_email_id = db_session.query(Email.id).filter_by(email=email).first()
-            if not enrichment_email_id:
-                continue
+            enrich_link = (
+                db_session.query(EnrichmentUsersEmails.enrichment_user_id)
+                .join(EnrichmentEmails,
+                      EnrichmentEmails.id == EnrichmentUsersEmails.email_id)
+                .filter(
+                    EnrichmentEmails.email == email
+                )
+                .first()
+            )
 
-            enrichment_user_id = db_session.query(EmailEnrichment.enrichment_user_id).filter_by(
-                email_id=enrichment_email_id.id
-            ).first()
-
-            if enrichment_user_id:
-                enrichment_user_id = enrichment_user_id[0]
+            if enrich_link:
+                enrichment_user_id = enrich_link[0]
                 break
 
         if not enrichment_user_id:

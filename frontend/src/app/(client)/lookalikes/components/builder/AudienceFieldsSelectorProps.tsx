@@ -12,11 +12,11 @@ import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 
 interface AudienceFieldsSelectorProps {
-  calculation: CalculationResults;
-  financialData: FinancialResults;
-  lifestylesData: LifestylesResults;
-  voterData: VoterResults;
-  realEstateData: RealEstateResults;
+  calculation?: CalculationResults;
+  financialData?: FinancialResults;
+  lifestylesData?: LifestylesResults;
+  voterData?: VoterResults;
+  realEstateData?: RealEstateResults;
   handleNextStep: () => void;
   onPersonalChange: (keys: (keyof CalculationResults)[]) => void;
   onFinancialChange: (keys: (keyof FinancialResults)[]) => void;
@@ -26,12 +26,12 @@ interface AudienceFieldsSelectorProps {
   canProcessed: boolean
 }
 
-export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
-  calculation,
-  financialData,
-  lifestylesData,
-  voterData,
-  realEstateData,
+const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
+  calculation = {} as CalculationResults,
+  financialData = {} as FinancialResults,
+  lifestylesData = {} as LifestylesResults,
+  voterData = {} as VoterResults,
+  realEstateData = {} as RealEstateResults,
   handleNextStep,
   onPersonalChange,
   onFinancialChange,
@@ -214,3 +214,5 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
     </Grid>
   </Box>
 )};
+
+export default React.memo(AudienceFieldsSelector);

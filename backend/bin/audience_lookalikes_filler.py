@@ -217,9 +217,32 @@ def fetch_user_profiles(
     rows = (
         db_session.query(*select_cols)
         .select_from(AudienceSource)
-        .join(AudienceSourcesMatchedPerson, AudienceSourcesMatchedPerson.source_id == AudienceSource.id)
-        .join(EnrichmentUserId, EnrichmentUserId.id == AudienceSourcesMatchedPerson.enrichment_user_id)
-        .filter(AudienceSource.id == audience_lookalike.source_uuid).all()
+        .join(
+            AudienceSourcesMatchedPerson,
+            AudienceSourcesMatchedPerson.source_id == AudienceSource.id
+        )
+        .join(
+            EnrichmentUserId,
+            EnrichmentUserId.id == AudienceSourcesMatchedPerson.enrichment_user_id
+        )
+        .outerjoin(
+            EnrichmentPersonalProfiles,
+            EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
+        )
+        .outerjoin(
+            EnrichmentFinancialRecord,
+            EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+        )
+        .outerjoin(
+            EnrichmentLifestyle,
+            EnrichmentLifestyle.asid == EnrichmentUserId.asid
+        )
+        .outerjoin(
+            EnrichmentVoterRecord,
+            EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+        )
+        .filter(AudienceSource.id == audience_lookalike.source_uuid)
+        .all()
     )
     profiles: List[AudienceData] = []
     for row in rows:
@@ -265,7 +288,7 @@ def calculate_and_store_scores(
         model=model,
         lookalike_id=lookalike_id,
         query=query,
-        user_id_key="id",
+        user_id_key="EnrichmentUserId",
         config=config
     )
 

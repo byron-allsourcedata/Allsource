@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import { Field } from "@/types";
-import { DragAndDropTable } from "./DragAndDropTable";
+import  DragAndDropTable  from "./DragAndDropTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 
 interface OrderFieldsStepProps {

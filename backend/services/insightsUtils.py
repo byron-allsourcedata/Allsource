@@ -1,10 +1,11 @@
+import uuid
 from collections import defaultdict, Counter
 from typing import List, Optional, Dict, Any
 
 from sqlalchemy.orm import Session
 
 from models import AudienceSourcesMatchedPerson, EnrichmentUserId, EnrichmentPersonalProfiles, \
-    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord
+    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, AudienceLookalikesPerson
 from schemas.insights import InsightsByCategory
 
 
@@ -28,30 +29,7 @@ class InsightsUtils:
         return "Other"
 
     @staticmethod
-    def process_insights(
-        source_id: str,
-        db_session: Session,
-    ) -> "InsightsByCategory":
-        insights = InsightsByCategory()
-
-        # 1) get all enrichment_user_id by source_id
-        user_ids: List[str] = [
-            uid for (uid,) in db_session
-            .query(AudienceSourcesMatchedPerson.enrichment_user_id)
-            .filter(AudienceSourcesMatchedPerson.source_id == source_id)
-            .all()
-        ]
-        if not user_ids:
-            return insights
-
-        # 2) convert to ASID
-        asids: List[str] = [
-            asid for (asid,) in db_session
-            .query(EnrichmentUserId.asid)
-            .filter(EnrichmentUserId.id.in_(user_ids))
-            .all()
-        ]
-
+    def process_insights_for_asids(insights, asids: List[uuid.UUID], db_session: Session):
         # 3) PERSONAL
         personal_fields = [
             "gender", "state", "religion", "homeowner",
@@ -145,7 +123,12 @@ class InsightsUtils:
                     else:
                         key = "None"
                 else:
-                    key = str(val)
+                    if field == "credit_cards":
+                        key = val.strip("[]")
+                        key = key.replace("'", "").replace('"', "")
+                        key = ", ".join(item.strip() for item in key.split(",") if item)
+                    else:
+                        key = str(val)
                 key = key.lower()
                 fin_cts[field][key] += 1
 
@@ -217,6 +200,55 @@ class InsightsUtils:
             setattr(insights.voter, field, dict(voter_cts[field]))
 
         return insights
+
+    @staticmethod
+    def process_insights(
+        source_id: str,
+        db_session: Session,
+    ) -> "InsightsByCategory":
+        insights = InsightsByCategory()
+
+        user_ids: List[uuid.UUID] = [
+            uid for (uid,) in db_session
+            .query(AudienceSourcesMatchedPerson.enrichment_user_id)
+            .filter(AudienceSourcesMatchedPerson.source_id == source_id)
+            .all()
+        ]
+        if not user_ids:
+            return insights
+
+        asids: List[uuid.UUID] = [
+            asid for (asid,) in db_session
+            .query(EnrichmentUserId.asid)
+            .filter(EnrichmentUserId.id.in_(user_ids))
+            .all()
+        ]
+
+        return InsightsUtils.process_insights_for_asids(insights, asids, db_session)
+
+    @staticmethod
+    def compute_insights_for_lookalike(
+            lookalike_id: uuid.UUID,
+            db_session: Session
+    ) -> InsightsByCategory:
+        insights = InsightsByCategory()
+        user_ids = [
+            uid for (uid,) in db_session
+            .query(AudienceLookalikesPerson.enrichment_user_id)
+            .filter(AudienceLookalikesPerson.lookalike_id == lookalike_id)
+            .all()
+        ]
+        if not user_ids:
+            return insights
+
+        asids = [
+            asid for (asid,) in db_session
+            .query(EnrichmentUserId.asid)
+            .filter(EnrichmentUserId.id.in_(user_ids))
+            .all()
+        ]
+        
+        return InsightsUtils.process_insights_for_asids(insights, asids, db_session)
 
     @staticmethod
     def merge_insights_json(

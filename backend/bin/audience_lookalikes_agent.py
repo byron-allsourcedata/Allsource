@@ -11,6 +11,8 @@ from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
+from services.insightsUtils import InsightsUtils
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -76,7 +78,29 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         ).fetchone()
                                 
         db_session.commit()
-            
+
+        row = db_session.execute(
+            select(AudienceLookalikes.insights)
+            .where(AudienceLookalikes.id == lookalike_id)
+        ).scalar_one_or_none()
+        existing_insights: dict | None = row or {}
+
+        loop = asyncio.get_running_loop()
+        new_insights = await loop.run_in_executor(
+            None,
+            InsightsUtils.compute_insights_for_lookalike,
+            lookalike_id,
+            db_session
+        )
+        merged = InsightsUtils.merge_insights_json(existing_insights, new_insights)
+
+        db_session.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(insights=merged)
+        )
+        db_session.commit()
+
         await send_sse(connection, user_id, {"lookalike_id": lookalike_id, "total": total_records, "processed": processed_size})
         logging.info(f"ack")
         await message.ack()

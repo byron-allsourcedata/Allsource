@@ -6,7 +6,7 @@ import type { Field, LookalikeFieldsGridProps } from "@/types";
 const formatPercent = (value: string) =>
   `${(parseFloat(value) * 100).toFixed(1)}%`;
 
-export function DragAndDropTable({
+function DragAndDropTable({
   fields,
   onOrderChange,
 }: LookalikeFieldsGridProps) {
@@ -68,11 +68,15 @@ export function DragAndDropTable({
     setDragOverIndex(null);
   };
 
+  const uniqueFields = Array.from(
+    new Map(fields.map(f => [f.id, f])).values()
+  );
+
   return (
     <Box sx={{ width: '100%', maxWidth: 600 }}>
       {rows.map((row, index) => (
         <Box
-          key={row.id}
+          key={`${row.id}-${index}`}
           className="row"
           onDragOver={(e) => handleDragOver(e, index)}
           onDrop={handleDrop}
@@ -114,3 +118,5 @@ export function DragAndDropTable({
     </Box>
   );
 }
+
+export default React.memo(DragAndDropTable);
