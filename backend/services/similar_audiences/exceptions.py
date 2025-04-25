@@ -4,5 +4,5 @@ class EqualTrainTargets(Exception):
 class EmptyTrainDataset(Exception):
     pass
 
-class OneElementTrainDataset(Exception):
+class LessThenTwoTrainDataset(Exception):
     pass

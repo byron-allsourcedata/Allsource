@@ -11,7 +11,8 @@ from fastapi import HTTPException
 from schemas.lookalikes import CalculateRequest
 from schemas.similar_audiences import AudienceFeatureImportance
 from services.similar_audiences import SimilarAudienceService
-from services.similar_audiences.exceptions import EqualTrainTargets, EmptyTrainDataset, OneElementTrainDataset
+from services.similar_audiences.exceptions import EqualTrainTargets, EmptyTrainDataset, \
+    LessThenTwoTrainDataset
 
 
 class AudienceLookalikesService:
@@ -168,7 +169,7 @@ class AudienceLookalikesService:
         )
         try:
             if len(audience_data) < 2:
-                raise OneElementTrainDataset
+                raise LessThenTwoTrainDataset
 
             audience_feature = similar_audience_service.get_audience_feature_importance(audience_data)
             audience_feature_dict = audience_feature.dict()
@@ -180,7 +181,7 @@ class AudienceLookalikesService:
             afi = AudienceFeatureImportance(**rounded_feature)
 
 
-        except (EqualTrainTargets, EmptyTrainDataset, OneElementTrainDataset):
+        except (EqualTrainTargets, EmptyTrainDataset, LessThenTwoTrainDataset):
             afi = AudienceFeatureImportance()
 
         return CalculateRequest(
