@@ -20,6 +20,7 @@ from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from models.users import Users as User
 from persistence.audience_dashboard import DashboardAudiencePersistence
+from persistence.audience_insights import AudienceInsightsPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_smarts import AudienceSmartsPersistence
 from persistence.company_persistence import CompanyPersistence
@@ -29,6 +30,7 @@ from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.million_verifier import MillionVerifierPersistence
+from services.audience_insights import AudienceInsightsService
 from services.companies import CompanyService
 from services.lookalikes import AudienceLookalikesService
 from services.payouts import PayoutsService
@@ -179,6 +181,10 @@ def get_user_persistence_service(db: Session = Depends(get_db)):
 
 def get_dashboard_audience_persistence(db: Session = Depends(get_db)):
     return DashboardAudiencePersistence(db)
+
+
+def get_audience_insights_persistence(db: Session = Depends(get_db)):
+    return AudienceInsightsPersistence(db)
 
 
 def get_audience_persistence(db: Session = Depends(get_db)):
@@ -591,6 +597,12 @@ def get_audience_dashboard_service(dashboard_audience_persistence:
                                    DashboardAudiencePersistence = Depends(get_dashboard_audience_persistence)
                                    ):
     return DashboardAudienceService(dashboard_audience_persistence=dashboard_audience_persistence)
+
+
+def get_audience_insights_service(audience_insights_persistence:
+                                  AudienceInsightsPersistence = Depends(get_audience_insights_persistence)
+                                  ):
+    return AudienceInsightsService(insights_persistence_service=audience_insights_persistence)
 
 
 def get_payouts_service(

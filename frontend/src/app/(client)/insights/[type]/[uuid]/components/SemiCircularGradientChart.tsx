@@ -4,8 +4,8 @@ import React, { useId } from "react";
 import { Box, Typography } from "@mui/material";
 
 type ColorStop = {
-  offset: string; // например "11.88%"
-  color: string; // например "#62B2FD"
+  offset: string;
+  color: string;
 };
 
 type SemiCircularGradientChartProps = {
@@ -13,7 +13,7 @@ type SemiCircularGradientChartProps = {
   percent: number;
   labelLeft: string;
   labelRight: string;
-  colorStops: ColorStop[]; // ✅ заменили colorGradient
+  colorStops: ColorStop[];
 };
 
 export const SemiCircularGradientChart: React.FC<
@@ -23,10 +23,16 @@ export const SemiCircularGradientChart: React.FC<
   const strokeWidth = 20;
   const center = radius + strokeWidth / 2;
   const endAngle = 180 * (percent / 100);
-  const gradientId = useId(); // 👈 уникальный id
+  const gradientId = useId();
 
   return (
-    <Box p={2} borderRadius={2} boxShadow={2} bgcolor="#fff">
+    <Box
+      p={2}
+      sx={{ width: "100%" }}
+      borderRadius={2}
+      boxShadow={2}
+      bgcolor="#fff"
+    >
       <Typography className="dashboard-card-heading" mb={3}>
         {title}
       </Typography>
@@ -69,7 +75,7 @@ export const SemiCircularGradientChart: React.FC<
 
         <Box display="flex" flexDirection="column" alignItems="center" ml={2}>
           <Typography className="dashboard-card-text">
-            {100 - percent}%
+            {(100 - percent).toFixed(2)}%
           </Typography>
           <Typography className="dashboard-card-text">{labelRight}</Typography>
         </Box>

@@ -13,6 +13,10 @@ class AudienceSource(Base):
         Index('audience_sources_user_id_idx', 'user_id'),
         Index('audience_sources_matched_records_idx', 'matched_records'),
         Index('audience_sources_total_records_idx', 'total_records'),
+        Index('audience_sources_created_at_idx', 'created_at'),
+        Index('audience_sources_user_id_uuid_idx', 'user_id', 'id'),
+        Index('audience_sources_name_idx', 'name'),
+        Index('audience_sources_matched_records_idx', 'matched_records'),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False,

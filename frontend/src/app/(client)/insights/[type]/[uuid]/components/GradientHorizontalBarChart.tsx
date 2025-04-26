@@ -1,5 +1,7 @@
-import React from "react";
-import { Box, Typography, Stack } from "@mui/material";
+import React, { useState } from "react";
+import { Box, Typography, Stack, IconButton, Collapse } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 type BarData = {
   label: string;
@@ -12,7 +14,6 @@ type GradientBarChartProps = {
 };
 
 const getGradient = (fillPercent: number, relativePercent: number) => {
-  // относительная насыщенность (от 0.4 до 1)
   const opacity = 0.4 + 0.6 * relativePercent;
   return `linear-gradient(90deg, rgba(98, 178, 253, ${opacity}) ${fillPercent}%, rgba(220,220,220,0.3) ${fillPercent}%)`;
 };
@@ -21,7 +22,11 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
   title,
   data,
 }) => {
-  const maxPercent = Math.max(...data.map((d) => d.percent)) || 1;
+  const [expanded, setExpanded] = useState(false);
+  const sortedData = [...data].sort((a, b) => b.percent - a.percent);
+  const maxPercent = Math.max(...sortedData.map((d) => d.percent)) || 1;
+
+  const visibleData = expanded ? sortedData : sortedData.slice(0, 5);
 
   return (
     <Box
@@ -38,7 +43,7 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
       </Typography>
 
       <Stack spacing={1}>
-        {data.map(({ label, percent }, index) => {
+        {visibleData.map(({ label, percent }, index) => {
           const relative = percent / maxPercent;
 
           return (
@@ -46,19 +51,13 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
               <Box display="flex" justifyContent="space-between" mb={0.5}>
                 <Typography
                   className="dashboard-card-text"
-                  sx={{
-                    color: "rgba(66, 66, 66, 1) !important",
-                    fontWeight: "400 !important",
-                  }}
+                  sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
                 >
                   {label}
                 </Typography>
                 <Typography
                   className="dashboard-card-text"
-                  sx={{
-                    color: "rgba(66, 66, 66, 1) !important",
-                    fontWeight: "400 !important",
-                  }}
+                  sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
                 >
                   {percent}%
                 </Typography>
@@ -75,6 +74,17 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
           );
         })}
       </Stack>
+
+      {sortedData.length > 5 && (
+        <Box mt={2} display="flex" justifyContent="center">
+          <IconButton onClick={() => setExpanded((prev) => !prev)} size="small">
+            <Typography sx={{ fontSize: 14, mr: 0.5 }}>
+              {expanded ? "Show Less" : "Show More"}
+            </Typography>
+            {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          </IconButton>
+        </Box>
+      )}
     </Box>
   );
 };

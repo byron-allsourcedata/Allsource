@@ -1,448 +1,536 @@
 "use client";
-import { Box, Typography, Button, Tabs, Tab } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Tabs,
+  Tab,
+  Link,
+  TableContainer,
+  IconButton,
+  InputAdornment,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  TextField,
+} from "@mui/material";
 import React, { useState, useEffect, Suspense } from "react";
 import CustomTooltip from "@/components/customToolTip";
-import FilterListIcon from "@mui/icons-material/FilterList";
 import Image from "next/image";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import axiosInstance from "../../../axios/axiosInterceptorInstance";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
-import { insightsStyle } from "./insightsStyles";
-
-const centerContainerStyles = {
-  display: "flex",
-  flexDirection: "column",
-  justifyContent: "center",
-  alignItems: "center",
-  border: "1px solid rgba(235, 235, 235, 1)",
-  borderRadius: 2,
-  padding: 3,
-  boxSizing: "border-box",
-  width: "100%",
-  textAlign: "center",
-  flex: 1,
-  "& img": {
-    width: "auto",
-    height: "auto",
-    maxWidth: "100%",
-  },
-};
+import SearchIcon from "@mui/icons-material/Search";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useNotification } from "@/context/NotificationContext";
-import { IconFillIndicator } from "./components/CustomChart";
-import { DateRangeIcon } from "@mui/x-date-pickers";
-import { dashboardStyles } from "../dashboard/dashboardStyles";
-import { TabPanel } from "@/components/TabPanel";
-import StaticticsTab from "./components/StaticticsTab";
-import FeatureListTable, { FeatureObject } from "./components/FeatureListTable";
+import { showErrorToast } from "@/components/ToastNotification";
+import CircularProgress from "@mui/material/CircularProgress";
 
-interface DataSyncProps {
-  service_name?: string;
-}
-
-export interface CalculationResults {
-  [key: string]: number;
-  PersonExactAge: number;
-  PersonGender: number;
-  EstimatedHouseholdIncomeCode: number;
-  EstimatedCurrentHomeValueCode: number;
-  HomeownerStatus: number;
-  HasChildren: number;
-  NumberOfChildren: number;
-  CreditRating: number;
-  NetWorthCode: number;
-  HasCreditCard: number;
-  LengthOfResidenceYears: number;
-  MaritalStatus: number;
-  OccupationGroupCode: number;
-  IsBookReader: number;
-  IsOnlinePurchaser: number;
-  IsTraveler: number;
-  ZipCode5: number;
-  ZipCode4: number;
-  ZipCode3: number;
-  state_name: number;
-  state_city: number;
-}
-
-export interface FinancialResults extends FeatureObject {
-  [key: string]: number;
-  CreditScore: number;
-  IncomeRange: number;
-  NetWorth: number;
-  CreditRating: number;
-  CreditCards: number;
-  BankCard: number;
-  CreditCardPremium: number;
-  CreditCardNewIssue: number;
-  CreditLines: number;
-  CreditRangeOfNewCredit: number;
-  Donor: number;
-  Investor: number;
-  MailOrderDonor: number;
-}
-
-export interface LifestylesResults extends FeatureObject {
-  [key: string]: number;
-  Pets: number;
-  CookingEnthusiast: number;
-  Travel: number;
-  MailOrderBuyer: number;
-  OnlinePurchaser: number;
-  BookReader: number;
-  HealthAndBeauty: number;
-  Fitness: number;
-  OutdoorEnthusiast: number;
-  TechEnthusiast: number;
-  DIY: number;
-  Gardening: number;
-  AutomotiveBuff: number;
-  GolfEnthusiasts: number;
-  BeautyCosmetics: number;
-  Smoker: number;
-}
-
-export interface VoterResults extends FeatureObject {
-  [key: string]: number;
-  PartyAffiliation: number;
-  VotingPropensity: number;
-  CongressionalDistrict: number;
-}
-
-export interface RealEstateResults extends FeatureObject {
-  [key: string]: number;
-  URN: number;
-  SiteStreetAddress: number;
-  SiteCity: number;
-  SiteState: number;
-  SiteZipCode: number;
-  OwnerFullName: number;
-  EstimatedHomeValue: number;
-  HomeValueNumeric: number;
-  Equity: number;
-  EquityNumeric: number;
-  MortgageAmount: number;
-  MortgageDate: number;
-  LenderName: number;
-  PurchasePrice: number;
-  PurchaseDate: number;
-  OwnerOccupied: number;
-  LandUseCode: number;
-  YearBuilt: number;
-  LotSizeSqFt: number;
-  BuildingTotalSqFt: number;
-  AssessedValue: number;
-  MarketValue: number;
-  TaxAmount: number;
-}
-
-// --- Пример «псевдо‑данных» ---
-const personalData: CalculationResults = {
-  PersonExactAge: 0.18,
-  PersonGender: 0.12,
-  EstimatedHouseholdIncomeCode: 0.22,
-  EstimatedCurrentHomeValueCode: 0.10,
-  HomeownerStatus: 0.05,
-  HasChildren: 0.08,
-  NumberOfChildren: 0.02,
-  CreditRating: 0.06,
-  NetWorthCode: 0.04,
-  HasCreditCard: 0.03,
-  LengthOfResidenceYears: 0.05,
-  MaritalStatus: 0.02,
-  OccupationGroupCode: 0.01,
-  IsBookReader: 0.02,
-  IsOnlinePurchaser: 0.25,
-  IsTraveler: 0.20,
-  ZipCode5: 0,
-  ZipCode4: 0,
-  ZipCode3: 0,
-  state_name: 0,
-  state_city: 0,
-};
-
-const financialData: FinancialResults = {
-  CreditScore: 0.30,
-  IncomeRange: 0.20,
-  NetWorth: 0.15,
-  CreditRating: 0.10,
-  CreditCards: 0.05,
-  BankCard: 0.03,
-  CreditCardPremium: 0.02,
-  CreditCardNewIssue: 0.01,
-  CreditLines: 0.04,
-  CreditRangeOfNewCredit: 0.02,
-  Donor: 0.03,
-  Investor: 0.02,
-  MailOrderDonor: 0.03,
-};
-
-const lifestylesData: LifestylesResults = {
-  Pets: 0.12,
-  CookingEnthusiast: 0.08,
-  Travel: 0.18,
-  MailOrderBuyer: 0.10,
-  OnlinePurchaser: 0.22,
-  BookReader: 0.05,
-  HealthAndBeauty: 0.07,
-  Fitness: 0.09,
-  OutdoorEnthusiast: 0.06,
-  TechEnthusiast: 0.10,
-  DIY: 0.04,
-  Gardening: 0.03,
-  AutomotiveBuff: 0.02,
-  GolfEnthusiasts: 0.01,
-  BeautyCosmetics: 0.02,
-  Smoker: 0.01,
-};
-
-const voterData: VoterResults = {
-  PartyAffiliation: 0.50,
-  VotingPropensity: 0.45,
-  CongressionalDistrict: 0.05,
-};
-
-const realEstateData: RealEstateResults = {
-  URN: 0.05,
-  SiteStreetAddress: 0.02,
-  SiteCity: 0.03,
-  SiteState: 0.04,
-  SiteZipCode: 0.01,
-  OwnerFullName: 0.02,
-  EstimatedHomeValue: 0.10,
-  HomeValueNumeric: 0.08,
-  Equity: 0.06,
-  EquityNumeric: 0.05,
-  MortgageAmount: 0.04,
-  MortgageDate: 0.03,
-  LenderName: 0.02,
-  PurchasePrice: 0.07,
-  PurchaseDate: 0.03,
-  OwnerOccupied: 0.05,
-  LandUseCode: 0.01,
-  YearBuilt: 0.02,
-  LotSizeSqFt: 0.01,
-  BuildingTotalSqFt: 0.01,
-  AssessedValue: 0.02,
-  MarketValue: 0.03,
-  TaxAmount: 0.01,
+type TableData = {
+  id: string;
+  data_source_type: string;
+  name: string;
+  type: string;
+  size: number;
+  created_date: string;
 };
 
 const Insights = () => {
   const router = useRouter();
   const { hasNotification } = useNotification();
   const [tabIndex, setTabIndex] = useState(0);
+  const [isLookalikeGenerated, setIsLookalikeGenerated] = useState(true);
+  const [search, setSearch] = useState("");
+  const [isTableVisible, setIsTableVisible] = useState(false);
+  const [sourceData, setSourceData] = useState<TableData[]>([]);
+  const [lookalikeData, setLookalikeData] = useState<TableData[]>([]);
+  const [allData, setAllData] = useState<TableData[]>([]);
+  const [filteredData, setFilteredData] = useState<TableData[]>([]);
 
   const [status, setStatus] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
     setTabIndex(newIndex);
   };
+
+  const toNormalText = (sourceType: string) =>
+    sourceType
+      .split(",")
+      .map((item) =>
+        item
+          .split("_")
+          .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+          .join(" ")
+      )
+      .join(", ");
+
+  const handleSelectRow = (row: any) => {
+    console.log(row);
+    router.push(`/insights/${row.data_source_type}/${row.id}`);
+  };
+
+  const handleSourceData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axiosInstance.get(
+        "/audience-insights/get-data-sources"
+      );
+
+      const sources = Array.isArray(response.data.source)
+        ? response.data.source
+        : [response.data.source];
+      const lookalikes = Array.isArray(response.data.lookalike)
+        ? response.data.lookalike
+        : [response.data.lookalike];
+
+      const combined = [...sources, ...lookalikes];
+
+      combined.sort(
+        (a, b) =>
+          new Date(b.created_date).getTime() -
+          new Date(a.created_date).getTime()
+      );
+
+      setAllData(combined);
+      setSourceData(sources);
+      setLookalikeData(lookalikes);
+    } catch {
+      showErrorToast(
+        "An error occurred while loading data sources. Please try again later."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSearch = async (query: string) => {
+    if (!query) return;
+
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(
+        `/audience-insights/search-data-sources?query=${encodeURIComponent(
+          query
+        )}`
+      );
+
+      const sources = Array.isArray(response.data.source)
+        ? response.data.source
+        : [response.data.source];
+      const lookalikes = Array.isArray(response.data.lookalike)
+        ? response.data.lookalike
+        : [response.data.lookalike];
+
+      const combined = [...sources, ...lookalikes];
+      combined.sort(
+        (a, b) =>
+          new Date(b.created_date).getTime() -
+          new Date(a.created_date).getTime()
+      );
+
+      setFilteredData(combined);
+    } catch {
+      showErrorToast("Search failed. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const dataToShow = search.trim() ? filteredData : allData;
+
+  useEffect(() => {
+    handleSourceData();
+  }, []);
+
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (search.trim() !== "") {
+        handleSearch(search);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [search]);
 
   if (isLoading) {
     return <CustomizedProgressBar />;
   }
 
   return (
-    <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          position: "sticky",
-          top: 0,
-          pt: "12px",
-          pr: "1.5rem",
-          pl: 0,
-          zIndex: 1,
-          backgroundColor: "#fff",
-          justifyContent: "space-between",
-          width: "100%",
-          "@media (max-width: 600px)": {
-            flexDirection: "column",
-            display: "flex",
-            alignItems: "flex-start",
-            zIndex: 1,
-            width: "100%",
-            pr: 1.5,
-          },
-          "@media (max-width: 440px)": {
-            flexDirection: "column",
-            pt: hasNotification ? "3rem" : "0.75rem",
-            top: hasNotification ? "4.5rem" : "",
-            zIndex: 1,
-            justifyContent: "flex-start",
-          },
-          "@media (max-width: 400px)": {
-            pt: hasNotification ? "4.25rem" : "",
-            pb: "6px",
-          },
-        }}
-      >
-        <Typography
-          variant="h4"
-          component="h1"
-          className="first-sub-title"
-          sx={{
-            ...insightsStyle.title,
-            position: "fixed",
-            mt: 1,
-            "@media (max-width: 600px)": {
-              display: "none",
-            },
-          }}
-        >
-          Insights
-        </Typography>
+    <Box sx={{ width: "100%", pr: 2, flexGrow: 1 }}>
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
         <Box
           sx={{
-            display: "none",
-            width: "100%",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
             justifyContent: "space-between",
-            alignItems: "start",
-            "@media (max-width: 600px)": {
-              display: "flex",
-            },
+            flexWrap: "wrap",
+            pt: 1,
+            gap: "15px",
           }}
         >
-          <Typography
-            variant="h4"
-            component="h1"
-            className="first-sub-title"
-            sx={dashboardStyles.title}
-          >
-            Dashboard
-          </Typography>
-        </Box>
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            width: "100%",
-            justifyContent: "center",
-            alignItems: "start",
-            "@media (max-width: 600px)": {
-              width: "100%",
-              mt: hasNotification ? 1 : 2,
-            },
-          }}
-        >
-          <Tabs
-            value={tabIndex}
-            onChange={handleTabChange}
+          <Box
             sx={{
-              textTransform: "none",
-              minHeight: 0,
-              alignItems: "start",
-              "& .MuiTabs-indicator": {
-                backgroundColor: "rgba(80, 82, 178, 1)",
-                height: "1.4px",
-              },
-              "@media (max-width: 600px)": {
-                border: "1px solid rgba(228, 228, 228, 1)",
-                borderRadius: "4px",
-                width: "100%",
-                "& .MuiTabs-indicator": {
-                  height: "0",
-                },
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 1,
+              pt: isLookalikeGenerated ? 1 : 2.5,
+              "@media (max-width: 900px)": {
+                paddingLeft: 1,
               },
             }}
-            aria-label="insights tabs"
           >
-            <Tab
-              className="main-text"
-              sx={{
-                textTransform: "none",
-                padding: "4px 24px",
-                flexGrow: 1,
-                minHeight: "auto",
-                minWidth: "120px",
-                fontSize: "14px",
-                fontWeight: 700,
-                lineHeight: "19.1px",
-                textAlign: "left",
-                "&.Mui-selected": {
-                  color: "rgba(80, 82, 178, 1)",
-                },
-                "@media (max-width: 600px)": {
-                  mr: 0,
-                  borderRadius: "4px",
-                  "&.Mui-selected": {
-                    backgroundColor: "rgba(249, 249, 253, 1)",
-                    border: "1px solid rgba(220, 220, 239, 1)",
-                  },
-                },
-              }}
-              label="Statistics"
-            />
-            <Tab
-              className="main-text"
-              sx={{
-                textTransform: "none",
-                padding: "4px 10px",
-                minHeight: "auto",
-                flexGrow: 1,
-                textAlign: "center",
-                fontSize: "14px",
-                fontWeight: 700,
-                lineHeight: "19.1px",
-                minWidth: "120px",
-                "&.Mui-selected": {
-                  color: "rgba(80, 82, 178, 1)",
-                },
-                "@media (max-width: 600px)": {
-                  mr: 0,
-                  borderRadius: "4px",
-                  "&.Mui-selected": {
-                    backgroundColor: "rgba(249, 249, 253, 1)",
-                    border: "1px solid rgba(220, 220, 239, 1)",
-                  },
-                },
-              }}
-              label="Predictable fields"
-            />
-          </Tabs>
+            <Typography className="first-sub-title">Insights</Typography>
+            <CustomTooltip title="Insights" />
+          </Box>
         </Box>
-      </Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          flexGrow: 1,
-        }}
-      >
-        <TabPanel value={tabIndex} index={0}>
-          <StaticticsTab />
-        </TabPanel>
-        <TabPanel value={tabIndex} index={1}>
-        <FeatureListTable
-          title="Personal Profile"
-          features={personalData}
-          columnHeaders={["Field", "Importance"]}
-        />
-        <FeatureListTable
-          title="Financial"
-          features={financialData}
-          columnHeaders={["Field", "Importance"]}
-        />
-        <FeatureListTable
-          title="Lifestyles"
-          features={lifestylesData}
-          columnHeaders={["Field", "Importance"]}
-        />
-        <FeatureListTable
-          title="Voter"
-          features={voterData}
-          columnHeaders={["Field", "Importance"]}
-        />
-        <FeatureListTable
-          title="Real Estate"
-          features={realEstateData}
-          columnHeaders={["Field", "Importance"]}
-        />
-      </TabPanel>
+        {isLookalikeGenerated ? (
+          <Box>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                flexGrow: 1,
+                width: "55%",
+                "@media (max-width: 1100px)": {
+                  width: "70%",
+                },
+                "@media (max-width: 900px)": {
+                  width: "100%",
+                  padding: 1,
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "start",
+                  gap: 1,
+                }}
+              >
+                <Typography className="first-sub-title">
+                  Select your Audience
+                </Typography>
+                <Typography className="paragraph">
+                  Select a source or lookalike audience to uncover key
+                  statistics, trends, and actionable data—helping you refine
+                  your targeting and maximize results.
+                </Typography>
+              </Box>
+              <Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    width: "100%",
+                    flexDirection: "column",
+                    pt: 2,
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ width: "100%" }}>
+                    <Box
+                      sx={{
+                        width: "100%",
+                        border: "1px solid rgba(224, 224, 224, 1)",
+                        borderRadius: 1,
+                        padding: "5.5px 14px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        cursor: "pointer",
+                        backgroundColor: "#fff",
+                        "&:hover": {
+                          borderColor: "rgba(80, 82, 178, 1)",
+                        },
+                      }}
+                      onClick={() => setIsTableVisible(!isTableVisible)}
+                    >
+                      <Typography
+                        className="paragraph"
+                        sx={{ fontSize: "14px !important" }}
+                      >
+                        Select source or lookalike
+                      </Typography>
+
+                      <IconButton size="small">
+                        {isTableVisible ? (
+                          <ExpandLessIcon />
+                        ) : (
+                          <ExpandMoreIcon />
+                        )}
+                      </IconButton>
+                    </Box>
+
+                    {isTableVisible && (
+                      <Box sx={{ width: "100%" }}>
+                        <Box
+                          sx={{
+                            padding: 2,
+                            border: "1px solid rgba(228, 228, 228, 1)",
+                          }}
+                        >
+                          <TextField
+                            fullWidth
+                            variant="outlined"
+                            placeholder="Search"
+                            value={search}
+                            onChange={(e) => {
+                              setSearch(e.target.value);
+                            }}
+                            InputLabelProps={{
+                              sx: {
+                                fontFamily: "Nunito Sans",
+                                fontSize: "15px",
+                                lineHeight: "16px",
+                                color: "rgba(17, 17, 19, 0.60)",
+
+                                padding: 0,
+                                margin: 0,
+                                left: "3px",
+                                "&.Mui-focused": {
+                                  color: "#0000FF",
+                                },
+                              },
+                            }}
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <SearchIcon />
+                                </InputAdornment>
+                              ),
+                              endAdornment: loading && (
+                                <InputAdornment position="end">
+                                  <CircularProgress size={20} />
+                                </InputAdornment>
+                              ),
+                              style: {
+                                color: "rgba(17, 17, 19, 1)",
+                                fontFamily: "Nunito Sans",
+                                fontWeight: 400,
+                                fontSize: "14px",
+                              },
+                            }}
+                            sx={{
+                              pb: "2px",
+                              "& input::placeholder": {
+                                fontSize: "14px",
+                                color: "rgba(32, 33, 36, 1)",
+                              },
+                            }}
+                          />
+                        </Box>
+                        <TableContainer
+                          component={Paper}
+                          sx={{ maxHeight: "32vh", overflow: "scroll" }}
+                        >
+                          <Table>
+                            <TableBody>
+                              {dataToShow.map((row, index) => (
+                                <TableRow
+                                  key={index}
+                                  hover
+                                  sx={{
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    width: "100%",
+                                    padding: 0,
+                                    margin: 0,
+                                  }}
+                                  onClick={() => handleSelectRow(row)}
+                                >
+                                  <TableCell
+                                    sx={{
+                                      flex: 1,
+                                      textAlign: "start",
+                                      minWidth: "300px",
+                                      "@media (max-width: 900px)": {
+                                        minWidth: "auto",
+                                      },
+                                    }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "start",
+                                        justifyContent: "start",
+                                      }}
+                                    >
+                                      <Typography className="paragraph">
+                                        {row.data_source_type === "lookalikes"
+                                          ? "Lookalike"
+                                          : "Source"}
+                                      </Typography>
+
+                                      <Typography className="black-table-header">
+                                        {row.name}
+                                      </Typography>
+                                    </Box>
+                                  </TableCell>
+                                  <TableCell sx={{ flex: 1 }}>
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "left",
+                                        justifyContent: "end",
+                                      }}
+                                    >
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "left",
+                                          justifyContent: "end",
+                                        }}
+                                      >
+                                        <Typography className="paragraph">
+                                          Type
+                                        </Typography>
+
+                                        <Typography className="black-table-header">
+                                          {toNormalText(row.type)}
+                                        </Typography>
+                                      </Box>
+                                    </Box>
+                                  </TableCell>
+                                  <TableCell
+                                    sx={{ flex: 1, textAlign: "right" }}
+                                  >
+                                    <Box
+                                      sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "end",
+                                        justifyContent: "end",
+                                      }}
+                                    >
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "start",
+                                          justifyContent: "start",
+                                        }}
+                                      >
+                                        <Typography className="paragraph">
+                                          Size
+                                        </Typography>
+
+                                        <Typography className="black-table-header">
+                                          {row.size.toLocaleString("en-US")}
+                                        </Typography>
+                                      </Box>
+                                    </Box>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      </Box>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              display: "flex",
+              width: "100%",
+              height: "100%",
+              alignItems: "center",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                border: "1px solid rgba(235, 235, 235, 1)",
+                borderRadius: 2,
+                padding: 3,
+                boxSizing: "border-box",
+                width: "100%",
+                textAlign: "center",
+                flex: 1,
+                "& img": {
+                  width: "auto",
+                  height: "auto",
+                  maxWidth: "100%",
+                },
+              }}
+            >
+              <Typography
+                variant="h5"
+                className="first-sub-title"
+                sx={{
+                  mb: 3,
+                  fontFamily: "Nunito Sans",
+                  fontSize: "20px",
+                  color: "#4a4a4a",
+                  fontWeight: "600",
+                  lineHeight: "28px",
+                }}
+              >
+                Import Your First Source or Lookalike
+              </Typography>
+              <Image
+                src="/pixel_installation_needed.svg"
+                alt="Need Pixel Install"
+                height={250}
+                width={300}
+              />
+              <Typography
+                variant="body1"
+                className="table-data"
+                sx={{
+                  mt: 3,
+                  fontFamily: "Nunito Sans",
+                  fontSize: "14px",
+                  color: "#808080",
+                  fontWeight: "600",
+                  lineHeight: "20px",
+                }}
+              >
+                You don’t have any sources and lookalikes yet. Import your first
+                source to develop insights.
+              </Typography>
+              <Link href="/sources">
+                <Button
+                  variant="contained"
+                  className="second-sub-title"
+                  sx={{
+                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    textTransform: "none",
+                    padding: "10px 24px",
+                    mt: 3,
+                    color: "#fff !important",
+                    ":hover": {
+                      backgroundColor: "rgba(80, 82, 178, 1)",
+                    },
+                  }}
+                >
+                  Import Your First Source
+                </Button>
+              </Link>
+            </Box>
+          </Box>
+        )}
       </Box>
     </Box>
   );

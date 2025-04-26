@@ -8,6 +8,10 @@ class AudienceLookalikes(Base):
     __tablename__ = 'audience_lookalikes'
     __table_args__ = (
         Index('audience_lookalikes_user_id_created_date_idx', 'user_id', 'created_date'),
+        Index('audience_lookalikes_user_id_idx', 'user_id'),
+        Index('audience_lookalikes_created_date_idx', 'created_date'),
+        Index('audience_lookalikes_name_idx', 'name'),
+        Index('audience_lookalikes_user_id_uuid_idx', 'user_id', 'id'),
     )
 
     id = Column(

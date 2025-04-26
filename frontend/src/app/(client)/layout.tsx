@@ -30,16 +30,16 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-  
+
     if (newNotification) {
       setHasNewNotifications(true);
     }
-  
+
     if (NotificationData) {
       setLatestNotification(NotificationData);
     }
   }, [isAuthenticated, newNotification, NotificationData]);
-  
+
 
 
   useEffect(() => {
@@ -78,80 +78,80 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 
 
   return (
-  <>
-    {!isAuthenticated ? (
-      <NotificationProvider hasNotification={Boolean(latestNotification || newNotification)}>
-        <>{children}</>
-      </NotificationProvider>
-    ) : (
-      <> 
-      <Header 
-        NewRequestNotification={hasNewNotifications}
-        NotificationData={latestNotification}
-        onDismissNotification={handleDismissNotification}
-      />
-      <Grid container className="page-container" sx={{
-        display: 'flex',
-        flexWrap: 'nowrap',
-        overflowX: 'hidden',
-        border: 'none',
-        '@media (max-width: 899px)': {
-          paddingTop: '68px',
-          paddingRight: 0,
-          flexWrap: 'wrap'
-        },
-      }}>
-        <Grid item xs={12} sx={{
-          padding: "0px", display: { xs: 'block', md: 'none' },
-        }}>
-          <TrialStatus />
-        </Grid>
-        {isLoading && <CustomizedProgressBar />}
-        <Grid item xs={12} md="auto" lg="auto" sx={{
-          padding: "0px",
-          display: { xs: 'none', md: 'block' },
-          flexBasis: '170px',
-          flexShrink: 0,
-          minWidth: '170px',
-          maxWidth: '170px',
-          position: 'fixed',
-          top: latestNotification || newNotification ? 'calc(7.125rem)' : '4.25rem',
-        }}>
-          <SliderProvider>
-            <Sidebar setShowSlider={setSlider} setLoading={setIsLoading} hasNotification={Boolean(latestNotification || newNotification)} />
-          </SliderProvider>
-        </Grid>
+    <>
+      {!isAuthenticated ? (
         <NotificationProvider hasNotification={Boolean(latestNotification || newNotification)}>
-          <Grid item xs={12} md lg sx={{
-            position: 'relative',
-            flexGrow: 1,
-            padding: '0px 0px 0px 24px',
-            minWidth: 0,
-            overflowY: 'auto',
-            marginLeft: '170px',
-            '@media (max-width: 899px)': {
-              overflowY: 'hidden',
-              padding: '0 0 16px 16px',
-              marginLeft: 0,
-            },
-            '@media (max-width: 599px)': {
-              padding: '0 0px 16px 16px',
-              marginLeft: 0,
-            }
-          }}>
-            {showSlider && (
-              <SliderProvider>
-                <Slider setShowSliders={setSlider} />
-              </SliderProvider>
-            )}
-            {children}
-          </Grid>
+          <>{children}</>
         </NotificationProvider>
-      </Grid>
+      ) : (
+        <>
+          <Header
+            NewRequestNotification={hasNewNotifications}
+            NotificationData={latestNotification}
+            onDismissNotification={handleDismissNotification}
+          />
+          <Grid container className="page-container" sx={{
+            display: 'flex',
+            flexWrap: 'nowrap',
+            overflowX: 'hidden',
+            border: 'none',
+            '@media (max-width: 899px)': {
+              paddingTop: '68px',
+              paddingRight: 0,
+              flexWrap: 'wrap'
+            },
+          }}>
+            <Grid item xs={12} sx={{
+              padding: "0px", display: { xs: 'block', md: 'none' },
+            }}>
+              <TrialStatus />
+            </Grid>
+            {isLoading && <CustomizedProgressBar />}
+            <Grid item xs={12} md="auto" lg="auto" sx={{
+              padding: "0px",
+              display: { xs: 'none', md: 'block' },
+              flexBasis: '170px',
+              flexShrink: 0,
+              minWidth: '170px',
+              maxWidth: '170px',
+              position: 'fixed',
+              top: latestNotification || newNotification ? 'calc(7.125rem)' : '4.25rem',
+            }}>
+              <SliderProvider>
+                <Sidebar setShowSlider={setSlider} setLoading={setIsLoading} hasNotification={Boolean(latestNotification || newNotification)} />
+              </SliderProvider>
+            </Grid>
+            <NotificationProvider hasNotification={Boolean(latestNotification || newNotification)}>
+              <Grid item xs={12} md lg sx={{
+                position: 'relative',
+                flexGrow: 1,
+                padding: '0px 0px 0px 24px',
+                minWidth: 0,
+                overflowY: 'auto',
+                marginLeft: '170px',
+                '@media (max-width: 899px)': {
+                  overflowY: 'hidden',
+                  padding: '0 0 16px 16px',
+                  marginLeft: 0,
+                },
+                '@media (max-width: 599px)': {
+                  padding: '0 0px 16px 16px',
+                  marginLeft: 0,
+                }
+              }}>
+                {showSlider && (
+                  <SliderProvider>
+                    <Slider setShowSliders={setSlider} />
+                  </SliderProvider>
+                )}
+                {children}
+              </Grid>
+            </NotificationProvider>
+          </Grid>
+        </>
+      )}
     </>
-    )}
-  </>
-);
+  );
 }
 
 export default ClientLayout;
