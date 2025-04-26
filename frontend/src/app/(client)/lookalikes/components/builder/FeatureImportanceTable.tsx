@@ -144,7 +144,7 @@ export function FeatureImportanceTable<T extends FeatureObject>({
           </Grid>
           {allPairs.map(([k, v]) => {
             const checked = selectedKeys.includes(k);
-            const displayValue = `${(v * 100).toFixed(1)}%`;
+            const displayValue = `${(v * 100).toFixed(4)}%`;
             return (
               <Grid
                 container

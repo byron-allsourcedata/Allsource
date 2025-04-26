@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import type {
-  CalculationResults,
+  PersonalResults,
   FinancialResults,
   LifestylesResults,
   VoterResults,
@@ -12,32 +12,32 @@ import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 
 interface AudienceFieldsSelectorProps {
-  calculation?: CalculationResults;
+  personalData?: PersonalResults;
   financialData?: FinancialResults;
   lifestylesData?: LifestylesResults;
   voterData?: VoterResults;
-  realEstateData?: RealEstateResults;
+  // realEstateData?: RealEstateResults;
   handleNextStep: () => void;
-  onPersonalChange: (keys: (keyof CalculationResults)[]) => void;
+  onPersonalChange: (keys: (keyof PersonalResults)[]) => void;
   onFinancialChange: (keys: (keyof FinancialResults)[]) => void;
   onLifestylesChange: (keys: (keyof LifestylesResults)[]) => void;
   onVoterChange: (keys: (keyof VoterResults)[]) => void;
-  onRealEstateChange: (keys: (keyof RealEstateResults)[]) => void;
+  // onRealEstateChange: (keys: (keyof RealEstateResults)[]) => void;
   canProcessed: boolean
 }
 
 const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
-  calculation = {} as CalculationResults,
+  personalData = {} as PersonalResults,
   financialData = {} as FinancialResults,
   lifestylesData = {} as LifestylesResults,
   voterData = {} as VoterResults,
-  realEstateData = {} as RealEstateResults,
+  // realEstateData = {} as RealEstateResults,
   handleNextStep,
   onPersonalChange,
   onFinancialChange,
   onLifestylesChange,
   onVoterChange,
-  onRealEstateChange,
+  // onRealEstateChange,
   canProcessed
 }) => {
   const [activeStep, setActiveStep] = React.useState(0);
@@ -149,7 +149,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
       <Grid item xs={12} md={6}>
         <FeatureImportanceTable
           title="Personal Profile"
-          features={calculation}
+          features={personalData}
           onChangeDisplayed={onPersonalChange}
         />
         <FeatureImportanceTable
@@ -167,11 +167,11 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
           features={voterData}
           onChangeDisplayed={onVoterChange}
         />
-        <FeatureImportanceTable
+        {/* <FeatureImportanceTable
           title="Real Estate"
           features={realEstateData}
           onChangeDisplayed={onRealEstateChange}
-        />
+        /> */}
       </Grid>
       <Grid item xs={12} md={1} />
       <Grid item xs={12} md={5} sx={{ borderLeft: "1px solid #E4E4E4" }}>

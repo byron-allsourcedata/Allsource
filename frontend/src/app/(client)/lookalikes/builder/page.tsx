@@ -32,7 +32,7 @@ import LookalikeContainer from "../components/LookalikeContainer";
 import { smartAudiences } from "../../smart-audiences/smartAudiences";
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import ProgressBar from "@/components/ProgressBar";
-import { TableData, LookalikeData, CalculationResponse, CalculationResults, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject } from "@/types"
+import { TableData, LookalikeData, CalculationResponse, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject, PersonalResults } from "@/types"
 import { FeatureImportanceTable, DragAndDropTable, AudienceFieldsSelector, OrderFieldsStep } from "../components"
 export const dynamic = 'force-dynamic';
 
@@ -54,77 +54,14 @@ const CreateLookalikePage: React.FC = () => {
   const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
   const [calculatedResults, setCalculatedResults] =
     useState<CalculationResponse | null>(null);
+    
+  const [personalData,  setPersonalData]  = useState<PersonalResults>({} as PersonalResults);
+  const [financialData,  setFinancialData]  = useState<FinancialResults>({} as FinancialResults);
+  const [lifestylesData,setLifestylesData] = useState<LifestylesResults>({} as LifestylesResults);
+  const [voterData,     setVoterData]      = useState<VoterResults>({} as VoterResults);
+  const [realEstateData,setRealEstateData] = useState<RealEstateResults>({} as RealEstateResults);
 
-  const [financialData, setFinancialData] = useState<FinancialResults>({
-    IncomeRange: 0,
-    NetWorth: 0,
-    CreditRating: 0,
-    CreditCards: 0,
-    BankCard: 0,
-    CreditCardPremium: 0,
-    CreditCardNewIssue: 0,
-    CreditLines: 0,
-    CreditRangeOfNewCredit: 0,
-    Donor: 0,
-    Investor: 0,
-    MailOrderDonor: 0,
-    CreditScore: 0,
-    DebtToIncomeRatio: 0,
-    Income: 0,
-  });
-
-  const [lifestylesData, setLifestylesData] = useState<LifestylesResults>({
-    Pets: 0,
-    CookingEnthusiast: 0,
-    Travel: 0,
-    MailOrderBuyer: 0,
-    OnlinePurchaser: 0,
-    BookReader: 0,
-    HealthAndBeauty: 0,
-    Fitness: 0,
-    OutdoorEnthusiast: 0,
-    TechEnthusiast: 0,
-    DIY: 0,
-    Gardening: 0,
-    AutomotiveBuff: 0,
-    GolfEnthusiasts: 0,
-    BeautyCosmetics: 0,
-    Smoker: 0,
-  });
-
-  const [voterData, setVoterData] = useState<VoterResults>({
-    PartyAffiliation: 0,
-    VotingPropensity: 0,
-    CongressionalDistrict: 0,
-  });
-
-  const [realEstateData, setRealEstateData] = useState<RealEstateResults>({
-    URN: 0,
-    SiteStreetAddress: 0,
-    SiteCity: 0,
-    SiteState: 0,
-    SiteZipCode: 0,
-    OwnerFullName: 0,
-    EstimatedHomeValue: 0,
-    HomeValueNumeric: 0,
-    Equity: 0,
-    EquityNumeric: 0,
-    MortgageAmount: 0,
-    MortgageDate: 0,
-    LenderName: 0,
-    PurchasePrice: 0,
-    PurchaseDate: 0,
-    OwnerOccupied: 0,
-    LandUseCode: 0,
-    YearBuilt: 0,
-    LotSizeSqFt: 0,
-    BuildingTotalSqFt: 0,
-    AssessedValue: 0,
-    MarketValue: 0,
-    TaxAmount: 0,
-  });
-
-  const [personalKeys, setPersonalKeys] = useState<(keyof CalculationResults)[]>([]);
+  const [personalKeys, setPersonalKeys] = useState<(keyof PersonalResults)[]>([]);
   const [financialKeys, setFinancialKeys] = useState<(keyof FinancialResults)[]>([]);
   const [lifestylesKeys, setLifestylesKeys] = useState<(keyof LifestylesResults)[]>([]);
   const [voterKeys, setVoterKeys] = useState<(keyof VoterResults)[]>([]);
@@ -142,7 +79,7 @@ const CreateLookalikePage: React.FC = () => {
       }));
   
     return [
-      ...toFields(personalKeys, calculatedResults?.audience_feature_importance ?? {} as any),
+      ...toFields(personalKeys, personalData),
       ...toFields(financialKeys, financialData),
       ...toFields(lifestylesKeys, lifestylesData),
       ...toFields(voterKeys, voterData),
@@ -225,11 +162,20 @@ const CreateLookalikePage: React.FC = () => {
     }
     try {
       setLoading(true);
-      const response = await axiosInstance.get(
+      const response = await axiosInstance.get<CalculationResponse>(
         `/audience-lookalikes/calculate-lookalikes?uuid_of_source=${selectedSourceId}&lookalike_size=${selectedSize}`
       );
       if (response.data) {
         setCalculatedResults(response.data);
+        const afi = response.data.audience_feature_importance;
+        setPersonalData(afi.personal  as any);
+        setFinancialData(afi.financial  as any);
+        setLifestylesData(afi.lifestyle as any);
+        setVoterData(afi.voter          as any);
+        setPersonalKeys   (Object.keys(afi.personal ) as (keyof PersonalResults)[]);
+        setFinancialKeys  (Object.keys(afi.financial) as (keyof FinancialResults)[]);
+        setLifestylesKeys (Object.keys(afi.lifestyle) as (keyof LifestylesResults)[]);
+        setVoterKeys      (Object.keys(afi.voter    ) as (keyof VoterResults)[]);
         setCurrentStep(2);
       }
     } catch {
@@ -641,16 +587,16 @@ const CreateLookalikePage: React.FC = () => {
                 {calculatedResults && (
                   <Box hidden={currentStep !== 2}>
                     <AudienceFieldsSelector
-                      calculation={calculatedResults!.audience_feature_importance}
+                      personalData={personalData}
                       financialData={financialData}
                       lifestylesData={lifestylesData}
                       voterData={voterData}
-                      realEstateData={realEstateData}
+                      // realEstateData={realEstateData}
                       onPersonalChange={setPersonalKeys}
                       onFinancialChange={setFinancialKeys}
                       onLifestylesChange={setLifestylesKeys}
                       onVoterChange={setVoterKeys}
-                      onRealEstateChange={setRealEstateKeys}
+                      // onRealEstateChange={setRealEstateKeys}
                       handleNextStep={handleNextStep}
                       canProcessed={canProceed}
                     />

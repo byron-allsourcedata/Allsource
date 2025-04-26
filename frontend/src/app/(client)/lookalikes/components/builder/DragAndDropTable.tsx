@@ -4,7 +4,15 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import type { Field, LookalikeFieldsGridProps } from "@/types";
 
 const formatPercent = (value: string) =>
-  `${(parseFloat(value) * 100).toFixed(1)}%`;
+  `${(parseFloat(value) * 100).toFixed(4)}%`;
+
+const formatKey = (k: string) =>
+  k
+    .replace(/_/g, " ")
+    .replace(/(?!^)([A-Z])/g, " $1")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^./, (c) => c.toUpperCase());
 
 function DragAndDropTable({
   fields,
@@ -108,7 +116,7 @@ function DragAndDropTable({
             <DragIndicatorIcon fontSize="small" />
           </Box>
           <Box sx={{ flex: 1, typography: 'body2', textAlign: 'left' }}>
-            {row.name}
+            {formatKey(String(row.name))}
           </Box>
           <Box sx={{ width: 150, typography: 'body2', textAlign: 'left' }}>
             {formatPercent(row.value)}

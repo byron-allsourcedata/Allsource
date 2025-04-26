@@ -44,72 +44,65 @@ export interface LookalikeData {
     created_by: string;
 }
 
-export interface CalculationResults {
-    [key: string]: number;
-    PersonExactAge: number;
-    PersonGender: number;
-    EstimatedHouseholdIncomeCode: number;
-    EstimatedCurrentHomeValueCode: number;
-    HomeownerStatus: number;
-    HasChildren: number;
-    NumberOfChildren: number;
-    CreditRating: number;
-    NetWorthCode: number;
-    HasCreditCard: number;
-    LengthOfResidenceYears: number;
-    MaritalStatus: number;
-    OccupationGroupCode: number;
-    IsBookReader: number;
-    IsOnlinePurchaser: number;
-    IsTraveler: number;
-    ZipCode5: number;
-    ZipCode4: number;
-    ZipCode3: number;
-    state_name: number;
-    state_city: number;
-}
+export interface PersonalResults extends FeatureObject {
+    age: number;
+    gender: number;
+    homeowner: number;
+    length_of_residence_years: number;
+    marital_status: number;
+    business_owner: number;
+    birth_day: number;
+    birth_month: number;
+    birth_year: number;
+    has_children: number;
+    number_of_children: number;
+    religion: number;
+    ethnicity: number;
+    language_code: number;
+    state_abbr: number;
+    zip_code5: number;
+} 
+  
 
 export interface FinancialResults extends FeatureObject {
-    [key: string]: number;
-    CreditScore: number;
-    IncomeRange: number;
-    NetWorth: number;
-    CreditRating: number;
-    CreditCards: number;
-    BankCard: number;
-    CreditCardPremium: number;
-    CreditCardNewIssue: number;
-    CreditLines: number;
-    CreditRangeOfNewCredit: number;
-    Donor: number;
-    Investor: number;
-    MailOrderDonor: number;
+    income_range: number;
+    net_worth: number;
+    credit_rating: number;
+    credit_cards: number;
+    bank_card: number;
+    credit_card_premium: number;
+    credit_card_new_issue: number;
+    credit_lines: number;
+    credit_range_of_new_credit_lines: number;
+    donor: number;
+    investor: number;
+    mail_order_donor: number;
 }
 export interface LifestylesResults extends FeatureObject {
-    [key: string]: number;
-    Pets: number;
-    CookingEnthusiast: number;
-    Travel: number;
-    MailOrderBuyer: number;
-    OnlinePurchaser: number;
-    BookReader: number;
-    HealthAndBeauty: number;
-    Fitness: number;
-    OutdoorEnthusiast: number;
-    TechEnthusiast: number;
-    DIY: number;
-    Gardening: number;
-    AutomotiveBuff: number;
-    GolfEnthusiasts: number;
-    BeautyCosmetics: number;
-    Smoker: number;
+    pets: number;
+    cooking_enthusiast: number;
+    travel: number;
+    mail_order_buyer: number;
+    online_purchaser: number;
+    book_reader: number;
+    health_and_beauty: number;
+    fitness: number;
+    outdoor_enthusiast: number;
+    tech_enthusiast: number;
+    diy: number;
+    gardening: number;
+    automotive_buff: number;
+    golf_enthusiasts: number;
+    beauty_cosmetics: number;
+    smoker: number;
 }
+
 export interface VoterResults extends FeatureObject {
-    [key: string]: number;
-    PartyAffiliation: number;
-    VotingPropensity: number;
-    CongressionalDistrict: number;
+    party_affiliation: number;
+    congressional_district: number;
+    voting_propensity: number;
 }
+
 export interface RealEstateResults extends FeatureObject {
     [key: string]: number;
     URN: number;
@@ -137,7 +130,15 @@ export interface RealEstateResults extends FeatureObject {
     TaxAmount: number;
 }
 
-export interface CalculationResponse {
+export interface AudienceFeatureImportance {
+    personal:   PersonalResults;
+    financial:  FinancialResults;
+    lifestyle:  LifestylesResults;
+    voter:      VoterResults;
+  }
+
+  export interface CalculationResponse {
     count_matched_persons: number;
-    audience_feature_importance: CalculationResults;
-}
+    audience_feature_importance: AudienceFeatureImportance;
+  }
+
