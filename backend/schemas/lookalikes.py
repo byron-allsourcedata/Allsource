@@ -1,9 +1,19 @@
-from typing import Dict
+from typing import Dict, Optional
 
 from pydantic import BaseModel, Field
 
 from schemas.similar_audiences import AudienceFeatureImportance
 
+class LookalikeCreateRequest(BaseModel):
+    uuid_of_source: str
+    lookalike_size: str
+    lookalike_name: str
+    audience_feature_importance: Optional[AudienceFeatureImportance]
+
+
+class UpdateLookalikeRequest(BaseModel):
+    uuid_of_lookalike: str
+    name_of_lookalike: str
 
 class B2CInsights(BaseModel):
     personal:   Dict[str, float] = Field(default_factory=dict)
