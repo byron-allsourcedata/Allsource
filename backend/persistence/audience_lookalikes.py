@@ -3,16 +3,20 @@ from decimal import Decimal
 from uuid import UUID
 
 import pytz
+from psycopg2.extras import NumericRange
 from pydantic.v1 import UUID4
+from sqlalchemy.dialects.postgresql import INT4RANGE
 
 from enums import LookalikeSize
+from models import EnrichmentUserId, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
+    EnrichmentVoterRecord
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.enrichment_users import EnrichmentUser
 from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 import math
 from sqlalchemy import asc, desc, or_, func
 from sqlalchemy.exc import IntegrityError
@@ -212,7 +216,7 @@ class AudienceLookalikesPersistence:
 
         return dict(query._asdict()) if query else None
 
-    def calculate_lookalikes(self, user_id: int, source_uuid: UUID, lookalike_size: str) -> List[AudienceData]:
+    def calculate_lookalikes(self, user_id: int, source_uuid: UUID, lookalike_size: str) -> List[Dict]:
         audience_source = (
             self.db.query(AudienceSource)
             .filter(
@@ -227,7 +231,6 @@ class AudienceLookalikesPersistence:
         total_matched = self.db.query(func.count(AudienceSourcesMatchedPerson.id)).filter(
             AudienceSourcesMatchedPerson.source_id == str(source_uuid)
         ).scalar()
-
         def get_number_users(lookalike_size: str, size: int) -> int:
             if lookalike_size == LookalikeSize.ALMOST.value:
                 number = size * 0.2
@@ -245,73 +248,61 @@ class AudienceLookalikesPersistence:
 
         number_required = get_number_users(lookalike_size, total_matched)
 
-        rows = (
+        def all_columns_except(model, *skip: str):
+            return tuple(
+                c for c in model.__table__.c
+                if c.name not in skip
+            )
+
+        q = (
             self.db.query(
-                AudienceSourcesMatchedPerson.email.label("EmailAddress"),
-                EnrichmentUser.age.label("age"),
-                EnrichmentUser.gender.label("PersonGender"),
-                EnrichmentUser.estimated_household_income_code.label("EstimatedHouseholdIncomeCode"),
-                EnrichmentUser.estimated_current_home_value_code.label("EstimatedCurrentHomeValueCode"),
-                EnrichmentUser.homeowner_status.label("HomeownerStatus"),
-                EnrichmentUser.has_children.label("HasChildren"),
-                EnrichmentUser.number_of_children.label("NumberOfChildren"),
-                EnrichmentUser.credit_rating.label("CreditRating"),
-                EnrichmentUser.net_worth_code.label("NetWorthCode"),
-                EnrichmentUser.zip_code5.label("ZipCode5"),
-                EnrichmentUser.lat.label("Latitude"),
-                EnrichmentUser.lon.label("Longitude"),
-                EnrichmentUser.has_credit_card.label("HasCreditCard"),
-                EnrichmentUser.length_of_residence_years.label("LengthOfResidenceYears"),
-                EnrichmentUser.marital_status.label("MaritalStatus"),
-                EnrichmentUser.occupation_group_code.label("OccupationGroupCode"),
-                EnrichmentUser.is_book_reader.label("IsBookReader"),
-                EnrichmentUser.is_online_purchaser.label("IsOnlinePurchaser"),
-                EnrichmentUser.state_abbr.label("StateAbbr"),
-                EnrichmentUser.is_traveler.label("IsTraveler"),
-                AudienceSourcesMatchedPerson.value_score.label("customer_value")
+                AudienceSourcesMatchedPerson.email.label("email"),
+                AudienceSourcesMatchedPerson.value_score.label("customer_value"),
+                *all_columns_except(EnrichmentPersonalProfiles, "id", "asid"),
+                *all_columns_except(EnrichmentFinancialRecord, "id", "asid"),
+                *all_columns_except(EnrichmentLifestyle, "id", "asid"),
+                *all_columns_except(EnrichmentVoterRecord, "id", "asid"),
             )
-            .select_from(AudienceSource)
+            .select_from(AudienceSourcesMatchedPerson)
             .join(
-                AudienceSourcesMatchedPerson,
-                AudienceSourcesMatchedPerson.source_id == AudienceSource.id
+                EnrichmentUserId,
+                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUserId.id
             )
-            .join(
-                EnrichmentUser,
-                EnrichmentUser.id == AudienceSourcesMatchedPerson.enrichment_user_id
+            .outerjoin(
+                EnrichmentPersonalProfiles,
+                EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
             )
-            .filter(AudienceSource.id == str(source_uuid))
+            .outerjoin(
+                EnrichmentFinancialRecord,
+                EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+            )
+            .outerjoin(
+                EnrichmentLifestyle,
+                EnrichmentLifestyle.asid == EnrichmentUserId.asid
+            )
+            .outerjoin(
+                EnrichmentVoterRecord,
+                EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+            )
+            .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
             .order_by(AudienceSourcesMatchedPerson.value_score.desc())
             .limit(number_required)
-            .all()
         )
 
-        audience_data_list = []
-        for row in rows:
-            ad = AudienceData(
-                EmailAddress=row.EmailAddress,
-                PersonExactAge=str(row.age),
-                PersonGender=str(row.PersonGender),
-                EstimatedHouseholdIncomeCode=str(row.EstimatedHouseholdIncomeCode),
-                EstimatedCurrentHomeValueCode=str(row.EstimatedCurrentHomeValueCode),
-                HomeownerStatus=str(row.HomeownerStatus),
-                HasChildren=str(row.HasChildren),
-                NumberOfChildren=str(row.NumberOfChildren),
-                CreditRating=str(row.CreditRating),
-                NetWorthCode=str(row.NetWorthCode),
-                ZipCode5=str(row.ZipCode5),
-                Latitude=str(row.Latitude),
-                Longitude=str(row.Longitude),
-                HasCreditCard=str(row.HasCreditCard),
-                LengthOfResidenceYears=str(row.LengthOfResidenceYears),
-                MaritalStatus=str(row.MaritalStatus),
-                OccupationGroupCode=row.OccupationGroupCode,
-                IsBookReader=str(row.IsBookReader),
-                IsOnlinePurchaser=str(row.IsOnlinePurchaser),
-                StateAbbr=str(row.StateAbbr),
-                IsTraveler=str(row.IsTraveler),
-                customer_value=Decimal(row.customer_value)
-            )
-            audience_data_list.append(ad)
-        return audience_data_list
+        rows = q.all()
+        def _row2dict(row) -> Dict[str, Any]:
+            d = dict(row._mapping)
+            for k, v in d.items():
+                if k == "age" and v:
+                    d[k] = int(v.lower) if v.lower is not None else Non
+                if k == "zip_code5" and v:
+                    d[k] = str(v)
+                elif isinstance(v, Decimal):
+                    d[k] = str(v)
+            return d
+
+        result: List[Dict[str, Any]] = [_row2dict(r) for r in rows]
+        # print(result)
+        return result
 
 

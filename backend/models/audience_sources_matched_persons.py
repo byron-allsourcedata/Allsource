@@ -12,6 +12,7 @@ class AudienceSourcesMatchedPerson(Base):
     __table_args__ = (
         Index('audience_sources_matched_persons_source_id_email_idx', 'source_id', 'email'),
         Index('audience_sources_matched_persons_source_id_idx', 'source_id'),
+
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False,

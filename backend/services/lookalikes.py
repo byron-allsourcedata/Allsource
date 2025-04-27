@@ -8,11 +8,32 @@ from enums import BaseEnum
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
-from schemas.lookalikes import CalculateRequest
-from schemas.similar_audiences import AudienceFeatureImportance
+from schemas.lookalikes import CalculateRequest, B2CInsights
+from schemas.similar_audiences import AudienceFeatureImportance, NormalizationConfig
 from services.similar_audiences import SimilarAudienceService
-from services.similar_audiences.exceptions import EqualTrainTargets, EmptyTrainDataset
+from services.similar_audiences.exceptions import EqualTrainTargets, EmptyTrainDataset, \
+    LessThenTwoTrainDataset
 
+
+PERSONAL   = {
+    "age","gender","homeowner","length_of_residence_years",
+    "marital_status","business_owner","birth_day","birth_month",
+    "birth_year","has_children","number_of_children",
+    "religion","ethnicity","language_code","state_abbr","zip_code5",
+}
+FINANCIAL  = {
+    "income_range","net_worth","credit_rating","credit_cards",
+    "bank_card","credit_card_premium","credit_card_new_issue",
+    "credit_lines","credit_range_of_new_credit_lines",
+    "donor","investor","mail_order_donor",
+}
+LIFESTYLE  = {
+    "pets","cooking_enthusiast","travel","mail_order_buyer",
+    "online_purchaser","book_reader","health_and_beauty","fitness",
+    "outdoor_enthusiast","tech_enthusiast","diy","gardening",
+    "automotive_buff","golf_enthusiasts","beauty_cosmetics","smoker",
+}
+VOTER      = {"party_affiliation","congressional_district","voting_propensity"}
 
 class AudienceLookalikesService:
     def __init__(self, lookalikes_persistence_service: AudienceLookalikesPersistence):
@@ -154,6 +175,33 @@ class AudienceLookalikesService:
         limited_results = list(results)[:10]
         return limited_results
 
+    def split_to_b2c(self, insights: dict[str, float]) -> B2CInsights:
+        personal = {}
+        financial = {}
+        lifestyle = {}
+        voter = {}
+        other = {}
+
+        for k, v in insights.items():
+            if k in PERSONAL:
+                personal[k] = v
+            elif k in FINANCIAL:
+                financial[k] = v
+            elif k in LIFESTYLE:
+                lifestyle[k] = v
+            elif k in VOTER:
+                voter[k] = v
+            else:
+                other[k] = v
+
+        return B2CInsights(
+            personal=personal,
+            financial=financial,
+            lifestyle=lifestyle,
+            voter=voter,
+            other=other,
+        )
+
     def calculate_lookalike(
         self,
         similar_audience_service: SimilarAudienceService,
@@ -166,24 +214,64 @@ class AudienceLookalikesService:
             source_uuid=uuid_of_source,
             lookalike_size=lookalike_size
         )
-
         try:
-            audience_feature = similar_audience_service.get_audience_feature_importance(audience_data)
-            audience_feature_dict = audience_feature.dict()
+            if len(audience_data) < 2:
+                raise LessThenTwoTrainDataset
+
+            normalization_config = NormalizationConfig(
+                numerical_features = [],
+                ordered_features = {},
+
+                unordered_features = [
+                    # matched-person
+                    "email",
+                    "customer_value",
+
+                    # personal
+                    "age", "gender", "homeowner", "length_of_residence_years",
+                    "marital_status", "business_owner",
+                    "birth_day", "birth_month", "birth_year",
+                    "has_children", "number_of_children",
+                    "religion", "ethnicity", "language_code",
+                    "state_abbr", "zip_code5",
+
+                    # financial
+                    "income_range", "net_worth", "credit_rating",
+                    "credit_cards", "bank_card", "credit_card_premium",
+                    "credit_card_new_issue", "credit_lines",
+                    "credit_range_of_new_credit_lines",
+                    "donor", "investor", "mail_order_donor",
+
+                    # lifestyle
+                    "pets", "cooking_enthusiast", "travel", "mail_order_buyer",
+                    "online_purchaser", "book_reader", "health_and_beauty",
+                    "fitness", "outdoor_enthusiast", "tech_enthusiast", "diy",
+                    "gardening", "automotive_buff", "golf_enthusiasts",
+                    "beauty_cosmetics", "smoker",
+
+                    # voter
+                    "party_affiliation", "congressional_district",
+                    "voting_propensity",
+                ]
+            )
+            audience_feature_dict = similar_audience_service.get_audience_feature_importance_with_config(
+                audience_data=audience_data,
+                config=normalization_config
+            )
+
             rounded_feature = {
-                key: round(value * 1000) / 1000 if isinstance(value, (int, float)) else value
-                for key, value in audience_feature_dict.items()
+                k: round(v, 6) if isinstance(v, (int, float)) else v
+                for k, v in audience_feature_dict.items()
             }
 
-            afi = AudienceFeatureImportance(**rounded_feature)
+            insights_payload: B2CInsights = self.split_to_b2c(rounded_feature)
 
-
-        except (EqualTrainTargets, EmptyTrainDataset):
-            afi = AudienceFeatureImportance()
+        except (EqualTrainTargets, EmptyTrainDataset, LessThenTwoTrainDataset):
+            insights_payload = B2CInsights()
 
         return CalculateRequest(
             count_matched_persons=len(audience_data),
-            audience_feature_importance=afi
+            audience_feature_importance=insights_payload
         )
 
     

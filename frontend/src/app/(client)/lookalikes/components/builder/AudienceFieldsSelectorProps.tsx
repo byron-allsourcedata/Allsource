@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Grid, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import type {
-  CalculationResults,
+  PersonalResults,
   FinancialResults,
   LifestylesResults,
   VoterResults,
@@ -12,44 +12,45 @@ import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 
 interface AudienceFieldsSelectorProps {
-  calculation: CalculationResults;
-  financialData: FinancialResults;
-  lifestylesData: LifestylesResults;
-  voterData: VoterResults;
-  realEstateData: RealEstateResults;
+  personalData?: PersonalResults;
+  financialData?: FinancialResults;
+  lifestylesData?: LifestylesResults;
+  voterData?: VoterResults;
+  // realEstateData?: RealEstateResults;
   handleNextStep: () => void;
-  onPersonalChange: (keys: (keyof CalculationResults)[]) => void;
+  onPersonalChange: (keys: (keyof PersonalResults)[]) => void;
   onFinancialChange: (keys: (keyof FinancialResults)[]) => void;
   onLifestylesChange: (keys: (keyof LifestylesResults)[]) => void;
   onVoterChange: (keys: (keyof VoterResults)[]) => void;
-  onRealEstateChange: (keys: (keyof RealEstateResults)[]) => void;
+  // onRealEstateChange: (keys: (keyof RealEstateResults)[]) => void;
+  canProcessed: boolean
 }
 
-export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
-  calculation,
-  financialData,
-  lifestylesData,
-  voterData,
-  realEstateData,
+const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
+  personalData = {} as PersonalResults,
+  financialData = {} as FinancialResults,
+  lifestylesData = {} as LifestylesResults,
+  voterData = {} as VoterResults,
+  // realEstateData = {} as RealEstateResults,
   handleNextStep,
   onPersonalChange,
   onFinancialChange,
   onLifestylesChange,
   onVoterChange,
-  onRealEstateChange,
+  // onRealEstateChange,
+  canProcessed
 }) => {
   const [activeStep, setActiveStep] = React.useState(0);
   const [completed, setCompleted] = React.useState<{
     [k: number]: boolean;
   }>({});
+  const canProceed = canProcessed;
 
   const handleStep = (step: number) => () => {
+    if (step === 1 && !canProceed) return;
     setActiveStep(step);
-    if (step === 1) {
-      handleNextStep();
-    }
+    if (step === 1) handleNextStep();
   };
-
 
   return (
   <Box
@@ -69,9 +70,9 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
           ml: 0,
         }}
         >
-        {['Step 1', 'Step 2'].map((label, index) => (
+        {['Select fields', 'Order fields'].map((label, index) => (
           <Step key={label} sx={{pl: 0}}>
-            <StepButton onClick={handleStep(index)} sx={{
+            <StepButton onClick={handleStep(index)} disabled={index === 1 && !canProceed} sx={{
                 "&:after": {
                   content:'""',
                   backgroundColor: "rgba(212, 212, 212, 1)",
@@ -88,7 +89,7 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
                 fontSize: '14px',
                 },
                 '& .MuiStepIcon-root': {
-                color: index === activeStep ? 'rgba(80, 82, 178, 1) !important' : 'rgba(212, 212, 212, 1)',
+                color: index === 0 ? 'rgba(80, 82, 178, 1) !important' : 'rgba(212, 212, 212, 1)',
                 },
             }}>
               {label}
@@ -148,7 +149,7 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
       <Grid item xs={12} md={6}>
         <FeatureImportanceTable
           title="Personal Profile"
-          features={calculation}
+          features={personalData}
           onChangeDisplayed={onPersonalChange}
         />
         <FeatureImportanceTable
@@ -166,11 +167,11 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
           features={voterData}
           onChangeDisplayed={onVoterChange}
         />
-        <FeatureImportanceTable
+        {/* <FeatureImportanceTable
           title="Real Estate"
           features={realEstateData}
           onChangeDisplayed={onRealEstateChange}
-        />
+        /> */}
       </Grid>
       <Grid item xs={12} md={1} />
       <Grid item xs={12} md={5} sx={{ borderLeft: "1px solid #E4E4E4" }}>
@@ -213,3 +214,5 @@ export const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
     </Grid>
   </Box>
 )};
+
+export default React.memo(AudienceFieldsSelector);

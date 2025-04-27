@@ -47,17 +47,16 @@ def map_net_worth_code(letter: str):
 
 def default_normalization_config() -> NormalizationConfig:
     return NormalizationConfig(
-        numerical_features=['PersonExactAge', 'NumberOfChildren', 'LengthOfResidenceYears'],
+        numerical_features=['age', 'number_of_children', 'length_of_residence_years'],
         unordered_features=[
-            'PersonGender', 'HasChildren','HomeownerStatus', 'MaritalStatus',
-            'HasCreditCard', 'OccupationGroupCode', 'IsBookReader',
-            'IsOnlinePurchaser', 'IsTraveler'
+            'gender', 'has_children','homeowner', 'marital_status',
+            'book_reader', 'online_purchaser', 'travel'
         ],
         ordered_features={
-            'EstimatedHouseholdIncomeCode': map_letter_to_number,
-            'EstimatedCurrentHomeValueCode': map_letter_to_number,
-            'CreditRating': map_credit_rating,
-            'NetWorthCode': map_net_worth_code
+            # 'EstimatedHouseholdIncomeCode': map_letter_to_number,
+            # 'EstimatedCurrentHomeValueCode': map_letter_to_number,
+            'credit_rating': map_credit_rating,
+            'net_worth': map_net_worth_code
         }
     )
 
@@ -103,21 +102,23 @@ class AudienceDataNormalizationService:
 
 
     def slice_zipcodes(self, df: DataFrame):
-        if 'ZipCode5' in df.columns:
-            df['ZipCode3'] = df['ZipCode5'].str[:3]
-            df['ZipCode4'] = df['ZipCode5'].str[:4]
+        if 'zip_code5' in df.columns:
+            df['zip_code3'] = df['zip_code5'].str[:3]
+            df['zip_code4'] = df['zip_code5'].str[:4]
 
 
     def fill_unknowns(self, df: DataFrame, cat_columns: List[str]):
         for cat in cat_columns:
             df.loc[:, cat] = df[cat].fillna('U')
 
-        # if 'PersonExactAge' in df.columns:
-        #     df['PersonExactAge'] = df['PersonExactAge'].fillna(df['PersonExactAge'].median())
-        if 'NumberOfChildren' in df.columns:
-            df['NumberOfChildren'] = df['NumberOfChildren'].fillna(0)
-        if 'LengthOfResidenceYears' in df.columns:
-            df['LengthOfResidenceYears'] = df['LengthOfResidenceYears'].fillna(0)
+        if 'age' in df.columns:
+            df["age"] = pd.to_numeric(df["age"], errors="coerce")
+            median_age = df["age"].median(skipna=True)
+            df["age"] = df["age"].fillna(median_age)
+        if 'number_of_children' in df.columns:
+            df['number_of_children'] = df['number_of_children'].fillna(0)
+        if 'length_of_residence_years' in df.columns:
+            df['length_of_residence_years'] = df['length_of_residence_years'].fillna(0)
 
 
     def fill_unknown_geo(self, df: DataFrame):
@@ -128,7 +129,7 @@ class AudienceDataNormalizationService:
     def merge_with_geo(self, df: DataFrame) -> DataFrame:
         df_geo = self.get_states_dataframe()
 
-        df_with_geo = df.merge(df_geo, how='left', left_on='ZipCode5', right_on='zip')
+        df_with_geo = df.merge(df_geo, how='left', left_on='zip_code5', right_on='zip')
         df_with_geo['state_city'] = df_with_geo['state_name'] + '|' + df_with_geo['city']
 
         return df_with_geo
@@ -142,7 +143,7 @@ class AudienceDataNormalizationService:
 
         cat_indicator_columns = [name + 'IsMissing' for name in cat_columns]
 
-        zipcodes = [f"ZipCode{n}" for n in [3, 4, 5]]
+        zipcodes = [f"zip_code{n}" for n in [3, 4, 5]]
 
         valid_columns = ([
              'state_name', 'state_city'
@@ -159,7 +160,7 @@ class AudienceDataNormalizationService:
     def get_audience_dataframe(self, audience_data: List[AudienceData]):
         df = pd.DataFrame([t.__dict__ for t in audience_data])
 
-        df['ZipCode5'] = df['ZipCode5'].astype('object')
+        df['zip_code5'] = df['zip_code5'].astype('object')
         return df
 
     def get_states_dataframe(self) -> DataFrame:

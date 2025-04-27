@@ -1,4 +1,4 @@
-export { DragAndDropTable } from './DragAndDropTable';
+export { default as DragAndDropTable } from './DragAndDropTable';
 export { FeatureImportanceTable } from './FeatureImportanceTable';
-export { AudienceFieldsSelector } from './AudienceFieldsSelectorProps';
+export { default as AudienceFieldsSelector } from './AudienceFieldsSelectorProps';
 export { OrderFieldsStep } from './OrderFieldsStep'

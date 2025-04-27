@@ -3,8 +3,20 @@ import { Box, Tabs, Tab, Typography } from "@mui/material";
 import { useState } from "react";
 import B2CPersonal from "./B2CTabComponents/B2CPersonal";
 import B2CLifestyle from "./B2CTabComponents/B2CLifestyle";
+import B2CVoter from "./B2CTabComponents/B2CVoter";
+import B2CFinancial from "./B2CTabComponents/B2CFinancial";
 
-const B2CTabs = () => {
+interface B2CData {
+  personal_info: Record<string, any>;
+  financial: Record<string, any>;
+  lifestyle: Record<string, any>;
+  voter: Record<string, any>;
+}
+
+interface B2CTabsProps {
+  data: B2CData;
+}
+const B2CTabs: React.FC<B2CTabsProps> = ({ data }) => {
   const [tabIndex, setIndex] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
@@ -39,8 +51,9 @@ const B2CTabs = () => {
             flexGrow: 1,
             display: "flex",
             pt: 2,
+            padding: "1rem 5rem 0rem",
             width: "100%",
-            justifyContent: "center",
+            justifyContent: "start",
             alignItems: "start",
           }}
         >
@@ -51,7 +64,7 @@ const B2CTabs = () => {
             sx={{
               minHeight: 0,
               display: "flex",
-              alignItems: "center",
+              alignItems: "start",
               padding: "2px",
               "& .MuiTabs-flexContainer": {
                 gap: "4px",
@@ -121,13 +134,31 @@ const B2CTabs = () => {
         }}
       >
         <TabPanel value={tabIndex} index={0}>
-          <B2CPersonal />
+          <B2CPersonal
+            data={{
+              gender: data.personal_info.gender || {},
+              state: data.personal_info.state || {},
+              religion: data.personal_info.religion || {},
+              age: data.personal_info.age || {},
+              ethnicity: data.personal_info.ethnicity || {},
+              languages: data.personal_info.languages || {},
+              education_level: data.personal_info.education_level || {},
+              have_children: data.personal_info.have_children || {},
+              marital_status: data.personal_info.marital_status || {},
+              homeowner: data.personal_info.homeowner || {},
+            }}
+            pets_data={data.lifestyle.own_pets}
+          />
         </TabPanel>
-        <TabPanel value={tabIndex} index={1}></TabPanel>
+        <TabPanel value={tabIndex} index={1}>
+          <B2CFinancial data={data.financial} />
+        </TabPanel>
         <TabPanel value={tabIndex} index={2}>
-          <B2CLifestyle />
+          <B2CLifestyle data={data.lifestyle} />
         </TabPanel>
-        <TabPanel value={tabIndex} index={3}></TabPanel>
+        <TabPanel value={tabIndex} index={3}>
+          <B2CVoter data={data.voter} />
+        </TabPanel>
       </Box>
     </Box>
   );

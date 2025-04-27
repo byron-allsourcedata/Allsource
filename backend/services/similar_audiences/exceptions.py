@@ -3,3 +3,6 @@ class EqualTrainTargets(Exception):
 
 class EmptyTrainDataset(Exception):
     pass
+
+class LessThenTwoTrainDataset(Exception):
+    pass

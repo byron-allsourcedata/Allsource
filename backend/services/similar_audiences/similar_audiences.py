@@ -2,7 +2,7 @@ from typing import Dict
 from typing import List, Annotated
 
 import pandas as pd
-from catboost import CatBoostRegressor, CatBoostError
+from catboost import CatBoostRegressor, CatBoostError, Pool
 from fastapi import Depends
 from pandas import DataFrame
 from sklearn.model_selection import train_test_split
@@ -37,11 +37,11 @@ class SimilarAudienceService:
 
 
     def get_audience_feature_importance_with_config(self, audience_data: List[dict], config: NormalizationConfig) -> Dict[str, float]:
-        model = self.get_trained_model(audience_data, config)
+        model, x_train = self.get_trained_model(audience_data, config)
 
         feature_importance = pd.DataFrame({
             'Feature': model.feature_names_,
-            'Importance': model.get_feature_importance()
+            'Importance': model.get_feature_importance(data=x_train)
         })
 
         feature_importance['Importance'] = feature_importance['Importance'] / 100
@@ -52,12 +52,20 @@ class SimilarAudienceService:
         ))
 
     def train_catboost(self, df: DataFrame, amount: DataFrame) -> CatBoostRegressor:
+        df = df.loc[:, ~df.columns.duplicated()].copy()
         x = df
         y = amount
 
         cat_features = x.select_dtypes(include=['object', 'category']).columns.tolist()
+        if cat_features:
+            x[cat_features] = (
+                x[cat_features]
+                .fillna("NA")
+                .astype(str)
+            )
 
         x_train, x_test, y_train, y_test = train_test_split(x, y)
+        train_pool = Pool(x_train, label=y_train, cat_features=cat_features)
         model = CatBoostRegressor(
             iterations=100,
             learning_rate=0.1,
@@ -67,20 +75,20 @@ class SimilarAudienceService:
         )
 
         try:
-            model.fit(x_train, y_train)
+            model.fit(train_pool)
         except CatBoostError as e:
             if "All train targets are equal" in str(e):
                 value = y_train.iloc[0]
-                raise EqualTrainTargets(f"All train targets are equal - customer value is same ({value}) for all rows, check if your data is valid)")
+                raise EqualTrainTargets(
+                    f"All train targets are equal - customer value is same ({value}) for all rows, check if your data is valid)")
+
+        return model, train_pool
 
 
-        return model
-
-
-    def feature_importance(self, model: CatBoostRegressor):
+    def feature_importance(self, model: CatBoostRegressor, x_train):
         feature_importance = pd.DataFrame({
             'Feature': model.feature_names_,
-            'Importance': model.get_feature_importance()
+            'Importance': model.get_feature_importance(data=x_train)
         })
 
         feature_importance['Importance'] = feature_importance['Importance'] / 100

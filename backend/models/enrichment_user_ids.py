@@ -2,6 +2,7 @@ from sqlalchemy import Column, UniqueConstraint, text, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
+# from . import ProfessionalProfile
 from .base import Base
 from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
 from models.enrichment_user_contact import EnrichmentUserContact
@@ -34,4 +35,11 @@ class EnrichmentUserId(Base):
         "EnrichmentPersonalProfiles",
         back_populates="enrichment_user",
         foreign_keys="[EnrichmentPersonalProfiles.asid]"
+    )
+
+    professional_profiles = relationship(
+        "ProfessionalProfile",
+        back_populates="enrichment_user",
+        cascade="all, delete-orphan",
+        foreign_keys="[ProfessionalProfile.asid]"
     )
