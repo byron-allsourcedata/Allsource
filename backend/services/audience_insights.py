@@ -49,7 +49,7 @@ class AudienceInsightsService:
         parsed = AudienceInsightData(
             b2b={
                 "professional_profile": data.get("professional_profile", {}),
-                "education_history": data.get("education_history", {}),
+                "education": data.get("education_history", {}),
                 "employment_history": data.get("employment_history", {}),
             },
             b2c={
