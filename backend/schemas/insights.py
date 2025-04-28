@@ -219,15 +219,37 @@ class Lifestyle(BaseModel):
     golf_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
     beauty_cosmetic_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
 
-
 class Voter(BaseModel):
     congressional_district: Optional[Dict[str, int]] = Field(default_factory=dict)
     voting_propensity: Optional[Dict[str, int]] = Field(default_factory=dict)
     political_party: Optional[Dict[str, int]] = Field(default_factory=dict)
 
 
+class EmploymentHistory(BaseModel):
+    job_title:          Optional[Dict[str, int]] = Field(default_factory=dict)
+    company_name:       Optional[Dict[str, int]] = Field(default_factory=dict)
+    start_date:         Optional[Dict[str, int]] = Field(default_factory=dict)
+    end_date:           Optional[Dict[str, int]] = Field(default_factory=dict)
+    is_current:         Optional[Dict[str, int]] = Field(default_factory=dict)
+    location:           Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_description:    Optional[Dict[str, int]] = Field(default_factory=dict)
+
+class ProfessionalProfile(BaseModel):
+    current_job_title:       Optional[Dict[str, int]] = Field(default_factory=dict)
+    current_company_name:    Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_start_date:          Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_duration:            Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_location:            Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_level:               Optional[Dict[str, int]] = Field(default_factory=dict)
+    department:              Optional[Dict[str, int]] = Field(default_factory=dict)
+    company_size:            Optional[Dict[str, int]] = Field(default_factory=dict)
+    primary_industry:        Optional[Dict[str, int]] = Field(default_factory=dict)
+    annual_sales:            Optional[Dict[str, int]] = Field(default_factory=dict)
+
 class InsightsByCategory(BaseModel):
     personal_profile: Optional[Personal] = Field(default_factory=Personal)
     financial: Optional[Financial] = Field(default_factory=Financial)
     lifestyle: Optional[Lifestyle] = Field(default_factory=Lifestyle)
     voter: Optional[Voter] = Field(default_factory=Voter)
+    employment_history: Optional[EmploymentHistory] = Field(default_factory=EmploymentHistory)
+    professional_profile: Optional[ProfessionalProfile] = Field(default_factory=ProfessionalProfile)

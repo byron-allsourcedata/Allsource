@@ -11,8 +11,6 @@ from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
-
-
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -27,6 +25,7 @@ from services.similar_audiences.audience_data_normalization import AudienceDataN
 from services.similar_audiences import SimilarAudienceService
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes_persons import AudienceLookalikes
+from models import EnrichmentEmploymentHistory, ProfessionalProfile
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
 from persistence.enrichment_models import EnrichmentModelsPersistence
@@ -89,59 +88,80 @@ def get_max_size(lookalike_size):
 def get_enrichment_user_column_map() -> Dict[str, Any]:
     return {
         # — Personal Profiles —
-        "Age": EnrichmentPersonalProfiles.age.label("Age"),
-        "Gender": EnrichmentPersonalProfiles.gender.label("Gender"),
-        "HomeownerStatus": EnrichmentPersonalProfiles.homeowner.label("HomeownerStatus"),
-        "LengthOfResidenceYears": EnrichmentPersonalProfiles.length_of_residence_years.label("LengthOfResidenceYears"),
-        "MaritalStatus": EnrichmentPersonalProfiles.marital_status.label("MaritalStatus"),
-        "BusinessOwner": EnrichmentPersonalProfiles.business_owner.label("BusinessOwner"),
-        "BirthDay": EnrichmentPersonalProfiles.birth_day.label("BirthDay"),
-        "BirthMonth": EnrichmentPersonalProfiles.birth_month.label("BirthMonth"),
-        "BirthYear": EnrichmentPersonalProfiles.birth_year.label("BirthYear"),
-        "HasChildren": EnrichmentPersonalProfiles.has_children.label("HasChildren"),
-        "NumberOfChildren": EnrichmentPersonalProfiles.number_of_children.label("NumberOfChildren"),
-        "Religion": EnrichmentPersonalProfiles.religion.label("Religion"),
-        "Ethnicity": EnrichmentPersonalProfiles.ethnicity.label("Ethnicity"),
-        "LanguageCode": EnrichmentPersonalProfiles.language_code.label("LanguageCode"),
-        "StateAbbr": EnrichmentPersonalProfiles.state_abbr.label("StateAbbr"),
-        "ZipCode5": cast(EnrichmentPersonalProfiles.zip_code5, String).label("ZipCode5"),
+        "age": EnrichmentPersonalProfiles.age.label("age"),
+        "gender": EnrichmentPersonalProfiles.gender.label("gender"),
+        "homeowner": EnrichmentPersonalProfiles.homeowner.label("homeowner"),
+        "length_of_residence_years": EnrichmentPersonalProfiles.length_of_residence_years.label("length_of_residence_years"),
+        "marital_status": EnrichmentPersonalProfiles.marital_status.label("marital_status"),
+        "business_owner": EnrichmentPersonalProfiles.business_owner.label("business_owner"),
+        "birth_day": EnrichmentPersonalProfiles.birth_day.label("birth_day"),
+        "birth_month": EnrichmentPersonalProfiles.birth_month.label("birth_month"),
+        "birth_year": EnrichmentPersonalProfiles.birth_year.label("birth_year"),
+        "has_children": EnrichmentPersonalProfiles.has_children.label("has_children"),
+        "number_of_children": EnrichmentPersonalProfiles.number_of_children.label("number_of_children"),
+        "religion": EnrichmentPersonalProfiles.religion.label("religion"),
+        "ethnicity": EnrichmentPersonalProfiles.ethnicity.label("ethnicity"),
+        "language_code": EnrichmentPersonalProfiles.language_code.label("language_code"),
+        "state_abbr": EnrichmentPersonalProfiles.state_abbr.label("state_abbr"),
+        "zip_code5": cast(EnrichmentPersonalProfiles.zip_code5, String).label("zip_code5"),
 
         # — Financial Records —
-        "IncomeRange": EnrichmentFinancialRecord.income_range.label("IncomeRange"),
-        "NetWorth": EnrichmentFinancialRecord.net_worth.label("NetWorth"),
-        "CreditRating": EnrichmentFinancialRecord.credit_rating.label("CreditRating"),
-        "CreditCards": EnrichmentFinancialRecord.credit_cards.label("CreditCards"),
-        "BankCard": EnrichmentFinancialRecord.bank_card.label("BankCard"),
-        "CreditCardPremium": EnrichmentFinancialRecord.credit_card_premium.label("CreditCardPremium"),
-        "CreditCardNewIssue": EnrichmentFinancialRecord.credit_card_new_issue.label("CreditCardNewIssue"),
-        "CreditLines": EnrichmentFinancialRecord.credit_lines.label("CreditLines"),
-        "CreditRangeOfNewCreditLines": EnrichmentFinancialRecord.credit_range_of_new_credit_lines.label("CreditRangeOfNewCreditLines"),
-        "Donor": EnrichmentFinancialRecord.donor.label("Donor"),
-        "Investor": EnrichmentFinancialRecord.investor.label("Investor"),
-        "MailOrderDonor": EnrichmentFinancialRecord.mail_order_donor.label("MailOrderDonor"),
+        "income_range": EnrichmentFinancialRecord.income_range.label("income_range"),
+        "net_worth": EnrichmentFinancialRecord.net_worth.label("net_worth"),
+        "credit_rating": EnrichmentFinancialRecord.credit_rating.label("credit_rating"),
+        "credit_cards": EnrichmentFinancialRecord.credit_cards.label("credit_cards"),
+        "bank_card": EnrichmentFinancialRecord.bank_card.label("bank_card"),
+        "credit_card_premium": EnrichmentFinancialRecord.credit_card_premium.label("credit_card_premium"),
+        "credit_card_new_issue": EnrichmentFinancialRecord.credit_card_new_issue.label("credit_card_new_issue"),
+        "credit_lines": EnrichmentFinancialRecord.credit_lines.label("credit_lines"),
+        "credit_range_of_new_credit_lines": EnrichmentFinancialRecord.credit_range_of_new_credit_lines.label("credit_range_of_new_credit_lines"),
+        "donor": EnrichmentFinancialRecord.donor.label("donor"),
+        "investor": EnrichmentFinancialRecord.investor.label("investor"),
+        "mail_order_donor": EnrichmentFinancialRecord.mail_order_donor.label("mail_order_donor"),
 
         # — Lifestyle —
-        "Pets": EnrichmentLifestyle.pets.label("Pets"),
-        "CookingEnthusiast": EnrichmentLifestyle.cooking_enthusiast.label("CookingEnthusiast"),
-        "Travel": EnrichmentLifestyle.travel.label("Travel"),
-        "MailOrderBuyer": EnrichmentLifestyle.mail_order_buyer.label("MailOrderBuyer"),
-        "OnlinePurchaser": EnrichmentLifestyle.online_purchaser.label("OnlinePurchaser"),
-        "BookReader": EnrichmentLifestyle.book_reader.label("BookReader"),
-        "HealthAndBeauty": EnrichmentLifestyle.health_and_beauty.label("HealthAndBeauty"),
-        "Fitness": EnrichmentLifestyle.fitness.label("Fitness"),
-        "OutdoorEnthusiast": EnrichmentLifestyle.outdoor_enthusiast.label("OutdoorEnthusiast"),
-        "TechEnthusiast": EnrichmentLifestyle.tech_enthusiast.label("TechEnthusiast"),
-        "Diy": EnrichmentLifestyle.diy.label("Diy"),
-        "Gardening": EnrichmentLifestyle.gardening.label("Gardening"),
-        "AutomotiveBuff": EnrichmentLifestyle.automotive_buff.label("AutomotiveBuff"),
-        "GolfEnthusiasts": EnrichmentLifestyle.golf_enthusiasts.label("GolfEnthusiasts"),
-        "BeautyCosmetics": EnrichmentLifestyle.beauty_cosmetics.label("BeautyCosmetics"),
-        "Smoker": EnrichmentLifestyle.smoker.label("Smoker"),
+        "pets": EnrichmentLifestyle.pets.label("pets"),
+        "cooking_enthusiast": EnrichmentLifestyle.cooking_enthusiast.label("cooking_enthusiast"),
+        "travel": EnrichmentLifestyle.travel.label("travel"),
+        "mail_order_buyer": EnrichmentLifestyle.mail_order_buyer.label("mail_order_buyer"),
+        "online_purchaser": EnrichmentLifestyle.online_purchaser.label("online_purchaser"),
+        "book_reader": EnrichmentLifestyle.book_reader.label("book_reader"),
+        "health_and_beauty": EnrichmentLifestyle.health_and_beauty.label("health_and_beauty"),
+        "fitness": EnrichmentLifestyle.fitness.label("fitness"),
+        "outdoor_enthusiast": EnrichmentLifestyle.outdoor_enthusiast.label("outdoor_enthusiast"),
+        "tech_enthusiast": EnrichmentLifestyle.tech_enthusiast.label("tech_enthusiast"),
+        "diy": EnrichmentLifestyle.diy.label("diy"),
+        "gardening": EnrichmentLifestyle.gardening.label("gardening"),
+        "automotive_buff": EnrichmentLifestyle.automotive_buff.label("automotive_buff"),
+        "golf_enthusiasts": EnrichmentLifestyle.golf_enthusiasts.label("golf_enthusiasts"),
+        "beauty_cosmetics": EnrichmentLifestyle.beauty_cosmetics.label("beauty_cosmetics"),
+        "smoker": EnrichmentLifestyle.smoker.label("smoker"),
 
         # — Voter Record —
-        "PartyAffiliation": EnrichmentVoterRecord.party_affiliation.label("PartyAffiliation"),
-        "CongressionalDistrict": EnrichmentVoterRecord.congressional_district.label("CongressionalDistrict"),
-        "VotingPropensity": EnrichmentVoterRecord.voting_propensity.label("VotingPropensity"),
+        "party_affiliation": EnrichmentVoterRecord.party_affiliation.label("party_affiliation"),
+        "congressional_district": EnrichmentVoterRecord.congressional_district.label("congressional_district"),
+        "voting_propensity": EnrichmentVoterRecord.voting_propensity.label("voting_propensity"),
+
+        # — Employment History —
+        "job_title": EnrichmentEmploymentHistory.job_title.label("job_title"),
+        "company_name": EnrichmentEmploymentHistory.company_name.label("company_name"),
+        "start_date": EnrichmentEmploymentHistory.start_date.label("start_date"),
+        "end_date": EnrichmentEmploymentHistory.end_date.label("end_date"),
+        "is_current": EnrichmentEmploymentHistory.is_current.label("is_current"),
+        "location": EnrichmentEmploymentHistory.location.label("location"),
+        "job_description": EnrichmentEmploymentHistory.job_description.label("job_description"),
+
+        # — Professional Profile —
+        "current_job_title": ProfessionalProfile.current_job_title.label("current_job_title"),
+        "current_company_name": ProfessionalProfile.current_company_name.label("current_company_name"),
+        "job_start_date": ProfessionalProfile.job_start_date.label("job_start_date"),
+        "job_duration": ProfessionalProfile.job_duration.label("job_duration"),
+        "job_location": ProfessionalProfile.job_location.label("job_location"),
+        "job_level": ProfessionalProfile.job_level.label("job_level"),
+        "department": ProfessionalProfile.department.label("department"),
+        "company_size": ProfessionalProfile.company_size.label("company_size"),
+        "primary_industry": ProfessionalProfile.primary_industry.label("primary_industry"),
+        "annual_sales": ProfessionalProfile.annual_sales.label("annual_sales"),
     }
 
 def build_dynamic_query_and_config(
@@ -175,26 +195,70 @@ def build_dynamic_query_and_config(
             EnrichmentVoterRecord,
             EnrichmentVoterRecord.asid == EnrichmentUserId.asid
         )
+        .outerjoin(
+            EnrichmentEmploymentHistory,
+            EnrichmentEmploymentHistory.asid == EnrichmentUserId.asid
+        )
+        .outerjoin(
+            ProfessionalProfile,
+            ProfessionalProfile.asid == EnrichmentUserId.asid
+        )
     )
 
-    numerical = {"NumberOfChildren", "LengthOfResidenceYears"}
-    unordered = {
-        "IsOnlinePurchaser", "IsTraveler", "PersonGender",
-        "HasChildren", "HomeownerStatus", "MaritalStatus",
-        "HasCreditCard"
-    }
-    ordered = {
-        "EstimatedHouseholdIncomeCode": map_letter_to_number,
-        "EstimatedCurrentHomeValueCode": map_letter_to_number,
-        "CreditRating": map_credit_rating,
-        "NetWorthCode": map_net_worth_code,
-    }
-    config = NormalizationConfig(
-        numerical_features=[name for name in sig if name in numerical],
-        unordered_features=[name for name in sig if name in unordered],
-        ordered_features={name: ordered[name] for name in sig if name in ordered},
+    normalization_config = NormalizationConfig(
+        numerical_features=[],
+        ordered_features={},
+
+        unordered_features=[
+            # personal
+            "age", "gender", "homeowner", "length_of_residence_years",
+            "marital_status", "business_owner",
+            "birth_day", "birth_month", "birth_year",
+            "has_children", "number_of_children",
+            "religion", "ethnicity", "language_code",
+            "state_abbr", "zip_code5",
+
+            # financial
+            "income_range", "net_worth", "credit_rating",
+            "credit_cards", "bank_card", "credit_card_premium",
+            "credit_card_new_issue", "credit_lines",
+            "credit_range_of_new_credit_lines",
+            "donor", "investor", "mail_order_donor",
+
+            # lifestyle
+            "pets", "cooking_enthusiast", "travel", "mail_order_buyer",
+            "online_purchaser", "book_reader", "health_and_beauty",
+            "fitness", "outdoor_enthusiast", "tech_enthusiast", "diy",
+            "gardening", "automotive_buff", "golf_enthusiasts",
+            "beauty_cosmetics", "smoker",
+
+            # voter
+            "party_affiliation", "congressional_district",
+            "voting_propensity",
+
+            # employment_history
+            "job_title",
+            "company_name",
+            "start_date",
+            "end_date",
+            "location",
+            "job_description",
+
+            # professional_profile
+            "current_job_title",
+            "current_company_name",
+            "job_start_date",
+            "job_duration",
+            "job_location",
+            "job_level",
+            "department",
+            "company_size",
+            "primary_industry",
+            "annual_sales",
+        ]
     )
-    return query, config
+
+    return query, normalization_config
 
 
 def fetch_user_profiles(
@@ -240,6 +304,14 @@ def fetch_user_profiles(
         .outerjoin(
             EnrichmentVoterRecord,
             EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+        )
+        .outerjoin(
+            EnrichmentEmploymentHistory,
+            EnrichmentEmploymentHistory.asid == EnrichmentUserId.asid
+        )
+        .outerjoin(
+            ProfessionalProfile,
+            ProfessionalProfile.asid == EnrichmentUserId.asid
         )
         .filter(AudienceSource.id == audience_lookalike.source_uuid)
         .all()

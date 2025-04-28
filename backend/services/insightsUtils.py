@@ -5,7 +5,8 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
 
 from models import AudienceSourcesMatchedPerson, EnrichmentUserId, EnrichmentPersonalProfiles, \
-    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, AudienceLookalikesPerson
+    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, AudienceLookalikesPerson, \
+    ProfessionalProfile, EnrichmentEmploymentHistory
 from schemas.insights import InsightsByCategory
 
 
@@ -58,13 +59,14 @@ class InsightsUtils:
             for field, val in zip(personal_fields, row):
                 if field == "age":
                     key = InsightsUtils.bucket_age(val)
-                elif val is None:
-                    if field in ("have_children", "gender", "marital_status", "homeowner"):
-                        key = "2"
-                    elif field in ("religion", "ethnicity", "state"):
-                        key = "Other"
-                    else:
-                        key = "None"
+                elif val is None or str(val).upper() == 'UNKNOWN':
+                    # if field in ("have_children", "gender", "marital_status", "homeowner"):
+                    #     key = "2"
+                    # elif field in ("religion", "ethnicity", "state"):
+                    #     key = "Other"
+                    # else:
+                    #     key = "None"
+                    continue
                 else:
                     key = str(val)
                 key = key.lower()
@@ -101,27 +103,14 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(financial_fields, row):
-                if val is None:
-                    if field in {
-                        "donor",
-                        "credit_card_premium",
-                        "investor",
-                        "bank_card",
-                        "mail_order_donor",
-                        "credit_card_new_issue",
-                    }:
-                        key = "2"
-                    elif field in {
-                        "number_of_credit_lines",
-                        "income_range",
-                        "net_worth_range",
-                        "credit_score_range",
-                        "credit_cards",
-                        "credit_range_of_new_credit",
-                    }:
-                        key = "Other"
-                    else:
-                        key = "None"
+                if val is None or str(val).upper() == 'UNKNOWN':
+                    continue
+                elif field == "credit_cards":
+                    raw = val.strip("[]")
+                    raw = raw.replace("'", "").replace('"', "")
+                    cards = [c.strip().lower() for c in raw.split(",") if c.strip()]
+                    for card in cards:
+                        fin_cts[field][card] += 1
                 else:
                     if field == "credit_cards":
                         key = val.strip("[]")
@@ -167,8 +156,10 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(lifestyle_fields, row):
-                key = "Other" if val is None else str(val)
-                key = key.lower()
+                if val is None or str(val).upper() == 'UNKNOWN':
+                    continue
+
+                key = str(val).lower()
                 life_cts[field][key] += 1
 
         for field in lifestyle_fields:
@@ -187,17 +178,73 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(voter_fields, row):
-                if field in ('congressional_district', 'voting_propensity'):
-                    key = "Other" if val is None else str(val)
-                elif field == 'political_party':
-                    key = "Other" if val is None or str(val).upper() == 'UNKNOWN' else str(val)
-                else:
-                    key = str(val)
-                key = key.lower()
+                if val is None or str(val).upper() == 'UNKNOWN':
+                    continue
+                key = str(val).lower()
                 voter_cts[field][key] += 1
 
         for field in voter_fields:
             setattr(insights.voter, field, dict(voter_cts[field]))
+
+        # 7) PROFESSIONAL PROFILE
+        prof_fields = [
+            "current_job_title", "current_company_name", "job_start_date",
+            "job_duration", "job_location", "job_level", "department",
+            "company_size", "primary_industry", "annual_sales"
+        ]
+        prof_cts: defaultdict[str, Counter] = defaultdict(Counter)
+        prof_rows = db_session.query(
+            ProfessionalProfile.current_job_title,
+            ProfessionalProfile.current_company_name,
+            ProfessionalProfile.job_start_date,
+            ProfessionalProfile.job_duration,
+            ProfessionalProfile.job_location,
+            ProfessionalProfile.job_level,
+            ProfessionalProfile.department,
+            ProfessionalProfile.company_size,
+            ProfessionalProfile.primary_industry,
+            ProfessionalProfile.annual_sales,
+        ).filter(
+            ProfessionalProfile.asid.in_(asids)
+        ).all()
+
+        for row in prof_rows:
+            for field, val in zip(prof_fields, row):
+                if val is None or str(val).upper() == "UNKNOWN" or str(val) == "":
+                    continue
+                key = str(val).lower()
+                prof_cts[field][key] += 1
+
+        for field in prof_fields:
+            setattr(insights.professional_profile, field, dict(prof_cts[field]))
+
+        # 8) EMPLOYMENT HISTORY
+        emp_fields = [
+            "job_title", "company_name", "start_date",
+            "end_date", "is_current", "location", "job_description"
+        ]
+        emp_cts: defaultdict[str, Counter] = defaultdict(Counter)
+        emp_rows = db_session.query(
+            EnrichmentEmploymentHistory.job_title,
+            EnrichmentEmploymentHistory.company_name,
+            EnrichmentEmploymentHistory.start_date,
+            EnrichmentEmploymentHistory.end_date,
+            EnrichmentEmploymentHistory.is_current,
+            EnrichmentEmploymentHistory.location,
+            EnrichmentEmploymentHistory.job_description,
+        ).filter(
+            EnrichmentEmploymentHistory.asid.in_(asids)
+        ).all()
+
+        for row in emp_rows:
+            for field, val in zip(emp_fields, row):
+                if val is None or (isinstance(val, str) and val.upper() == "UNKNOWN"):
+                    continue
+                key = str(val).lower()
+                emp_cts[field][key] += 1
+
+        for field in emp_fields:
+            setattr(insights.employment_history, field, dict(emp_cts[field]))
 
         return insights
 
