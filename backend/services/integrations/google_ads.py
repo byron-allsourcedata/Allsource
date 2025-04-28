@@ -10,7 +10,7 @@ from services.integrations.commonIntegration import get_valid_email, get_valid_p
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from faker import Faker
 from google.auth.transport.requests import Request
 from google.ads.googleads.client import GoogleAdsClient

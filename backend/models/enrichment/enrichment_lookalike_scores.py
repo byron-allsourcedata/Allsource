@@ -3,7 +3,7 @@ from decimal import Decimal
 from sqlalchemy import Numeric, text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import mapped_column, Mapped
-from .base import Base
+from models.base import Base
 
 
 class EnrichmentLookalikeScore(Base):

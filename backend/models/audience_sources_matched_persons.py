@@ -2,7 +2,7 @@ from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Inde
     VARCHAR, text, func
 
 from .audience_sources import AudienceSource
-from models.enrichment_user_ids import EnrichmentUserId
+from models.enrichment.enrichment_users import EnrichmentUser
 from .base import Base, create_timestamps, update_timestamps
 from .five_x_five_users import FiveXFiveUser
 
@@ -17,8 +17,8 @@ class AudienceSourcesMatchedPerson(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False,
                 server_default=text('gen_random_uuid()'))
-    source_id = Column(UUID(as_uuid=True), ForeignKey('audience_sources.id', ondelete='CASCADE'), nullable=False)
-    enrichment_user_id = Column(UUID(as_uuid=True), ForeignKey('enrichment_users.id'), nullable=False)
+    source_id = Column(UUID(as_uuid=True), ForeignKey(AudienceSource.id, ondelete='CASCADE'), nullable=False)
+    enrichment_user_id = Column(UUID(as_uuid=True), ForeignKey(EnrichmentUser.id), nullable=False)
     mapped_fields = Column(JSON, nullable=True)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())

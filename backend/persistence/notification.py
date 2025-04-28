@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from models.account_notification import AccountNotification
 from models.users import Users
 from models.users_account_notification import UserAccountNotification
+from models.enrichment.enrichment_users import EnrichmentUser
 
 
 class NotificationPersistence:
@@ -12,6 +13,9 @@ class NotificationPersistence:
 
     def get_account_notification_by_title(self, title: str) -> str:
         return self.db.query(AccountNotification).filter(AccountNotification.title == title).first()
+    
+    def get_all_enrichment(self,):
+        return self.db.query(EnrichmentUser).limit(10000).all()
 
     def save_account_notification(self, user_id, account_notification_id, params=None):
         account_notification = UserAccountNotification(

@@ -1,13 +1,11 @@
 from sqlalchemy import Column, Boolean, ForeignKey, text, Index
 from sqlalchemy.dialects.postgresql import UUID
-from .base import Base
+from models.base import Base
 
 
 class EnrichmentLifestyle(Base):
     __tablename__ = 'enrichment_lifestyles'
-    __table_args__ = (
-        Index("ix_lifestyle_asid", "asid"),
-    )
+    
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
@@ -35,3 +33,7 @@ class EnrichmentLifestyle(Base):
     golf_enthusiasts = Column(Boolean, nullable=True)
     beauty_cosmetics = Column(Boolean, nullable=True)
     smoker = Column(Boolean, nullable=True)
+    
+    __table_args__ = (
+        Index("ix_lifestyle_asid", asid),
+    )

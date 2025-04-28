@@ -16,7 +16,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
-from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
+from models.enrichment.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 

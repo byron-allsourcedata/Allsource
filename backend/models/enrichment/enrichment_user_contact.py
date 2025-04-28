@@ -1,12 +1,9 @@
 from sqlalchemy import Column, Integer, TEXT, UUID, SmallInteger, TIMESTAMP, ForeignKey, text, Boolean, Index
 from sqlalchemy.orm import relationship
-from .base import Base
+from models.base import Base
 
 class EnrichmentUserContact(Base):
     __tablename__ = 'enrichment_users_contacts'
-    __table_args__ = (
-        Index("ix_enrichment_users_contacts_asid", "asid"),
-    )
 
     id = Column(
         UUID(as_uuid=True),
@@ -14,11 +11,7 @@ class EnrichmentUserContact(Base):
         nullable=False,
         server_default=text("gen_random_uuid()")
     )
-    # enrichment_user_id = Column(
-    #     UUID(as_uuid=True),
-    #     ForeignKey("enrichment_users.id"),
-    #     nullable=False
-    # )
+
     asid = Column(
         UUID(as_uuid=True),
         ForeignKey("enrichment_users.asid", ondelete="CASCADE"),
@@ -43,9 +36,15 @@ class EnrichmentUserContact(Base):
     personal_email_validation_status = Column(TEXT, nullable=True)
     linkedin_url = Column(TEXT, nullable=True)
     email = Column(TEXT, nullable=True)
-
-    enrichment_user = relationship(
-        "EnrichmentUserId",
-        back_populates="contacts",
-        foreign_keys=[asid],
+    
+    __table_args__ = (
+        Index("ix_enrichment_users_contacts_asid", asid),
     )
+
+from .enrichment_users import EnrichmentUser
+
+EnrichmentUserContact.enrichment_user = relationship(
+    EnrichmentUser,
+    back_populates="contacts",
+    foreign_keys=[EnrichmentUserContact.asid],
+)

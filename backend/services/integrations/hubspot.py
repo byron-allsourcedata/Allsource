@@ -13,7 +13,7 @@ import os
 from faker import Faker
 from datetime import datetime, timedelta
 from fastapi import HTTPException
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from typing import List
 
 from schemas.integrations.hubspot import HubspotProfile

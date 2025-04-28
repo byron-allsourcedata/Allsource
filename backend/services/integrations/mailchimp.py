@@ -11,7 +11,7 @@ from faker import Faker
 import re
 import logging
 from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from schemas.integrations.mailchimp import MailchimpProfile

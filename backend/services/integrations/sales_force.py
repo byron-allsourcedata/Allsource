@@ -18,7 +18,7 @@ from datetime import datetime, timedelta
 from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 import httpx
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 import json
 from utils import format_phone_number
 from typing import List

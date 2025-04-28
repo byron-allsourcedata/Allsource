@@ -4,8 +4,10 @@ from typing import List, Optional, Dict, Any
 
 from sqlalchemy.orm import Session
 
-from models import AudienceSourcesMatchedPerson, EnrichmentUserId, EnrichmentPersonalProfiles, \
-    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, AudienceLookalikesPerson
+from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, \
+    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from schemas.insights import InsightsByCategory
 
 
@@ -219,8 +221,8 @@ class InsightsUtils:
 
         asids: List[uuid.UUID] = [
             asid for (asid,) in db_session
-            .query(EnrichmentUserId.asid)
-            .filter(EnrichmentUserId.id.in_(user_ids))
+            .query(EnrichmentUser.asid)
+            .filter(EnrichmentUser.id.in_(user_ids))
             .all()
         ]
 
@@ -243,8 +245,8 @@ class InsightsUtils:
 
         asids = [
             asid for (asid,) in db_session
-            .query(EnrichmentUserId.asid)
-            .filter(EnrichmentUserId.id.in_(user_ids))
+            .query(EnrichmentUser.asid)
+            .filter(EnrichmentUser.id.in_(user_ids))
             .all()
         ]
         

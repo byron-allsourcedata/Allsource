@@ -9,7 +9,7 @@ from schemas.integrations.integrations import *
 from fastapi import HTTPException
 from faker import Faker
 import re
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit
 import httpx
 from utils import format_phone_number

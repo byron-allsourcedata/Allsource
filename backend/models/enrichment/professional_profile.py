@@ -1,31 +1,24 @@
 from sqlalchemy import Column, TEXT, UUID, ForeignKey, text, UniqueConstraint
 from sqlalchemy.orm import relationship
-from .base import Base
+from models.base import Base
 
 
 class ProfessionalProfile(Base):
     __tablename__ = 'professional_profiles'
-    __table_args__ = (
-        UniqueConstraint('asid', name='professional_profiles_asid_key'),
-    )
-
+    
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
         nullable=False,
         server_default=text("gen_random_uuid()")
     )
-    # enrichment_user_id = Column(
-    #     UUID(as_uuid=True),
-    #     ForeignKey("enrichment_users2.id", ondelete="CASCADE"),
-    #     nullable=True
-    # )
 
     asid = Column(
         UUID(as_uuid=True),
         ForeignKey("enrichment_users.asid", ondelete="CASCADE"),
         nullable=True
     )
+    
     current_job_title = Column(TEXT, nullable=True)
     current_company_name = Column(TEXT, nullable=True)
     job_start_date = Column(TEXT, nullable=True)
@@ -36,9 +29,15 @@ class ProfessionalProfile(Base):
     company_size = Column(TEXT, nullable=True)
     primary_industry = Column(TEXT, nullable=True)
     annual_sales = Column(TEXT, nullable=True)
+    
+    __table_args__ = (
+        UniqueConstraint(asid, name='professional_profiles_asid_key'),
+    )
 
-    enrichment_user = relationship(
-        "EnrichmentUserId",
+from .enrichment_users import EnrichmentUser
+    
+ProfessionalProfile.enrichment_user = relationship(
+        EnrichmentUser,
         back_populates="professional_profiles",
-        foreign_keys=[asid],
+        foreign_keys=[ProfessionalProfile.asid]
     )

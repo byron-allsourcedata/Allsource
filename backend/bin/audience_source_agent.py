@@ -21,7 +21,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from services.insightsUtils import InsightsUtils
-from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
+from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
 from schemas.insights import InsightsByCategory, Personal, Financial, Lifestyle, Voter
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
@@ -29,11 +29,11 @@ from models.five_x_five_users import FiveXFiveUser
 from enums import TypeOfCustomer, ProccessDataSyncResult, EmailType, BusinessType
 from utils import get_utc_aware_date, get_valid_email_without_million
 from models.leads_visits import LeadsVisits
-from models.emails import Email
-from models.emails_enrichment import EmailEnrichment
-from models import EnrichmentUsersEmails, EnrichmentUserId, EnrichmentFinancialRecord, EnrichmentLifestyle, \
+from models.enrichment.emails import Email
+from models.enrichment.emails_enrichment import EmailEnrichment
+from models.enrichment import EnrichmentUsersEmails, EnrichmentUser, EnrichmentFinancialRecord, EnrichmentLifestyle, \
     EnrichmentVoterRecord
-from models.enrichment_emails import EnrichmentEmails
+from models.enrichment.enrichment_emails import EnrichmentEmails
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
 from services.audience_sources import AudienceSourceMath
@@ -111,12 +111,12 @@ async def process_email_leads(
     rows = (
         db_session.query(
             EnrichmentEmails.email,
-            EnrichmentUserId.id
+            EnrichmentUser.id
         )
         .join(EnrichmentUsersEmails,
               EnrichmentEmails.id == EnrichmentUsersEmails.email_id)
-        .join(EnrichmentUserId,
-              EnrichmentUsersEmails.enrichment_user_id == EnrichmentUserId.id)
+        .join(EnrichmentUser,
+              EnrichmentUsersEmails.enrichment_user_id == EnrichmentUser.id)
         .filter(EnrichmentEmails.email.in_(emails))
         .all()
     )

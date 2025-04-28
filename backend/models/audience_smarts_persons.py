@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, Boolean, text, Index, Text
 from models.audience_smarts import AudienceSmart
-from models.enrichment_user_ids import EnrichmentUserId
+from models.enrichment.enrichment_users import EnrichmentUser
 from .base import Base
 from sqlalchemy.sql import func
 
@@ -28,7 +28,7 @@ class AudienceSmartPerson(Base):
     )
     enrichment_user_id = Column(
         UUID(as_uuid=True),
-        ForeignKey(EnrichmentUserId.id),
+        ForeignKey(EnrichmentUser.id),
         nullable=True
     )
     is_valid = Column(

@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from utils import format_phone_number
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit, DataSyncType
 from models.five_x_five_users import FiveXFiveUser
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from uuid import UUID
 import uuid
 from faker import Faker

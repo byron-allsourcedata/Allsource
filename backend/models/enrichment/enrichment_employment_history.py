@@ -8,7 +8,7 @@ from sqlalchemy import (
     text
 )
 from sqlalchemy.dialects.postgresql import UUID
-from .base import Base
+from models.base import Base
 
 
 class EnrichmentEmploymentHistory(Base):

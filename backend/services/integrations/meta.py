@@ -16,7 +16,7 @@ from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from datetime import datetime
 from utils import extract_first_email

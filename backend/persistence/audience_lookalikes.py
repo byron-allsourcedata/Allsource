@@ -8,12 +8,12 @@ from pydantic.v1 import UUID4
 from sqlalchemy.dialects.postgresql import INT4RANGE
 
 from enums import LookalikeSize
-from models import EnrichmentUserId, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
+from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
     EnrichmentVoterRecord
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
@@ -22,7 +22,7 @@ from sqlalchemy import asc, desc, or_, func
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
-from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
+from models.enrichment.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from uuid import UUID
 
 from models.users import Users
@@ -265,24 +265,24 @@ class AudienceLookalikesPersistence:
             )
             .select_from(AudienceSourcesMatchedPerson)
             .join(
-                EnrichmentUserId,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUserId.id
+                EnrichmentUser,
+                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id
             )
             .outerjoin(
                 EnrichmentPersonalProfiles,
-                EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
+                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentFinancialRecord,
-                EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+                EnrichmentFinancialRecord.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentLifestyle,
-                EnrichmentLifestyle.asid == EnrichmentUserId.asid
+                EnrichmentLifestyle.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentVoterRecord,
-                EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+                EnrichmentVoterRecord.asid == EnrichmentUser.asid
             )
             .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
             .order_by(AudienceSourcesMatchedPerson.value_score.desc())
@@ -294,7 +294,7 @@ class AudienceLookalikesPersistence:
             d = dict(row._mapping)
             for k, v in d.items():
                 if k == "age" and v:
-                    d[k] = int(v.lower) if v.lower is not None else Non
+                    d[k] = int(v.lower) if v.lower is not None else None
                 if k == "zip_code5" and v:
                     d[k] = str(v)
                 elif isinstance(v, Decimal):

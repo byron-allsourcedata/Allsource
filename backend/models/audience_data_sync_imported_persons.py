@@ -1,20 +1,13 @@
 from sqlalchemy import Column, Integer, VARCHAR, Index, UUID, ForeignKey, text, String, BigInteger
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from models.integrations.integrations_users_sync import IntegrationUserSync
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from .base import Base
 
 
 class AudienceDataSyncImportedPersons(Base):
     __tablename__ = 'audience_data_sync_imported_persons'
-    __table_args__ = (
-        Index(
-            'audience_data_sync_imported_persons_enrichment_user_id_data_syn',
-            'enrichment_user_id', 'data_sync_id',
-            unique=True
-        ),
-    )
-
+    
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
@@ -36,6 +29,12 @@ class AudienceDataSyncImportedPersons(Base):
     updated_at = Column(TIMESTAMP, nullable=True)
     enrichment_user_id = Column(
         UUID(as_uuid=True),
-        ForeignKey('enrichment_users.id', ondelete='CASCADE'),
+        ForeignKey(EnrichmentUser.id, ondelete='CASCADE'),
         nullable=False
+    )
+    
+    __table_args__ = (
+        Index(
+            'audience_data_sync_imported_persons_enrichment_user_id_data_syn', enrichment_user_id, data_sync_id, unique=True
+        ),
     )

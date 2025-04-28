@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from typing import Optional, List, Dict
 
 from enums import ProccessDataSyncResult
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from utils import extract_first_email
 

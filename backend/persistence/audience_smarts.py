@@ -18,9 +18,9 @@ from models.audience_sources import AudienceSource
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.users import Users
 from models.state import States
-from models.enrichment_users import EnrichmentUser
-from models.emails_enrichment import EmailEnrichment
-from models.emails import Email
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.enrichment.emails_enrichment import EmailEnrichment
+from models.enrichment.emails import Email
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row

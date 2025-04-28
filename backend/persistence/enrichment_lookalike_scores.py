@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 
 from dependencies import Db
-from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
+from models.enrichment.enrichment_lookalike_scores import EnrichmentLookalikeScore
 
 
 class EnrichmentLookalikeScoresPersistence:

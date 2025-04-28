@@ -8,7 +8,7 @@ from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
 from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.users import User
 from enums import AudienceSmartDataSource, QueueName

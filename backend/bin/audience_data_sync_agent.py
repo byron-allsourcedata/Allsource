@@ -12,9 +12,9 @@ from uuid import UUID
 from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
-from models.emails import Email
-from models.emails_enrichment import EmailEnrichment
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.emails import Email
+from models.enrichment.emails_enrichment import EmailEnrichment
+from models.enrichment.enrichment_users import EnrichmentUser
 from utils import get_utc_aware_date
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts import AudienceSmart
@@ -24,7 +24,7 @@ from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatform
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, selectinload
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
@@ -72,8 +72,10 @@ def get_lead_attributes(session, enrichment_user_ids, data_sync_id):
     .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id) \
     .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id) \
     .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
-    .join(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id) \
-    .join(Email, Email.id == EmailEnrichment.email_id) \
+    .options(
+        selectinload(EnrichmentUser.emails_enrichment),
+        selectinload(EnrichmentUser.emails_enrichment).selectinload(EmailEnrichment.email)
+    )\
     .filter(
         EnrichmentUser.id.in_(enrichment_user_ids),
         IntegrationUserSync.id == data_sync_id

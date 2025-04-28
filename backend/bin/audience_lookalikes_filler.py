@@ -21,7 +21,6 @@ from schemas.similar_audiences import NormalizationConfig, AudienceData
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService, \
     map_letter_to_number, map_credit_rating, map_net_worth_code
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from services.similar_audiences.similar_audience_scores import SimilarAudiencesScoresService
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 from services.similar_audiences import SimilarAudienceService
@@ -35,11 +34,7 @@ from decimal import Decimal
 from datetime import datetime
 from sqlalchemy import create_engine, cast, String
 from sqlalchemy.orm import Session
-from models.enrichment_user_ids import EnrichmentUserId
-from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
-from models.enrichment_financial_records import EnrichmentFinancialRecord
-from models.enrichment_lifestyles import EnrichmentLifestyle
-from models.enrichment_voter_record import EnrichmentVoterRecord
+from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, EnrichmentLookalikeScore
 
 
 
@@ -151,29 +146,29 @@ def build_dynamic_query_and_config(
     column_map = get_enrichment_user_column_map()
     dynamic_columns = [column_map[name] for name in sig if name in column_map]
     select_columns = [
-        EnrichmentUserId.id.label("EnrichmentUserId"),
+        EnrichmentUser.id.label("EnrichmentUser"),
         *dynamic_columns
     ]
 
     query = (
         db_session
         .query(*select_columns)
-        .select_from(EnrichmentUserId)
+        .select_from(EnrichmentUser)
         .outerjoin(
             EnrichmentPersonalProfiles,
-            EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
+            EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentFinancialRecord,
-            EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+            EnrichmentFinancialRecord.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentLifestyle,
-            EnrichmentLifestyle.asid == EnrichmentUserId.asid
+            EnrichmentLifestyle.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentVoterRecord,
-            EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+            EnrichmentVoterRecord.asid == EnrichmentUser.asid
         )
     )
 
@@ -222,24 +217,24 @@ def fetch_user_profiles(
             AudienceSourcesMatchedPerson.source_id == AudienceSource.id
         )
         .join(
-            EnrichmentUserId,
-            EnrichmentUserId.id == AudienceSourcesMatchedPerson.enrichment_user_id
+            EnrichmentUser,
+            EnrichmentUser.id == AudienceSourcesMatchedPerson.enrichment_user_id
         )
         .outerjoin(
             EnrichmentPersonalProfiles,
-            EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
+            EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentFinancialRecord,
-            EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+            EnrichmentFinancialRecord.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentLifestyle,
-            EnrichmentLifestyle.asid == EnrichmentUserId.asid
+            EnrichmentLifestyle.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentVoterRecord,
-            EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+            EnrichmentVoterRecord.asid == EnrichmentUser.asid
         )
         .filter(AudienceSource.id == audience_lookalike.source_uuid)
         .all()
@@ -288,7 +283,7 @@ def calculate_and_store_scores(
         model=model,
         lookalike_id=lookalike_id,
         query=query,
-        user_id_key="EnrichmentUserId",
+        user_id_key="EnrichmentUser",
         config=config
     )
 

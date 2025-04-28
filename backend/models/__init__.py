@@ -23,17 +23,10 @@ from .audience_sources import AudienceSource
 from .audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from .base import Base
 from .data_sync_imported_leads import DataSyncImportedLead
-from .emails import Email
-from .emails_enrichment import EmailEnrichment
-from .enrichment_employment_history import EnrichmentEmploymentHistory
-from .enrichment_financial_records import EnrichmentFinancialRecord
-from .enrichment_lifestyles import EnrichmentLifestyle
-from .enrichment_lookalike_scores import EnrichmentLookalikeScore
-from .enrichment_models import EnrichmentModels
-from .enrichment_user_contact import EnrichmentUserContact
-from .enrichment_user_ids import EnrichmentUserId
-from .enrichment_users import EnrichmentUser
-from .enrichment_voter_record import EnrichmentVoterRecord
+from .enrichment import (Email, EmailEnrichment, EnrichmentEmploymentHistory, EnrichmentFinancialRecord,
+                         EnrichmentLifestyle, EnrichmentLookalikeScore, EnrichmentModels, EnrichmentUserContact,
+                         EnrichmentUser, EnrichmentVoterRecord, EnrichmentUsersEmails, EnrichmentPersonalProfiles, EnrichmentEmails)
+
 from .five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from .five_x_five_emails import FiveXFiveEmails
 from .five_x_five_hems import FiveXFiveHems
@@ -60,7 +53,7 @@ from .leads_visits import LeadsVisits
 from .partner import Partner
 from .partners_asset import PartnersAsset
 from .plans import SubscriptionPlan
-from .professional_profile import ProfessionalProfile
+from .enrichment.professional_profile import ProfessionalProfile
 from .referral_discount_codes import ReferralDiscountCode
 from .referral_payouts import ReferralPayouts
 from .referral_users import ReferralUser
@@ -75,9 +68,6 @@ from .users import Users
 from .users_account_notification import UserAccountNotification
 from .users_domains import UserDomains
 from .users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
-from .enrichment_emails import EmailType
-from .enrichment_users_emails import EnrichmentUsersEmails
-from .enrichment_personal_profiles import EnrichmentPersonalProfiles
 
 __all__ = [
     "BigCommerceUser",
@@ -111,7 +101,7 @@ __all__ = [
     "EnrichmentLookalikeScore",
     "EnrichmentModels",
     "EnrichmentUserContact",
-    "EnrichmentUserId",
+    "EnrichmentEmails",
     "EnrichmentUser",
     "EnrichmentVoterRecord",
     "FiveXFiveCookieSyncFile",
