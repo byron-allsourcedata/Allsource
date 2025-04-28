@@ -92,9 +92,10 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
 
             is_verify = False
 
-            if not linkedin_url:
+            if not linkedin_url or not job_title or not company_name:
                 failed_ids.append(person_id)
                 continue
+                
 
             existing_verification = db_session.query(AudienceLinkedinVerification).filter_by(linkedin_url=linkedin_url).first()
 
@@ -108,11 +109,9 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 )
                 response_data = response.json()
 
-                # logging.info(f"response: {response_data}")
-
-                if response.status_code != 200:
-                    await message.nack()
-                    continue
+                if response.status_code != 200 and not response_data.get("success"):
+                    await message.ack()
+                    return
 
                 positions = response_data.get("person", {}).get("positions", {}).get("positionHistory", [])
                 for position in positions:
@@ -137,6 +136,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 )
 
             else: 
+                logging.info("There is such a LinkedIn in our database")
                 is_verify = existing_verification.is_verify
             
 
@@ -230,7 +230,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.nack()
+        await message.ack()
+        return 
 
 
 async def main():

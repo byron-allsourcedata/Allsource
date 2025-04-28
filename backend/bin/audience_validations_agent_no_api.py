@@ -229,7 +229,7 @@ async def aud_validation_agent(message: IncomingMessage, db_session: Session, co
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.nack()
+        await message.ack()
 
 
 async def main():

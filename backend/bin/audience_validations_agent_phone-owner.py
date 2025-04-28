@@ -88,6 +88,9 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
             full_name = record.get("full_name")
 
             for phone_field in ['phone_mobile1', 'phone_mobile2']:
+                if phone_field == 'phone_mobile1' and record.get('phone_mobile1') == record.get('phone_mobile2'):
+                    continue
+
                 phone_number = record.get(phone_field)
                 
                 is_verify = False
@@ -111,15 +114,18 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                     )
                     response_data = response.json()
 
-                    logging.info(f"response: {response_data}")
+                    logging.info(f"response: {response.status_code} {response_data}")
 
                     if response.status_code != 200:
-                        # await message.nack()
                         continue
 
-                    caller_name = response_data.get("caller_name", "")
+                    if response.status_code != 200 and phone_field == 'phone_mobile2':
+                        await message.ack()
+
+
+                    caller_name = response_data.get("caller_name", "").title()
                     similarity = fuzz.ratio(full_name, caller_name)
-                    is_verify = similarity > 70
+                    is_verify = similarity > 70 and caller_name != 'Unavailable'
 
                     logging.info(f"similarity: {full_name} - {caller_name} = {similarity}")
 
@@ -133,6 +139,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                         )
                     )
                 else:
+                    logging.info("There is such a Phone in our database")
                     is_verify = existing_verification.is_verify
 
                 if not is_verify and phone_field == 'phone_mobile2':
@@ -228,7 +235,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.nack()
+        await message.ack()
+        return
 
 
 async def main():
