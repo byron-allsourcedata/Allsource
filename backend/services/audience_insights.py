@@ -23,12 +23,14 @@ class AudienceInsightsService:
         raw_data = self.insights_persistence_service.get_source_insights_info(source_uuid, user.get('id'))
         response = self._build_response(raw_data.get("insights", {}))
         response["name"] = raw_data.get("name", "")
+        response["audience_type"] = raw_data.get("audience_type", "")
         return response
 
     def get_lookalike_insights(self, lookalike_uuid: UUID, user: dict) -> dict:
         raw_data = self.insights_persistence_service.get_lookalike_insights_info(lookalike_uuid, user.get('id'))
         response = self._build_response(raw_data.get("insights", {}))
         response["name"] = raw_data.get("name", "")
+        response["audience_type"] = raw_data.get("audience_type", "")
         return response
 
     def get_data_sources(self, user: dict) -> dict:
