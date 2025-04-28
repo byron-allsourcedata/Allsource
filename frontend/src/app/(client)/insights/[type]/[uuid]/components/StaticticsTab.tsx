@@ -54,6 +54,7 @@ type AudienceInsightsStatisticsResponse = {
   b2b: B2BData;
   b2c: B2CData;
   name: string;
+  audience_type: string;
 };
 
 type StatisticsTabProps = {
@@ -119,6 +120,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = React.memo(
         setB2BData(response.data.b2b);
         setB2CData(response.data.b2c);
         setName(response.data.name);
+        if (response.data.audience_type === "b2c") setTargetIndex(1);
       } catch (error) {
       } finally {
         setLoading(false);
