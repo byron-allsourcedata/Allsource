@@ -3,8 +3,15 @@ import { Box, Tabs, Tab, Typography } from "@mui/material";
 import { useState } from "react";
 import B2CPersonal from "./B2CTabComponents/B2CPersonal";
 import B2CLifestyle from "./B2CTabComponents/B2CLifestyle";
+import B2BProfessional from "./B2BTabComponents/B2BProfessional";
+import B2BEmployment from "./B2BTabComponents/B2BEmployment";
+import B2BEducation from "./B2BTabComponents/B2BEducation";
+import { B2BData } from "./StaticticsTab";
 
-const B2BTabs = () => {
+type B2BTabsProps = {
+  data: B2BData;
+};
+const B2BTabs: React.FC<B2BTabsProps> = ({ data }) => {
   const [tabIndex, setIndex] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
@@ -19,8 +26,9 @@ const B2BTabs = () => {
           flexDirection: "row",
           alignItems: "center",
           position: "sticky",
-          top: 82,
+          top: 95,
           zIndex: 100,
+          pt: 2,
           backgroundColor: "#fff",
           justifyContent: "space-between",
           width: "98%",
@@ -38,9 +46,10 @@ const B2BTabs = () => {
           sx={{
             flexGrow: 1,
             display: "flex",
-            pt: 2,
+            mt: 2,
             width: "100%",
-            justifyContent: "center",
+            padding: "0rem 5rem 0rem",
+            justifyContent: "start",
             alignItems: "start",
           }}
         >
@@ -62,7 +71,7 @@ const B2BTabs = () => {
             }}
           >
             <Tab
-              label="Professional Profile"
+              label="Professional"
               className="tab-filled-button"
               sx={{
                 mr: 2,
@@ -74,7 +83,7 @@ const B2BTabs = () => {
               }}
             />
             <Tab
-              label="Education History"
+              label="Education"
               className="tab-filled-button"
               sx={{
                 mr: 2,
@@ -86,7 +95,7 @@ const B2BTabs = () => {
               }}
             />
             <Tab
-              label="Employment History"
+              label="Employment"
               className="tab-filled-button"
               sx={{
                 mr: 2,
@@ -101,7 +110,7 @@ const B2BTabs = () => {
         </Box>
       </Box>
 
-      {/* <Box
+      <Box
         sx={{
           display: "flex",
           flexDirection: "column",
@@ -109,14 +118,16 @@ const B2BTabs = () => {
         }}
       >
         <TabPanel value={tabIndex} index={0}>
-          <B2CPersonal />
+          <B2BProfessional data={data.professional_profile} />
         </TabPanel>
-        <TabPanel value={tabIndex} index={1}></TabPanel>
+        <TabPanel value={tabIndex} index={1}>
+          <B2BEducation data={data.education} />
+        </TabPanel>
         <TabPanel value={tabIndex} index={2}>
-          <B2CLifestyle />
+          <B2BEmployment data={data.employment_history} />
         </TabPanel>
         <TabPanel value={tabIndex} index={3}></TabPanel>
-      </Box> */}
+      </Box>
     </Box>
   );
 };
