@@ -22,7 +22,6 @@ sys.path.append(parent_dir)
 
 from services.insightsUtils import InsightsUtils
 from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
-from schemas.insights import InsightsByCategory, Personal, Financial, Lifestyle, Voter
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users import FiveXFiveUser

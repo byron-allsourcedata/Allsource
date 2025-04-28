@@ -32,7 +32,7 @@ import LookalikeContainer from "../components/LookalikeContainer";
 import { smartAudiences } from "../../smart-audiences/smartAudiences";
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import ProgressBar from "@/components/ProgressBar";
-import { TableData, LookalikeData, CalculationResponse, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject, PersonalResults } from "@/types"
+import { TableData, LookalikeData, CalculationResponse, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject, PersonalResults, ProfessionalProfileResults, EmploymentHistoryResults } from "@/types"
 import { FeatureImportanceTable, DragAndDropTable, AudienceFieldsSelector, OrderFieldsStep } from "../components"
 export const dynamic = 'force-dynamic';
 
@@ -59,13 +59,16 @@ const CreateLookalikePage: React.FC = () => {
   const [financialData,  setFinancialData]  = useState<FinancialResults>({} as FinancialResults);
   const [lifestylesData,setLifestylesData] = useState<LifestylesResults>({} as LifestylesResults);
   const [voterData,     setVoterData]      = useState<VoterResults>({} as VoterResults);
-  const [realEstateData,setRealEstateData] = useState<RealEstateResults>({} as RealEstateResults);
+  const [professionalProfileData,     setProfessionalProfileData]      = useState<ProfessionalProfileResults>({} as ProfessionalProfileResults);
+  const [employmentHistoryData,     setEmploymentHistoryData]      = useState<EmploymentHistoryResults>({} as EmploymentHistoryResults);
 
   const [personalKeys, setPersonalKeys] = useState<(keyof PersonalResults)[]>([]);
   const [financialKeys, setFinancialKeys] = useState<(keyof FinancialResults)[]>([]);
   const [lifestylesKeys, setLifestylesKeys] = useState<(keyof LifestylesResults)[]>([]);
   const [voterKeys, setVoterKeys] = useState<(keyof VoterResults)[]>([]);
-  const [realEstateKeys, setRealEstateKeys] = useState<(keyof RealEstateResults)[]>([]);
+  const [professionalProfileKeys,     setProfessionalProfileKeys]      = useState<(keyof ProfessionalProfileResults)[]>([]);
+  const [employmentHistoryKeys,     setEmploymentHistoryKeys]      = useState<(keyof EmploymentHistoryResults)[]>([]);
+
   const [dndFields, setDndFields] = useState<Field[]>([]);
   const initialFields = useMemo<Field[]>(() => {
     const toFields = <T extends FeatureObject>(
@@ -83,13 +86,14 @@ const CreateLookalikePage: React.FC = () => {
       ...toFields(financialKeys, financialData),
       ...toFields(lifestylesKeys, lifestylesData),
       ...toFields(voterKeys, voterData),
-      ...toFields(realEstateKeys, realEstateData),
+      ...toFields(professionalProfileKeys, professionalProfileData),
+      ...toFields(employmentHistoryKeys, employmentHistoryData),
     ];
   }, [
     personalKeys, financialKeys,
-    lifestylesKeys, voterKeys, realEstateKeys,
+    lifestylesKeys, voterKeys, professionalProfileKeys, employmentHistoryKeys,
     calculatedResults, financialData,
-    lifestylesData, voterData, realEstateData
+    lifestylesData, voterData, professionalProfileData, employmentHistoryData
   ]);
 
   useEffect(() => {
@@ -167,15 +171,20 @@ const CreateLookalikePage: React.FC = () => {
       );
       if (response.data) {
         setCalculatedResults(response.data);
-        const afi = response.data.audience_feature_importance;
-        setPersonalData(afi.personal  as any);
-        setFinancialData(afi.financial  as any);
-        setLifestylesData(afi.lifestyle as any);
-        setVoterData(afi.voter          as any);
-        setPersonalKeys   (Object.keys(afi.personal ) as (keyof PersonalResults)[]);
-        setFinancialKeys  (Object.keys(afi.financial) as (keyof FinancialResults)[]);
-        setLifestylesKeys (Object.keys(afi.lifestyle) as (keyof LifestylesResults)[]);
-        setVoterKeys      (Object.keys(afi.voter    ) as (keyof VoterResults)[]);
+        const b2c = response.data.audience_feature_importance_b2c;
+        const b2b = response.data.audience_feature_importance_b2b;
+        setPersonalData(b2c.personal  as any);
+        setFinancialData(b2c.financial  as any);
+        setLifestylesData(b2c.lifestyle as any);
+        setVoterData(b2c.voter          as any);
+        setProfessionalProfileData(b2b.professional_profile          as any);
+        setEmploymentHistoryData(b2b.employment_history          as any);
+        setPersonalKeys   (Object.keys(b2c.personal ) as (keyof PersonalResults)[]);
+        setFinancialKeys  (Object.keys(b2c.financial) as (keyof FinancialResults)[]);
+        setLifestylesKeys (Object.keys(b2c.lifestyle) as (keyof LifestylesResults)[]);
+        setVoterKeys      (Object.keys(b2c.voter    ) as (keyof VoterResults)[]);
+        setProfessionalProfileKeys (Object.keys(b2b.professional_profile ) as (keyof ProfessionalProfileResults)[]);
+        setEmploymentHistoryKeys (Object.keys(b2b.employment_history ) as (keyof EmploymentHistoryResults)[]);
         setCurrentStep(2);
       }
     } catch {
@@ -267,9 +276,9 @@ const CreateLookalikePage: React.FC = () => {
     setCurrentStep(0);
   };
 
-  const canProceed = personalKeys.length + financialKeys.length 
-                 + lifestylesKeys.length + voterKeys.length 
-                 + realEstateKeys.length >= 3;
+  const canProceed = (personalKeys.length + financialKeys.length 
+                 + lifestylesKeys.length + voterKeys.length + professionalProfileKeys.length 
+                 + employmentHistoryKeys.length) > 3;
 
   return (
     <Box
@@ -591,11 +600,15 @@ const CreateLookalikePage: React.FC = () => {
                       financialData={financialData}
                       lifestylesData={lifestylesData}
                       voterData={voterData}
+                      professionalProfileData={professionalProfileData}
+                      employmentHistoryData={employmentHistoryData}
                       // realEstateData={realEstateData}
                       onPersonalChange={setPersonalKeys}
                       onFinancialChange={setFinancialKeys}
                       onLifestylesChange={setLifestylesKeys}
                       onVoterChange={setVoterKeys}
+                      onProfessionalProfileChange={setProfessionalProfileKeys}
+                      onEmploymentHistoryChange={setEmploymentHistoryKeys}
                       // onRealEstateChange={setRealEstateKeys}
                       handleNextStep={handleNextStep}
                       canProcessed={canProceed}

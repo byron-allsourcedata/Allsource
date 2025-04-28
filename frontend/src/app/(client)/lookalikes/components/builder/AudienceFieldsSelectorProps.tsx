@@ -7,6 +7,8 @@ import type {
   LifestylesResults,
   VoterResults,
   RealEstateResults,
+  ProfessionalProfileResults,
+  EmploymentHistoryResults,
 } from "@/types";
 import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
@@ -16,12 +18,16 @@ interface AudienceFieldsSelectorProps {
   financialData?: FinancialResults;
   lifestylesData?: LifestylesResults;
   voterData?: VoterResults;
+  professionalProfileData?: ProfessionalProfileResults;
+  employmentHistoryData?: EmploymentHistoryResults;
   // realEstateData?: RealEstateResults;
   handleNextStep: () => void;
   onPersonalChange: (keys: (keyof PersonalResults)[]) => void;
   onFinancialChange: (keys: (keyof FinancialResults)[]) => void;
   onLifestylesChange: (keys: (keyof LifestylesResults)[]) => void;
   onVoterChange: (keys: (keyof VoterResults)[]) => void;
+  onProfessionalProfileChange: (keys: (keyof ProfessionalProfileResults)[]) => void;
+  onEmploymentHistoryChange: (keys: (keyof EmploymentHistoryResults)[]) => void;
   // onRealEstateChange: (keys: (keyof RealEstateResults)[]) => void;
   canProcessed: boolean
 }
@@ -31,12 +37,16 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   financialData = {} as FinancialResults,
   lifestylesData = {} as LifestylesResults,
   voterData = {} as VoterResults,
+  professionalProfileData = {} as ProfessionalProfileResults,
+  employmentHistoryData = {} as EmploymentHistoryResults,
   // realEstateData = {} as RealEstateResults,
   handleNextStep,
   onPersonalChange,
   onFinancialChange,
   onLifestylesChange,
   onVoterChange,
+  onProfessionalProfileChange,
+  onEmploymentHistoryChange,
   // onRealEstateChange,
   canProcessed
 }) => {
@@ -167,11 +177,16 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
           features={voterData}
           onChangeDisplayed={onVoterChange}
         />
-        {/* <FeatureImportanceTable
-          title="Real Estate"
-          features={realEstateData}
-          onChangeDisplayed={onRealEstateChange}
-        /> */}
+        <FeatureImportanceTable
+          title="Professional Profile"
+          features={professionalProfileData}
+          onChangeDisplayed={onProfessionalProfileChange}
+        />
+        <FeatureImportanceTable
+          title="Employment History"
+          features={employmentHistoryData}
+          onChangeDisplayed={onEmploymentHistoryChange}
+        />
       </Grid>
       <Grid item xs={12} md={1} />
       <Grid item xs={12} md={5} sx={{ borderLeft: "1px solid #E4E4E4" }}>

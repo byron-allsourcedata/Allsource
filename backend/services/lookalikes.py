@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple, Dict
 from uuid import UUID
 
 from pydantic.v1 import UUID4
@@ -8,7 +8,7 @@ from enums import BaseEnum
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
-from schemas.lookalikes import CalculateRequest, B2CInsights
+from schemas.lookalikes import CalculateRequest, B2CInsights, B2BInsights
 from schemas.similar_audiences import AudienceFeatureImportance, NormalizationConfig
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.exceptions import EqualTrainTargets, EmptyTrainDataset, \
@@ -34,6 +34,27 @@ LIFESTYLE  = {
     "automotive_buff","golf_enthusiasts","beauty_cosmetics","smoker",
 }
 VOTER      = {"party_affiliation","congressional_district","voting_propensity"}
+EMPLOYMENT_HISTORY = {
+    "job_title",
+    "company_name",
+    "start_date",
+    "end_date",
+    "is_current",
+    "location",
+    "job_description",
+}
+PROFESSIONAL_PROFILE = {
+    "current_job_title",
+    "current_company_name",
+    "job_start_date",
+    "job_duration",
+    "job_location",
+    "job_level",
+    "department",
+    "company_size",
+    "primary_industry",
+    "annual_sales",
+}
 
 class AudienceLookalikesService:
     def __init__(self, lookalikes_persistence_service: AudienceLookalikesPersistence):
@@ -175,11 +196,13 @@ class AudienceLookalikesService:
         limited_results = list(results)[:10]
         return limited_results
 
-    def split_to_b2c(self, insights: dict[str, float]) -> B2CInsights:
+    def split_insights(self, insights: dict[str, float]) -> Tuple[B2CInsights, B2BInsights, Dict]:
         personal = {}
         financial = {}
         lifestyle = {}
         voter = {}
+        employment_history = {}
+        professional_profile = {}
         other = {}
 
         for k, v in insights.items():
@@ -191,16 +214,28 @@ class AudienceLookalikesService:
                 lifestyle[k] = v
             elif k in VOTER:
                 voter[k] = v
+            elif k in EMPLOYMENT_HISTORY:
+                employment_history[k] = v
+            elif k in PROFESSIONAL_PROFILE:
+                professional_profile[k] = v
             else:
                 other[k] = v
 
-        return B2CInsights(
+        b2c = B2CInsights(
             personal=personal,
             financial=financial,
             lifestyle=lifestyle,
             voter=voter,
-            other=other,
+            employment_history=employment_history,
+            professional_profile=professional_profile,
         )
+
+        b2b = B2BInsights(
+            employment_history=employment_history,
+            professional_profile=professional_profile,
+        )
+
+        return b2c, b2b, other
 
     def calculate_lookalike(
         self,
@@ -223,10 +258,6 @@ class AudienceLookalikesService:
                 ordered_features = {},
 
                 unordered_features = [
-                    # matched-person
-                    "email",
-                    "customer_value",
-
                     # personal
                     "age", "gender", "homeowner", "length_of_residence_years",
                     "marital_status", "business_owner",
@@ -252,6 +283,26 @@ class AudienceLookalikesService:
                     # voter
                     "party_affiliation", "congressional_district",
                     "voting_propensity",
+
+                    # employment_history
+                    "job_title",
+                    "company_name",
+                    "start_date",
+                    "end_date",
+                    "location",
+                    "job_description",
+
+                    # professional_profile
+                    "current_job_title",
+                    "current_company_name",
+                    "job_start_date",
+                    "job_duration",
+                    "job_location",
+                    "job_level",
+                    "department",
+                    "company_size",
+                    "primary_industry",
+                    "annual_sales",
                 ]
             )
             audience_feature_dict = similar_audience_service.get_audience_feature_importance_with_config(
@@ -264,14 +315,16 @@ class AudienceLookalikesService:
                 for k, v in audience_feature_dict.items()
             }
 
-            insights_payload: B2CInsights = self.split_to_b2c(rounded_feature)
+            b2c_insights, b2b_insights, other = self.split_insights(rounded_feature)
 
         except (EqualTrainTargets, EmptyTrainDataset, LessThenTwoTrainDataset):
-            insights_payload = B2CInsights()
+            b2c_insights, b2b_insights, other = B2CInsights(), B2BInsights(), {}
 
         return CalculateRequest(
             count_matched_persons=len(audience_data),
-            audience_feature_importance=insights_payload
+            audience_feature_importance_b2c=b2c_insights,
+            audience_feature_importance_b2b=b2b_insights,
+            audience_feature_importance_other=other
         )
 
     

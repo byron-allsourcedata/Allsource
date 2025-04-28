@@ -4,7 +4,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import type { Field, LookalikeFieldsGridProps } from "@/types";
 
 const formatPercent = (value: string) =>
-  `${(parseFloat(value) * 100).toFixed(4)}%`;
+  `${(parseFloat(value) * 100).toFixed(2)}%`;
 
 const formatKey = (k: string) =>
   k
