@@ -24,6 +24,7 @@ from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatform
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
+from models.audience_smarts_validations import AudienceSmartValidation
 from sqlalchemy.orm import sessionmaker, Session, selectinload
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
@@ -71,17 +72,12 @@ def get_lead_attributes(session, enrichment_user_ids, data_sync_id):
     .join(AudienceSmartPerson, AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id) \
     .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id) \
     .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id) \
-    .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
-    .options(
-        selectinload(EnrichmentUser.emails_enrichment),
-        selectinload(EnrichmentUser.emails_enrichment).selectinload(EmailEnrichment.email)
-    )\
+    .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id)\
     .filter(
         EnrichmentUser.id.in_(enrichment_user_ids),
         IntegrationUserSync.id == data_sync_id
     ) \
     .all()
-
     if result:
         enrichment_users = [row[0] for row in result]
         user_integration = result[0][1]

@@ -246,25 +246,15 @@ class GoogleAdsIntegrationsService:
             return {'message': 'successfuly'}  
     
     def __mapped_googleads_profile(self, enrichment_user: EnrichmentUser) -> GoogleAdsProfile:
-        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
-        first_email = get_valid_email(emails_list)
-
-        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value):
-            return first_email
-        
-        # first_phone = get_valid_phone(five_x_five_user)
-        # address_parts = get_valid_location(five_x_five_user)
+        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
         fake = Faker()
 
-        first_phone = fake.phone_number()
         address_parts = fake.address()
-        first_name = fake.first_name()
-        last_name = fake.last_name()
         return GoogleAdsProfile(
-            email=first_email,
-            first_name=first_name,
-            last_name=last_name,
-            phone=validate_and_format_phone(first_phone),
+            email=verified_email,
+            first_name=enrichment_user.contacts.first_name,
+            last_name=enrichment_user.contacts.last_name,
+            phone=validate_and_format_phone(verified_phone),
             # city=address_parts[1],
             # state=address_parts[2],
             address=address_parts

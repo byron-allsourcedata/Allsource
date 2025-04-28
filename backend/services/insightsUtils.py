@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 
-from models.enrichment import AudienceSourcesMatchedPerson, EnrichmentUser, EnrichmentPersonalProfiles, \
-    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, AudienceLookalikesPerson, \
+from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, \
+    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, \
     ProfessionalProfile, EnrichmentEmploymentHistory
 
 

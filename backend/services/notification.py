@@ -12,9 +12,6 @@ class Notification:
         self.subscription_service = subscription_service
         self.plan_persistence = plan_persistence
         self.leads_persistence = leads_persistence
-        
-    def get_all_enrichment(self,):
-        return self.notification_persistence.get_all_enrichment()
 
     def get_notification(self, user: dict):
         notifications = self.notification_persistence.get_notifications_by_user_id(user_id=user.get('id'))

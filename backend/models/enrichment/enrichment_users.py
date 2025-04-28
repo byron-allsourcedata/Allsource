@@ -30,6 +30,7 @@ EnrichmentUser.contacts = relationship(
     EnrichmentUserContact,
     back_populates='enrichment_user',
     foreign_keys=[EnrichmentUserContact.asid],
+    uselist=False,
     lazy="select"
 )
 
@@ -37,6 +38,7 @@ EnrichmentUser.personal_profiles = relationship(
     EnrichmentPersonalProfiles,
     back_populates='enrichment_user',
     foreign_keys=[EnrichmentPersonalProfiles.asid],
+    uselist=False,
     lazy="select"
 )
 
@@ -45,6 +47,7 @@ EnrichmentUser.professional_profiles = relationship(
     back_populates='enrichment_user',
     cascade="all, delete-orphan",
     foreign_keys=[ProfessionalProfile.asid],
+    uselist=False,
     lazy="select"
 )
 
