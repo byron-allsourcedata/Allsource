@@ -264,6 +264,16 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                             "total_validated": 0,
                                         }
                                     )
+                                    db_session.query(AudienceSmart).filter(
+                                        AudienceSmart.id == aud_smart_id
+                                    ).update(
+                                        {
+                                            "validated_records": 0,
+                                            "status": "ready",
+                                        }
+                                    )
+
+                                    db_session.commit()
                                     return    
 
                                 i += 1
