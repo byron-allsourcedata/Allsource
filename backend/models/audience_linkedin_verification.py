@@ -4,10 +4,10 @@ from sqlalchemy.sql import func
 from models.audience_smarts_persons import AudienceSmartPerson
 
 
-class EnrichmentLinkedinVerification(Base):
-    __tablename__ = "enrichment_linkedin_verification"
+class AudienceLinkedinVerification(Base):
+    __tablename__ = "audience_linkedins_verification"
     __table_args__ = (
-        Index('enrichment_linkedin_verification_linkedin_url_idx', 'linkedin_url', unique=True),
+        Index('audience_linkedins_verification_linkedin_url_idx', 'linkedin_url', unique=True),
     )
 
     id = Column(

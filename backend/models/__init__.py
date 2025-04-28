@@ -34,7 +34,7 @@ from .enrichment_user_contact import EnrichmentUserContact
 from .enrichment_user_ids import EnrichmentUserId
 from .enrichment_users import EnrichmentUser
 from .enrichment_voter_record import EnrichmentVoterRecord
-from .enrichment_phones_verification import EnrichmentPhoneVerification
+from .audience_phones_verification import AudiencePhoneVerification
 from .five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from .five_x_five_emails import FiveXFiveEmails
 from .five_x_five_hems import FiveXFiveHems
@@ -79,7 +79,7 @@ from .users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from .enrichment_emails import EmailType
 from .enrichment_users_emails import EnrichmentUsersEmails
 from .enrichment_personal_profiles import EnrichmentPersonalProfiles
-from .enrichment_linkedin_verification import EnrichmentLinkedinVerification
+from .audience_linkedin_verification import AudienceLinkedinVerification
 
 __all__ = [
     "BigCommerceUser",
@@ -116,7 +116,7 @@ __all__ = [
     "EnrichmentUserId",
     "EnrichmentUser",
     "EnrichmentVoterRecord",
-    "EnrichmentPhoneVerification",
+    "AudiencePhoneVerification",
     "FiveXFiveCookieSyncFile",
     "FiveXFiveEmails",
     "FiveXFiveHems",
@@ -160,6 +160,6 @@ __all__ = [
     "UsersUnlockedFiveXFiveUser",
     "EmailType",
     "EnrichmentUsersEmails",
-    "EnrichmentPersonalProfiles",
-    "EnrichmentLinkedinVerification"
+    "PersonalProfiles",
+    "AudienceLinkedinVerification"
 ]

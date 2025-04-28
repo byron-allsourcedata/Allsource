@@ -9,10 +9,10 @@ from models.audience_smarts_persons import AudienceSmartPerson
 #     name='enrichment_phone_verification_statuses', create_type=True
 # )
 
-class EnrichmentPhoneVerification(Base):
-    __tablename__ = "enrichment_phones_verification"
+class AudiencePhoneVerification(Base):
+    __tablename__ = "audience_phones_verification"
     __table_args__ = (
-        Index('enrichment_phones_verification_phone_idx', 'phone', unique=True),
+        Index('audience_phones_verification_phone_idx', 'phone', unique=True),
     )
 
     id = Column(

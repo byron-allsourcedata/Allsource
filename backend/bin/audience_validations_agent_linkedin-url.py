@@ -24,7 +24,7 @@ from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.enrichment_users import EnrichmentUser
 from models.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment_linkedin_verification import EnrichmentLinkedinVerification
+from models.audience_linkedin_verification import AudienceLinkedinVerification
 from models.enrichment_employment_history import EnrichmentEmploymentHistory
 from models.emails_enrichment import EmailEnrichment
 from models.enrichment_user_ids import EnrichmentUserId
@@ -70,7 +70,7 @@ async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
         logging.error(f"Error sending SSE: {e}")
 
 
-async def aud_validation_agent_linkedin_url(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
+async def process_rmq_message(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -96,7 +96,7 @@ async def aud_validation_agent_linkedin_url(message: IncomingMessage, db_session
                 failed_ids.append(person_id)
                 continue
 
-            existing_verification = db_session.query(EnrichmentLinkedinVerification).filter_by(linkedin_url=linkedin_url).first()
+            existing_verification = db_session.query(AudienceLinkedinVerification).filter_by(linkedin_url=linkedin_url).first()
 
             if not existing_verification:
                 response = requests.get(
@@ -129,7 +129,7 @@ async def aud_validation_agent_linkedin_url(message: IncomingMessage, db_session
                         break
                 
                 verifications.append(
-                    EnrichmentLinkedinVerification(
+                    AudienceLinkedinVerification(
                         audience_smart_person_id=person_id,
                         linkedin_url=linkedin_url,
                         is_verify=is_verify
@@ -266,7 +266,7 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_validation_agent_linkedin_url, connection=connection, db_session=db_session)
+                functools.partial(process_rmq_message, connection=connection, db_session=db_session)
             )
 
         await asyncio.Future()

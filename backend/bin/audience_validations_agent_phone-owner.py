@@ -25,8 +25,7 @@ from models.audience_smarts_persons import AudienceSmartPerson
 from models.enrichment_users import EnrichmentUser
 from models.enrichment_user_ids import EnrichmentUserId
 from models.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment_phones_verification import EnrichmentPhoneVerification
-from models.enrichment_linkedin_verification import EnrichmentLinkedinVerification
+from models.audience_phones_verification import AudiencePhoneVerification
 from models.emails_enrichment import EmailEnrichment
 from models.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -70,7 +69,7 @@ async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
         logging.error(f"Error sending SSE: {e}")
 
 
-async def aud_validation_agent_phone_owner(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
+async def process_rmq_message(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -99,7 +98,7 @@ async def aud_validation_agent_phone_owner(message: IncomingMessage, db_session:
                 if not phone_number:
                     continue
 
-                existing_verification = db_session.query(EnrichmentPhoneVerification).filter_by(phone=phone_number).first()
+                existing_verification = db_session.query(AudiencePhoneVerification).filter_by(phone=phone_number).first()
 
                 if not existing_verification:
                     response = requests.get(
@@ -126,7 +125,7 @@ async def aud_validation_agent_phone_owner(message: IncomingMessage, db_session:
 
 
                     verifications.append(
-                        EnrichmentPhoneVerification(
+                        AudiencePhoneVerification(
                             audience_smart_person_id=person_id,
                             phone=phone_number,
                             status=response_data.get("status", ""),
@@ -265,7 +264,7 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_validation_agent_phone_owner, connection=connection, db_session=db_session)
+                functools.partial(process_rmq_message, connection=connection, db_session=db_session)
             )
 
         await asyncio.Future()
