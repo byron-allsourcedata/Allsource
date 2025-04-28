@@ -164,7 +164,7 @@ class AudienceLookalikesService:
         except IntegrityError:
             raise HTTPException(status_code=400, detail="Cannot remove lookalike because it is used for smart audience")
 
-    def create_lookalike(self, user, uuid_of_source, lookalike_size, lookalike_name, created_by_user_id, audience_feature_importance: AudienceFeatureImportance):
+    def create_lookalike(self, user, uuid_of_source, lookalike_size, lookalike_name, created_by_user_id, audience_feature_importance: Dict):
         lookalike = self.lookalikes_persistence_service.create_lookalike(
             uuid_of_source, user.get('id'), lookalike_size, lookalike_name, created_by_user_id, audience_feature_importance=audience_feature_importance
         )
@@ -264,7 +264,7 @@ class AudienceLookalikesService:
                     "birth_day", "birth_month", "birth_year",
                     "has_children", "number_of_children",
                     "religion", "ethnicity", "language_code",
-                    "state_abbr", "zip_code5",
+                    "state_abbr",
 
                     # financial
                     "income_range", "net_worth", "credit_rating",
@@ -317,7 +317,7 @@ class AudienceLookalikesService:
 
             b2c_insights, b2b_insights, other = self.split_insights(rounded_feature)
 
-        except (EqualTrainTargets, EmptyTrainDataset, LessThenTwoTrainDataset):
+        except (EqualTrainTargets, EmptyTrainDataset, LessThenTwoTrainDataset, Exception):
             b2c_insights, b2b_insights, other = B2CInsights(), B2BInsights(), {}
 
         return CalculateRequest(

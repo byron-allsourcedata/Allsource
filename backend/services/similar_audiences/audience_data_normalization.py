@@ -109,7 +109,7 @@ class AudienceDataNormalizationService:
 
     def fill_unknowns(self, df: DataFrame, cat_columns: List[str]):
         for cat in cat_columns:
-            df.loc[:, cat] = df[cat].fillna('U')
+            df.loc[:, cat] = df[cat].fillna('U').astype(str).infer_objects(copy=False)
 
         if 'age' in df.columns:
             df["age"] = pd.to_numeric(df["age"], errors="coerce")

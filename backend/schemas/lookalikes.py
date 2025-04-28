@@ -8,7 +8,7 @@ class LookalikeCreateRequest(BaseModel):
     uuid_of_source: str
     lookalike_size: str
     lookalike_name: str
-    audience_feature_importance: Optional[AudienceFeatureImportance]
+    audience_feature_importance: Optional[Dict]
 
 
 class UpdateLookalikeRequest(BaseModel):

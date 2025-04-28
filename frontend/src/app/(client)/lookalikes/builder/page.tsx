@@ -226,6 +226,9 @@ const CreateLookalikePage: React.FC = () => {
         lookalike_name: sourceName,
         audience_feature_importance: featureImportanceMap,
       };
+      if (!Object.prototype.hasOwnProperty.call(featureImportanceMap, 'zip_code5')) {
+        featureImportanceMap['zip_code5'] = 0;
+      }
       const response = await axiosInstance.post(
         "/audience-lookalikes/builder",
         requestData

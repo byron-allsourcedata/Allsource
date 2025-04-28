@@ -169,11 +169,13 @@ def build_dynamic_query_and_config(
     sig: Dict[str, float]
 ) -> Tuple:
     column_map = get_enrichment_user_column_map()
-    dynamic_columns = [column_map[name] for name in sig if name in column_map]
+    selected_fields = [name for name in sig.keys() if name in column_map]
+    dynamic_columns = [column_map[name] for name in selected_fields]
     select_columns = [
         EnrichmentUserId.id.label("EnrichmentUserId"),
         *dynamic_columns
     ]
+    unordered = [f for f in selected_fields if f != "zip_code5"]
 
     query = (
         db_session
@@ -208,54 +210,7 @@ def build_dynamic_query_and_config(
     normalization_config = NormalizationConfig(
         numerical_features=[],
         ordered_features={},
-
-        unordered_features=[
-            # personal
-            "age", "gender", "homeowner", "length_of_residence_years",
-            "marital_status", "business_owner",
-            "birth_day", "birth_month", "birth_year",
-            "has_children", "number_of_children",
-            "religion", "ethnicity", "language_code",
-            "state_abbr", "zip_code5",
-
-            # financial
-            "income_range", "net_worth", "credit_rating",
-            "credit_cards", "bank_card", "credit_card_premium",
-            "credit_card_new_issue", "credit_lines",
-            "credit_range_of_new_credit_lines",
-            "donor", "investor", "mail_order_donor",
-
-            # lifestyle
-            "pets", "cooking_enthusiast", "travel", "mail_order_buyer",
-            "online_purchaser", "book_reader", "health_and_beauty",
-            "fitness", "outdoor_enthusiast", "tech_enthusiast", "diy",
-            "gardening", "automotive_buff", "golf_enthusiasts",
-            "beauty_cosmetics", "smoker",
-
-            # voter
-            "party_affiliation", "congressional_district",
-            "voting_propensity",
-
-            # employment_history
-            "job_title",
-            "company_name",
-            "start_date",
-            "end_date",
-            "location",
-            "job_description",
-
-            # professional_profile
-            "current_job_title",
-            "current_company_name",
-            "job_start_date",
-            "job_duration",
-            "job_location",
-            "job_level",
-            "department",
-            "company_size",
-            "primary_industry",
-            "annual_sales",
-        ]
+        unordered_features=unordered
     )
 
     return query, normalization_config
@@ -264,15 +219,14 @@ def build_dynamic_query_and_config(
 def fetch_user_profiles(
     db_session: Session,
     audience_lookalike: AudienceLookalikes
-) -> List[AudienceData]:
+) -> List[Dict]:
     sig_fields = audience_lookalike.significant_fields or {}
         
     column_map = {
-        "EmailAddress": AudienceSourcesMatchedPerson.email.label("EmailAddress"),
         "customer_value": (AudienceSourcesMatchedPerson.value_score.label("customer_value")),
         **get_enrichment_user_column_map()
     }
-    select_cols = [column_map["EmailAddress"]]
+    select_cols = []
     for fld in sig_fields:
         if fld in column_map:
             select_cols.append(column_map[fld])
@@ -316,7 +270,7 @@ def fetch_user_profiles(
         .filter(AudienceSource.id == audience_lookalike.source_uuid)
         .all()
     )
-    profiles: List[AudienceData] = []
+    profiles: List[Dict] = []
     for row in rows:
         data_kwargs = {}
         for label, value in row._mapping.items():
@@ -325,23 +279,24 @@ def fetch_user_profiles(
             else:
                 data_kwargs[label] = str(value)
 
-        profiles.append(AudienceData(**data_kwargs))
+        profiles.append(data_kwargs)
         
     return profiles
 
 
 def train_and_save_model(
     lookalike_id: int,
-    user_profiles: List[AudienceData],
+    user_profiles: List[Dict],
     config: NormalizationConfig,
     similar_audiences_scores_service: SimilarAudiencesScoresService,
     similar_audience_service: SimilarAudienceService
 ):
     dict_enrichment = [
-        {k: str(v) if v is not None else "None" for k, v in profile.__dict__.items()}
+        {k: str(v) if v is not None else "None" for k, v in profile.items()}
         for profile in user_profiles
     ]
-    model = similar_audience_service.get_trained_model(dict_enrichment, config)
+    trained = similar_audience_service.get_trained_model(dict_enrichment, config)
+    model = trained[0] if isinstance(trained, (tuple, list)) else trained
     similar_audiences_scores_service.save_enrichment_model(
         lookalike_id=lookalike_id,
         model=model
