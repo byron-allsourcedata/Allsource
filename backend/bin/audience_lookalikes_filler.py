@@ -11,8 +11,6 @@ from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
-from models import EnrichmentEmploymentHistory, ProfessionalProfile
-
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
@@ -27,6 +25,7 @@ from services.similar_audiences.audience_data_normalization import AudienceDataN
 from services.similar_audiences import SimilarAudienceService
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes_persons import AudienceLookalikes
+from models import EnrichmentEmploymentHistory, ProfessionalProfile
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
 from persistence.enrichment_models import EnrichmentModelsPersistence
