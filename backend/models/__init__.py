@@ -80,6 +80,7 @@ from .enrichment_emails import EmailType
 from .enrichment_users_emails import EnrichmentUsersEmails
 from .enrichment_personal_profiles import EnrichmentPersonalProfiles
 from .audience_linkedin_verification import AudienceLinkedinVerification
+from .audience_smarts_validations import AudienceSmartValidation
 
 __all__ = [
     "BigCommerceUser",
@@ -93,6 +94,7 @@ __all__ = [
     "ApiKeys",
     "Audience",
     "AudienceDataSyncImportedPersons",
+    "AudienceSmartValidation",
     "AudienceLeads",
     "AudienceLookalikes",
     "AudienceLookalikesPerson",
