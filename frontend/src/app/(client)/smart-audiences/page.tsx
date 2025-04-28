@@ -106,6 +106,8 @@ const getUseCaseStyle = (status: string) => {
             return <Image src="./meta.svg" alt="meta icon" width={20} height={20}/>
         case 'bing':
             return <Image src="./bing.svg" alt="bing icon" width={20} height={20}/>
+        case 'linkedin':
+            return <Image src="./linkedin.svg" alt="linkedin icon" width={20} height={20}/>
         case 'tele_marketing':
             return <HeadsetMicOutlinedIcon />
         default:
