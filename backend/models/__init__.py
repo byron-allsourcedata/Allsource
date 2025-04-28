@@ -27,6 +27,8 @@ from .enrichment import (Email, EmailEnrichment, EnrichmentEmploymentHistory, En
                          EnrichmentLifestyle, EnrichmentLookalikeScore, EnrichmentModels, EnrichmentUserContact,
                          EnrichmentUser, EnrichmentVoterRecord, EnrichmentUsersEmails, EnrichmentPersonalProfiles, EnrichmentEmails)
 
+
+from .audience_phones_verification import AudiencePhoneVerification
 from .five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from .five_x_five_emails import FiveXFiveEmails
 from .five_x_five_hems import FiveXFiveHems
@@ -68,6 +70,8 @@ from .users import Users
 from .users_account_notification import UserAccountNotification
 from .users_domains import UserDomains
 from .users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
+from .audience_linkedin_verification import AudienceLinkedinVerification
+from .audience_smarts_validations import AudienceSmartValidation
 
 __all__ = [
     "BigCommerceUser",
@@ -81,6 +85,7 @@ __all__ = [
     "ApiKeys",
     "Audience",
     "AudienceDataSyncImportedPersons",
+    "AudienceSmartValidation",
     "AudienceLeads",
     "AudienceLookalikes",
     "AudienceLookalikesPerson",
@@ -104,6 +109,7 @@ __all__ = [
     "EnrichmentEmails",
     "EnrichmentUser",
     "EnrichmentVoterRecord",
+    "AudiencePhoneVerification",
     "FiveXFiveCookieSyncFile",
     "FiveXFiveEmails",
     "FiveXFiveHems",
@@ -145,7 +151,8 @@ __all__ = [
     "UserAccountNotification",
     "UserDomains",
     "UsersUnlockedFiveXFiveUser",
-    "EmailType",
     "EnrichmentUsersEmails",
     "EnrichmentPersonalProfiles"
+    "PersonalProfiles",
+    "AudienceLinkedinVerification"
 ]

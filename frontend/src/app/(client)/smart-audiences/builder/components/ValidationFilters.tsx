@@ -21,6 +21,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { smartAudiences } from "../../smartAudiences";
 import ValidationPopup from "./SkipValidationPopup";
 import { useRouter } from "next/navigation";
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 interface ExpandableFilterProps {
   targetAudience: string;
@@ -28,6 +29,7 @@ interface ExpandableFilterProps {
   onSkip: () => void;
   onValidate: (data: FilterData) => void;
   onEdit: () => void;
+  setPersentsData: (value: number) => void;
 }
 
 interface Recency {
@@ -68,6 +70,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
   onSkip,
   onValidate,
   onEdit,
+  setPersentsData
 }) => {
   const router = useRouter();
   const [isOpenPersonalEmail, setIsOpenPersonalEmail] = useState(false);
@@ -75,6 +78,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
   const [isOpenPhone, setIsOpenPhone] = useState(false);
   const [isOpenPostalCAS, setIsOpenPostalCAS] = useState(false);
   const [isOpenLinkedIn, setIsOpenLinkedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const [selectedOptionsPersonalEmail, setSelectedOptionsPersonalEmail] =
     useState<string[]>([]);
@@ -121,6 +125,19 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
       );
     }
   };
+
+  const getEstimatePredictable = async (validations: string[]) => {
+    setIsLoading(true);
+    try {
+      const response = await axiosInstance.get(`/audience-smarts/estimates-predictable-validation?validations=${validations}`);
+      if (response.status === 200 && response.data) {
+        setPersentsData(response.data)
+      }
+    } catch {
+    } finally {
+      setIsLoading(false);
+    }
+};
 
   const handleNestedSelect = (option: string, value: string) => {
     if (!isValidate) {
@@ -225,7 +242,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
     setIsOpenPhone(false);
     setIsOpenPostalCAS(false);
     setIsOpenLinkedIn(false);
-    onValidate({
+    const validations = {
       personal_email: convertValidationWithRecency(
         selectedOptionsPersonalEmail,
         nestedSelections["Recency"]
@@ -237,7 +254,14 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
       phone: convertValidation(selectedOptionsPhone),
       postal_cas: convertValidation(selectedOptionsPostalCAS),
       linked_in: convertValidation(selectedOptionsLinkedIn),
-    });
+    }
+    onValidate(validations);
+    getEstimatePredictable([
+      ...selectedOptionsPersonalEmail.map(el => `personal_email-${toSnakeCase(el)}`), 
+      ...selectedOptionsBusinessEmail.map(el => (el === "RecencyBusiness") ? `business_email-recency` : `personal_email-${toSnakeCase(el)}`),
+      ...selectedOptionsPhone.map(el => `phone-${toSnakeCase(el)}`),
+      ...selectedOptionsPostalCAS.map(el => `postal_cas-${toSnakeCase(el)}`),
+      ...selectedOptionsLinkedIn.map(el => `linked_in-${toSnakeCase(el)}`),])
   };
 
   const handleSkip = () => {
@@ -274,7 +298,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
       useCaseType === "Email"
     ) {
       setNestedSelections((prev) => ({ ...prev, Recency: "30 days" }));
-      setSelectedOptionsPersonalEmail(["MX", "Delivery", "Recency"]);
+      // setSelectedOptionsPersonalEmail(["MX", "Delivery", "Recency"]);
+      setSelectedOptionsPersonalEmail(["MX", "Recency"]);
       setValidate(false);
     }
 
@@ -283,31 +308,37 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
       useCaseType === "Email"
     ) {
       setNestedSelections((prev) => ({ ...prev, RecencyBusiness: "30 days" }));
-      setSelectedOptionsBusinessEmail(["MX", "Delivery", "RecencyBusiness"]);
+      // setSelectedOptionsBusinessEmail(["MX", "Delivery", "RecencyBusiness"]);
+      setSelectedOptionsBusinessEmail(["MX", "RecencyBusiness"]);
       setValidate(false);
     }
 
     if (useCaseType === "Tele Marketing") {
       if (targetAudience === "Both" || targetAudience === "B2B") {
+        // setSelectedOptionsPhone([
+        //   "Last updated date",
+        //   "Confirmation",
+        //   "DNC filter",
+        // ]);
         setSelectedOptionsPhone([
-          "Last updated date",
           "Confirmation",
           "DNC filter",
         ]);
       } else if (targetAudience === "B2C") {
-        setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
+        // setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
+        setSelectedOptionsPhone(["DNC filter"]);
       }
       setValidate(false);
     }
 
     if (useCaseType === "Postal") {
-      if (targetAudience === "Both") {
-        setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
-      } else if (targetAudience === "B2C") {
-        setSelectedOptionsPostalCAS(["CAS home address"]);
-      } else if (targetAudience === "B2B") {
-        setSelectedOptionsPostalCAS(["CAS office address"]);
-      }
+      // if (targetAudience === "Both") {
+      //   setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
+      // } else if (targetAudience === "B2C") {
+      //   setSelectedOptionsPostalCAS(["CAS home address"]);
+      // } else if (targetAudience === "B2B") {
+      //   setSelectedOptionsPostalCAS(["CAS office address"]);
+      // }
       setValidate(false);
     }
 
@@ -1184,7 +1215,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                               <Checkbox
                                 size="small"
                                 // disabled={isValidate}
-                                disabled={option === "Last updated date" || option === "Confirmation"}
+                                disabled={option === "Last updated date"}
                                 checked={selectedOptionsPhone.includes(option)}
                                 onChange={() =>
                                   handleOptionClick(
@@ -1425,8 +1456,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
                         <Checkbox
-                          // disabled={isValidate}
-                          disabled={true}
+                          disabled={isValidate}
                           size="small"
                           checked={selectedOptionsLinkedIn.includes(
                             "Job validation"

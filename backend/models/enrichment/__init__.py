@@ -11,6 +11,7 @@ from .enrichment_voter_record import EnrichmentVoterRecord
 from .enrichment_emails import EnrichmentEmails
 from .emails import Email
 from .emails_enrichment import EmailEnrichment
+from .professional_profile import ProfessionalProfile
 
 __all__ = [
     "EnrichmentUser",
@@ -25,5 +26,6 @@ __all__ = [
     "Email",
     "EmailEnrichment",
     "EnrichmentPersonalProfiles",
-    "EnrichmentEmails"
+    "EnrichmentEmails",
+    "ProfessionalProfile"
 ]

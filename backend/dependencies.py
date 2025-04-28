@@ -20,6 +20,7 @@ from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from models.users import Users as User
 from persistence.audience_dashboard import DashboardAudiencePersistence
+from persistence.audience_settings import AudienceSettingPersistence
 from persistence.audience_insights import AudienceInsightsPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_smarts import AudienceSmartsPersistence
@@ -109,6 +110,8 @@ async def verify_signature(request: Request):
 def get_audience_sources_persistence(db: Session = Depends(get_db)):
     return AudienceSourcesPersistence(db)
 
+def get_audience_setting_persistence(db: Session = Depends(get_db)):
+    return AudienceSettingPersistence(db)
 
 def get_audience_sources_matched_persons_persistence(db: Session = Depends(get_db)):
     return AudienceSourcesMatchedPersonsPersistence(db)
@@ -244,11 +247,13 @@ def get_audience_sources_service(
 def get_audience_smarts_service(
         audience_smarts_persistence: AudienceSmartsPersistence = Depends(get_audience_smarts_persistence),
         lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(get_lookalikes_persistence),
-        audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence)
+        audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence),
+        audience_settings_persistence: AudienceSettingPersistence = Depends(get_audience_setting_persistence)
 ):
     return AudienceSmartsService(audience_smarts_persistence=audience_smarts_persistence,
                                  lookalikes_persistence_service=lookalikes_persistence_service,
-                                 audience_sources_persistence=audience_sources_persistence)
+                                 audience_sources_persistence=audience_sources_persistence,
+                                 audience_settings_persistence=audience_settings_persistence)
 
 
 def get_slack_service(

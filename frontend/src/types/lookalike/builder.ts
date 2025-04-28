@@ -61,8 +61,8 @@ export interface PersonalResults extends FeatureObject {
     language_code: number;
     state_abbr: number;
     zip_code5: number;
-} 
-  
+}
+
 
 export interface FinancialResults extends FeatureObject {
     income_range: number;
@@ -130,15 +130,50 @@ export interface RealEstateResults extends FeatureObject {
     TaxAmount: number;
 }
 
-export interface AudienceFeatureImportance {
-    personal:   PersonalResults;
-    financial:  FinancialResults;
-    lifestyle:  LifestylesResults;
-    voter:      VoterResults;
-  }
+export interface OtherResults extends FeatureObject {
+    [key: string]: number;
+}
 
-  export interface CalculationResponse {
+export interface EmploymentHistoryResults extends FeatureObject {
+    job_title: number;
+    company_name: number;
+    start_date: number;
+    end_date: number;
+    is_current: number;
+    location: number;
+    job_description: number;
+}
+
+export interface ProfessionalProfileResults extends FeatureObject {
+    current_job_title: number;
+    current_company_name: number;
+    job_start_date: number;
+    job_duration: number;
+    job_location: number;
+    job_level: number;
+    department: number;
+    company_size: number;
+    primary_industry: number;
+    annual_sales: number;
+}
+
+
+export interface B2CResults {
+    personal: PersonalResults;
+    financial: FinancialResults;
+    lifestyle: LifestylesResults;
+    voter: VoterResults;
+}
+
+export interface B2BResults {
+    employment_history: EmploymentHistoryResults;
+    professional_profile: ProfessionalProfileResults;
+}
+
+export interface CalculationResponse {
     count_matched_persons: number;
-    audience_feature_importance: AudienceFeatureImportance;
-  }
+    audience_feature_importance_b2c: B2CResults;
+    audience_feature_importance_b2b: B2BResults;
+    other: OtherResults;
+}
 

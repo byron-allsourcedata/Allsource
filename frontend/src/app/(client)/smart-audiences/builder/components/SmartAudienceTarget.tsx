@@ -124,6 +124,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   const [isTableVisible, setIsTableVisible] = useState(true);
   const [isValidate, setIsValidate] = useState(false);
   const [isValidateSkip, setIsValidateSkip] = useState(false);
+  const [persentsData, setPersentsData] = useState<number>(0);
   const [validationFilters, setValidationFilters] =
     useState<ValidationData | null>();
   const [targetAudience, setTargetAudience] = useState<string | "">("");
@@ -136,9 +137,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   const [value, setValue] = useState<number | null>(0);
   // const [maxValue, setMaxValue] = useState<number | null>(100000);
   const [numberToValidate, setNumberToValidate] = useState<number | null>(null);
-  const [estimatedContacts, setEstimatedContacts] = useState<number | null>(
-    null
-  );
+  const [estimatedContacts, setEstimatedContacts] = useState<number>(0);
   const [availableCredits, setAvailableCredits] = useState<number | null>(60);
   const [validationCost, setValidationCost] = useState<number | null>(null);
   const [isCalculateActiveSegments, setIsCalculateActiveSegments] =
@@ -150,7 +149,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
   const handleCalculateActiveSegments = (value: number) => {
     setNumberToValidate(value);
-    setEstimatedContacts(value - 1257);
+    setEstimatedContacts(value * persentsData);
     setValidationCost(10);
     setIsCalculateActiveSegments(true);
   };
@@ -903,6 +902,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
           onSkip={handleOnSkip}
           onValidate={handleFilterValidation}
           onEdit={handleOnEditValidation}
+          setPersentsData={setPersentsData}
         />
       )}
 
@@ -1150,9 +1150,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                     </Tooltip>
                   </Typography>
                   <Typography>
-                    {formatNumber(
-                      estimatedContacts ? estimatedContacts.toString() : "0"
-                    )}
+                    {Math.trunc(estimatedContacts).toLocaleString('en-US')}
                   </Typography>
                 </Box>
 

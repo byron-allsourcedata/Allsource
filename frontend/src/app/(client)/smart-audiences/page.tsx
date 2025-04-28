@@ -30,6 +30,7 @@ import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
 import EditIcon from '@mui/icons-material/Edit';
+import TableCustomCell from "../sources/components/table/TableCustomCell";
 import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
 import { useScrollShadow } from '@/hooks/useScrollShadow';
 
@@ -96,6 +97,62 @@ const getStatusStyle = (status: string) => {
     }
 };
 
+// { key: 'name', label: 'Smart Audience Name' },
+// { key: 'use_case', label: 'Use Case' },
+// { key: 'validations', label: 'Validations' },
+// { key: 'created_date', label: 'Created', sortable: true },
+// { key: 'number_of_customers', label: 'Total Universe', sortable: true },
+// { key: 'active_segment_records', label: 'Active Segment', sortable: true },
+// { key: 'status', label: 'Status' },
+// { key: 'actions', label: 'Actions' }
+
+const columns = [
+    {
+      key: "name",
+      label: "Smart Audience Name",
+      widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
+    },
+    {
+      key: "use_case",
+      label: "Use Case",
+      widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
+    },
+    {
+      key: "validations",
+      label: "Validations",
+      widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
+    },
+    {
+      key: "created_date",
+      label: "Created",
+      widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+      sortable: true
+    },
+    {
+      key: "number_of_customers",
+      label: "Total Universe",
+      widths: { width: "13vw", minWidth: "13vw", maxWidth: "20vw" },
+      sortable: true
+    },
+    {
+      key: "active_segment_records",
+      label: "Active Segment",
+      widths: { width: "125px", minWidth: "125px", maxWidth: "125px" },
+      sortable: true,
+    },
+    {
+      key: "status",
+      label: "Status",
+      widths: { width: "11vw", minWidth: "11vw", maxWidth: "11vw" },
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
+    },
+  ];
+
+
 const getUseCaseStyle = (status: string) => {
     switch (status) {
         case 'postal':
@@ -106,6 +163,8 @@ const getUseCaseStyle = (status: string) => {
             return <Image src="./meta.svg" alt="meta icon" width={20} height={20}/>
         case 'bing':
             return <Image src="./bing.svg" alt="bing icon" width={20} height={20}/>
+        case 'linkedin':
+            return <Image src="./linkedin.svg" alt="linkedin icon" width={20} height={20}/>
         case 'tele_marketing':
             return <HeadsetMicOutlinedIcon />
         default:
@@ -903,15 +962,62 @@ const SmartAudiences: React.FC = () => {
                                                         <Table stickyHeader aria-label="leads table">
                                                             <TableHead sx={{ position: "relative" }}>
                                                                 <TableRow>
-                                                                    {[
-                                                                        { key: 'name', label: 'Smart Audience Name' },
-                                                                        { key: 'use_case', label: 'Use Case' },
-                                                                        { key: 'validations', label: 'Validations' },
-                                                                        { key: 'created_date', label: 'Created', sortable: true },
-                                                                        { key: 'number_of_customers', label: 'Total Universe', sortable: true },
-                                                                        { key: 'active_segment_records', label: 'Active Segment', sortable: true },
-                                                                        { key: 'status', label: 'Status' },
-                                                                        { key: 'actions', label: 'Actions' }
+                                                                {columns.map(({
+                                                                    key,
+                                                                    label,
+                                                                    sortable = false,
+                                                                    widths,
+                                                                    }) => (
+                                                                    <TableCell
+                                                                        key={key}
+                                                                        sx={{
+                                                                        ...smartAudiences.table_column,
+                                                                        ...(key === "name" && {
+                                                                            position: "sticky",
+                                                                            left: 0,
+                                                                            zIndex: 10,
+                                                                            top: 0,
+                                                                            boxShadow: isScrolledX
+                                                                            ? "3px 0px 3px #00000033"
+                                                                            : "none",
+                                                                        }),
+                                                                        }}
+                                                                    >
+                                                                        <Box
+                                                                        sx={{
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            justifyContent: "space-between",
+                                                                        }}
+                                                                        >
+                                                                        <Typography
+                                                                            variant="body2"
+                                                                            sx={{
+                                                                            ...smartAudiences.table_column,
+                                                                            borderRight: "0",
+                                                                            }}
+                                                                        >
+                                                                            {label}
+                                                                        </Typography>
+                                                                        {sortable && (
+                                                                            <IconButton size="small">
+                                                                                {orderBy === key ? (
+                                                                                    order === 'asc' ? (
+                                                                                        <ArrowUpwardRoundedIcon fontSize="inherit" />
+                                                                                    ) : (
+                                                                                        <ArrowDownwardRoundedIcon fontSize="inherit" />
+                                                                                    )
+                                                                                ) : (
+                                                                                    <SwapVertIcon fontSize="inherit" />
+                                                                                )}
+                                                                            </IconButton>
+                                                                        )}
+                                                                        </Box>
+                                                                    </TableCell>
+                                                                    )
+                                                                )}
+                                                                    {/* {[
+
                                                                     ].map(({ key, label, sortable = false }) => (
                                                                         <TableCell
                                                                             key={key}
@@ -952,7 +1058,7 @@ const SmartAudiences: React.FC = () => {
                                                                                 )}
                                                                             </Box>
                                                                         </TableCell>
-                                                                    ))}
+                                                                    ))} */}
                                                                 </TableRow>
                                                                 <TableRow
                                                                     sx={{
@@ -1005,7 +1111,7 @@ const SmartAudiences: React.FC = () => {
                                                                             }}
                                                                         >
                                                                             {/* Name Column */}
-                                                                            <TableCell className="sticky-cell"
+                                                                            {/* <TableCell className="sticky-cell"
                                                                                 sx={{
                                                                                     ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff', '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' },
                                                                                     boxShadow: isScrolledX
@@ -1074,11 +1180,26 @@ const SmartAudiences: React.FC = () => {
                                                                                         <EditIcon sx={{ maxHeight: "18px" }} />
                                                                                     </IconButton>
                                                                                 </Box>
-                                                                                {/* {row.name} */}
-                                                                            </TableCell>
+                                                                            </TableCell> */}
 
-                                                                            <Popover
-                                                                                open={isEditPopoverOpen}
+                                                                        <TableCustomCell
+                                                                            rowExample={row.name}
+                                                                            loaderForTable={loaderForTable}
+                                                                            customCellStyles={{
+                                                                            position: "sticky",
+                                                                            left: "0",
+                                                                            zIndex: 9,
+                                                                            backgroundColor: loaderForTable
+                                                                                ? "#fff"
+                                                                                : "#fff",
+                                                                            boxShadow: isScrolledX
+                                                                                ? "3px 0px 3px #00000033"
+                                                                                : "none",
+                                                                            }}
+                                                                        />
+
+                                                                           <Popover
+                                                                                 open={isEditPopoverOpen}
                                                                                 anchorEl={editPopoverAnchorEl}
                                                                                 onClose={handleCloseEditPopover}
                                                                                 anchorOrigin={{

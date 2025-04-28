@@ -16,14 +16,20 @@ class UpdateLookalikeRequest(BaseModel):
     name_of_lookalike: str
 
 class B2CInsights(BaseModel):
-    personal:   Dict[str, float] = Field(default_factory=dict)
-    financial:  Dict[str, float] = Field(default_factory=dict)
-    lifestyle:  Dict[str, float] = Field(default_factory=dict)
-    voter:      Dict[str, float] = Field(default_factory=dict)
-    other:      Dict[str, float] = Field(default_factory=dict)
+    personal:               Dict[str, float] = Field(default_factory=dict)
+    financial:              Dict[str, float] = Field(default_factory=dict)
+    lifestyle:              Dict[str, float] = Field(default_factory=dict)
+    voter:                  Dict[str, float] = Field(default_factory=dict)
+    employment_history:     Dict[str, float] = Field(default_factory=dict)
+    professional_profile:   Dict[str, float] = Field(default_factory=dict)
 
+class B2BInsights(BaseModel):
+    employment_history:     Dict[str, float] = Field(default_factory=dict)
+    professional_profile:   Dict[str, float] = Field(default_factory=dict)
 
 class CalculateRequest(BaseModel):
-    count_matched_persons: int
-    audience_feature_importance: B2CInsights
+    count_matched_persons:              int
+    audience_feature_importance_b2c:   Optional[B2CInsights]=B2BInsights()
+    audience_feature_importance_b2b:    Optional[B2BInsights]=B2CInsights()
+    audience_feature_importance_other: Dict[str, float]
 

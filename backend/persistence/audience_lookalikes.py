@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import INT4RANGE
 
 from enums import LookalikeSize
 from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
-    EnrichmentVoterRecord
+    EnrichmentVoterRecord, ProfessionalProfile, EnrichmentEmploymentHistory
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
@@ -256,12 +256,13 @@ class AudienceLookalikesPersistence:
 
         q = (
             self.db.query(
-                AudienceSourcesMatchedPerson.email.label("email"),
                 AudienceSourcesMatchedPerson.value_score.label("customer_value"),
                 *all_columns_except(EnrichmentPersonalProfiles, "id", "asid"),
                 *all_columns_except(EnrichmentFinancialRecord, "id", "asid"),
                 *all_columns_except(EnrichmentLifestyle, "id", "asid"),
                 *all_columns_except(EnrichmentVoterRecord, "id", "asid"),
+                *all_columns_except(ProfessionalProfile, "id", "asid"),
+                *all_columns_except(EnrichmentEmploymentHistory, "id", "asid")
             )
             .select_from(AudienceSourcesMatchedPerson)
             .join(
@@ -284,6 +285,14 @@ class AudienceLookalikesPersistence:
                 EnrichmentVoterRecord,
                 EnrichmentVoterRecord.asid == EnrichmentUser.asid
             )
+            .outerjoin(
+                ProfessionalProfile,
+                ProfessionalProfile.asid == EnrichmentUser.asid
+            )
+            .outerjoin(
+                EnrichmentEmploymentHistory,
+                EnrichmentEmploymentHistory.asid == EnrichmentUser.asid
+            )
             .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
             .order_by(AudienceSourcesMatchedPerson.value_score.desc())
             .limit(number_required)
@@ -302,7 +311,6 @@ class AudienceLookalikesPersistence:
             return d
 
         result: List[Dict[str, Any]] = [_row2dict(r) for r in rows]
-        # print(result)
         return result
 
 

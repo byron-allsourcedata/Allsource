@@ -9,7 +9,7 @@ class AudienceSmartPerson(Base):
     __tablename__ = 'audience_smarts_persons'
     
     __table_args__ = (
-      Index('audience_smarts_persons_is_validation_processed_idx', 'is_validation_processed'),
+      Index('au_sm_ps_is_validation_processed_smart_audience_id_idx', 'is_validation_processed', 'smart_audience_id'),
       Index('audience_smarts_persons_smart_audience_id_idx', 'smart_audience_id'),
       Index('audience_smarts_persons_enrichment_user_id_idx', 'enrichment_user_id'),
     )

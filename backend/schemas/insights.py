@@ -161,10 +161,61 @@ class B2CInsight(BaseModel):
     voter: VoterProfiles
 
 
+class ProfessionalProfiles(BaseModel):
+    current_job_title: Dict[str, float] = {}
+    job_location: Dict[str, float] = {}
+    job_level: Dict[str, float] = {}
+    primary_industry: Dict[str, float] = {}
+    current_company_name: Dict[str, float] = {}
+    job_start_date: Dict[str, float] = {}
+    company_size: Dict[str, float] = {}
+    annual_sales: Dict[str, float] = {}
+    department: Dict[str, float] = {}
+    job_duration: Dict[str, float] = {}
+
+    @staticmethod
+    def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
+        total = sum(data.values())
+        if total == 0:
+            return {k: 0.0 for k in data}
+        return {k: round(v / total * 100, 2) for k, v in data.items()}
+
+    @model_validator(mode="after")
+    def calculate_percentages(self) -> "ProfessionalProfiles":
+        values = self.model_dump()
+        for key, val in values.items():
+            if isinstance(val, dict):
+                setattr(self, key, self._to_percent(val))
+        return self
+
+
+class EmploymentHistory(BaseModel):
+    job_location: Dict[str, float] = {}
+    number_of_jobs: Dict[str, float] = {}
+    company_name: Dict[str, float] = {}
+    job_tenure: Dict[str, float] = {}
+    job_title: Dict[str, float] = {}
+
+    @staticmethod
+    def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
+        total = sum(data.values())
+        if total == 0:
+            return {k: 0.0 for k in data}
+        return {k: round(v / total * 100, 2) for k, v in data.items()}
+
+    @model_validator(mode="after")
+    def calculate_percentages(self) -> "EmploymentHistory":
+        values = self.model_dump()
+        for key, val in values.items():
+            if isinstance(val, dict):
+                setattr(self, key, self._to_percent(val))
+        return self
+
+
 class B2BInsight(BaseModel):
-    professional_profile: Dict[str, Any] = {}
+    professional_profile: ProfessionalProfiles
     education_history: Dict[str, Any] = {}
-    employment_history: Dict[str, Any] = {}
+    employment_history: EmploymentHistory
 
 
 class AudienceInsightData(BaseModel):
@@ -219,15 +270,37 @@ class Lifestyle(BaseModel):
     golf_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
     beauty_cosmetic_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
 
-
 class Voter(BaseModel):
     congressional_district: Optional[Dict[str, int]] = Field(default_factory=dict)
     voting_propensity: Optional[Dict[str, int]] = Field(default_factory=dict)
     political_party: Optional[Dict[str, int]] = Field(default_factory=dict)
 
 
+class EmploymentHistory(BaseModel):
+    job_title:          Optional[Dict[str, int]] = Field(default_factory=dict)
+    company_name:       Optional[Dict[str, int]] = Field(default_factory=dict)
+    start_date:         Optional[Dict[str, int]] = Field(default_factory=dict)
+    end_date:           Optional[Dict[str, int]] = Field(default_factory=dict)
+    is_current:         Optional[Dict[str, int]] = Field(default_factory=dict)
+    location:           Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_description:    Optional[Dict[str, int]] = Field(default_factory=dict)
+
+class ProfessionalProfile(BaseModel):
+    current_job_title:       Optional[Dict[str, int]] = Field(default_factory=dict)
+    current_company_name:    Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_start_date:          Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_duration:            Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_location:            Optional[Dict[str, int]] = Field(default_factory=dict)
+    job_level:               Optional[Dict[str, int]] = Field(default_factory=dict)
+    department:              Optional[Dict[str, int]] = Field(default_factory=dict)
+    company_size:            Optional[Dict[str, int]] = Field(default_factory=dict)
+    primary_industry:        Optional[Dict[str, int]] = Field(default_factory=dict)
+    annual_sales:            Optional[Dict[str, int]] = Field(default_factory=dict)
+
 class InsightsByCategory(BaseModel):
     personal_profile: Optional[Personal] = Field(default_factory=Personal)
     financial: Optional[Financial] = Field(default_factory=Financial)
     lifestyle: Optional[Lifestyle] = Field(default_factory=Lifestyle)
     voter: Optional[Voter] = Field(default_factory=Voter)
+    employment_history: Optional[EmploymentHistory] = Field(default_factory=EmploymentHistory)
+    professional_profile: Optional[ProfessionalProfile] = Field(default_factory=ProfessionalProfile)
