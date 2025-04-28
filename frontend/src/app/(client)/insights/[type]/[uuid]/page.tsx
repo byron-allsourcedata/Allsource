@@ -1,12 +1,9 @@
 "use client";
-import { Box, Typography, Button, Tabs, Tab } from "@mui/material";
+import { Box, Typography, Button, Tabs, Tab, IconButton } from "@mui/material";
 import React, { useState, useEffect, Suspense } from "react";
-import CustomTooltip from "@/components/customToolTip";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import Image from "next/image";
-import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import axiosInstance from "../../../../../axios/axiosInterceptorInstance";
+import { useParams } from "next/navigation";
 import { AxiosError } from "axios";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useRouter } from "next/navigation";
 import { insightsStyle } from "./insightsStyles";
 
@@ -35,7 +32,7 @@ import { dashboardStyles } from "../../../dashboard/dashboardStyles";
 import { TabPanel } from "@/components/TabPanel";
 import StaticticsTab from "./components/StaticticsTab";
 import FeatureListTable, { FeatureObject } from "./components/FeatureListTable";
-
+import CustomTooltip from "@/components/customToolTip";
 
 export interface CalculationResults {
   [key: string]: number;
@@ -227,19 +224,19 @@ const realEstateData: RealEstateResults = {
 
 const Insights = () => {
   const router = useRouter();
+  const params = useParams();
+  const type = params.type;
   const { hasNotification } = useNotification();
   const [tabIndex, setTabIndex] = useState(0);
-
-  const [status, setStatus] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState<string>("");
 
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
     setTabIndex(newIndex);
   };
 
-  if (isLoading) {
-    return <CustomizedProgressBar />;
-  }
+  const handleSetName = (newName: string) => {
+    setName(newName);
+  };
 
   return (
     <Box>
@@ -250,7 +247,7 @@ const Insights = () => {
           alignItems: "center",
           position: "sticky",
           top: 0,
-          pt: "12px",
+          pt: "10px",
           pr: "1.5rem",
           pl: 0,
           zIndex: 1,
@@ -278,6 +275,21 @@ const Insights = () => {
           },
         }}
       >
+        <IconButton
+          onClick={() => {
+            router.push("/insights");
+          }}
+          sx={{
+            ":hover": {
+              backgroundColor: "transparent",
+            },
+            "@media (max-width: 600px)": {
+              display: "none",
+            },
+          }}
+        >
+          <ArrowBackIcon sx={{ color: "#5052B2" }} />
+        </IconButton>
         <Typography
           variant="h4"
           component="h1"
@@ -285,34 +297,47 @@ const Insights = () => {
           sx={{
             ...insightsStyle.title,
             position: "fixed",
+            ml: 6,
             mt: 1,
             "@media (max-width: 600px)": {
               display: "none",
             },
           }}
         >
-          Insights
+          {type === "sources" ? "Source" : "Lookalike"} - {name}
+          <CustomTooltip title="Insights" />
         </Typography>
         <Box
           sx={{
             display: "none",
             width: "100%",
-            justifyContent: "space-between",
-            alignItems: "start",
+            justifyContent: "start",
+            alignItems: "center",
             "@media (max-width: 600px)": {
               display: "flex",
             },
           }}
         >
+          <IconButton
+            onClick={() => {
+              router.push("/insights");
+            }}
+            sx={{
+              "@media (max-width: 600px)": {},
+            }}
+          >
+            <ArrowBackIcon sx={{ color: "#5052B2" }} />
+          </IconButton>
           <Typography
             variant="h4"
             component="h1"
             className="first-sub-title"
-            sx={dashboardStyles.title}
+            sx={{ ...dashboardStyles.title, mb: 0 }}
           >
-            Dashboard
+            {type === "sources" ? "Source" : "Lookalike"} - {name}
           </Typography>
         </Box>
+
         <Box
           sx={{
             flexGrow: 1,
@@ -411,7 +436,7 @@ const Insights = () => {
         }}
       >
         <TabPanel value={tabIndex} index={0}>
-          <StaticticsTab />
+          <StaticticsTab setName={handleSetName} />
         </TabPanel>
         <TabPanel value={tabIndex} index={1}>
           <FeatureListTable

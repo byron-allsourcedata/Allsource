@@ -11,22 +11,32 @@ type BarData = {
 type GradientBarChartProps = {
   title: string;
   data: BarData[];
+  gradientColor?: string;
 };
 
-const getGradient = (fillPercent: number, relativePercent: number) => {
+const getGradient = (relativePercent: number, gradientColor: string) => {
   const opacity = 0.4 + 0.6 * relativePercent;
-  return `linear-gradient(90deg, rgba(98, 178, 253, ${opacity}) ${fillPercent}%, rgba(220,220,220,0.3) ${fillPercent}%)`;
+
+  if (gradientColor.startsWith("rgba(")) {
+    const rgbValues = gradientColor.match(/\d+/g)?.slice(0, 3).join(", ");
+    return `rgba(${rgbValues}, ${opacity})`;
+  }
+
+  return `rgba(${gradientColor}, ${opacity})`;
 };
 
 export const GradientBarChart: React.FC<GradientBarChartProps> = ({
   title,
   data,
+  gradientColor = "98, 178, 253",
 }) => {
   const [expanded, setExpanded] = useState(false);
   const sortedData = [...data].sort((a, b) => b.percent - a.percent);
   const maxPercent = Math.max(...sortedData.map((d) => d.percent)) || 1;
 
-  const visibleData = expanded ? sortedData : sortedData.slice(0, 5);
+  const visibleData = expanded
+    ? sortedData.slice(0, 20)
+    : sortedData.slice(0, 5);
 
   return (
     <Box
@@ -66,7 +76,8 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
                 height={24}
                 borderRadius={2}
                 sx={{
-                  background: getGradient(percent, relative),
+                  width: `${percent}%`,
+                  backgroundColor: getGradient(relative, gradientColor),
                   transition: "background 0.3s ease",
                 }}
               />

@@ -35,6 +35,7 @@ AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 AUDIENCE_VALIDATION_AGENT_NOAPI = 'aud_validation_agent_no-api'
 AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
 AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = 'aud_validation_agent_phone-owner-api'
+AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 
 def setup_logging(level):
     logging.basicConfig(
@@ -55,6 +56,21 @@ async def wait_for_ping(connection: RabbitMQConnection, aud_smart_id: UUID, vali
                 if message_body.get("status") == "validation_complete" and message_body.get("aud_smart_id") == aud_smart_id and message_body.get("validation_type") == validation_type:
                     await message.ack()
                     break
+
+
+async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
+    try:
+        logging.info(f"send client throught SSE: {data, user_id}")
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=f'sse_events_{str(user_id)}',
+            message_body={
+                "status": AUDIENCE_VALIDATION_PROGRESS,
+                "data": data
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error sending SSE: {e}")
 
 
 def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id: UUID, column_name: str = None):
@@ -240,7 +256,25 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
 
                                 if not enrichment_users:
                                     logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}.")
-                                    continue    
+                                    await send_sse(
+                                        connection,
+                                        user_id,
+                                        {
+                                            "smart_audience_id": aud_smart_id,
+                                            "total_validated": 0,
+                                        }
+                                    )
+                                    db_session.query(AudienceSmart).filter(
+                                        AudienceSmart.id == aud_smart_id
+                                    ).update(
+                                        {
+                                            "validated_records": 0,
+                                            "status": "ready",
+                                        }
+                                    )
+
+                                    db_session.commit()
+                                    return    
 
                                 i += 1
                                 is_last_validation_in_type = count_validations_type == length_validations_type
@@ -253,7 +287,6 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         {
                                             **user,
                                             "audience_smart_person_id": str(user["audience_smart_person_id"]),
-                                            # column_name: user[column_name]
                                         }
                                         for user in batch
                                     ]

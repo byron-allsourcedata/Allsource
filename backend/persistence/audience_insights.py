@@ -32,7 +32,8 @@ class AudienceInsightsPersistence:
     def get_source_insights_info(self, uuid_of_source: UUID, user_id: int) -> dict:
         source = self.db.query(
             AudienceSource.insights,
-            AudienceSource.name
+            AudienceSource.name,
+            AudienceSource.target_schema
         ).filter(
             AudienceSource.id == uuid_of_source,
             AudienceSource.user_id == user_id
@@ -41,15 +42,18 @@ class AudienceInsightsPersistence:
         if source and source.insights:
             return {
                 "insights": source.insights,
-                "name": source.name
+                "name": source.name,
+                "audience_type": source.target_schema
             }
 
-        return {"insights": {}, "name": ""}
+        return {"insights": {}, "name": "", "audience_type": ""}
 
     def get_lookalike_insights_info(self, uuid_of_lookalike: UUID, user_id: int) -> dict:
         lookalike = self.db.query(
             AudienceLookalikes.insights,
-            AudienceLookalikes.name
+            AudienceLookalikes.name,
+            AudienceSource.target_schema
+        ).join(AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid
         ).filter(
             AudienceLookalikes.id == uuid_of_lookalike,
             AudienceLookalikes.user_id == user_id
@@ -58,10 +62,11 @@ class AudienceInsightsPersistence:
         if lookalike and lookalike.insights:
             return {
                 "insights": lookalike.insights,
-                "name": lookalike.name
+                "name": lookalike.name,
+                "audience_type": lookalike.target_schema
             }
 
-        return {"insights": {}, "name": ""}
+        return {"insights": {}, "name": "", "audience_type": ""}
 
     def get_recent_sources(self, user_id: int) -> list[dict]:
         return (
