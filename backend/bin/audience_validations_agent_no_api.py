@@ -7,6 +7,7 @@ import json
 import boto3
 import random
 from datetime import datetime
+from uuid import UUID
 from sqlalchemy import update
 from aio_pika import IncomingMessage, Message
 from sqlalchemy.exc import IntegrityError
@@ -18,9 +19,11 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
+from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.enrichment_users import EnrichmentUser
 from models.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment_user_ids import EnrichmentUserId
 from models.emails_enrichment import EmailEnrichment
 from models.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -30,6 +33,8 @@ load_dotenv()
 
 AUDIENCE_VALIDATION_AGENT_NOAPI = 'aud_validation_agent_no-api'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
+AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
+AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = 'aud_validation_agent_phone-owner-api'
 
 COLUMN_MAPPING = {
     'personal_email_validation_status': 'mx',
@@ -37,6 +42,14 @@ COLUMN_MAPPING = {
     'personal_email_last_seen': 'recency',
     'business_email_last_seen_date': 'recency',
     'mobile_phone_dnc': 'dnc_filter'
+}
+
+VALIDATION_MAPPING = {
+    'personal_email_validation_status': 'personal_email-mx',
+    'personal_email_last_seen': 'personal_email-recency',
+    'business_email_validation_status': 'business_email-mx',
+    'business_email_last_seen_date': 'business_email-recency',
+    'mobile_phone_dnc': 'phone-dnc_filter'
 }
 
 def setup_logging(level):
@@ -60,7 +73,38 @@ async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
 
-async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
+
+def update_stats_validations(db_session: Session, validation_type: str, count_persons_before_validation: int, count_failed_person: int):
+    validation_key = VALIDATION_MAPPING.get(validation_type)
+
+    valid_persons_count = count_persons_before_validation - count_failed_person
+    new_data = {
+        "total_count": count_persons_before_validation,
+        "valid_count": valid_persons_count
+    }
+    existing_record = db_session.query(AudienceSetting).filter(AudienceSetting.alias == "counts_validations").first()
+    if existing_record:
+        current_data = json.loads(existing_record.value)
+
+        existing_data = current_data.get(validation_key, {"total_count": 0, "valid_count": 0})
+
+        updated_data = {
+            "total_count": existing_data.get("total_count") + new_data["total_count"],
+            "valid_count": existing_data.get("valid_count") + new_data["valid_count"]
+        }
+
+        current_data[validation_key] = updated_data
+        existing_record.value = json.dumps(current_data)
+
+    else:
+        new_record = AudienceSetting(
+            alias="counts_validations",
+            value=json.dumps({validation_key: new_data})
+        )
+        db_session.add(new_record)
+
+
+async def aud_validation_agent(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -69,11 +113,11 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
         recency_personal_days = message_body.get("recency_personal_days")
         recency_business_days = message_body.get("recency_business_days")
         validation_type = message_body.get("validation_type")
+        count_persons_before_validation = message_body.get("count_persons_before_validation")
         is_last_validation_in_type = message_body.get("is_last_validation_in_type")
         is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation", False) 
 
         try:
-
             validation_rules = {
                 # "personal_email_validation_status": lambda value: True,
                 # "business_email_validation_status": lambda value: True,
@@ -100,6 +144,9 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                 )
 
 
+            # update_stats_validations(db_session, validation_type, count_persons_before_validation, len(failed_ids))
+            
+
             if is_last_validation_in_type:
                 aud_smart = db_session.query(AudienceSmart).filter_by(id=aud_smart_id).first()
                 if aud_smart:
@@ -118,20 +165,24 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                 logging.info(f"is last validation")
 
                 with db_session.begin():
-                    subquery = select(EnrichmentUserContact.enrichment_user_id).filter(
-                        EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id
-                    )
+                    # subquery = select(EnrichmentUserId.id).select_from(EnrichmentUserContact).join(
+                    #     EnrichmentUserId, EnrichmentUserId.asid == EnrichmentUserContact.asid).join(
+                    #     AudienceSmartPerson, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id
+                    # )
+                    # subquery = select(EnrichmentUserContact.enrichment_user_id).filter(
+                    #     EnrichmentUserContact.enrichment_user_id == AudienceSmartPerson.enrichment_user_id
+                    # )
 
                     db_session.query(AudienceSmartPerson).filter(
                         AudienceSmartPerson.smart_audience_id == aud_smart_id,
                         AudienceSmartPerson.is_validation_processed == True,
-                        AudienceSmartPerson.enrichment_user_id.in_(subquery)
+                        # AudienceSmartPerson.enrichment_user_id.in_(subquery)
                     ).update({"is_valid": True}, synchronize_session=False)
 
                     total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
                         AudienceSmartPerson.smart_audience_id == aud_smart_id,
                         AudienceSmartPerson.is_validation_processed == True,
-                        AudienceSmartPerson.enrichment_user_id.in_(subquery)
+                        # AudienceSmartPerson.enrichment_user_id.in_(subquery)
                     ).scalar()
 
                     db_session.query(AudienceSmart).filter(
@@ -166,9 +217,7 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
                 }
             )
             
-
             logging.info(f"send ping {aud_smart_id}.")
-
                        
 
             await message.ack()
@@ -180,7 +229,7 @@ async def aud_validation_agent_noapi(message: IncomingMessage, db_session: Sessi
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.nack()
+        await message.ack()
 
 
 async def main():
@@ -216,7 +265,7 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_validation_agent_noapi, connection=connection, db_session=db_session)
+                functools.partial(aud_validation_agent, connection=connection, db_session=db_session)
             )
 
         await asyncio.Future()

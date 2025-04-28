@@ -15,7 +15,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
-from models.audience_lookalikes_persons import AudienceLookALikePerson
+from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 
 load_dotenv()
@@ -56,7 +56,7 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
         if active_segment % SELECTED_ROW_COUNT != 0:
             common_count += 1
 
-        AudienceLALP = aliased(AudienceLookALikePerson)
+        AudienceLALP = aliased(AudienceLookalikesPerson)
         AudienceSMP = aliased(AudienceSourcesMatchedPerson)
         
         # includes_lookalikes = db_session.query(AudienceLALP.lookalike_id).filter(

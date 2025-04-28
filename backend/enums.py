@@ -60,6 +60,9 @@ class BusinessType(Enum):
     B2B = 'b2b'
     B2C = 'b2c'
 
+class AudienceSettingAlias(Enum):
+    AVERAGE_SUCCESS_VALIDATIONS = 'average_success_validations'
+
 class LeadStatus(Enum):
     ABANDONED_CART = 'abandoned_cart'
     VIEW_PRODUCT = 'view_product'

@@ -1,11 +1,12 @@
 import logging
-from typing import Optional, List
+from typing import Optional, List, Dict
 import json
 import io
 import csv
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
+from persistence.audience_settings import AudienceSettingPersistence
 from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
 from models.enrichment_users import EnrichmentUser
@@ -22,11 +23,13 @@ class AudienceSmartsService:
 
     def __init__(self, audience_smarts_persistence: AudienceSmartsPersistence,
                  lookalikes_persistence_service: AudienceLookalikesPersistence,
-                 audience_sources_persistence: AudienceSourcesPersistence
+                 audience_sources_persistence: AudienceSourcesPersistence,
+                 audience_settings_persistence: AudienceSettingPersistence,
                  ):
         self.audience_smarts_persistence = audience_smarts_persistence
         self.lookalikes_persistence_service = lookalikes_persistence_service
         self.audience_sources_persistence = audience_sources_persistence
+        self.audience_settings_persistence = audience_settings_persistence
 
     def get_audience_smarts(
             self,
@@ -94,6 +97,13 @@ class AudienceSmartsService:
         count_deleted = self.audience_smarts_persistence.delete_audience_smart(id)
         return count_deleted > 0
 
+    def estimates_predictable_validation(self, validations: List[str]) -> Dict[str, float]:
+        stats = self.audience_settings_persistence.get_average_success_validations()
+        product = 1.0
+        for key in validations:
+            product *= stats.get(key, 1.0)
+
+        return product
 
     def update_audience_smart(self, id: UUID, new_name: str) -> bool:
         count_updated = self.audience_smarts_persistence.update_audience_smart(id, new_name)
