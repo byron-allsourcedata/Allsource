@@ -835,10 +835,19 @@ const Leads: React.FC = () => {
             const response = await axiosInstance.get(url, { responseType: 'blob' });
 
             if (response.status === 200) {
+                const pad = (n: any) => String(n).padStart(2, '0');
+                const now = new Date();
+                const year  = now.getFullYear();
+                const month = pad(now.getMonth() + 1);
+                const day   = pad(now.getDate());
+                const hours   = pad(now.getHours());
+                const minutes = pad(now.getMinutes());
+                const seconds = pad(now.getSeconds());
+                const fileName = `contacts_${year}-${month}-${day}_${hours}-${minutes}-${seconds}.csv`;
                 const url = window.URL.createObjectURL(new Blob([response.data]));
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', 'data.csv');
+                link.setAttribute('download', fileName);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
