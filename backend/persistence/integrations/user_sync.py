@@ -41,27 +41,6 @@ class IntegrationsUserSyncPersistence:
             return True
         return False
 
-    def delete_smart_audience_sync(self, user_id, list_id):
-        sync = (
-            self.db.query(IntegrationUserSync)
-                .join(UserIntegration, IntegrationUserSync.integration_id == UserIntegration.id)
-                .filter(IntegrationUserSync.id == list_id, UserIntegration.user_id == user_id)
-                .first()
-        )
-        if sync:
-            audience = (
-                self.db.query(AudienceSmart)
-                    .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id)
-                    .filter(IntegrationUserSync.id == list_id)
-                    .first()
-            )
-            if audience:
-                audience.status = 'ready'
-            self.db.delete(sync)
-            self.db.commit()
-            return True
-        return False
-
     def switch_sync_toggle(self, domain_id, list_id):
         active = False
         sync = self.db.query(IntegrationUserSync) \

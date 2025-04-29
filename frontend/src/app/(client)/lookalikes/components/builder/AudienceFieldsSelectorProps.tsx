@@ -137,6 +137,19 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
           You can configure the predictable fields that will be used for audience
           building yourself.
         </Typography>
+        {!canProceed && (
+            <Typography
+              variant="body2"
+              sx={{
+                fontSize: "14px",
+                color: "error.main",
+                mb: 1,
+                ml: 1,
+              }}
+            >
+              Please select at least 3 fields to proceed to the next step.
+            </Typography>
+          )}
       </Grid>
       <Grid item xs={5}>
         <Typography

@@ -1,12 +1,17 @@
 import string
+import warnings
 from typing import List, Annotated, Tuple
 
 import pandas as pd
 from fastapi import Depends
 from pandas import DataFrame
+from pandas.errors import PerformanceWarning
 
 from config.folders import Folders
 from schemas.similar_audiences import AudienceData, NormalizationConfig, OrderedFeatureRules
+
+pd.set_option('future.no_silent_downcasting', True)
+warnings.filterwarnings("ignore", category=PerformanceWarning)
 
 letter_to_number = {
     ch: (None if ch == 'U' else i + 1)
@@ -109,7 +114,7 @@ class AudienceDataNormalizationService:
 
     def fill_unknowns(self, df: DataFrame, cat_columns: List[str]):
         for cat in cat_columns:
-            df.loc[:, cat] = df[cat].fillna('U')
+            df.loc[:, cat] = df[cat].fillna('U').astype(str).infer_objects(copy=False)
 
         if 'age' in df.columns:
             df["age"] = pd.to_numeric(df["age"], errors="coerce")
@@ -143,7 +148,10 @@ class AudienceDataNormalizationService:
 
         cat_indicator_columns = [name + 'IsMissing' for name in cat_columns]
 
-        zipcodes = [f"zip_code{n}" for n in [3, 4, 5]]
+        if "zip_code5" in df_with_geo.columns:
+            zipcodes = [f"zip_code{n}" for n in [3, 4, 5]]
+        else:
+            zipcodes = []
 
         valid_columns = ([
              'state_name', 'state_city'

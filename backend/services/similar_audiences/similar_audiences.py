@@ -13,6 +13,7 @@ from .audience_data_normalization import AudienceDataNormalizationService, Audie
     default_normalization_config
 from .exceptions import EqualTrainTargets, EmptyTrainDataset
 
+pd.set_option('future.no_silent_downcasting', True)
 
 class SimilarAudienceService:
     def __init__(self, audience_data_normalization_service: AudienceDataNormalizationService):
@@ -51,8 +52,18 @@ class SimilarAudienceService:
             feature_importance['Importance']
         ))
 
+    def safe_fillna_numeric(self, df: DataFrame, numeric_cols: List[str]):
+        for col in numeric_cols:
+            non_null = df[col].dropna()
+            if not non_null.empty:
+                fill = non_null.mean()
+            else:
+                fill = 0
+            df[col].fillna(fill, inplace=True)
+        df = df.infer_objects(copy=False)
+        return df
+
     def train_catboost(self, df: DataFrame, amount: DataFrame) -> CatBoostRegressor:
-        df = df.loc[:, ~df.columns.duplicated()].copy()
         x = df
         y = amount
 
@@ -62,6 +73,7 @@ class SimilarAudienceService:
                 x[cat_features]
                 .fillna("NA")
                 .astype(str)
+                .infer_objects(copy=False)
             )
 
         x_train, x_test, y_train, y_test = train_test_split(x, y)

@@ -41,10 +41,6 @@ class AudienceSmartPerson(Base):
         nullable=True,
         server_default=text('true')
     )
-    valid_phone = Column(
-        Text,
-        nullable=True,
-    )
     created_at = Column(
         TIMESTAMP,
         nullable=False,

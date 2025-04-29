@@ -78,7 +78,6 @@ async def create_lookalike(
         user_id = user.get('team_member').get('id')
     else:
         user_id = user.get('id')
-
     result = lookalike_service.create_lookalike(
         user=user,
         uuid_of_source=payload.uuid_of_source,

@@ -111,11 +111,12 @@ class AudienceLookalikesPersistence:
             raise HTTPException(status_code=404, detail="Source not found or access denied")
 
         sources, created_by = source_info
+
         audience_feature_dict = {
-            key: round(value * 1000) / 1000
-            for key, value in audience_feature_importance.__dict__.items()
-            if value is not None
+            k: round(v * 1000) / 1000
+            for k, v in audience_feature_importance.items()
         }
+
         sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
         lookalike = AudienceLookalikes(
             name=lookalike_name,

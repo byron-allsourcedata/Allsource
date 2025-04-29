@@ -164,7 +164,7 @@ class AudienceLookalikesService:
         except IntegrityError:
             raise HTTPException(status_code=400, detail="Cannot remove lookalike because it is used for smart audience")
 
-    def create_lookalike(self, user, uuid_of_source, lookalike_size, lookalike_name, created_by_user_id, audience_feature_importance: AudienceFeatureImportance):
+    def create_lookalike(self, user, uuid_of_source, lookalike_size, lookalike_name, created_by_user_id, audience_feature_importance: Dict):
         lookalike = self.lookalikes_persistence_service.create_lookalike(
             uuid_of_source, user.get('id'), lookalike_size, lookalike_name, created_by_user_id, audience_feature_importance=audience_feature_importance
         )
@@ -180,6 +180,29 @@ class AudienceLookalikesService:
         if update:
             return {'status': 'SUCCESS'}
         return {'status': 'FAILURE'}
+
+
+    def _default_insights(self) -> Tuple[B2CInsights, B2BInsights, Dict[str, float]]:
+        zero_dicts = CalculateRequest._make_zero_dicts(
+            personal=PERSONAL,
+            financial=FINANCIAL,
+            lifestyle=LIFESTYLE,
+            voter=VOTER,
+            employment_history=EMPLOYMENT_HISTORY,
+            professional_profile=PROFESSIONAL_PROFILE,
+        )
+
+        b2c = B2CInsights(
+            personal=zero_dicts['personal'],
+            financial=zero_dicts['financial'],
+            lifestyle=zero_dicts['lifestyle'],
+            voter=zero_dicts['voter'],
+        )
+        b2b = B2BInsights(
+            employment_history=zero_dicts['employment_history'],
+            professional_profile=zero_dicts['professional_profile'],
+        )
+        return b2c, b2b, {}
 
     def search_lookalikes(self, start_letter, user):
         lookalike_data = self.lookalikes_persistence_service.search_lookalikes(start_letter=start_letter,
@@ -226,8 +249,6 @@ class AudienceLookalikesService:
             financial=financial,
             lifestyle=lifestyle,
             voter=voter,
-            employment_history=employment_history,
-            professional_profile=professional_profile,
         )
 
         b2b = B2BInsights(
@@ -264,7 +285,7 @@ class AudienceLookalikesService:
                     "birth_day", "birth_month", "birth_year",
                     "has_children", "number_of_children",
                     "religion", "ethnicity", "language_code",
-                    "state_abbr", "zip_code5",
+                    "state_abbr",
 
                     # financial
                     "income_range", "net_worth", "credit_rating",
@@ -317,8 +338,8 @@ class AudienceLookalikesService:
 
             b2c_insights, b2b_insights, other = self.split_insights(rounded_feature)
 
-        except (EqualTrainTargets, EmptyTrainDataset, LessThenTwoTrainDataset):
-            b2c_insights, b2b_insights, other = B2CInsights(), B2BInsights(), {}
+        except (EqualTrainTargets, EmptyTrainDataset, LessThenTwoTrainDataset, Exception):
+            b2c_insights, b2b_insights, other = self._default_insights()
 
         return CalculateRequest(
             count_matched_persons=len(audience_data),

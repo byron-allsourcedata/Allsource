@@ -1,8 +1,10 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, 
-        IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText,
-        LinearProgress, Chip, Tooltip, TextField } from '@mui/material';
+import {
+    Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
+    IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText,
+    LinearProgress, Chip, Tooltip, TextField, TypographyProps, TooltipProps
+} from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
@@ -108,68 +110,141 @@ const getStatusStyle = (status: string) => {
 
 const columns = [
     {
-      key: "name",
-      label: "Smart Audience Name",
-      widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
+        key: "name",
+        label: "Smart Audience Name",
+        widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
     },
     {
-      key: "use_case",
-      label: "Use Case",
-      widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
+        key: "use_case",
+        label: "Use Case",
+        widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
     },
     {
-      key: "validations",
-      label: "Validations",
-      widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
+        key: "validations",
+        label: "Validations",
+        widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
     },
     {
-      key: "created_date",
-      label: "Created",
-      widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
-      sortable: true
+        key: "created_date",
+        label: "Created",
+        widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+        sortable: true
     },
     {
-      key: "number_of_customers",
-      label: "Total Universe",
-      widths: { width: "13vw", minWidth: "13vw", maxWidth: "20vw" },
-      sortable: true
+        key: "number_of_customers",
+        label: "Total Universe",
+        widths: { width: "13vw", minWidth: "13vw", maxWidth: "20vw" },
+        sortable: true
     },
     {
-      key: "active_segment_records",
-      label: "Active Segment",
-      widths: { width: "125px", minWidth: "125px", maxWidth: "125px" },
-      sortable: true,
+        key: "active_segment_records",
+        label: "Active Segment",
+        widths: { width: "125px", minWidth: "125px", maxWidth: "125px" },
+        sortable: true,
     },
     {
-      key: "status",
-      label: "Status",
-      widths: { width: "11vw", minWidth: "11vw", maxWidth: "11vw" },
+        key: "status",
+        label: "Status",
+        widths: { width: "11vw", minWidth: "11vw", maxWidth: "11vw" },
     },
     {
-      key: "actions",
-      label: "Actions",
-      widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
+        key: "actions",
+        label: "Actions",
+        widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
     },
-  ];
+];
 
 
 const getUseCaseStyle = (status: string) => {
     switch (status) {
         case 'postal':
-            return <Image src="./postal.svg" alt="google icon" width={20} height={20}/>
+            return <Image src="./postal.svg" alt="google icon" width={20} height={20} />
         case 'google':
-            return <Image src="./google-ads.svg" alt="google icon" width={20} height={20}/>
+            return <Image src="./google-ads.svg" alt="google icon" width={20} height={20} />
         case 'meta':
-            return <Image src="./meta.svg" alt="meta icon" width={20} height={20}/>
+            return <Image src="./meta.svg" alt="meta icon" width={20} height={20} />
         case 'bing':
-            return <Image src="./bing.svg" alt="bing icon" width={20} height={20}/>
+            return <Image src="./bing.svg" alt="bing icon" width={20} height={20} />
         case 'linkedin':
-            return <Image src="./linkedin.svg" alt="linkedin icon" width={20} height={20}/>
+            return <Image src="./linkedin.svg" alt="linkedin icon" width={20} height={20} />
         case 'tele_marketing':
             return <HeadsetMicOutlinedIcon />
         default:
             return <MailOutlinedIcon />
     }
+};
+
+type OverflowTooltipTextProps = {
+    text: string;
+    onClick: () => void;
+    typographyProps?: TypographyProps;
+    tooltipProps?: Omit<TooltipProps, 'title' | 'children'>;
+}
+
+const OverflowTooltipText = ({
+    text,
+    onClick,
+    typographyProps,
+    tooltipProps
+}: OverflowTooltipTextProps) => {
+    const [isOverflowed, setIsOverflowed] = useState(false);
+    const textRef = useRef<HTMLSpanElement>(null);
+
+    useEffect(() => {
+        if (textRef.current) {
+            setIsOverflowed(
+                textRef.current.scrollWidth > textRef.current.clientWidth
+            );
+        }
+    }, [text]);
+
+    return (
+        <Tooltip
+            title={
+                <Box sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+                    <Typography className='table-data' component='div' sx={{ fontSize: '12px !important' }}>
+                        {text}
+                    </Typography>
+                </Box>
+            }
+            componentsProps={{
+                tooltip: {
+                    sx: {
+                        backgroundColor: '#fff',
+                        color: '#000',
+                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                        border: '0.5px solid rgba(225, 225, 225, 1)',
+                        borderRadius: '4px',
+                        maxHeight: '100%',
+                        maxWidth: '500px',
+                        padding: '11px 10px',
+                        marginLeft: '0.5rem !important',
+                    },
+                },
+            }}
+            disableHoverListener={!isOverflowed}
+            enterDelay={100}
+            {...tooltipProps}
+        >
+            <Typography
+                ref={textRef}
+                onClick={onClick}
+                className='table-data'
+                style={{ color: "rgba(80, 82, 178, 1)" }}
+                sx={{
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%',
+                    ...typographyProps?.sx,
+                }}
+                {...typographyProps}
+            >
+                {text}
+            </Typography>
+        </Tooltip>
+    );
 };
 
 
@@ -192,11 +267,6 @@ const SmartAudiences: React.FC = () => {
 
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
-
-    //xz cho eto
-    const [dropdownEl, setDropdownEl] = useState<null | HTMLElement>(null);
-    const dropdownOpen = Boolean(dropdownEl);
-
     const [detailsPopupOpen, setDetailsPopupOpen] = useState(false);
 
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
@@ -225,7 +295,7 @@ const SmartAudiences: React.FC = () => {
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const [dataSyncPopupOpen, setDataSyncPopupOpen] = useState(false);
-    
+
     useEffect(() => {
         fetchSmarts({
             sortBy: orderBy,
@@ -259,15 +329,15 @@ const SmartAudiences: React.FC = () => {
             console.log("interval cleared");
         }
     }
-    
+
     useEffect(() => {
         console.log("pooling");
-    
+
         if (!intervalRef.current) {
             console.log("pooling started");
             intervalRef.current = setInterval(() => {
                 const hasPending = data.some(item => item.active_segment_records !== item.processed_active_segment_records || item.status === "validating");
-    
+
                 if (hasPending) {
                     console.log("Fetching due to pending records");
                     fetchSmartsMemoized();
@@ -277,7 +347,7 @@ const SmartAudiences: React.FC = () => {
                 }
             }, 2000);
         }
-    
+
         return () => {
             clearPollingInterval()
         };
@@ -288,15 +358,15 @@ const SmartAudiences: React.FC = () => {
             !intervalRef.current
                 ? isFirstLoad ? setLoading(true) : setLoaderForTable(true)
                 : () => { }
-    
+
             const accessToken = localStorage.getItem("token");
             if (!accessToken) {
                 router.push('/signin');
                 return;
             }
-    
+
             let url = `/audience-smarts?&page=${page + 1}&per_page=${rowsPerPage}`;
-    
+
             const startEpoch = appliedDates.start
                 ? Math.floor(new Date(appliedDates.start.toISOString()).getTime() / 1000)
                 : null;
@@ -306,12 +376,12 @@ const SmartAudiences: React.FC = () => {
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
-    
+
             if (sortBy) {
                 setPage(0);
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
-    
+
             const savedFilters = sessionStorage.getItem('filtersBySmarts');
             let parsedFilters = null;
             if (savedFilters) {
@@ -325,34 +395,34 @@ const SmartAudiences: React.FC = () => {
             const selectedStatuses = parsedFilters?.selectedStatuses || {};
             const selectedUseCases = parsedFilters?.selectedUseCases || {};
             const searchQuery = parsedFilters?.searchQuery || "";
-    
+
             const processMultiFilter = (paramName: string, filterData: { [s: string]: unknown }) => {
                 const toSnakeCase = (str: string) => str.trim().toLowerCase().replace(/\s+/g, '_');
-            
+
                 const filterValues = Object.entries(filterData)
                     .filter(([key, value]) => value)
                     .map(([key]) => toSnakeCase(key));
-            
-            
+
+
                 if (filterValues.length) {
                     filterValues.forEach((value) => {
                         url += `&${paramName}=${encodeURIComponent(value)}`;
                     });
                 }
             };
-    
+
             processMultiFilter('use_cases', selectedUseCases);
             processMultiFilter('statuses', selectedStatuses);
-    
+
             if (searchQuery) {
                 url += `&search_query=${encodeURIComponent(searchQuery)}`;
             }
-    
+
             const response = await axiosInstance.get(url);
             const { audience_smarts_list, count } = response.data;
             setData(audience_smarts_list);
             setCount(count || 0);
-    
+
             const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
@@ -371,7 +441,7 @@ const SmartAudiences: React.FC = () => {
             }
         }
     };
-    
+
 
     const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setCalendarAnchorEl(event.currentTarget);
@@ -515,7 +585,7 @@ const SmartAudiences: React.FC = () => {
             )
         );
     };
-    
+
 
     const handleCloseEditPopover = () => {
         setIsEditPopoverOpen(false);
@@ -550,7 +620,7 @@ const SmartAudiences: React.FC = () => {
         } finally {
             setLoaderForTable(false)
         }
-        
+
     };
 
     useEffect(() => {
@@ -599,7 +669,7 @@ const SmartAudiences: React.FC = () => {
 
     const handleResetFilters = () => {
         setSelectedFilters([]);
-        setSelectedDates({start: null, end: null})
+        setSelectedDates({ start: null, end: null })
         setAppliedDates({ start: null, end: null })
         setFormattedDates('')
 
@@ -609,14 +679,14 @@ const SmartAudiences: React.FC = () => {
 
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         // setSelectedFilters([]);
-        setSelectedDates({start: null, end: null})
+        setSelectedDates({ start: null, end: null })
         setAppliedDates({ start: null, end: null })
         setFormattedDates('')
         let updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
-    
+
         let filters = JSON.parse(sessionStorage.getItem('filtersBySmarts') || '{}');
-    
+
         switch (filterToDelete.label) {
             case 'Search':
                 filters.searchQuery = '';
@@ -630,24 +700,24 @@ const SmartAudiences: React.FC = () => {
             default:
                 break;
         }
-    
+
         sessionStorage.setItem('filtersBySmarts', JSON.stringify(filters));
-    
+
         updatedFilters = updatedFilters.filter(f => !['From Date', 'To Date', 'Date Range'].includes(f.label));
         setSelectedFilters(updatedFilters);
-    
+
         if (updatedFilters.length === 0) {
             setSelectedFilters([]);
         }
-    
+
         const newFilters: FilterParams = {
             searchQuery: updatedFilters.find(f => f.label === 'Search') ? updatedFilters.find(f => f.label === 'Search')!.value : '',
             selectedUseCases: Object.fromEntries(Object.keys(filters.selectedUseCases).map(key => [key, updatedFilters.some(f => f.label === 'Use Case' && f.value.includes(key))])),
             selectedStatuses: Object.fromEntries(Object.keys(filters.selectedStatuses).map(key => [key, updatedFilters.some(f => f.label === 'Status' && f.value.includes(key))]))
         };
-    
+
         handleApplyFilters(newFilters);
-    };    
+    };
 
 
     const truncateText = (text: string, maxLength: number) => {
@@ -663,9 +733,9 @@ const SmartAudiences: React.FC = () => {
 
     const setStatus = (status: string) => {
         return status
-          .split("_")
-          .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
-          .join(" ")
+            .split("_")
+            .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+            .join(" ")
     }
 
     return (
@@ -735,9 +805,6 @@ const SmartAudiences: React.FC = () => {
                                 <Button
                                     onClick={handleFilterPopupOpen}
                                     disabled={data?.length === 0}
-                                    aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                    aria-haspopup="true"
-                                    aria-expanded={dropdownOpen ? 'true' : undefined}
                                     sx={{
                                         textTransform: 'none',
                                         color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
@@ -747,7 +814,7 @@ const SmartAudiences: React.FC = () => {
                                         opacity: data?.length === 0 ? '0.5' : '1',
                                         minWidth: 'auto',
                                         maxHeight: '40px',
-                                        maxWidth:'40px',
+                                        maxWidth: '40px',
                                         position: 'relative',
                                         '@media (max-width: 900px)': {
                                             border: 'none',
@@ -885,7 +952,7 @@ const SmartAudiences: React.FC = () => {
                                         })}
                                     </Box>
                                     <Box sx={{
-                                        flex: 1, display: 'flex', flexGrow:1, flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
+                                        flex: 1, display: 'flex', flexGrow: 1, flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
                                         '@media (max-width: 900px)': {
                                             pt: '2px',
                                             pb: '18px'
@@ -901,7 +968,7 @@ const SmartAudiences: React.FC = () => {
                                                     fontWeight: "600",
                                                     lineHeight: "28px"
                                                 }}>
-                                                    Get Started with Your First Audience 
+                                                    Get Started with Your First Audience
                                                 </Typography>
                                                 <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
                                                 <Typography variant="body1" color="textSecondary"
@@ -936,7 +1003,7 @@ const SmartAudiences: React.FC = () => {
                                         }
                                         {data.length !== 0 &&
                                             <Grid container spacing={1} sx={{ flex: 1 }}>
-                                                <Grid item xs={12} sx={{display: "flex", flexDirection: "column", justifyContent: "space-between"}}>
+                                                <Grid item xs={12} sx={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                                                     <TableContainer
                                                         ref={tableContainerRef}
                                                         component={Paper}
@@ -962,60 +1029,60 @@ const SmartAudiences: React.FC = () => {
                                                         <Table stickyHeader aria-label="leads table">
                                                             <TableHead sx={{ position: "relative" }}>
                                                                 <TableRow>
-                                                                {columns.map(({
-                                                                    key,
-                                                                    label,
-                                                                    sortable = false,
-                                                                    widths,
+                                                                    {columns.map(({
+                                                                        key,
+                                                                        label,
+                                                                        sortable = false,
+                                                                        widths,
                                                                     }) => (
-                                                                    <TableCell
-                                                                        key={key}
-                                                                        sx={{
-                                                                        ...smartAudiences.table_column,
-                                                                        ...(key === "name" && {
-                                                                            position: "sticky",
-                                                                            left: 0,
-                                                                            zIndex: 10,
-                                                                            top: 0,
-                                                                            boxShadow: isScrolledX
-                                                                            ? "3px 0px 3px #00000033"
-                                                                            : "none",
-                                                                        }),
-                                                                        }}
-                                                                    >
-                                                                        <Box
-                                                                        sx={{
-                                                                            display: "flex",
-                                                                            alignItems: "center",
-                                                                            justifyContent: "space-between",
-                                                                        }}
-                                                                        >
-                                                                        <Typography
-                                                                            variant="body2"
+                                                                        <TableCell
+                                                                            key={key}
                                                                             sx={{
-                                                                            ...smartAudiences.table_column,
-                                                                            borderRight: "0",
+                                                                                ...smartAudiences.table_column,
+                                                                                ...(key === "name" && {
+                                                                                    position: "sticky",
+                                                                                    left: 0,
+                                                                                    zIndex: 10,
+                                                                                    top: 0,
+                                                                                    boxShadow: isScrolledX
+                                                                                        ? "3px 0px 3px #00000033"
+                                                                                        : "none",
+                                                                                }),
                                                                             }}
                                                                         >
-                                                                            {label}
-                                                                        </Typography>
-                                                                        {sortable && (
-                                                                            <IconButton size="small">
-                                                                                {orderBy === key ? (
-                                                                                    order === 'asc' ? (
-                                                                                        <ArrowUpwardRoundedIcon fontSize="inherit" />
-                                                                                    ) : (
-                                                                                        <ArrowDownwardRoundedIcon fontSize="inherit" />
-                                                                                    )
-                                                                                ) : (
-                                                                                    <SwapVertIcon fontSize="inherit" />
+                                                                            <Box
+                                                                                sx={{
+                                                                                    display: "flex",
+                                                                                    alignItems: "center",
+                                                                                    justifyContent: "space-between",
+                                                                                }}
+                                                                            >
+                                                                                <Typography
+                                                                                    variant="body2"
+                                                                                    sx={{
+                                                                                        ...smartAudiences.table_column,
+                                                                                        borderRight: "0",
+                                                                                    }}
+                                                                                >
+                                                                                    {label}
+                                                                                </Typography>
+                                                                                {sortable && (
+                                                                                    <IconButton size="small">
+                                                                                        {orderBy === key ? (
+                                                                                            order === 'asc' ? (
+                                                                                                <ArrowUpwardRoundedIcon fontSize="inherit" />
+                                                                                            ) : (
+                                                                                                <ArrowDownwardRoundedIcon fontSize="inherit" />
+                                                                                            )
+                                                                                        ) : (
+                                                                                            <SwapVertIcon fontSize="inherit" />
+                                                                                        )}
+                                                                                    </IconButton>
                                                                                 )}
-                                                                            </IconButton>
-                                                                        )}
-                                                                        </Box>
-                                                                    </TableCell>
+                                                                            </Box>
+                                                                        </TableCell>
                                                                     )
-                                                                )}
+                                                                    )}
                                                                     {/* {[
 
                                                                     ].map(({ key, label, sortable = false }) => (
@@ -1062,32 +1129,32 @@ const SmartAudiences: React.FC = () => {
                                                                 </TableRow>
                                                                 <TableRow
                                                                     sx={{
-                                                                    position: "sticky",
-                                                                    top: "60px",
-                                                                    zIndex: 11,
-                                                                    borderTop: "none",
+                                                                        position: "sticky",
+                                                                        top: "60px",
+                                                                        zIndex: 11,
+                                                                        borderTop: "none",
                                                                     }}
                                                                 >
                                                                     <TableCell
-                                                                    colSpan={9}
-                                                                    sx={{
-                                                                        p: 0,
-                                                                        pb: "1.5px",
-                                                                        borderTop: "none",
-                                                                        backgroundColor: "rgba(235, 235, 235, 1)",
-                                                                        borderColor: "rgba(235, 235, 235, 1)",
-                                                                    }}
-                                                                    >
-                                                                    {loaderForTable && (
-                                                                        <LinearProgress
-                                                                        variant="indeterminate"
+                                                                        colSpan={9}
                                                                         sx={{
-                                                                            width: "100%",
-                                                                            height: "1.5px",
-                                                                            position: "absolute",
+                                                                            p: 0,
+                                                                            pb: "1.5px",
+                                                                            borderTop: "none",
+                                                                            backgroundColor: "rgba(235, 235, 235, 1)",
+                                                                            borderColor: "rgba(235, 235, 235, 1)",
                                                                         }}
-                                                                        />
-                                                                    )}
+                                                                    >
+                                                                        {loaderForTable && (
+                                                                            <LinearProgress
+                                                                                variant="indeterminate"
+                                                                                sx={{
+                                                                                    width: "100%",
+                                                                                    height: "1.5px",
+                                                                                    position: "absolute",
+                                                                                }}
+                                                                            />
+                                                                        )}
                                                                     </TableCell>
                                                                 </TableRow>
                                                             </TableHead>
@@ -1111,58 +1178,24 @@ const SmartAudiences: React.FC = () => {
                                                                             }}
                                                                         >
                                                                             {/* Name Column */}
-                                                                            {/* <TableCell className="sticky-cell"
+                                                                            <TableCell className="sticky-cell"
                                                                                 sx={{
                                                                                     ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff', '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' },
+                                                                                    pb: 0,
+                                                                                    pt: 0,
                                                                                     boxShadow: isScrolledX
-                                                                                    ? "3px 0px 3px #00000033"
-                                                                                    : "none",
+                                                                                        ? "3px 0px 3px #00000033"
+                                                                                        : "none",
+                                                                                    maxWidth: '200px'
                                                                                 }}>
-                                                                                <Box sx={{display: 'flex', justifyContent: "space-between"}}>
-                                                                                    <Tooltip
-                                                                                        title={
-                                                                                            <Box onClick={ () => {
-                                                                                                    setSelectedRowData(row)
-                                                                                                    handleDetailsPopupOpen()
-                                                                                                }} 
-                                                                                                sx={{ backgroundColor: '#fff', margin: 0, padding: 0, display: 'flex', flexDirection: 'row', cursor: "pointer", alignItems: 'center', }}>
-                                                                                            <Typography className='table-data' component='div'style={{color: "rgba(80, 82, 178, 1)"}} sx={{ fontSize: '12px !important' }}>
-                                                                                                {row.name}
-                                                                                            </Typography>
-                                                                                            </Box>
-                                                                                        }
-                                                                                        sx={{marginLeft:'0.5rem !important'}}
-                                                                                        componentsProps={{
-                                                                                            tooltip: {
-                                                                                                sx: {
-                                                                                                    backgroundColor: '#fff',
-                                                                                                    color: '#000',
-                                                                                                    boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                                                                    border: '0.2px solid rgba(255, 255, 255, 1)',
-                                                                                                    borderRadius: '4px',
-                                                                                                    maxHeight: '100%',
-                                                                                                    maxWidth: '500px',
-                                                                                                    padding: '11px 10px',
-                                                                                                    marginLeft: '0.5rem !important',
-                                                                                                },
-                                                                                            },
+                                                                                <Box sx={{ display: 'flex', width: '100%', justifyContent: "space-between", alignItems: 'center', gap: 1 }}>
+                                                                                    <OverflowTooltipText
+                                                                                        text={row.name}
+                                                                                        onClick={() => {
+                                                                                            setSelectedRowData(row);
+                                                                                            handleDetailsPopupOpen();
                                                                                         }}
-                                                                                        placement='right'
-                                                                                    >
-                                                                                        <Typography className='table-data'
-                                                                                            style={{
-                                                                                                color: "rgba(80, 82, 178, 1)"
-                                                                                            }}
-                                                                                            sx={{
-                                                                                                whiteSpace: 'nowrap',
-                                                                                                overflow: 'hidden',
-                                                                                                textOverflow: 'ellipsis',
-                                                                                                maxWidth:'150px',
-                                                                                            }}
-                                                                                        >
-                                                                                            {truncateText(row.name, 20)}
-                                                                                        </Typography>
-                                                                                    </Tooltip>
+                                                                                    />
                                                                                     <IconButton
                                                                                         className="edit-icon"
                                                                                         sx={{
@@ -1180,26 +1213,9 @@ const SmartAudiences: React.FC = () => {
                                                                                         <EditIcon sx={{ maxHeight: "18px" }} />
                                                                                     </IconButton>
                                                                                 </Box>
-                                                                            </TableCell> */}
-
-                                                                        <TableCustomCell
-                                                                            rowExample={row.name}
-                                                                            loaderForTable={loaderForTable}
-                                                                            customCellStyles={{
-                                                                            position: "sticky",
-                                                                            left: "0",
-                                                                            zIndex: 9,
-                                                                            backgroundColor: loaderForTable
-                                                                                ? "#fff"
-                                                                                : "#fff",
-                                                                            boxShadow: isScrolledX
-                                                                                ? "3px 0px 3px #00000033"
-                                                                                : "none",
-                                                                            }}
-                                                                        />
-
-                                                                           <Popover
-                                                                                 open={isEditPopoverOpen}
+                                                                            </TableCell>
+                                                                            <Popover
+                                                                                open={isEditPopoverOpen}
                                                                                 anchorEl={editPopoverAnchorEl}
                                                                                 onClose={handleCloseEditPopover}
                                                                                 anchorOrigin={{
@@ -1317,19 +1333,19 @@ const SmartAudiences: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative', textAlign: "center" }}
                                                                             >
-                                                                            {row.status === "unvalidated" 
-                                                                                ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
-                                                                                : row.status === "n_a"
-                                                                                    ? "N/A"
-                                                                                    : row.validated_records === 0 && row.status === "validating" && !progressValidation?.total
-                                                                                        ? <Box sx={{display: "flex", justifyContent: "center"}}><ThreeDotsLoader /></Box> 
-                                                                                        : progressValidation?.total > row.validated_records
-                                                                                            ? progressValidation?.total.toLocaleString('en-US')
-                                                                                            : row.validated_records.toLocaleString('en-US')}
+                                                                                {row.status === "unvalidated"
+                                                                                    ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20} />
+                                                                                    : row.status === "n_a"
+                                                                                        ? "N/A"
+                                                                                        : row.validated_records === 0 && row.status === "validating" && !progressValidation?.total
+                                                                                            ? <Box sx={{ display: "flex", justifyContent: "center" }}><ThreeDotsLoader /></Box>
+                                                                                            : progressValidation?.total > row.validated_records
+                                                                                                ? progressValidation?.total.toLocaleString('en-US')
+                                                                                                : row.validated_records.toLocaleString('en-US')}
                                                                             </TableCell>
                                                                             {/* Created Column */}
                                                                             <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative'}}
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
                                                                             >
                                                                                 <Box>{dayjs(row.created_at).format('MMM D, YYYY')}</Box>
                                                                                 <Box>{row.created_by}</Box>
@@ -1337,7 +1353,7 @@ const SmartAudiences: React.FC = () => {
 
                                                                             {/* Total Universe Column */}
                                                                             <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative'}}
+                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
                                                                             >
                                                                                 {row.total_records.toLocaleString('en-US')}
                                                                             </TableCell>
@@ -1346,11 +1362,11 @@ const SmartAudiences: React.FC = () => {
                                                                             <TableCell
                                                                                 sx={{ ...smartAudiences.table_array, position: 'relative' }}
                                                                             >
-                                                                                {(progress?.processed && progress?.processed === row?.active_segment_records) || (row?.processed_active_segment_records ===  row?.active_segment_records && (row.status === "unvalidated"  || row?.processed_active_segment_records !== 0))
+                                                                                {(progress?.processed && progress?.processed === row?.active_segment_records) || (row?.processed_active_segment_records === row?.active_segment_records && (row.status === "unvalidated" || row?.processed_active_segment_records !== 0))
                                                                                     ? row.active_segment_records.toLocaleString('en-US')
                                                                                     : row?.processed_active_segment_records > progress?.processed
-                                                                                        ? <ProgressBar progress={{ total: row?.active_segment_records, processed: row?.processed_active_segment_records}} />
-                                                                                        : <ProgressBar progress={{...progress, total: row.active_segment_records}} />
+                                                                                        ? <ProgressBar progress={{ total: row?.active_segment_records, processed: row?.processed_active_segment_records }} />
+                                                                                        : <ProgressBar progress={{ ...progress, total: row.active_segment_records }} />
                                                                                 }
                                                                             </TableCell>
 
@@ -1363,9 +1379,9 @@ const SmartAudiences: React.FC = () => {
                                                                                         width: "100px",
                                                                                         margin: 0,
                                                                                         background: getStatusStyle(
-                                                                                            progressValidation?.total 
-                                                                                            ? "Ready"
-                                                                                            : preRenderStatus(setStatus(row.status))
+                                                                                            progressValidation?.total
+                                                                                                ? "Ready"
+                                                                                                : preRenderStatus(setStatus(row.status))
                                                                                         ).background,
                                                                                         padding: '3px 8px',
                                                                                         borderRadius: '2px',
@@ -1375,15 +1391,15 @@ const SmartAudiences: React.FC = () => {
                                                                                         lineHeight: '16px',
                                                                                         textAlign: "center",
                                                                                         color: getStatusStyle(
-                                                                                            progressValidation?.total 
-                                                                                            ? "Ready"
-                                                                                            : preRenderStatus(setStatus(row.status))
+                                                                                            progressValidation?.total
+                                                                                                ? "Ready"
+                                                                                                : preRenderStatus(setStatus(row.status))
                                                                                         ).color,
                                                                                     }}>
-                                                                                        {progressValidation?.total 
+                                                                                        {progressValidation?.total
                                                                                             ? "Ready"
                                                                                             : preRenderStatus(setStatus(row.status))
-                                                                                            }
+                                                                                        }
                                                                                     </Typography>
                                                                                 </Box>
                                                                             </TableCell>
@@ -1403,39 +1419,40 @@ const SmartAudiences: React.FC = () => {
                                                                                                 boxShadow: 0,
                                                                                                 borderRadius: "4px",
                                                                                                 border: "0.5px solid rgba(175, 175, 175, 1)",
-                                                    
+
                                                                                             },
-                                                                                        }}}
-                                                                                        anchorOrigin={{
-                                                                                            vertical: "center",
-                                                                                            horizontal: "center",
-                                                                                        }}
+                                                                                        }
+                                                                                    }}
+                                                                                    anchorOrigin={{
+                                                                                        vertical: "center",
+                                                                                        horizontal: "center",
+                                                                                    }}
                                                                                     transformOrigin={{
                                                                                         vertical: "top",
                                                                                         horizontal: "right",
                                                                                     }}
-                                                                                    
+
                                                                                 >
                                                                                     <List
                                                                                         sx={{
                                                                                             width: '100%', maxWidth: 360, boxShadow: 'none'
                                                                                         }}
                                                                                     >
-                                                                                        <ListItemButton disabled={!(selectedRowData?.status === "ready" || selectedRowData?.status === "n_a")} 
-                                                                                                        sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} 
-                                                                                                        onClick={() => {
-                                                                                                            handleCloseMorePopover()
-                                                                                                            handleDataSyncPopupOpen()
-                                                                                                        }}>
+                                                                                        <ListItemButton disabled={!(selectedRowData?.status === "ready" || selectedRowData?.status === "n_a")}
+                                                                                            sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
+                                                                                            onClick={() => {
+                                                                                                handleCloseMorePopover()
+                                                                                                handleDataSyncPopupOpen()
+                                                                                            }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
                                                                                         </ListItemButton>
-                                                                                        <ListItemButton disabled={(selectedRowData?.active_segment_records !== selectedRowData?.processed_active_segment_records || selectedRowData?.status === "unvalidated" || selectedRowData?.status === "validating")} 
-                                                                                                        sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} 
-                                                                                                        onClick={() => {
-                                                                                                            setIsDownloadAction(true)
-                                                                                                            handleCloseMorePopover()
-                                                                                                            handleDataSyncPopupOpen()
-                                                                                                        }}>
+                                                                                        <ListItemButton disabled={(selectedRowData?.active_segment_records !== selectedRowData?.processed_active_segment_records || selectedRowData?.status === "unvalidated" || selectedRowData?.status === "validating")}
+                                                                                            sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
+                                                                                            onClick={() => {
+                                                                                                setIsDownloadAction(true)
+                                                                                                handleCloseMorePopover()
+                                                                                                handleDataSyncPopupOpen()
+                                                                                            }}>
                                                                                             <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Download" />
                                                                                         </ListItemButton>
                                                                                         <ListItemButton
@@ -1561,7 +1578,7 @@ const SmartAudiences: React.FC = () => {
                                         }
                                     </Box>
 
-                                    <CreateSyncPopup 
+                                    <CreateSyncPopup
                                         open={dataSyncPopupOpen}
                                         id={selectedRowData?.id}
                                         activeSegmentRecords={selectedRowData?.active_segment_records}
