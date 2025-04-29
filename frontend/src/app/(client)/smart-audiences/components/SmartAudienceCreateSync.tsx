@@ -240,7 +240,7 @@ const customFieldsListCSV: Row[] = [
     { id: 4, type: 'Personal Email', value: 'personal_email' },
     { id: 5, type: 'Other Emails', value: 'other_emails' },
     { id: 6, type: 'Phone Mobile 1', value: 'phone_mobile1' },
-    { id: 7, type: 'Phone Mobile 1', value: 'phone_mobile2' },
+    { id: 7, type: 'Phone Mobile 2', value: 'phone_mobile2' },
     { id: 8, type: 'Mobile Phone DNC', value: 'mobile_phone_dnc' },
     { id: 9, type: 'Business Email last seen', value: 'business_email_last_seen_date' },
     { id: 10, type: 'Personal Email last seen', value: 'personal_email_last_seen' },
@@ -322,8 +322,13 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
     }, [open]);
 
     useEffect(() => {
+        console.log({customFields})
+    }, [customFields]);
+
+    useEffect(() => {
         if (isDownloadAction) {
             setValue("2")
+            setActiveService("CSV")
             setCustomFields(
                 [...customFieldsListCSV.map(field => ({ type: field.value, value: field.type }))
                 ])
