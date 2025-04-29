@@ -174,6 +174,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = React.memo(
                 textTransform: "none",
                 minHeight: 0,
                 pt: 2,
+                mb: 0.25,
                 alignItems: "start",
                 "& .MuiTabs-indicator": {
                   backgroundColor: "rgba(80, 82, 178, 1)",
@@ -182,6 +183,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = React.memo(
                 "@media (max-width: 600px)": {
                   border: "1px solid rgba(228, 228, 228, 1)",
                   borderRadius: "4px",
+                  pt: 0,
                   width: "100%",
                   "& .MuiTabs-indicator": {
                     height: "0",
@@ -222,7 +224,6 @@ const StaticticsTab: React.FC<StatisticsTabProps> = React.memo(
                   textTransform: "none",
                   padding: "4px 24px",
                   minHeight: "auto",
-                  mb: 0.25,
                   flexGrow: 1,
                   textAlign: "center",
                   fontSize: "14px",

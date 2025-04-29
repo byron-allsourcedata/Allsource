@@ -45,6 +45,11 @@ class AudienceInsightsPersistence:
                 "name": source.name,
                 "audience_type": source.target_schema
             }
+        elif source:
+            return {"insights": {},
+                    "name": source.name,
+                    "audience_type": source.target_schema
+            }
 
         return {"insights": {}, "name": "", "audience_type": ""}
 
@@ -64,6 +69,11 @@ class AudienceInsightsPersistence:
                 "insights": lookalike.insights,
                 "name": lookalike.name,
                 "audience_type": lookalike.target_schema
+            }
+        elif lookalike:
+            return {"insights": {},
+                    "name": lookalike.name,
+                    "audience_type": lookalike.target_schema
             }
 
         return {"insights": {}, "name": "", "audience_type": ""}
