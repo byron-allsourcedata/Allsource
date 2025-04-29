@@ -6,7 +6,7 @@ import B2CLifestyle from "./B2CTabComponents/B2CLifestyle";
 import B2BProfessional from "./B2BTabComponents/B2BProfessional";
 import B2BEmployment from "./B2BTabComponents/B2BEmployment";
 import B2BEducation from "./B2BTabComponents/B2BEducation";
-import { B2BData } from "./StaticticsTab";
+import { B2BData } from "../page";
 
 type B2BTabsProps = {
   data: B2BData;
