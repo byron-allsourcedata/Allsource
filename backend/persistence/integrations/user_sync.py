@@ -310,17 +310,30 @@ class IntegrationsUserSyncPersistence:
             .filter(IntegrationUserSync.id == sync_id).first()
         
     def get_verified_email_and_phone(self, enrichment_user_id):
-        result = self.db.query(
-            AudienceSmartValidation.verified_email,
-            AudienceSmartValidation.verified_phone
-        ).join(
-            AudienceSmartPerson,
-            AudienceSmartPerson.id == AudienceSmartValidation.audience_smart_person_id
-        ).filter(
-            AudienceSmartPerson.enrichment_user_id == enrichment_user_id
-        ).first()
-        if result:
-            return result.verified_email, result.verified_phone
-        else:
-            return '', ''
+        rows = (
+            self.db.query(
+                AudienceSmartValidation.verified_email,
+                AudienceSmartValidation.verified_phone
+            )
+            .join(
+                AudienceSmartPerson,
+                AudienceSmartPerson.id == AudienceSmartValidation.audience_smart_person_id
+            )
+            .filter(
+                AudienceSmartPerson.enrichment_user_id == enrichment_user_id
+            )
+            .limit(2)
+            .all()
+        )
+
+        email = ''
+        phone = ''
+        for verified_email, verified_phone in rows:
+            if verified_email:
+                email = verified_email
+            if verified_phone:
+                phone = verified_phone
+
+        return email, phone
+
 
