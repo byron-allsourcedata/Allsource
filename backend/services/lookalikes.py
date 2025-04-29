@@ -181,6 +181,29 @@ class AudienceLookalikesService:
             return {'status': 'SUCCESS'}
         return {'status': 'FAILURE'}
 
+
+    def _default_insights(self) -> Tuple[B2CInsights, B2BInsights, Dict[str, float]]:
+        zero_dicts = CalculateRequest._make_zero_dicts(
+            personal=PERSONAL,
+            financial=FINANCIAL,
+            lifestyle=LIFESTYLE,
+            voter=VOTER,
+            employment_history=EMPLOYMENT_HISTORY,
+            professional_profile=PROFESSIONAL_PROFILE,
+        )
+
+        b2c = B2CInsights(
+            personal=zero_dicts['personal'],
+            financial=zero_dicts['financial'],
+            lifestyle=zero_dicts['lifestyle'],
+            voter=zero_dicts['voter'],
+        )
+        b2b = B2BInsights(
+            employment_history=zero_dicts['employment_history'],
+            professional_profile=zero_dicts['professional_profile'],
+        )
+        return b2c, b2b, {}
+
     def search_lookalikes(self, start_letter, user):
         lookalike_data = self.lookalikes_persistence_service.search_lookalikes(start_letter=start_letter,
                                                                                user_id=user.get('id'))
@@ -226,8 +249,6 @@ class AudienceLookalikesService:
             financial=financial,
             lifestyle=lifestyle,
             voter=voter,
-            employment_history=employment_history,
-            professional_profile=professional_profile,
         )
 
         b2b = B2BInsights(
@@ -318,7 +339,7 @@ class AudienceLookalikesService:
             b2c_insights, b2b_insights, other = self.split_insights(rounded_feature)
 
         except (EqualTrainTargets, EmptyTrainDataset, LessThenTwoTrainDataset, Exception):
-            b2c_insights, b2b_insights, other = B2CInsights(), B2BInsights(), {}
+            b2c_insights, b2b_insights, other = self._default_insights()
 
         return CalculateRequest(
             count_matched_persons=len(audience_data),

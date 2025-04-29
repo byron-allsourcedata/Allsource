@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Iterable
 
 from pydantic import BaseModel, Field
 
@@ -20,8 +20,6 @@ class B2CInsights(BaseModel):
     financial:              Dict[str, float] = Field(default_factory=dict)
     lifestyle:              Dict[str, float] = Field(default_factory=dict)
     voter:                  Dict[str, float] = Field(default_factory=dict)
-    employment_history:     Dict[str, float] = Field(default_factory=dict)
-    professional_profile:   Dict[str, float] = Field(default_factory=dict)
 
 class B2BInsights(BaseModel):
     employment_history:     Dict[str, float] = Field(default_factory=dict)
@@ -32,4 +30,11 @@ class CalculateRequest(BaseModel):
     audience_feature_importance_b2c:   Optional[B2CInsights]=B2BInsights()
     audience_feature_importance_b2b:    Optional[B2BInsights]=B2CInsights()
     audience_feature_importance_other: Dict[str, float]
+
+    @staticmethod
+    def _make_zero_dicts(**key_sets: Iterable[str]) -> Dict[str, Dict[str, float]]:
+        return {
+            category: {key: 0.0 for key in keys}
+            for category, keys in key_sets.items()
+        }
 

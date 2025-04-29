@@ -8,6 +8,8 @@ from pandas import DataFrame
 from config.folders import Folders
 from schemas.similar_audiences import AudienceData, NormalizationConfig, OrderedFeatureRules
 
+pd.set_option('future.no_silent_downcasting', True)
+
 letter_to_number = {
     ch: (None if ch == 'U' else i + 1)
     for i, ch in enumerate(string.ascii_uppercase)

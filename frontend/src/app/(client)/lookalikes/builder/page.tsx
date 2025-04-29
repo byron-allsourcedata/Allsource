@@ -281,7 +281,7 @@ const CreateLookalikePage: React.FC = () => {
 
   const canProceed = (personalKeys.length + financialKeys.length 
                  + lifestylesKeys.length + voterKeys.length + professionalProfileKeys.length 
-                 + employmentHistoryKeys.length) > 3;
+                 + employmentHistoryKeys.length) >= 3;
 
   return (
     <Box
