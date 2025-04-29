@@ -72,7 +72,7 @@ export const usePolling = (
         console.log("Polling interval cleared");
       }
     };
-  }, [data.size, data.size_progress, isPolling, fetchDataCallback]);
+  }, []);
 
   return { mergedProgress, mergedTotal };
 };

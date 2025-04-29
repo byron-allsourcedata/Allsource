@@ -2,7 +2,6 @@ from decimal import Decimal
 from typing import List
 from uuid import UUID
 
-import numpy as np
 from catboost import CatBoostRegressor
 from fastapi import Depends
 from pandas import DataFrame
@@ -67,41 +66,24 @@ class SimilarAudiencesScoresService:
                     print(f"fetched {count}\r")
 
                     dict_rows = [dict(zip(columns, row)) for row in rows]
-                    ad = [AudienceData(
-                        EmailAddress=row.get('EmailAddress'),
-                        PersonExactAge=str(row.get('age', '')),
-                        PersonGender=str(row.get('PersonGender', '')),
-                        EstimatedHouseholdIncomeCode=str(row.get('EstimatedHouseholdIncomeCode', '')),
-                        EstimatedCurrentHomeValueCode=str(row.get('EstimatedCurrentHomeValueCode', '')),
-                        HomeownerStatus=str(row.get('HomeownerStatus', '')),
-                        HasChildren=str(row.get('HasChildren', '')),
-                        NumberOfChildren=str(row.get('NumberOfChildren', '')),
-                        CreditRating=str(row.get('CreditRating', '')),
-                        NetWorthCode=str(row.get('NetWorthCode', '')),
-                        ZipCode5=str(row.get('ZipCode5', '')),
-                        Latitude=str(row.get('Latitude', '')),
-                        Longitude=str(row.get('Longitude', '')),
-                        HasCreditCard=str(row.get('HasCreditCard', '')),
-                        LengthOfResidenceYears=str(row.get('LengthOfResidenceYears', '')),
-                        MaritalStatus=str(row.get('MaritalStatus', '')),
-                        OccupationGroupCode=row.get('OccupationGroupCode'),
-                        IsBookReader=str(row.get('IsBookReader', '')),
-                        IsOnlinePurchaser=str(row.get('IsOnlinePurchaser', '')),
-                        StateAbbr=str(row.get('StateAbbr', '')),
-                        IsTraveler=str(row.get('IsTraveler', '')),
-                        customer_value=Decimal(0.0)
-                    ).__dict__ for row in dict_rows]
+                    user_ids = []
+                    feature_dicts = []
+                    for rd in dict_rows:
+                        user_ids.append(rd[user_id_key])
+                        feats = {
+                            k: (str(v) if v is not None else "None")
+                            for k, v in rd.items()
+                            if k != user_id_key
+                        }
+                        feature_dicts.append(feats)
 
-                    scores = self.calculate_score_dict_batch(model, ad, config)
-                    user_ids: List[UUID] = [row[user_id_key] for row in dict_rows]
-
+                    scores = self.calculate_score_dict_batch(model, feature_dicts, config)
 
                     self.enrichment_lookalike_scores_persistence.bulk_insert(lookalike_id, list(zip(user_ids, scores)))
 
                     print("done insert")
                     self.db.flush()
                     self.db.commit()
-
 
         self.db.commit()
 
@@ -110,11 +92,10 @@ class SimilarAudiencesScoresService:
         df = DataFrame(persons)
         return self.calculate_score_batches(model, df, config=config)
 
-
-    def calculate_score_batches(self, model: CatBoostRegressor, persons: DataFrame, config: NormalizationConfig) -> List[float]:
-        persons, values = self.normalization_service.normalize_dataframe(persons, config=config)
-        result: np.ndarray = model.predict(persons)
-
+    def calculate_score_batches(self, model: CatBoostRegressor, df: DataFrame, config: NormalizationConfig) -> List[
+        float]:
+        df_normed, _ = self.normalization_service.normalize_dataframe(df, config)
+        result = model.predict(df_normed)
         return result.tolist()
 
 
