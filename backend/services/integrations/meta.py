@@ -56,7 +56,7 @@ class MetaIntegrationsService:
         return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.META.value)
 
     def get_info_by_access_token(self, access_token: str):
-        url = 'https://graph.facebook.com/v20.0/me'
+        url = 'https://graph.facebook.com/v22.0/me'
         params = {
             'access_token': access_token
         }
@@ -106,7 +106,7 @@ class MetaIntegrationsService:
         return integartion
     
     def check_custom_audience_terms(self, ad_account_id, access_token):
-        url = f"https://graph.facebook.com/v20.0/{ad_account_id}/customaudiences"
+        url = f"https://graph.facebook.com/v22.0/{ad_account_id}/customaudiences"
         
         params = {
             "access_token": access_token,
@@ -129,7 +129,7 @@ class MetaIntegrationsService:
         return {"terms_accepted": False, "error": error_data}
 
     def get_long_lived_token(self, fb_exchange_token):
-        url = 'https://graph.facebook.com/v20.0/oauth/access_token'
+        url = 'https://graph.facebook.com/v22.0/oauth/access_token'
         params = {
             'client_id': APP_ID,
             'client_secret': APP_SECRET,
@@ -146,7 +146,7 @@ class MetaIntegrationsService:
         }
 
     def __get_ad_accounts(self, access_token: str):
-        url = 'https://graph.facebook.com/v20.0/me/adaccounts'
+        url = 'https://graph.facebook.com/v22.0/me/adaccounts'
         params = {
             'fields': 'name',
             'access_token': access_token
@@ -167,7 +167,7 @@ class MetaIntegrationsService:
         return [self.__mapped_ad_account(ad_account) for ad_account in response.json().get('data')]
     
     def __get_audience_list(self, ad_account_id, access_token: str):
-        url = f'https://graph.facebook.com/v20.0/{ad_account_id}/customaudiences?fields=name'
+        url = f'https://graph.facebook.com/v22.0/{ad_account_id}/customaudiences?fields=name'
         params = {
             'fields': 'name',
             'access_token': access_token
@@ -176,7 +176,7 @@ class MetaIntegrationsService:
         return response
     
     def __get_campaigns_list(self, ad_account_id, access_token: str):
-        url = f'https://graph.facebook.com/v20.0/{ad_account_id}/campaigns?fields=name'
+        url = f'https://graph.facebook.com/v22.0/{ad_account_id}/campaigns?fields=name'
         params = {
             'fields': 'name',
             'access_token': access_token
@@ -244,7 +244,7 @@ class MetaIntegrationsService:
         return sync
     
     def create_adset(self, ad_account_id, campaign_name, campaign_id, access_token, list_id, campaign_objective, bid_amount):
-        url = f'https://graph.facebook.com/v20.0/{ad_account_id}/adsets'
+        url = f'https://graph.facebook.com/v22.0/{ad_account_id}/adsets'
         ad_set_data = {
             'name': f"{campaign_name}_ad",
             'optimization_goal': campaign_objective,
@@ -261,7 +261,7 @@ class MetaIntegrationsService:
         response = self.__handle_request(method='POST', url=url, json=ad_set_data)
     
     def create_campaign(self, campaign_name, daily_budget, access_token, ad_account_id):
-        url = f'https://graph.facebook.com/v20.0/{ad_account_id}/campaigns'
+        url = f'https://graph.facebook.com/v22.0/{ad_account_id}/campaigns'
         campaign_data = {
             'name': campaign_name,
             'objective': 'OUTCOME_TRAFFIC',
@@ -328,7 +328,7 @@ class MetaIntegrationsService:
             ],
             "data": [profile]
         }
-        url = f'https://graph.facebook.com/v20.0/{custom_audience_id}/users'
+        url = f'https://graph.facebook.com/v22.0/{custom_audience_id}/users'
         response = self.__handle_request(method='POST', url=url, params={'access_token': access_token}, data={
             'payload': payload,
             'app_id': APP_ID
