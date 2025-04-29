@@ -21,11 +21,6 @@ class AudiencePhoneVerification(Base):
         nullable=False,
         server_default=text('gen_random_uuid()')
     )
-    audience_smart_person_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey(AudienceSmartPerson.id, ondelete='CASCADE'),
-        nullable=False
-    )
     phone = Column(
         Text, 
         nullable=False
