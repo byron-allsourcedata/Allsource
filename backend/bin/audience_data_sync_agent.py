@@ -20,7 +20,7 @@ from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts import AudienceSmart
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from config.aws import get_s3_client
-from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatformEnum, NotificationTitles
+from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatformEnum, NotificationTitles, AudienceSmartStatuses
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
@@ -87,7 +87,7 @@ def get_lead_attributes(session, enrichment_user_ids, data_sync_id):
         return [], None, None
 
 
-def update_users_integrations(session, status, integration_data_sync_id, service_name, user_domain_integration_id = None):
+def update_users_integrations(session, status, integration_data_sync_id, service_name, user_domain_integration_id = None, smart_audience_id=None):
     if status == ProccessDataSyncResult.LIST_NOT_EXISTS.value:
         logging.info(f"List not exists for  integration_data_sync_id {integration_data_sync_id}")
         session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
@@ -97,6 +97,17 @@ def update_users_integrations(session, status, integration_data_sync_id, service
         
     if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or ProccessDataSyncResult.PAYMENT_REQUIRED.value:
         logging.info(f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}")
+        subquery = (
+            session.query(AudienceSmart.id)
+            .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id)
+            .filter(IntegrationUserSync.id == integration_data_sync_id)
+            .subquery()
+        )
+        session.query(AudienceSmart)\
+            .filter(AudienceSmart.id.in_(subquery))\
+            .update({AudienceSmart.status: AudienceSmartStatuses.FAILED.value}, synchronize_session=False)
+
+        
         if service_name == SourcePlatformEnum.WEBHOOK.value:
             session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
                 'sync_status': False,
