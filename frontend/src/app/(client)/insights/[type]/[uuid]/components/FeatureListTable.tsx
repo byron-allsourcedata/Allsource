@@ -16,6 +16,7 @@ interface Props<T extends FeatureObject> {
   features: T;
   title?: string;
   columnHeaders?: [string, string];
+  first?: boolean
 }
 
 const formatKey = (k: string) =>
@@ -30,6 +31,7 @@ function FeatureListTable<T extends FeatureObject>({
   features,
   title,
   columnHeaders = ["Field", "Importance"],
+  first
 }: Props<T>) {
   const theme = useTheme();
 
@@ -41,68 +43,84 @@ function FeatureListTable<T extends FeatureObject>({
     [features]
   );
 
-  const renderContent = () => (
-    <Box sx={{ pt: 2, px: 2, pb: 2 }}>
-      <Grid
-        container
-        alignItems="center"
-        sx={{
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          pb: 1,
-          mb: 1,
-        }}
-      >
-        <Grid item xs={8}>
-          <Typography
-            className="black-table-header"
-            sx={{
-              fontWeight: "500 !important",
-              color: "rgba(32, 33, 36, 1) !important",
-            }}
-          >
-            {columnHeaders[0]}
+  const renderContent = () => {
+    if (allPairs.length === 0) {
+      return (
+        <Box sx={{ p: 2 }}>
+          <Typography variant="body2" color="text.secondary">
+            No fields selected
           </Typography>
-        </Grid>
-        <Grid item xs={4} textAlign="left">
-          <Typography
-            className="black-table-header"
-            sx={{
-              fontWeight: "500 !important",
-              color: "rgba(32, 33, 36, 1) !important",
-            }}
-          >
-            {columnHeaders[1]}
-          </Typography>
-        </Grid>
-      </Grid>
+        </Box>
+      );
+    }
 
-      {allPairs.map(([k, v]) => (
+    return (
+      <Box sx={{ pt: 2, px: 2, }}>
         <Grid
           container
-          key={String(k)}
           alignItems="center"
           sx={{
             borderBottom: `1px solid ${theme.palette.divider}`,
-            py: 1,
+            pb: 1,
+            mb: 1,
           }}
         >
           <Grid item xs={8}>
-            <Typography className="black-table-header">
-              {formatKey(String(k))}
+            <Typography
+              className="black-table-header"
+              sx={{
+                fontWeight: "500 !important",
+                color: "rgba(32, 33, 36, 1) !important",
+              }}
+            >
+              {columnHeaders[0]}
             </Typography>
           </Grid>
           <Grid item xs={4} textAlign="left">
-            <Typography className="black-table-header">
-              {(v * 100).toFixed(1)}%
+            <Typography
+              className="black-table-header"
+              sx={{
+                fontWeight: "500 !important",
+                color: "rgba(32, 33, 36, 1) !important",
+              }}
+            >
+              {columnHeaders[1]}
             </Typography>
           </Grid>
         </Grid>
-      ))}
-    </Box>
-  );
+
+        {allPairs.map(([k, v], index) => (
+          <Grid
+            container
+            key={String(k)}
+            alignItems="center"
+            sx={{
+              borderBottom:
+                index !== allPairs.length - 1
+                  ? `1px solid ${theme.palette.divider}`
+                  : "none",
+              py: 1,
+            }}
+          >
+            <Grid item xs={8}>
+              <Typography className="black-table-header">
+                {formatKey(String(k))}
+              </Typography>
+            </Grid>
+            <Grid item xs={4} textAlign="left">
+              <Typography className="black-table-header">
+                {(v * 100).toFixed(1)}%
+              </Typography>
+            </Grid>
+          </Grid>
+        ))}
+      </Box>
+    );
+  };
+
 
   return title ? (
-    <Accordion disableGutters elevation={0} sx={{ mb: 2, width: "100%" }}>
+    <Accordion disableGutters elevation={0} sx={{ mb: 2, width: "100%", borderTop: first ? "none" : `1px solid ${theme.palette.divider}` }}>
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         sx={{

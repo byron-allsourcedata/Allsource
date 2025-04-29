@@ -57,7 +57,8 @@ class AudienceInsightsPersistence:
         lookalike = self.db.query(
             AudienceLookalikes.insights,
             AudienceLookalikes.name,
-            AudienceSource.target_schema
+            AudienceSource.target_schema,
+            AudienceLookalikes.significant_fields
         ).join(AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid
                ).filter(
             AudienceLookalikes.id == uuid_of_lookalike,
@@ -68,15 +69,24 @@ class AudienceInsightsPersistence:
             return {
                 "insights": lookalike.insights,
                 "name": lookalike.name,
-                "audience_type": lookalike.target_schema
+                "audience_type": lookalike.target_schema,
+                "significant_fields": lookalike.significant_fields
             }
         elif lookalike:
-            return {"insights": {},
-                    "name": lookalike.name,
-                    "audience_type": lookalike.target_schema
-            }
+            if lookalike.significant_fields:
+                return {"insights": {},
+                        "name": lookalike.name,
+                        "audience_type": lookalike.target_schema,
+                        "significant_fields": lookalike.significant_fields
+                }
+            else:
+                return {"insights": {},
+                        "name": lookalike.name,
+                        "audience_type": lookalike.target_schema,
+                        "significant_fields": {}
+                        }
 
-        return {"insights": {}, "name": "", "audience_type": ""}
+        return {"insights": {}, "name": "", "audience_type": "", "significant_fields": {}}
 
     def get_recent_sources(self, user_id: int) -> list[dict]:
         return (

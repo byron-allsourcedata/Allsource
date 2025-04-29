@@ -5,15 +5,13 @@ import FeatureListTable, { FeatureObject } from "./FeatureListTable";
 import Link from "next/link";
 import Categories from "./PredictableFieldsComponents/Categories";
 import All from "./PredictableFieldsComponents/All";
+import { SignificantFields } from '../page'
 
-interface B2CData {
-  personal_info: Record<string, any>;
-  financial: Record<string, any>;
-  lifestyle: Record<string, any>;
-  voter: Record<string, any>;
-}
+type PredictableFieldsTabProps = {
+  data: SignificantFields;
+};
 
-const PredictableFields: React.FC = () => {
+const PredictableFields: React.FC<PredictableFieldsTabProps> = ({ data }) => {
   const [tabIndex, setIndex] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
@@ -108,11 +106,11 @@ const PredictableFields: React.FC = () => {
       >
         <TabPanel value={tabIndex} index={0}>
           <Box sx={{ width: "100%", display: "flex" }}>
-            <Categories />
+            <Categories data={data} />
           </Box>
         </TabPanel>
         <TabPanel value={tabIndex} index={1}>
-          <All />
+          <All data={data} />
         </TabPanel>
       </Box>
     </Box>
