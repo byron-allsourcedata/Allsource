@@ -116,6 +116,7 @@ class AudienceLookalikesPersistence:
             k: round(v * 1000) / 1000
             for k, v in audience_feature_importance.items()
         }
+
         sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
         lookalike = AudienceLookalikes(
             name=lookalike_name,

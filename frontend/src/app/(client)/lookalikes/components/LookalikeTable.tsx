@@ -239,9 +239,12 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
     fields: Record<string, number> | null
   ): string => {
     if (!fields || typeof fields !== "object") return "---";
+    if (Object.keys(fields).length === 0) {
+      return 'There are no fields with values ​​greater than zero';
+    }
     return Object.entries(fields)
-      .map(([key, value]) => `${key}: ${value}`)
-      .join("%, ");
+      .map(([key, value]) => `${key}: ${value}%`)
+      .join(", ");
   };
 
   const handleOpenConfirm = (
@@ -901,7 +904,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         >
                           <Box sx={{ margin: 1 }}>
                             <Typography className="table-data">
-                              {fullFormattedFields(row.significant_fields)}%
+                              {fullFormattedFields(row.significant_fields)}
                             </Typography>
                           </Box>
                         </Collapse>
@@ -1003,7 +1006,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         >
                           <Box sx={{ margin: 1 }}>
                             <Typography className="table-data">
-                              {fullFormattedFields(row.similarity_score)}%
+                              {fullFormattedFields(row.similarity_score)}
                             </Typography>
                           </Box>
                         </Collapse>
