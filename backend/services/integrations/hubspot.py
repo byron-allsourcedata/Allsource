@@ -303,7 +303,6 @@ class HubspotIntegrationsService:
             'email': verified_email,
             'phone': verified_phone,
             'lifecyclestage': None,
-            'twitterhandle': None,
             'city': city,
             'state': state,
             'zip': zip_code,
@@ -314,7 +313,6 @@ class HubspotIntegrationsService:
             'jobtitle': None,
             'industry': None,
             'annualrevenue': None,
-            'linkedin_url': linkedin_url,
             'gender': gender,
         }
 

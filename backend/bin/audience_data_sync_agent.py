@@ -177,6 +177,10 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         enrichment_users, user_integration, integration_data_sync = get_lead_attributes(
             session, enrichment_user_ids, data_sync_id
         )
+        if not user_integration or not integration_data_sync:
+            logging.warning(f"Data sync not correct")
+            await message.ack()
+            return
         
         service_map = {
             'meta': integration_service.meta,
