@@ -20,6 +20,7 @@ from models.users import Users
 from models.state import States
 from models.enrichment_user_contact import EnrichmentUserContact
 from models.enrichment_user_ids import EnrichmentUserId
+from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
 from models.emails_enrichment import EmailEnrichment
 from models.emails import Email
 from schemas.audience import DataSourcesFormat
@@ -298,12 +299,22 @@ class AudienceSmartsPersistence:
 
 
     def get_persons_by_smart_aud_id(self, smart_audience_id, sent_contacts, fields):
+        contact_fields = [
+            getattr(EnrichmentUserContact, field)
+            for field in fields if hasattr(EnrichmentUserContact, field)
+        ]
+
+        profile_fields = [
+            getattr(EnrichmentPersonalProfiles, field)
+            for field in fields if hasattr(EnrichmentPersonalProfiles, field)
+        ]
+
         query = (
-            self.db.query(
-                        *[getattr(EnrichmentUserContact, field) for field in fields if hasattr(EnrichmentUserContact, field)])
+            self.db.query(*contact_fields, *profile_fields)
                 .select_from(AudienceSmartPerson)
                 .join(EnrichmentUserId, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id)
                 .join(EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUserId.asid)
+                .join(EnrichmentPersonalProfiles, EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid)
                 .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
         )
 

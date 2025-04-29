@@ -755,7 +755,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
     const arrayWithCustomFields: ArrayMapping = {
         hubspot: customFieldsList,
         mailchimp: customFieldsList,
-        CSV: customFieldsList,
+        CSV: customFieldsListCSV,
         default: customFieldsList,
         meta: customFieldsList,
         s3: customFieldsList,
