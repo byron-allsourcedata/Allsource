@@ -300,16 +300,22 @@ class AudienceLookalikesPersistence:
         )
 
         rows = q.all()
+
         def _row2dict(row) -> Dict[str, Any]:
             d = dict(row._mapping)
+            updated_dict = {}
             for k, v in d.items():
                 if k == "age" and v:
-                    d[k] = int(v.lower) if v.lower is not None else None
-                if k == "zip_code5" and v:
-                    d[k] = str(v)
+                    updated_dict[k] = int(v.lower) if v.lower is not None else None
+                elif k == "zip_code5" and v:
+                    updated_dict[k] = str(v)
+                elif k == "state_abbr":
+                    updated_dict["state"] = v
                 elif isinstance(v, Decimal):
-                    d[k] = str(v)
-            return d
+                    updated_dict[k] = str(v)
+                else:
+                    updated_dict[k] = v
+            return updated_dict
 
         result: List[Dict[str, Any]] = [_row2dict(r) for r in rows]
         return result

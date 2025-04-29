@@ -19,7 +19,7 @@ PERSONAL   = {
     "age","gender","homeowner","length_of_residence_years",
     "marital_status","business_owner","birth_day","birth_month",
     "birth_year","has_children","number_of_children",
-    "religion","ethnicity","language_code","state_abbr","zip_code5",
+    "religion","ethnicity","language_code","state","zip_code5",
 }
 FINANCIAL  = {
     "income_range","net_worth","credit_rating","credit_cards",
@@ -285,7 +285,7 @@ class AudienceLookalikesService:
                     "birth_day", "birth_month", "birth_year",
                     "has_children", "number_of_children",
                     "religion", "ethnicity", "language_code",
-                    "state_abbr",
+                    "state",
 
                     # financial
                     "income_range", "net_worth", "credit_rating",
