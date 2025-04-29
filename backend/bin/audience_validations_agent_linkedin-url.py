@@ -79,7 +79,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
         validation_type = message_body.get("validation_type")
         count_persons_before_validation = message_body.get("count_persons_before_validation")
         is_last_validation_in_type = message_body.get("is_last_validation_in_type")
-        is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation", False) 
+        is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation") 
 
         failed_ids = []
         verifications = []
@@ -110,8 +110,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 response_data = response.json()
 
                 if response.status_code != 200 and not response_data.get("success"):
-                    await message.ack()
-                    return
+                    failed_ids.append(person_id)
 
                 positions = response_data.get("person", {}).get("positions", {}).get("positionHistory", [])
                 for position in positions:
