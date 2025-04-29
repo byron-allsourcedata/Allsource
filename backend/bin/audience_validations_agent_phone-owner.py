@@ -27,6 +27,7 @@ from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_phones_verification import AudiencePhoneVerification
 from models.enrichment.emails_enrichment import EmailEnrichment
 from models.enrichment.emails import Email
+from models.audience_smarts_validations import AudienceSmartValidation
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
@@ -81,6 +82,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
 
         failed_ids = []
         verifications = []
+        verified_phones = []
 
         for record in batch:
             person_id = record.get("audience_smart_person_id")
@@ -137,6 +139,22 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                             is_verify=is_verify
                         )
                     )
+
+                    existing_entry = db_session.query(AudienceSmartValidation).filter_by(
+                        audience_smart_person_id=person_id
+                    ).first()
+
+                    if existing_entry:
+                        existing_entry.verified_phone = phone_number
+                    else:
+                        verified_phones.append(
+                            AudienceSmartValidation(
+                                audience_smart_person_id=person_id,
+                                verified_phone=phone_number
+                            )
+                        )
+
+                
                 else:
                     logging.info("There is such a Phone in our database")
                     is_verify = existing_verification.is_verify
@@ -150,6 +168,10 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
 
         if len(verifications):
             db_session.bulk_save_objects(verifications)
+            db_session.commit()
+        
+        if len(verified_phones):
+            db_session.bulk_save_objects(verified_phones)
             db_session.commit()
 
         if len(failed_ids):

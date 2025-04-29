@@ -54,7 +54,7 @@ class AudienceInsightsPersistence:
             AudienceLookalikes.name,
             AudienceSource.target_schema
         ).join(AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid
-        ).filter(
+               ).filter(
             AudienceLookalikes.id == uuid_of_lookalike,
             AudienceLookalikes.user_id == user_id
         ).first()
@@ -135,5 +135,3 @@ class AudienceInsightsPersistence:
                 .limit(20)
                 .all()
         )
-
-
