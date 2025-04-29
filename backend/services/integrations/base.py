@@ -176,13 +176,6 @@ class IntegrationService:
         else:
             return {'status': 'FAILED'}
 
-    def delete_smart_sync(self, user: dict, list_id):
-        result = self.integrations_user_sync_persistence.delete_smart_audience_sync(user.get('id'), list_id=list_id)
-        if result:
-            return {'status': 'SUCCESS'}
-        else:
-            return {'status': 'FAILED'}
-
     def get_external(self, platform):
         eais = self.eai_persistence.get_epi_by_filter_all(platform=platform)
         return [{'store_hash': eai.store_hash} for eai in eais]
