@@ -4,15 +4,10 @@ import sys
 import asyncio
 import functools
 import json
-import boto3
-import random
 import requests
-from datetime import datetime
-from sqlalchemy import update
 from rapidfuzz import fuzz
-from aio_pika import IncomingMessage, Message
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import create_engine, func, select
+from aio_pika import IncomingMessage
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
@@ -22,14 +17,8 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
-from models.enrichment_users import EnrichmentUser
-from models.enrichment_user_ids import EnrichmentUserId
-from models.enrichment_user_contact import EnrichmentUserContact
 from models.audience_phones_verification import AudiencePhoneVerification
 from models.audience_smarts_validations import AudienceSmartValidation
-from models.emails_enrichment import EmailEnrichment
-from models.emails import Email
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
@@ -90,7 +79,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
             full_name = record.get("full_name")
 
             for phone_field in ['phone_mobile1', 'phone_mobile2']:
-                if phone_field == 'phone_mobile1' and record.get('phone_mobile1') == record.get('phone_mobile2'):
+                if phone_field == 'phone_mobile1' and record.get('phone_mobile1') == record.get('phone_mobile2') and not record.get('phone_mobile1'):
                     continue
 
                 phone_number = record.get(phone_field)
@@ -134,35 +123,27 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
 
                     verifications.append(
                         AudiencePhoneVerification(
-                            audience_smart_person_id=person_id,
                             phone=phone_number,
                             status=response_data.get("status", ""),
                             is_verify=is_verify
                         )
                     )
 
-                    existing_entry = db_session.query(AudienceSmartValidation).filter_by(
-                        audience_smart_person_id=person_id
-                    ).first()
-
-                    if existing_entry:
-                        existing_entry.verified_phone = phone_number
-                    else:
-                        verified_phones.append(
-                            AudienceSmartValidation(
-                                audience_smart_person_id=person_id,
-                                verified_phone=phone_number
-                            )
-                        )
-
                 
                 else:
                     logging.info("There is such a Phone in our database")
                     is_verify = existing_verification.is_verify
 
+
                 if not is_verify and phone_field == 'phone_mobile2':
                     failed_ids.append(person_id)
                 elif is_verify:
+                    verified_phones.append(
+                        AudienceSmartValidation(
+                            audience_smart_person_id=person_id,
+                            verified_phone=phone_number
+                        )
+                    )
                     break
                 else:
                     continue
