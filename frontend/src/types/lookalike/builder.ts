@@ -59,7 +59,7 @@ export interface PersonalResults extends FeatureObject {
     religion: number;
     ethnicity: number;
     language_code: number;
-    state_abbr: number;
+    state: number;
     zip_code5: number;
 }
 
