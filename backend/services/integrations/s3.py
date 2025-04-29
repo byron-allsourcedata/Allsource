@@ -256,6 +256,7 @@ class S3IntegrationService:
             return None
         first_name = enrichment_contacts.first_name
         last_name = enrichment_contacts.last_name
+        linkedin_url = enrichment_contacts.linkedin_url
         
         fake = Faker()
         verified_email = fake.email()
@@ -273,7 +274,7 @@ class S3IntegrationService:
         birth_month = None
         birth_year = None
         company_name = None
-        address_parts = None
+        homeowner = None
         
         if enrichment_professional_profiles:
             company_name = enrichment_professional_profiles.current_company_name
@@ -294,7 +295,8 @@ class S3IntegrationService:
                 gender = 'f'
             birth_day = str(enrichment_personal_profiles.birth_day)
             birth_month = str(enrichment_personal_profiles.birth_month)
-            birth_year = str(enrichment_personal_profiles.birth_year) 
+            birth_year = str(enrichment_personal_profiles.birth_year)
+            homeowner = str(enrichment_personal_profiles.homeowner)
             
         
         
@@ -309,5 +311,10 @@ class S3IntegrationService:
             'city': city,
             'state': state,
             'zip_code': zip_code,
+            'linkedin_url': linkedin_url,
+            'birth_date': (f"{birth_year}-{birth_month}-{birth_day}"),
+            'company_name': company_name,
+            'homeowner': homeowner
+            
             # **properties
         }
