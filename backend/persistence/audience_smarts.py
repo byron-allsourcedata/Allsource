@@ -18,7 +18,8 @@ from models.audience_sources import AudienceSource
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.users import Users
 from models.state import States
-from models.enrichment_users import EnrichmentUser
+from models.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment_user_ids import EnrichmentUserId
 from models.emails_enrichment import EmailEnrichment
 from models.emails import Email
 from schemas.audience import DataSourcesFormat
@@ -299,12 +300,10 @@ class AudienceSmartsPersistence:
     def get_persons_by_smart_aud_id(self, smart_audience_id, sent_contacts, fields):
         query = (
             self.db.query(
-                        Email.email, 
-                        *[getattr(EnrichmentUser, field) for field in fields if hasattr(EnrichmentUser, field)])
+                        *[getattr(EnrichmentUserContact, field) for field in fields if hasattr(EnrichmentUserContact, field)])
                 .select_from(AudienceSmartPerson)
-                .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
-                .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
-                .outerjoin(Email, Email.id == EmailEnrichment.email_id)
+                .join(EnrichmentUserId, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id)
+                .join(EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUserId.asid)
                 .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
         )
 
@@ -312,31 +311,31 @@ class AudienceSmartsPersistence:
         smarts = query.limit(sent_contacts).all()
         return smarts
     
-    def get_synced_persons_by_smart_aud_id(self, data_sync_id, enrichment_field_names):
-        enrichment_fields = [
-            getattr(EnrichmentUser, field) for field in enrichment_field_names
-        ]
+    # def get_synced_persons_by_smart_aud_id(self, data_sync_id, enrichment_field_names):
+    #     enrichment_fields = [
+    #         getattr(EnrichmentUser, field) for field in enrichment_field_names
+    #     ]
 
-        fields = [
-            Email.email,
-            *enrichment_fields,
-            States.state_name.label("state"),
-        ]
+    #     fields = [
+    #         Email.email,
+    #         *enrichment_fields,
+    #         States.state_name.label("state"),
+    #     ]
 
-        query = (
-            self.db.query(
-                *fields
-            )
-                .select_from(AudienceDataSyncImportedPersons)
-                .join(EnrichmentUser, EnrichmentUser.id == AudienceDataSyncImportedPersons.enrichment_user_id)
-                .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
-                .outerjoin(Email, Email.id == EmailEnrichment.email_id)
-                .outerjoin(States, func.lower(States.state_code) == func.lower(EnrichmentUser.state_abbr))  
-                .filter(AudienceDataSyncImportedPersons.data_sync_id == data_sync_id)
-        )
+    #     query = (
+    #         self.db.query(
+    #             *fields
+    #         )
+    #             .select_from(AudienceDataSyncImportedPersons)
+    #             .join(EnrichmentUser, EnrichmentUser.id == AudienceDataSyncImportedPersons.enrichment_user_id)
+    #             .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
+    #             .outerjoin(Email, Email.id == EmailEnrichment.email_id)
+    #             .outerjoin(States, func.lower(States.state_code) == func.lower(EnrichmentUser.state_abbr))  
+    #             .filter(AudienceDataSyncImportedPersons.data_sync_id == data_sync_id)
+    #     )
 
 
-        return query.all()
+    #     return query.all()
 
     def get_processing_sources(self, id):
         query = (

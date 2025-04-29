@@ -233,6 +233,31 @@ const customFieldsList: Row[] = [
     { id: 22, type: 'Rec id', value: 'rec_id' },
 ]
 
+const customFieldsListCSV: Row[] = [
+    { id: 1, type: 'First Name', value: 'first_name' },
+    { id: 2, type: 'Last Name', value: 'last_name' },
+    { id: 3, type: 'Business Email', value: 'business_email' },
+    { id: 4, type: 'Personal Email', value: 'personal_email' },
+    { id: 5, type: 'Other Emails', value: 'other_emails' },
+    { id: 6, type: 'Phone Mobile 1', value: 'phone_mobile1' },
+    { id: 7, type: 'Phone Mobile 1', value: 'phone_mobile2' },
+    { id: 8, type: 'Mobile Phone DNC', value: 'mobile_phone_dnc' },
+    { id: 9, type: 'Business Email last seen', value: 'business_email_last_seen_date' },
+    { id: 10, type: 'Personal Email last seen', value: 'personal_email_last_seen' },
+    { id: 11, type: 'Linkedin URL', value: 'linkedin_url' },
+    { id: 12, type: 'Gender', value: 'gender' },
+    // { id: 13, type: 'Lon', value: 'lon' },
+    // { id: 14, type: 'Has credit card', value: 'has_credit_card' },
+    // { id: 15, type: 'Length of residence years', value: 'length_of_residence_years' },
+    // { id: 16, type: 'Marital status', value: 'marital_status' },
+    // { id: 17, type: 'Occupation group code', value: 'occupation_group_code' },
+    // { id: 18, type: 'Is book reader', value: 'is_book_reader' },
+    // { id: 19, type: 'Is online purchaser', value: 'is_online_purchaser' },
+    // { id: 20, type: 'Is book reader', value: 'is_book_reader' },
+    // { id: 21, type: 'Is traveler', value: 'is_traveler' },
+    // { id: 22, type: 'Rec id', value: 'rec_id' },
+]
+
 const defaultRows: Row[] = [
     { id: 1, type: 'Email', value: 'email' }
 ];
@@ -300,7 +325,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         if (isDownloadAction) {
             setValue("2")
             setCustomFields(
-                [...customFieldsList.map(field => ({ type: field.value, value: field.type }))
+                [...customFieldsListCSV.map(field => ({ type: field.value, value: field.type }))
                 ])
         }
         else {
@@ -513,7 +538,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
 
         if (activeService === "CSV") {
             setRows(defaultRows)
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            setCustomFields(customFieldsListCSV.map(field => ({ type: field.value, value: field.type })))
         }
 
         if (activeService === "sales_force") {
