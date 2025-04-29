@@ -9,6 +9,7 @@ from rapidfuzz import fuzz
 from aio_pika import IncomingMessage
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.dialects.postgresql import insert
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -95,41 +96,47 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 existing_verification = db_session.query(AudiencePhoneVerification).filter_by(phone=phone_number).first()
 
                 if not existing_verification:
-                    response = requests.get(
-                        REAL_TIME_API_URL,
-                        params={
-                            "output": "json",
-                            "phone": phone_number,
-                            "token": REAL_TIME_API_KEY
-                        }
+                    
+                    is_verify = next(
+                        (verification.is_verify for verification in verifications if verification.phone == phone_number),
+                        False
                     )
-                    response_data = response.json()
 
-                    logging.info(f"response: {response.status_code} {response_data}")
-
-                    if response.status_code != 200:
-                        continue
-
-                    if response.status_code != 200 and phone_field == 'phone_mobile2':
-                        await message.ack()
-
-
-                    caller_name = response_data.get("caller_name", "").title()
-                    similarity = fuzz.ratio(full_name, caller_name)
-                    is_verify = similarity > 70 and caller_name != 'Unavailable'
-
-                    logging.info(f"similarity: {full_name} - {caller_name} = {similarity}")
-
-
-                    verifications.append(
-                        AudiencePhoneVerification(
-                            phone=phone_number,
-                            status=response_data.get("status", ""),
-                            is_verify=is_verify
+                    if not is_verify:
+                        response = requests.get(
+                            REAL_TIME_API_URL,
+                            params={
+                                "output": "json",
+                                "phone": phone_number,
+                                "token": REAL_TIME_API_KEY
+                            }
                         )
-                    )
+                        response_data = response.json()
 
-                
+                        logging.info(f"response: {response.status_code} {response_data}")
+
+                        if response.status_code != 200:
+                            continue
+
+                        if response.status_code != 200 and phone_field == 'phone_mobile2':
+                            await message.ack()
+
+
+                        caller_name = response_data.get("caller_name", "").title()
+                        similarity = fuzz.ratio(full_name, caller_name)
+                        is_verify = similarity > 70 and caller_name != 'Unavailable'
+
+                        logging.info(f"similarity: {full_name} - {caller_name} = {similarity}")
+
+
+                        verifications.append(
+                            AudiencePhoneVerification(
+                                phone=phone_number,
+                                status=response_data.get("status", ""),
+                                is_verify=is_verify
+                            )
+                        )
+
                 else:
                     logging.info("There is such a Phone in our database")
                     is_verify = existing_verification.is_verify
@@ -148,8 +155,27 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 else:
                     continue
 
+        # if len(verifications):
+        #     db_session.bulk_save_objects(verifications)
+        #     db_session.commit()
+
         if len(verifications):
-            db_session.bulk_save_objects(verifications)
+            verification_data = [
+                {
+                    "phone": v.phone,
+                    "status": v.status,
+                    "is_verify": v.is_verify
+                }
+                for v in verifications
+            ]
+
+            insert_stmt = insert(AudiencePhoneVerification).values(verification_data)
+
+            insert_stmt = insert_stmt.on_conflict_do_nothing(
+                index_elements=["phone"]
+            )
+
+            db_session.execute(insert_stmt)
             db_session.commit()
         
         if len(verified_phones):
