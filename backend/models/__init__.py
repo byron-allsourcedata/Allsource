@@ -72,6 +72,8 @@ from .users_domains import UserDomains
 from .users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from .audience_linkedin_verification import AudienceLinkedinVerification
 from .audience_smarts_validations import AudienceSmartValidation
+from .usa_zip_codes import UsaZipCode
+
 
 __all__ = [
     "BigCommerceUser",
@@ -147,6 +149,7 @@ __all__ = [
     "SuppressionRule",
     "SuppressionList",
     "TeamInvitation",
+    "UsaZipCode",
     "Users",
     "UserAccountNotification",
     "UserDomains",
