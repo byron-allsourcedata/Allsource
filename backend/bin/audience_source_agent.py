@@ -705,7 +705,7 @@ async def normalize_persons_failed_leads(
         f"from {data_for_normalize.all_size} matched records."
     )
 
-def calculate_lookalikes(db_session: Session, source_uuid: UUID) -> List[Dict]:
+def calculate_source_data(db_session: Session, source_uuid: UUID) -> List[Dict]:
         def all_columns_except(model, *skip: str):
             return tuple(
                 c for c in model.__table__.c
@@ -794,7 +794,7 @@ def extract_non_zero_values(*insights):
     return combined
 
 def calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service):
-    audience_source_data = calculate_lookalikes(db_session=db_session, source_uuid=source_id)
+    audience_source_data = calculate_source_data(db_session=db_session, source_uuid=source_id)
     b2c_insights, b2b_insights, other = audience_lookalikes_service.calculate_insights(audience_data=audience_source_data, similar_audience_service=similar_audience_service)
     combined_insights = extract_non_zero_values(b2c_insights, b2b_insights, other)
     db_session.execute(
