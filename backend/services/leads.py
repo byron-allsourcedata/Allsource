@@ -181,7 +181,7 @@ class LeadsService:
             'Personal email', 'Personal email last seen', 'Business email', 'Business email last seen', 'Personal LinkedIn url', 
             'Gender', 'Age range', 'Marital status', 'Children', 'Job title', 'Seniority level', 'Department', 'Company name', 'Company domain', 'Company phone', 'Company description', 
             'Business email', 'Business email last seen', 'Company last updated', 'Company address', 'Company city', 'Company state', 'Company zipcode', 'Income range', 'Net worth', 'Company revenue',
-            'Company employee count', 'Primary industry', 'Followers', 'Company LinkedIn url', 'Page Visits', 'Time on site'])
+            'Company employee count', 'Primary industry', 'Followers', 'Company LinkedIn url', 'Page Visits', 'Page visits count', 'Time on site', 'Page visits with parameters'])
         
         state_dict = {state.state_code: state.state_name for state in states} if states else {}
 
@@ -191,13 +191,18 @@ class LeadsService:
             page_visits_count = 0
             max_spent_time = 0
             page_visits_info = []
+            page_visits_info_with_parameters = []
             for visit in leads_requests[lead_user_id]:
                 spent_time_sec = int(visit['spent_time_sec'])
                 page_visits_info.append(f"{visit['page']} {spent_time_sec}")
+                qs = visit['page_parameters'].replace(', ', '&').replace(',', '&')
+                url = f"{visit['page']}?{qs}" if qs else visit['page']
+                page_visits_info_with_parameters.append(url)
                 page_visits_count += 1
                 max_spent_time += spent_time_sec
 
             page_visits_str = "\n".join(page_visits_info) if page_visits_info else 'None'
+            page_visits_with_parameters_str = "\n".join(page_visits_info_with_parameters) if page_visits_info_with_parameters else 'None'
             max_spent_time_minutes = max_spent_time // 60
             remaining_seconds = max_spent_time % 60
             time_in_minutes_and_seconds = f"{max_spent_time_minutes} min {remaining_seconds} sec"
@@ -244,7 +249,8 @@ class LeadsService:
                 five_x_five_user.company_linkedin_url or 'None',
                 page_visits_str,
                 page_visits_count,
-                time_in_minutes_and_seconds
+                time_in_minutes_and_seconds,
+                page_visits_with_parameters_str
             ]
             writer.writerow(relevant_data)
 
