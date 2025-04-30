@@ -1,7 +1,7 @@
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field, model_validator
 from schemas.mapping.audience_insights_mapping import ETHNICITY_MAP, LANGUAGE_MAP, RELIGION_MAP,\
-    YES_NO_UNKNOWN_MAPS, NET_WORTH_RANGE_MAP, CREDIT_SCORE_RANGE_MAP
+    YES_NO_UNKNOWN_MAPS, NET_WORTH_RANGE_MAP, CREDIT_SCORE_RANGE_MAP, INCOME_RANGE
 
 
 class PersonalProfiles(BaseModel):
@@ -92,6 +92,10 @@ class FinancialProfiles(BaseModel):
 
             elif key == "credit_score_range":
                 mapped = {CREDIT_SCORE_RANGE_MAP.get(k, k): v for k, v in val.items()}
+                setattr(self, key, self._to_percent(mapped))
+
+            elif key == "income_range":
+                mapped = {INCOME_RANGE.get(k, k): v for k, v in val.items()}
                 setattr(self, key, self._to_percent(mapped))
 
             else:
