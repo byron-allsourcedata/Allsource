@@ -257,13 +257,22 @@ body {
   border: 0.0625rem solid var(--surface-border);
 }
 
+.dashboard-pixel-card-text {
+  font-family: Nunito Sans;
+  font-weight: 400;
+  font-size: 10px;
+  line-height: 140%;
+  letter-spacing: 0%;
+  color: rgba(74, 74, 74, 0.8);
+}
+
 .dashboard-card-heading {
   font-family: 'Nunito Sans';
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 140%;
   letter-spacing: 0%;
-  color: rgba(74, 74, 74, 1)
+  color: rgba(0, 0, 0, 1)
 }
 
 .dashboard-card-text {
@@ -272,7 +281,7 @@ body {
   font-weight: 500;
   line-height: 140%;
   letter-spacing: 0%;
-  color: rgba(74, 74, 74, 1)
+  color: rgba(74, 74, 74, 0.8)
 }
 
 .MuiInputLabel.MuiInputLabel-outlined {
