@@ -70,7 +70,7 @@ const PredictableFields: React.FC<PredictableFieldsTabProps> = ({ data }) => {
             }}
           >
             <Tab
-              label="Categories"
+              label="All"
               className="tab-filled-button"
               sx={{
                 mr: 2,
@@ -82,7 +82,7 @@ const PredictableFields: React.FC<PredictableFieldsTabProps> = ({ data }) => {
               }}
             />
             <Tab
-              label="All"
+              label="Categories"
               className="tab-filled-button"
               sx={{
                 mr: 2,
@@ -105,12 +105,12 @@ const PredictableFields: React.FC<PredictableFieldsTabProps> = ({ data }) => {
         }}
       >
         <TabPanel value={tabIndex} index={0}>
+          <All data={data} />
+        </TabPanel>
+        <TabPanel value={tabIndex} index={1}>
           <Box sx={{ width: "100%", display: "flex" }}>
             <Categories data={data} />
           </Box>
-        </TabPanel>
-        <TabPanel value={tabIndex} index={1}>
-          <All data={data} />
         </TabPanel>
       </Box>
     </Box>

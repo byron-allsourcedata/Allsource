@@ -41,6 +41,7 @@ class AudienceSource(Base):
         server_default="'b2c'"
     )
     insights = Column(JSON, nullable=True)
+    significant_fields = Column(JSON, nullable=True)
 
 
 event.listen(AudienceSource, "before_insert", create_timestamps)

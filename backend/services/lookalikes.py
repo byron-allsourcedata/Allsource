@@ -257,75 +257,56 @@ class AudienceLookalikesService:
         )
 
         return b2c, b2b, other
+    
+    def build_normalization_config(self):
+        return NormalizationConfig(
+            numerical_features=[],
+            ordered_features={},
+            unordered_features=[
+                # personal
+                "age", "gender", "homeowner", "length_of_residence_years",
+                "marital_status", "business_owner",
+                "birth_day", "birth_month", "birth_year",
+                "has_children", "number_of_children",
+                "religion", "ethnicity", "language_code",
+                "state",
 
-    def calculate_lookalike(
-        self,
-        similar_audience_service: SimilarAudienceService,
-        user: dict,
-        uuid_of_source: UUID,
-        lookalike_size: str
-    ) -> CalculateRequest:
-        audience_data = self.lookalikes_persistence_service.calculate_lookalikes(
-            user_id=user.get("id"),
-            source_uuid=uuid_of_source,
-            lookalike_size=lookalike_size
+                # financial
+                "income_range", "net_worth", "credit_rating",
+                "credit_cards", "bank_card", "credit_card_premium",
+                "credit_card_new_issue", "credit_lines",
+                "credit_range_of_new_credit_lines",
+                "donor", "investor", "mail_order_donor",
+
+                # lifestyle
+                "pets", "cooking_enthusiast", "travel", "mail_order_buyer",
+                "online_purchaser", "book_reader", "health_and_beauty",
+                "fitness", "outdoor_enthusiast", "tech_enthusiast", "diy",
+                "gardening", "automotive_buff", "golf_enthusiasts",
+                "beauty_cosmetics", "smoker",
+
+                # voter
+                "party_affiliation", "congressional_district",
+                "voting_propensity",
+
+                # employment_history
+                "job_title", "company_name", "start_date", "end_date",
+                "location", "job_description",
+
+                # professional_profile
+                "current_job_title", "current_company_name",
+                "job_start_date", "job_duration", "job_location",
+                "job_level", "department", "company_size",
+                "primary_industry", "annual_sales",
+            ]
         )
+    def calculate_insights(self, audience_data: List[dict], similar_audience_service: SimilarAudienceService) -> CalculateRequest:
         try:
             if len(audience_data) < 2:
                 raise LessThenTwoTrainDataset
 
-            normalization_config = NormalizationConfig(
-                numerical_features = [],
-                ordered_features = {},
-
-                unordered_features = [
-                    # personal
-                    "age", "gender", "homeowner", "length_of_residence_years",
-                    "marital_status", "business_owner",
-                    "birth_day", "birth_month", "birth_year",
-                    "has_children", "number_of_children",
-                    "religion", "ethnicity", "language_code",
-                    "state",
-
-                    # financial
-                    "income_range", "net_worth", "credit_rating",
-                    "credit_cards", "bank_card", "credit_card_premium",
-                    "credit_card_new_issue", "credit_lines",
-                    "credit_range_of_new_credit_lines",
-                    "donor", "investor", "mail_order_donor",
-
-                    # lifestyle
-                    "pets", "cooking_enthusiast", "travel", "mail_order_buyer",
-                    "online_purchaser", "book_reader", "health_and_beauty",
-                    "fitness", "outdoor_enthusiast", "tech_enthusiast", "diy",
-                    "gardening", "automotive_buff", "golf_enthusiasts",
-                    "beauty_cosmetics", "smoker",
-
-                    # voter
-                    "party_affiliation", "congressional_district",
-                    "voting_propensity",
-
-                    # employment_history
-                    "job_title",
-                    "company_name",
-                    "start_date",
-                    "end_date",
-                    "location",
-                    "job_description",
-
-                    # professional_profile
-                    "current_job_title",
-                    "current_company_name",
-                    "job_start_date",
-                    "job_duration",
-                    "job_location",
-                    "job_level",
-                    "department",
-                    "company_size",
-                    "primary_industry",
-                    "annual_sales",
-                ]
-            )
+            normalization_config = self.build_normalization_config()
+            
             audience_feature_dict = similar_audience_service.get_audience_feature_importance_with_config(
                 audience_data=audience_data,
                 config=normalization_config
@@ -336,18 +317,25 @@ class AudienceLookalikesService:
                 for k, v in audience_feature_dict.items()
             }
 
-            b2c_insights, b2b_insights, other = self.split_insights(rounded_feature)
+            return self.split_insights(rounded_feature)
 
         except (EqualTrainTargets, EmptyTrainDataset, LessThenTwoTrainDataset, Exception):
-            b2c_insights, b2b_insights, other = self._default_insights()
+            return self._default_insights()
+            
 
+    def calculate_lookalike(self, similar_audience_service: SimilarAudienceService, user: dict, uuid_of_source: UUID, lookalike_size: str) -> CalculateRequest:
+        audience_data = self.lookalikes_persistence_service.calculate_lookalikes(
+            user_id=user.get("id"),
+            source_uuid=uuid_of_source,
+            lookalike_size=lookalike_size
+        )
+        b2c_insights, b2b_insights, other = self.calculate_insights(audience_data=audience_data, similar_audience_service=similar_audience_service)
         return CalculateRequest(
             count_matched_persons=len(audience_data),
             audience_feature_importance_b2c=b2c_insights,
             audience_feature_importance_b2b=b2b_insights,
             audience_feature_importance_other=other
         )
-
     
     def get_processing_lookalike(self, id: str):
         lookalike = self.lookalikes_persistence_service.get_processing_lookalike(id)
