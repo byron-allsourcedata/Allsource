@@ -166,10 +166,10 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
   const mainchartSize = isLargeScreen
     ? 450
     : isMediumScreen
-    ? 300
-    : isMobile
-    ? 200
-    : 260;
+      ? 300
+      : isMobile
+        ? 200
+        : 260;
 
   const [data, setDays] = useState<string[]>([]);
   const formattedData = data.map((dateStr) => {
@@ -455,18 +455,16 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
 
         const extendedDays: string[] = [...availableDays];
 
-        // Добавляем только forward-заполнение от последней доступной даты до appliedDates.end
         const end = dayjs(appliedDates.end);
         let current = dayjs(lastAvailableDay).add(1, "day");
 
         while (current.isSameOrBefore(end)) {
           const dateStr = current.format("YYYY-MM-DD");
-          daily_data[dateStr] = lastData; // дублируем последнее значение
+          daily_data[dateStr] = lastData;
           extendedDays.push(dateStr);
           current = current.add(1, "day");
         }
 
-        // Генерация данных
         const getMetric = (day: string, key: string): number =>
           daily_data[day]?.[key] ?? 0;
 
@@ -554,7 +552,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
           display: "flex",
           flexDirection: "row",
           mt: 2,
-          mb: 1.5,
+          mb: 1,
         }}
       >
         <Box
@@ -648,13 +646,10 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
             alignItems: "center",
             width: "100%",
             gap: 1,
-            "@media (max-width: 37.5rem)": {
-              display: "none",
-            },
           }}
         >
           {/* Calendary picker*/}
-          <Typography className="second-sub-title">
+          <Typography className="second-sub-title" sx={{ "@media (max-width: 37.5rem)": { display: 'none' } }}>
             {selectedDateLabel ? selectedDateLabel : ""}
           </Typography>
           <Button
@@ -676,8 +671,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
               padding: ".5rem",
               minWidth: "auto",
               "@media (max-width: 56.25rem)": {
-                border: "none",
-                padding: 0,
+                maxHeight: '41px'
               },
               "&:hover": {
                 border: ".0938rem solid rgba(80, 82, 178, 1)",
@@ -765,11 +759,10 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
                       ml: 5.5,
                       height: "20px",
                       borderRadius: "4px",
-                      border: `1.5008px solid ${
-                        chartType === "line"
-                          ? "rgba(80, 82, 178, 1)"
-                          : "rgba(115, 115, 115, 1)"
-                      }`,
+                      border: `1.5008px solid ${chartType === "line"
+                        ? "rgba(80, 82, 178, 1)"
+                        : "rgba(115, 115, 115, 1)"
+                        }`,
                       color:
                         chartType === "line"
                           ? "rgba(80, 82, 178, 1)"
@@ -788,11 +781,10 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
                       width: "20px",
                       height: "20px",
                       borderRadius: "4px",
-                      border: `1.5008px solid ${
-                        chartType === "bar"
-                          ? "rgba(80, 82, 178, 1)"
-                          : "rgba(115, 115, 115, 1)"
-                      }`,
+                      border: `1.5008px solid ${chartType === "bar"
+                        ? "rgba(80, 82, 178, 1)"
+                        : "rgba(115, 115, 115, 1)"
+                        }`,
                       color:
                         chartType === "bar"
                           ? "rgba(80, 82, 178, 1)"
@@ -897,12 +889,12 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
                       return isAllSelected
                         ? "All contacts type"
                         : selected
-                            .map(
-                              (id) =>
-                                options.find((option) => option.id === id)
-                                  ?.label
-                            )
-                            .join(", ");
+                          .map(
+                            (id) =>
+                              options.find((option) => option.id === id)
+                                ?.label
+                          )
+                          .join(", ");
                     }}
                     IconComponent={CustomIcon}
                     sx={{

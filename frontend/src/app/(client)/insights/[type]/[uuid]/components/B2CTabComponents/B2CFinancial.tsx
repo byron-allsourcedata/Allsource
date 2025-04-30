@@ -27,9 +27,38 @@ function sortNetWorthRanges(data: BarData[]): BarData[] {
     return [...data].sort((a, b) => parseNetWorthStart(a.label) - parseNetWorthStart(b.label));
 }
 
+function parseIncomeRangeStart(label: string): number {
+    if (label === "u" || label.toLowerCase() === "unknown") {
+        return Number.MAX_SAFE_INTEGER;
+    }
+
+    const lower = label.toLowerCase();
+    if (lower.includes("under")) {
+        return 0;
+    }
+
+    if (lower.includes("plus")) {
+        const match = label.match(/\$([\d,]+)/);
+        return match ? parseInt(match[1].replace(/,/g, ""), 10) + 1_000_000 : Number.MAX_SAFE_INTEGER - 1;
+    }
+
+    const rangeMatch = label.match(/\$([\d,]+)\s*-\s*\$([\d,]+)/);
+    if (rangeMatch) {
+        return parseInt(rangeMatch[1].replace(/,/g, ""), 10);
+    }
+
+    return Number.MAX_SAFE_INTEGER;
+}
+
+
+function sortIncomeRanges(data: BarData[]): BarData[] {
+    return [...data].sort((a, b) => parseIncomeRangeStart(a.label) - parseIncomeRangeStart(b.label));
+}
+
+
 
 const B2CFinancial = ({ data }: { data: any }) => {
-    const incomeRangeData = mapGenericPercentage(data.income_range);
+    const incomeRangeData = sortIncomeRanges(mapGenericPercentage(data.income_range));
     const creditScoreRangeData = mapGenericPercentage(data.credit_score_range);
     const creditCardsData = mapGenericPercentage(data.credit_cards);
     const netWorthRangeData = sortNetWorthRanges(mapGenericPercentage(data.net_worth_range));
@@ -66,7 +95,7 @@ const B2CFinancial = ({ data }: { data: any }) => {
                     sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
                 >
                     <Box sx={{ display: "flex", width: "70%" }}>
-                        <GradientBarChart title="Income range" data={incomeRangeData} />
+                        <GradientBarChart title="Income range" data={incomeRangeData} sortByPercent={false} />
                     </Box>
                     <Box sx={{ display: "flex", width: "100%" }}>
                         <VerticalGradientBarChart

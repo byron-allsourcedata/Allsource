@@ -305,33 +305,32 @@ const Insights = () => {
               }}
               label="Statistics"
             />
-            {type !== "sources" &&
-              <Tab
-                className="main-text"
-                sx={{
-                  textTransform: "none",
-                  padding: "4px 10px",
-                  minHeight: "auto",
-                  flexGrow: 1,
-                  textAlign: "center",
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  lineHeight: "19.1px",
-                  minWidth: "120px",
+            <Tab
+              className="main-text"
+              sx={{
+                textTransform: "none",
+                padding: "4px 10px",
+                minHeight: "auto",
+                flexGrow: 1,
+                textAlign: "center",
+                fontSize: "14px",
+                fontWeight: 700,
+                lineHeight: "19.1px",
+                minWidth: "120px",
+                "&.Mui-selected": {
+                  color: "rgba(80, 82, 178, 1)",
+                },
+                "@media (max-width: 600px)": {
+                  mr: 0,
+                  borderRadius: "4px",
                   "&.Mui-selected": {
-                    color: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "rgba(249, 249, 253, 1)",
+                    border: "1px solid rgba(220, 220, 239, 1)",
                   },
-                  "@media (max-width: 600px)": {
-                    mr: 0,
-                    borderRadius: "4px",
-                    "&.Mui-selected": {
-                      backgroundColor: "rgba(249, 249, 253, 1)",
-                      border: "1px solid rgba(220, 220, 239, 1)",
-                    },
-                  },
-                }}
-                label="Predictable fields"
-              />}
+                },
+              }}
+              label="Predictable fields"
+            />
           </Tabs>
         </Box>
       </Box>
