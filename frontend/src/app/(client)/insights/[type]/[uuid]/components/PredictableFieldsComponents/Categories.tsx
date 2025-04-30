@@ -105,9 +105,7 @@ type PredictableFieldsTabProps = {
 };
 
 const Categories: React.FC<PredictableFieldsTabProps> = ({ data }) => {
-  console.log(data)
   const categorized = categorizeFields(data);
-  console.log(categorized)
   return (
     <Box sx={{ width: "100%", display: "flex" }}>
       <Box
