@@ -81,6 +81,8 @@ from .enrichment_users_emails import EnrichmentUsersEmails
 from .enrichment_personal_profiles import EnrichmentPersonalProfiles
 from .audience_linkedin_verification import AudienceLinkedinVerification
 from .audience_smarts_validations import AudienceSmartValidation
+from .usa_zip_codes import UsaZipCode
+
 
 __all__ = [
     "BigCommerceUser",
@@ -156,6 +158,7 @@ __all__ = [
     "SuppressionRule",
     "SuppressionList",
     "TeamInvitation",
+    "UsaZipCode",
     "Users",
     "UserAccountNotification",
     "UserDomains",
