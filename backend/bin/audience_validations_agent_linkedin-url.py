@@ -221,16 +221,16 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
             logging.info(f"sent sse with total count")
 
 
-            await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=f"validation_complete",
-                message_body={
-                    "aud_smart_id": aud_smart_id,
-                    "validation_type": validation_type,
-                    "status": "validation_complete"
-                }
-            )
-            logging.info(f"sent ping {aud_smart_id}.")
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=f"validation_complete",
+            message_body={
+                "aud_smart_id": aud_smart_id,
+                "validation_type": validation_type,
+                "status": "validation_complete"
+            }
+        )
+        logging.info(f"sent ping {aud_smart_id}.")
             
         await message.ack()
 

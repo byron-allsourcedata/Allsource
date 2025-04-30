@@ -102,6 +102,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                         False
                     )
 
+                    print(f"is_verify: {is_verify}")
+
                     if not is_verify:
                         response = requests.get(
                             REAL_TIME_API_URL,
@@ -154,10 +156,6 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                     break
                 else:
                     continue
-
-        # if len(verifications):
-        #     db_session.bulk_save_objects(verifications)
-        #     db_session.commit()
 
         if len(verifications):
             verification_data = [
@@ -249,16 +247,16 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
             logging.info(f"sent sse with total count")
 
 
-            await publish_rabbitmq_message(
-                connection=connection,
-                queue_name=f"validation_complete",
-                message_body={
-                    "aud_smart_id": aud_smart_id,
-                    "validation_type": validation_type,
-                    "status": "validation_complete"
-                }
-            )
-            logging.info(f"sent ping {aud_smart_id}.")
+        await publish_rabbitmq_message(
+            connection=connection,
+            queue_name=f"validation_complete",
+            message_body={
+                "aud_smart_id": aud_smart_id,
+                "validation_type": validation_type,
+                "status": "validation_complete"
+            }
+        )
+        logging.info(f"sent ping {aud_smart_id}.")
 
         await message.ack()
 
