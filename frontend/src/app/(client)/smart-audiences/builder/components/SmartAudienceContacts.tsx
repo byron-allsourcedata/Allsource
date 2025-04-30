@@ -37,6 +37,7 @@ interface SelectedData {
   sourceLookalike: string;
   selectedSource: string;
   selectedSourceId: string;
+  useCase: string;
 }
 
 interface DataItem {
@@ -133,6 +134,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
           sourceLookalike: sourceType,
           selectedSource: row.name,
           selectedSourceId: row.id,
+          useCase: useCaseType,
         },
       ]);
       setOption("");
