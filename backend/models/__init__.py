@@ -82,6 +82,7 @@ from .enrichment_personal_profiles import EnrichmentPersonalProfiles
 from .audience_linkedin_verification import AudienceLinkedinVerification
 from .audience_smarts_validations import AudienceSmartValidation
 from .usa_zip_codes import UsaZipCode
+from .audience_postals_verification import AudiencePostalVerification
 
 
 __all__ = [
@@ -166,5 +167,7 @@ __all__ = [
     "EmailType",
     "EnrichmentUsersEmails",
     "PersonalProfiles",
-    "AudienceLinkedinVerification"
+    "AudienceLinkedinVerification",
+    "AudiencePostalVerification",
+    "EnrichmentPersonalProfiles"
 ]

@@ -24,7 +24,8 @@ from models.audience_settings import AudienceSetting
 from models.enrichment_user_ids import EnrichmentUserId
 from models.enrichment_user_contact import EnrichmentUserContact
 from models.enrichment_employment_history import EnrichmentEmploymentHistory
-from models.emails_enrichment import EmailEnrichment
+from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
+from models.usa_zip_codes import UsaZipCode
 from models.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
@@ -35,6 +36,7 @@ AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 AUDIENCE_VALIDATION_AGENT_NOAPI = 'aud_validation_agent_no-api'
 AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
 AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = 'aud_validation_agent_phone-owner-api'
+AUDIENCE_VALIDATION_AGENT_POSTAL = 'aud_validation_agent_postal'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 
 def setup_logging(level):
@@ -138,6 +140,39 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
             .distinct(EnrichmentUserContact.asid)
             .all()
         ]
+    elif validation_type == "cas_home_address" or validation_type == "cas_office_address":
+        enrichment_users = [
+            {
+                "audience_smart_person_id": user.audience_smart_person_id,
+                "zip_code5": user.zip_code5,
+                "city": user.city,
+                "state_name": user.state_name
+            }
+            for user in db_session.query(
+                AudienceSmartPerson.id.label("audience_smart_person_id"),
+                EnrichmentPersonalProfiles.zip_code5.label("zip_code5"),
+                UsaZipCode.city.label("city"),
+                UsaZipCode.state_name.label("state_name"),
+            )
+            .join(
+                EnrichmentUserId,
+                EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id,
+            )
+            .join(
+                EnrichmentPersonalProfiles,
+                EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid,
+            )
+            .join(
+                UsaZipCode,
+                UsaZipCode.zip == EnrichmentPersonalProfiles.zip_code5,
+            )
+            .filter(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                AudienceSmartPerson.is_validation_processed == True,
+            )
+            .distinct(EnrichmentUserContact.asid)
+            .all()
+        ]
     else:
         enrichment_users = [
             {
@@ -202,7 +237,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 .first()
             )
 
-            priority_values = priority_record.value.split(",")[:7]
+            priority_values = priority_record.value.split(",")[:8]
 
             column_mapping = {
                 'personal_email-mx': 'personal_email_validation_status',
@@ -211,7 +246,9 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 'business_email-recency': 'business_email_last_seen_date',
                 'phone-dnc_filter': 'mobile_phone_dnc',
                 'linked_in-job_validation': 'job_validation',
-                'phone-confirmation': 'confirmation'
+                'phone-confirmation': 'confirmation',
+                'postal_cas_verification-cas_home_address': 'cas_home_address',
+                'postal_cas_verification-cas_office_address': 'cas_office_address'
             }
 
 
@@ -313,6 +350,12 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         await publish_rabbitmq_message(
                                             connection=connection,
                                             queue_name=AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
+                                            message_body=message_body
+                                        )
+                                    elif column_name == "cas_home_address" or column_name == "cas_office_address":
+                                        await publish_rabbitmq_message(
+                                            connection=connection,
+                                            queue_name=AUDIENCE_VALIDATION_AGENT_POSTAL,
                                             message_body=message_body
                                         )
                                     else:
