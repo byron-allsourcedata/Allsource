@@ -109,7 +109,14 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 )
                 response_data = response.json()
 
-                if response.status_code != 200 and not response_data.get("success"):
+                logging.info(f"response: {response.status_code}")
+
+                if response.status_code == 402: #No more credits
+                    failed_ids.append(person_id)
+                    continue
+
+                elif response.status_code != 200 and not response_data.get("success"):
+                    logging.info(f"response: {response_data}")
                     failed_ids.append(person_id)
 
                 positions = response_data.get("person", {}).get("positions", {}).get("positionHistory", [])
