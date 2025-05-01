@@ -23,9 +23,10 @@ from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_settings import AudienceSetting
 from enums import AudienceSettingAlias
 from models.enrichment.enrichment_users import EnrichmentUser
+from models.usa_zip_codes import UsaZipCode
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.enrichment.enrichment_employment_history import EnrichmentEmploymentHistory
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
@@ -35,6 +36,7 @@ AUDIENCE_VALIDATION_AGENT_NOAPI = 'aud_validation_agent_no-api'
 AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
 AUDIENCE_VALIDATION_AGENT_EMAIL_API = 'aud_validation_agent_email-api'
 AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = 'aud_validation_agent_phone-owner-api'
+AUDIENCE_VALIDATION_AGENT_POSTAL = 'aud_validation_agent_postal'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 
 def setup_logging(level):
@@ -159,6 +161,39 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
             .distinct(EnrichmentUserContact.asid)
             .all()
         ]
+    elif validation_type == "cas_home_address" or validation_type == "cas_office_address":
+        enrichment_users = [
+            {
+                "audience_smart_person_id": user.audience_smart_person_id,
+                "zip_code5": user.zip_code5,
+                "city": user.city,
+                "state_name": user.state_name
+            }
+            for user in db_session.query(
+                AudienceSmartPerson.id.label("audience_smart_person_id"),
+                EnrichmentPersonalProfiles.zip_code5.label("zip_code5"),
+                UsaZipCode.city.label("city"),
+                UsaZipCode.state_name.label("state_name"),
+            )
+            .join(
+                EnrichmentUser,
+                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
+            )
+            .join(
+                EnrichmentPersonalProfiles,
+                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid,
+            )
+            .join(
+                UsaZipCode,
+                UsaZipCode.zip == EnrichmentPersonalProfiles.zip_code5,
+            )
+            .filter(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                AudienceSmartPerson.is_validation_processed == True,
+            )
+            .distinct(EnrichmentUserContact.asid)
+            .all()
+        ]
     else:
         enrichment_users = [
             {
@@ -223,7 +258,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 .first()
             )
 
-            priority_values = priority_record.value.split(",")[:7]
+            priority_values = priority_record.value.split(",")[:8]
 
             column_mapping = {
                 'personal_email-mx': 'personal_email_validation_status',
@@ -232,7 +267,9 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 'business_email-recency': 'business_email_last_seen_date',
                 'phone-dnc_filter': 'mobile_phone_dnc',
                 'linked_in-job_validation': 'job_validation',
-                'phone-confirmation': 'confirmation'
+                'phone-confirmation': 'confirmation',
+                'postal_cas_verification-cas_home_address': 'cas_home_address',
+                'postal_cas_verification-cas_office_address': 'cas_office_address'
             }
 
 
@@ -312,15 +349,14 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         'count_persons_before_validation': len(enrichment_users)
                                     }
                                     queue_map = {
-                                        "personal_email_validation_status": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
-                                        "personal_email_last_seen": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
-                                        "business_email_validation_status": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
-                                        "business_email_last_seen_date": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
+                                        "personal_email_validation_status": AUDIENCE_VALIDATION_AGENT_NOAPI, "personal_email_last_seen": AUDIENCE_VALIDATION_AGENT_NOAPI,
+                                        "business_email_validation_status": AUDIENCE_VALIDATION_AGENT_NOAPI, "business_email_last_seen_date": AUDIENCE_VALIDATION_AGENT_NOAPI,
                                         "job_validation": AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
                                         "confirmation": AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
+                                        "cas_home_addressA: ": AUDIENCE_VALIDATION_AGENT_POSTAL, "cas_office_address": AUDIENCE_VALIDATION_AGENT_POSTAL
                                     }
-                                    queue_name = queue_map.get(column_name, AUDIENCE_VALIDATION_AGENT_NOAPI)
-                                    if queue_name == AUDIENCE_VALIDATION_AGENT_NOAPI or queue_name == AUDIENCE_VALIDATION_AGENT_EMAIL_API:
+                                    queue_name = queue_map[column_name]
+                                    if queue_name == AUDIENCE_VALIDATION_AGENT_NOAPI:
                                             message_body["recency_business_days"] = recency_business_days
                                             message_body["recency_personal_days"] = recency_personal_days
 
@@ -329,8 +365,6 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         queue_name=queue_name,
                                         message_body=message_body
                                     )
-
-                                logging.info(f"ping came {aud_smart_id}.")
             
             await message.ack()                  
     
