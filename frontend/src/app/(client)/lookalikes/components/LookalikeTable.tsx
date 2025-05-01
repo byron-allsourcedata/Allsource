@@ -39,6 +39,7 @@ import TableCustomCell from "../../sources/components/table/TableCustomCell";
 import { useSSE } from "@/context/SSEContext";
 import { padding } from "@mui/system";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
+import { QrCodeScannerOutlined } from "@mui/icons-material";
 
 interface TableRowData {
   id: string;
@@ -50,6 +51,8 @@ interface TableRowData {
   created_by: string;
   size: number;
   processed_size: number;
+  train_model_size: number;
+  processed_train_model_size: number;
   significant_fields: Record<string, any>;
   similarity_score: Record<string, any>;
   target_schema: string;
@@ -116,6 +119,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
   refreshData,
   loader_for_table,
 }) => {
+  
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editedName, setEditedName] = useState<string>("");
   const [editPopoverAnchorEl, setEditPopoverAnchorEl] =
@@ -178,7 +182,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
           console.log("No pending records, stopping interval");
           clearPollingInterval();
         }
-      }, 2000);
+      }, 10000);
     }
 
     return () => {
@@ -395,7 +399,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
         </TableHead>
         <TableBody sx={{ position: "relative" }}>
           {tableData.map((row) => {
-            const progress = smartLookaLikeProgress[row.id];
             return (
               <>
                 <TableRow
@@ -735,17 +738,16 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                       position: "relative",
                     }}
                   >
-                    {row.processed_size === row.size ? (
+                    {((row.processed_size + row.processed_train_model_size) === (row.size + row.train_model_size))
+                    && ((row.size + row.train_model_size) !== 0) ? (
                       row.size.toLocaleString("en-US")
-                    ) : row?.processed_size > progress?.processed ? (
+                    ) :  (
                       <ProgressBar
                         progress={{
-                          total: row?.size,
-                          processed: row?.processed_size,
+                          total: (row?.size + row?.train_model_size) || 0,
+                          processed: (row?.processed_size + row?.processed_train_model_size) || 0,
                         }}
                       />
-                    ) : (
-                      <ProgressBar progress={{ ...progress }} />
                     )}
                   </TableCell>
                   <TableCell

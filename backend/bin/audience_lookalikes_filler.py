@@ -330,7 +330,6 @@ def process_lookalike_pipeline(
         similar_audiences_scores_service=similar_audiences_scores_service,
         similar_audience_service=similar_audience_service
     )
-
     calculate_and_store_scores(
         model=model,
         lookalike_id=audience_lookalike.id,

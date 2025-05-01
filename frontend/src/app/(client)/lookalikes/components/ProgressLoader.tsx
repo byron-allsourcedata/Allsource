@@ -14,7 +14,7 @@ const ProgressBar = ({ progress }: ProgressBarProps) => {
   const percentage = progress?.processed 
   ? (progress.processed / progress.total) * 100 
   : 0; 
-
+  console.log(percentage);
   return (
     <div>
       <LinearProgress

@@ -5,11 +5,13 @@ from uuid import UUID
 from catboost import CatBoostRegressor
 from fastapi import Depends
 from pandas import DataFrame
+from sqlalchemy import update
 from sqlalchemy.dialects.postgresql import dialect
 from sqlalchemy.orm import Session, Query
 from typing_extensions import Annotated
 
 from dependencies import Db
+from models import AudienceLookalikes
 from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence, \
     EnrichmentLookalikeScoresPersistenceDep
 from persistence.enrichment_models import EnrichmentModelsPersistence, EnrichmentModelsPersistenceDep
@@ -45,7 +47,18 @@ class SimilarAudiencesScoresService:
 
 
     def calculate_scores(self, model: CatBoostRegressor, lookalike_id: UUID, query: Query, config: NormalizationConfig, user_id_key: str = 'user_id'):
-        compiled = query.statement.compile(dialect=dialect(), compile_kwargs={"literal_binds": True})
+        total = query.count()
+        self.db.execute(
+            update(AudienceLookalikes)
+            .where(AudienceLookalikes.id == lookalike_id)
+            .values(train_model_size=total)
+        )
+        self.db.commit()
+
+        compiled = query.statement.compile(
+            dialect=dialect(),
+            compile_kwargs={"literal_binds": True}
+        )
 
         count = 0
         with self.db.connection() as conn:
@@ -53,14 +66,12 @@ class SimilarAudiencesScoresService:
                 cursor.execute(str(compiled))
                 columns = [desc[0] for desc in cursor.description]
 
-                print("columns:" + str(columns))
                 while True:
                     rows = cursor.fetchmany(10000)
 
                     if not rows:
                         print("done")
                         break
-
 
                     count += len(rows)
                     print(f"fetched {count}\r")
@@ -78,13 +89,17 @@ class SimilarAudiencesScoresService:
                         feature_dicts.append(feats)
 
                     scores = self.calculate_score_dict_batch(model, feature_dicts, config)
-
                     self.enrichment_lookalike_scores_persistence.bulk_insert(lookalike_id, list(zip(user_ids, scores)))
+
+                    self.db.execute(
+                        update(AudienceLookalikes)
+                        .where(AudienceLookalikes.id == lookalike_id)
+                        .values(processed_train_model_size=count)
+                    )
 
                     print("done insert")
                     self.db.flush()
                     self.db.commit()
-
         self.db.commit()
 
 
