@@ -379,6 +379,7 @@ const CreateLookalikePage: React.FC = () => {
                             setSearch(e.target.value);
                             setIsTableVisible(true);
                           }}
+                          onClick={() => setIsTableVisible(!isTableVisible)}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
