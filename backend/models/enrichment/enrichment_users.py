@@ -23,7 +23,7 @@ class EnrichmentUser(Base):
     
 from .enrichment_user_contact import EnrichmentUserContact
 from .enrichment_personal_profiles import EnrichmentPersonalProfiles
-from .enrichment_professional_profile import EnrichmentProfessionalProfile
+from .enrichment_professional_profiles import EnrichmentProfessionalProfile
 from .emails_enrichment import EmailEnrichment
 
 EnrichmentUser.contacts = relationship(

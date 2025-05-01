@@ -11,7 +11,7 @@ from .enrichment_voter_record import EnrichmentVoterRecord
 from .enrichment_emails import EnrichmentEmails
 from .emails import Email
 from .emails_enrichment import EmailEnrichment
-from .enrichment_professional_profile import EnrichmentProfessionalProfile
+from .enrichment_professional_profiles import EnrichmentProfessionalProfile
 
 __all__ = [
     "EnrichmentUser",
