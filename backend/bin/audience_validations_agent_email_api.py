@@ -56,137 +56,142 @@ async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
         logging.error(f"Error sending SSE: {e}")
 
 
-async def process_rmq_message(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection, million_verifier_service: MillionVerifierIntegrationsService):
+async def process_rmq_message(
+    message: IncomingMessage,
+    db_session: Session,
+    connection: RabbitMQConnection,
+    million_verifier_service: MillionVerifierIntegrationsService,
+):
     try:
-        message_body = json.loads(message.body)
-        user_id = message_body.get("user_id")
-        aud_smart_id = message_body.get("aud_smart_id")
-        batch = message_body.get("batch")
-        validation_type = message_body.get("validation_type")
-        recency_business_days = message_body.get("recency_business_days")
-        recency_personal_days = message_body.get("recency_personal_days")
-        is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation", False) 
+        body = json.loads(message.body)
+        user_id = body.get("user_id")
+        aud_smart_id = body.get("aud_smart_id")
+        batch = body.get("batch", [])
+        validation_type = body.get("validation_type")
+        recency_business_days = body.get("recency_business_days", 0)
+        recency_personal_days = body.get("recency_personal_days", 0)
+        last_iter = body.get("is_last_iteration_in_last_validation", False)
 
-        verified_emails = []
-        failed_ids = []
-        for record in batch:
-            person_id = record.get("audience_smart_person_id")
-            personal_email = record.get("personal_email")
-            personal_email_last_seen = record.get("personal_email_last_seen")
-            personal_email_validation_status = record.get("personal_email_validation_status")
-            business_email = record.get("business_email")
-            business_email_last_seen_date = record.get("business_email_last_seen_date")
-            business_email_validation_status = record.get("business_email_validation_status")
-            is_verify = million_verifier_service.is_email_verify(email=personal_email)
-            if validation_type == 'personal_email_validation_status':
-                is_verify = million_verifier_service.is_email_verify(personal_email)
-                if is_verify:
-                    verified_emails.append(
-                            AudienceSmartValidation(
-                                audience_smart_person_id=person_id,
-                                verified_email=personal_email
-                            )
-                        )
-                else:
-                    failed_ids.append(person_id)
-                    continue
-                
-            if validation_type == 'personal_email_last_seen':
-                if (datetime.strptime(personal_email_last_seen, "%d/%m/%Y") < datetime.now() - timedelta(days=30)) and not personal_email_validation_status in ('', None, 'Invalid', 'UNKNOWN'):
-                    verified_emails.append(
-                            AudienceSmartValidation(
-                                audience_smart_person_id=person_id,
-                                verified_email=personal_email
-                            )
-                        )
-                    continue
-                
-            if validation_type == 'business_email_validation_status':
-                is_verify = million_verifier_service.is_email_verify(business_email)
-                if is_verify:
-                    verified_emails.append(
-                            AudienceSmartValidation(
-                                audience_smart_person_id=person_id,
-                                verified_email=business_email
-                            )
-                        )
-                    continue
-                
-            if validation_type == 'business_email_last_seen':
-                if (datetime.strptime(business_email_last_seen_date, "%d/%m/%Y") < datetime.now() - timedelta(days=30)) and not business_email_validation_status in ('', None, 'Invalid', 'UNKNOWN'):
-                    verified_emails.append(
-                            AudienceSmartValidation(
-                                audience_smart_person_id=person_id,
-                                verified_email=business_email
-                            )
-                        )
-                    continue
-            
-                failed_ids.append(person_id)
-        
-        if len(verified_emails):
+        verified_emails: list[AudienceSmartValidation] = []
+        failed_ids: list[int] = []
+        now = datetime.now()
+
+        def parse_date(date_str: str) -> datetime:
+            return datetime.strptime(date_str, "%d/%m/%Y") if date_str else None
+
+        def handle_personal_status(rec):
+            last_seen = parse_date(rec.get("personal_email_last_seen"))
+            status = rec.get("personal_email_validation_status") or ""
+            email = rec.get("personal_email")
+            pid = rec.get("audience_smart_person_id")
+            if last_seen and last_seen >= now - timedelta(days=30) and status not in ('', None, 'Invalid', 'UNKNOWN'):
+                return pid, email, True
+            if million_verifier_service.is_email_verify(email):
+                return pid, email, True
+            return pid, email, False
+
+        def handle_personal_last_seen(rec):
+            last_seen = parse_date(rec.get("personal_email_last_seen"))
+            pid = rec.get("audience_smart_person_id")
+            email = rec.get("personal_email")
+            if last_seen and last_seen >= now - timedelta(days=recency_personal_days):
+                return pid, email, True
+            return pid, email, False
+
+        def handle_business_status(rec):
+            last_seen = parse_date(rec.get("personal_email_last_seen"))
+            pid = rec.get("audience_smart_person_id")
+            email = rec.get("business_email")
+            if last_seen and last_seen >= now - timedelta(days=recency_personal_days):
+                return pid, email, True
+            if million_verifier_service.is_email_verify(email):
+                return pid, email, True
+            return pid, email, False
+
+        def handle_business_last_seen(rec):
+            last_seen = parse_date(rec.get("business_email_last_seen_date"))
+            status = rec.get("business_email_validation_status") or ""
+            pid = rec.get("audience_smart_person_id")
+            email = rec.get("business_email")
+            if last_seen and last_seen >= now - timedelta(days=recency_business_days) and status not in ('', None, 'Invalid', 'UNKNOWN'):
+                return pid, email, True
+            return pid, email, False
+
+        handlers = {
+            'personal_email_validation_status': handle_personal_status,
+            'personal_email_last_seen':    handle_personal_last_seen,
+            'business_email_validation_status': handle_business_status,
+            'business_email_last_seen':     handle_business_last_seen,
+        }
+
+        handler = handlers.get(validation_type)
+        if not handler:
+            raise ValueError(f"Unknown validation_type: {validation_type}")
+
+        for rec in batch:
+            pid, email, ok = handler(rec)
+            if ok:
+                verified_emails.append(
+                    AudienceSmartValidation(
+                        audience_smart_person_id=pid,
+                        verified_email=email,
+                    )
+                )
+            else:
+                failed_ids.append(pid)
+
+        if verified_emails:
             db_session.bulk_save_objects(verified_emails)
             db_session.commit()
-        
-        if len(failed_ids):
-            db_session.bulk_update_mappings(
-                AudienceSmartPerson,
-                [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
-            )
+
+        if failed_ids:
+            mappings = [
+                {"id": pid, "is_validation_processed": False}
+                for pid in failed_ids
+            ]
+            db_session.bulk_update_mappings(AudienceSmartPerson, mappings)
             db_session.commit()
-        
-        if is_last_iteration_in_last_validation:
-            logging.info(f"is last validation")
 
+        if last_iter:
+            logging.info("Performing final validation update")
             with db_session.begin():
-                db_session.query(AudienceSmartPerson).filter(
+                base_q = db_session.query(AudienceSmartPerson).filter(
                     AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True,
-                ).update({"is_valid": True}, synchronize_session=False)
-
-                total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True,
-                ).scalar()
-
+                    AudienceSmartPerson.is_validation_processed.is_(True),
+                )
+                total_validated = base_q.count()
+                base_q.update({"is_valid": True}, synchronize_session=False)
                 db_session.query(AudienceSmart).filter(
                     AudienceSmart.id == aud_smart_id
-                ).update(
-                    {
-                        "validated_records": total_validated,
-                        "status": "ready",
-                    }
-                )
-
-                db_session.commit()
+                ).update({
+                    "validated_records": total_validated,
+                    "status": "ready",
+                }, synchronize_session=False)
 
             await send_sse(
                 connection,
                 user_id,
-                {
-                    "smart_audience_id": aud_smart_id,
-                    "total_validated": total_validated,
-                }
+                {"smart_audience_id": aud_smart_id, "total_validated": total_validated},
             )
-            logging.info(f"sent sse with total count")
-            
+            logging.info("SSE sent with total count")
+
         await publish_rabbitmq_message(
             connection=connection,
-            queue_name=f"validation_complete",
+            queue_name="validation_complete",
             message_body={
                 "aud_smart_id": aud_smart_id,
                 "validation_type": validation_type,
-                "status": "validation_complete"
-            }
+                "status": "validation_complete",
+            },
         )
-        logging.info(f"sent ping {aud_smart_id}.")
+        logging.info(f"Sent ping {aud_smart_id}")
 
         await message.ack()
 
     except Exception as e:
-        logging.error(f"Error processing matching: {e}", exc_info=True)
+        logging.error(f"Error processing validation: {e}", exc_info=True)
         await message.ack()
-        return
+
 
 
 async def main():
