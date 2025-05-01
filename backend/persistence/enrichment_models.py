@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 
 from dependencies import Db
-from models.enrichment_models import EnrichmentModels
+from models.enrichment.enrichment_models import EnrichmentModels
 
 
 class EnrichmentModelsPersistence:
