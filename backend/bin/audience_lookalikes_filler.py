@@ -24,7 +24,7 @@ from services.similar_audiences.audience_data_normalization import AudienceDataN
 from services.similar_audiences import SimilarAudienceService
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes_persons import AudienceLookalikes
-from models import EnrichmentEmploymentHistory, ProfessionalProfile
+from models import EnrichmentEmploymentHistory, EnrichmentProfessionalProfile
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
 from persistence.enrichment_models import EnrichmentModelsPersistence
@@ -147,16 +147,16 @@ def get_enrichment_user_column_map() -> Dict[str, Any]:
         "job_description": EnrichmentEmploymentHistory.job_description.label("job_description"),
 
         # — Professional Profile —
-        "current_job_title": ProfessionalProfile.current_job_title.label("current_job_title"),
-        "current_company_name": ProfessionalProfile.current_company_name.label("current_company_name"),
-        "job_start_date": ProfessionalProfile.job_start_date.label("job_start_date"),
-        "job_duration": ProfessionalProfile.job_duration.label("job_duration"),
-        "job_location": ProfessionalProfile.job_location.label("job_location"),
-        "job_level": ProfessionalProfile.job_level.label("job_level"),
-        "department": ProfessionalProfile.department.label("department"),
-        "company_size": ProfessionalProfile.company_size.label("company_size"),
-        "primary_industry": ProfessionalProfile.primary_industry.label("primary_industry"),
-        "annual_sales": ProfessionalProfile.annual_sales.label("annual_sales"),
+        "current_job_title": EnrichmentProfessionalProfile.current_job_title.label("current_job_title"),
+        "current_company_name": EnrichmentProfessionalProfile.current_company_name.label("current_company_name"),
+        "job_start_date": EnrichmentProfessionalProfile.job_start_date.label("job_start_date"),
+        "job_duration": EnrichmentProfessionalProfile.job_duration.label("job_duration"),
+        "job_location": EnrichmentProfessionalProfile.job_location.label("job_location"),
+        "job_level": EnrichmentProfessionalProfile.job_level.label("job_level"),
+        "department": EnrichmentProfessionalProfile.department.label("department"),
+        "company_size": EnrichmentProfessionalProfile.company_size.label("company_size"),
+        "primary_industry": EnrichmentProfessionalProfile.primary_industry.label("primary_industry"),
+        "annual_sales": EnrichmentProfessionalProfile.annual_sales.label("annual_sales"),
     }
 
 def build_dynamic_query_and_config(
@@ -197,8 +197,8 @@ def build_dynamic_query_and_config(
             EnrichmentEmploymentHistory.asid == EnrichmentUser.asid
         )
         .outerjoin(
-            ProfessionalProfile,
-            ProfessionalProfile.asid == EnrichmentUser.asid
+            EnrichmentProfessionalProfile,
+            EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
         )
     )
 
@@ -259,8 +259,8 @@ def fetch_user_profiles(
             EnrichmentEmploymentHistory.asid == EnrichmentUser.asid
         )
         .outerjoin(
-            ProfessionalProfile,
-            ProfessionalProfile.asid == EnrichmentUser.asid
+            EnrichmentProfessionalProfile,
+            EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
         )
         .filter(AudienceSource.id == audience_lookalike.source_uuid)
         .all()

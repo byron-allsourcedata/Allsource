@@ -3,8 +3,8 @@ from sqlalchemy.orm import relationship
 from models.base import Base
 
 
-class ProfessionalProfile(Base):
-    __tablename__ = 'professional_profiles'
+class EnrichmentProfessionalProfile(Base):
+    __tablename__ = 'enrichment_professional_profiles'
     
     id = Column(
         UUID(as_uuid=True),
@@ -36,8 +36,8 @@ class ProfessionalProfile(Base):
 
 from .enrichment_users import EnrichmentUser
     
-ProfessionalProfile.enrichment_user = relationship(
+EnrichmentProfessionalProfile.enrichment_user = relationship(
         EnrichmentUser,
         back_populates="professional_profiles",
-        foreign_keys=[ProfessionalProfile.asid]
+        foreign_keys=[EnrichmentProfessionalProfile.asid]
     )

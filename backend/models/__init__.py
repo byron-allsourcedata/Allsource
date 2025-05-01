@@ -55,7 +55,7 @@ from .leads_visits import LeadsVisits
 from .partner import Partner
 from .partners_asset import PartnersAsset
 from .plans import SubscriptionPlan
-from .enrichment.professional_profile import ProfessionalProfile
+from .enrichment.enrichment_professional_profile import EnrichmentProfessionalProfile
 from .referral_discount_codes import ReferralDiscountCode
 from .referral_payouts import ReferralPayouts
 from .referral_users import ReferralUser
@@ -136,7 +136,7 @@ __all__ = [
     "Partner",
     "PartnersAsset",
     "SubscriptionPlan",
-    "ProfessionalProfile",
+    "EnrichmentProfessionalProfile",
     "ReferralDiscountCode",
     "ReferralPayouts",
     "ReferralUser",

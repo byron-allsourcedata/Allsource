@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import INT4RANGE
 
 from enums import LookalikeSize
 from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
-    EnrichmentVoterRecord, ProfessionalProfile, EnrichmentEmploymentHistory
+    EnrichmentVoterRecord, EnrichmentProfessionalProfile, EnrichmentEmploymentHistory
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
@@ -262,7 +262,7 @@ class AudienceLookalikesPersistence:
                 *all_columns_except(EnrichmentFinancialRecord, "id", "asid"),
                 *all_columns_except(EnrichmentLifestyle, "id", "asid"),
                 *all_columns_except(EnrichmentVoterRecord, "id", "asid"),
-                *all_columns_except(ProfessionalProfile, "id", "asid"),
+                *all_columns_except(EnrichmentProfessionalProfile, "id", "asid"),
                 *all_columns_except(EnrichmentEmploymentHistory, "id", "asid")
             )
             .select_from(AudienceSourcesMatchedPerson)
@@ -287,8 +287,8 @@ class AudienceLookalikesPersistence:
                 EnrichmentVoterRecord.asid == EnrichmentUser.asid
             )
             .outerjoin(
-                ProfessionalProfile,
-                ProfessionalProfile.asid == EnrichmentUser.asid
+                EnrichmentProfessionalProfile,
+                EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentEmploymentHistory,
