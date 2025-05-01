@@ -785,11 +785,14 @@ def extract_non_zero_values(*insights):
         for category, fields in to_dict(insight).items():
             if isinstance(fields, dict):
                 for key, value in fields.items():
-                    if value != 0:
-                        combined[key] = value
+                    rounded = round(value, 2)
+                    if rounded != 0:
+                        combined[key] = rounded
             else:
                 if fields != 0:
-                    combined[category] = fields
+                    rounded = round(fields, 2)
+                    if rounded != 0:
+                        combined[category] = rounded
 
     return combined
 
