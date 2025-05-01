@@ -400,7 +400,13 @@ const CreateLookalikePage: React.FC = () => {
                               </IconButton>
                             ),
                           }}
-                          sx={{ pb: "2px" }}
+                          sx={{
+                            pb: "2px",
+                            cursor: "pointer",
+                            "& .MuiInputBase-input": {
+                              cursor: "pointer",
+                            },
+                          }}
                         />
                         {isTableVisible && (
                           <TableContainer
