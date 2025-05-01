@@ -21,11 +21,9 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
-from models.enrichment_users import EnrichmentUser
-from models.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment_user_ids import EnrichmentUserId
-from models.emails_enrichment import EmailEnrichment
-from models.emails import Email
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment.enrichment_users import EnrichmentUser
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 

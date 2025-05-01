@@ -12,19 +12,18 @@ from uuid import UUID
 from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
-from models.emails import Email
-from models.emails_enrichment import EmailEnrichment
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from utils import get_utc_aware_date
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_smarts import AudienceSmart
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from config.aws import get_s3_client
-from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatformEnum, NotificationTitles
+from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatformEnum, NotificationTitles, AudienceSmartStatuses
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
-from sqlalchemy.orm import sessionmaker, Session
+from models.audience_smarts_validations import AudienceSmartValidation
+from sqlalchemy.orm import sessionmaker, Session, selectinload
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
@@ -71,15 +70,12 @@ def get_lead_attributes(session, enrichment_user_ids, data_sync_id):
     .join(AudienceSmartPerson, AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id) \
     .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id) \
     .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id) \
-    .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
-    .join(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id) \
-    .join(Email, Email.id == EmailEnrichment.email_id) \
+    .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id)\
     .filter(
         EnrichmentUser.id.in_(enrichment_user_ids),
         IntegrationUserSync.id == data_sync_id
     ) \
     .all()
-
     if result:
         enrichment_users = [row[0] for row in result]
         user_integration = result[0][1]
@@ -89,7 +85,7 @@ def get_lead_attributes(session, enrichment_user_ids, data_sync_id):
         return [], None, None
 
 
-def update_users_integrations(session, status, integration_data_sync_id, service_name, user_domain_integration_id = None):
+def update_users_integrations(session, status, integration_data_sync_id, service_name, user_domain_integration_id = None, smart_audience_id=None):
     if status == ProccessDataSyncResult.LIST_NOT_EXISTS.value:
         logging.info(f"List not exists for  integration_data_sync_id {integration_data_sync_id}")
         session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
@@ -99,6 +95,17 @@ def update_users_integrations(session, status, integration_data_sync_id, service
         
     if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or ProccessDataSyncResult.PAYMENT_REQUIRED.value:
         logging.info(f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}")
+        subquery = (
+            session.query(AudienceSmart.id)
+            .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id)
+            .filter(IntegrationUserSync.id == integration_data_sync_id)
+            .subquery()
+        )
+        session.query(AudienceSmart)\
+            .filter(AudienceSmart.id.in_(subquery))\
+            .update({AudienceSmart.status: AudienceSmartStatuses.FAILED.value}, synchronize_session=False)
+
+        
         if service_name == SourcePlatformEnum.WEBHOOK.value:
             session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
                 'sync_status': False,
@@ -179,6 +186,10 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         enrichment_users, user_integration, integration_data_sync = get_lead_attributes(
             session, enrichment_user_ids, data_sync_id
         )
+        if not user_integration or not integration_data_sync:
+            logging.warning(f"Data sync not correct")
+            await message.ack()
+            return
         
         service_map = {
             'meta': integration_service.meta,

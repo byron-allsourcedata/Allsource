@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 from typing import List, Tuple
 
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from models.five_x_five_users import FiveXFiveUser
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 

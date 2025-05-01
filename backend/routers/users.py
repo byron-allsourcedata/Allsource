@@ -37,7 +37,6 @@ async def get_notification(notification_service: Notification = Depends(get_noti
                            user=Depends(check_user_authentication)):
     return notification_service.get_notification(user)
 
-
 @router.delete("/notification/delete")
 async def get_notification(request: DeleteNotificationRequest, notification_service: Notification = Depends(get_notification_service),
                            user=Depends(check_user_authentication)):

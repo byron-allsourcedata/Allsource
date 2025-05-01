@@ -18,8 +18,8 @@ sys.path.append(parent_dir)
 
 from config.database import SessionLocal
 from dependencies import get_db
-from models.enrichment_models import EnrichmentModels
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_models import EnrichmentModels
+from models.enrichment.enrichment_users import EnrichmentUser
 from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
 from persistence.enrichment_models import EnrichmentModelsPersistence
 from services.similar_audiences.similar_audience_scores import SimilarAudiencesScoresService

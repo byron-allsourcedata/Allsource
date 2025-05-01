@@ -18,8 +18,11 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_phones_verification import AudiencePhoneVerification
 from models.audience_smarts_validations import AudienceSmartValidation
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()

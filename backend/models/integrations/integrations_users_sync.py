@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID,
     String
 from sqlalchemy.dialects.postgresql import ENUM
 from datetime import datetime
+from models.enrichment.enrichment_users import EnrichmentUser
 from models.audience_smarts import AudienceSmart
 from models.base import Base
 
@@ -81,6 +82,6 @@ class IntegrationUserSync(Base):
     campaign_name = Column(VARCHAR, nullable=True)
     last_sent_enrichment_id = Column(
         UUID(as_uuid=True),
-        ForeignKey('enrichment_users.id', ondelete='SET NULL'),
+        ForeignKey(EnrichmentUser.id, ondelete='SET NULL'),
         nullable=True
     )

@@ -18,11 +18,9 @@ from models.audience_sources import AudienceSource
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.users import Users
 from models.state import States
-from models.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment_user_ids import EnrichmentUserId
-from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
-from models.emails_enrichment import EmailEnrichment
-from models.emails import Email
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
@@ -312,9 +310,9 @@ class AudienceSmartsPersistence:
         query = (
             self.db.query(*contact_fields, *profile_fields)
                 .select_from(AudienceSmartPerson)
-                .join(EnrichmentUserId, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id)
-                .join(EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUserId.asid)
-                .join(EnrichmentPersonalProfiles, EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid)
+                .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
+                .join(EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid)
+                .join(EnrichmentPersonalProfiles, EnrichmentPersonalProfiles.asid == EnrichmentUser.asid)
                 .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
         )
 

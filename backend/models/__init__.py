@@ -23,17 +23,11 @@ from .audience_sources import AudienceSource
 from .audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from .base import Base
 from .data_sync_imported_leads import DataSyncImportedLead
-from .emails import Email
-from .emails_enrichment import EmailEnrichment
-from .enrichment_employment_history import EnrichmentEmploymentHistory
-from .enrichment_financial_records import EnrichmentFinancialRecord
-from .enrichment_lifestyles import EnrichmentLifestyle
-from .enrichment_lookalike_scores import EnrichmentLookalikeScore
-from .enrichment_models import EnrichmentModels
-from .enrichment_user_contact import EnrichmentUserContact
-from .enrichment_user_ids import EnrichmentUserId
-from .enrichment_users import EnrichmentUser
-from .enrichment_voter_record import EnrichmentVoterRecord
+from .enrichment import (EnrichmentEmploymentHistory, EnrichmentFinancialRecord,
+                         EnrichmentLifestyle, EnrichmentLookalikeScore, EnrichmentModels, EnrichmentUserContact,
+                         EnrichmentUser, EnrichmentVoterRecord, EnrichmentUsersEmails, EnrichmentPersonalProfiles, EnrichmentEmails)
+
+
 from .audience_phones_verification import AudiencePhoneVerification
 from .five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from .five_x_five_emails import FiveXFiveEmails
@@ -61,7 +55,7 @@ from .leads_visits import LeadsVisits
 from .partner import Partner
 from .partners_asset import PartnersAsset
 from .plans import SubscriptionPlan
-from .professional_profile import ProfessionalProfile
+from .enrichment.enrichment_professional_profiles import EnrichmentProfessionalProfile
 from .referral_discount_codes import ReferralDiscountCode
 from .referral_payouts import ReferralPayouts
 from .referral_users import ReferralUser
@@ -76,9 +70,6 @@ from .users import Users
 from .users_account_notification import UserAccountNotification
 from .users_domains import UserDomains
 from .users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
-from .enrichment_emails import EmailType
-from .enrichment_users_emails import EnrichmentUsersEmails
-from .enrichment_personal_profiles import EnrichmentPersonalProfiles
 from .audience_linkedin_verification import AudienceLinkedinVerification
 from .audience_smarts_validations import AudienceSmartValidation
 from .usa_zip_codes import UsaZipCode
@@ -109,15 +100,13 @@ __all__ = [
     "AudienceSourcesMatchedPerson",
     "Base",
     "DataSyncImportedLead",
-    "Email",
-    "EmailEnrichment",
     "EnrichmentEmploymentHistory",
     "EnrichmentFinancialRecord",
     "EnrichmentLifestyle",
     "EnrichmentLookalikeScore",
     "EnrichmentModels",
     "EnrichmentUserContact",
-    "EnrichmentUserId",
+    "EnrichmentEmails",
     "EnrichmentUser",
     "EnrichmentVoterRecord",
     "AudiencePhoneVerification",
@@ -147,7 +136,7 @@ __all__ = [
     "Partner",
     "PartnersAsset",
     "SubscriptionPlan",
-    "ProfessionalProfile",
+    "EnrichmentProfessionalProfile",
     "ReferralDiscountCode",
     "ReferralPayouts",
     "ReferralUser",
@@ -163,8 +152,8 @@ __all__ = [
     "UserAccountNotification",
     "UserDomains",
     "UsersUnlockedFiveXFiveUser",
-    "EmailType",
     "EnrichmentUsersEmails",
+    "EnrichmentPersonalProfiles"
     "PersonalProfiles",
     "AudienceLinkedinVerification"
 ]

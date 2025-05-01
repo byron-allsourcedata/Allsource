@@ -11,11 +11,11 @@ from datetime import datetime, timezone
 from utils import format_phone_number
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit, DataSyncType
 from models.five_x_five_users import FiveXFiveUser
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from uuid import UUID
 import uuid
 from faker import Faker
-from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
+from services.integrations.commonIntegration import get_states_dataframe
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from schemas.integrations.sendlane import SendlaneContact, SendlaneSender
 from schemas.integrations.integrations import DataMap, IntegrationCredentials, ListFromIntegration
@@ -250,37 +250,71 @@ class S3IntegrationService:
         return properties
     
     def __mapped_s3_contact(self, enrichment_user: EnrichmentUser, data_map):
-        properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
-        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
-        first_email = get_valid_email(emails_list)
-        fake = Faker()
-
-        first_phone = fake.phone_number()
-        address_parts = fake.address()
-        city_state_zip = address_parts.split("\n")[-1]
-
-        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
-
-        if match:
-            city = match.group(1).strip()
-            state = match.group(2) if match.group(2) else ''
-            zip_code = match.group(3) if match.group(3) else ''
-        else:
-            city, state, zip_code = '', '', ''
-            
-        gender = fake.passport_gender()
-        first_name = fake.first_name()
-        last_name = fake.last_name()
+        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+        enrichment_contacts = enrichment_user.contacts
+        if not enrichment_contacts:
+            return None
+        first_name = enrichment_contacts.first_name
+        last_name = enrichment_contacts.last_name
+        linkedin_url = enrichment_contacts.linkedin_url
         
+        fake = Faker()
+        verified_email = fake.email()
+        verified_phone = fake.phone_number()
+        if not verified_email or not first_name or not last_name:
+            return None
+        
+        enrichment_personal_profiles = enrichment_user.personal_profiles
+        enrichment_professional_profiles = enrichment_user.professional_profiles
+        city = None
+        state = None
+        zip_code = None
+        gender = None
+        birth_day = None
+        birth_month = None
+        birth_year = None
+        company_name = None
+        homeowner = None
+        
+        if enrichment_professional_profiles:
+            company_name = enrichment_professional_profiles.current_company_name
+        
+        if enrichment_personal_profiles:
+            zip_code = str(enrichment_personal_profiles.zip_code5)
+            df_geo = get_states_dataframe()
+            if df_geo['zip'].dtype == object:
+                df_geo['zip'] = df_geo['zip'].astype(int)
+            row = df_geo.loc[df_geo['zip'] == zip_code]
+            if not row.empty:
+                city = row['city'].iat[0]
+                state = row['state_name'].iat[0]
+            
+            if enrichment_personal_profiles.gender == 1:
+                gender = 'm'
+            elif enrichment_personal_profiles.gender == 2:
+                gender = 'f'
+            birth_day = str(enrichment_personal_profiles.birth_day)
+            birth_month = str(enrichment_personal_profiles.birth_month)
+            birth_year = str(enrichment_personal_profiles.birth_year)
+            homeowner = str(enrichment_personal_profiles.homeowner)
+            
+        
+        
+        #properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
         
         return {
-            'email': first_email,
+            'email': verified_email,
             'first_name': first_name,
             'last_name': last_name,
-            'phone': first_phone,
+            'phone': verified_phone,
             'gender': gender,
             'city': city,
             'state': state,
             'zip_code': zip_code,
-            **properties
+            'linkedin_url': linkedin_url,
+            'birth_date': (f"{birth_year}-{birth_month}-{birth_day}"),
+            'company_name': company_name,
+            'homeowner': homeowner
+            
+            # **properties
         }

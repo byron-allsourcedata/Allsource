@@ -8,12 +8,12 @@ from pydantic.v1 import UUID4
 from sqlalchemy.dialects.postgresql import INT4RANGE
 
 from enums import LookalikeSize
-from models import EnrichmentUserId, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
-    EnrichmentVoterRecord, ProfessionalProfile, EnrichmentEmploymentHistory
+from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
+    EnrichmentVoterRecord, EnrichmentProfessionalProfile, EnrichmentEmploymentHistory
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
 from typing import Optional, List, Dict, Any
@@ -22,7 +22,7 @@ from sqlalchemy import asc, desc, or_, func
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
-from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
+from models.enrichment.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from uuid import UUID
 
 from models.users import Users
@@ -262,37 +262,37 @@ class AudienceLookalikesPersistence:
                 *all_columns_except(EnrichmentFinancialRecord, "id", "asid"),
                 *all_columns_except(EnrichmentLifestyle, "id", "asid"),
                 *all_columns_except(EnrichmentVoterRecord, "id", "asid"),
-                *all_columns_except(ProfessionalProfile, "id", "asid"),
+                *all_columns_except(EnrichmentProfessionalProfile, "id", "asid"),
                 *all_columns_except(EnrichmentEmploymentHistory, "id", "asid")
             )
             .select_from(AudienceSourcesMatchedPerson)
             .join(
-                EnrichmentUserId,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUserId.id
+                EnrichmentUser,
+                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id
             )
             .outerjoin(
                 EnrichmentPersonalProfiles,
-                EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
+                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentFinancialRecord,
-                EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+                EnrichmentFinancialRecord.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentLifestyle,
-                EnrichmentLifestyle.asid == EnrichmentUserId.asid
+                EnrichmentLifestyle.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentVoterRecord,
-                EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+                EnrichmentVoterRecord.asid == EnrichmentUser.asid
             )
             .outerjoin(
-                ProfessionalProfile,
-                ProfessionalProfile.asid == EnrichmentUserId.asid
+                EnrichmentProfessionalProfile,
+                EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentEmploymentHistory,
-                EnrichmentEmploymentHistory.asid == EnrichmentUserId.asid
+                EnrichmentEmploymentHistory.asid == EnrichmentUser.asid
             )
             .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
             .order_by(AudienceSourcesMatchedPerson.value_score.desc())

@@ -9,7 +9,7 @@ from enums import LookalikeSize
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from models.users_domains import UserDomains
 from sqlalchemy.orm import Session
 from typing import Optional, List
@@ -18,7 +18,7 @@ from sqlalchemy import asc, desc, or_, func
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
-from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
+from models.enrichment.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from uuid import UUID
 
 from models.users import Users
