@@ -27,15 +27,6 @@ load_dotenv()
 AUDIENCE_VALIDATION_AGENT_EMAIL_API = 'aud_validation_agent_email-api'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 
-COLUMN_MAPPING = {
-    'personal_email_validation_status': 'mx',
-    'business_email_validation_status': 'mx',
-    'personal_email_last_seen': 'recency',
-    'business_email_last_seen_date': 'recency',
-    'mobile_phone_dnc': 'dnc_filter'
-}
-
-
 def setup_logging(level):
     logging.basicConfig(
         level=level,
@@ -184,17 +175,6 @@ async def process_rmq_message(
                 {"smart_audience_id": aud_smart_id, "total_validated": total_validated},
             )
             logging.info("SSE sent with total count")
-
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name="validation_complete",
-            message_body={
-                "aud_smart_id": aud_smart_id,
-                "validation_type": validation_type,
-                "status": "validation_complete",
-            },
-        )
-        logging.info(f"Sent ping {aud_smart_id}")
 
         await message.ack()
 
