@@ -22,9 +22,6 @@ class MillionVerifierIntegrationsService:
         
         result = self.__check_verify_email(email)
         if result.get('credits') == 0:
-            print('----')
-            print(email)
-            print(result)
             logger.warning(result.get('error'))
             raise Exception(f"Insufficient credits for million_verifier")
         

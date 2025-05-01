@@ -14,6 +14,8 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
+from dateutil import parser
+from typing import Optional
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.million_verifier import MillionVerifierPersistence
 from models.audience_smarts_persons import AudienceSmartPerson
@@ -76,8 +78,13 @@ async def process_rmq_message(
         failed_ids: list[int] = []
         now = datetime.now()
 
-        def parse_date(date_str: str) -> datetime:
-            return datetime.strptime(date_str, "%d/%m/%Y") if date_str else None
+        def parse_date(date_str: Optional[str]) -> Optional[datetime]:
+            if not date_str or not isinstance(date_str, str):
+                return None
+            try:
+                return parser.parse(date_str)
+            except (ValueError, parser.ParserError):
+                return None
 
         def handle_personal_status(rec):
             last_seen = parse_date(rec.get("personal_email_last_seen"))
@@ -86,7 +93,8 @@ async def process_rmq_message(
             pid = rec.get("audience_smart_person_id")
             if last_seen and last_seen >= now - timedelta(days=30) and status not in ('', None, 'Invalid', 'UNKNOWN'):
                 return pid, email, True
-            if million_verifier_service.is_email_verify(email):
+
+            if email and million_verifier_service.is_email_verify(email):
                 return pid, email, True
             return pid, email, False
 
@@ -104,7 +112,7 @@ async def process_rmq_message(
             email = rec.get("business_email")
             if last_seen and last_seen >= now - timedelta(days=recency_personal_days):
                 return pid, email, True
-            if million_verifier_service.is_email_verify(email):
+            if email and million_verifier_service.is_email_verify(email):
                 return pid, email, True
             return pid, email, False
 
@@ -123,7 +131,7 @@ async def process_rmq_message(
             'business_email_validation_status': handle_business_status,
             'business_email_last_seen':     handle_business_last_seen,
         }
-
+        logging.info(f"Validation type {validation_type}")
         handler = handlers.get(validation_type)
         if not handler:
             raise ValueError(f"Unknown validation_type: {validation_type}")
@@ -141,10 +149,12 @@ async def process_rmq_message(
                 failed_ids.append(pid)
 
         if verified_emails:
+            logging.info(f"Saving {len(verified_emails)} verified emails")
             db_session.bulk_save_objects(verified_emails)
             db_session.commit()
 
         if failed_ids:
+            logging.info(f"Marking {len(failed_ids)} as failed")
             mappings = [
                 {"id": pid, "is_validation_processed": False}
                 for pid in failed_ids

@@ -44,20 +44,6 @@ def setup_logging(level):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-async def wait_for_ping(connection: RabbitMQConnection, aud_smart_id: UUID, validation_type: str):
-    queue_name = f"validation_complete"
-    channel = await connection.channel()
-    queue = await channel.declare_queue(queue_name, durable=True)
-
-    async with queue.iterator() as queue_iter:
-        async for message in queue_iter:
-            if message:
-                message_body = json.loads(message.body)
-                if message_body.get("status") == "validation_complete" and message_body.get("aud_smart_id") == aud_smart_id and message_body.get("validation_type") == validation_type:
-                    await message.ack()
-                    break
-
-
 async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
@@ -209,9 +195,9 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
         user_id = message_body.get("user_id")
         aud_smart_id = message_body.get("aud_smart_id")
         validation_params = message_body.get("validation_params")
-
         recency_personal_days = 0
         recency_business_days = 0
+        
         def count_unprocessed(params):
             count = 0
             stack = [params]
@@ -251,7 +237,6 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
 
 
             logging.info(f"validation_params {validation_params}")
-            i = 0
 
             for value in priority_values:
                 validation, validation_type = value.split('-')
@@ -307,12 +292,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                     )
 
                                     db_session.commit()
-                                    return    
-
-                                i += 1
-                                is_last_validation_in_type = count_validations_type == length_validations_type
-
-                                logging.info(f"is last validation in type {is_last_validation_in_type}")
+                                    continue
 
                                 for j in range(0, len(enrichment_users), 100):
                                     batch = enrichment_users[j:j+100]
@@ -323,19 +303,14 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         }
                                         for user in batch
                                     ]
-        
-                                    is_last_iteration_in_last_validation = (i == count_validations) and (j + 100 >= len(enrichment_users))
 
                                     message_body = {
                                         'aud_smart_id': str(aud_smart_id),
                                         'user_id': user_id,
                                         'batch': serialized_batch,
                                         'validation_type': column_name,
-                                        'count_persons_before_validation': len(enrichment_users),
-                                        'is_last_validation_in_type': is_last_validation_in_type,
-                                        'is_last_iteration_in_last_validation': is_last_iteration_in_last_validation
+                                        'count_persons_before_validation': len(enrichment_users)
                                     }
-                                    
                                     queue_map = {
                                         "personal_email_validation_status": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
                                         "personal_email_last_seen": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
@@ -354,9 +329,6 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         queue_name=queue_name,
                                         message_body=message_body
                                     )
-
-
-                                await wait_for_ping(connection, aud_smart_id, column_name)
 
                                 logging.info(f"ping came {aud_smart_id}.")
             
