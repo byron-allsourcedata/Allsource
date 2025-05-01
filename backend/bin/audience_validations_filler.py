@@ -100,20 +100,12 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
             {
                 "audience_smart_person_id": user.audience_smart_person_id,
                 "personal_email": user.personal_email,
-                "personal_email_last_seen": str(user.personal_email_last_seen),
-                "personal_email_validation_status": user.personal_email_validation_status,
                 "business_email": user.business_email,
-                "business_email_last_seen_date": str(user.business_email_last_seen_date),
-                "business_email_validation_status": user.business_email_validation_status,
             }
             for user in db_session.query(
                 AudienceSmartPerson.id.label("audience_smart_person_id"),
                 EnrichmentUserContact.personal_email.label("personal_email"),
-                EnrichmentUserContact.personal_email_last_seen.label("personal_email_last_seen"),
-                EnrichmentUserContact.personal_email_validation_status.label("personal_email_validation_status"),
                 EnrichmentUserContact.business_email.label("business_email"),
-                EnrichmentUserContact.business_email_last_seen_date.label("business_email_last_seen_date"),
-                EnrichmentUserContact.business_email_validation_status.label("business_email_validation_status"),
             )
             .join(
                 EnrichmentUser,
@@ -233,22 +225,6 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
         recency_personal_days = 0
         recency_business_days = 0
         
-        def count_unprocessed(params):
-            count = 0
-            stack = [params]
-            while stack:
-                curr = stack.pop()
-                if isinstance(curr, dict):
-                    if curr.get('processed') is False:
-                        count += 1
-                    for v in curr.values():
-                        stack.append(v)
-                elif isinstance(curr, list):
-                    stack.extend(curr)
-            return count
-
-        count_validations = count_unprocessed(validation_params)
-        logging.info(f"count_validations, {count_validations}")
         logging.info(f"Processed email validation for aud_smart_id {aud_smart_id}.")    
 
         try:
@@ -258,7 +234,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 .first()
             )
 
-            priority_values = priority_record.value.split(",")[:8]
+            priority_values = priority_record.value.split(",")
 
             column_mapping = {
                 'personal_email-mx': 'personal_email_validation_status',
@@ -282,12 +258,8 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 if validation in validation_params:
                     validation_params_list = validation_params.get(validation)
                     logging.info(f"validation_params_list {validation_params_list}")
-                    
                     if len(validation_params_list) > 0:
-                        length_validations_type = len(validation_params_list)
-                        count_validations_type = 0
                         for param in validation_params_list:
-                            count_validations_type += 1
                             if validation_type in param:
                                 column_name = column_mapping.get(value)
                                 
