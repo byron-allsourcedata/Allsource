@@ -19,13 +19,12 @@ from schemas.similar_audiences import NormalizationConfig, AudienceData
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService, \
     map_letter_to_number, map_credit_rating, map_net_worth_code
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from models.enrichment_lookalike_scores import EnrichmentLookalikeScore
 from services.similar_audiences.similar_audience_scores import SimilarAudiencesScoresService
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 from services.similar_audiences import SimilarAudienceService
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes_persons import AudienceLookalikes
-from models import EnrichmentEmploymentHistory, ProfessionalProfile
+from models import EnrichmentEmploymentHistory, EnrichmentProfessionalProfile
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
 from persistence.enrichment_models import EnrichmentModelsPersistence
@@ -34,11 +33,7 @@ from decimal import Decimal
 from datetime import datetime
 from sqlalchemy import create_engine, cast, String
 from sqlalchemy.orm import Session
-from models.enrichment_user_ids import EnrichmentUserId
-from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
-from models.enrichment_financial_records import EnrichmentFinancialRecord
-from models.enrichment_lifestyles import EnrichmentLifestyle
-from models.enrichment_voter_record import EnrichmentVoterRecord
+from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, EnrichmentLookalikeScore
 
 
 
@@ -152,16 +147,16 @@ def get_enrichment_user_column_map() -> Dict[str, Any]:
         "job_description": EnrichmentEmploymentHistory.job_description.label("job_description"),
 
         # — Professional Profile —
-        "current_job_title": ProfessionalProfile.current_job_title.label("current_job_title"),
-        "current_company_name": ProfessionalProfile.current_company_name.label("current_company_name"),
-        "job_start_date": ProfessionalProfile.job_start_date.label("job_start_date"),
-        "job_duration": ProfessionalProfile.job_duration.label("job_duration"),
-        "job_location": ProfessionalProfile.job_location.label("job_location"),
-        "job_level": ProfessionalProfile.job_level.label("job_level"),
-        "department": ProfessionalProfile.department.label("department"),
-        "company_size": ProfessionalProfile.company_size.label("company_size"),
-        "primary_industry": ProfessionalProfile.primary_industry.label("primary_industry"),
-        "annual_sales": ProfessionalProfile.annual_sales.label("annual_sales"),
+        "current_job_title": EnrichmentProfessionalProfile.current_job_title.label("current_job_title"),
+        "current_company_name": EnrichmentProfessionalProfile.current_company_name.label("current_company_name"),
+        "job_start_date": EnrichmentProfessionalProfile.job_start_date.label("job_start_date"),
+        "job_duration": EnrichmentProfessionalProfile.job_duration.label("job_duration"),
+        "job_location": EnrichmentProfessionalProfile.job_location.label("job_location"),
+        "job_level": EnrichmentProfessionalProfile.job_level.label("job_level"),
+        "department": EnrichmentProfessionalProfile.department.label("department"),
+        "company_size": EnrichmentProfessionalProfile.company_size.label("company_size"),
+        "primary_industry": EnrichmentProfessionalProfile.primary_industry.label("primary_industry"),
+        "annual_sales": EnrichmentProfessionalProfile.annual_sales.label("annual_sales"),
     }
 
 def build_dynamic_query_and_config(
@@ -172,7 +167,7 @@ def build_dynamic_query_and_config(
     selected_fields = [name for name in sig.keys() if name in column_map]
     dynamic_columns = [column_map[name] for name in selected_fields]
     select_columns = [
-        EnrichmentUserId.id.label("EnrichmentUserId"),
+        EnrichmentUser.id.label("EnrichmentUser"),
         *dynamic_columns
     ]
     unordered = [f for f in selected_fields if f != "zip_code5"]
@@ -180,30 +175,30 @@ def build_dynamic_query_and_config(
     query = (
         db_session
         .query(*select_columns)
-        .select_from(EnrichmentUserId)
+        .select_from(EnrichmentUser)
         .outerjoin(
             EnrichmentPersonalProfiles,
-            EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
+            EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentFinancialRecord,
-            EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+            EnrichmentFinancialRecord.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentLifestyle,
-            EnrichmentLifestyle.asid == EnrichmentUserId.asid
+            EnrichmentLifestyle.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentVoterRecord,
-            EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+            EnrichmentVoterRecord.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentEmploymentHistory,
-            EnrichmentEmploymentHistory.asid == EnrichmentUserId.asid
+            EnrichmentEmploymentHistory.asid == EnrichmentUser.asid
         )
         .outerjoin(
-            ProfessionalProfile,
-            ProfessionalProfile.asid == EnrichmentUserId.asid
+            EnrichmentProfessionalProfile,
+            EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
         )
     )
 
@@ -240,32 +235,32 @@ def fetch_user_profiles(
             AudienceSourcesMatchedPerson.source_id == AudienceSource.id
         )
         .join(
-            EnrichmentUserId,
-            EnrichmentUserId.id == AudienceSourcesMatchedPerson.enrichment_user_id
+            EnrichmentUser,
+            EnrichmentUser.id == AudienceSourcesMatchedPerson.enrichment_user_id
         )
         .outerjoin(
             EnrichmentPersonalProfiles,
-            EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
+            EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentFinancialRecord,
-            EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+            EnrichmentFinancialRecord.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentLifestyle,
-            EnrichmentLifestyle.asid == EnrichmentUserId.asid
+            EnrichmentLifestyle.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentVoterRecord,
-            EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+            EnrichmentVoterRecord.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentEmploymentHistory,
-            EnrichmentEmploymentHistory.asid == EnrichmentUserId.asid
+            EnrichmentEmploymentHistory.asid == EnrichmentUser.asid
         )
         .outerjoin(
-            ProfessionalProfile,
-            ProfessionalProfile.asid == EnrichmentUserId.asid
+            EnrichmentProfessionalProfile,
+            EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
         )
         .filter(AudienceSource.id == audience_lookalike.source_uuid)
         .all()
@@ -315,7 +310,7 @@ def calculate_and_store_scores(
         model=model,
         lookalike_id=lookalike_id,
         query=query,
-        user_id_key="EnrichmentUserId",
+        user_id_key="EnrichmentUser",
         config=config
     )
 

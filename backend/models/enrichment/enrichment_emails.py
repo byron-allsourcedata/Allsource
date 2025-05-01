@@ -14,11 +14,7 @@ class EmailType(enum.Enum):
 
 class EnrichmentEmails(Base):
     __tablename__ = "enrichment_emails"
-    __table_args__ = (
-        UniqueConstraint("email", "email_type", name="uq_enrichment_emails_email_type"),
-        Index("ix_enrichment_emails_norm_email", func.lower(func.trim(text("email")))),
-    )
-
+    
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True,
         server_default=text("gen_random_uuid()")
@@ -28,9 +24,8 @@ class EnrichmentEmails(Base):
         SAEnum(EmailType, name="email_type", create_type=True),
         nullable=False
     )
-
-    users: Mapped[list["EnrichmentUsersEmails"]] = relationship(
-        "EnrichmentUsersEmails",
-        back_populates="email",
-        cascade="all, delete-orphan"
+    
+    __table_args__ = (
+        UniqueConstraint(email, email_type, name="uq_enrichment_emails_email_type"),
+        Index("ix_enrichment_emails_norm_email", func.lower(func.trim(text("email")))),
     )

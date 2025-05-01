@@ -2,8 +2,7 @@ from sqlalchemy import UUID, Column, ForeignKey, TIMESTAMP, event, text
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.orm import mapped_column, Mapped
 
-from .audience_lookalikes import AudienceLookalikes
-from .base import Base, create_timestamps
+from models.base import Base, create_timestamps
 
 
 class EnrichmentModels(Base):

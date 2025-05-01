@@ -10,8 +10,8 @@ import os
 from faker import Faker
 import re
 import logging
-from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
-from models.enrichment_users import EnrichmentUser
+from services.integrations.commonIntegration import get_states_dataframe
+from models.enrichment.enrichment_users import EnrichmentUser
 from fastapi import HTTPException
 from datetime import datetime, timedelta
 from schemas.integrations.mailchimp import MailchimpProfile
@@ -225,8 +225,11 @@ class MailchimpIntegrationsService:
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__mapped_member_into_list(enrichment_user, integration_data_sync.data_map)
-            profiles.append(profile)
+            if profile:
+                profiles.append(profile)
             
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
         profile = self.__create_profile(access_token, integration_data_sync, profiles)
         if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.LIST_NOT_EXISTS.value):
@@ -304,44 +307,65 @@ class MailchimpIntegrationsService:
         return ListFromIntegration(id=list['id'], list_name=list['name'])
 
     def __mapped_member_into_list(self, enrichment_user: EnrichmentUser, data_map: dict):
-        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
-        first_email = get_valid_email(emails_list)
-
-        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value):
-            return first_email
+        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+        enrichment_contacts = enrichment_user.contacts
+        if not enrichment_contacts:
+            return None
+        first_name = enrichment_contacts.first_name
+        last_name = enrichment_contacts.last_name
+        
+        fake = Faker()
+        verified_email = fake.email()
+        verified_phone = fake.phone_number()
+        if not verified_email or not first_name or not last_name:
+            return None
+        
+        enrichment_personal_profiles = enrichment_user.personal_profiles
+        enrichment_professional_profiles = enrichment_user.professional_profiles
+        city = None
+        state = None
+        zip_code = None
+        gender = None
+        birth_day = None
+        birth_month = None
+        birth_year = None
+        company_name = None
+        address_parts = None
+        
+        if enrichment_professional_profiles:
+            company_name = enrichment_professional_profiles.current_company_name
+        
+        if enrichment_personal_profiles:
+            zip_code = str(enrichment_personal_profiles.zip_code5)
+            df_geo = get_states_dataframe()
+            if df_geo['zip'].dtype == object:
+                df_geo['zip'] = df_geo['zip'].astype(int)
+            row = df_geo.loc[df_geo['zip'] == zip_code]
+            if not row.empty:
+                city = row['city'].iat[0]
+                state = row['state_name'].iat[0]
+            
+            if enrichment_personal_profiles.gender == 1:
+                gender = 'm'
+            elif enrichment_personal_profiles.gender == 2:
+                gender = 'f'
+            birth_day = str(enrichment_personal_profiles.birth_day)
+            birth_month = str(enrichment_personal_profiles.birth_month)
+            birth_year = str(enrichment_personal_profiles.birth_year) 
         
         if data_map:
             properties = self.__map_properties(enrichment_user, data_map)
         else:
             properties = {}
-            
-        fake = Faker()
-
-        first_phone = fake.phone_number()
-        address_parts = fake.address()
-        city_state_zip = address_parts.split("\n")[-1]
-
-        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
-
-        if match:
-            city = match.group(1).strip()
-            state = match.group(2) if match.group(2) else ''
-            zip_code = match.group(3) if match.group(3) else ''
-        else:
-            city, state, zip_code = '', '', ''
-            
-        gender = fake.passport_gender()
-        first_name = fake.first_name()
-        last_name = fake.last_name()
-        
+                    
         json_data = {
-            'email_address': first_email,
+            'email_address': verified_email,
             'status': 'subscribed',
             'email_type': 'text',
             "merge_fields": {
                 "FNAME": first_name,
                 "LNAME": last_name,
-                'PHONE': first_phone if first_phone else 'N/A',
+                'PHONE': verified_phone if verified_phone else 'N/A',
                 'COMPANY': 'N/A',
                 "ADDRESS": {
                     "addr1": address_parts or 'N/A',

@@ -4,9 +4,14 @@ from typing import List, Optional, Dict, Any
 
 from sqlalchemy.orm import Session
 
-from models import AudienceSourcesMatchedPerson, EnrichmentUserId, EnrichmentPersonalProfiles, \
-    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, AudienceLookalikesPerson, \
-    ProfessionalProfile, EnrichmentEmploymentHistory
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from models.audience_lookalikes_persons import AudienceLookalikesPerson
+
+from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, \
+    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, \
+    EnrichmentProfessionalProfile, EnrichmentEmploymentHistory
+
+
 from schemas.insights import InsightsByCategory
 
 
@@ -194,18 +199,18 @@ class InsightsUtils:
         ]
         prof_cts: defaultdict[str, Counter] = defaultdict(Counter)
         prof_rows = db_session.query(
-            ProfessionalProfile.current_job_title,
-            ProfessionalProfile.current_company_name,
-            ProfessionalProfile.job_start_date,
-            ProfessionalProfile.job_duration,
-            ProfessionalProfile.job_location,
-            ProfessionalProfile.job_level,
-            ProfessionalProfile.department,
-            ProfessionalProfile.company_size,
-            ProfessionalProfile.primary_industry,
-            ProfessionalProfile.annual_sales,
+            EnrichmentProfessionalProfile.current_job_title,
+            EnrichmentProfessionalProfile.current_company_name,
+            EnrichmentProfessionalProfile.job_start_date,
+            EnrichmentProfessionalProfile.job_duration,
+            EnrichmentProfessionalProfile.job_location,
+            EnrichmentProfessionalProfile.job_level,
+            EnrichmentProfessionalProfile.department,
+            EnrichmentProfessionalProfile.company_size,
+            EnrichmentProfessionalProfile.primary_industry,
+            EnrichmentProfessionalProfile.annual_sales,
         ).filter(
-            ProfessionalProfile.asid.in_(asids)
+            EnrichmentProfessionalProfile.asid.in_(asids)
         ).all()
 
         for row in prof_rows:
@@ -266,8 +271,8 @@ class InsightsUtils:
 
         asids: List[uuid.UUID] = [
             asid for (asid,) in db_session
-            .query(EnrichmentUserId.asid)
-            .filter(EnrichmentUserId.id.in_(user_ids))
+            .query(EnrichmentUser.asid)
+            .filter(EnrichmentUser.id.in_(user_ids))
             .all()
         ]
 
@@ -290,8 +295,8 @@ class InsightsUtils:
 
         asids = [
             asid for (asid,) in db_session
-            .query(EnrichmentUserId.asid)
-            .filter(EnrichmentUserId.id.in_(user_ids))
+            .query(EnrichmentUser.asid)
+            .filter(EnrichmentUser.id.in_(user_ids))
             .all()
         ]
         

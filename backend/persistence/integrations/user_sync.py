@@ -6,6 +6,8 @@ from enums import SourcePlatformEnum
 from models.users_domains import UserDomains
 from models.subscriptions import UserSubscriptions
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
+from models.audience_smarts_validations import AudienceSmartValidation
+from models.audience_smarts_persons import AudienceSmartPerson
 from sqlalchemy import func, desc
 from models.integrations.users_domains_integrations import UserIntegration
 
@@ -285,3 +287,32 @@ class IntegrationsUserSyncPersistence:
         return self.db.query(UserIntegration) \
             .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id) \
             .filter(IntegrationUserSync.id == sync_id).first()
+        
+    def get_verified_email_and_phone(self, enrichment_user_id):
+        rows = (
+            self.db.query(
+                AudienceSmartValidation.verified_email,
+                AudienceSmartValidation.verified_phone
+            )
+            .join(
+                AudienceSmartPerson,
+                AudienceSmartPerson.id == AudienceSmartValidation.audience_smart_person_id
+            )
+            .filter(
+                AudienceSmartPerson.enrichment_user_id == enrichment_user_id
+            )
+            .limit(2)
+            .all()
+        )
+
+        email = ''
+        phone = ''
+        for verified_email, verified_phone in rows:
+            if verified_email:
+                email = verified_email
+            if verified_phone:
+                phone = verified_phone
+
+        return email, phone
+
+

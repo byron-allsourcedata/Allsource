@@ -22,13 +22,12 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
-from models.enrichment_users import EnrichmentUser
-from models.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_linkedin_verification import AudienceLinkedinVerification
-from models.enrichment_employment_history import EnrichmentEmploymentHistory
-from models.emails_enrichment import EmailEnrichment
-from models.enrichment_user_ids import EnrichmentUserId
-from models.emails import Email
+from models.enrichment.enrichment_employment_history import EnrichmentEmploymentHistory
+from models.enrichment.emails_enrichment import EmailEnrichment
+from models.enrichment.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
@@ -180,11 +179,11 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
 
             with db_session.begin():
                 subquery = (
-                    select(EnrichmentUserId.id)
+                    select(EnrichmentUser.id)
                     .select_from(EnrichmentUserContact)
-                    .join(EnrichmentUserId, EnrichmentUserId.asid == EnrichmentUserContact.asid)
-                    .join(AudienceSmartPerson, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id)
-                    .join(EnrichmentEmploymentHistory, EnrichmentEmploymentHistory.asid == EnrichmentUserId.asid)
+                    .join(EnrichmentUser, EnrichmentUser.asid == EnrichmentUserContact.asid)
+                    .join(AudienceSmartPerson, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
+                    .join(EnrichmentEmploymentHistory, EnrichmentEmploymentHistory.asid == EnrichmentUser.asid)
                 )
 
                 db_session.query(AudienceSmartPerson).filter(

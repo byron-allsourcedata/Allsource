@@ -1,13 +1,11 @@
 from sqlalchemy import Column, String, Text, SmallInteger, ForeignKey, text, Index
 from sqlalchemy.dialects.postgresql import UUID
-from .base import Base
+from models.base import Base
 
 
 class EnrichmentFinancialRecord(Base):
     __tablename__ = 'enrichment_financial_records'
-    __table_args__ = (
-        Index("ix_financial_asid", "asid"),
-    )
+    
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
@@ -31,3 +29,7 @@ class EnrichmentFinancialRecord(Base):
     donor = Column(SmallInteger, nullable=True)
     investor = Column(SmallInteger, nullable=True)
     mail_order_donor = Column(SmallInteger, nullable=True)
+    
+    __table_args__ = (
+        Index("ix_financial_asid", asid),
+    )

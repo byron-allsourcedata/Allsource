@@ -10,13 +10,13 @@ from persistence.domains import UserDomainsPersistence
 import httpx
 import os
 from faker import Faker
-from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
+from services.integrations.commonIntegration import get_states_dataframe
 from datetime import datetime, timedelta
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 from facebook_business.adobjects.adaccount import AdAccount
 from facebook_business.api import FacebookAdsApi
 from fastapi import HTTPException
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from datetime import datetime
 from utils import extract_first_email
@@ -334,13 +334,21 @@ class MetaIntegrationsService:
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__hash_mapped_meta_user(enrichment_user)
-            profiles.append(profile)
+            if profile:
+                profiles.append(profile)
+            
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
             
         return self.__create_user(custom_audience_id=integration_data_sync.list_id, access_token=user_integration.access_token, profiles=profiles)
 
     def __create_user(self, custom_audience_id: str, access_token: str, profiles: List[dict]):
         payload = {
-            "schema": ["EMAIL", "PHONE", "GEN", "DOBY", "DOBM", "DOBD", "LN", "FN", "ST", "CT", "ZIP"],
+            "schema": [
+                "EMAIL", "PHONE", "GEN", "DOBY", "DOBM", "DOBD",
+                "FN", "LN", "FI", "ST", "CT", "ZIP",
+                "COUNTRY"
+            ],
             "data":   profiles
         }
         session = {
@@ -363,63 +371,61 @@ class MetaIntegrationsService:
         
         return ProccessDataSyncResult.SUCCESS.value
     
-    def get_birth_date_from_age(self, age_range):
-        if age_range is None or age_range.lower is None:
-            return None, None, None
-        
-        age = age_range.lower
-        current_year = datetime.now().year
-        birth_year = current_year - age
-        return str(birth_year), '01', '01'
-
     def __hash_mapped_meta_user(self, enrichment_user: EnrichmentUser):
-        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
-        first_email = get_valid_email(emails_list)
+        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+        enrichment_contacts = enrichment_user.contacts
+        if not enrichment_contacts:
+            return None
+        first_name = enrichment_contacts.first_name
+        last_name = enrichment_contacts.last_name
         
-        # first_phone = get_valid_phone(five_x_five_user)
-        # address_parts = get_valid_location(five_x_five_user)
-        fake = Faker()
-
-        first_phone = fake.phone_number()
-        address_parts = fake.address().split("\n")
-        city_state_zip = address_parts[-1]
-
-        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
-
-        if match:
-            city = match.group(1).strip()
-            state = match.group(2) if match.group(2) else ''
-            zip_code = match.group(3) if match.group(3) else ''
-        else:
-            city, state, zip_code = '', '', ''
-            
-        gender = ''
+        if not verified_email or not first_name or not last_name:
+            return None
         
-        if enrichment_user.gender == 1:
-            gender = 'm'
-        elif enrichment_user.gender == 2:
-            gender = 'f'
+        enrichment_personal_profiles = enrichment_user.personal_profiles
+        city = None
+        state = None
+        zip_code = None
+        gender = None
+        birth_day = None
+        birth_month = None
+        birth_year = None
+        
+        if enrichment_personal_profiles:
+            zip_code = str(enrichment_personal_profiles.zip_code5)
+            df_geo = get_states_dataframe()
+            if df_geo['zip'].dtype == object:
+                df_geo['zip'] = df_geo['zip'].astype(int)
+            row = df_geo.loc[df_geo['zip'] == zip_code]
+            if not row.empty:
+                city = row['city'].iat[0]
+                state = row['state_name'].iat[0]
             
-        first_name = fake.first_name()
-        last_name = fake.last_name()
-
+            if enrichment_personal_profiles.gender == 1:
+                gender = 'm'
+            elif enrichment_personal_profiles.gender == 2:
+                gender = 'f'
+            birth_day = str(enrichment_personal_profiles.birth_day)
+            birth_month = str(enrichment_personal_profiles.birth_month)
+            birth_year = str(enrichment_personal_profiles.birth_year)
+        
         def hash_value(value):
             return hashlib.sha256(value.encode('utf-8')).hexdigest() if value else ""
-        
-        birth_year, birth_month, birth_day = self.get_birth_date_from_age(enrichment_user.age)
 
         return [
-                hash_value(first_email),                                                           # EMAIL
-                hash_value(first_phone),                                                           # PHONE
+                hash_value(verified_email),                                                        # EMAIL
+                hash_value(verified_phone),                                                        # PHONE
                 hash_value(gender),                                                                # GEN
                 hash_value(birth_year),                                                            # DOBY
                 hash_value(birth_month),                                                           # DOBM
                 hash_value(birth_day),                                                             # DOBD
-                hash_value(first_name),                                                            # LN
-                hash_value(last_name),                                                             # FN
+                hash_value(first_name),                                                            # FN
+                hash_value(last_name),                                                             # LN
+                hash_value(first_name[0].lower()),                                                 # FI
                 hash_value(state),                                                                 # ST
                 hash_value(city),                                                                  # CT
                 hash_value(zip_code),                                                              # ZIP
+                hash_value('USA'),                                                                 # COUNTRY
             ]
             
     def __mapped_meta_list(self, list):

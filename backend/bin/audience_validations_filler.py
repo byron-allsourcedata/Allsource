@@ -21,11 +21,11 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_settings import AudienceSetting
-from models.enrichment_user_ids import EnrichmentUserId
-from models.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment_employment_history import EnrichmentEmploymentHistory
-from models.emails_enrichment import EmailEnrichment
-from models.emails import Email
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment.enrichment_employment_history import EnrichmentEmploymentHistory
+from models.enrichment.emails_enrichment import EmailEnrichment
+from models.enrichment.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
@@ -89,16 +89,16 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUserContact.linkedin_url,
             )
             .join(
-                EnrichmentUserId,
-                EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUser,
+                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
             .join(
                 EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUserId.asid,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
             .join(
                 EnrichmentEmploymentHistory,
-                EnrichmentEmploymentHistory.asid == EnrichmentUserId.asid,
+                EnrichmentEmploymentHistory.asid == EnrichmentUser.asid,
             )
             .filter(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
@@ -124,12 +124,12 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUserContact.last_name.label("last_name"),
             )
             .join(
-                EnrichmentUserId,
-                EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUser,
+                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
             .join(
                 EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUserId.asid,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
             .filter(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
@@ -151,12 +151,12 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 getattr(EnrichmentUserContact, column_name).label("value"),
             )
             .join(
-                EnrichmentUserId,
-                EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id,
+                EnrichmentUser,
+                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
             .join(
                 EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUserId.asid,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
             .filter(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
