@@ -5,7 +5,8 @@ import FeatureListTable, { FeatureObject } from "./FeatureListTable";
 import Link from "next/link";
 import Categories from "./PredictableFieldsComponents/Categories";
 import All from "./PredictableFieldsComponents/All";
-import { SignificantFields } from '../page'
+import { SignificantFields } from "@/types/insights";
+
 
 type PredictableFieldsTabProps = {
   data: SignificantFields;

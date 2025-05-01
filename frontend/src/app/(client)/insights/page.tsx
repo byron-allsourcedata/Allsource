@@ -200,6 +200,7 @@ const Insights = () => {
                                 display: "flex",
                                 flexDirection: "column",
                                 flexGrow: 1,
+                                mb: 1,
                                 width: "55%",
                                 "@media (max-width: 1100px)": {
                                     width: "70%",
@@ -331,7 +332,7 @@ const Insights = () => {
                                                 </Box>
                                                 <TableContainer
                                                     component={Paper}
-                                                    sx={{ maxHeight: "32vh", overflow: "scroll" }}
+                                                    sx={{ maxHeight: "35vh", overflow: "scroll" }}
                                                 >
                                                     <Table>
                                                         <TableBody>
@@ -346,7 +347,7 @@ const Insights = () => {
                                                                         width: "100%",
                                                                         padding: 0,
                                                                         margin: 0,
-                                                                        flexWrap: "wrap", // для маленьких экранов
+                                                                        flexWrap: "wrap",
                                                                     }}
                                                                     onClick={() => handleSelectRow(row)}
                                                                 >

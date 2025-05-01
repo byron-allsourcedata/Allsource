@@ -597,6 +597,7 @@ const AudienceDashboard: React.FC = () => {
               overflowX: "auto",
               whiteSpace: "nowrap",
               pl: 0.5,
+              pr: 0.5,
               pt: 1,
               "@media (max-width: 900px)": { mt: 0, mb: 0 },
             }}

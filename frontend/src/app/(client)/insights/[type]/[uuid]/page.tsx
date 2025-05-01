@@ -13,58 +13,19 @@ import { TabPanel } from "@/components/TabPanel";
 import StaticticsTab from "./components/StaticticsTab";
 import CustomTooltip from "@/components/customToolTip";
 import PredictableFields from "./components/PredictableFields";
+import { AudienceInsightsStatisticsResponse, B2BData, B2CData, FieldRankMap, SignificantFields } from "@/types/insights";
 
-export type B2CData = {
-  personal_info: Record<string, any>;
-  financial: Record<string, any>;
-  lifestyle: Record<string, any>;
-  voter: Record<string, any>;
+const getFieldRankMap = (significantFields: Record<string, number>): FieldRankMap => {
+  const entries = Object.entries(significantFields)
+    .filter(([, value]) => value > 0)
+    .sort((a, b) => b[1] - a[1])
+
+  return entries.reduce<FieldRankMap>((acc, [key], index) => {
+    if (index < 5) acc[key] = index + 1;
+    return acc;
+  }, {});
 };
 
-type PercentageMap = Record<string, any>;
-
-type ProfessionalInfo = {
-  job_location: PercentageMap;
-  current_company_name: PercentageMap;
-  job_level: PercentageMap;
-  current_job_title: PercentageMap;
-  job_duration: PercentageMap;
-  primary_industry: PercentageMap;
-  company_size: PercentageMap;
-  annual_sales: PercentageMap;
-  department: PercentageMap;
-  homeowner: PercentageMap;
-};
-
-type EducationInfo = {
-  institution_name: PercentageMap;
-  post_graduation_time: PercentageMap;
-  degree: PercentageMap;
-};
-
-type EmploymentInfo = {
-  job_location: PercentageMap;
-  number_of_jobs: PercentageMap;
-  company_name: PercentageMap;
-  job_tenure: PercentageMap;
-  job_title: PercentageMap;
-};
-
-export type SignificantFields = Record<string, number>;
-
-export type B2BData = {
-  professional_profile: ProfessionalInfo;
-  education: EducationInfo;
-  employment_history: EmploymentInfo;
-};
-
-type AudienceInsightsStatisticsResponse = {
-  b2b: B2BData;
-  b2c: B2CData;
-  name: string;
-  audience_type: string;
-  significant_fields: SignificantFields;
-};
 
 const Insights = () => {
   const router = useRouter();
@@ -77,13 +38,42 @@ const Insights = () => {
   const [name, setName] = useState<string>("");
   const [audience_type, setType] = useState("");
   const [predictableFields, setPredictableFields] = useState<SignificantFields>({});
+  const [fieldRanks, setFieldRanks] = useState<FieldRankMap>({});
 
 
   const [b2cData, setB2CData] = useState<B2CData>({
-    personal_info: {},
-    financial: {},
+    personal_info: {
+      gender: {},
+      state: {},
+      religion: {},
+      age: {},
+      ethnicity: {},
+      languages: {},
+      education_level: {},
+      have_children: {},
+      marital_status: {},
+      homeowner: {}
+    },
+    financial: {
+      income_range: {},
+      credit_score_range: {},
+      credit_cards: {},
+      net_worth_range: {},
+      number_of_credit_lines: {},
+      bank_card: {},
+      mail_order_donor: {},
+      credit_card_premium: {},
+      credit_card_new_issue: {},
+      donor: {},
+      investor: {},
+      credit_range_of_new_credit: {}
+    },
     lifestyle: {},
-    voter: {},
+    voter: {
+      congressional_district: {},
+      political_party: {},
+      voting_propensity: {}
+    },
   });
 
   const [b2bData, setB2BData] = useState<B2BData>({
@@ -124,9 +114,14 @@ const Insights = () => {
         await axiosInstance.get<AudienceInsightsStatisticsResponse>(
           `/audience-insights/${type}/${uuid}`
         );
+
+      const significantFields = response.data.significant_fields;
+      const fieldRankMap = getFieldRankMap(significantFields);
+
       setB2BData(response.data.b2b);
       setB2CData(response.data.b2c);
       setPredictableFields(response.data.significant_fields)
+      setFieldRanks(fieldRankMap);
       setName(response.data.name);
       setType(response.data.audience_type)
     } catch (error) {
@@ -342,7 +337,7 @@ const Insights = () => {
         }}
       >
         <TabPanel value={tabIndex} index={0}>
-          <StaticticsTab type={audience_type} b2bData={b2bData} b2cData={b2cData} />
+          <StaticticsTab type={audience_type} b2bData={b2bData} b2cData={b2cData} fieldRanks={fieldRanks} />
         </TabPanel>
         <TabPanel value={tabIndex} index={1}>
           <PredictableFields data={predictableFields} />

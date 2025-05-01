@@ -18,9 +18,10 @@ interface RegionData {
 interface USHeatMapCardProps {
   title: string;
   regions: RegionData[];
+  rank?: number;
 }
 
-export const USHeatMapCard: FC<USHeatMapCardProps> = ({ title, regions }) => {
+export const USHeatMapCard: FC<USHeatMapCardProps> = ({ title, regions, rank }) => {
   const defaultColor = "rgba(199, 228, 255, 1)";
 
   const customStates = useMemo(() => {
@@ -69,9 +70,29 @@ export const USHeatMapCard: FC<USHeatMapCardProps> = ({ title, regions }) => {
         justifyContent: "space-between",
       }}
     >
-      <Typography className="dashboard-card-heading" mb={2}>
-        {title}
-      </Typography>
+      <Box sx={{
+        width: "100%",
+        justifyContent: 'space-between',
+        display: 'flex',
+        flexDirection: 'row'
+      }}>
+        <Typography className="dashboard-card-heading" mb={2}>
+          {title}
+        </Typography>
+        {rank !== undefined && (
+          <Typography
+            component="span"
+            sx={{
+              fontSize: 12,
+              ml: 1,
+              color: "#888",
+              verticalAlign: "middle",
+            }}
+          >
+            #{rank}
+          </Typography>
+        )}
+      </Box>
 
       <Box
         sx={{
@@ -139,14 +160,13 @@ export const USHeatMapCard: FC<USHeatMapCardProps> = ({ title, regions }) => {
                         sx={{ fontSize: "12px !important" }}
                       >
                         {state && percentagesMap[state as USAStateAbbreviation]
-                          ? `${percentagesMap[state as USAStateAbbreviation]} ${
-                              stateNameMap[state as USAStateAbbreviation] ||
-                              (state === "DC" ? "District of Columbia" : state)
-                            }`
+                          ? `${percentagesMap[state as USAStateAbbreviation]} ${stateNameMap[state as USAStateAbbreviation] ||
+                          (state === "DC" ? "District of Columbia" : state)
+                          }`
                           : state
-                          ? stateNameMap[state as USAStateAbbreviation] ||
+                            ? stateNameMap[state as USAStateAbbreviation] ||
                             (state === "DC" ? "District of Columbia" : state)
-                          : "District of Columbia"}
+                            : "District of Columbia"}
                       </Typography>
                     </Box>
                   }

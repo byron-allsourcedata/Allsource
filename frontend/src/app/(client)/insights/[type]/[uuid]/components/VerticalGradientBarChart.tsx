@@ -11,6 +11,8 @@ export type BarData = {
 type VerticalGradientBarChartProps = {
   title: string;
   data: BarData[];
+  fieldKey?: string;
+  rank?: number;
 };
 
 const getVerticalGradient = (relativePercent: number) => {
@@ -20,7 +22,7 @@ const getVerticalGradient = (relativePercent: number) => {
 
 export const VerticalGradientBarChart: React.FC<
   VerticalGradientBarChartProps
-> = ({ title, data }) => {
+> = ({ title, data, rank }) => {
   const maxPercent = Math.max(...data.map((d) => d.percent)) || 1;
 
   return (
@@ -34,9 +36,30 @@ export const VerticalGradientBarChart: React.FC<
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
       }}
     >
-      <Typography className="dashboard-card-heading" mb={2}>
-        {title}
-      </Typography>
+      <Box sx={{
+        width: "100%",
+        justifyContent: 'space-between',
+        display: 'flex',
+        flexDirection: 'row',
+        mb: 2
+      }}>
+        <Typography className="dashboard-card-heading">
+          {title}
+        </Typography>
+        {rank !== undefined && (
+          <Typography
+            component="span"
+            sx={{
+              fontSize: 12,
+              ml: 1,
+              color: "#888",
+              verticalAlign: "middle",
+            }}
+          >
+            #{rank}
+          </Typography>
+        )}
+      </Box>
 
       <Stack
         direction="row"

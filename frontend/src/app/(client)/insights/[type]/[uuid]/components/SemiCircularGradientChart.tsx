@@ -14,11 +14,12 @@ type SemiCircularGradientChartProps = {
   labelLeft: string;
   labelRight: string;
   colorStops: ColorStop[];
+  rank?: number;
 };
 
 export const SemiCircularGradientChart: React.FC<
   SemiCircularGradientChartProps
-> = ({ title, percent, labelLeft, labelRight, colorStops }) => {
+> = ({ title, percent, labelLeft, labelRight, colorStops, rank }) => {
   const radius = 90;
   const strokeWidth = 20;
   const center = radius + strokeWidth / 2;
@@ -33,9 +34,30 @@ export const SemiCircularGradientChart: React.FC<
       boxShadow={2}
       bgcolor="#fff"
     >
-      <Typography className="dashboard-card-heading" mb={3}>
-        {title}
-      </Typography>
+      <Box sx={{
+        width: "100%",
+        justifyContent: 'space-between',
+        display: 'flex',
+        flexDirection: 'row',
+        mb: 2
+      }}>
+        <Typography className="dashboard-card-heading">
+          {title}
+        </Typography>
+        {rank !== undefined && (
+          <Typography
+            component="span"
+            sx={{
+              fontSize: 12,
+              ml: 1,
+              color: "#888",
+              verticalAlign: "middle",
+            }}
+          >
+            #{rank}
+          </Typography>
+        )}
+      </Box>
 
       <Box display="flex" justifyContent="center" alignItems="end">
         <Box display="flex" flexDirection="column" alignItems="center" mr={2}>

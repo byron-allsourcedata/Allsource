@@ -6,12 +6,13 @@ import B2CLifestyle from "./B2CTabComponents/B2CLifestyle";
 import B2BProfessional from "./B2BTabComponents/B2BProfessional";
 import B2BEmployment from "./B2BTabComponents/B2BEmployment";
 import B2BEducation from "./B2BTabComponents/B2BEducation";
-import { B2BData } from "../page";
+import { B2BData, FieldRankMap } from "@/types/insights";
 
 type B2BTabsProps = {
   data: B2BData;
+  fieldRanks: FieldRankMap;
 };
-const B2BTabs: React.FC<B2BTabsProps> = ({ data }) => {
+const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
   const [tabIndex, setIndex] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
@@ -118,13 +119,13 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data }) => {
         }}
       >
         <TabPanel value={tabIndex} index={0}>
-          <B2BProfessional data={data.professional_profile} />
+          <B2BProfessional data={data.professional_profile} fieldRanks={fieldRanks} />
         </TabPanel>
         <TabPanel value={tabIndex} index={1}>
-          <B2BEducation data={data.education} />
+          <B2BEducation data={data.education} fieldRanks={fieldRanks} />
         </TabPanel>
         <TabPanel value={tabIndex} index={2}>
-          <B2BEmployment data={data.employment_history} />
+          <B2BEmployment data={data.employment_history} fieldRanks={fieldRanks} />
         </TabPanel>
         <TabPanel value={tabIndex} index={3}></TabPanel>
       </Box>
