@@ -379,6 +379,7 @@ const CreateLookalikePage: React.FC = () => {
                             setSearch(e.target.value);
                             setIsTableVisible(true);
                           }}
+                          onClick={() => setIsTableVisible(!isTableVisible)}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -399,7 +400,13 @@ const CreateLookalikePage: React.FC = () => {
                               </IconButton>
                             ),
                           }}
-                          sx={{ pb: "2px" }}
+                          sx={{
+                            pb: "2px",
+                            cursor: "pointer",
+                            "& .MuiInputBase-input": {
+                              cursor: "pointer",
+                            },
+                          }}
                         />
                         {isTableVisible && (
                           <TableContainer

@@ -44,6 +44,8 @@ interface TableRowData {
   created_by: string;
   size: number;
   processed_size: number;
+  train_model_size: number;
+  processed_train_model_size: number;
   significant_fields: Record<string, any>;
   similarity_score: Record<string, any>;
   target_schema: string;
@@ -56,7 +58,7 @@ const CreateLookalikePage: React.FC = () => {
   const [loaderForTable, setLoaderForTable] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
-  const [lookalikesData, setLookalikeData] = useState<any[]>([]);
+  const [lookalikesData, setLookalikeData] = useState<TableRowData[]>([]);
 
   // Pagination and Sorting
   const [count_lookalikes, setCountLookalike] = useState<number | null>(null);
@@ -283,6 +285,7 @@ const CreateLookalikePage: React.FC = () => {
       const response = await axiosInstance.get(url);
       const [leads, count] = response.data;
       setLookalikeData(Array.isArray(leads) ? leads : []);
+      // console.log(lookalikesData[0])
       setCountLookalike(count || 0);
       if (leads && count > 0) {
         setIsLookalikeGenerated(true);

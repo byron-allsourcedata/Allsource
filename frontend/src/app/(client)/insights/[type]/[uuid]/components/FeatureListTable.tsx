@@ -8,8 +8,10 @@ import {
   AccordionDetails,
   useTheme,
   Button,
+  IconButton,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 
 export type FeatureObject = Record<string, number>;
 
@@ -69,16 +71,24 @@ function FeatureListTable<T extends FeatureObject>({
             mb: 1,
           }}
         >
-          <Grid item xs={8}>
+          <Grid item xs={9}>
             <Typography
-              sx={{ fontWeight: 500, color: "rgba(32,33,36,1)" }}
+              className="black-table-header"
+              sx={{
+                fontWeight: "500 !important",
+                color: "rgba(32, 33, 36, 1) !important",
+              }}
             >
               {columnHeaders[0]}
             </Typography>
           </Grid>
-          <Grid item xs={4} textAlign="left">
+          <Grid item xs={3} textAlign="left">
             <Typography
-              sx={{ fontWeight: 500, color: "rgba(32,33,36,1)" }}
+              className="black-table-header"
+              sx={{
+                fontWeight: "500 !important",
+                color: "rgba(32, 33, 36, 1) !important",
+              }}
             >
               {columnHeaders[1]}
             </Typography>
@@ -98,20 +108,23 @@ function FeatureListTable<T extends FeatureObject>({
               py: 1,
             }}
           >
-            <Grid item xs={8}>
-              <Typography>{formatKey(String(k))}</Typography>
+            <Grid item xs={9}>
+              <Typography className="black-table-header">{formatKey(String(k))}</Typography>
             </Grid>
-            <Grid item xs={4} textAlign="left">
-              <Typography>{(v * 100).toFixed(1)}%</Typography>
+            <Grid item xs={3} textAlign="left">
+              <Typography className="black-table-header">{(v * 100).toFixed(1)}%</Typography>
             </Grid>
           </Grid>
         ))}
 
         {allPairs.length > 5 && (
           <Box sx={{ textAlign: "center", mt: 1 }}>
-            <Button size="small" onClick={() => setShowAll((s) => !s)}>
-              {showAll ? "Less" : `More (${allPairs.length - 5})`}
-            </Button>
+            <IconButton sx={{ borderRadius: 1, padding: 0 }} onClick={() => setShowAll((s) => !s)} size="small">
+              <Typography sx={{ fontSize: 14, mr: 0.5, borderRadius: 0 }}>
+                {showAll ? "Show Less" : `Show More (${allPairs.length - 5})`}
+              </Typography>
+              {showAll ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
           </Box>
         )}
       </Box>
