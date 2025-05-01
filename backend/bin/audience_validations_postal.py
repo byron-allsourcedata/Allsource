@@ -148,7 +148,6 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 
                 verifications.append(
                     AudiencePostalVerification(
-                        audience_smart_person_id=person_id,
                         zip_code5=zip_code5,
                         is_verify=is_verify
                     )
