@@ -1,5 +1,5 @@
-import React from "react";
-import { Box, Grid, Typography } from "@mui/material";
+import React, { useState } from "react";
+import { Box, Button, Grid, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import type {
   PersonalResults,
@@ -62,6 +62,10 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
     if (step === 1) handleNextStep();
   };
 
+  const [resetTrigger, setResetTrigger] = useState(0);
+  const handleResetAll = () => {
+    setResetTrigger((prev) => prev + 1);
+  };
   return (
   <Box
     sx={{
@@ -170,35 +174,44 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
 
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
+      <Button size="small" onClick={handleResetAll} sx={{ textTransform: "none", fontSize: "12px", color:"rgba(80, 82, 178, 1)"}}>
+          Default state
+        </Button>
         <FeatureImportanceTable
           title="Personal Profile"
           features={personalData}
           onChangeDisplayed={onPersonalChange}
+          resetTrigger={resetTrigger}
         />
         <FeatureImportanceTable
           title="Financial"
           features={financialData}
           onChangeDisplayed={onFinancialChange}
+          resetTrigger={resetTrigger}
         />
         <FeatureImportanceTable
           title="Lifestyles"
           features={lifestylesData}
           onChangeDisplayed={onLifestylesChange}
+          resetTrigger={resetTrigger}
         />
         <FeatureImportanceTable
           title="Voter"
           features={voterData}
           onChangeDisplayed={onVoterChange}
+          resetTrigger={resetTrigger}
         />
         <FeatureImportanceTable
           title="Professional Profile"
           features={professionalProfileData}
           onChangeDisplayed={onProfessionalProfileChange}
+          resetTrigger={resetTrigger}
         />
         <FeatureImportanceTable
           title="Employment History"
           features={employmentHistoryData}
           onChangeDisplayed={onEmploymentHistoryChange}
+          resetTrigger={resetTrigger}
         />
       </Grid>
       <Grid item xs={12} md={1} />

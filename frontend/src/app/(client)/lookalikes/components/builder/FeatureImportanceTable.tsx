@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
   Box,
   Grid,
@@ -25,7 +25,8 @@ export function FeatureImportanceTable<T extends FeatureObject>({
   title,
   onChangeDisplayed,
   columnHeaders = ["Field", "Importance"],
-}: Props<T>) {
+  resetTrigger,
+}: Props<T> & { resetTrigger?: number }) {
   const theme = useTheme();
 
   const allPairs = useMemo<[keyof T, number][]>(
@@ -51,7 +52,13 @@ export function FeatureImportanceTable<T extends FeatureObject>({
     [nonZeroPairs, maxSelectable]
   );
 
+  const initialSelectedRef = useRef<(keyof T)[]>(initialSelected);
+
   const [selectedKeys, setSelectedKeys] = useState<(keyof T)[]>(initialSelected);
+
+  useEffect(() => {
+    setSelectedKeys(initialSelectedRef.current);
+  }, [resetTrigger]);
 
   useEffect(() => {
     setSelectedKeys(initialSelected);
