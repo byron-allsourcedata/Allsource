@@ -23,7 +23,6 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
 from services.insightsUtils import InsightsUtils
-from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
 from schemas.insights import InsightsByCategory, Personal, Financial, Lifestyle, Voter
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
@@ -32,10 +31,8 @@ from enums import TypeOfCustomer, EmailType, BusinessType
 from utils import get_utc_aware_date
 from models.leads_visits import LeadsVisits
 from models.enrichment import EnrichmentUsersEmails, EnrichmentUser, EnrichmentFinancialRecord, EnrichmentLifestyle, \
-    EnrichmentVoterRecord
+    EnrichmentVoterRecord, EnrichmentPersonalProfiles, EnrichmentEmploymentHistory, EnrichmentProfessionalProfile
 from models.enrichment.enrichment_emails import EnrichmentEmails
-from models import EnrichmentUsersEmails, EnrichmentUserId, EnrichmentFinancialRecord, EnrichmentLifestyle, \
-    EnrichmentVoterRecord, ProfessionalProfile, EnrichmentEmploymentHistory
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
 from services.audience_sources import AudienceSourceMath
@@ -722,37 +719,37 @@ def calculate_source_data(db_session: Session, source_uuid: UUID) -> List[Dict]:
                 *all_columns_except(EnrichmentFinancialRecord, "id", "asid"),
                 *all_columns_except(EnrichmentLifestyle, "id", "asid"),
                 *all_columns_except(EnrichmentVoterRecord, "id", "asid"),
-                *all_columns_except(ProfessionalProfile, "id", "asid"),
+                *all_columns_except(EnrichmentProfessionalProfile, "id", "asid"),
                 *all_columns_except(EnrichmentEmploymentHistory, "id", "asid")
             )
             .select_from(AudienceSourcesMatchedPerson)
             .join(
-                EnrichmentUserId,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUserId.id
+                EnrichmentUser,
+                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id
             )
             .outerjoin(
                 EnrichmentPersonalProfiles,
-                EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
+                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentFinancialRecord,
-                EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+                EnrichmentFinancialRecord.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentLifestyle,
-                EnrichmentLifestyle.asid == EnrichmentUserId.asid
+                EnrichmentLifestyle.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentVoterRecord,
-                EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+                EnrichmentVoterRecord.asid == EnrichmentUser.asid
             )
             .outerjoin(
-                ProfessionalProfile,
-                ProfessionalProfile.asid == EnrichmentUserId.asid
+                EnrichmentProfessionalProfile,
+                EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
             )
             .outerjoin(
                 EnrichmentEmploymentHistory,
-                EnrichmentEmploymentHistory.asid == EnrichmentUserId.asid
+                EnrichmentEmploymentHistory.asid == EnrichmentUser.asid
             )
             .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
         )
