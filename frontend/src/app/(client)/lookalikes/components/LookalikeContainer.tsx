@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Table,
   TableBody,
@@ -90,10 +90,10 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
       const updatedItem = response.data;
 
       console.log({updatedItem});
-
+      setLookalikeSize(updatedItem.size);
       return {
-        size_progress: updatedItem.processed_size || 0,
-        size: updatedItem.size || 0,
+        size_progress: updatedItem.processed_size + updatedItem.processed_train_model_size || 0,
+        size: updatedItem.size + updatedItem.train_model_size || 0,
         id: id,
       };
     } catch {
@@ -115,7 +115,7 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
     return sourceOrigin === "pixel" ? "Pixel" : "CSV File";
   };
   
-
+  const [lookalikeSize, setLookalikeSize] = useState(0);
   return (
     <TableContainer
       component={Paper}
@@ -251,9 +251,9 @@ const LookalikeContainer: React.FC<TableContainerProps> = ({ tableData }) => {
                 {dayjs(row.created_date).format("MMM D, YYYY")}
               </TableCell>
               <TableCell>{row.created_by}</TableCell>
-              <TableCell sx={{ position: "relative" }}>
+              <TableCell sx={{ position: "relative", maxWidth: "8.25rem", width: "7.25rem"}}>
               {mergedTotal === mergedProgress && mergedProgress !== 0 ? (
-                mergedTotal.toLocaleString("en-US")
+                lookalikeSize.toLocaleString("en-US")
               ) : (
                 <ProgressBar
                   progress={{

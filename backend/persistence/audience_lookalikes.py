@@ -117,6 +117,20 @@ class AudienceLookalikesPersistence:
             for k, v in audience_feature_importance.items()
         }
 
+        def get_max_size(lookalike_size):
+            if lookalike_size == 'almost_identical':
+                size = 10000
+            elif lookalike_size == 'extremely_similar':
+                size = 50000
+            elif lookalike_size == 'very_similar':
+                size = 100000
+            elif lookalike_size == 'quite_similar':
+                size = 200000
+            elif lookalike_size == 'broad':
+                size = 500000
+
+            return size
+
         sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
         lookalike = AudienceLookalikes(
             name=lookalike_name,
@@ -125,7 +139,8 @@ class AudienceLookalikesPersistence:
             created_date=datetime.utcnow(),
             created_by_user_id=created_by_user_id,
             source_uuid=uuid_of_source,
-            significant_fields=sorted_dict
+            significant_fields=sorted_dict,
+            size=get_max_size(lookalike_size)
         )
         self.db.add(lookalike)
         self.db.commit()
@@ -137,6 +152,8 @@ class AudienceLookalikesPersistence:
             "source_type": sources.source_type,
             "size": lookalike.size,
             "size_progress": lookalike.processed_size,
+            "train_model_size": lookalike.train_model_size,
+            "processed_train_model_size": lookalike.processed_train_model_size,
             "lookalike_size": lookalike.lookalike_size,
             "created_date": lookalike.created_date,
             "created_by": created_by,
@@ -204,6 +221,8 @@ class AudienceLookalikesPersistence:
                 AudienceLookalikes.size,
                 AudienceLookalikes.processed_size,
                 AudienceLookalikes.lookalike_size,
+                AudienceLookalikes.processed_train_model_size,
+                AudienceLookalikes.train_model_size,
                 AudienceSource.name,
                 AudienceSource.source_type,
                 Users.full_name,
