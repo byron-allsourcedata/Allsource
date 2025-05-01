@@ -13,6 +13,7 @@ type GradientBarChartProps = {
   data: BarData[];
   gradientColor?: string;
   sortByPercent?: boolean;
+  rank?: number;
 };
 
 const getGradient = (relativePercent: number, gradientColor: string) => {
@@ -31,6 +32,7 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
   data,
   gradientColor = "98, 178, 253",
   sortByPercent = true,
+  rank
 }) => {
   const [expanded, setExpanded] = useState(false);
   const sortedData = sortByPercent
@@ -52,9 +54,30 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
       }}
     >
-      <Typography className="dashboard-card-heading" mb={2}>
-        {title}
-      </Typography>
+      <Box sx={{
+        width: "100%",
+        justifyContent: 'space-between',
+        display: 'flex',
+        flexDirection: 'row',
+        mb: 2
+      }}>
+        <Typography className="dashboard-card-heading">
+          {title}
+        </Typography>
+        {rank !== undefined && (
+          <Typography
+            component="span"
+            sx={{
+              fontSize: 12,
+              ml: 1,
+              color: "#888",
+              verticalAlign: "middle",
+            }}
+          >
+            #{rank}
+          </Typography>
+        )}
+      </Box>
 
       <Stack spacing={1}>
         {visibleData.map(({ label, percent }, index) => {

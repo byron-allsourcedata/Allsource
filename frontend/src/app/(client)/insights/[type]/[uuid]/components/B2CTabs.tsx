@@ -5,18 +5,20 @@ import B2CPersonal from "./B2CTabComponents/B2CPersonal";
 import B2CLifestyle from "./B2CTabComponents/B2CLifestyle";
 import B2CVoter from "./B2CTabComponents/B2CVoter";
 import B2CFinancial from "./B2CTabComponents/B2CFinancial";
+import { FieldRankMap, FinancialInfo, PersonalInfo, VoterInfo } from "@/types/insights";
 
 interface B2CData {
-  personal_info: Record<string, any>;
-  financial: Record<string, any>;
+  personal_info: PersonalInfo;
+  financial: FinancialInfo;
   lifestyle: Record<string, any>;
-  voter: Record<string, any>;
+  voter: VoterInfo;
 }
 
 interface B2CTabsProps {
   data: B2CData;
+  fieldRanks: FieldRankMap;
 }
-const B2CTabs: React.FC<B2CTabsProps> = ({ data }) => {
+const B2CTabs: React.FC<B2CTabsProps> = ({ data, fieldRanks }) => {
   const [tabIndex, setIndex] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
@@ -136,29 +138,19 @@ const B2CTabs: React.FC<B2CTabsProps> = ({ data }) => {
       >
         <TabPanel value={tabIndex} index={0}>
           <B2CPersonal
-            data={{
-              gender: data.personal_info.gender || {},
-              state: data.personal_info.state || {},
-              religion: data.personal_info.religion || {},
-              age: data.personal_info.age || {},
-              ethnicity: data.personal_info.ethnicity || {},
-              languages: data.personal_info.languages || {},
-              education_level: data.personal_info.education_level || {},
-              have_children: data.personal_info.have_children || {},
-              marital_status: data.personal_info.marital_status || {},
-              homeowner: data.personal_info.homeowner || {},
-            }}
+            data={data.personal_info}
             pets_data={data.lifestyle.own_pets}
+            fieldRanks={fieldRanks}
           />
         </TabPanel>
         <TabPanel value={tabIndex} index={1}>
-          <B2CFinancial data={data.financial} />
+          <B2CFinancial data={data.financial} fieldRanks={fieldRanks} />
         </TabPanel>
         <TabPanel value={tabIndex} index={2}>
-          <B2CLifestyle data={data.lifestyle} />
+          <B2CLifestyle data={data.lifestyle} fieldRanks={fieldRanks} />
         </TabPanel>
         <TabPanel value={tabIndex} index={3}>
-          <B2CVoter data={data.voter} />
+          <B2CVoter data={data.voter} fieldRanks={fieldRanks} />
         </TabPanel>
       </Box>
     </Box>

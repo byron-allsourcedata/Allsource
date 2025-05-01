@@ -7,6 +7,7 @@ interface IconFillIndicatorProps {
   labels: [string, string];
   totalIcons?: number;
   iconSize?: number;
+  rank?: number;
 }
 
 export const IconFillIndicator = ({
@@ -16,6 +17,7 @@ export const IconFillIndicator = ({
   labels,
   totalIcons = 4,
   iconSize = 96,
+  rank
 }: IconFillIndicatorProps) => {
   const fullIcons = Math.floor((percentage / 100) * totalIcons);
   const partialIconPercentage =
@@ -34,9 +36,30 @@ export const IconFillIndicator = ({
         justifyContent: "space-between",
       }}
     >
-      <Typography className="dashboard-card-heading" mb={2}>
-        {title}
-      </Typography>
+      <Box sx={{
+        width: "100%",
+        justifyContent: 'space-between',
+        display: 'flex',
+        flexDirection: 'row',
+        mb: 2
+      }}>
+        <Typography className="dashboard-card-heading">
+          {title}
+        </Typography>
+        {rank !== undefined && (
+          <Typography
+            component="span"
+            sx={{
+              fontSize: 12,
+              ml: 1,
+              color: "#888",
+              verticalAlign: "middle",
+            }}
+          >
+            #{rank}
+          </Typography>
+        )}
+      </Box>
 
       <Box
         display="flex"

@@ -1,42 +1,19 @@
-import { TabPanel } from "@/components/TabPanel";
-import { Box, Tabs, Tab, Typography } from "@mui/material";
-import { useState } from "react";
+import { Box } from "@mui/material";
 import { IconFillIndicator } from "../CustomChart";
 import { GradientBarChart } from "../GradientHorizontalBarChart";
 import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
-import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
 import { PieChartWithLegend } from "../CircularChart";
 import { MultiIconFillIndicator } from "../MultiIconChart";
 import { USHeatMapCard } from "../USMap";
 import { BarData } from "../VerticalGradientBarChart";
+import { mapGender, mapState, mapGenericPercentage, mapPieChart } from "./mappingUtils";
+import { PersonalInfo, BooleanDistribution, FieldRankMap } from "@/types/insights";
 
-import {
-  mapGender,
-  mapState,
-  mapGenericPercentage,
-  mapPieChart,
-  extractSemiCirclePercent,
-} from "./mappingUtils";
-
-type PercentageMap = Record<string, any>;
-type BooleanDistribution = Record<"true" | "false", number>;
-
-interface PersonalInfo {
-  gender: PercentageMap;
-  state: PercentageMap;
-  religion: PercentageMap;
-  age: PercentageMap;
-  ethnicity: PercentageMap;
-  languages: PercentageMap;
-  education_level: PercentageMap;
-  have_children: PercentageMap;
-  marital_status: PercentageMap;
-  homeowner: PercentageMap;
-}
 
 interface B2CPersonalProps {
   data: PersonalInfo;
   pets_data: Record<string, BooleanDistribution>;
+  fieldRanks: FieldRankMap;
 }
 
 function sortAgeGroups(data: BarData[]): BarData[] {
@@ -51,7 +28,7 @@ function sortAgeGroups(data: BarData[]): BarData[] {
 }
 
 
-const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
+const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data, fieldRanks }) => {
   const ownPets = pets_data["own_pets"];
   const trueVal = ownPets?.true ?? 0;
   const falseVal = ownPets?.false ?? 0;
@@ -73,7 +50,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
         <Box
           sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
         >
-          <USHeatMapCard title="Location" regions={mapState(data.state)} />
+          <USHeatMapCard title="Location" regions={mapState(data.state)} rank={fieldRanks["state"]} />
         </Box>
 
         <Box
@@ -83,6 +60,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
             <MultiIconFillIndicator
               title="Gender"
               items={mapGender(data.gender)}
+              rank={fieldRanks["gender"]}
             />
           </Box>
 
@@ -96,6 +74,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
                 { label: "Attended Vocational/Technical", percent: 13 },
                 { label: "Unknown", percent: 7 },
               ]}
+              rank={fieldRanks["education_level"]}
             />
           </Box>
         </Box>
@@ -107,12 +86,14 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
             <GradientBarChart
               title="Ethnicity"
               data={mapGenericPercentage(data.ethnicity)}
+              rank={fieldRanks["ethnicity"]}
             />
           </Box>
           <Box sx={{ display: "flex", width: "60%" }}>
             <VerticalGradientBarChart
               title="Age"
               data={sortAgeGroups(mapGenericPercentage(data.age))}
+              rank={fieldRanks["age"]}
             />
           </Box>
         </Box>
@@ -124,6 +105,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
             <PieChartWithLegend
               title="Home Status"
               data={mapPieChart(data.homeowner)}
+              rank={fieldRanks["homeowner"]}
             />
           </Box>
 
@@ -131,6 +113,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
             <GradientBarChart
               title="Religion"
               data={mapGenericPercentage(data.religion)}
+              rank={fieldRanks["religion"]}
             />
           </Box>
         </Box>
@@ -142,6 +125,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
             <GradientBarChart
               title="Languages"
               data={mapGenericPercentage(data.languages)}
+              rank={fieldRanks["languages"]}
             />
           </Box>
           <Box
@@ -154,6 +138,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
             <PieChartWithLegend
               title="Marital Status"
               data={mapPieChart(data.marital_status)}
+              rank={fieldRanks["marital_status"]}
             />
           </Box>
         </Box>
@@ -165,6 +150,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
             <PieChartWithLegend
               title="Have Children"
               data={mapPieChart(data.have_children)}
+              rank={fieldRanks["has_children"]}
             />
           </Box>
 
@@ -174,6 +160,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
               title="Pets"
               percentage={percentage}
               labels={["Yes", "No"]}
+              rank={fieldRanks["pets"]}
             />
           </Box>
         </Box>
@@ -198,6 +185,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
                 { label: "15-18", percent: 7 },
                 { label: "18+", percent: 3 },
               ]}
+              rank={fieldRanks["children_ages"]}
             />
           </Box>
         </Box>

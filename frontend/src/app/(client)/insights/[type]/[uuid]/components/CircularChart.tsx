@@ -2,7 +2,7 @@ import * as React from "react";
 import { PieChart } from "@mui/x-charts/PieChart";
 import { useDrawingArea } from "@mui/x-charts/hooks";
 import { styled } from "@mui/material/styles";
-import type {} from "@mui/material/themeCssVarsAugmentation";
+import type { } from "@mui/material/themeCssVarsAugmentation";
 import { Typography, Card, CardContent, Box, Stack } from "@mui/material";
 
 interface PieChartDataItem {
@@ -14,6 +14,7 @@ interface PieChartDataItem {
 interface PieChartWithLegendProps {
   title: string;
   data: PieChartDataItem[];
+  rank?: number;
 }
 
 interface StyledTextProps {
@@ -74,6 +75,7 @@ function PieCenterLabel({
 export const PieChartWithLegend: React.FC<PieChartWithLegendProps> = ({
   title,
   data,
+  rank
 }) => {
   const sortedData = [...data].sort((a, b) => b.value - a.value);
   const maxItem = sortedData[0];
@@ -98,7 +100,30 @@ export const PieChartWithLegend: React.FC<PieChartWithLegendProps> = ({
       }}
     >
       <CardContent>
-        <Typography className="dashboard-card-heading">{title}</Typography>
+        <Box sx={{
+          width: "100%",
+          justifyContent: 'space-between',
+          display: 'flex',
+          flexDirection: 'row',
+          mb: 2
+        }}>
+          <Typography className="dashboard-card-heading">
+            {title}
+          </Typography>
+          {rank !== undefined && (
+            <Typography
+              component="span"
+              sx={{
+                fontSize: 12,
+                ml: 1,
+                color: "#888",
+                verticalAlign: "middle",
+              }}
+            >
+              #{rank}
+            </Typography>
+          )}
+        </Box>
         <Box sx={{ display: "flex", alignItems: "center" }}>
           <PieChart
             colors={colors}

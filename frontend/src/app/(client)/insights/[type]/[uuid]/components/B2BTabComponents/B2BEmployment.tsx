@@ -3,23 +3,15 @@ import { GradientBarChart } from "../GradientHorizontalBarChart";
 import { USHeatMapCard } from "../USMap";
 
 import { mapState, mapGenericPercentage } from "./mappingUtils";
+import { EmploymentInfo, FieldRankMap } from "@/types/insights";
 
-type PercentageMap = Record<string, any>;
-type BooleanDistribution = Record<"true" | "false", number>;
-
-type EmploymentInfo = {
-  job_location: PercentageMap;
-  number_of_jobs: PercentageMap;
-  company_name: PercentageMap;
-  job_tenure: PercentageMap;
-  job_title: PercentageMap;
-};
 
 type B2BEmploymentProps = {
   data: EmploymentInfo;
+  fieldRanks: FieldRankMap;
 };
 
-const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data }) => {
+const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
   return (
     <Box>
       <Box
@@ -37,6 +29,7 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data }) => {
           <USHeatMapCard
             title="Job Location"
             regions={mapState(data.job_location)}
+            rank={fieldRanks["job_location"]}
           />
         </Box>
 
@@ -47,6 +40,7 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data }) => {
             <GradientBarChart
               title="№ of jobs(last 5 years)"
               data={mapGenericPercentage(data.number_of_jobs)}
+              rank={fieldRanks["number_of_jobs"]}
             />
           </Box>
 
@@ -55,6 +49,7 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data }) => {
               title="Company Name"
               data={mapGenericPercentage(data.company_name)}
               gradientColor="155, 223, 196"
+              rank={fieldRanks["company_name"]}
             />
           </Box>
         </Box>
@@ -67,6 +62,7 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data }) => {
               title="Job Tenure"
               data={mapGenericPercentage(data.job_tenure)}
               gradientColor="249, 155, 171"
+              rank={fieldRanks["job_tenure"]}
             />
           </Box>
 
@@ -74,6 +70,7 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data }) => {
             <GradientBarChart
               title="Job Title"
               data={mapGenericPercentage(data.job_title)}
+              rank={fieldRanks["job_title"]}
             />
           </Box>
         </Box>
