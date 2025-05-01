@@ -109,7 +109,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
             .distinct(EnrichmentUserContact.asid)
             .all()
         ]
-    elif column_name == "personal_email_validation_status" or column_name == "personal_email_last_seen" or column_name == "business_email_validation_status" or column_name == "business_email_last_seen_date":
+    elif validation_type == "mx":
         enrichment_users = [
             {
                 "audience_smart_person_id": user.audience_smart_person_id,

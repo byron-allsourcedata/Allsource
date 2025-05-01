@@ -87,9 +87,10 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                                 verified_email=personal_email
                             )
                         )
+                else:
+                    failed_ids.append(person_id)
                     continue
                 
-                failed_ids.append(person_id)
             if validation_type == 'personal_email_last_seen':
                 if (datetime.strptime(personal_email_last_seen, "%d/%m/%Y") < datetime.now() - timedelta(days=30)) and not personal_email_validation_status in ('', None, 'Invalid', 'UNKNOWN'):
                     verified_emails.append(
