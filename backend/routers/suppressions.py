@@ -124,6 +124,13 @@ async def process_based_urls(suppression_request: SuppressionRequest,
                              user: User = Depends(check_user_authorization)):
     return suppression_service.process_based_urls(suppression_request.data, domain.id)
 
+@router.post("/contacts-days")
+async def save_suppress_contact_days(suppression_request: SuppressionRequest,
+                             suppression_service: SuppressionService = Depends(get_suppression_service),
+                             domain=Depends(check_domain),
+                             user: User = Depends(check_user_authorization)):
+    return suppression_service.save_suppress_contact_days(suppression_request.data, domain.id)
+
 
 @router.post("/collection-rules")
 async def process_page_views_limit(collection_rule: CollectionRuleRequest,

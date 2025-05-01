@@ -33,7 +33,8 @@ class AudienceInsightsPersistence:
         source = self.db.query(
             AudienceSource.insights,
             AudienceSource.name,
-            AudienceSource.target_schema
+            AudienceSource.target_schema,
+            AudienceSource.significant_fields
         ).filter(
             AudienceSource.id == uuid_of_source,
             AudienceSource.user_id == user_id
@@ -43,15 +44,17 @@ class AudienceInsightsPersistence:
             return {
                 "insights": source.insights,
                 "name": source.name,
-                "audience_type": source.target_schema
+                "audience_type": source.target_schema,
+                "significant_fields": source.significant_fields
             }
         elif source:
             return {"insights": {},
                     "name": source.name,
-                    "audience_type": source.target_schema
+                    "audience_type": source.target_schema,
+                    "significant_fields": source.significant_fields
             }
 
-        return {"insights": {}, "name": "", "audience_type": ""}
+        return {"insights": {}, "name": "", "audience_type": "", "significant_fields": {}}
 
     def get_lookalike_insights_info(self, uuid_of_lookalike: UUID, user_id: int) -> dict:
         lookalike = self.db.query(

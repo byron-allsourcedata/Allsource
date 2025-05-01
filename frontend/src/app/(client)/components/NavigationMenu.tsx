@@ -397,10 +397,10 @@ const NavigationMenu: React.FC<NavigationProps> = ({
             onClick={handleTogglePixel}
             sx={{
               ...(isActive("/pixel") ||
-              isActive("/dashboard") ||
-              isActive("/leads") ||
-              isActive("/company") ||
-              isActive("/supression")
+                isActive("/dashboard") ||
+                isActive("/leads") ||
+                isActive("/company") ||
+                isActive("/supression")
                 ? navigationmenuStyles.activeItem
                 : {}),
               ...navigationmenuStyles.mobileDrawerList,
@@ -513,8 +513,14 @@ const NavigationMenu: React.FC<NavigationProps> = ({
             <ListItemText primary="Lookalikes" />
           </ListItem>
           <ListItem
+            button
             onClick={() => handleNavigation("/insights")}
-            sx={isActive("/insights") ? navigationmenuStyles.activeItem : {}}
+            sx={{
+              ...(isActive("/insights")
+                ? navigationmenuStyles.activeItem
+                : {}),
+              ...navigationmenuStyles.mobileDrawerList,
+            }}
           >
             <ListItemIcon>
               <InsightsIcon />

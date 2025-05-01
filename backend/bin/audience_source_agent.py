@@ -5,7 +5,8 @@ import asyncio
 import functools
 import json
 import pytz
-from collections import defaultdict, Counter
+from uuid import UUID
+from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
 from typing import List, Union, Optional, Any, Dict
@@ -13,6 +14,7 @@ import boto3
 from sqlalchemy import update, func
 from aio_pika import IncomingMessage, Connection
 from sqlalchemy import create_engine
+from dataclasses import asdict
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
@@ -26,20 +28,26 @@ from schemas.insights import InsightsByCategory, Personal, Financial, Lifestyle,
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users import FiveXFiveUser
-from enums import TypeOfCustomer, ProccessDataSyncResult, EmailType, BusinessType
-from utils import get_utc_aware_date, get_valid_email_without_million
+from enums import TypeOfCustomer, EmailType, BusinessType
+from utils import get_utc_aware_date
 from models.leads_visits import LeadsVisits
 from models.enrichment.emails import Email
 from models.enrichment.emails_enrichment import EmailEnrichment
 from models.enrichment import EnrichmentUsersEmails, EnrichmentUser, EnrichmentFinancialRecord, EnrichmentLifestyle, \
     EnrichmentVoterRecord
 from models.enrichment.enrichment_emails import EnrichmentEmails
+from models import EnrichmentUsersEmails, EnrichmentUserId, EnrichmentFinancialRecord, EnrichmentLifestyle, \
+    EnrichmentVoterRecord, ProfessionalProfile, EnrichmentEmploymentHistory
+from models.enrichment_emails import EnrichmentEmails
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
 from services.audience_sources import AudienceSourceMath
 from models.audience_sources import AudienceSource
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from services.similar_audiences import SimilarAudienceService
+from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
+from services.lookalikes import AudienceLookalikesService
 
 load_dotenv()
 
@@ -703,7 +711,108 @@ async def normalize_persons_failed_leads(
         f"from {data_for_normalize.all_size} matched records."
     )
 
-async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection):
+def calculate_source_data(db_session: Session, source_uuid: UUID) -> List[Dict]:
+        def all_columns_except(model, *skip: str):
+            return tuple(
+                c for c in model.__table__.c
+                if c.name not in skip
+            )
+
+        q = (
+            db_session.query(
+                AudienceSourcesMatchedPerson.value_score.label("customer_value"),
+                *all_columns_except(EnrichmentPersonalProfiles, "id", "asid"),
+                *all_columns_except(EnrichmentFinancialRecord, "id", "asid"),
+                *all_columns_except(EnrichmentLifestyle, "id", "asid"),
+                *all_columns_except(EnrichmentVoterRecord, "id", "asid"),
+                *all_columns_except(ProfessionalProfile, "id", "asid"),
+                *all_columns_except(EnrichmentEmploymentHistory, "id", "asid")
+            )
+            .select_from(AudienceSourcesMatchedPerson)
+            .join(
+                EnrichmentUserId,
+                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUserId.id
+            )
+            .outerjoin(
+                EnrichmentPersonalProfiles,
+                EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid
+            )
+            .outerjoin(
+                EnrichmentFinancialRecord,
+                EnrichmentFinancialRecord.asid == EnrichmentUserId.asid
+            )
+            .outerjoin(
+                EnrichmentLifestyle,
+                EnrichmentLifestyle.asid == EnrichmentUserId.asid
+            )
+            .outerjoin(
+                EnrichmentVoterRecord,
+                EnrichmentVoterRecord.asid == EnrichmentUserId.asid
+            )
+            .outerjoin(
+                ProfessionalProfile,
+                ProfessionalProfile.asid == EnrichmentUserId.asid
+            )
+            .outerjoin(
+                EnrichmentEmploymentHistory,
+                EnrichmentEmploymentHistory.asid == EnrichmentUserId.asid
+            )
+            .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
+        )
+
+        rows = q.all()
+
+        def _row2dict(row) -> Dict[str, Any]:
+            d = dict(row._mapping)
+            updated_dict = {}
+            for k, v in d.items():
+                if k == "age" and v:
+                    updated_dict[k] = int(v.lower) if v.lower is not None else None
+                elif k == "zip_code5" and v:
+                    updated_dict[k] = str(v)
+                elif k == "state_abbr":
+                    updated_dict["state"] = v
+                elif isinstance(v, Decimal):
+                    updated_dict[k] = str(v)
+                else:
+                    updated_dict[k] = v
+            return updated_dict
+
+        result: List[Dict[str, Any]] = [_row2dict(r) for r in rows]
+        return result
+
+def to_dict(obj):
+    return obj if isinstance(obj, dict) else obj.__dict__
+
+def extract_non_zero_values(*insights):
+    combined = {}
+    
+    for insight in insights:
+        for category, fields in to_dict(insight).items():
+            if isinstance(fields, dict):
+                for key, value in fields.items():
+                    if value != 0:
+                        combined[key] = value
+            else:
+                if fields != 0:
+                    combined[category] = fields
+
+    return combined
+
+def calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service):
+    audience_source_data = calculate_source_data(db_session=db_session, source_uuid=source_id)
+    b2c_insights, b2b_insights, other = audience_lookalikes_service.calculate_insights(audience_data=audience_source_data, similar_audience_service=similar_audience_service)
+    combined_insights = extract_non_zero_values(b2c_insights, b2b_insights, other)
+    db_session.execute(
+            update(AudienceSource)
+            .where(AudienceSource.id == source_id)
+            .values(
+                significant_fields=combined_insights
+            )
+        )
+    db_session.commit()
+
+async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection, similar_audience_service: SimilarAudienceService, audience_lookalikes_service: AudienceLookalikesService):
     try:
         message_body_dict = json.loads(message.body)
         message_body = MessageBody(**message_body_dict)
@@ -723,6 +832,9 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         )
 
         if type == 'emails' and data_for_normalize:
+            if data_for_normalize.matched_size == data_for_normalize.all_size:
+                calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service)
+                
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
                 await normalize_persons_customer_conversion(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
                                                             db_session=db_session, source_schema=audience_source.target_schema)
@@ -745,7 +857,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         if type == 'user_ids':
             logging.info(f"Processing {len(persons)} user_id records.")
             count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id,
-                                          audience_source=audience_source)
+                                            audience_source=audience_source)
 
         if type == 'emails':
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
@@ -782,7 +894,9 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 existing=audience_source.insights,
                 new_insights=new_insights
             )
-            
+            if type == 'user_ids':
+                calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service)
+        
             db_session.execute(
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)
@@ -845,8 +959,10 @@ async def main():
             name=AUDIENCE_SOURCES_MATCHING,
             durable=True,
         )
+        similar_audience_service = SimilarAudienceService(audience_data_normalization_service=AudienceDataNormalizationService())
+        audience_lookalikes_service = AudienceLookalikesService(lookalikes_persistence_service=None)
         await queue.consume(
-            functools.partial(aud_sources_matching, connection=connection, db_session=db_session)
+            functools.partial(aud_sources_matching, connection=connection, db_session=db_session, similar_audience_service=similar_audience_service, audience_lookalikes_service=audience_lookalikes_service)
         )
 
         await asyncio.Future()
