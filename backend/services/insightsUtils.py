@@ -36,6 +36,11 @@ class InsightsUtils:
 
     @staticmethod
     def process_insights_for_asids(insights, asids: List[uuid.UUID], db_session: Session):
+        is_invalid = lambda val: (
+                val is None
+                or str(val).upper() in ('UNKNOWN', 'U')
+                or val == 2
+        )
         # 3) PERSONAL
         personal_fields = [
             "gender", "state", "religion", "homeowner",
@@ -64,13 +69,7 @@ class InsightsUtils:
             for field, val in zip(personal_fields, row):
                 if field == "age":
                     key = InsightsUtils.bucket_age(val)
-                elif val is None or str(val).upper() == 'UNKNOWN':
-                    # if field in ("have_children", "gender", "marital_status", "homeowner"):
-                    #     key = "2"
-                    # elif field in ("religion", "ethnicity", "state"):
-                    #     key = "Other"
-                    # else:
-                    #     key = "None"
+                elif is_invalid(val):
                     continue
                 else:
                     key = str(val)
@@ -108,7 +107,7 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(financial_fields, row):
-                if val is None or str(val).upper() == 'UNKNOWN':
+                if is_invalid(val):
                     continue
                 elif field == "credit_cards":
                     raw = val.strip("[]")
@@ -161,7 +160,7 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(lifestyle_fields, row):
-                if val is None or str(val).upper() == 'UNKNOWN':
+                if is_invalid(val):
                     continue
 
                 key = str(val).lower()
@@ -183,7 +182,7 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(voter_fields, row):
-                if val is None or str(val).upper() == 'UNKNOWN':
+                if is_invalid(val):
                     continue
                 key = str(val).lower()
                 voter_cts[field][key] += 1
@@ -215,7 +214,7 @@ class InsightsUtils:
 
         for row in prof_rows:
             for field, val in zip(prof_fields, row):
-                if val is None or str(val).upper() == "UNKNOWN" or str(val) == "":
+                if is_invalid(val):
                     continue
                 key = str(val).lower()
                 prof_cts[field][key] += 1
@@ -243,7 +242,7 @@ class InsightsUtils:
 
         for row in emp_rows:
             for field, val in zip(emp_fields, row):
-                if val is None or (isinstance(val, str) and val.upper() == "UNKNOWN"):
+                if is_invalid(val):
                     continue
                 key = str(val).lower()
                 emp_cts[field][key] += 1
