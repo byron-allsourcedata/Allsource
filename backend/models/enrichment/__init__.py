@@ -9,8 +9,6 @@ from .enrichment_user_contact import EnrichmentUserContact
 from .enrichment_personal_profiles import EnrichmentPersonalProfiles
 from .enrichment_voter_record import EnrichmentVoterRecord
 from .enrichment_emails import EnrichmentEmails
-from .emails import Email
-from .emails_enrichment import EmailEnrichment
 from .enrichment_professional_profiles import EnrichmentProfessionalProfile
 
 __all__ = [
@@ -23,8 +21,6 @@ __all__ = [
     "EnrichmentModels",
     "EnrichmentUserContact",
     "EnrichmentVoterRecord",
-    "Email",
-    "EmailEnrichment",
     "EnrichmentPersonalProfiles",
     "EnrichmentEmails",
     "EnrichmentProfessionalProfile"

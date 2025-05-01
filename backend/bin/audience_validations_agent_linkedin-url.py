@@ -26,8 +26,6 @@ from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_linkedin_verification import AudienceLinkedinVerification
 from models.enrichment.enrichment_employment_history import EnrichmentEmploymentHistory
-from models.enrichment.emails_enrichment import EmailEnrichment
-from models.enrichment.emails import Email
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 

@@ -31,14 +31,11 @@ from models.five_x_five_users import FiveXFiveUser
 from enums import TypeOfCustomer, EmailType, BusinessType
 from utils import get_utc_aware_date
 from models.leads_visits import LeadsVisits
-from models.enrichment.emails import Email
-from models.enrichment.emails_enrichment import EmailEnrichment
 from models.enrichment import EnrichmentUsersEmails, EnrichmentUser, EnrichmentFinancialRecord, EnrichmentLifestyle, \
     EnrichmentVoterRecord
 from models.enrichment.enrichment_emails import EnrichmentEmails
 from models import EnrichmentUsersEmails, EnrichmentUserId, EnrichmentFinancialRecord, EnrichmentLifestyle, \
     EnrichmentVoterRecord, ProfessionalProfile, EnrichmentEmploymentHistory
-from models.enrichment_emails import EnrichmentEmails
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
 from services.audience_sources import AudienceSourceMath

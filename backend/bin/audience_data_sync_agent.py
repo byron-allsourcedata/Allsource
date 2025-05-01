@@ -12,8 +12,6 @@ from uuid import UUID
 from sqlalchemy import create_engine
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
-from models.enrichment.emails import Email
-from models.enrichment.emails_enrichment import EmailEnrichment
 from models.enrichment.enrichment_users import EnrichmentUser
 from utils import get_utc_aware_date
 from models.audience_smarts_persons import AudienceSmartPerson

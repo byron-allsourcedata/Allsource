@@ -23,7 +23,7 @@ from .audience_sources import AudienceSource
 from .audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from .base import Base
 from .data_sync_imported_leads import DataSyncImportedLead
-from .enrichment import (Email, EmailEnrichment, EnrichmentEmploymentHistory, EnrichmentFinancialRecord,
+from .enrichment import (EnrichmentEmploymentHistory, EnrichmentFinancialRecord,
                          EnrichmentLifestyle, EnrichmentLookalikeScore, EnrichmentModels, EnrichmentUserContact,
                          EnrichmentUser, EnrichmentVoterRecord, EnrichmentUsersEmails, EnrichmentPersonalProfiles, EnrichmentEmails)
 
@@ -100,8 +100,6 @@ __all__ = [
     "AudienceSourcesMatchedPerson",
     "Base",
     "DataSyncImportedLead",
-    "Email",
-    "EmailEnrichment",
     "EnrichmentEmploymentHistory",
     "EnrichmentFinancialRecord",
     "EnrichmentLifestyle",
