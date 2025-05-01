@@ -1,6 +1,8 @@
 import { Box, Typography } from "@mui/material";
 import Link from "next/link";
 import FeatureListTable, { FeatureObject } from "../FeatureListTable";
+import { categorizeFields } from "./categorizeFields";
+import { SignificantFields } from '../../page';
 
 export interface CalculationResults {
   [key: string]: number;
@@ -98,99 +100,12 @@ export interface RealEstateResults extends FeatureObject {
   TaxAmount: number;
 }
 
-// --- Пример «псевдо‑данных» ---
-const personalData: CalculationResults = {
-  PersonExactAge: 0.18,
-  PersonGender: 0.12,
-  EstimatedHouseholdIncomeCode: 0.22,
-  EstimatedCurrentHomeValueCode: 0.1,
-  HomeownerStatus: 0.05,
-  HasChildren: 0.08,
-  NumberOfChildren: 0.02,
-  CreditRating: 0.06,
-  NetWorthCode: 0.04,
-  HasCreditCard: 0.03,
-  LengthOfResidenceYears: 0.05,
-  MaritalStatus: 0.02,
-  OccupationGroupCode: 0.01,
-  IsBookReader: 0.02,
-  IsOnlinePurchaser: 0.25,
-  IsTraveler: 0.2,
-  ZipCode5: 0,
-  ZipCode4: 0,
-  ZipCode3: 0,
-  state_name: 0,
-  state_city: 0,
+type PredictableFieldsTabProps = {
+  data: SignificantFields
 };
 
-const financialData: FinancialResults = {
-  CreditScore: 0.3,
-  IncomeRange: 0.2,
-  NetWorth: 0.15,
-  CreditRating: 0.1,
-  CreditCards: 0.05,
-  BankCard: 0.03,
-  CreditCardPremium: 0.02,
-  CreditCardNewIssue: 0.01,
-  CreditLines: 0.04,
-  CreditRangeOfNewCredit: 0.02,
-  Donor: 0.03,
-  Investor: 0.02,
-  MailOrderDonor: 0.03,
-};
-
-const lifestylesData: LifestylesResults = {
-  Pets: 0.12,
-  CookingEnthusiast: 0.08,
-  Travel: 0.18,
-  MailOrderBuyer: 0.1,
-  OnlinePurchaser: 0.22,
-  BookReader: 0.05,
-  HealthAndBeauty: 0.07,
-  Fitness: 0.09,
-  OutdoorEnthusiast: 0.06,
-  TechEnthusiast: 0.1,
-  DIY: 0.04,
-  Gardening: 0.03,
-  AutomotiveBuff: 0.02,
-  GolfEnthusiasts: 0.01,
-  BeautyCosmetics: 0.02,
-  Smoker: 0.01,
-};
-
-const voterData: VoterResults = {
-  PartyAffiliation: 0.5,
-  VotingPropensity: 0.45,
-  CongressionalDistrict: 0.05,
-};
-
-const realEstateData: RealEstateResults = {
-  URN: 0.05,
-  SiteStreetAddress: 0.02,
-  SiteCity: 0.03,
-  SiteState: 0.04,
-  SiteZipCode: 0.01,
-  OwnerFullName: 0.02,
-  EstimatedHomeValue: 0.1,
-  HomeValueNumeric: 0.08,
-  Equity: 0.06,
-  EquityNumeric: 0.05,
-  MortgageAmount: 0.04,
-  MortgageDate: 0.03,
-  LenderName: 0.02,
-  PurchasePrice: 0.07,
-  PurchaseDate: 0.03,
-  OwnerOccupied: 0.05,
-  LandUseCode: 0.01,
-  YearBuilt: 0.02,
-  LotSizeSqFt: 0.01,
-  BuildingTotalSqFt: 0.01,
-  AssessedValue: 0.02,
-  MarketValue: 0.03,
-  TaxAmount: 0.01,
-};
-
-const Categories: React.FC = () => {
+const Categories: React.FC<PredictableFieldsTabProps> = ({ data }) => {
+  const categorized = categorizeFields(data);
   return (
     <Box sx={{ width: "100%", display: "flex" }}>
       <Box
@@ -206,27 +121,23 @@ const Categories: React.FC = () => {
       >
         <FeatureListTable
           title="Personal Profile"
-          features={personalData}
+          features={categorized.personal}
           columnHeaders={["Attribute name", "Predictable value"]}
+          first={true}
         />
         <FeatureListTable
           title="Financial"
-          features={financialData}
+          features={categorized.financial}
           columnHeaders={["Attribute name", "Predictable value"]}
         />
         <FeatureListTable
           title="Lifestyles"
-          features={lifestylesData}
+          features={categorized.lifestyle}
           columnHeaders={["Attribute name", "Predictable value"]}
         />
         <FeatureListTable
           title="Voter"
-          features={voterData}
-          columnHeaders={["Attribute name", "Predictable value"]}
-        />
-        <FeatureListTable
-          title="Real Estate"
-          features={realEstateData}
+          features={categorized.voter}
           columnHeaders={["Attribute name", "Predictable value"]}
         />
       </Box>
@@ -282,10 +193,6 @@ const Categories: React.FC = () => {
           <Typography className="paragraph">
             - Voter: Political leanings, voting likelihood, and key issues of
             influence.
-          </Typography>
-          <Typography className="paragraph">
-            - Real Estate: Homeownership status, property value estimates, and
-            relocation probability.
           </Typography>
         </Box>
         <Typography className="paragraph">

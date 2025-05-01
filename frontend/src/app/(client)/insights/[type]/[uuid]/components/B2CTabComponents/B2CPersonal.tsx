@@ -8,6 +8,7 @@ import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
 import { PieChartWithLegend } from "../CircularChart";
 import { MultiIconFillIndicator } from "../MultiIconChart";
 import { USHeatMapCard } from "../USMap";
+import { BarData } from "../VerticalGradientBarChart";
 
 import {
   mapGender,
@@ -38,12 +39,26 @@ interface B2CPersonalProps {
   pets_data: Record<string, BooleanDistribution>;
 }
 
+function sortAgeGroups(data: BarData[]): BarData[] {
+  const extractRangeStart = (label: string): number => {
+    const match = label.match(/^(\d+)-/);
+    return match ? parseInt(match[1], 10) : Number.MAX_SAFE_INTEGER;
+  };
+
+  return [...data].sort((a, b) => {
+    return extractRangeStart(a.label) - extractRangeStart(b.label);
+  });
+}
+
+
 const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
   const ownPets = pets_data["own_pets"];
   const trueVal = ownPets?.true ?? 0;
   const falseVal = ownPets?.false ?? 0;
   const total = trueVal + falseVal;
   const percentage = total > 0 ? Math.round((trueVal / total) * 100) : 0;
+
+
   return (
     <Box>
       <Box
@@ -97,7 +112,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
           <Box sx={{ display: "flex", width: "60%" }}>
             <VerticalGradientBarChart
               title="Age"
-              data={mapGenericPercentage(data.age)}
+              data={sortAgeGroups(mapGenericPercentage(data.age))}
             />
           </Box>
         </Box>

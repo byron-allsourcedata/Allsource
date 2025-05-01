@@ -200,36 +200,36 @@ const CustomCards: React.FC<CustomCardsProps> = ({
   pixelCardActive,
 }) => {
   return (
-    <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
-      <Grid item xs={12} md={2.4}>
+    <Grid container wrap="nowrap" sx={{ flexWrap: 'nowrap', }} spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
+      <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
         <PixelContactsCard
           value={values.pixel_contacts}
           onClick={() => onCardClick("Pixel Contacts")}
           isActive={selectedCard === "Pixel Contacts" || pixelCardActive}
         />
       </Grid>
-      <Grid item xs={12} md={2.4}>
+      <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
         <SourcesCard
           value={values.sources}
           onClick={() => onCardClick("Sources")}
           isActive={selectedCard === "Sources"}
         />
       </Grid>
-      <Grid item xs={12} md={2.4}>
+      <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
         <LookalikesCard
           value={values.lookalikes}
           onClick={() => onCardClick("Lookalikes")}
           isActive={selectedCard === "Lookalikes"}
         />
       </Grid>
-      <Grid item xs={12} md={2.4}>
+      <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
         <SmartAudienceCard
           value={values.smart_audience}
           onClick={() => onCardClick("Smart Audience")}
           isActive={selectedCard === "Smart Audience"}
         />
       </Grid>
-      <Grid item xs={12} md={2.4}>
+      <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
         <DataSyncCard
           value={values.data_sync}
           onClick={() => onCardClick("Data sync")}

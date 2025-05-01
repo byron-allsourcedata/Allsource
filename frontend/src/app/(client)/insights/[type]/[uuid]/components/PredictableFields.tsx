@@ -5,15 +5,13 @@ import FeatureListTable, { FeatureObject } from "./FeatureListTable";
 import Link from "next/link";
 import Categories from "./PredictableFieldsComponents/Categories";
 import All from "./PredictableFieldsComponents/All";
+import { SignificantFields } from '../page'
 
-interface B2CData {
-  personal_info: Record<string, any>;
-  financial: Record<string, any>;
-  lifestyle: Record<string, any>;
-  voter: Record<string, any>;
-}
+type PredictableFieldsTabProps = {
+  data: SignificantFields;
+};
 
-const PredictableFields: React.FC = () => {
+const PredictableFields: React.FC<PredictableFieldsTabProps> = ({ data }) => {
   const [tabIndex, setIndex] = useState(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
@@ -72,7 +70,7 @@ const PredictableFields: React.FC = () => {
             }}
           >
             <Tab
-              label="Categories"
+              label="All"
               className="tab-filled-button"
               sx={{
                 mr: 2,
@@ -84,7 +82,7 @@ const PredictableFields: React.FC = () => {
               }}
             />
             <Tab
-              label="All"
+              label="Categories"
               className="tab-filled-button"
               sx={{
                 mr: 2,
@@ -107,12 +105,12 @@ const PredictableFields: React.FC = () => {
         }}
       >
         <TabPanel value={tabIndex} index={0}>
-          <Box sx={{ width: "100%", display: "flex" }}>
-            <Categories />
-          </Box>
+          <All data={data} />
         </TabPanel>
         <TabPanel value={tabIndex} index={1}>
-          <All />
+          <Box sx={{ width: "100%", display: "flex" }}>
+            <Categories data={data} />
+          </Box>
         </TabPanel>
       </Box>
     </Box>

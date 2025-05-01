@@ -12,6 +12,7 @@ type GradientBarChartProps = {
   title: string;
   data: BarData[];
   gradientColor?: string;
+  sortByPercent?: boolean;
 };
 
 const getGradient = (relativePercent: number, gradientColor: string) => {
@@ -29,9 +30,12 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
   title,
   data,
   gradientColor = "98, 178, 253",
+  sortByPercent = true,
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const sortedData = [...data].sort((a, b) => b.percent - a.percent);
+  const sortedData = sortByPercent
+    ? [...data].sort((a, b) => b.percent - a.percent)
+    : data;
   const maxPercent = Math.max(...sortedData.map((d) => d.percent)) || 1;
 
   const visibleData = expanded

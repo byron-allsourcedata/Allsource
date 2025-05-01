@@ -3,7 +3,7 @@
 import React from "react";
 import { Box, Typography, Stack } from "@mui/material";
 
-type BarData = {
+export type BarData = {
   label: string;
   percent: number;
 };

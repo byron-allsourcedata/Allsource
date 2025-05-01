@@ -7,7 +7,7 @@ from sqlalchemy import or_
 from bs4 import BeautifulSoup
 import requests
 
-from enums import BaseEnum, SendgridTemplate
+from enums import BaseEnum, SendgridTemplate, PixelStatus
 from models.subscriptions import UserSubscriptions
 from models.users import Users
 from models.users_domains import UserDomains
@@ -113,16 +113,16 @@ class PixelInstallationService:
         return result
     
     def check_pixel_installed_via_api(self, pixelClientId, url):
-        result = {'success': False}
+        result = {'status': PixelStatus.INCORRECT_PROVIDER_ID.value}
         domain = self.db.query(UserDomains).filter(UserDomains.data_provider_id == pixelClientId).first()
         if domain:
-            domain.is_pixel_installed = True
-            domain.domain = normalize_url(url)
-            self.db.commit()
+            result['status'] = PixelStatus.PIXEL_MISMATCH.value
+            if domain.domain == normalize_url(url):
+                result['status'] = PixelStatus.PIXEL_CODE_INSTALLED.value
+                domain.is_pixel_installed = True
+                self.db.commit()
             user = self.db.query(Users).filter(Users.id == domain.user_id).first()
-            if user:
-                result['success'] = True
-                result['user_id'] = user.id
+            result['user_id'] = user.id
         return result
     
     

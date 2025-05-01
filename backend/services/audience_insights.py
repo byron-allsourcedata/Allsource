@@ -24,6 +24,7 @@ class AudienceInsightsService:
         response = self._build_response(raw_data.get("insights", {}))
         response["name"] = raw_data.get("name", "")
         response["audience_type"] = raw_data.get("audience_type", "")
+        response["significant_fields"] = raw_data.get("significant_fields", "")
         return response
 
     def get_lookalike_insights(self, lookalike_uuid: UUID, user: dict) -> dict:
@@ -31,6 +32,7 @@ class AudienceInsightsService:
         response = self._build_response(raw_data.get("insights", {}))
         response["name"] = raw_data.get("name", "")
         response["audience_type"] = raw_data.get("audience_type", "")
+        response["significant_fields"] = raw_data.get("significant_fields", {})
         return response
 
     def get_data_sources(self, user: dict) -> dict:
