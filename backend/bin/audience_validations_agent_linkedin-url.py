@@ -33,6 +33,7 @@ load_dotenv()
 
 AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
+AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 REVERSE_CONTACT_API_KEY = os.getenv('REVERSE_CONTACT_API_KEY')
 REVERSE_CONTACT_API_URL = os.getenv('REVERSE_CONTACT_API_URL')
 
@@ -41,7 +42,8 @@ COLUMN_MAPPING = {
     'business_email_validation_status': 'mx',
     'personal_email_last_seen': 'recency',
     'business_email_last_seen_date': 'recency',
-    'mobile_phone_dnc': 'dnc_filter'
+    'mobile_phone_dnc': 'dnc_filter',
+    'job_validation': 'job_validation'
 }
 
 def setup_logging(level):
@@ -67,174 +69,147 @@ async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
         logging.error(f"Error sending SSE: {e}")
 
 
-async def process_rmq_message(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
+async def process_rmq_message(
+    message: IncomingMessage,
+    db_session: Session,
+    connection: RabbitMQConnection,
+):
     try:
-        message_body = json.loads(message.body)
-        user_id = message_body.get("user_id")
-        aud_smart_id = message_body.get("aud_smart_id")
-        batch = message_body.get("batch")
-        validation_type = message_body.get("validation_type")
-        count_persons_before_validation = message_body.get("count_persons_before_validation")
-        is_last_validation_in_type = message_body.get("is_last_validation_in_type")
-        is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation") 
+        body = json.loads(message.body)
+        user_id = body.get("user_id")
+        aud_smart_id = body.get("aud_smart_id")
+        batch = body.get("batch", [])
+        validation_type = body.get("validation_type")
+        expected_count = body.get("count_persons_before_validation", -1)
 
-        failed_ids = []
-        verifications = []
+        failed_ids: list[int] = []
+        verifications: list[AudienceLinkedinVerification] = []
 
-        for record in batch:
-            person_id = record.get("audience_smart_person_id")
-            company_name = record.get("company_name")
-            job_title = record.get("job_title")
-            linkedin_url = record.get("linkedin_url")
+        for rec in batch:
+            pid = rec.get("audience_smart_person_id")
+            name = rec.get("company_name")
+            title = rec.get("job_title")
+            url = rec.get("linkedin_url")
+
+            if not (url and title and name):
+                failed_ids.append(pid)
+                continue
+            
+            ev = (
+                db_session.query(AudienceLinkedinVerification)
+                .filter_by(linkedin_url=url)
+                .first()
+            )
 
             is_verify = False
-
-            if not linkedin_url or not job_title or not company_name:
-                failed_ids.append(person_id)
-                continue
-                
-
-            existing_verification = db_session.query(AudienceLinkedinVerification).filter_by(linkedin_url=linkedin_url).first()
-
-            if not existing_verification:
-                response = requests.get(
+            if ev is None:
+                resp = requests.get(
                     REVERSE_CONTACT_API_URL,
-                    params={
-                        "linkedInUrl": linkedin_url,
-                        "apikey": REVERSE_CONTACT_API_KEY
-                    }
+                    params={"linkedInUrl": url, "apikey": REVERSE_CONTACT_API_KEY},
                 )
-                response_data = response.json()
-
-                logging.info(f"response: {response.status_code}")
-
-                if response.status_code == 402: #No more credits
-                    failed_ids.append(person_id)
+                data = resp.json()
+                if resp.status_code == 402 or (resp.status_code != 200 and not data.get("success")):
+                    failed_ids.append(pid)
                     continue
 
-                elif response.status_code != 200 and not response_data.get("success"):
-                    logging.info(f"response: {response_data}")
-                    failed_ids.append(person_id)
-
-                positions = response_data.get("person", {}).get("positions", {}).get("positionHistory", [])
-                for position in positions:
-                    title = position.get("title", "")
-                    company = position.get("companyName", "") 
-                    similarity_job_title = fuzz.ratio(job_title, title)
-                    similarity_company_name = fuzz.ratio(company_name, company)
-                    
-                    logging.info(f"similarity company: {company_name} - {company} = {similarity_company_name}")
-                    logging.info(f"similarity job: {job_title} - {title} = {similarity_job_title}")
-
-                    if similarity_company_name > 70 and similarity_job_title > 70:
+                for pos in data.get("person", {}).get("positions", {}).get("positionHistory", []):
+                    sim_title = fuzz.ratio(title, pos.get("title", ""))
+                    sim_comp = fuzz.ratio(name, pos.get("companyName", ""))
+                    if sim_title > 70 and sim_comp > 70:
                         is_verify = True
                         break
-                
+
                 verifications.append(
                     AudienceLinkedinVerification(
-                        audience_smart_person_id=person_id,
-                        linkedin_url=linkedin_url,
-                        is_verify=is_verify
+                        audience_smart_person_id=pid,
+                        linkedin_url=url,
+                        is_verify=is_verify,
                     )
                 )
-
-            else: 
-                logging.info("There is such a LinkedIn in our database")
-                is_verify = existing_verification.is_verify
-            
+            else:
+                is_verify = ev.is_verify
 
             if not is_verify:
-                failed_ids.append(person_id)
+                failed_ids.append(pid)
 
-        if len(verifications):
+        success_ids = [
+            rec["audience_smart_person_id"]
+            for rec in batch
+            if rec["audience_smart_person_id"] not in failed_ids
+        ]
+        
+        if verifications:
             db_session.bulk_save_objects(verifications)
-            db_session.commit()
+            db_session.flush()
 
-        if len(failed_ids):
+        if failed_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
-                [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
+                [
+                    {"id": pid, "is_validation_processed": False, "is_valid": False}
+                    for pid in failed_ids
+                ],
             )
-            db_session.commit()
-        
-        # update_stats_validations(db_session, validation_type, count_persons_before_validation, len(failed_ids))
+            db_session.flush()
             
-        if is_last_validation_in_type:
-            aud_smart = db_session.query(AudienceSmart).filter_by(id=aud_smart_id).first()
-            if aud_smart:
-                validations = json.loads(aud_smart.validations)
-                for category in validations.values():
-                    for rule in category:
-                        column_name = COLUMN_MAPPING.get(validation_type)
-                        if column_name in rule:
-                            rule[column_name]["processed"] = True
-                aud_smart.validations = json.dumps(validations)
-        
-            db_session.commit()
-
-        if is_last_iteration_in_last_validation:
-            logging.info(f"is last validation")
-
-            with db_session.begin():
-                subquery = (
-                    select(EnrichmentUser.id)
-                    .select_from(EnrichmentUserContact)
-                    .join(EnrichmentUser, EnrichmentUser.asid == EnrichmentUserContact.asid)
-                    .join(AudienceSmartPerson, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
-                    .join(EnrichmentEmploymentHistory, EnrichmentEmploymentHistory.asid == EnrichmentUser.asid)
-                )
-
-                db_session.query(AudienceSmartPerson).filter(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True,
-                    AudienceSmartPerson.enrichment_user_id.in_(subquery)
-                ).update({"is_valid": True}, synchronize_session=False)
-
-                total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True,
-                    AudienceSmartPerson.enrichment_user_id.in_(subquery)
-                ).scalar()
-
-                db_session.query(AudienceSmart).filter(
-                    AudienceSmart.id == aud_smart_id
-                ).update(
-                    {
-                        "validated_records": total_validated,
-                        "status": "ready",
-                    }
-                )
-
-                db_session.commit()
-
-            await send_sse(
-                connection,
-                user_id,
-                {
-                    "smart_audience_id": aud_smart_id,
-                    "total_validated": total_validated,
-                }
+        if success_ids:
+            db_session.bulk_update_mappings(
+                AudienceSmartPerson,
+                [
+                    {"id": pid, "is_validation_processed": False}
+                    for pid in success_ids
+                ],
             )
-            logging.info(f"sent sse with total count")
+            db_session.flush()
 
-
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=f"validation_complete",
-            message_body={
-                "aud_smart_id": aud_smart_id,
-                "validation_type": validation_type,
-                "status": "validation_complete"
-            }
+        total_validated = db_session.scalar(
+            select(func.count(AudienceSmartPerson.id)).where(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                AudienceSmartPerson.is_valid.is_(True),
+            )
         )
-        logging.info(f"sent ping {aud_smart_id}.")
-            
+        validation_count = db_session.scalar(
+            select(func.count(AudienceSmartPerson.id)).where(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                AudienceSmartPerson.is_validation_processed.is_(False),
+            )
+        )
+
+        if validation_count == expected_count:
+            aud_smart = db_session.get(AudienceSmart, aud_smart_id)
+            validations = {}
+            if aud_smart and aud_smart.validations:
+                validations = json.loads(aud_smart.validations)
+                key = COLUMN_MAPPING.get(validation_type)
+                for cat in validations.values():
+                    for rule in cat:
+                        if key in rule:
+                            rule[key]["processed"] = True
+                aud_smart.validations = json.dumps(validations)
+
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=AUDIENCE_VALIDATION_FILLER,
+                message_body={
+                    "aud_smart_id": str(aud_smart_id),
+                    "user_id": user_id,
+                    "validation_params": validations,
+                },
+            )
+        db_session.commit()
+        await send_sse(
+            connection,
+            user_id,
+            {"smart_audience_id": aud_smart_id, "total_validated": total_validated},
+        )
+        logging.info("sent sse with total count")
+
         await message.ack()
 
-    except Exception as e:
-        logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.ack()
-        return 
+    except Exception:
+        logging.exception("Error processing matching")
+        # await message.ack()
+
 
 
 async def main():

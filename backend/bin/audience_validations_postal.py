@@ -22,14 +22,11 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
-from models.enrichment_users import EnrichmentUser
-from models.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_postals_verification import AudiencePostalVerification
-from models.enrichment_employment_history import EnrichmentEmploymentHistory
-from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
-from models.emails_enrichment import EmailEnrichment
-from models.enrichment_user_ids import EnrichmentUserId
-from models.emails import Email
+from models.enrichment.enrichment_employment_history import EnrichmentEmploymentHistory
+from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
@@ -37,6 +34,7 @@ load_dotenv()
 
 AUDIENCE_VALIDATION_AGENT_POSTAL = 'aud_validation_agent_postal'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
+AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 EXPERIANAPERTURE_API_KEY = os.getenv('EXPERIANAPERTURE_API_KEY')
 EXPERIANAPERTURE_API_URL = os.getenv('EXPERIANAPERTURE_API_URL')
 
@@ -80,9 +78,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
         aud_smart_id = message_body.get("aud_smart_id")
         batch = message_body.get("batch")
         validation_type = message_body.get("validation_type")
-        count_persons_before_validation = message_body.get("count_persons_before_validation")
-        is_last_validation_in_type = message_body.get("is_last_validation_in_type")
-        is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation") 
+        expected_count = message_body.get("count_persons_before_validation", -1)
 
         failed_ids = []
         verifications = []
@@ -94,161 +90,157 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
             state_name = record.get("state_name")
 
             is_verify = False
-
             if not zip_code5 or not city or not state_name:
+                failed_ids.append(person_id)
+                continue
+            
+            if random.random() < 0.5:
                 failed_ids.append(person_id)
                 continue
                 
 
-            existing_verification = db_session.query(AudiencePostalVerification).filter_by(zip_code5=zip_code5).first()
+            # existing_verification = db_session.query(AudiencePostalVerification).filter(AudiencePostalVerification.zip_code5 == int(zip_code5)).first()
 
-            if not existing_verification:
-                response = requests.get(
-                    EXPERIANAPERTURE_API_URL,
-                    params={
-                        "country_iso": "USA",
-                        "datasets": [
-                            "us-address"
-                        ],
-                        "key": {
-                            "type": "postal_code",
-                            "value": zip_code5
-                        }
-                    },
-                    headers={
-                        "Auth-Token": EXPERIANAPERTURE_API_KEY
-                    }
-                )
-                response_data = response.json()
+            # if not existing_verification:
+            #     response = requests.get(
+            #         EXPERIANAPERTURE_API_URL,
+            #         params={
+            #             "country_iso": "USA",
+            #             "datasets": [
+            #                 "us-address"
+            #             ],
+            #             "key": {
+            #                 "type": "postal_code",
+            #                 "value": zip_code5
+            #             }
+            #         },
+            #         headers={
+            #             "Auth-Token": EXPERIANAPERTURE_API_KEY
+            #         }
+            #     )
+            #     response_data = response.json()
 
-                logging.info(f"response: {response.status_code}")
+            #     logging.info(f"response: {response.status_code}")
 
-                if response.status_code == 402: #No more credits
-                    failed_ids.append(person_id)
-                    continue
+            #     if response.status_code == 402: #No more credits
+            #         failed_ids.append(person_id)
+            #         continue
 
-                elif response.status_code != 200 and not response_data.get("success"):
-                    logging.info(f"response: {response_data}")
-                    failed_ids.append(person_id)
+            #     elif response.status_code != 200 and not response_data.get("success"):
+            #         logging.info(f"response: {response_data}")
+            #         failed_ids.append(person_id)
 
-                suggestions = response_data.get("result", {}).get("suggestions", [])
-                for suggestion in suggestions:
-                    locality = suggestion.get("locality", {})
-                    city_in_api = locality.get("town", {}).get("name", "")
-                    state_name_in_api = locality.get("sub_region", {}).get("name", "")
-                    similarity_state_name = fuzz.ratio(state_name, state_name_in_api)
-                    similarity_city = fuzz.ratio(city, city_in_api)
+            #     suggestions = response_data.get("result", {}).get("suggestions", [])
+            #     for suggestion in suggestions:
+            #         locality = suggestion.get("locality", {})
+            #         city_in_api = locality.get("town", {}).get("name", "")
+            #         state_name_in_api = locality.get("sub_region", {}).get("name", "")
+            #         similarity_state_name = fuzz.ratio(state_name, state_name_in_api)
+            #         similarity_city = fuzz.ratio(city, city_in_api)
                     
-                    logging.info(f"similarity city: {city} - {city_in_api} = {similarity_city}")
-                    logging.info(f"similarity state: {state_name} - {state_name_in_api} = {similarity_state_name}")
+            #         logging.info(f"similarity city: {city} - {city_in_api} = {similarity_city}")
+            #         logging.info(f"similarity state: {state_name} - {state_name_in_api} = {similarity_state_name}")
 
-                    if similarity_city > 70 and similarity_state_name > 70:
-                        is_verify = True
-                        break
+            #         if similarity_city > 70 and similarity_state_name > 70:
+            #             is_verify = True
+            #             break
                 
-                verifications.append(
-                    AudiencePostalVerification(
-                        zip_code5=zip_code5,
-                        is_verify=is_verify
-                    )
-                )
+            #     verifications.append(
+            #         AudiencePostalVerification(
+            #             zip_code5=zip_code5,
+            #             is_verify=is_verify
+            #         )
+            #     )
 
-            else: 
-                logging.info("There is such a Postal in our database")
-                is_verify = existing_verification.is_verify
+            # else: 
+            #     logging.info("There is such a Postal in our database")
+            #     is_verify = existing_verification.is_verify
             
 
-            if not is_verify:
-                failed_ids.append(person_id)
+            # if not is_verify:
+            #     failed_ids.append(person_id)
 
-        if len(verifications):
+        
+        
+        success_ids = [
+            rec["audience_smart_person_id"]
+            for rec in batch
+            if rec["audience_smart_person_id"] not in failed_ids
+        ]
+        
+        if verifications:
             db_session.bulk_save_objects(verifications)
-            db_session.commit()
+            db_session.flush()
 
-        if len(failed_ids):
+        if failed_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
-                [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
+                [
+                    {"id": pid, "is_validation_processed": False, "is_valid": False}
+                    for pid in failed_ids
+                ],
             )
-            db_session.commit()
-        
-        # update_stats_validations(db_session, validation_type, count_persons_before_validation, len(failed_ids))
+            db_session.flush()
             
-        if is_last_validation_in_type:
-            aud_smart = db_session.query(AudienceSmart).filter_by(id=aud_smart_id).first()
-            if aud_smart:
-                validations = json.loads(aud_smart.validations)
-                for category in validations.values():
-                    for rule in category:
-                        column_name = COLUMN_MAPPING.get(validation_type)
-                        if column_name in rule:
-                            rule[column_name]["processed"] = True
-                aud_smart.validations = json.dumps(validations)
-        
-            db_session.commit()
-
-        if is_last_iteration_in_last_validation:
-            logging.info(f"is last validation")
-
-            with db_session.begin():
-                subquery = (
-                    select(EnrichmentUserId.id)
-                    .select_from(EnrichmentUserContact)
-                    .join(EnrichmentUserId, EnrichmentUserId.asid == EnrichmentUserContact.asid)
-                    .join(AudienceSmartPerson, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id)
-                    .join(EnrichmentPersonalProfiles, EnrichmentPersonalProfiles.asid == EnrichmentUserId.asid)
-                )
-
-                db_session.query(AudienceSmartPerson).filter(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True,
-                    AudienceSmartPerson.enrichment_user_id.in_(subquery)
-                ).update({"is_valid": True}, synchronize_session=False)
-
-                total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True,
-                    AudienceSmartPerson.enrichment_user_id.in_(subquery)
-                ).scalar()
-
-                db_session.query(AudienceSmart).filter(
-                    AudienceSmart.id == aud_smart_id
-                ).update(
-                    {
-                        "validated_records": total_validated,
-                        "status": "ready",
-                    }
-                )
-
-                db_session.commit()
-
-            await send_sse(
-                connection,
-                user_id,
-                {
-                    "smart_audience_id": aud_smart_id,
-                    "total_validated": total_validated,
-                }
+        if success_ids:
+            db_session.bulk_update_mappings(
+                AudienceSmartPerson,
+                [
+                    {"id": pid, "is_validation_processed": False}
+                    for pid in success_ids
+                ],
             )
-            logging.info(f"sent sse with total count")
+            db_session.flush()
 
-
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=f"validation_complete",
-            message_body={
-                "aud_smart_id": aud_smart_id,
-                "validation_type": validation_type,
-                "status": "validation_complete"
-            }
+        total_validated = db_session.scalar(
+            select(func.count(AudienceSmartPerson.id)).where(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                AudienceSmartPerson.is_valid.is_(True),
+            )
         )
-        logging.info(f"sent ping {aud_smart_id}.")
-            
-        await message.ack()
+        validation_count = db_session.scalar(
+            select(func.count(AudienceSmartPerson.id)).where(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                AudienceSmartPerson.is_validation_processed.is_(False),
+            )
+        )
+        print(validation_count)
+        print(expected_count)
+        if validation_count == expected_count:
+            aud_smart = db_session.get(AudienceSmart, aud_smart_id)
+            validations = {}
+            if aud_smart and aud_smart.validations:
+                validations = json.loads(aud_smart.validations)
+                key = COLUMN_MAPPING.get(validation_type)
+                print(key)
+                for cat in validations.values():
+                    for rule in cat:
+                        if key in rule:
+                            rule[key]["processed"] = True
+                aud_smart.validations = json.dumps(validations)
 
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=AUDIENCE_VALIDATION_FILLER,
+                message_body={
+                    "aud_smart_id": str(aud_smart_id),
+                    "user_id": user_id,
+                    "validation_params": validations,
+                },
+            )
+        db_session.commit()
+        await send_sse(
+            connection,
+            user_id,
+            {"smart_audience_id": aud_smart_id, "total_validated": total_validated},
+        )
+        logging.info("sent sse with total count")
+
+        await message.ack()
+            
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.ack()
+        # await message.ack()
         return 
 
 

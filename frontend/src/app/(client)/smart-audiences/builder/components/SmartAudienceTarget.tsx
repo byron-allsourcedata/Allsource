@@ -66,7 +66,7 @@ interface ValidationData {
   personal_email: EmailValidation[];
   business_email: EmailValidation[];
   phone: PhoneValidation[];
-  postal_cas: PostalValidation[];
+  postal_cas_verification: PostalValidation[];
   linked_in: LinkedInValidation[];
 }
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, TIMESTAMP, Index, UUID, text, Boolean, Text
+from sqlalchemy import Column, TIMESTAMP, Index, UUID, text, Boolean, Integer
 from .base import Base
 from sqlalchemy.sql import func
 
@@ -16,7 +16,7 @@ class AudiencePostalVerification(Base):
         server_default=text('gen_random_uuid()')
     )
     zip_code5 = Column(
-        Text, 
+        Integer, 
         nullable=False
     )
     is_verify = Column(
