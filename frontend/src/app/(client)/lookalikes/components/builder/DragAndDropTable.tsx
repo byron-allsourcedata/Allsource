@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import type { Field, LookalikeFieldsGridProps } from "@/types";
+import { useResetContext } from '@/context/ResetContext';
 
 const formatPercent = (value: string) =>
   `${(parseFloat(value) * 100).toFixed(2)}%`;
@@ -18,9 +19,30 @@ function DragAndDropTable({
   fields,
   onOrderChange,
 }: LookalikeFieldsGridProps) {
-  const [rows, setRows] = React.useState<Field[]>(() =>
-    [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value))
+  const { resetTrigger, notifyInteraction } = useResetContext();
+
+  // Compute and store the initial sorted order by importance on mount or fields change
+  const sortedInitial = React.useMemo(() =>
+    [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value)),
+    [fields]
   );
+  const initialRowsRef = React.useRef<Field[]>(sortedInitial);
+
+  // Local state for current row order
+  const [rows, setRows] = React.useState<Field[]>(initialRowsRef.current);
+
+  // Sync when the incoming fields change (update reference only)
+  React.useEffect(() => {
+    initialRowsRef.current = sortedInitial;
+    // do not reset rows on external fields change to preserve user order
+  }, [sortedInitial]);
+
+  // Reset to original sorted order when resetTrigger fires
+  React.useEffect(() => {
+    setRows(initialRowsRef.current);
+    // Do not trigger parent on reset; parent can get rows via onOrderChange if needed
+  }, [resetTrigger]);
+
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
 
@@ -64,21 +86,17 @@ function DragAndDropTable({
     const to = dragOverIndex;
     if (isNaN(from) || to === null || from === to) return;
 
-    setRows((prev) => {
-      const updated = [...prev];
+    // compute new order outside setState callback to avoid render-phase context updates
+      const updated = [...rows];
       const [moved] = updated.splice(from, 1);
       updated.splice(to, 0, moved);
+      setRows(updated);
+      notifyInteraction();
       onOrderChange?.(updated);
-      return updated;
-    });
 
     setDragIndex(null);
     setDragOverIndex(null);
   };
-
-  const uniqueFields = Array.from(
-    new Map(fields.map(f => [f.id, f])).values()
-  );
 
   return (
     <Box sx={{ width: '100%', maxWidth: 600 }}>

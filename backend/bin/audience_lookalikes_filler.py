@@ -98,6 +98,7 @@ def get_enrichment_user_column_map() -> Dict[str, Any]:
         "ethnicity": EnrichmentPersonalProfiles.ethnicity.label("ethnicity"),
         "language_code": EnrichmentPersonalProfiles.language_code.label("language_code"),
         "state_abbr": EnrichmentPersonalProfiles.state_abbr.label("state_abbr"),
+        "state": EnrichmentPersonalProfiles.state_abbr.label("state"),
         "zip_code5": cast(EnrichmentPersonalProfiles.zip_code5, String).label("zip_code5"),
 
         # — Financial Records —
