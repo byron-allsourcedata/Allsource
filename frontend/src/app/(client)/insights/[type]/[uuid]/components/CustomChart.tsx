@@ -19,6 +19,7 @@ export const IconFillIndicator = ({
   iconSize = 96,
   rank
 }: IconFillIndicatorProps) => {
+
   const fullIcons = Math.floor((percentage / 100) * totalIcons);
   const partialIconPercentage =
     ((percentage / 100) * totalIcons - fullIcons) * 100;

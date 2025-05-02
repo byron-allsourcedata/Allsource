@@ -16,13 +16,14 @@ type VerticalGradientBarChartProps = {
 };
 
 const getVerticalGradient = (relativePercent: number) => {
-  const opacity = 0.4 + 0.6 * relativePercent; // от 0.4 до 1
+  const opacity = 0.4 + 0.6 * relativePercent;
   return `linear-gradient(0deg, rgba(155, 223, 196, ${opacity}) 0%, rgba(155, 223, 196, 1) 100%)`;
 };
 
 export const VerticalGradientBarChart: React.FC<
   VerticalGradientBarChartProps
 > = ({ title, data, rank }) => {
+
   const maxPercent = Math.max(...data.map((d) => d.percent)) || 1;
 
   return (

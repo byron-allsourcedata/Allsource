@@ -4,6 +4,7 @@ import { GradientBarChart } from "../GradientHorizontalBarChart";
 import { mapGenericPercentage } from "./mappingUtils";
 import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
 import { EducationInfo, FieldRankMap } from "@/types/insights";
+import MapChart from "../MapChart";
 
 interface B2BEducationProps {
   data: EducationInfo;
