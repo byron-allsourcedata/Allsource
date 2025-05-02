@@ -24,10 +24,6 @@ export const VerticalGradientBarChart: React.FC<
   VerticalGradientBarChartProps
 > = ({ title, data, rank }) => {
 
-  if (!data || data.length === 0 || data.every(d => d.percent === 0)) {
-    return null;
-  }
-
   const maxPercent = Math.max(...data.map((d) => d.percent)) || 1;
 
   return (

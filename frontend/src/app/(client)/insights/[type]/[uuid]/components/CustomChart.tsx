@@ -19,9 +19,6 @@ export const IconFillIndicator = ({
   iconSize = 96,
   rank
 }: IconFillIndicatorProps) => {
-  if (percentage <= 0 || isNaN(percentage)) {
-    return null;
-  }
 
   const fullIcons = Math.floor((percentage / 100) * totalIcons);
   const partialIconPercentage =
