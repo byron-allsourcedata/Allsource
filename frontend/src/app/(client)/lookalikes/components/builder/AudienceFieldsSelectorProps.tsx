@@ -120,7 +120,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
     variant="outlined"
   >
     <Typography  fontSize="0.8rem">
-      Default fields
+      Set recommended
     </Typography>
   </Button>
     </Box>

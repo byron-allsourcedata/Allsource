@@ -87,7 +87,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                     variant="outlined"
                   >
                     <Typography  fontSize="0.8rem">
-                      Default fields
+                      Set recommended
                     </Typography>
                   </Button>
             </Box>
