@@ -116,7 +116,8 @@ async def aud_validation_agent(
         recency_personal_days = body.get("recency_personal_days", 0)
         recency_business_days = body.get("recency_business_days", 0)
         validation_type = body.get("validation_type")
-        expected_count = body.get("count_persons_before_validation", -1)
+        logging.info(f"aud_smart_id: {aud_smart_id}")
+        logging.info(f"validation_type: {validation_type}")
         validation_rules = {
             "personal_email_validation_status": lambda v: bool(v and v.startswith("Valid")),
             "business_email_validation_status": lambda v: bool(v and v.startswith("Valid")),
@@ -130,11 +131,13 @@ async def aud_validation_agent(
             for rec in batch
             if not validation_rules.get(validation_type, lambda _: False)(rec.get(validation_type))
         ]
+        logging.info(f"Failed ids len: {len(failed_ids)}")
         success_ids = [
             rec["audience_smart_person_id"]
             for rec in batch
             if rec["audience_smart_person_id"] not in failed_ids
         ]
+        logging.info(f"Success ids len: {len(success_ids)}")
 
         with db_session.begin():
             # if failed_ids:
@@ -168,7 +171,10 @@ async def aud_validation_agent(
                     AudienceSmartPerson.is_validation_processed.is_(False)
                 )
             ).scalar_one()
-            if validation_count >= expected_count:
+            total_count = db_session.query(AudienceSmartPerson).filter(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id
+            ).count()
+            if validation_count == total_count:
                 aud_smart = db_session.get(AudienceSmart, aud_smart_id)
                 if aud_smart and aud_smart.validations:
                     validations = json.loads(aud_smart.validations)

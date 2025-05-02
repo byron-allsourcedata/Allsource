@@ -76,6 +76,7 @@ async def process_rmq_message(
 ):
     try:
         body = json.loads(message.body)
+        logging.info(f"Processing message: {body}")
         user_id = body.get("user_id")
         aud_smart_id = body.get("aud_smart_id")
         batch = body.get("batch", [])
@@ -131,12 +132,14 @@ async def process_rmq_message(
 
             if not is_verify:
                 failed_ids.append(pid)
-
+                
+        logging.info(f"Failed ids len: {len(failed_ids)}")
         success_ids = [
             rec["audience_smart_person_id"]
             for rec in batch
             if rec["audience_smart_person_id"] not in failed_ids
         ]
+        logging.info(f"Success ids: {success_ids}")
         
         if verifications:
             db_session.bulk_save_objects(verifications)

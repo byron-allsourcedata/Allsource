@@ -171,11 +171,11 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
-            .join(
+            .outerjoin(
                 EnrichmentPersonalProfiles,
                 EnrichmentPersonalProfiles.asid == EnrichmentUser.asid,
             )
-            .join(
+            .outerjoin(
                 UsaZipCode,
                 UsaZipCode.zip == EnrichmentPersonalProfiles.zip_code5,
             )
@@ -321,7 +321,8 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                 if not enrichment_users:
                                     logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}. column_name {column_name}")
                                     continue
-
+                                
+                                validation_processed(db_session, [user["audience_smart_person_id"] for user in enrichment_users])
                                 for j in range(0, len(enrichment_users), 100):
                                     batch = enrichment_users[j:j+100]
                                     serialized_batch = [
@@ -331,13 +332,11 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         }
                                         for user in batch
                                     ]
-                                    validation_processed(db_session, [user["audience_smart_person_id"] for user in serialized_batch])
                                     message_body = {
                                         'aud_smart_id': str(aud_smart_id),
                                         'user_id': user_id,
                                         'batch': serialized_batch,
-                                        'validation_type': column_name,
-                                        'count_persons_before_validation': len(enrichment_users)
+                                        'validation_type': column_name
                                     }
                                     queue_map = {
                                         "personal_email_validation_status": AUDIENCE_VALIDATION_AGENT_NOAPI, "personal_email_last_seen": AUDIENCE_VALIDATION_AGENT_NOAPI,

@@ -67,7 +67,8 @@ async def process_rmq_message(
         aud_smart_id = body.get("aud_smart_id")
         batch = body.get("batch", [])
         validation_type = body.get("validation_type")
-        expected_count = body.get("count_persons_before_validation", -1)
+        logging.info(f"aud_smart_id: {aud_smart_id}")
+        logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
         for rec in batch:
             if validation_type == 'personal_email':
@@ -102,6 +103,7 @@ async def process_rmq_message(
                 ],
             )
             db_session.flush()
+        logging.info(f"Failed ids len: {len(failed_ids)}")
         if success_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
@@ -111,7 +113,7 @@ async def process_rmq_message(
                 ],
             )
             db_session.flush()
-
+        logging.info(f"Success ids len: {len(success_ids)}")
         total_validated = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
@@ -124,7 +126,11 @@ async def process_rmq_message(
                 AudienceSmartPerson.is_validation_processed.is_(False),
             )
         )
-        if validation_count >= expected_count:
+        total_count = db_session.query(AudienceSmartPerson).filter(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id
+            ).count()
+        
+        if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
             if aud_smart and aud_smart.validations:
