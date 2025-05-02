@@ -20,6 +20,7 @@ type SemiCircularGradientChartProps = {
 export const SemiCircularGradientChart: React.FC<
   SemiCircularGradientChartProps
 > = ({ title, percent, labelLeft, labelRight, colorStops, rank }) => {
+
   const radius = 90;
   const strokeWidth = 20;
   const center = radius + strokeWidth / 2;

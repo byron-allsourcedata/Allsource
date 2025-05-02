@@ -34,6 +34,7 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
   sortByPercent = true,
   rank
 }) => {
+
   const [expanded, setExpanded] = useState(false);
   const sortedData = sortByPercent
     ? [...data].sort((a, b) => b.percent - a.percent)
