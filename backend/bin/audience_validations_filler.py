@@ -229,7 +229,6 @@ async def complete_validation(db_session: Session, aud_smart_id: int, connection
                     AudienceSmartPerson.smart_audience_id == aud_smart_id,
                     AudienceSmartPerson.is_valid == True,
                 ).scalar()
-
     db_session.query(AudienceSmart).filter(
         AudienceSmart.id == aud_smart_id
     ).update(
@@ -367,7 +366,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
         except IntegrityError as e:
             logging.warning(f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping.")
             db_session.rollback()
-            # await message.ack()
+            await message.ack()
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)

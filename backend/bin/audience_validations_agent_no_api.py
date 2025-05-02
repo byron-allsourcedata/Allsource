@@ -116,7 +116,7 @@ async def aud_validation_agent(
         recency_personal_days = body.get("recency_personal_days", 0)
         recency_business_days = body.get("recency_business_days", 0)
         validation_type = body.get("validation_type")
-        expected_count = body.get("count_persons_before_validation", 0)
+        expected_count = body.get("count_persons_before_validation", -1)
         validation_rules = {
             "personal_email_validation_status": lambda v: bool(v and v.startswith("Valid")),
             "business_email_validation_status": lambda v: bool(v and v.startswith("Valid")),
@@ -137,10 +137,15 @@ async def aud_validation_agent(
         ]
 
         with db_session.begin():
+            # if failed_ids:
+            #     db_session.bulk_update_mappings(
+            #         AudienceSmartPerson,
+            #         [{"id": pid, "is_validation_processed": False, "is_valid": False} for pid in failed_ids]
+            #     )
             if failed_ids:
                 db_session.bulk_update_mappings(
                     AudienceSmartPerson,
-                    [{"id": pid, "is_validation_processed": False, "is_valid": False} for pid in failed_ids]
+                    [{"id": pid, "is_validation_processed": False} for pid in failed_ids]
                 )
             if success_ids:
                 db_session.bulk_update_mappings(
