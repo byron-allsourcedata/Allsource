@@ -8,6 +8,7 @@ import { USHeatMapCard } from "../USMap";
 import { BarData } from "../VerticalGradientBarChart";
 import { mapGender, mapState, mapGenericPercentage, mapPieChart } from "./mappingUtils";
 import { PersonalInfo, BooleanDistribution, FieldRankMap } from "@/types/insights";
+import MapChart from "../MapChart";
 
 
 interface B2CPersonalProps {
@@ -50,7 +51,8 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data, fieldRanks }
         <Box
           sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
         >
-          <USHeatMapCard title="Location" regions={mapState(data.state)} rank={fieldRanks["state"]} />
+          <MapChart title="Location" regions={mapState(data.state)} rank={fieldRanks["state"]}
+          />
         </Box>
 
         <Box

@@ -11,6 +11,7 @@ import InfoCard from "./components/SelectedCards";
 import PixelCard from "./components/PixelCard";
 import MainSectionCard from "./components/MainSectionCards";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import SmartAudienceCard from "./components/SmartAudienceCard";
 
 interface EventCardData {
   id: string;
@@ -722,7 +723,7 @@ const AudienceDashboard: React.FC = () => {
                   <Grid item xs={12} sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} md={2.4}>
                     {eventCards.smart_audience.map((card, index) => (
                       <Box key={index} mt={1}>
-                        <MainSectionCard
+                        <SmartAudienceCard
                           key={card.id}
                           data={card}
                           highlighted={activeChainIds.includes(card.id)}
