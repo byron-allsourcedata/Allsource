@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { memo, useState } from "react";
 import { Box, Button, FormControlLabel, Grid, styled, Switch, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import type {
@@ -258,8 +258,13 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   </Box>
 )};
 
-export default React.memo((props: AudienceFieldsSelectorProps) => (
-  <ResetProvider>
-    <AudienceFieldsSelector {...props} />
-  </ResetProvider>
-));
+const MemoAudienceFieldsSelector = memo(AudienceFieldsSelector);
+MemoAudienceFieldsSelector.displayName = 'AudienceFieldsSelector';
+
+export default function WrappedAudienceFieldsSelector(props: AudienceFieldsSelectorProps) {
+  return (
+    <ResetProvider>
+      <MemoAudienceFieldsSelector {...props} />
+    </ResetProvider>
+  );
+}
