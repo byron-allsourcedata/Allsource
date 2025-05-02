@@ -69,12 +69,22 @@ export function FeatureImportanceTable<T extends FeatureObject>({
       onChangeDisplayed(selectedKeys);
     }
   }, [selectedKeys]);
+  const arraysEqual = (a: any[], b: any[]) => {
+    if (a.length !== b.length) return false;
+    const setB = new Set(b);
+    return a.every(x => setB.has(x));
+  };
+  
 
   const onOptionToggle = (key: keyof T) => {
-    notifyInteraction();
-    setSelectedKeys(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
+    setSelectedKeys(prev => {
+      const newSelected = prev.includes(key)
+        ? prev.filter(x => x !== key)
+        : [...prev, key];
+      const isBackToDefault = arraysEqual(newSelected, initialSelectedRef.current);
+      notifyInteraction(title, isBackToDefault);
+      return newSelected;
+    });
   };
 
   const headerColor =

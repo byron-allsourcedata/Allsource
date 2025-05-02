@@ -106,7 +106,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
       </Stepper>
       <Button
     onClick={resetAll}
-    disabled={!userInteracted && atDefault}
+    disabled={atDefault}
     sx={{
       border: "1px #5052B2 solid",
       color: "#5052B2",
