@@ -206,7 +206,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
         )
         print(validation_count)
         print(expected_count)
-        if validation_count == expected_count:
+        if validation_count >= expected_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
             if aud_smart and aud_smart.validations:
