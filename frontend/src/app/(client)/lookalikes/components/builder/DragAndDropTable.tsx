@@ -35,6 +35,7 @@ function DragAndDropTable({
   React.useEffect(() => {
     initialRowsRef.current = sortedInitial;
     // do not reset rows on external fields change to preserve user order
+    // setRows(sortedInitial);
   }, [sortedInitial]);
 
   // Reset to original sorted order when resetTrigger fires

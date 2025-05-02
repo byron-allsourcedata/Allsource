@@ -191,10 +191,4 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
         </Box>
 )};
 
-export default React.memo(function WrappedOrderFieldsStep(props: OrderFieldsStepProps) {
-    return (
-      <ResetProvider>
-        <OrderFieldsStep {...props} />
-      </ResetProvider>
-    );
-  });
+export default React.memo(OrderFieldsStep);

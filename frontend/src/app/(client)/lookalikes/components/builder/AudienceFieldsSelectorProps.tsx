@@ -258,13 +258,4 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   </Box>
 )};
 
-const MemoAudienceFieldsSelector = memo(AudienceFieldsSelector);
-MemoAudienceFieldsSelector.displayName = 'AudienceFieldsSelector';
-
-export default function WrappedAudienceFieldsSelector(props: AudienceFieldsSelectorProps) {
-  return (
-    <ResetProvider>
-      <MemoAudienceFieldsSelector {...props} />
-    </ResetProvider>
-  );
-}
+export default memo(AudienceFieldsSelector);
