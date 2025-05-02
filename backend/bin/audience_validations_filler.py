@@ -359,11 +359,11 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                 queue_name=queue_name,
                                 message_body=message_body
                                 )
-                        # await message.ack()
+                        await message.ack()
                         return
                 
             await complete_validation(db_session, aud_smart_id, connection, user_id)
-            # await message.ack()
+            await message.ack()
         except IntegrityError as e:
             logging.warning(f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping.")
             db_session.rollback()
