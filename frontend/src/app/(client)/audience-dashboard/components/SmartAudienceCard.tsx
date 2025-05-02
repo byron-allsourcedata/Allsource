@@ -167,12 +167,7 @@ const SmartAudienceCard: React.FC<SmartAudienceCardProps> = ({
                         <Typography className="dashboard-card-text">Usecase</Typography>
                         <Box display="flex" alignItems="center" gap={0.5}>
                             {getUseCaseStyle(useCase)}
-                            <Typography className="dashboard-card-heading" sx={{
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                maxWidth: '50px',
-                            }}>{useCase}</Typography>
+                            <Typography className="dashboard-card-heading">{useCase}</Typography>
                         </Box>
                     </Box>
                     <Box flex={1}>
