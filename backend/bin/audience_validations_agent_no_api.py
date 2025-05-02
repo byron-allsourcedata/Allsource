@@ -163,7 +163,7 @@ async def aud_validation_agent(
                     AudienceSmartPerson.is_validation_processed.is_(False)
                 )
             ).scalar_one()
-            if validation_count == expected_count:
+            if validation_count >= expected_count:
                 aud_smart = db_session.get(AudienceSmart, aud_smart_id)
                 if aud_smart and aud_smart.validations:
                     validations = json.loads(aud_smart.validations)
