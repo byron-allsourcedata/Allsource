@@ -73,6 +73,7 @@ from .users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from .audience_linkedin_verification import AudienceLinkedinVerification
 from .audience_smarts_validations import AudienceSmartValidation
 from .usa_zip_codes import UsaZipCode
+from .audience_postals_verification import AudiencePostalVerification
 
 
 __all__ = [
@@ -155,5 +156,7 @@ __all__ = [
     "EnrichmentUsersEmails",
     "EnrichmentPersonalProfiles"
     "PersonalProfiles",
-    "AudienceLinkedinVerification"
+    "AudienceLinkedinVerification",
+    "AudiencePostalVerification",
+    "EnrichmentPersonalProfiles"
 ]

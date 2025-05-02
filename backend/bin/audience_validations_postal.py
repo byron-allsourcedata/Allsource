@@ -24,18 +24,19 @@ from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
-from models.audience_linkedin_verification import AudienceLinkedinVerification
+from models.audience_postals_verification import AudiencePostalVerification
 from models.enrichment.enrichment_employment_history import EnrichmentEmploymentHistory
+from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
 
-AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
+AUDIENCE_VALIDATION_AGENT_POSTAL = 'aud_validation_agent_postal'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
-REVERSE_CONTACT_API_KEY = os.getenv('REVERSE_CONTACT_API_KEY')
-REVERSE_CONTACT_API_URL = os.getenv('REVERSE_CONTACT_API_URL')
+EXPERIANAPERTURE_API_KEY = os.getenv('EXPERIANAPERTURE_API_KEY')
+EXPERIANAPERTURE_API_URL = os.getenv('EXPERIANAPERTURE_API_URL')
 
 COLUMN_MAPPING = {
     'personal_email_validation_status': 'mx',
@@ -43,7 +44,8 @@ COLUMN_MAPPING = {
     'personal_email_last_seen': 'recency',
     'business_email_last_seen_date': 'recency',
     'mobile_phone_dnc': 'dnc_filter',
-    'job_validation': 'job_validation'
+    'cas_home_address': 'cas_home_address',
+    'cas_office_address': 'cas_office_address',
 }
 
 def setup_logging(level):
@@ -69,69 +71,97 @@ async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
         logging.error(f"Error sending SSE: {e}")
 
 
-async def process_rmq_message(
-    message: IncomingMessage,
-    db_session: Session,
-    connection: RabbitMQConnection,
-):
+async def process_rmq_message(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
     try:
-        body = json.loads(message.body)
-        user_id = body.get("user_id")
-        aud_smart_id = body.get("aud_smart_id")
-        batch = body.get("batch", [])
-        validation_type = body.get("validation_type")
-        expected_count = body.get("count_persons_before_validation", -1)
+        message_body = json.loads(message.body)
+        user_id = message_body.get("user_id")
+        aud_smart_id = message_body.get("aud_smart_id")
+        batch = message_body.get("batch")
+        validation_type = message_body.get("validation_type")
+        expected_count = message_body.get("count_persons_before_validation", -1)
 
-        failed_ids: list[int] = []
-        verifications: list[AudienceLinkedinVerification] = []
+        failed_ids = []
+        verifications = []
 
-        for rec in batch:
-            pid = rec.get("audience_smart_person_id")
-            name = rec.get("company_name")
-            title = rec.get("job_title")
-            url = rec.get("linkedin_url")
-
-            if not (url and title and name):
-                failed_ids.append(pid)
-                continue
-            
-            ev = (
-                db_session.query(AudienceLinkedinVerification)
-                .filter_by(linkedin_url=url)
-                .first()
-            )
+        for record in batch:
+            person_id = record.get("audience_smart_person_id")
+            zip_code5 = record.get("zip_code5")
+            city = record.get("city")
+            state_name = record.get("state_name")
 
             is_verify = False
-            if ev is None:
-                resp = requests.get(
-                    REVERSE_CONTACT_API_URL,
-                    params={"linkedInUrl": url, "apikey": REVERSE_CONTACT_API_KEY},
-                )
-                data = resp.json()
-                if resp.status_code == 402 or (resp.status_code != 200 and not data.get("success")):
-                    failed_ids.append(pid)
-                    continue
+            if not zip_code5 or not city or not state_name:
+                failed_ids.append(person_id)
+                continue
+            
+            if random.random() < 0.5:
+                failed_ids.append(person_id)
+                continue
+                
 
-                for pos in data.get("person", {}).get("positions", {}).get("positionHistory", []):
-                    sim_title = fuzz.ratio(title, pos.get("title", ""))
-                    sim_comp = fuzz.ratio(name, pos.get("companyName", ""))
-                    if sim_title > 70 and sim_comp > 70:
-                        is_verify = True
-                        break
+            # existing_verification = db_session.query(AudiencePostalVerification).filter(AudiencePostalVerification.zip_code5 == int(zip_code5)).first()
 
-                verifications.append(
-                    AudienceLinkedinVerification(
-                        audience_smart_person_id=pid,
-                        linkedin_url=url,
-                        is_verify=is_verify,
-                    )
-                )
-            else:
-                is_verify = ev.is_verify
+            # if not existing_verification:
+            #     response = requests.get(
+            #         EXPERIANAPERTURE_API_URL,
+            #         params={
+            #             "country_iso": "USA",
+            #             "datasets": [
+            #                 "us-address"
+            #             ],
+            #             "key": {
+            #                 "type": "postal_code",
+            #                 "value": zip_code5
+            #             }
+            #         },
+            #         headers={
+            #             "Auth-Token": EXPERIANAPERTURE_API_KEY
+            #         }
+            #     )
+            #     response_data = response.json()
 
-            if not is_verify:
-                failed_ids.append(pid)
+            #     logging.info(f"response: {response.status_code}")
 
+            #     if response.status_code == 402: #No more credits
+            #         failed_ids.append(person_id)
+            #         continue
+
+            #     elif response.status_code != 200 and not response_data.get("success"):
+            #         logging.info(f"response: {response_data}")
+            #         failed_ids.append(person_id)
+
+            #     suggestions = response_data.get("result", {}).get("suggestions", [])
+            #     for suggestion in suggestions:
+            #         locality = suggestion.get("locality", {})
+            #         city_in_api = locality.get("town", {}).get("name", "")
+            #         state_name_in_api = locality.get("sub_region", {}).get("name", "")
+            #         similarity_state_name = fuzz.ratio(state_name, state_name_in_api)
+            #         similarity_city = fuzz.ratio(city, city_in_api)
+                    
+            #         logging.info(f"similarity city: {city} - {city_in_api} = {similarity_city}")
+            #         logging.info(f"similarity state: {state_name} - {state_name_in_api} = {similarity_state_name}")
+
+            #         if similarity_city > 70 and similarity_state_name > 70:
+            #             is_verify = True
+            #             break
+                
+            #     verifications.append(
+            #         AudiencePostalVerification(
+            #             zip_code5=zip_code5,
+            #             is_verify=is_verify
+            #         )
+            #     )
+
+            # else: 
+            #     logging.info("There is such a Postal in our database")
+            #     is_verify = existing_verification.is_verify
+            
+
+            # if not is_verify:
+            #     failed_ids.append(person_id)
+
+        
+        
         success_ids = [
             rec["audience_smart_person_id"]
             for rec in batch
@@ -174,13 +204,15 @@ async def process_rmq_message(
                 AudienceSmartPerson.is_validation_processed.is_(False),
             )
         )
-
+        print(validation_count)
+        print(expected_count)
         if validation_count == expected_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
             if aud_smart and aud_smart.validations:
                 validations = json.loads(aud_smart.validations)
                 key = COLUMN_MAPPING.get(validation_type)
+                print(key)
                 for cat in validations.values():
                     for rule in cat:
                         if key in rule:
@@ -205,11 +237,11 @@ async def process_rmq_message(
         logging.info("sent sse with total count")
 
         await message.ack()
-
-    except Exception:
-        logging.exception("Error processing matching")
+            
+    except Exception as e:
+        logging.error(f"Error processing matching: {e}", exc_info=True)
         # await message.ack()
-
+        return 
 
 
 async def main():
@@ -241,7 +273,7 @@ async def main():
         db_session = Session()
 
         queue = await channel.declare_queue(
-            name=AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
+            name=AUDIENCE_VALIDATION_AGENT_POSTAL,
             durable=True,
         )
         await queue.consume(

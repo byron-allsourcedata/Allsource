@@ -60,7 +60,7 @@ interface FilterData {
   personal_email: EmailValidation[];
   business_email: EmailValidation[];
   phone: PhoneValidation[];
-  postal_cas: PostalValidation[];
+  postal_cas_verification: PostalValidation[];
   linked_in: LinkedInValidation[];
 }
 
@@ -252,7 +252,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
         nestedSelections["RecencyBusiness"]
       ),
       phone: convertValidation(selectedOptionsPhone),
-      postal_cas: convertValidation(selectedOptionsPostalCAS),
+      postal_cas_verification: convertValidation(selectedOptionsPostalCAS),
       linked_in: convertValidation(selectedOptionsLinkedIn),
     }
     onValidate(validations);
@@ -260,7 +260,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
       ...selectedOptionsPersonalEmail.map(el => `personal_email-${toSnakeCase(el)}`), 
       ...selectedOptionsBusinessEmail.map(el => (el === "RecencyBusiness") ? `business_email-recency` : `personal_email-${toSnakeCase(el)}`),
       ...selectedOptionsPhone.map(el => `phone-${toSnakeCase(el)}`),
-      ...selectedOptionsPostalCAS.map(el => `postal_cas-${toSnakeCase(el)}`),
+      ...selectedOptionsPostalCAS.map(el => `postal_cas_verification-${toSnakeCase(el)}`),
       ...selectedOptionsLinkedIn.map(el => `linked_in-${toSnakeCase(el)}`),])
   };
 
@@ -1347,7 +1347,6 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                               <Checkbox
                                 size="small"
                                 // disabled={isValidate}
-                                disabled={true}
                                 checked={selectedOptionsPostalCAS.includes(
                                   option
                                 )}

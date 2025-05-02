@@ -34,7 +34,7 @@ class AudienceSmartPerson(Base):
     is_valid = Column(
         Boolean,
         nullable=False,
-        server_default=text('false')
+        server_default=text('true')
     )
     is_validation_processed = Column(
         Boolean,

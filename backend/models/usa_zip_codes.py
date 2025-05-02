@@ -8,7 +8,7 @@ class UsaZipCode(Base):
     __tablename__ = "usa_zip_codes"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, nullable=False)
-    zip: Mapped[str] = mapped_column(String(5), unique=True, nullable=False)
+    zip: Mapped[str] = mapped_column(Integer, unique=True, nullable=False)
     lat: Mapped[float | None] = mapped_column(Float)
     lng: Mapped[float | None] = mapped_column(Float)
     city: Mapped[str | None] = mapped_column(String(100))
