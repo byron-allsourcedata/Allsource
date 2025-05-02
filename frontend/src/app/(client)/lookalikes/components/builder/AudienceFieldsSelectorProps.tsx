@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Button, FormControlLabel, Grid, styled, Switch, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import type {
   PersonalResults,
@@ -12,6 +12,7 @@ import type {
 } from "@/types";
 import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
+import { ResetProvider, useResetContext } from "@/context/ResetContext";
 
 interface AudienceFieldsSelectorProps {
   personalData?: PersonalResults;
@@ -50,21 +51,13 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   // onRealEstateChange,
   canProcessed
 }) => {
+  const { atDefault, userInteracted, resetAll } = useResetContext();
   const [activeStep, setActiveStep] = React.useState(0);
-  const [completed, setCompleted] = React.useState<{
-    [k: number]: boolean;
-  }>({});
   const canProceed = canProcessed;
-
   const handleStep = (step: number) => () => {
     if (step === 1 && !canProceed) return;
     setActiveStep(step);
     if (step === 1) handleNextStep();
-  };
-
-  const [resetTrigger, setResetTrigger] = useState(0);
-  const handleResetAll = () => {
-    setResetTrigger((prev) => prev + 1);
   };
   return (
   <Box
@@ -76,7 +69,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
       mt: 2,
     }}
   >
-    <Box sx={{ display: "flex", alignItems: "center", width: "400p", mb: 2, ml: 1 }}>
+    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "600px", mb: 2, ml: 1 }}>
       <Stepper 
         activeStep={activeStep}
         nonLinear
@@ -111,7 +104,25 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
           </Step>
         ))}
       </Stepper>
-
+      <Button
+    onClick={resetAll}
+    disabled={!userInteracted && atDefault}
+    sx={{
+      border: "1px #5052B2 solid",
+      color: "#5052B2",
+      backgroundColor: "#FFFFFF",
+      textTransform: "none",
+      "&:hover": {
+        border: "1px #5052B2 solid",
+        backgroundColor: "#FFFFFF",
+      },
+    }}
+    variant="outlined"
+  >
+    <Typography  fontSize="0.8rem">
+      Default fields
+    </Typography>
+  </Button>
     </Box>
 
     <Grid container sx={{ mb: 2 }}>
@@ -174,44 +185,35 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
 
     <Grid container spacing={2}>
       <Grid item xs={12} md={6}>
-      <Button size="small" onClick={handleResetAll} sx={{ textTransform: "none", fontSize: "12px", color:"rgba(80, 82, 178, 1)"}}>
-          Default state
-        </Button>
         <FeatureImportanceTable
           title="Personal Profile"
           features={personalData}
           onChangeDisplayed={onPersonalChange}
-          resetTrigger={resetTrigger}
         />
         <FeatureImportanceTable
           title="Financial"
           features={financialData}
           onChangeDisplayed={onFinancialChange}
-          resetTrigger={resetTrigger}
         />
         <FeatureImportanceTable
           title="Lifestyles"
           features={lifestylesData}
           onChangeDisplayed={onLifestylesChange}
-          resetTrigger={resetTrigger}
         />
         <FeatureImportanceTable
           title="Voter"
           features={voterData}
           onChangeDisplayed={onVoterChange}
-          resetTrigger={resetTrigger}
         />
         <FeatureImportanceTable
           title="Professional Profile"
           features={professionalProfileData}
           onChangeDisplayed={onProfessionalProfileChange}
-          resetTrigger={resetTrigger}
         />
         <FeatureImportanceTable
           title="Employment History"
           features={employmentHistoryData}
           onChangeDisplayed={onEmploymentHistoryChange}
-          resetTrigger={resetTrigger}
         />
       </Grid>
       <Grid item xs={12} md={1} />
@@ -256,4 +258,8 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   </Box>
 )};
 
-export default React.memo(AudienceFieldsSelector);
+export default React.memo((props: AudienceFieldsSelectorProps) => (
+  <ResetProvider>
+    <AudienceFieldsSelector {...props} />
+  </ResetProvider>
+));
