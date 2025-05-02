@@ -741,8 +741,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       >
                         <Checkbox
                           size="small"
-                          // disabled={isValidate}
-                          disabled={true}
+                          disabled={isValidate}
                           checked={selectedOptionsPersonalEmail.includes(
                             "Delivery"
                           )}
@@ -1077,8 +1076,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       >
                         <Checkbox
                           size="small"
-                          // disabled={isValidate}
-                          disabled={true}
+                          disabled={isValidate}
                           checked={selectedOptionsBusinessEmail.includes(
                             "Delivery"
                           )}
