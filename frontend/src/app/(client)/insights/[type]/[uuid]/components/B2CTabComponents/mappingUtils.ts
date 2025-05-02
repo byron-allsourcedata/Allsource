@@ -17,10 +17,10 @@ export const mapGender = (gender: PercentageMap) => [
   },
   {
     imageSrc: "/male-female.svg",
-    label: "Unknown",
+    label: "Other",
     percentage: parseFloat((gender["2"] ?? 0).toString()),
     fillColor: "rgb(15, 209, 134)",
-    bgColor: "rgba(155, 223, 196, 1)",
+    bgColor: "rgb(96, 212, 166)",
   },
 ];
 

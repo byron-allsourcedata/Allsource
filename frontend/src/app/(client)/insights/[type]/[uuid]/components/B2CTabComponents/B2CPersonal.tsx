@@ -49,7 +49,7 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data, fieldRanks }
         }}
       >
         <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
+          sx={{ display: "flex", flexDirection: "row", width: "100%", height: '600px', gap: 2 }}
         >
           <MapChart title="Location" regions={mapState(data.state)} rank={fieldRanks["state"]}
           />
@@ -72,9 +72,8 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data, fieldRanks }
               data={[
                 { label: "Completed High School", percent: 40 },
                 { label: "Completed College", percent: 25 },
-                { label: "Completed Graduate School", percent: 15 },
-                { label: "Attended Vocational/Technical", percent: 13 },
-                { label: "Unknown", percent: 7 },
+                { label: "Completed Graduate School", percent: 18 },
+                { label: "Attended Vocational/Technical", percent: 17 },
               ]}
               rank={fieldRanks["education_level"]}
             />

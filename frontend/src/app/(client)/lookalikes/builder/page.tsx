@@ -34,6 +34,7 @@ import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import ProgressBar from "@/components/ProgressBar";
 import { TableData, LookalikeData, CalculationResponse, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject, PersonalResults, ProfessionalProfileResults, EmploymentHistoryResults } from "@/types"
 import { FeatureImportanceTable, DragAndDropTable, AudienceFieldsSelector, OrderFieldsStep } from "../components"
+import { ResetProvider } from "@/context/ResetContext";
 export const dynamic = 'force-dynamic';
 
 const CreateLookalikePage: React.FC = () => {
@@ -913,7 +914,9 @@ const CreateLookalikePage: React.FC = () => {
 const CreateLookalike: React.FC = () => {
   return (
     <Suspense fallback={<ProgressBar />}>
-      <CreateLookalikePage />
+      <ResetProvider>
+        <CreateLookalikePage />
+      </ResetProvider>
     </Suspense>
   );
 };
