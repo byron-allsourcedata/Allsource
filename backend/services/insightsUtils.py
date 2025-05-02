@@ -38,8 +38,7 @@ class InsightsUtils:
     def process_insights_for_asids(insights, asids: List[uuid.UUID], db_session: Session):
         is_invalid = lambda val: (
                 val is None
-                or str(val).upper() in ('UNKNOWN', 'U')
-                or val == 2
+                or str(val).upper() in ('UNKNOWN', 'U', '2')
         )
         # 3) PERSONAL
         personal_fields = [
@@ -67,10 +66,10 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(personal_fields, row):
-                if field == "age":
-                    key = InsightsUtils.bucket_age(val)
-                elif is_invalid(val):
+                if is_invalid(val):
                     continue
+                elif field == "age":
+                    key = InsightsUtils.bucket_age(val)
                 else:
                     key = str(val)
                 key = key.lower()
