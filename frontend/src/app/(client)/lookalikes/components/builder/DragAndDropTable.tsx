@@ -92,7 +92,7 @@ function DragAndDropTable({
       const [moved] = updated.splice(from, 1);
       updated.splice(to, 0, moved);
       setRows(updated);
-      notifyInteraction();
+      notifyInteraction("id", false);
       onOrderChange?.(updated);
 
     setDragIndex(null);
