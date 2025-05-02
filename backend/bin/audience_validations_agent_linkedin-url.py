@@ -76,13 +76,12 @@ async def process_rmq_message(
 ):
     try:
         body = json.loads(message.body)
-        logging.info(f"Processing message: {body}")
         user_id = body.get("user_id")
         aud_smart_id = body.get("aud_smart_id")
         batch = body.get("batch", [])
         validation_type = body.get("validation_type")
-        expected_count = body.get("count_persons_before_validation", -1)
-
+        logging.info(f"aud_smart_id: {aud_smart_id}")
+        logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
         verifications: list[AudienceLinkedinVerification] = []
 
@@ -177,8 +176,11 @@ async def process_rmq_message(
                 AudienceSmartPerson.is_validation_processed.is_(False),
             )
         )
-
-        if validation_count == expected_count:
+        total_count = db_session.query(AudienceSmartPerson).filter(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id
+            ).count()
+        
+        if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
             if aud_smart and aud_smart.validations:
@@ -211,7 +213,7 @@ async def process_rmq_message(
 
     except Exception:
         logging.exception("Error processing matching")
-        # await message.ack()
+        await message.ack()
 
 
 

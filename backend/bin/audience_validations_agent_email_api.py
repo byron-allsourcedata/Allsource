@@ -28,11 +28,6 @@ AUDIENCE_VALIDATION_AGENT_EMAIL_API = 'aud_validation_agent_email-api'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
 AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 
-COLUMN_MAPPING = {
-    'personal_email': 'delivery',
-    'business_email': 'delivery',
-}
-
 def setup_logging(level):
     logging.basicConfig(
         level=level,
@@ -135,11 +130,11 @@ async def process_rmq_message(
             validations = {}
             if aud_smart and aud_smart.validations:
                 validations = json.loads(aud_smart.validations)
-                key = COLUMN_MAPPING.get(validation_type)
-                for cat in validations.values():
-                    for rule in cat:
-                        if key in rule:
-                            rule[key]["processed"] = True
+                if validation_type in validations:
+                    for rule in validations[validation_type]:
+                        if "delivery" in rule:
+                            rule["delivery"]["processed"] = True
+
                 aud_smart.validations = json.dumps(validations)
 
             await publish_rabbitmq_message(
@@ -163,7 +158,7 @@ async def process_rmq_message(
 
     except Exception as e:
         logging.error(f"Error processing validation: {e}", exc_info=True)
-        # await message.ack()
+        await message.ack()
 
 
 

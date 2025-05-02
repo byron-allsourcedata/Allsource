@@ -80,11 +80,11 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
-            .join(
+            .outerjoin(
                 EnrichmentUserContact,
                 EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
-            .join(
+            .outerjoin(
                 EnrichmentEmploymentHistory,
                 EnrichmentEmploymentHistory.asid == EnrichmentUser.asid,
             )
@@ -111,7 +111,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
-            .join(
+            .outerjoin(
                 EnrichmentUserContact,
                 EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
@@ -122,7 +122,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
             .distinct(EnrichmentUserContact.asid)
             .all()
         ]
-    elif validation_type == "confirmation":
+    elif validation_type == "confirmation" or validation_type == 'dnc_filter':
         enrichment_users = [
             {
                 "audience_smart_person_id": user.audience_smart_person_id,
@@ -142,7 +142,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
-            .join(
+            .outerjoin(
                 EnrichmentUserContact,
                 EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
@@ -201,7 +201,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
-            .join(
+            .outerjoin(
                 EnrichmentUserContact,
                 EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
@@ -344,7 +344,8 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         "job_validation": AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
                                         "confirmation": AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
                                         "cas_home_address": AUDIENCE_VALIDATION_AGENT_POSTAL, "cas_office_address": AUDIENCE_VALIDATION_AGENT_POSTAL,
-                                        "business_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API, "personal_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API
+                                        "business_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API, "personal_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
+                                        "mobile_phone_dnc": AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API
                                         
                                     }
                                     queue_name = queue_map[column_name]
@@ -369,7 +370,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        # await message.nack()
+        await message.nack()
 
 
 async def main():

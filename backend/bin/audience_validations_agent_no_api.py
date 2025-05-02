@@ -21,10 +21,6 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
-from models.enrichment.enrichment_users import EnrichmentUser
-from models.enrichment.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment.enrichment_users import EnrichmentUser
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
@@ -140,16 +136,12 @@ async def aud_validation_agent(
         logging.info(f"Success ids len: {len(success_ids)}")
 
         with db_session.begin():
-            # if failed_ids:
-            #     db_session.bulk_update_mappings(
-            #         AudienceSmartPerson,
-            #         [{"id": pid, "is_validation_processed": False, "is_valid": False} for pid in failed_ids]
-            #     )
             if failed_ids:
                 db_session.bulk_update_mappings(
                     AudienceSmartPerson,
-                    [{"id": pid, "is_validation_processed": False} for pid in failed_ids]
+                    [{"id": pid, "is_validation_processed": False, "is_valid": False} for pid in failed_ids]
                 )
+                
             if success_ids:
                 db_session.bulk_update_mappings(
                     AudienceSmartPerson,
