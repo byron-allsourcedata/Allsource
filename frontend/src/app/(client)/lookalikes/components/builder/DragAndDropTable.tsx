@@ -38,7 +38,6 @@ function DragAndDropTable({
     if (rows.length > 0) {
       notifyInteraction("dragTable", handleComparer());
     }
-    console.log("sorted");
   }, [sortedInitial]);
 
   // Reset to original sorted order when resetTrigger fires
@@ -86,12 +85,9 @@ function DragAndDropTable({
   const handleComparer = () => {
     const initialIds = initialRowsRef.current.map(f => f.id);
     const currentIds = rows.map(f => f.id);
-    console.log(initialIds);
-    console.log(currentIds);
     const isSame = 
       initialIds.length === currentIds.length &&
       initialIds.every((id, idx) => id === currentIds[idx]);
-    console.log(isSame);
     return isSame
   }
 
