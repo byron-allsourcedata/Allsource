@@ -27,14 +27,14 @@ function DragAndDropTable({
   const initialRowsRef = React.useRef<Field[]>(sortedInitial);
   // Local state for current row order
   const [rows, setRows] = React.useState<Field[]>(initialRowsRef.current);
-  if (rows.length === 0) {
-    setRows(sortedInitial);
-  }
   const { resetTrigger, notifyInteraction } = useResetContext();
 
   // Sync when the incoming fields change (update reference only)
   React.useEffect(() => {
     initialRowsRef.current = sortedInitial;
+    if (rows.length === 0) {
+      setRows(initialRowsRef.current);
+    }
   }, [sortedInitial]);
 
   // Reset to original sorted order when resetTrigger fires
@@ -88,6 +88,7 @@ function DragAndDropTable({
     if (isNaN(from) || to === null || from === to) return;
 
     // compute new order outside setState callback to avoid render-phase context updates
+    console.log('[DragAndDropTable] before:', rows.map(r => r.id));  
     const updated = [...rows];
     const [moved] = updated.splice(from, 1);
     updated.splice(to, 0, moved);
