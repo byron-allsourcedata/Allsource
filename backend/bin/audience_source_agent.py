@@ -780,7 +780,7 @@ def to_dict(obj):
 
 def extract_non_zero_values(*insights):
     combined = {}
-    
+
     for insight in insights:
         for category, fields in to_dict(insight).items():
             if isinstance(fields, dict):
@@ -831,7 +831,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         if type == 'emails' and data_for_normalize:
             if data_for_normalize.matched_size == data_for_normalize.all_size:
                 calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service)
-                
+
             if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
                 await normalize_persons_customer_conversion(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
                                                             db_session=db_session, source_schema=audience_source.target_schema)
@@ -891,9 +891,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 existing=audience_source.insights,
                 new_insights=new_insights
             )
-            if type == 'user_ids':
-                calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service)
-        
+            
             db_session.execute(
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)
