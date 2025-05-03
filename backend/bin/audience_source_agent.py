@@ -18,12 +18,11 @@ from dataclasses import asdict
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 
-from models import EnrichmentUserContact
-
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from models import EnrichmentUserContact
 from services.insightsUtils import InsightsUtils
 from schemas.insights import InsightsByCategory, Personal, Financial, Lifestyle, Voter
 from models.five_x_five_emails import FiveXFiveEmails
@@ -417,6 +416,7 @@ async def process_and_send_chunks(
     status: str
 ):
     outgoing: List[Tuple[str, MessageBody]] = []
+    db_session.commit()
     with db_session.begin():
         result = (
             db_session.query(
@@ -432,10 +432,6 @@ async def process_and_send_chunks(
             )
             .filter(
                 AudienceSourcesMatchedPerson.source_id == source_id,
-                AudienceSourcesMatchedPerson.amount.isnot(None),
-                AudienceSourcesMatchedPerson.count.isnot(None),
-                AudienceSourcesMatchedPerson.recency.isnot(None),
-                AudienceSourcesMatchedPerson.start_date.isnot(None),
             )
             .first()
         )
@@ -948,9 +944,6 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             )
             .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)
         ).fetchone()
-
-        db_session.flush()
-        db_session.commit()
         logging.info(f"Updated processed and matched records for source_id {source_id}.")
 
         if processed_records >= total_records:
@@ -968,6 +961,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                                             batch_size=BATCH_SIZE, queue_name=AUDIENCE_SOURCES_MATCHING,
                                             connection=connection, status=message_body.status)
 
+        db_session.commit()
         await send_sse(connection, user_id,
                         {"source_id": source_id, "total": total_records, "processed": processed_records,
                         "matched": matched_records})

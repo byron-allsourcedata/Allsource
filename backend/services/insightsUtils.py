@@ -258,6 +258,7 @@ class InsightsUtils:
         source_id: str,
         db_session: Session,
     ) -> "InsightsByCategory":
+        db_session.commit()
         with db_session.begin():
             try:
                 source_row = (
