@@ -80,8 +80,8 @@ async def process_rmq_message(
         aud_smart_id = body.get("aud_smart_id")
         batch = body.get("batch", [])
         validation_type = body.get("validation_type")
-        expected_count = body.get("count_persons_before_validation", -1)
-
+        logging.info(f"aud_smart_id: {aud_smart_id}")
+        logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
         verifications: list[AudienceLinkedinVerification] = []
 
@@ -131,12 +131,14 @@ async def process_rmq_message(
 
             if not is_verify:
                 failed_ids.append(pid)
-
+                
+        logging.info(f"Failed ids len: {len(failed_ids)}")
         success_ids = [
             rec["audience_smart_person_id"]
             for rec in batch
             if rec["audience_smart_person_id"] not in failed_ids
         ]
+        logging.info(f"Success ids: {success_ids}")
         
         if verifications:
             db_session.bulk_save_objects(verifications)
@@ -174,8 +176,11 @@ async def process_rmq_message(
                 AudienceSmartPerson.is_validation_processed.is_(False),
             )
         )
-
-        if validation_count == expected_count:
+        total_count = db_session.query(AudienceSmartPerson).filter(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id
+            ).count()
+        
+        if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
             if aud_smart and aud_smart.validations:
@@ -208,7 +213,7 @@ async def process_rmq_message(
 
     except Exception:
         logging.exception("Error processing matching")
-        # await message.ack()
+        await message.ack()
 
 
 

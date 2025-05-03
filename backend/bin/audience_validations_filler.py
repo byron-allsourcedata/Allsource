@@ -80,11 +80,11 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
-            .join(
+            .outerjoin(
                 EnrichmentUserContact,
                 EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
-            .join(
+            .outerjoin(
                 EnrichmentEmploymentHistory,
                 EnrichmentEmploymentHistory.asid == EnrichmentUser.asid,
             )
@@ -111,7 +111,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
-            .join(
+            .outerjoin(
                 EnrichmentUserContact,
                 EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
@@ -122,7 +122,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
             .distinct(EnrichmentUserContact.asid)
             .all()
         ]
-    elif validation_type == "confirmation":
+    elif validation_type == "confirmation" or validation_type == 'dnc_filter':
         enrichment_users = [
             {
                 "audience_smart_person_id": user.audience_smart_person_id,
@@ -142,7 +142,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
-            .join(
+            .outerjoin(
                 EnrichmentUserContact,
                 EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
@@ -171,11 +171,11 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
-            .join(
+            .outerjoin(
                 EnrichmentPersonalProfiles,
                 EnrichmentPersonalProfiles.asid == EnrichmentUser.asid,
             )
-            .join(
+            .outerjoin(
                 UsaZipCode,
                 UsaZipCode.zip == EnrichmentPersonalProfiles.zip_code5,
             )
@@ -201,7 +201,7 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
-            .join(
+            .outerjoin(
                 EnrichmentUserContact,
                 EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
@@ -229,7 +229,6 @@ async def complete_validation(db_session: Session, aud_smart_id: int, connection
                     AudienceSmartPerson.smart_audience_id == aud_smart_id,
                     AudienceSmartPerson.is_valid == True,
                 ).scalar()
-
     db_session.query(AudienceSmart).filter(
         AudienceSmart.id == aud_smart_id
     ).update(
@@ -322,7 +321,8 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                 if not enrichment_users:
                                     logging.info(f"No enrichment users found for aud_smart_id {aud_smart_id}. column_name {column_name}")
                                     continue
-
+                                
+                                validation_processed(db_session, [user["audience_smart_person_id"] for user in enrichment_users])
                                 for j in range(0, len(enrichment_users), 100):
                                     batch = enrichment_users[j:j+100]
                                     serialized_batch = [
@@ -332,13 +332,11 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         }
                                         for user in batch
                                     ]
-                                    validation_processed(db_session, [user["audience_smart_person_id"] for user in serialized_batch])
                                     message_body = {
                                         'aud_smart_id': str(aud_smart_id),
                                         'user_id': user_id,
                                         'batch': serialized_batch,
-                                        'validation_type': column_name,
-                                        'count_persons_before_validation': len(enrichment_users)
+                                        'validation_type': column_name
                                     }
                                     queue_map = {
                                         "personal_email_validation_status": AUDIENCE_VALIDATION_AGENT_NOAPI, "personal_email_last_seen": AUDIENCE_VALIDATION_AGENT_NOAPI,
@@ -346,7 +344,8 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         "job_validation": AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
                                         "confirmation": AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
                                         "cas_home_address": AUDIENCE_VALIDATION_AGENT_POSTAL, "cas_office_address": AUDIENCE_VALIDATION_AGENT_POSTAL,
-                                        "business_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API, "personal_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API
+                                        "business_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API, "personal_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
+                                        "mobile_phone_dnc": AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API
                                         
                                     }
                                     queue_name = queue_map[column_name]
@@ -367,11 +366,11 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
         except IntegrityError as e:
             logging.warning(f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping.")
             db_session.rollback()
-            # await message.ack()
+            await message.ack()
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        # await message.nack()
+        await message.nack()
 
 
 async def main():

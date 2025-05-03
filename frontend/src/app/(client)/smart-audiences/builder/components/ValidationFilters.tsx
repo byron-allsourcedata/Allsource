@@ -137,7 +137,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
     } finally {
       setIsLoading(false);
     }
-};
+  };
 
   const handleNestedSelect = (option: string, value: string) => {
     if (!isValidate) {
@@ -257,7 +257,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
     }
     onValidate(validations);
     getEstimatePredictable([
-      ...selectedOptionsPersonalEmail.map(el => `personal_email-${toSnakeCase(el)}`), 
+      ...selectedOptionsPersonalEmail.map(el => `personal_email-${toSnakeCase(el)}`),
       ...selectedOptionsBusinessEmail.map(el => (el === "RecencyBusiness") ? `business_email-recency` : `personal_email-${toSnakeCase(el)}`),
       ...selectedOptionsPhone.map(el => `phone-${toSnakeCase(el)}`),
       ...selectedOptionsPostalCAS.map(el => `postal_cas_verification-${toSnakeCase(el)}`),
@@ -483,10 +483,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                         isValidate
                           ? undefined
                           : () =>
-                              removeChip(
-                                setSelectedOptionsPersonalEmail,
-                                option
-                              )
+                            removeChip(
+                              setSelectedOptionsPersonalEmail,
+                              option
+                            )
                       }
                       deleteIcon={
                         !isValidate ? (
@@ -618,12 +618,16 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                           checked={selectedOptionsPersonalEmail.includes(
                             "Recency"
                           )}
-                          onChange={() => {
-                            if (nestedSelections["Recency"]) {
-                              handleOptionClick(
-                                setSelectedOptionsPersonalEmail,
-                                "Recency"
-                              );
+                          onChange={(event) => {
+                            const isChecked = event.target.checked;
+
+                            handleOptionClick(
+                              setSelectedOptionsPersonalEmail,
+                              "Recency"
+                            );
+
+                            if (!isChecked) {
+                              handleNestedSelect("Recency", "");
                             }
                           }}
                           sx={{
@@ -806,21 +810,20 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       key={option}
                       label={
                         nestedSelections[option]
-                          ? `${
-                              option === "RecencyBusiness" ? "Recency" : option
-                            }: ${nestedSelections[option]}`
+                          ? `${option === "RecencyBusiness" ? "Recency" : option
+                          }: ${nestedSelections[option]}`
                           : option === "RecencyBusiness"
-                          ? "Recency"
-                          : option
+                            ? "Recency"
+                            : option
                       }
                       onDelete={
                         isValidate
                           ? undefined
                           : () =>
-                              removeChip(
-                                setSelectedOptionsBusinessEmail,
-                                option
-                              )
+                            removeChip(
+                              setSelectedOptionsBusinessEmail,
+                              option
+                            )
                       }
                       deleteIcon={
                         <CloseIcon
@@ -952,12 +955,16 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                           checked={selectedOptionsBusinessEmail.includes(
                             "RecencyBusiness"
                           )}
-                          onChange={() => {
-                            if (nestedSelections["RecencyBusiness"]) {
-                              handleOptionClick(
-                                setSelectedOptionsBusinessEmail,
-                                "RecencyBusiness"
-                              );
+                          onChange={(event) => {
+                            const isChecked = event.target.checked;
+
+                            handleOptionClick(
+                              setSelectedOptionsBusinessEmail,
+                              "RecencyBusiness"
+                            );
+
+                            if (!isChecked) {
+                              handleNestedSelect("RecencyBusiness", "");
                             }
                           }}
                           sx={{
@@ -1281,7 +1288,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                         isValidate
                           ? undefined
                           : () =>
-                              removeChip(setSelectedOptionsPostalCAS, option)
+                            removeChip(setSelectedOptionsPostalCAS, option)
                       }
                       deleteIcon={
                         <CloseIcon

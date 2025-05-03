@@ -21,10 +21,6 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
-from models.enrichment.enrichment_users import EnrichmentUser
-from models.enrichment.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment.enrichment_users import EnrichmentUser
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
@@ -116,7 +112,8 @@ async def aud_validation_agent(
         recency_personal_days = body.get("recency_personal_days", 0)
         recency_business_days = body.get("recency_business_days", 0)
         validation_type = body.get("validation_type")
-        expected_count = body.get("count_persons_before_validation", 0)
+        logging.info(f"aud_smart_id: {aud_smart_id}")
+        logging.info(f"validation_type: {validation_type}")
         validation_rules = {
             "personal_email_validation_status": lambda v: bool(v and v.startswith("Valid")),
             "business_email_validation_status": lambda v: bool(v and v.startswith("Valid")),
@@ -130,11 +127,13 @@ async def aud_validation_agent(
             for rec in batch
             if not validation_rules.get(validation_type, lambda _: False)(rec.get(validation_type))
         ]
+        logging.info(f"Failed ids len: {len(failed_ids)}")
         success_ids = [
             rec["audience_smart_person_id"]
             for rec in batch
             if rec["audience_smart_person_id"] not in failed_ids
         ]
+        logging.info(f"Success ids len: {len(success_ids)}")
 
         with db_session.begin():
             if failed_ids:
@@ -142,6 +141,7 @@ async def aud_validation_agent(
                     AudienceSmartPerson,
                     [{"id": pid, "is_validation_processed": False, "is_valid": False} for pid in failed_ids]
                 )
+                
             if success_ids:
                 db_session.bulk_update_mappings(
                     AudienceSmartPerson,
@@ -163,7 +163,10 @@ async def aud_validation_agent(
                     AudienceSmartPerson.is_validation_processed.is_(False)
                 )
             ).scalar_one()
-            if validation_count >= expected_count:
+            total_count = db_session.query(AudienceSmartPerson).filter(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id
+            ).count()
+            if validation_count == total_count:
                 aud_smart = db_session.get(AudienceSmart, aud_smart_id)
                 if aud_smart and aud_smart.validations:
                     validations = json.loads(aud_smart.validations)
