@@ -9,7 +9,7 @@ from uuid import UUID
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Union, Optional, Any, Dict
+from typing import List, Union, Optional, Any, Dict, Tuple
 import boto3
 from sqlalchemy import update, func
 from aio_pika import IncomingMessage, Connection
@@ -22,6 +22,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
+from models import EnrichmentUserContact
 from services.insightsUtils import InsightsUtils
 from schemas.insights import InsightsByCategory, Personal, Financial, Lifestyle, Voter
 from models.five_x_five_emails import FiveXFiveEmails
@@ -174,62 +175,75 @@ async def process_email_leads(
             logging.debug(
                 f"Added new person {email} with sale amount {sale_amount} and transaction date {transaction_date_obj}")
 
-    existing_persons = {p.email: p for p in db_session.query(AudienceSourcesMatchedPerson).filter(
-        AudienceSourcesMatchedPerson.source_id == source_id,
-        AudienceSourcesMatchedPerson.email.in_(matched_persons.keys())
-    ).all()}
-
-    logging.info(f"Found {len(existing_persons)} existing persons to update for source_id {source_id}")
-
-    reference_date = datetime.now()
-
-    matched_persons_to_update = []
-    matched_persons_to_add = []
-    for email, data in matched_persons.items():
-        last_transaction = data["start_date"]
-        recency = (reference_date - last_transaction).days if last_transaction else None
-
-        if email in existing_persons:
-            matched_person = existing_persons[email]
-            matched_person.count += data["orders_count"]
-            if include_amount:
-                matched_person.count += data["orders_amount"]
-
-            if data["start_date"]:
-                if matched_person.start_date is None or data["start_date"] > matched_person.start_date:
-                    matched_person.start_date = data["start_date"]
-                    matched_person.recency = recency
-                    logging.debug(f"Updated matched person {email}: orders_count={matched_person.count}")
-
-            matched_persons_to_update.append({
-                "id": matched_person.id,
-                "amount": matched_person.amount if include_amount else 0.0,
-                "count": matched_person.count,
-                "start_date": matched_person.start_date,
-                "recency": recency
-            })
-        else:
-            new_matched_person = AudienceSourcesMatchedPerson(
-                source_id=source_id,
-                email=email,
-                count=data["orders_count"],
-                start_date = data["start_date"],
-                recency=recency,
-                enrichment_user_id=data["enrichment_user_id"]
+    db_session.commit()
+    with db_session.begin():
+        existing_persons = {
+            p.email: p
+            for p in (
+                db_session
+                .query(AudienceSourcesMatchedPerson)
+                .filter(
+                    AudienceSourcesMatchedPerson.source_id == source_id,
+                    AudienceSourcesMatchedPerson.email.in_(matched_persons.keys())
+                )
+                .with_for_update()
+                .all()
             )
-            if include_amount:
-                new_matched_person.amount = data["orders_amount"]
+        }
 
-            matched_persons_to_add.append(new_matched_person)
-            logging.debug(f"Added new matched person {email}: orders_count={data['orders_count']}")
+        logging.info(f"Found {len(existing_persons)} existing persons to update")
 
-    if matched_persons_to_update:
-        logging.info(f"Updating {len(matched_persons_to_update)} persons in the database")
-        db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, matched_persons_to_update)
+        reference_date = datetime.now()
+        matched_persons_to_update = []
+        matched_persons_to_add = []
 
-    if matched_persons_to_add:
-        logging.info(f"Adding {len(matched_persons_to_add)} new persons to the database")
-        db_session.bulk_save_objects(matched_persons_to_add)
+        for email, data in matched_persons.items():
+            last_transaction = data["start_date"]
+            recency = ((reference_date - last_transaction).days
+                       if last_transaction else None)
+
+            if email in existing_persons:
+                p = existing_persons[email]
+                p.count += data["orders_count"]
+                if include_amount:
+                    p.amount += data["orders_amount"]
+                if last_transaction and (
+                    p.start_date is None or last_transaction > p.start_date
+                ):
+                    p.start_date = last_transaction
+                    p.recency     = recency
+
+                matched_persons_to_update.append({
+                    "id":        p.id,
+                    "count":     p.count,
+                    "amount":    p.amount if include_amount else None,
+                    "start_date": p.start_date,
+                    "recency":   p.recency,
+                })
+            else:
+                new_p = AudienceSourcesMatchedPerson(
+                    source_id=source_id,
+                    email=email,
+                    count=data["orders_count"],
+                    start_date=last_transaction,
+                    recency=recency,
+                    enrichment_user_id=data["enrichment_user_id"]
+                )
+                if include_amount:
+                    new_p.amount = data["orders_amount"]
+
+                matched_persons_to_add.append(new_p)
+
+        if matched_persons_to_add:
+            logging.info(f"Adding {len(matched_persons_to_add)} new persons")
+            db_session.bulk_save_objects(matched_persons_to_add)
+
+        if matched_persons_to_update:
+            logging.info(f"Updating {len(matched_persons_to_update)} persons")
+            db_session.bulk_update_mappings(
+                AudienceSourcesMatchedPerson,
+                matched_persons_to_update
+            )
 
     return len(matched_persons_to_add)
 
@@ -288,181 +302,195 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
     five_x_five_user_ids = [p.user_id for p in persons]
     logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
 
-    results_query = (
-        db_session.query(
-            LeadUser.id,
-            FiveXFiveUser.id.label("five_x_five_user_id")
-        )
-        .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
-        .filter(
-            LeadUser.user_id == audience_source.user_id,
-            FiveXFiveUser.id.in_(five_x_five_user_ids)
-        )
-        .all()
-    )
-
-    updates = []
-    for lead_id, five_x_five_user_id in results_query:
-        email_types_priority = [EmailType.BUSINESS, EmailType.PERSONAL, EmailType.ADDITIONAL_PERSONAL]
-        email = None
-        enrichment_user_id = None
-        for email_type in email_types_priority:
-            email_link = db_session.query(FiveXFiveUsersEmails.email_id).filter_by(
-                user_id=five_x_five_user_id,
-                type=email_type.value
-            ).first()
-            if not email_link:
-                continue
-
-            email_entry = db_session.query(FiveXFiveEmails.email).filter_by(
-                id=email_link.email_id
-            ).first()
-            if not email_entry:
-                continue
-
-            email = email_entry[0]
-            enrich_link = (
-                db_session.query(EnrichmentUsersEmails.enrichment_user_id)
-                .join(EnrichmentEmails,
-                      EnrichmentEmails.id == EnrichmentUsersEmails.email_id)
-                .filter(
-                    EnrichmentEmails.email == email
-                )
-                .first()
+    with db_session.begin():
+        existing_uids = {
+            row[0]
+            for row in db_session.query(AudienceSourcesMatchedPerson.enrichment_user_id)
+            .filter(AudienceSourcesMatchedPerson.source_id == source_id)
+            .all()
+        }
+        results_query = (
+            db_session.query(
+                LeadUser.id,
+                FiveXFiveUser.id.label("five_x_five_user_id")
             )
+            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+            .filter(
+                LeadUser.user_id == audience_source.user_id,
+                FiveXFiveUser.id.in_(five_x_five_user_ids)
+            )
+            .all()
+        )
 
-            if enrich_link:
-                enrichment_user_id = enrich_link[0]
+        updates = []
+        for lead_id, five_x_id in results_query:
+            enrichment_user_id = None
+            chosen_email = None
+            for t in (EmailType.BUSINESS, EmailType.PERSONAL, EmailType.ADDITIONAL_PERSONAL):
+                link_row = (
+                    db_session.query(FiveXFiveUsersEmails.email_id)
+                    .filter_by(user_id=five_x_id, type=t.value)
+                    .first()
+                )
+                if not link_row:
+                    continue
+
+                email_id = link_row[0]
+
+                email_row = (
+                    db_session
+                    .query(FiveXFiveEmails.email)
+                    .filter_by(id=email_id)
+                    .first()
+                )
+                if not email_row:
+                    continue
+                email = email_row[0]
+
+                enrich_row = (
+                    db_session
+                    .query(EnrichmentUsersEmails.enrichment_user_id)
+                    .join(EnrichmentEmails,
+                          EnrichmentEmails.id == EnrichmentUsersEmails.email_id)
+                    .filter(EnrichmentEmails.email == email)
+                    .first()
+                )
+                if not enrich_row:
+                    continue
+                enrichment_user_id = enrich_row[0]
+                chosen_email = email
                 break
 
-        if not enrichment_user_id:
-            continue
+            if not enrichment_user_id or enrichment_user_id in existing_uids:
+                continue
 
-        first_visit = db_session.query(LeadsVisits).filter(
-            LeadsVisits.lead_id == lead_id
-        ).order_by(
-            LeadsVisits.end_date.asc(), LeadsVisits.end_time.asc()
-        ).first()
-        last_visit = db_session.query(LeadsVisits).filter(
-            LeadsVisits.lead_id == lead_id
-        ).order_by(
-            LeadsVisits.end_date.desc(), LeadsVisits.end_time.desc()
-        ).first()
+            first = db_session.query(LeadsVisits) \
+                .filter_by(lead_id=lead_id) \
+                .order_by(LeadsVisits.end_date, LeadsVisits.end_time) \
+                .first()
+            last = db_session.query(LeadsVisits) \
+                .filter_by(lead_id=lead_id) \
+                .order_by(LeadsVisits.end_date.desc(),
+                          LeadsVisits.end_time.desc()) \
+                .first()
 
-        first_datetime = datetime.combine(first_visit.end_date, first_visit.end_time)
-        last_start_datetime = datetime.combine(last_visit.start_date, last_visit.start_time)
-        last_end_datetime = datetime.combine(last_visit.end_date, last_visit.end_time)
+            if not first or not last:
+                continue
 
-        calculate_result = calculate_website_visitor_user_value(first_datetime, last_start_datetime, last_end_datetime)
+            fd = datetime.combine(first.end_date, first.end_time)
+            ls = datetime.combine(last.start_date, last.start_time)
+            le = datetime.combine(last.end_date, last.end_time)
+            calc = calculate_website_visitor_user_value(fd, ls, le)
 
-        updates.append({
-            "source_id": source_id,
-            "enrichment_user_id": enrichment_user_id,
-            "email": email,
-            "start_date": calculate_result['active_start_date'],
-            "end_date": calculate_result['active_end_date'],
-            "recency": calculate_result['recency'],
-            "recency_min": calculate_result['recency_min'],
-            "recency_max": calculate_result['recency_max'],
-            "inverted_recency": calculate_result['inverted_recency'],
-            "inverted_recency_min": calculate_result['inverted_recency_min'],
-            "inverted_recency_max": calculate_result['inverted_recency_max'],
-            "duration": calculate_result['duration'],
-            "recency_score": calculate_result['recency_score'],
-            "view_score": calculate_result['page_view_score'],
-            "value_score": calculate_result['user_value_score'],
-        })
+            updates.append({
+                "source_id": source_id,
+                "enrichment_user_id": enrichment_user_id,
+                "email": chosen_email,
+                "start_date": calc["active_start_date"],
+                "end_date": calc["active_end_date"],
+                "recency": calc["recency"],
+                "recency_min": calc["recency_min"],
+                "recency_max": calc["recency_max"],
+                "inverted_recency": calc["inverted_recency"],
+                "inverted_recency_min": calc["inverted_recency_min"],
+                "inverted_recency_max": calc["inverted_recency_max"],
+                "duration": calc["duration"],
+                "recency_score": calc["recency_score"],
+                "view_score": calc["page_view_score"],
+                "value_score": calc["user_value_score"],
+            })
+            existing_uids.add(enrichment_user_id)
 
-    if updates:
-        db_session.bulk_insert_mappings(AudienceSourcesMatchedPerson, updates)
-        logging.info(f"Updated {len(updates)} persons.")
-        db_session.commit()
+        if updates:
+            db_session.bulk_insert_mappings(AudienceSourcesMatchedPerson, updates)
+            logging.info(f"Inserted {len(updates)} new persons for source_id {source_id}")
 
     return len(updates)
 
-
-
-async def process_and_send_chunks(db_session: Session, source_id: str, batch_size: int, queue_name: str,
-                                  connection, status: str):
-    result = db_session.query(
-        func.min(AudienceSourcesMatchedPerson.amount).label('min_orders_amount'),
-        func.max(AudienceSourcesMatchedPerson.amount).label('max_orders_amount'),
-        func.min(AudienceSourcesMatchedPerson.count).label('min_orders_count'),
-        func.max(AudienceSourcesMatchedPerson.count).label('max_orders_count'),
-        func.min(AudienceSourcesMatchedPerson.recency).label('min_recency'),
-        func.max(AudienceSourcesMatchedPerson.recency).label('max_recency'),
-        func.min(AudienceSourcesMatchedPerson.start_date).label('min_start_date'),
-        func.max(AudienceSourcesMatchedPerson.start_date).label('max_start_date'),
-        func.count().label('total_count')
-    ).filter(
-        AudienceSourcesMatchedPerson.source_id == source_id,
-        AudienceSourcesMatchedPerson.amount.isnot(None),
-        AudienceSourcesMatchedPerson.count.isnot(None),
-        AudienceSourcesMatchedPerson.recency.isnot(None),
-        AudienceSourcesMatchedPerson.start_date.isnot(None)
-    ).first()
-    
-    min_orders_amount = float(result.min_orders_amount) if result.min_orders_amount is not None else 0.0
-    max_orders_amount = float(result.max_orders_amount) if result.max_orders_amount is not None else 1.0
-    min_orders_count = int(result.min_orders_count or 0)
-    max_orders_count = int(result.max_orders_count or 1)
-    min_recency = float(result.min_recency) if result.min_recency is not None else 0.0
-    max_recency = float(result.max_recency) if result.max_recency is not None else 1.0
-    min_start_date = result.min_start_date
-    max_start_date = result.max_start_date
-    total_count = int(result.total_count or 0)
-
-    logging.info(f"Processing {result}")
-
-    for offset in range(0, total_count, batch_size):
-        matched_persons_list = db_session.query(AudienceSourcesMatchedPerson) \
-            .filter_by(source_id=source_id) \
-            .offset(offset) \
-            .limit(batch_size) \
-            .all()
-
-        if not matched_persons_list:
-            logging.warning(f"No more matched persons found for source_id {source_id} at offset {offset}")
-            break
-
-        logging.info(f"Processing {len(matched_persons_list)} matched persons for source_id {source_id}")
-
-        batch_rows: List[PersonEntry] = [
-            PersonEntry(
-                id=str(p.id),
-                email=str(p.email),
-                sum_amount=float(p.amount) if p.amount is not None else 0.0,
-                count=int(p.count),
-                recency=float(p.recency) if p.recency is not None else 0.0
+async def process_and_send_chunks(
+    db_session: Session,
+    source_id: str,
+    batch_size: int,
+    queue_name: str,
+    connection,
+    status: str
+):
+    outgoing: List[Tuple[str, MessageBody]] = []
+    db_session.commit()
+    with db_session.begin():
+        result = (
+            db_session.query(
+                func.min(AudienceSourcesMatchedPerson.amount).label('min_orders_amount'),
+                func.max(AudienceSourcesMatchedPerson.amount).label('max_orders_amount'),
+                func.min(AudienceSourcesMatchedPerson.count).label('min_orders_count'),
+                func.max(AudienceSourcesMatchedPerson.count).label('max_orders_count'),
+                func.min(AudienceSourcesMatchedPerson.recency).label('min_recency'),
+                func.max(AudienceSourcesMatchedPerson.recency).label('max_recency'),
+                func.min(AudienceSourcesMatchedPerson.start_date).label('min_start_date'),
+                func.max(AudienceSourcesMatchedPerson.start_date).label('max_start_date'),
+                func.count().label('total_count'),
             )
-            for p in matched_persons_list
-        ]
-
-        message_body = MessageBody(
-            type="emails",
-            data=DataBodyNormalize(
-                persons=batch_rows,
-                source_id=source_id,
-                data_for_normalize=DataForNormalize(
-                    matched_size=offset + len(batch_rows),
-                    all_size=total_count,
-                    min_amount=min_orders_amount,
-                    max_amount=max_orders_amount,
-                    min_count=min_orders_count,
-                    max_count=max_orders_count,
-                    min_start_date=min_start_date.isoformat() if min_start_date else None,
-                    max_start_date=max_start_date.isoformat() if max_start_date else None,
-                    min_recency=min_recency,
-                    max_recency=max_recency,
-                ),
-            ),
-            status=status
+            .filter(
+                AudienceSourcesMatchedPerson.source_id == source_id,
+            )
+            .first()
         )
 
-        await publish_rabbitmq_message(connection=connection, queue_name=queue_name, message_body=message_body)
-        logging.info(f"RMQ message sent for batch starting at offset {offset} of size {total_count}")
+        total_count = int(result.total_count or 0)
+        logging.info(f"Chunk stats: {result}")
 
-    logging.info(f"All chunks processed and messages sent for source_id {source_id}")
+        for offset in range(0, total_count, batch_size):
+            batch = (
+                db_session.query(AudienceSourcesMatchedPerson)
+                .filter_by(source_id=source_id)
+                .order_by(AudienceSourcesMatchedPerson.id)
+                .with_for_update(skip_locked=True)
+                .offset(offset)
+                .limit(batch_size)
+                .all()
+            )
+            if not batch:
+                break
+
+            rows = [
+                PersonEntry(
+                    id=str(p.id),
+                    email=str(p.email),
+                    sum_amount=float(p.amount or 0),
+                    count=int(p.count),
+                    recency=float(p.recency or 0.0)
+                )
+                for p in batch
+            ]
+            msg = MessageBody(
+                type="emails",
+                data=DataBodyNormalize(
+                    persons=rows,
+                    source_id=source_id,
+                    data_for_normalize=DataForNormalize(
+                        matched_size=offset + len(rows),
+                        all_size=total_count,
+                        min_amount=float(result.min_orders_amount or 0.0),
+                        max_amount=float(result.max_orders_amount or 1.0),
+                        min_count=int(result.min_orders_count or 0),
+                        max_count=int(result.max_orders_count or 1),
+                        min_start_date=(result.min_start_date.isoformat()
+                                        if result.min_start_date else None),
+                        max_start_date=(result.max_start_date.isoformat()
+                                        if result.max_start_date else None),
+                        min_recency=float(result.min_recency or 0.0),
+                        max_recency=float(result.max_recency or 1.0),
+                    ),
+                ),
+                status=status
+            )
+            outgoing.append((queue_name, msg))
+
+    for queue, msg in outgoing:
+        await publish_rabbitmq_message(connection=connection, queue_name=queue, message_body=msg)
+        logging.info(f"Sent chunk to {queue}: {msg.data.data_for_normalize.matched_size}/{total_count}")
+
+    logging.info(f"All {len(outgoing)} chunks sent for source_id {source_id}")
 
 async def normalize_persons_customer_conversion(
     persons: List[PersonEntry],
@@ -533,6 +561,43 @@ async def normalize_persons_customer_conversion(
         # 2. Professional Score calculated from JobLevel, Department, and CompanySize.
         # 3. Completeness Score based on the presence of a valid business email, LinkedIn URL,
         #    and non-null professional attributes.
+        matched_ids = [UUID(p.id) for p in persons]
+        prof_rows = (
+            db_session.query(
+                AudienceSourcesMatchedPerson.id.label("mp_id"),
+                EnrichmentProfessionalProfile.job_level,
+                EnrichmentProfessionalProfile.department,
+                EnrichmentProfessionalProfile.company_size,
+            )
+            .join(EnrichmentUser,
+                  AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id)
+            .join(EnrichmentProfessionalProfile,
+                  EnrichmentProfessionalProfile.asid == EnrichmentUser.asid)
+            .filter(AudienceSourcesMatchedPerson.id.in_(matched_ids))
+            .all()
+        )
+        profile_map = {
+            row.mp_id: row for row in prof_rows
+        }
+
+        contact_rows = (
+            db_session.query(
+                AudienceSourcesMatchedPerson.id.label("mp_id"),
+                EnrichmentUserContact.business_email,
+                EnrichmentUserContact.business_email_validation_status,
+                EnrichmentUserContact.linkedin_url,
+            )
+            .join(EnrichmentUser,
+                  AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id)
+            .join(EnrichmentUserContact,
+                  EnrichmentUserContact.asid == EnrichmentUser.asid)
+            .filter(AudienceSourcesMatchedPerson.id.in_(matched_ids))
+            .all()
+        )
+        contact_map = {
+            row.mp_id: row for row in contact_rows
+        }
+
         inverted_values = []
 
         for person in persons:
@@ -545,20 +610,25 @@ async def normalize_persons_customer_conversion(
         for idx, person in enumerate(persons):
             recency_inv = inverted_values[idx]
             recency_score = AudienceSourceMath.normalize_decimal(value=recency_inv, min_val=min_inv, max_val=max_inv)
-            job_level = getattr(person, 'job_level', None)
-            department = getattr(person, 'department', None)
-            company_size = getattr(person, 'company_size', None)
+            prof = profile_map.get(UUID(person.id))
+            job_level = getattr(prof, "job_level", None)
+            department = getattr(prof, "department", None)
+            company_size = getattr(prof, "company_size", None)
+
             job_level_weight = job_level_map.get(job_level, Decimal("0.2"))
             department_weight = department_map.get(department, Decimal("0.4"))
             company_size_weight = company_size_map.get(company_size, Decimal("0.2"))
+
             professional_score = (Decimal("0.5") * job_level_weight +
                                   Decimal("0.3") * department_weight +
                                   Decimal("0.2") * company_size_weight)
             completeness_score = Decimal("0.0")
-            if getattr(person, 'business_email', None) and getattr(person, 'business_email_validation_status', None) == 'Valid':
-                completeness_score += Decimal("0.4")
-            if getattr(person, 'linkedin_url', None):
-                completeness_score += Decimal("0.3")
+            contact = contact_map.get(UUID(person.id))
+            completeness = Decimal("0.0")
+            if contact and contact.business_email and contact.business_email_validation_status == 'Valid':
+                completeness += Decimal("0.4")
+            if contact and contact.linkedin_url:
+                completeness += Decimal("0.3")
             if job_level:
                 completeness_score += Decimal("0.2")
             if department:
@@ -590,7 +660,6 @@ async def normalize_persons_customer_conversion(
         db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
         logging.info(f"Updated {len(updates)} persons with lead value scores.")
         db_session.flush()
-        db_session.commit()
 
     logging.info(
         f"RMQ message sent for matched records {data_for_normalize.matched_size} matched persons "
@@ -651,8 +720,6 @@ async def normalize_persons_interest_leads(
         db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
         logging.info(f"Updated {len(updates)} persons.")
 
-    db_session.commit()
-
     logging.info(
         f"RMQ message sent for matched records {data_for_normalize.matched_size} matched persons "
         f"from {data_for_normalize.all_size} matched records."
@@ -697,8 +764,6 @@ async def normalize_persons_failed_leads(
     if updates:
         db_session.bulk_update_mappings(AudienceSourcesMatchedPerson, updates)
         logging.info(f"Updated {len(updates)} persons.")
-
-    db_session.commit()
 
     logging.info(
         f"RMQ message sent for matched records {data_for_normalize.matched_size} matched persons "
@@ -780,7 +845,7 @@ def to_dict(obj):
 
 def extract_non_zero_values(*insights):
     combined = {}
-    
+
     for insight in insights:
         for category, fields in to_dict(insight).items():
             if isinstance(fields, dict):
@@ -807,7 +872,6 @@ def calculate_and_save_significant_fields(db_session, source_id, similar_audienc
                 significant_fields=combined_insights
             )
         )
-    db_session.commit()
 
 async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection, similar_audience_service: SimilarAudienceService, audience_lookalikes_service: AudienceLookalikesService):
     try:
@@ -815,7 +879,8 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         message_body = MessageBody(**message_body_dict)
         data: Union[DataBodyNormalize, DataBodyFromSource] = message_body.data
         source_id: str = data.source_id
-        audience_source = db_session.query(AudienceSource).filter_by(id=source_id).first()
+        with db_session.begin():
+            audience_source = db_session.query(AudienceSource).filter_by(id=source_id).first()
 
         if not data or not audience_source:
             logging.warning("Message data is missing or audience source not found.")
@@ -827,30 +892,28 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         data_for_normalize: Optional[DataForNormalize] = (
             data.data_for_normalize if isinstance(data, DataBodyNormalize) else None
         )
+        with db_session.begin():
+            if type == 'emails' and data_for_normalize:
+                if data_for_normalize.matched_size == data_for_normalize.all_size:
+                    calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service)
 
-        if type == 'emails' and data_for_normalize:
-            if data_for_normalize.matched_size == data_for_normalize.all_size:
-                calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service)
-                
-            if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
-                await normalize_persons_customer_conversion(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
-                                                            db_session=db_session, source_schema=audience_source.target_schema)
+                if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
+                    await normalize_persons_customer_conversion(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
+                                                                db_session=db_session, source_schema=audience_source.target_schema)
 
-            if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
-                await normalize_persons_failed_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
-                                                            db_session=db_session)
+                if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
+                    await normalize_persons_failed_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
+                                                                db_session=db_session)
 
-            if message_body.status == TypeOfCustomer.INTEREST.value:
-                await normalize_persons_interest_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
-                                                            db_session=db_session)
+                if message_body.status == TypeOfCustomer.INTEREST.value:
+                    await normalize_persons_interest_leads(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
+                                                                db_session=db_session)
 
-            await message.ack()
-            return
+                await message.ack()
+                return
 
         count = 0
-
         user_id = data.user_id
-
         if type == 'user_ids':
             logging.info(f"Processing {len(persons)} user_id records.")
             count = await process_user_id(persons=persons, db_session=db_session, source_id=source_id,
@@ -864,12 +927,13 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
                 logging.info(f"Processing {len(persons)} failed lead records.")
                 count = await process_email_failed_leads(persons=persons, db_session=db_session, source_id=source_id)
-                
+
             if message_body.status == TypeOfCustomer.INTEREST.value:
                 logging.info(f"Processing {len(persons)} interest lead records.")
                 count = await process_email_interest_leads(persons=persons, db_session=db_session, source_id=source_id)
 
         logging.info(f"Updated processed and matched records for source_id {count}.")
+
 
         total_records, processed_records, matched_records = db_session.execute(
             update(AudienceSource)
@@ -880,37 +944,24 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             )
             .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)
         ).fetchone()
-
-        db_session.flush()
         logging.info(f"Updated processed and matched records for source_id {source_id}.")
 
         if processed_records >= total_records:
-            new_insights = InsightsUtils.process_insights(source_id=source_id, db_session=db_session)
-            
-            merged_insights = InsightsUtils.merge_insights_json(
-                existing=audience_source.insights,
-                new_insights=new_insights
-            )
+            InsightsUtils.process_insights(source_id=source_id, db_session=db_session)
             if type == 'user_ids':
-                calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service)
-        
-            db_session.execute(
-                update(AudienceSource)
-                .where(AudienceSource.id == source_id)
-                .values(
-                    insights=merged_insights,
-                    matched_records_status="complete"
-                )
-            )
+                calculate_and_save_significant_fields(db_session, source_id, similar_audience_service,
+                                                      audience_lookalikes_service)
+
+
             logging.info(f"Source_id {source_id} processing complete.")
 
-        db_session.commit()
 
         if type == 'emails' and processed_records >= total_records:
             await process_and_send_chunks(db_session=db_session, source_id=source_id,
                                             batch_size=BATCH_SIZE, queue_name=AUDIENCE_SOURCES_MATCHING,
                                             connection=connection, status=message_body.status)
 
+        db_session.commit()
         await send_sse(connection, user_id,
                         {"source_id": source_id, "total": total_records, "processed": processed_records,
                         "matched": matched_records})

@@ -19,28 +19,31 @@ function DragAndDropTable({
   fields,
   onOrderChange,
 }: LookalikeFieldsGridProps) {
-  const { resetTrigger, notifyInteraction } = useResetContext();
-
   // Compute and store the initial sorted order by importance on mount or fields change
   const sortedInitial = React.useMemo(() =>
     [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value)),
     [fields]
   );
   const initialRowsRef = React.useRef<Field[]>(sortedInitial);
-
   // Local state for current row order
   const [rows, setRows] = React.useState<Field[]>(initialRowsRef.current);
+  const { resetTrigger, notifyInteraction } = useResetContext();
 
   // Sync when the incoming fields change (update reference only)
   React.useEffect(() => {
     initialRowsRef.current = sortedInitial;
-    // do not reset rows on external fields change to preserve user order
-    // setRows(sortedInitial);
+    if (rows.length === 0) {
+      setRows(initialRowsRef.current);
+    }
+    if (rows.length > 0) {
+      notifyInteraction("dragTable", handleComparer());
+    }
   }, [sortedInitial]);
 
   // Reset to original sorted order when resetTrigger fires
   React.useEffect(() => {
     setRows(initialRowsRef.current);
+    onOrderChange?.(initialRowsRef.current);
     // Do not trigger parent on reset; parent can get rows via onOrderChange if needed
   }, [resetTrigger]);
 
@@ -79,6 +82,15 @@ function DragAndDropTable({
     event.dataTransfer.dropEffect = 'move';
   };
 
+  const handleComparer = () => {
+    const initialIds = initialRowsRef.current.map(f => f.id);
+    const currentIds = rows.map(f => f.id);
+    const isSame = 
+      initialIds.length === currentIds.length &&
+      initialIds.every((id, idx) => id === currentIds[idx]);
+    return isSame
+  }
+
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const src = event.dataTransfer.getData('text/plain');
@@ -88,12 +100,12 @@ function DragAndDropTable({
     if (isNaN(from) || to === null || from === to) return;
 
     // compute new order outside setState callback to avoid render-phase context updates
-      const updated = [...rows];
-      const [moved] = updated.splice(from, 1);
-      updated.splice(to, 0, moved);
-      setRows(updated);
-      notifyInteraction();
-      onOrderChange?.(updated);
+ 
+    const updated = [...rows];
+    const [moved] = updated.splice(from, 1);
+    updated.splice(to, 0, moved);
+    setRows(updated);
+    onOrderChange?.(updated);
 
     setDragIndex(null);
     setDragOverIndex(null);

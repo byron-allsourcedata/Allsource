@@ -2,8 +2,10 @@ import uuid
 from collections import defaultdict, Counter
 from typing import List, Optional, Dict, Any
 
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
+from models import AudienceSource
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 
@@ -256,25 +258,49 @@ class InsightsUtils:
         source_id: str,
         db_session: Session,
     ) -> "InsightsByCategory":
-        insights = InsightsByCategory()
+        db_session.commit()
+        with db_session.begin():
+            try:
+                source_row = (
+                    db_session.query(AudienceSource)
+                    .filter(AudienceSource.id == source_id)
+                    .with_for_update()
+                    .one()
+                )
+            except NoResultFound:
+                return InsightsByCategory()
 
-        user_ids: List[uuid.UUID] = [
-            uid for (uid,) in db_session
-            .query(AudienceSourcesMatchedPerson.enrichment_user_id)
-            .filter(AudienceSourcesMatchedPerson.source_id == source_id)
-            .all()
-        ]
-        if not user_ids:
-            return insights
+            user_ids = [
+                uid for (uid,) in db_session
+                .query(AudienceSourcesMatchedPerson.enrichment_user_id)
+                .filter(AudienceSourcesMatchedPerson.source_id == source_id)
+                .all()
+            ]
+            if not user_ids:
+                return InsightsByCategory()
 
-        asids: List[uuid.UUID] = [
-            asid for (asid,) in db_session
-            .query(EnrichmentUser.asid)
-            .filter(EnrichmentUser.id.in_(user_ids))
-            .all()
-        ]
+            asids = [
+                asid for (asid,) in db_session
+                .query(EnrichmentUser.asid)
+                .filter(EnrichmentUser.id.in_(user_ids))
+                .all()
+            ]
+            if not asids:
+                return InsightsByCategory()
 
-        return InsightsUtils.process_insights_for_asids(insights, asids, db_session)
+            new_insights = InsightsByCategory()
+            new_insights = InsightsUtils.process_insights_for_asids(
+                new_insights, asids, db_session
+            )
+
+            merged = InsightsUtils.merge_insights_json(
+                existing=source_row.insights,
+                new_insights=new_insights
+            )
+            source_row.insights = merged
+
+            source_row.matched_records_status = "complete"
+        return new_insights
 
     @staticmethod
     def compute_insights_for_lookalike(
@@ -297,7 +323,7 @@ class InsightsUtils:
             .filter(EnrichmentUser.id.in_(user_ids))
             .all()
         ]
-        
+
         return InsightsUtils.process_insights_for_asids(insights, asids, db_session)
 
     @staticmethod
