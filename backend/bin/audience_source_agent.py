@@ -891,7 +891,10 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
                 existing=audience_source.insights,
                 new_insights=new_insights
             )
-            
+            if type == 'user_ids':
+                calculate_and_save_significant_fields(db_session, source_id, similar_audience_service,
+                                                      audience_lookalikes_service)
+
             db_session.execute(
                 update(AudienceSource)
                 .where(AudienceSource.id == source_id)
