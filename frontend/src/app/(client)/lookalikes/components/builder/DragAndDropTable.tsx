@@ -35,6 +35,10 @@ function DragAndDropTable({
     if (rows.length === 0) {
       setRows(initialRowsRef.current);
     }
+    if (rows.length > 0) {
+      notifyInteraction("dragTable", handleComparer());
+    }
+    console.log("sorted");
   }, [sortedInitial]);
 
   // Reset to original sorted order when resetTrigger fires
@@ -79,6 +83,18 @@ function DragAndDropTable({
     event.dataTransfer.dropEffect = 'move';
   };
 
+  const handleComparer = () => {
+    const initialIds = initialRowsRef.current.map(f => f.id);
+    const currentIds = rows.map(f => f.id);
+    console.log(initialIds);
+    console.log(currentIds);
+    const isSame = 
+      initialIds.length === currentIds.length &&
+      initialIds.every((id, idx) => id === currentIds[idx]);
+    console.log(isSame);
+    return isSame
+  }
+
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const src = event.dataTransfer.getData('text/plain');
@@ -88,12 +104,11 @@ function DragAndDropTable({
     if (isNaN(from) || to === null || from === to) return;
 
     // compute new order outside setState callback to avoid render-phase context updates
-    console.log('[DragAndDropTable] before:', rows.map(r => r.id));  
+ 
     const updated = [...rows];
     const [moved] = updated.splice(from, 1);
     updated.splice(to, 0, moved);
     setRows(updated);
-    notifyInteraction("id", false);
     onOrderChange?.(updated);
 
     setDragIndex(null);
