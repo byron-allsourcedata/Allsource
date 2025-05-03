@@ -19,28 +19,28 @@ function DragAndDropTable({
   fields,
   onOrderChange,
 }: LookalikeFieldsGridProps) {
-  const { resetTrigger, notifyInteraction } = useResetContext();
-
   // Compute and store the initial sorted order by importance on mount or fields change
   const sortedInitial = React.useMemo(() =>
     [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value)),
     [fields]
   );
   const initialRowsRef = React.useRef<Field[]>(sortedInitial);
-
   // Local state for current row order
   const [rows, setRows] = React.useState<Field[]>(initialRowsRef.current);
+  if (rows.length === 0) {
+    setRows(sortedInitial);
+  }
+  const { resetTrigger, notifyInteraction } = useResetContext();
 
   // Sync when the incoming fields change (update reference only)
   React.useEffect(() => {
     initialRowsRef.current = sortedInitial;
-    // do not reset rows on external fields change to preserve user order
-    // setRows(sortedInitial);
   }, [sortedInitial]);
 
   // Reset to original sorted order when resetTrigger fires
   React.useEffect(() => {
     setRows(initialRowsRef.current);
+    onOrderChange?.(initialRowsRef.current);
     // Do not trigger parent on reset; parent can get rows via onOrderChange if needed
   }, [resetTrigger]);
 
@@ -88,12 +88,12 @@ function DragAndDropTable({
     if (isNaN(from) || to === null || from === to) return;
 
     // compute new order outside setState callback to avoid render-phase context updates
-      const updated = [...rows];
-      const [moved] = updated.splice(from, 1);
-      updated.splice(to, 0, moved);
-      setRows(updated);
-      notifyInteraction("id", false);
-      onOrderChange?.(updated);
+    const updated = [...rows];
+    const [moved] = updated.splice(from, 1);
+    updated.splice(to, 0, moved);
+    setRows(updated);
+    notifyInteraction("id", false);
+    onOrderChange?.(updated);
 
     setDragIndex(null);
     setDragOverIndex(null);

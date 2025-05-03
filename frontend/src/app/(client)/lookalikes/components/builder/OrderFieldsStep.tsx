@@ -17,6 +17,8 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
     handlePrevStep,
     onOrderChange,
 }) => {
+    React.useEffect(() => {
+    }, []);
     const [activeStep, setActiveStep] = React.useState(1);
     const { atDefault, userInteracted, resetAll } = useResetContext();
     const handleStep = (step: number) => () => {
@@ -63,7 +65,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                         fontSize: '14px',
                         },
                         '& .MuiStepIcon-root': {
-                        color: index === activeStep ? 'rgba(80, 82, 178, 1)' : 'rgba(212, 212, 212, 1)',
+                        color: index === 1 ? 'rgba(80, 82, 178, 1)' : 'rgba(212, 212, 212, 1)',
                         },
                     }}>
                     {label}

@@ -283,7 +283,11 @@ const CreateLookalikePage: React.FC = () => {
   const canProceed = (personalKeys.length + financialKeys.length 
                  + lifestylesKeys.length + voterKeys.length + professionalProfileKeys.length 
                  + employmentHistoryKeys.length) >= 3;
-
+  
+  const handleFieldsOrderChange = (newOrder: Field[]) => {
+    setDndFields(newOrder);
+  };
+  
   return (
     <Box
       sx={{
@@ -628,13 +632,13 @@ const CreateLookalikePage: React.FC = () => {
                 )}
 
                 {/* Calculation results block rendered with flex layout */}
-                {currentStep == 3 && (
+                <Box hidden={currentStep !== 3}>
                   <OrderFieldsStep
-                  fields={dndFields}
-                  handlePrevStep={handlePrevStep}
-                  onOrderChange={newOrder => setDndFields(newOrder)}
+                    fields={dndFields}
+                    handlePrevStep={handlePrevStep}
+                    onOrderChange={handleFieldsOrderChange}
                   />
-                )}
+                </Box>
 
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
                 {currentStep >= 3 && (
