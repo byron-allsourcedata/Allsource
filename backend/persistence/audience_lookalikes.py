@@ -53,8 +53,8 @@ class AudienceLookalikesPersistence:
             UserDomains.domain,
             AudienceSource.target_schema)\
             .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)\
-            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)\
-            .order_by(desc(AudienceLookalikes.created_date))\
+            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id) \
+            .join(Users, Users.id == AudienceSource.created_by_user_id) \
             .filter(AudienceLookalikes.user_id == user_id)
             
         if search_query:
