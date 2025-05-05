@@ -24,7 +24,6 @@ sys.path.append(parent_dir)
 
 from models import EnrichmentUserContact
 from services.insightsUtils import InsightsUtils
-from schemas.insights import InsightsByCategory, Personal, Financial, Lifestyle, Voter
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
 from models.five_x_five_users import FiveXFiveUser
@@ -947,7 +946,11 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         logging.info(f"Updated processed and matched records for source_id {source_id}.")
 
         if processed_records >= total_records:
-            InsightsUtils.process_insights(source_id=source_id, db_session=db_session)
+            atype = {
+                "b2b": BusinessType.B2B,
+                "b2c": BusinessType.B2C,
+            }.get(audience_source.target_schema, BusinessType.ALL)
+            InsightsUtils.process_insights(source_id=source_id, db_session=db_session, audience_type=atype)
             if type == 'user_ids':
                 calculate_and_save_significant_fields(db_session, source_id, similar_audience_service,
                                                       audience_lookalikes_service)
