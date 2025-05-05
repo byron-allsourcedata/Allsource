@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index, BigInteger, text, \
+from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index, BigInteger, func, text, \
     String
 from sqlalchemy.dialects.postgresql import ENUM
 from datetime import datetime
@@ -35,7 +35,11 @@ class IntegrationUserSync(Base):
         server_default=text("'pixel'::data_sync_type")
     )
     is_active = Column(Boolean, nullable=True)
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(
+        TIMESTAMP, 
+        nullable=False, 
+        server_default=text('now()')
+    )
     last_sync_date = Column(TIMESTAMP, nullable=True)
     list_id = Column(VARCHAR, nullable=True)
     list_name = Column(VARCHAR, nullable=True)

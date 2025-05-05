@@ -401,7 +401,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                 sent_contacts: valueContactSync,
                 smart_audience_id: id,
                 data_map: [
-                    ...defaultRows.map((item) => ({ value: item.type, type: toSnakeCase(item.type) })),
+                    // ...defaultRows.map((item) => ({ value: item.type, type: toSnakeCase(item.type) })),
                     ...customFields
                 ]
             }
