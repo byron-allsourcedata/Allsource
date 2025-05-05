@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Box, Typography, Stack, IconButton, Collapse } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 
 type BarData = {
   label: string;
@@ -14,6 +15,7 @@ type GradientBarChartProps = {
   gradientColor?: string;
   sortByPercent?: boolean;
   rank?: number;
+  textPadding?: boolean
 };
 
 const getGradient = (relativePercent: number, gradientColor: string) => {
@@ -32,7 +34,8 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
   data,
   gradientColor = "98, 178, 253",
   sortByPercent = true,
-  rank
+  rank,
+  textPadding
 }) => {
 
   const [expanded, setExpanded] = useState(false);
@@ -47,83 +50,108 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
 
   return (
     <Box
-      p={2}
       bgcolor="#fff"
       sx={{
         width: "100%",
         borderRadius: "6px",
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
+        position: 'relative'
       }}
     >
-      <Box sx={{
-        width: "100%",
-        justifyContent: 'space-between',
-        display: 'flex',
-        flexDirection: 'row',
-        mb: 2
-      }}>
-        <Typography className="dashboard-card-heading">
-          {title}
-        </Typography>
-        {rank !== undefined && (
-          <Typography
-            component="span"
-            sx={{
-              fontSize: 12,
-              ml: 1,
-              color: "#888",
-              verticalAlign: "middle",
-            }}
-          >
-            #{rank}
-          </Typography>
-        )}
-      </Box>
-
-      <Stack spacing={1}>
-        {visibleData.map(({ label, percent }, index) => {
-          const relative = percent / maxPercent;
-
-          return (
-            <Box key={index}>
-              <Box display="flex" justifyContent="space-between" mb={0.5}>
-                <Typography
-                  className="dashboard-card-text"
-                  sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
-                >
-                  {label}
-                </Typography>
-                <Typography
-                  className="dashboard-card-text"
-                  sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
-                >
-                  {percent}%
-                </Typography>
-              </Box>
-              <Box
-                height={24}
-                borderRadius={2}
-                sx={{
-                  width: `${percent}%`,
-                  backgroundColor: getGradient(relative, gradientColor),
-                  transition: "background 0.3s ease",
-                }}
-              />
-            </Box>
-          );
-        })}
-      </Stack>
-
-      {sortedData.length > 5 && (
-        <Box mt={2} display="flex" justifyContent="center">
-          <IconButton onClick={() => setExpanded((prev) => !prev)} size="small">
-            <Typography sx={{ fontSize: 14, mr: 0.5 }}>
-              {expanded ? "Show Less" : "Show More"}
-            </Typography>
-            {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-          </IconButton>
+      {rank !== undefined && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            backgroundColor: 'rgba(30, 136, 229, 1)',
+            color: 'white',
+            borderTopRightRadius: '4px',
+            borderBottomLeftRadius: '4px',
+            px: 1.5,
+            py: 0.5,
+            fontFamily: 'Roboto',
+            fontSize: 12,
+            fontWeight: 500,
+            maxWidth: '100%',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <ArrowDropUpIcon sx={{ fontSize: 16, mr: 0.5 }} />
+          #{rank} Predictable field
         </Box>
       )}
+      <Box
+        bgcolor="#fff"
+        p={2}
+        sx={{
+          width: "100%",
+          height: '100%'
+        }}>
+
+        <Box
+          sx={{
+            width: '100%',
+            justifyContent: 'space-between',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            mb: 2,
+            pt: textPadding ? 1 : 0,
+          }}
+        >
+          <Typography className="dashboard-card-heading" >
+            {title}
+          </Typography>
+        </Box>
+
+        <Stack spacing={textPadding ? 3.5 : 2}>
+          {visibleData.map(({ label, percent }, index) => {
+            const relative = percent / maxPercent;
+
+            return (
+              <Box key={index}>
+                <Box display="flex" justifyContent="space-between" mb={0.5}>
+                  <Typography
+                    className="dashboard-card-text"
+                    sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
+                  >
+                    {label}
+                  </Typography>
+                  <Typography
+                    className="dashboard-card-text"
+                    sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
+                  >
+                    {percent}%
+                  </Typography>
+                </Box>
+                <Box
+                  height={24}
+                  borderRadius={2}
+                  sx={{
+                    width: `${percent}%`,
+                    backgroundColor: getGradient(relative, gradientColor),
+                    transition: "background 0.3s ease",
+                  }}
+                />
+              </Box>
+            );
+          })}
+        </Stack>
+
+        {sortedData.length > 5 && (
+          <Box display="flex" justifyContent="center">
+            <IconButton onClick={() => setExpanded((prev) => !prev)} size="small">
+              <Typography sx={{ fontSize: 14, mr: 0.5 }}>
+                {expanded ? "Show Less" : "Show More"}
+              </Typography>
+              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Box>
+        )}
+      </Box>
     </Box>
   );
 };

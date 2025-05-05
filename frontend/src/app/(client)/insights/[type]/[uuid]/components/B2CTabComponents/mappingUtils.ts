@@ -64,12 +64,20 @@ export const getHeatmapColor = (percent: number | string): string => {
 export const getColorForLabel = (label: string): string => {
   switch (label.toLowerCase()) {
     case "home owners":
+      return "rgba(249, 233, 156, 1)";
     case "married":
+      return "rgba(249, 233, 156, 1)";
     case "have children":
-      return "rgba(98, 178, 253, 1)";
+      return "rgba(249, 233, 156, 1)";
+    case "will vote":
+      return "rgba(249, 233, 156, 1)";
     case "rent home":
+      return "rgba(249, 155, 171, 1)";
     case "single":
+      return "rgba(249, 155, 171, 1)";
     case "don’t have children":
+      return "rgba(249, 155, 171, 1)";
+    case "won’t vote":
       return "rgba(249, 155, 171, 1)";
     default:
       return "rgba(155, 223, 196, 1)";
