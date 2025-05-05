@@ -93,7 +93,7 @@ const SourcesImport: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
-  const [targetAudience, setTargetAudience] = useState<string | "">("");
+  const [targetAudience, setTargetAudience] = useState<string>("");
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -158,6 +158,10 @@ const SourcesImport: React.FC = () => {
     );
   };
 
+  const handlePixelInstall = () => {
+    router.push("/dashboard");
+  }
+
   const handleAdd = () => {
     const hiddenRowIndex = rows.findIndex((row) => row.isHidden);
     if (hiddenRowIndex !== -1) {
@@ -171,15 +175,15 @@ const SourcesImport: React.FC = () => {
     let updatedRows = defaultRows.map((row) => {
       if (row.type === "Transaction Date") {
         let newType = row.type;
-        if (sourceType === "Customer Conversions") newType = "Transaction Date";
-        if (sourceType === "Failed Leads") newType = "Lead Date";
-        if (sourceType === "Interest") newType = "Interest Date";
+        if (sourceType === "Customer Conversions (CSV)") newType = "Transaction Date";
+        if (sourceType === "Failed Leads (CSV)") newType = "Lead Date";
+        if (sourceType === "Interest (CSV)") newType = "Interest Date";
 
         return { ...row, type: newType };
       }
       return row;
     });
-    if (sourceType === "Customer Conversions") {
+    if (sourceType === "Customer Conversions (CSV)") {
       updatedRows = [
         ...updatedRows,
         {
@@ -218,12 +222,24 @@ const SourcesImport: React.FC = () => {
   // Switching
 
   const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
+    if (event.target.value === "Website - Pixel") {
+      setSourceMethod(2)
+      scrollToBlock(block4Ref)
+      fetchDomainsAndLeads()
+    }
+    else {
+      setSourceMethod(1)
+      scrollToBlock(block2Ref)
+    }
+
     handleDeleteFile();
+    setTargetAudience("")
     setSourceType(event.target.value);
   };
 
   const handleTargetAudienceChange = (value: string) => {
     setTargetAudience(value);
+    scrollToBlock(block6Ref)
   };
 
 
@@ -484,6 +500,7 @@ const SourcesImport: React.FC = () => {
 
       const content = await readFileContent(file);
       await processFileContent(content);
+      scrollToBlock(block3Ref)
     } catch (error: unknown) {
       if (error instanceof Error) {
         showErrorToast(error.message);
@@ -534,11 +551,6 @@ const SourcesImport: React.FC = () => {
       setSelectedDomainId(selectedDomainData.id);
       setMatchedLeads(0);
       setEventType([]);
-      if (!selectedDomainData.pixel_installed) {
-        setPixelNotInstalled(true);
-      } else {
-        setPixelNotInstalled(false);
-      }
     }
   };
 
@@ -551,6 +563,8 @@ const SourcesImport: React.FC = () => {
       if (response.status === 200) {
         const domains = response.data;
         setDomains(domains);
+        const hasNoPixel = domains.some((domain: any) => !domain.pixel_installed);
+        setPixelNotInstalled(hasNoPixel);
       }
     } catch {
     } finally {
@@ -617,6 +631,7 @@ const SourcesImport: React.FC = () => {
               }}
             >
               <Box
+                ref={block1Ref}
                 sx={{
                   display: "flex",
                   flexDirection: "column",
@@ -659,7 +674,34 @@ const SourcesImport: React.FC = () => {
                     },
                   }}
                 >
-                  <Button
+                  <FormControl variant="outlined">
+                    <Select
+                      value={sourceType}
+                      onChange={handleChangeSourceType}
+                      displayEmpty
+                      sx={{
+                        ...sourcesStyles.text,
+                        width: "316px",
+                        borderRadius: "4px",
+                        fontSize: "14px", fontFamily: "Roboto",
+                        color: sourceType === "" ? "rgba(112, 112, 113, 1)" : "rgba(32, 33, 36, 1)",
+                        "@media (max-width: 390px)": {
+                          width: "calc(100vw - 74px)",
+                        },
+                      }}
+                    >
+                      <MenuItem value="" disabled sx={{ display: "none"}}>
+                        Choose Source Type
+                      </MenuItem>
+                      <MenuItem sx={{fontSize: "14px" }} value={"Website - Pixel"}>Website - Pixel</MenuItem>
+                      <MenuItem sx={{fontSize: "14px" }} value={"Customer Conversions"}>
+                        Customer Conversions (CSV)
+                      </MenuItem>
+                      <MenuItem sx={{fontSize: "14px" }} value={"Failed Leads"}>Failed Leads (CSV)</MenuItem>
+                      <MenuItem sx={{fontSize: "14px" }} value={"Interest"}>Interest (CSV)</MenuItem>
+                    </Select>
+                  </FormControl>
+                  {/* <Button
                     variant="outlined"
                     startIcon={
                       <Image
@@ -745,92 +787,11 @@ const SourcesImport: React.FC = () => {
                     }}
                   >
                     Website - Pixel
-                  </Button>
+                  </Button> */}
                 </Box>
               </Box>
 
-              {sourceMethod !== 0 && (
-                <Box
-                  ref={block1Ref}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    minWidth: "100%",
-                    flexGrow: 1,
-                    position: "relative",
-                    flexWrap: "wrap",
-                    border: "1px solid rgba(228, 228, 228, 1)",
-                    borderRadius: "6px",
-                    padding: "20px",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      width: "100%",
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      gap: 1,
-                    }}
-                  >
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Nunito Sans",
-                          fontSize: "16px",
-                          fontWeight: 500,
-                        }}
-                      >
-                        Select your target type
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: "Roboto",
-                          fontSize: "12px",
-                          color: "rgba(95, 99, 104, 1)",
-                        }}
-                      >
-                        Choose what you would like to use it for.
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
-                    {["B2B", "B2C"].map((option) => (
-                      <ToggleButton
-                        key={option}
-                        value={option}
-                        selected={targetAudience === option}
-                        className="form-input-label"
-                        onClick={() => handleTargetAudienceChange(option)}
-                        sx={{
-                          "&.MuiToggleButton-root.Mui-selected": {
-                            backgroundColor: "rgba(246, 248, 250, 1)",
-                            ":hover": {
-                              borderColor: "rgba(208, 213, 221, 1)",
-                              backgroundColor: "rgba(236, 238, 241, 1)",
-                            },
-                          },
-                          textTransform: "none",
-                          border:
-                            targetAudience === option
-                              ? "1px solid rgba(117, 168, 218, 1)"
-                              : "1px solid #ccc",
-                          color: "rgba(32, 33, 36, 1)",
-                          borderRadius: "4px",
-                          padding: "8px 12px",
-                        }}
-                      >
-                        {option}
-                      </ToggleButton>
-                    ))}
-                  </Box>
-                </Box>
-              )}
-
-              {sourceMethod === 1 && targetAudience !== "" && (
+              {sourceMethod === 1 && (
                 <Box
                   ref={block2Ref}
                   sx={{
@@ -891,30 +852,6 @@ const SourcesImport: React.FC = () => {
                       who have successfully completed an order on your website.
                     </Typography>
                   </Box>
-                  <FormControl variant="outlined">
-                    <Select
-                      value={sourceType}
-                      onChange={handleChangeSourceType}
-                      displayEmpty
-                      sx={{
-                        ...sourcesStyles.text,
-                        width: "316px",
-                        borderRadius: "4px",
-                        "@media (max-width: 390px)": {
-                          width: "calc(100vw - 74px)",
-                        },
-                      }}
-                    >
-                      <MenuItem value="" disabled sx={{ display: "none" }}>
-                        Select a Source Type
-                      </MenuItem>
-                      <MenuItem value={"Customer Conversions"}>
-                        Customer Conversions
-                      </MenuItem>
-                      <MenuItem value={"Failed Leads"}>Failed Leads</MenuItem>
-                      <MenuItem value={"Interest"}>Interest</MenuItem>
-                    </Select>
-                  </FormControl>
                   {sourceType !== "" && !file && (
                     <Box
                       sx={{
@@ -1052,6 +989,7 @@ const SourcesImport: React.FC = () => {
                         ...sourcesStyles.text,
                         gap: 0.25,
                         pt: 1,
+                        fontSize: "12px",
                         "@media (max-width: 700px)": { mb: 1 },
                       }}
                     >
@@ -1073,7 +1011,7 @@ const SourcesImport: React.FC = () => {
                 </Box>
               )}
 
-              {sourceMethod === 1 && targetAudience !== "" && (
+              {sourceMethod === 1 && (
                 <Box
                   ref={block3Ref}
                   sx={{
@@ -1343,7 +1281,7 @@ const SourcesImport: React.FC = () => {
                 </Box>
               )}
 
-              {sourceMethod === 2 && targetAudience !== "" && (
+              {sourceMethod === 2 && (
                 <Box
                   ref={block4Ref}
                   sx={{
@@ -1403,10 +1341,14 @@ const SourcesImport: React.FC = () => {
                       sx={{
                         ...sourcesStyles.text,
                         width: "316px",
+                        pt: 0,
                         borderRadius: "4px",
+                        fontFamily: "Roboto",
+                        fontSize: "14px",
+                        color: selectedDomain === "" ? "rgba(112, 112, 113, 1)" : "rgba(32, 33, 36, 1)",
                         "@media (max-width: 390px)": {
                           width: "calc(100vw - 74px)",
-                        },
+                        }
                       }}
                     >
                       <MenuItem
@@ -1414,19 +1356,37 @@ const SourcesImport: React.FC = () => {
                         disabled
                         sx={{
                           display: "none",
-                          fontFamily: "Roboto",
-                          fontSize: "12px",
-                          color: "rgba(205, 40, 43, 1)",
                         }}
                       >
                         Select domain
                       </MenuItem>
+                      {pixelNotInstalled && 
+                        <Box
+                          sx={{ display: "flex", justifyContent: "center", padding: "6px 16px", borderBottom: "1px solid rgba(228, 228, 228, 1)" }}
+                          onClick={handlePixelInstall}
+                        >
+                          <Typography
+                            sx={{
+                              fontFamily: "Nunito Sans",
+                              lineHeight: "22.4px",
+                              textDecoration: "underline",
+                              fontSize: "14px",
+                              fontWeight: "600",
+                              color: "rgba(80, 82, 178, 1)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            + Add a new pixel to domain
+                          </Typography>
+                        </Box>
+                          }
                       {domains.map((item: DomainsLeads, index) => (
                         <MenuItem
                           sx={{
-                            fontFamily: "Nunito Sans",
-                            fontWeight: 600,
+                            fontFamily: "Roboto",
+                            fontWeight: 400,
                             fontSize: "14px",
+                            borderBottom: "1px solid rgba(228, 228, 228, 1)"
                           }}
                           key={index}
                           value={item.name}
@@ -1436,7 +1396,7 @@ const SourcesImport: React.FC = () => {
                       ))}
                     </Select>
                   </FormControl>
-                  {pixelNotInstalled && (
+                  {/* {pixelNotInstalled && (
                     <Box
                       sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                     >
@@ -1470,8 +1430,8 @@ const SourcesImport: React.FC = () => {
                         Install Pixel
                       </Button>
                     </Box>
-                  )}
-                  {!pixelNotInstalled && selectedDomain && (
+                  )} */}
+                  {selectedDomain && (
                     <Box
                       sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                     >
@@ -1500,7 +1460,7 @@ const SourcesImport: React.FC = () => {
                 </Box>
               )}
 
-              {(sourceMethod === 2 && !pixelNotInstalled && selectedDomainId) ?  
+              {(sourceMethod === 2 && selectedDomainId) ?  
                 <Box
                   ref={block5Ref}
                   sx={{
@@ -1679,7 +1639,88 @@ const SourcesImport: React.FC = () => {
                 </Box>
               : null}
 
-              {((sourceMethod !== 0 && targetAudience !== "" && file) || (selectedDomain !== "" && !pixelNotInstalled) ) ? 
+              {sourceMethod !== 0 && (selectedDomainId || file)  &&  (
+                <Box
+                  ref={block4Ref}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                    minWidth: "100%",
+                    flexGrow: 1,
+                    position: "relative",
+                    flexWrap: "wrap",
+                    border: "1px solid rgba(228, 228, 228, 1)",
+                    borderRadius: "6px",
+                    padding: "20px",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      width: "100%",
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      gap: 1,
+                    }}
+                  >
+                    <Box
+                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                    >
+                      <Typography
+                        sx={{
+                          fontFamily: "Nunito Sans",
+                          fontSize: "16px",
+                          fontWeight: 500,
+                        }}
+                      >
+                        Select your target type
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: "Roboto",
+                          fontSize: "12px",
+                          color: "rgba(95, 99, 104, 1)",
+                        }}
+                      >
+                        Choose what you would like to use it for.
+                      </Typography>
+                    </Box>
+                  </Box>
+                  <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+                    {["B2B", "B2C"].map((option) => (
+                      <ToggleButton
+                        key={option}
+                        value={option}
+                        selected={targetAudience === option}
+                        className="form-input-label"
+                        onClick={() => handleTargetAudienceChange(option)}
+                        sx={{
+                          "&.MuiToggleButton-root.Mui-selected": {
+                            backgroundColor: "rgba(246, 248, 250, 1)",
+                            ":hover": {
+                              borderColor: "rgba(208, 213, 221, 1)",
+                              backgroundColor: "rgba(236, 238, 241, 1)",
+                            },
+                          },
+                          textTransform: "none",
+                          border:
+                            targetAudience === option
+                              ? "1px solid rgba(117, 168, 218, 1)"
+                              : "1px solid #ccc",
+                          color: "rgba(32, 33, 36, 1)",
+                          borderRadius: "4px",
+                          padding: "8px 12px",
+                        }}
+                      >
+                        {option}
+                      </ToggleButton>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {((sourceMethod !== 0 && targetAudience !== "") && (file || selectedDomainId )) ? 
                 <>
                   <Box
                     ref={block6Ref}
