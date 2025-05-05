@@ -195,12 +195,21 @@ class DashboardAudienceService:
             limit=self.LIMIT
         )
         
+        data_sync_dicts = [{
+                            'id': sync.id,
+                            'audience_name': sync.audience_name,
+                            'status': sync.status,
+                            'created_at': sync.created_at,
+                            'synced_contacts': sync.synced_contacts,
+                            'destination': sync.destination
+                        } for sync in data_syncs]
+        
         return {
             'short_info': {
                 'sources': self.merge_data_with_chain(last_sources, data_syncs_chain),
                 'lookalikes': self.merge_data_with_chain(last_lookalikes, data_syncs_chain),
                 'smart_audiences': self.merge_data_with_chain(last_audience_smart, data_syncs_chain),
-                'data_sync': self.merge_data_with_chain(data_syncs, data_syncs_chain)
+                'data_sync': self.merge_data_with_chain(data_sync_dicts, data_syncs_chain)
             },
             'full_info':{
                 'sources': self.merge_and_sort(
@@ -218,19 +227,12 @@ class DashboardAudienceService:
                                 ),
                 
                 'smart_audiences': self.merge_and_sort(
-                                        datasets=[(data_syncs, 'data_syncs', ['audience_name', 'created_at', 'status', 'synced_contacts', 'destination']), 
+                                        datasets=[(data_syncs, 'data_sync', ['audience_name', 'created_at', 'status', 'synced_contacts', 'destination']), 
                                                 ([smart_audience for smart_audience in group_smart_audiences], 'smart_audience', ['audience_name', 'use_case', 'active_segment', 'created_at', 'include', 'exclude']),],
                                         limit=self.LIMIT
                                     ),
                 
-                'data_sync': [{
-                            'id': sync.id,
-                            'audience_name': sync.audience_name,
-                            'status': sync.status,
-                            'created_at': sync.created_at,
-                            'synced_contacts': sync.synced_contacts,
-                            'destination': sync.destination
-                        } for sync in data_syncs]
+                'data_sync': data_sync_dicts
             }
         }
     

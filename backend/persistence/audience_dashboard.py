@@ -275,7 +275,7 @@ class DashboardAudiencePersistence:
                         AudienceSmart.status.label('status'),
                         IntegrationUserSync.created_at.label('created_at'),
                         IntegrationUserSync.sent_contacts.label('synced_contacts'),
-                        AudienceSmartsUseCase.name.label('destination'),
+                        UserIntegration.service_name.label('destination'),
                     )\
                     .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id)\
                     .join(AudienceSmart, AudienceSmart.id == IntegrationUserSync.smart_audience_id)\
