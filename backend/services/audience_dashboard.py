@@ -145,28 +145,31 @@ class DashboardAudienceService:
                     'include': [],
                     'exclude': [],
                 }
+            if row.inc_source_names:
+                for inc_source_name in row.inc_source_names:
+                    grouped[sid]['include'].append({
+                        'type': 'Source',
+                        'name': inc_source_name,
+                    })
+            if row.inc_lookalike_names:
+                for inc_lookalike_name in row.inc_lookalike_names:
+                    grouped[sid]['include'].append({
+                        'type': 'Lookalike',
+                        'name': inc_lookalike_name,
+                    })
 
-            if row.inc_source_id:
-                grouped[sid]['include'].append({
-                    'type': 'Source',
-                    'name': row.inc_source_name,
-                })
-            if row.inc_lookalike_id:
-                grouped[sid]['include'].append({
-                    'type': 'Lookalike',
-                    'name': row.inc_lookalike_name,
-                })
-
-            if row.exc_source_id:
-                grouped[sid]['exclude'].append({
-                    'type': 'Source',
-                    'name': row.exc_source_name,
-                })
-            if row.exc_lookalike_id:
-                grouped[sid]['exclude'].append({
-                    'type': 'Lookalike',
-                    'name': row.exc_lookalike_name,
-                })
+            if row.exc_source_names:
+                for exc_source_name in row.exc_source_names:
+                    grouped[sid]['exclude'].append({
+                        'type': 'Source',
+                        'name': exc_source_name,
+                    })
+            if row.exc_lookalike_names:
+                for exc_lookalike_name in row.exc_lookalike_names:
+                    grouped[sid]['exclude'].append({
+                        'type': 'Lookalike',
+                        'name': exc_lookalike_name,
+                    })
 
         return list(grouped.values())
 

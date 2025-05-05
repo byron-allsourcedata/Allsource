@@ -136,10 +136,14 @@ class DashboardAudiencePersistence:
                 ).all()
             
     def get_last_sources_and_lookalikes(self, *, user_id: int, limit=5, smart_audiences: List[AudienceSmart]):
-        
-        lookalike_ids = [data_sync.inc_lookalike_id for data_sync in smart_audiences]
+        all_lookalike_ids = [
+            lid
+            for audience in smart_audiences
+            for lid in (audience.inc_lookalike_ids or [])
+        ]
+        unique_lookalike_ids = set(all_lookalike_ids)
         priority_order = case(
-            (AudienceLookalikes.id.in_(lookalike_ids), 0),
+            (AudienceLookalikes.id.in_(unique_lookalike_ids), 0),
             else_=1
         )
         
@@ -164,15 +168,14 @@ class DashboardAudiencePersistence:
             )\
         .limit(limit).all()
         
-        source_ids = [data_sync.inc_source_id for data_sync in smart_audiences]
-        lookalikes_source_ids = [lookalike.source_id for lookalike in lookalikes]
+        all_source_ids = [
+            lid
+            for audience in smart_audiences
+            for lid in (audience.inc_source_ids or [])
+        ]
+        unique_source_ids = set(all_source_ids)
         priority_audience_source_order = case(
-            (AudienceSource.id.in_(source_ids), 0),
-            else_=1
-        )
-        
-        priority_lookalikes_source_order = case(
-            (AudienceSource.id.in_(lookalikes_source_ids), 0),
+            (AudienceSource.id.in_(unique_source_ids), 0),
             else_=1
         )
         
@@ -188,7 +191,6 @@ class DashboardAudiencePersistence:
         )\
         .order_by(
                 priority_audience_source_order,
-                priority_lookalikes_source_order,
                 AudienceSource.created_at.desc()
             )\
         .limit(limit).all()
@@ -285,31 +287,33 @@ class DashboardAudiencePersistence:
                     
         sync_ids = [data_sync.smart_audience_id for data_sync in data_syncs]
                 
-        include_sq = (
+        include_agg = (
             self.db.query(
                 AudienceSmartsDataSources.smart_audience_id.label('smart_audience_id'),
-                AudienceSource.id.label('inc_source_id'),
-                AudienceSource.name.label('inc_source_name'),
-                AudienceLookalikes.id.label('inc_lookalike_id'),
-                AudienceLookalikes.name.label('inc_lookalike_name'),
+                func.array_agg(AudienceSource.id).label('inc_source_ids'),
+                func.array_agg(AudienceSource.name).label('inc_source_names'),
+                func.array_agg(AudienceLookalikes.id).label('inc_lookalike_ids'),
+                func.array_agg(AudienceLookalikes.name).label('inc_lookalike_names'),
             )
-            .outerjoin(AudienceSource,   AudienceSmartsDataSources.source_id     == AudienceSource.id)
+            .outerjoin(AudienceSource, AudienceSmartsDataSources.source_id == AudienceSource.id)
             .outerjoin(AudienceLookalikes, AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id)
             .filter(AudienceSmartsDataSources.data_type == 'include')
+            .group_by(AudienceSmartsDataSources.smart_audience_id)
             .subquery()
         )
 
-        exclude_sq = (
+        exclude_agg = (
             self.db.query(
                 AudienceSmartsDataSources.smart_audience_id.label('smart_audience_id'),
-                AudienceSource.id.label('exc_source_id'),
-                AudienceSource.name.label('exc_source_name'),
-                AudienceLookalikes.id.label('exc_lookalike_id'),
-                AudienceLookalikes.name.label('exc_lookalike_name'),
+                func.array_agg(AudienceSource.id).label('exc_source_ids'),
+                func.array_agg(AudienceSource.name).label('exc_source_names'),
+                func.array_agg(AudienceLookalikes.id).label('exc_lookalike_ids'),
+                func.array_agg(AudienceLookalikes.name).label('exc_lookalike_names'),
             )
-            .outerjoin(AudienceSource,   AudienceSmartsDataSources.source_id     == AudienceSource.id)
+            .outerjoin(AudienceSource, AudienceSmartsDataSources.source_id == AudienceSource.id)
             .outerjoin(AudienceLookalikes, AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id)
             .filter(AudienceSmartsDataSources.data_type == 'exclude')
+            .group_by(AudienceSmartsDataSources.smart_audience_id)
             .subquery()
         )
 
@@ -326,29 +330,26 @@ class DashboardAudiencePersistence:
                 AudienceSmart.name.label('audience_name'),
                 AudienceSmartsUseCase.name.label('use_case'),
                 AudienceSmart.active_segment_records.label('active_segment'),
-                # include
-                include_sq.c.inc_source_id,
-                include_sq.c.inc_source_name,
-                include_sq.c.inc_lookalike_id,
-                include_sq.c.inc_lookalike_name,
-                # exclude
-                exclude_sq.c.exc_source_id,
-                exclude_sq.c.exc_source_name,
-                exclude_sq.c.exc_lookalike_id,
-                exclude_sq.c.exc_lookalike_name,
+                include_agg.c.inc_source_ids,
+                include_agg.c.inc_source_names,
+                include_agg.c.inc_lookalike_ids,
+                include_agg.c.inc_lookalike_names,
+                exclude_agg.c.exc_source_ids,
+                exclude_agg.c.exc_source_names,
+                exclude_agg.c.exc_lookalike_ids,
+                exclude_agg.c.exc_lookalike_names,
             )
             .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)
-            .outerjoin(include_sq, include_sq.c.smart_audience_id == AudienceSmart.id)
-            .outerjoin(exclude_sq, exclude_sq.c.smart_audience_id == AudienceSmart.id)
+            .outerjoin(include_agg, include_agg.c.smart_audience_id == AudienceSmart.id)
+            .outerjoin(exclude_agg, exclude_agg.c.smart_audience_id == AudienceSmart.id)
             .filter(AudienceSmart.user_id == user_id)
             .order_by(
                 priority_order,
                 AudienceSmart.created_at.desc()
-            )
+            )\
             .limit(limit)
             .all()
         )
-                            
         return audience_smart_results, data_syncs
 
     def get_contacts_for_pixel_contacts_by_domain_id(
