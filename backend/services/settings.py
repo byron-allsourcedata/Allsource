@@ -327,7 +327,7 @@ class SettingsService:
                 'domains': f"{user_limit_domain}/{plan_limit_domain}",
                 'prospect_credits': 'Coming soon',
                 'overage': 'free' if credit_price == -1 else credit_price,
-                'next_billing_date': self.timestamp_to_date(subscription['current_period_end']).strftime('%b %d, %Y'),
+                'next_billing_date': self.timestamp_to_date(subscription['items']['data'][0]['current_period_end']).strftime('%b %d, %Y'),
                 total_key: total_price,
                 'active': is_active,
             }
@@ -374,15 +374,16 @@ class SettingsService:
                 line_items = billing_data.lines.data
                 billing_hash['date'] = self.timestamp_to_date(line_items[0].period.start)
                 billing_hash['invoice_id'] = billing_data.id
-                billing_hash['pricing_plan'] = determine_plan_name_from_product_id(line_items[0].plan.product)
+                billing_hash['pricing_plan'] = line_items[0].description
                 billing_hash['total'] = billing_data.total / 100
                 billing_hash['status'] = self.map_status(billing_data.status)
 
             elif isinstance(billing_data, stripe.Charge):
                 if billing_data.amount <= 0:
                     continue
+                line_items = billing_data
                 billing_hash['date'] = self.timestamp_to_date(billing_data.created)
-                billing_hash['invoice_id'] = billing_data.invoice
+                billing_hash['invoice_id'] = billing_data.id
                 billing_hash['pricing_plan'] = "Overage"
                 billing_hash['total'] = billing_data.amount / 100
                 billing_hash['status'] = self.map_status(billing_data.status)
