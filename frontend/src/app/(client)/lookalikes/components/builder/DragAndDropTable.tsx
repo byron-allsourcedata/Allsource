@@ -24,28 +24,48 @@ function DragAndDropTable({
     [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value)),
     [fields]
   );
+  const initDefaultStateRef = React.useRef<Field[]>(sortedInitial);
   const initialRowsRef = React.useRef<Field[]>(sortedInitial);
   // Local state for current row order
   const [rows, setRows] = React.useState<Field[]>(initialRowsRef.current);
   const { resetTrigger, notifyInteraction } = useResetContext();
 
+  // Reset to original sorted order when resetTrigger fires
+  React.useEffect(() => {
+    setRows(initDefaultStateRef.current);
+    onOrderChange?.(initDefaultStateRef.current);
+    // Do not trigger parent on reset; parent can get rows via onOrderChange if needed
+  }, [resetTrigger]);
+
   // Sync when the incoming fields change (update reference only)
   React.useEffect(() => {
     initialRowsRef.current = sortedInitial;
+    const kept = rows.filter(r =>
+      sortedInitial.some(f => f.id === r.id)
+    );
+    const keptIds = new Set(kept.map(r => r.id));
+    const added = sortedInitial.filter(f => !keptIds.has(f.id));
+    const nextRows = [...kept];
+    added.forEach(f => {
+      const fValue = parseFloat(f.value);
+      const insertIdx = nextRows.findIndex(r => parseFloat(r.value) <= fValue);
+      if (insertIdx === -1) {
+        nextRows.push(f);
+      } else {
+        nextRows.splice(insertIdx, 0, f);
+      }
+    });
+    console.log(nextRows);
+    setRows(nextRows);
+
     if (rows.length === 0) {
       setRows(initialRowsRef.current);
+      initDefaultStateRef.current = sortedInitial;
     }
     if (rows.length > 0) {
       notifyInteraction("dragTable", handleComparer());
     }
   }, [sortedInitial]);
-
-  // Reset to original sorted order when resetTrigger fires
-  React.useEffect(() => {
-    setRows(initialRowsRef.current);
-    onOrderChange?.(initialRowsRef.current);
-    // Do not trigger parent on reset; parent can get rows via onOrderChange if needed
-  }, [resetTrigger]);
 
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
@@ -83,8 +103,8 @@ function DragAndDropTable({
   };
 
   const handleComparer = () => {
-    const initialIds = initialRowsRef.current.map(f => f.id);
-    const currentIds = rows.map(f => f.id);
+    const initialIds = initDefaultStateRef.current.map(f => f.id);
+    const currentIds = initialRowsRef.current.map(f => f.id);
     const isSame = 
       initialIds.length === currentIds.length &&
       initialIds.every((id, idx) => id === currentIds[idx]);

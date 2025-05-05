@@ -26,7 +26,7 @@ export function FeatureImportanceTable<T extends FeatureObject>({
   title,
   onChangeDisplayed,
   columnHeaders = ["Field", "Importance"],
-}: Props<T> & { resetTrigger?: number }) {
+}: Props<T>) {
   const theme = useTheme();
   const { resetTrigger, notifyInteraction } = useResetContext();
   const allPairs = useMemo<[keyof T, number][]>(
