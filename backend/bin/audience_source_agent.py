@@ -42,6 +42,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 from services.lookalikes import AudienceLookalikesService
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
 
 load_dotenv()
 
@@ -301,6 +302,7 @@ async def process_user_id(persons: List[PersonRow], db_session: Session, source_
     five_x_five_user_ids = [p.user_id for p in persons]
     logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
 
+    db_session.commit()
     with db_session.begin():
         existing_uids = {
             row[0]
@@ -769,55 +771,56 @@ async def normalize_persons_failed_leads(
         f"from {data_for_normalize.all_size} matched records."
     )
 
-def calculate_source_data(db_session: Session, source_uuid: UUID) -> List[Dict]:
+def calculate_source_data(db_session: Session, source_uuid: UUID, audience_type: BusinessType, limit: Optional[int] = None,) -> List[Dict]:
         def all_columns_except(model, *skip: str):
             return tuple(
                 c for c in model.__table__.c
                 if c.name not in skip
             )
+        # for b2c
+        enrichment_models_b2c = [
+            EnrichmentPersonalProfiles,
+            EnrichmentFinancialRecord,
+            EnrichmentLifestyle,
+            EnrichmentVoterRecord,
+        ]
+        # for b2b
+        enrichment_models_b2b = [
+            EnrichmentProfessionalProfile,
+            EnrichmentEmploymentHistory,
+        ]
+
+        if audience_type == BusinessType.B2C:
+            enrichment_models = enrichment_models_b2c
+        elif audience_type == BusinessType.B2B:
+            enrichment_models = enrichment_models_b2b
+        else:
+            enrichment_models = enrichment_models_b2c + enrichment_models_b2b
+
+        select_cols = [
+            AudienceSourcesMatchedPerson.value_score.label("customer_value")
+        ]
+        for model in enrichment_models:
+            select_cols.extend(all_columns_except(model, "id", "asid"))
 
         q = (
-            db_session.query(
-                AudienceSourcesMatchedPerson.value_score.label("customer_value"),
-                *all_columns_except(EnrichmentPersonalProfiles, "id", "asid"),
-                *all_columns_except(EnrichmentFinancialRecord, "id", "asid"),
-                *all_columns_except(EnrichmentLifestyle, "id", "asid"),
-                *all_columns_except(EnrichmentVoterRecord, "id", "asid"),
-                *all_columns_except(EnrichmentProfessionalProfile, "id", "asid"),
-                *all_columns_except(EnrichmentEmploymentHistory, "id", "asid")
-            )
+            db_session.query(*select_cols)
             .select_from(AudienceSourcesMatchedPerson)
             .join(
                 EnrichmentUser,
                 AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id
             )
-            .outerjoin(
-                EnrichmentPersonalProfiles,
-                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
-            )
-            .outerjoin(
-                EnrichmentFinancialRecord,
-                EnrichmentFinancialRecord.asid == EnrichmentUser.asid
-            )
-            .outerjoin(
-                EnrichmentLifestyle,
-                EnrichmentLifestyle.asid == EnrichmentUser.asid
-            )
-            .outerjoin(
-                EnrichmentVoterRecord,
-                EnrichmentVoterRecord.asid == EnrichmentUser.asid
-            )
-            .outerjoin(
-                EnrichmentProfessionalProfile,
-                EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
-            )
-            .outerjoin(
-                EnrichmentEmploymentHistory,
-                EnrichmentEmploymentHistory.asid == EnrichmentUser.asid
-            )
-            .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
         )
 
+        for model in enrichment_models:
+            q = q.outerjoin(
+                model,
+                model.asid == EnrichmentUser.asid
+            )
+
+        q = q.filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
+        if limit is not None:
+            q = q.limit(limit)
         rows = q.all()
 
         def _row2dict(row) -> Dict[str, Any]:
@@ -860,8 +863,9 @@ def extract_non_zero_values(*insights):
 
     return combined
 
-def calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service):
-    audience_source_data = calculate_source_data(db_session=db_session, source_uuid=source_id)
+def calculate_and_save_significant_fields(db_session: Session, source_id: UUID, similar_audience_service: SimilarAudienceService, audience_lookalikes_service: AudienceLookalikesService, audience_type: BusinessType):
+    # audience_source_data = calculate_source_data(db_session=db_session, source_uuid=source_id, audience_type=audience_type)
+    audience_source_data = audience_lookalikes_service.lookalikes_persistence_service.retrieve_source_insights(source_uuid=source_id, audience_type=audience_type)
     b2c_insights, b2b_insights, other = audience_lookalikes_service.calculate_insights(audience_data=audience_source_data, similar_audience_service=similar_audience_service)
     combined_insights = extract_non_zero_values(b2c_insights, b2b_insights, other)
     db_session.execute(
@@ -891,10 +895,19 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         data_for_normalize: Optional[DataForNormalize] = (
             data.data_for_normalize if isinstance(data, DataBodyNormalize) else None
         )
+        atype = {
+            "b2b": BusinessType.B2B,
+            "b2c": BusinessType.B2C,
+        }.get(audience_source.target_schema, BusinessType.ALL)
+
+        db_session.commit()
         with db_session.begin():
             if type == 'emails' and data_for_normalize:
                 if data_for_normalize.matched_size == data_for_normalize.all_size:
-                    calculate_and_save_significant_fields(db_session, source_id, similar_audience_service, audience_lookalikes_service)
+                    calculate_and_save_significant_fields(db_session=db_session, source_id=source_id,
+                                                          similar_audience_service=similar_audience_service,
+                                                          audience_lookalikes_service=audience_lookalikes_service,
+                                                          audience_type=atype)
 
                 if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
                     await normalize_persons_customer_conversion(persons=persons, source_id=source_id, data_for_normalize=data_for_normalize,
@@ -944,16 +957,13 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
             .returning(AudienceSource.total_records, AudienceSource.processed_records, AudienceSource.matched_records)
         ).fetchone()
         logging.info(f"Updated processed and matched records for source_id {source_id}.")
-
         if processed_records >= total_records:
-            atype = {
-                "b2b": BusinessType.B2B,
-                "b2c": BusinessType.B2C,
-            }.get(audience_source.target_schema, BusinessType.ALL)
-            InsightsUtils.process_insights(source_id=source_id, db_session=db_session, audience_type=atype)
+            InsightsUtils.process_insights(source_id=source_id, db_session=db_session)
             if type == 'user_ids':
-                calculate_and_save_significant_fields(db_session, source_id, similar_audience_service,
-                                                      audience_lookalikes_service)
+                calculate_and_save_significant_fields(db_session=db_session, source_id=source_id,
+                                                      similar_audience_service=similar_audience_service,
+                                                      audience_lookalikes_service=audience_lookalikes_service,
+                                                      audience_type=atype)
 
 
             logging.info(f"Source_id {source_id} processing complete.")
@@ -1011,7 +1021,8 @@ async def main():
             durable=True,
         )
         similar_audience_service = SimilarAudienceService(audience_data_normalization_service=AudienceDataNormalizationService())
-        audience_lookalikes_service = AudienceLookalikesService(lookalikes_persistence_service=None)
+        lookalikes_persistence_service = AudienceLookalikesPersistence(db_session)
+        audience_lookalikes_service = AudienceLookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)
         await queue.consume(
             functools.partial(aud_sources_matching, connection=connection, db_session=db_session, similar_audience_service=similar_audience_service, audience_lookalikes_service=audience_lookalikes_service)
         )
