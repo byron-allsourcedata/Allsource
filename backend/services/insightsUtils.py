@@ -118,12 +118,7 @@ class InsightsUtils:
                         fin_cts[field][card] += 1
                     continue
                 else:
-                    if field == "credit_cards":
-                        key = val.strip("[]")
-                        key = key.replace("'", "").replace('"', "")
-                        key = ", ".join(item.strip() for item in key.split(",") if item)
-                    else:
-                        key = str(val)
+                    key = str(val)
                 key = key.lower()
                 fin_cts[field][key] += 1
 
