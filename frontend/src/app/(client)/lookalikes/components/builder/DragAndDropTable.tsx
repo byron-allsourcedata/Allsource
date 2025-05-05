@@ -104,7 +104,7 @@ function DragAndDropTable({
 
   const handleComparer = () => {
     const initialIds = initDefaultStateRef.current.map(f => f.id);
-    const currentIds = initialRowsRef.current.map(f => f.id);
+    const currentIds = rows.map(f => f.id);
     const isSame = 
       initialIds.length === currentIds.length &&
       initialIds.every((id, idx) => id === currentIds[idx]);
