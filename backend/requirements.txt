@@ -22,11 +22,7 @@ botocore==1.34.131
 bs4==0.0.2
 cachetools==5.3.3
 catboost==1.2.5
-<<<<<<< HEAD
-certifi==2024.6.2
-=======
 certifi==2025.4.26
->>>>>>> 862fe1cbd383aee1ccffeeaf16acde78c0065ce6
 cffi==1.17.1
 chardet==5.2.0
 charset-normalizer==3.3.2
