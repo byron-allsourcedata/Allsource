@@ -116,6 +116,7 @@ class InsightsUtils:
                     cards = [c.strip().lower() for c in raw.split(",") if c.strip()]
                     for card in cards:
                         fin_cts[field][card] += 1
+                    continue
                 else:
                     if field == "credit_cards":
                         key = val.strip("[]")
