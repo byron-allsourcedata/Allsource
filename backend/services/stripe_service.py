@@ -394,28 +394,22 @@ def create_stripe_checkout_session(customer_id: str,
 
     return {"link": session.url}
 
-
-
 def get_billing_history_by_userid(customer_id, page, per_page):
-    billing_history_invoices = []
-    billing_history_charges = []
-    invoice_params = {
-        'customer': customer_id,
-        'limit': per_page,
-    }
-    invoices = stripe.Invoice.list(**invoice_params)
-    billing_history_invoices.extend(invoices.data)
-    charge_params = {
-        'customer': customer_id,
-        'limit': per_page,
-    }
-    charges = stripe.Charge.list(**charge_params)
-    billing_history_charges.extend(charges.data)
+    billing_history = []
+
+    invoices = stripe.Invoice.list(customer=customer_id, limit=per_page)
+    billing_history.extend(invoices.data)
+
+    charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
     non_subscription_charges = [
-        charge for charge in billing_history_charges if charge.invoice is None
+        charge for charge in charges
+        if getattr(charge, 'invoice', None) is None
+        and getattr(charge, 'metadata', {}).get('product_description') == 'leads_credits'
     ]
-    billing_history = billing_history_invoices + non_subscription_charges
+    billing_history.extend(non_subscription_charges)
+
     count = len(billing_history)
     max_page = math.ceil(count / per_page)
-    billing_history = billing_history[(page - 1) * per_page:min(page * per_page, count)]
-    return billing_history, count, max_page
+    start = (page - 1) * per_page
+    end = min(page * per_page, count)
+    return billing_history[start:end], count, max_page

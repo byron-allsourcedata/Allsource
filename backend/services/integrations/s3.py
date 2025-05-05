@@ -1,8 +1,9 @@
+import httpx
+import os
+import logging
 from utils import validate_and_format_phone
 from typing import List
 from fastapi import HTTPException
-import httpx
-import os
 from datetime import datetime, timedelta
 from utils import format_phone_number
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
@@ -18,6 +19,8 @@ from persistence.leads_persistence import LeadsPersistence
 import json
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
+
+logger = logging.getLogger(__name__)
 
 class S3IntegrationService:
 
@@ -170,10 +173,10 @@ class S3IntegrationService:
                     
         try:
             s3_client.upload_file(file_path, bucket_name, object_key)
-            print(f"Файл {file_path} успешно загружен в бакет {bucket_name} под именем {object_key}.")
+            logger.debug(f"File {file_path} successfully uploaded to the basket {bucket_name} under the name {object_key}.")
         except ClientError as e:
-            print("Ошибка при загрузке файла:", e)
-            raise HTTPException(status_code=400, detail="Ошибка загрузки файла в S3")
+            logger.error("Error when uploading a file:", e)
+            raise HTTPException(status_code=400, detail="File upload error in S3")
         
     
 
