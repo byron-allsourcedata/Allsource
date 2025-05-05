@@ -1,5 +1,5 @@
 "use client";
-import React, { ChangeEvent, useState, useEffect } from "react";
+import React, { ChangeEvent, useState, useEffect, useRef } from "react";
 import {
   Box,
   Grid,
@@ -100,6 +100,13 @@ const SourcesImport: React.FC = () => {
   const [totalLeads, setTotalLeads] = useState(0);
   const [matchedLeads, setMatchedLeads] = useState(0);
 
+  const block1Ref = useRef<HTMLDivElement | null>(null);
+  const block2Ref = useRef<HTMLDivElement | null>(null);
+  const block3Ref = useRef<HTMLDivElement | null>(null);
+  const block4Ref = useRef<HTMLDivElement | null>(null);
+  const block5Ref = useRef<HTMLDivElement | null>(null);
+  const block6Ref = useRef<HTMLDivElement | null>(null);
+
   const eventTypes: EventTypeInterface[] = [
     { id: 1, name: "visitor_count", title: "visitor" },
     { id: 2, name: "viewed_product_count", title: "viewed_product" },
@@ -128,11 +135,35 @@ const SourcesImport: React.FC = () => {
   ];
   const [rows, setRows] = useState<Row[]>(defaultRows);
 
+  const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {
+    if (blockRef.current) {
+      blockRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+
+  // Mapping
+
   const handleMapListChange = (id: number, value: string) => {
     setRows(rows.map((row) => (row.id === id ? { ...row, value } : row)));
 
     if (id === 1) {
       setEmailNotSubstitution(false);
+    }
+  };
+
+  const handleDelete = (id: number) => {
+    setRows(
+      rows.map((row) => (row.id === id ? { ...row, isHidden: true } : row))
+    );
+  };
+
+  const handleAdd = () => {
+    const hiddenRowIndex = rows.findIndex((row) => row.isHidden);
+    if (hiddenRowIndex !== -1) {
+      const updatedRows = [...rows];
+      updatedRows[hiddenRowIndex].isHidden = false;
+      setRows(updatedRows);
     }
   };
 
@@ -164,25 +195,39 @@ const SourcesImport: React.FC = () => {
     setRows(updatedRows);
   }, [sourceType]);
 
+  const smartSubstitutionHeaders = async (headings: string[]) => {
+    setIsChatGPTProcessing(true);
+    try {
+      const response = await axiosInstance.post(
+        `/audience-sources/heading-substitution`,
+        { source_type: sourceType, headings },
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+      if (response.status === 200) {
+        const updateEmployee = response.data;
+        return updateEmployee;
+      }
+    } catch {
+    } finally {
+      setIsChatGPTProcessing(false);
+    }
+  };
+
+  // Switching
+
   const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
     handleDeleteFile();
     setSourceType(event.target.value);
   };
 
-  const handleDelete = (id: number) => {
-    setRows(
-      rows.map((row) => (row.id === id ? { ...row, isHidden: true } : row))
-    );
+  const handleTargetAudienceChange = (value: string) => {
+    setTargetAudience(value);
   };
 
-  const handleAdd = () => {
-    const hiddenRowIndex = rows.findIndex((row) => row.isHidden);
-    if (hiddenRowIndex !== -1) {
-      const updatedRows = [...rows];
-      updatedRows[hiddenRowIndex].isHidden = false;
-      setRows(updatedRows);
-    }
-  };
+
+  // Uploading
 
   const handleDeleteFile = () => {
     setFile(null);
@@ -209,6 +254,22 @@ const SourcesImport: React.FC = () => {
       handleFileUpload(uploadedFile);
     }
   };
+
+  const validateFileSize = (file: File, maxSizeMB: number): boolean => {
+    const fileSize = parseFloat((file.size / (1024 * 1024)).toFixed(2));
+    if (fileSize > maxSizeMB) {
+      handleDeleteFile();
+      showErrorToast(
+        "The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again."
+      );
+      return false;
+    }
+    setFileSizeStr(fileSize + " MB");
+    setFileName(file.name);
+    return true;
+  };
+
+  // Formatting and Sending
 
   const convertToDBFormat = (sourceType: string) => {
     return sourceType.split(" ").join("_").toLowerCase();
@@ -275,6 +336,8 @@ const SourcesImport: React.FC = () => {
     }
   };
 
+  // Sample
+
   const downloadSampleFile = async () => {
     try {
       setLoading(true);
@@ -304,23 +367,7 @@ const SourcesImport: React.FC = () => {
     }
   };
 
-  const validateFileSize = (file: File, maxSizeMB: number): boolean => {
-    const fileSize = parseFloat((file.size / (1024 * 1024)).toFixed(2));
-    if (fileSize > maxSizeMB) {
-      handleDeleteFile();
-      showErrorToast(
-        "The uploaded CSV file exceeds the 100MB limit. Please reduce the file size and try again."
-      );
-      return false;
-    }
-    setFileSizeStr(fileSize + " MB");
-    setFileName(file.name);
-    return true;
-  };
-
-  const handleTargetAudienceChange = (value: string) => {
-    setTargetAudience(value);
-  };
+  // File Processing
 
   const getFileUploadUrl = async (fileType: string): Promise<string> => {
     try {
@@ -447,25 +494,7 @@ const SourcesImport: React.FC = () => {
     }
   };
 
-  const smartSubstitutionHeaders = async (headings: string[]) => {
-    setIsChatGPTProcessing(true);
-    try {
-      const response = await axiosInstance.post(
-        `/audience-sources/heading-substitution`,
-        { source_type: sourceType, headings },
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      if (response.status === 200) {
-        const updateEmployee = response.data;
-        return updateEmployee;
-      }
-    } catch {
-    } finally {
-      setIsChatGPTProcessing(false);
-    }
-  };
+  // Pixel
 
   const toggleEventType = (id: number) => {
     const isCurrentlyActive = eventType.includes(id);
@@ -722,6 +751,7 @@ const SourcesImport: React.FC = () => {
 
               {sourceMethod !== 0 && (
                 <Box
+                  ref={block1Ref}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
@@ -802,6 +832,7 @@ const SourcesImport: React.FC = () => {
 
               {sourceMethod === 1 && targetAudience !== "" && (
                 <Box
+                  ref={block2Ref}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
@@ -1044,6 +1075,7 @@ const SourcesImport: React.FC = () => {
 
               {sourceMethod === 1 && targetAudience !== "" && (
                 <Box
+                  ref={block3Ref}
                   sx={{
                     display: file ? "flex" : "none",
                     flexDirection: "column",
@@ -1313,6 +1345,7 @@ const SourcesImport: React.FC = () => {
 
               {sourceMethod === 2 && targetAudience !== "" && (
                 <Box
+                  ref={block4Ref}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
@@ -1466,354 +1499,351 @@ const SourcesImport: React.FC = () => {
                   )}
                 </Box>
               )}
-              {/* { sourceMethod === 2 && !pixelNotInstalled && selectedDomainId &&  */}
-              <Box
-                sx={{
-                  display:
-                    sourceMethod === 2 &&
-                    targetAudience !== "" &&
-                    !pixelNotInstalled &&
-                    selectedDomainId
-                      ? "flex"
-                      : "none",
-                  flexDirection: "column",
-                  gap: 2,
-                  flexWrap: "wrap",
-                  border: "1px solid rgba(228, 228, 228, 1)",
-                  borderRadius: "6px",
-                  padding: "20px",
-                }}
-              >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <Typography
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      fontSize: "16px",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Choose your data source
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: "Roboto",
-                      fontSize: "12px",
-                      color: "rgba(95, 99, 104, 1)",
-                    }}
-                  >
-                    Please select your event type.
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 2,
-                    "@media (max-width: 420px)": {
-                      display: "grid",
-                      gridTemplateColumns: "1fr",
-                    },
-                  }}
-                >
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      border: "1px solid rgba(208, 213, 221, 1)",
-                      borderRadius: "4px",
-                      color: "rgba(32, 33, 36, 1)",
-                      textTransform: "none",
-                      fontSize: "14px",
-                      padding: "8px 12px",
-                      backgroundColor: eventType.includes(1)
-                        ? "rgba(246, 248, 250, 1)"
-                        : "rgba(255, 255, 255, 1)",
-                      borderColor: eventType.includes(1)
-                        ? "rgba(117, 168, 218, 1)"
-                        : "rgba(208, 213, 221, 1)",
-                      ":hover": {
-                        borderColor: "rgba(208, 213, 221, 1)",
-                        backgroundColor: "rgba(236, 238, 241, 1)",
-                      },
-                    }}
-                    onClick={() => {
-                      toggleEventType(1);
-                    }}
-                  >
-                    Visitor
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      border: "1px solid rgba(208, 213, 221, 1)",
-                      borderRadius: "4px",
-                      color: "rgba(32, 33, 36, 1)",
-                      textTransform: "none",
-                      fontSize: "14px",
-                      padding: "8px 12px",
-                      backgroundColor: eventType.includes(2)
-                        ? "rgba(246, 248, 250, 1)"
-                        : "rgba(255, 255, 255, 1)",
-                      borderColor: eventType.includes(2)
-                        ? "rgba(117, 168, 218, 1)"
-                        : "rgba(208, 213, 221, 1)",
-                      ":hover": {
-                        borderColor: "rgba(208, 213, 221, 1)",
-                        backgroundColor: "rgba(236, 238, 241, 1)",
-                      },
-                    }}
-                    onClick={() => {
-                      toggleEventType(2);
-                    }}
-                  >
-                    View Product
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      border: "1px solid rgba(208, 213, 221, 1)",
-                      borderRadius: "4px",
-                      color: "rgba(32, 33, 36, 1)",
-                      textTransform: "none",
-                      fontSize: "14px",
-                      padding: "8px 12px",
-                      backgroundColor: eventType.includes(3)
-                        ? "rgba(246, 248, 250, 1)"
-                        : "rgba(255, 255, 255, 1)",
-                      borderColor: eventType.includes(3)
-                        ? "rgba(117, 168, 218, 1)"
-                        : "rgba(208, 213, 221, 1)",
-                      ":hover": {
-                        borderColor: "rgba(208, 213, 221, 1)",
-                        backgroundColor: "rgba(236, 238, 241, 1)",
-                      },
-                    }}
-                    onClick={() => {
-                      toggleEventType(3);
-                    }}
-                  >
-                    Abandoned Cart
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      border: "1px solid rgba(208, 213, 221, 1)",
-                      borderRadius: "4px",
-                      color: "rgba(32, 33, 36, 1)",
-                      textTransform: "none",
-                      fontSize: "14px",
-                      padding: "8px 12px",
-                      backgroundColor: eventType.includes(4)
-                        ? "rgba(246, 248, 250, 1)"
-                        : "rgba(255, 255, 255, 1)",
-                      borderColor: eventType.includes(4)
-                        ? "rgba(117, 168, 218, 1)"
-                        : "rgba(208, 213, 221, 1)",
-                      ":hover": {
-                        borderColor: "rgba(208, 213, 221, 1)",
-                        backgroundColor: "rgba(236, 238, 241, 1)",
-                      },
-                    }}
-                    onClick={() => {
-                      toggleEventType(4);
-                    }}
-                  >
-                    Converted Sales
-                  </Button>
-                </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <Typography
-                    sx={{
-                      fontFamily: "Roboto",
-                      fontSize: "14px",
-                      color: "rgba(32, 33, 36, 1)",
-                    }}
-                  >
-                    Total Leads
-                  </Typography>
-                  <Typography
-                    className="second-sub-title"
-                    sx={{
-                      fontFamily: "Nunino Sans",
-                      fontWeight: 600,
-                      fontSize: "16px",
-                      color: "rgba(32, 33, 36, 1)",
-                    }}
-                  >
-                    {eventType.some((id) => [1, 2, 3, 4].includes(id))
-                      ? matchedLeads
-                      : totalLeads}
-                  </Typography>
-                </Box>
-              </Box>
-              {/* } */}
 
-              <Box
-                sx={{
-                  display:
-                    (sourceMethod !== 0 && targetAudience !== "" && file) ||
-                    (selectedDomain !== "" && !pixelNotInstalled)
-                      ? "flex"
-                      : "none",
-                  flexDirection: "column",
-                  gap: 2,
-                  flexWrap: "wrap",
-                  border: "1px solid rgba(228, 228, 228, 1)",
-                  borderRadius: "6px",
-                  padding: "20px",
-                }}
-              >
+              {(sourceMethod === 2 && !pixelNotInstalled && selectedDomainId) ?  
                 <Box
+                  ref={block5Ref}
                   sx={{
                     display: "flex",
-                    alignItems: "center",
+                    flexDirection: "column",
                     gap: 2,
-                    "@media (max-width: 400px)": {
-                      justifyContent: "space-between",
-                    },
+                    flexWrap: "wrap",
+                    border: "1px solid rgba(228, 228, 228, 1)",
+                    borderRadius: "6px",
+                    padding: "20px",
                   }}
                 >
-                  <Typography
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      fontSize: "16px",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Create Name
-                  </Typography>
-                  <TextField
-                    id="outlined"
-                    label="Name"
-                    InputLabelProps={{
-                      sx: {
-                        color: "rgba(17, 17, 19, 0.6)",
-                        fontFamily: "Nunito Sans",
-                        fontWeight: 400,
-                        fontSize: "15px",
-                        padding: 0,
-                        top: "-1px",
-                        margin: 0,
-                      },
-                    }}
-                    sx={{
-                      width: "250px",
-                      "@media (max-width: 400px)": { width: "150px" },
-                      "& .MuiInputLabel-root.Mui-focused": {
-                        color: "rgba(17, 17, 19, 0.6)",
-                      },
-                      "& .MuiInputLabel-root[data-shrink='false']": {
-                        transform: "translate(16px, 50%) scale(1)",
-                      },
-                      "& .MuiOutlinedInput-root": {
-                        maxHeight: "40px",
-                      },
-                    }}
-                    InputProps={{
-                      className: "form-input",
-                    }}
-                    value={sourceName}
-                    onChange={(e) => {
-                      if (e.target.value.length < 128) {
-                        setSourceName(e.target.value);
-                      } else {
-                        showErrorToast("Your name is too long!");
-                      }
-                    }}
-                  />
-                </Box>
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  gap: 2,
-                  flexWrap: "wrap",
-                  justifyContent: "flex-end",
-                  borderRadius: "6px",
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <Button
-                    variant="outlined"
-                    onClick={() => {
-                      setSourceMethod(0);
-                      handleDeleteFile();
-                      setSourceName("");
-                      setSourceType("");
-                      router.push("/sources");
-                    }}
-                    sx={{
-                      borderColor: "rgba(80, 82, 178, 1)",
-                      width: "92px",
-                      height: "40px",
-                      ":hover": {
-                        borderColor: "rgba(62, 64, 142, 1)",
-                      },
-                      ":active": {
-                        borderColor: "rgba(80, 82, 178, 1)",
-                      },
-                      ":disabled": {
-                        borderColor: "rgba(80, 82, 178, 1)",
-                        opacity: 0.4,
-                      },
-                    }}
-                  >
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                     <Typography
                       sx={{
-                        textAlign: "center",
-                        color: "rgba(80, 82, 178, 1)",
-                        textTransform: "none",
                         fontFamily: "Nunito Sans",
-                        fontWeight: "600",
-                        fontSize: "14px",
-                        lineHeight: "19.6px",
+                        fontSize: "16px",
+                        fontWeight: 500,
                       }}
                     >
-                      Cancel
+                      Choose your data source
                     </Typography>
-                  </Button>
-                  <Button
-                    variant="contained"
-                    onClick={handleSumbit}
-                    disabled={
-                      sourceName.trim() === "" ||
-                      emailNotSubstitution ||
-                      pixelNotInstalled
-                    }
+                    <Typography
+                      sx={{
+                        fontFamily: "Roboto",
+                        fontSize: "12px",
+                        color: "rgba(95, 99, 104, 1)",
+                      }}
+                    >
+                      Please select your event type.
+                    </Typography>
+                  </Box>
+                  <Box
                     sx={{
-                      backgroundColor: "rgba(80, 82, 178, 1)",
-                      width: "120px",
-                      height: "40px",
-                      ":hover": {
-                        backgroundColor: "rgba(62, 64, 142, 1)",
-                      },
-                      ":active": {
-                        backgroundColor: "rgba(80, 82, 178, 1)",
-                      },
-                      ":disabled": {
-                        backgroundColor: "rgba(80, 82, 178, 1)",
-                        opacity: 0.6,
+                      display: "flex",
+                      gap: 2,
+                      "@media (max-width: 420px)": {
+                        display: "grid",
+                        gridTemplateColumns: "1fr",
                       },
                     }}
                   >
-                    <Typography
+                    <Button
+                      variant="outlined"
                       sx={{
-                        textAlign: "center",
-                        color: "rgba(255, 255, 255, 1)",
                         fontFamily: "Nunito Sans",
+                        border: "1px solid rgba(208, 213, 221, 1)",
+                        borderRadius: "4px",
+                        color: "rgba(32, 33, 36, 1)",
                         textTransform: "none",
-                        fontWeight: "600",
                         fontSize: "14px",
-                        lineHeight: "19.6px",
+                        padding: "8px 12px",
+                        backgroundColor: eventType.includes(1)
+                          ? "rgba(246, 248, 250, 1)"
+                          : "rgba(255, 255, 255, 1)",
+                        borderColor: eventType.includes(1)
+                          ? "rgba(117, 168, 218, 1)"
+                          : "rgba(208, 213, 221, 1)",
+                        ":hover": {
+                          borderColor: "rgba(208, 213, 221, 1)",
+                          backgroundColor: "rgba(236, 238, 241, 1)",
+                        },
+                      }}
+                      onClick={() => {
+                        toggleEventType(1);
                       }}
                     >
-                      Create
+                      Visitor
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      sx={{
+                        fontFamily: "Nunito Sans",
+                        border: "1px solid rgba(208, 213, 221, 1)",
+                        borderRadius: "4px",
+                        color: "rgba(32, 33, 36, 1)",
+                        textTransform: "none",
+                        fontSize: "14px",
+                        padding: "8px 12px",
+                        backgroundColor: eventType.includes(2)
+                          ? "rgba(246, 248, 250, 1)"
+                          : "rgba(255, 255, 255, 1)",
+                        borderColor: eventType.includes(2)
+                          ? "rgba(117, 168, 218, 1)"
+                          : "rgba(208, 213, 221, 1)",
+                        ":hover": {
+                          borderColor: "rgba(208, 213, 221, 1)",
+                          backgroundColor: "rgba(236, 238, 241, 1)",
+                        },
+                      }}
+                      onClick={() => {
+                        toggleEventType(2);
+                      }}
+                    >
+                      View Product
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      sx={{
+                        fontFamily: "Nunito Sans",
+                        border: "1px solid rgba(208, 213, 221, 1)",
+                        borderRadius: "4px",
+                        color: "rgba(32, 33, 36, 1)",
+                        textTransform: "none",
+                        fontSize: "14px",
+                        padding: "8px 12px",
+                        backgroundColor: eventType.includes(3)
+                          ? "rgba(246, 248, 250, 1)"
+                          : "rgba(255, 255, 255, 1)",
+                        borderColor: eventType.includes(3)
+                          ? "rgba(117, 168, 218, 1)"
+                          : "rgba(208, 213, 221, 1)",
+                        ":hover": {
+                          borderColor: "rgba(208, 213, 221, 1)",
+                          backgroundColor: "rgba(236, 238, 241, 1)",
+                        },
+                      }}
+                      onClick={() => {
+                        toggleEventType(3);
+                      }}
+                    >
+                      Abandoned Cart
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      sx={{
+                        fontFamily: "Nunito Sans",
+                        border: "1px solid rgba(208, 213, 221, 1)",
+                        borderRadius: "4px",
+                        color: "rgba(32, 33, 36, 1)",
+                        textTransform: "none",
+                        fontSize: "14px",
+                        padding: "8px 12px",
+                        backgroundColor: eventType.includes(4)
+                          ? "rgba(246, 248, 250, 1)"
+                          : "rgba(255, 255, 255, 1)",
+                        borderColor: eventType.includes(4)
+                          ? "rgba(117, 168, 218, 1)"
+                          : "rgba(208, 213, 221, 1)",
+                        ":hover": {
+                          borderColor: "rgba(208, 213, 221, 1)",
+                          backgroundColor: "rgba(236, 238, 241, 1)",
+                        },
+                      }}
+                      onClick={() => {
+                        toggleEventType(4);
+                      }}
+                    >
+                      Converted Sales
+                    </Button>
+                  </Box>
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Typography
+                      sx={{
+                        fontFamily: "Roboto",
+                        fontSize: "14px",
+                        color: "rgba(32, 33, 36, 1)",
+                      }}
+                    >
+                      Total Leads
                     </Typography>
-                  </Button>
+                    <Typography
+                      className="second-sub-title"
+                      sx={{
+                        fontFamily: "Nunino Sans",
+                        fontWeight: 600,
+                        fontSize: "16px",
+                        color: "rgba(32, 33, 36, 1)",
+                      }}
+                    >
+                      {eventType.some((id) => [1, 2, 3, 4].includes(id))
+                        ? matchedLeads
+                        : totalLeads}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
+              : null}
+
+              {((sourceMethod !== 0 && targetAudience !== "" && file) || (selectedDomain !== "" && !pixelNotInstalled) ) ? 
+                <>
+                  <Box
+                    ref={block6Ref}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 2,
+                      flexWrap: "wrap",
+                      border: "1px solid rgba(228, 228, 228, 1)",
+                      borderRadius: "6px",
+                      padding: "20px",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        "@media (max-width: 400px)": {
+                          justifyContent: "space-between",
+                        },
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontFamily: "Nunito Sans",
+                          fontSize: "16px",
+                          fontWeight: 500,
+                        }}
+                      >
+                        Create Name
+                      </Typography>
+                      <TextField
+                        id="outlined"
+                        label="Name"
+                        InputLabelProps={{
+                          sx: {
+                            color: "rgba(17, 17, 19, 0.6)",
+                            fontFamily: "Nunito Sans",
+                            fontWeight: 400,
+                            fontSize: "15px",
+                            padding: 0,
+                            top: "-1px",
+                            margin: 0,
+                          },
+                        }}
+                        sx={{
+                          width: "250px",
+                          "@media (max-width: 400px)": { width: "150px" },
+                          "& .MuiInputLabel-root.Mui-focused": {
+                            color: "rgba(17, 17, 19, 0.6)",
+                          },
+                          "& .MuiInputLabel-root[data-shrink='false']": {
+                            transform: "translate(16px, 50%) scale(1)",
+                          },
+                          "& .MuiOutlinedInput-root": {
+                            maxHeight: "40px",
+                          },
+                        }}
+                        InputProps={{
+                          className: "form-input",
+                        }}
+                        value={sourceName}
+                        onChange={(e) => {
+                          if (e.target.value.length < 128) {
+                            setSourceName(e.target.value);
+                          } else {
+                            showErrorToast("Your name is too long!");
+                          }
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 2,
+                      flexWrap: "wrap",
+                      justifyContent: "flex-end",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                      <Button
+                        variant="outlined"
+                        onClick={() => {
+                          setSourceMethod(0);
+                          handleDeleteFile();
+                          setSourceName("");
+                          setSourceType("");
+                          router.push("/sources");
+                        }}
+                        sx={{
+                          borderColor: "rgba(80, 82, 178, 1)",
+                          width: "92px",
+                          height: "40px",
+                          ":hover": {
+                            borderColor: "rgba(62, 64, 142, 1)",
+                          },
+                          ":active": {
+                            borderColor: "rgba(80, 82, 178, 1)",
+                          },
+                          ":disabled": {
+                            borderColor: "rgba(80, 82, 178, 1)",
+                            opacity: 0.4,
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            textAlign: "center",
+                            color: "rgba(80, 82, 178, 1)",
+                            textTransform: "none",
+                            fontFamily: "Nunito Sans",
+                            fontWeight: "600",
+                            fontSize: "14px",
+                            lineHeight: "19.6px",
+                          }}
+                        >
+                          Cancel
+                        </Typography>
+                      </Button>
+                      <Button
+                        variant="contained"
+                        onClick={handleSumbit}
+                        disabled={
+                          sourceName.trim() === "" ||
+                          emailNotSubstitution ||
+                          pixelNotInstalled
+                        }
+                        sx={{
+                          backgroundColor: "rgba(80, 82, 178, 1)",
+                          width: "120px",
+                          height: "40px",
+                          ":hover": {
+                            backgroundColor: "rgba(62, 64, 142, 1)",
+                          },
+                          ":active": {
+                            backgroundColor: "rgba(80, 82, 178, 1)",
+                          },
+                          ":disabled": {
+                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            opacity: 0.6,
+                          },
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            textAlign: "center",
+                            color: "rgba(255, 255, 255, 1)",
+                            fontFamily: "Nunito Sans",
+                            textTransform: "none",
+                            fontWeight: "600",
+                            fontSize: "14px",
+                            lineHeight: "19.6px",
+                          }}
+                        >
+                          Create
+                        </Typography>
+                      </Button>
+                    </Box>
+                  </Box>
+                </>
+                : null}
             </Box>
           </Box>
         </Box>
