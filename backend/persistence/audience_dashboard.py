@@ -283,7 +283,7 @@ class DashboardAudiencePersistence:
                     .filter(
                         UserIntegration.user_id == user_id
                     )\
-                    .order_by(IntegrationUserSync.last_sync_date.desc()).limit(limit).all()
+                    .order_by(IntegrationUserSync.created_at.desc()).limit(limit).all()
                     
         sync_ids = [data_sync.smart_audience_id for data_sync in data_syncs]
                 
