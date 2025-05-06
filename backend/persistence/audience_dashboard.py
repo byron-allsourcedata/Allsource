@@ -197,44 +197,119 @@ class DashboardAudiencePersistence:
 
         return sources, lookalikes
     
-    def get_chains_data_syncs(self, *, user_id):
+    def get_chains_data_syncs(self, *, ids, type):
         DataSourcesFromSource = aliased(AudienceSmartsDataSources, name="datasource_from_source")
         DataSourcesFromLookalike = aliased(AudienceSmartsDataSources, name="datasource_from_lookalike")
 
-        stmt = (
-            select(
-                AudienceSource,
-                AudienceLookalikes,
-                AudienceSmart,
-                IntegrationUserSync,
-            )
-            .outerjoin(
-                AudienceLookalikes,
-                AudienceLookalikes.source_uuid == AudienceSource.id
-            )
-            .outerjoin(
-                DataSourcesFromSource,
-                DataSourcesFromSource.source_id == AudienceSource.id
-            )
-            .outerjoin(
-                DataSourcesFromLookalike,
-                DataSourcesFromLookalike.lookalike_id == AudienceLookalikes.id
-            )
-            .outerjoin(
-                AudienceSmart,
-                or_(
-                    AudienceSmart.id == DataSourcesFromSource.smart_audience_id,
-                    AudienceSmart.id == DataSourcesFromLookalike.smart_audience_id
+        if type == 'sources':
+            stmt = (
+                select(
+                    AudienceSource,
+                    AudienceLookalikes,
+                    AudienceSmart,
+                    IntegrationUserSync,
                 )
+                .select_from(AudienceSource)
+                .outerjoin(
+                    AudienceLookalikes,
+                    AudienceLookalikes.source_uuid == AudienceSource.id
+                )
+                .outerjoin(
+                    DataSourcesFromSource,
+                    DataSourcesFromSource.source_id == AudienceSource.id
+                )
+                .outerjoin(
+                    DataSourcesFromLookalike,
+                    DataSourcesFromLookalike.lookalike_id == AudienceLookalikes.id
+                )
+                .outerjoin(
+                    AudienceSmart,
+                    or_(
+                        AudienceSmart.id == DataSourcesFromSource.smart_audience_id,
+                        AudienceSmart.id == DataSourcesFromLookalike.smart_audience_id
+                    )
+                )
+                .outerjoin(
+                    IntegrationUserSync,
+                    IntegrationUserSync.smart_audience_id == AudienceSmart.id
+                )
+                .where(AudienceSource.id.in_(ids))
             )
-            .outerjoin(
-                IntegrationUserSync,
-                IntegrationUserSync.smart_audience_id == AudienceSmart.id
+        elif type == 'lookalikes':
+            stmt = (
+                select(
+                    AudienceSource,
+                    AudienceLookalikes,
+                    AudienceSmart,
+                    IntegrationUserSync,
+                )
+                .select_from(AudienceLookalikes)
+                .join(
+                    AudienceSource,
+                    AudienceSource.id == AudienceLookalikes.source_uuid
+                )
+                .outerjoin(
+                    AudienceSmartsDataSources,
+                    AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id
+                )
+                .outerjoin(
+                    AudienceSmart, AudienceSmart.id == AudienceSmartsDataSources.smart_audience_id
+                )
+                .outerjoin(
+                    IntegrationUserSync,
+                    IntegrationUserSync.smart_audience_id == AudienceSmart.id
+                )
+                .where(AudienceLookalikes.id.in_(ids))
             )
-            .where(AudienceSource.user_id == user_id)
-            .order_by(AudienceSource.created_at.desc())
-        )
-
+        elif type == 'smart_audiences':
+            stmt = (
+                select(
+                    AudienceSource,
+                    AudienceLookalikes,
+                    AudienceSmart,
+                    IntegrationUserSync,
+                )
+                .select_from(AudienceSmart)
+                .join(
+                    DataSourcesFromSource, DataSourcesFromSource.smart_audience_id == AudienceSmart.id
+                )
+                .outerjoin(
+                    AudienceSource,
+                    AudienceSource.id == DataSourcesFromSource.source_id
+                )
+                .outerjoin(
+                    AudienceLookalikes,
+                    AudienceLookalikes.id == DataSourcesFromSource.lookalike_id
+                )
+                .outerjoin(
+                    IntegrationUserSync,
+                    IntegrationUserSync.smart_audience_id == AudienceSmart.id
+                )
+                .where(AudienceSmart.id.in_(ids))
+            )
+        elif type == 'data_sync':
+            stmt = (
+                select(
+                    AudienceSource,
+                    AudienceLookalikes,
+                    AudienceSmart,
+                    IntegrationUserSync,
+                )
+                .select_from(IntegrationUserSync)
+                .join(
+                    AudienceSmart, IntegrationUserSync.smart_audience_id == AudienceSmart.id
+                )
+                .join(
+                    DataSourcesFromSource, DataSourcesFromSource.smart_audience_id == AudienceSmart.id
+                )
+                .outerjoin(
+                    AudienceSource, AudienceSource.id == DataSourcesFromSource.source_id
+                )
+                .outerjoin(
+                    AudienceLookalikes, AudienceLookalikes.id == DataSourcesFromSource.lookalike_id
+                )
+                .where(IntegrationUserSync.id.in_(ids))
+            )
         return self.db.execute(stmt).all()
     
     def get_last_lookalike_smart_audiences(self, user_id: int, limit: int, smart_audiences: List[AudienceSmart]):
