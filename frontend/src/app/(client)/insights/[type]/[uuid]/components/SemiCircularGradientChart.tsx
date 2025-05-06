@@ -2,6 +2,7 @@
 
 import React, { useId } from "react";
 import { Box, Typography } from "@mui/material";
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 
 type ColorStop = {
   offset: string;
@@ -29,78 +30,104 @@ export const SemiCircularGradientChart: React.FC<
 
   return (
     <Box
-      p={2}
-      sx={{ width: "100%" }}
-      borderRadius={2}
-      boxShadow={2}
       bgcolor="#fff"
-    >
-      <Box sx={{
+      sx={{
         width: "100%",
-        justifyContent: 'space-between',
-        display: 'flex',
-        flexDirection: 'row',
-        mb: 2
-      }}>
-        <Typography className="dashboard-card-heading">
-          {title}
-        </Typography>
-        {rank !== undefined && (
-          <Typography
-            component="span"
-            sx={{
-              fontSize: 12,
-              ml: 1,
-              color: "#888",
-              verticalAlign: "middle",
-            }}
-          >
-            #{rank}
-          </Typography>
-        )}
-      </Box>
+        borderRadius: "6px",
+        boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
+        position: 'relative',
+        flexGrow: 1
+      }}
+    >
+      {rank !== undefined && (
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            backgroundColor: 'rgba(30, 136, 229, 1)',
+            color: 'white',
+            borderTopRightRadius: '4px',
+            borderBottomLeftRadius: '4px',
+            px: 1.5,
+            py: 0.5,
+            fontFamily: 'Roboto',
+            fontSize: 12,
+            fontWeight: 500,
+            maxWidth: '100%',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <ArrowDropUpIcon sx={{ fontSize: 16, mr: 0.5 }} />
+          #{rank} Predictable field
+        </Box>
+      )}
+      <Box
+        bgcolor="#fff"
+        p={2}
+        sx={{
+          width: "100%"
+        }}>
 
-      <Box display="flex" justifyContent="center" alignItems="end">
-        <Box display="flex" flexDirection="column" alignItems="center" mr={2}>
-          <Typography className="dashboard-card-text">{percent}%</Typography>
-          <Typography className="dashboard-card-text">{labelLeft}</Typography>
+        <Box
+          sx={{
+            width: '100%',
+            justifyContent: 'space-between',
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            mb: 2,
+          }}
+        >
+          <Typography className="dashboard-card-heading" >
+            {title}
+          </Typography>
         </Box>
 
-        <svg
-          width={radius * 2 + strokeWidth}
-          height={radius + strokeWidth}
-          viewBox={`0 0 ${radius * 2 + strokeWidth} ${radius + strokeWidth}`}
-        >
-          <defs>
-            <linearGradient id={gradientId} gradientTransform="rotate(90)">
-              {colorStops.map((stop, index) => (
-                <stop key={index} offset={stop.offset} stopColor={stop.color} />
-              ))}
-            </linearGradient>
-          </defs>
+        <Box display="flex" justifyContent="center" alignItems="end">
+          <Box display="flex" flexDirection="column" alignItems="center" mr={2}>
+            <Typography className="dashboard-card-text">{percent}%</Typography>
+            <Typography className="dashboard-card-text">{labelLeft}</Typography>
+          </Box>
 
-          <path
-            d={describeArc(center, center, radius, 0, 180)}
-            fill="none"
-            stroke="#F5FAFE"
-            strokeWidth={strokeWidth}
-            strokeLinecap="round"
-          />
+          <svg
+            width={radius * 2 + strokeWidth}
+            height={radius + strokeWidth}
+            viewBox={`0 0 ${radius * 2 + strokeWidth} ${radius + strokeWidth}`}
+          >
+            <defs>
+              <linearGradient id={gradientId} gradientTransform="rotate(90)">
+                {colorStops.map((stop, index) => (
+                  <stop key={index} offset={stop.offset} stopColor={stop.color} />
+                ))}
+              </linearGradient>
+            </defs>
 
-          <path
-            d={describeArc(center, center, radius, 0, endAngle)}
-            fill="none"
-            stroke={`url(#${gradientId})`}
-            strokeWidth={strokeWidth}
-            strokeLinecap="round"
-          />
-        </svg>
+            <path
+              d={describeArc(center, center, radius, 0, 180)}
+              fill="none"
+              stroke="#F5FAFE"
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+            />
 
-        <Box display="flex" flexDirection="column" alignItems="center" ml={2}>
-          <Typography className="dashboard-card-text">
-            {(100 - percent).toFixed(2)}%
-          </Typography>
-          <Typography className="dashboard-card-text">{labelRight}</Typography>
+            <path
+              d={describeArc(center, center, radius, 0, endAngle)}
+              fill="none"
+              stroke={`url(#${gradientId})`}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+            />
+          </svg>
+
+          <Box display="flex" flexDirection="column" alignItems="center" ml={2}>
+            <Typography className="dashboard-card-text">
+              {(100 - percent).toFixed(2)}%
+            </Typography>
+            <Typography className="dashboard-card-text">{labelRight}</Typography>
+          </Box>
         </Box>
       </Box>
     </Box>

@@ -1,7 +1,8 @@
 from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index, BigInteger, func, text, \
-    String
+    String, DateTime
+
 from sqlalchemy.dialects.postgresql import ENUM
-from datetime import datetime
+from datetime import datetime, timezone
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.audience_smarts import AudienceSmart
 from models.base import Base
@@ -36,9 +37,8 @@ class IntegrationUserSync(Base):
     )
     is_active = Column(Boolean, nullable=True)
     created_at = Column(
-        TIMESTAMP, 
-        nullable=False, 
-        server_default=text('now()')
+        DateTime(timezone=False),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
     )
     last_sync_date = Column(TIMESTAMP, nullable=True)
     list_id = Column(VARCHAR, nullable=True)
