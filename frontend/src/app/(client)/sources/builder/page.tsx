@@ -97,6 +97,7 @@ const SourcesImport: React.FC = () => {
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
+  const [domainsWithoutPixel, setDomainsWithoutPixel] = useState<DomainsLeads[]>([]);
   const [totalLeads, setTotalLeads] = useState(0);
   const [matchedLeads, setMatchedLeads] = useState(0);
 
@@ -159,7 +160,8 @@ const SourcesImport: React.FC = () => {
   };
 
   const handlePixelInstall = () => {
-    router.push("/integrations");
+    router.push("/dashboard");
+    sessionStorage.setItem('current_domain', domainsWithoutPixel[0].name);
   }
 
   const handleAdd = () => {
@@ -573,6 +575,7 @@ const SourcesImport: React.FC = () => {
       if (response.status === 200) {
         const domains = response.data;
         setDomains(domains.filter((domain: DomainsLeads) => domain.pixel_installed));
+        setDomainsWithoutPixel(domains.filter((domain: DomainsLeads) => !domain.pixel_installed));
         setPixelNotInstalled(domains.some((domain: DomainsLeads) => !domain.pixel_installed));
       }
     } catch {
