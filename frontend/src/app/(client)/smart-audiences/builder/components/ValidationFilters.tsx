@@ -12,6 +12,7 @@ import {
   Divider,
   Button,
   LinearProgress,
+  FormControlLabel
 } from "@mui/material";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -298,8 +299,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
       useCaseType === "Email"
     ) {
       setNestedSelections((prev) => ({ ...prev, Recency: "30 days" }));
-      // setSelectedOptionsPersonalEmail(["MX", "Delivery", "Recency"]);
-      setSelectedOptionsPersonalEmail(["MX", "Recency"]);
+      setSelectedOptionsPersonalEmail(["MX", "Delivery", "Recency"]);
       setValidate(false);
     }
 
@@ -308,37 +308,28 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
       useCaseType === "Email"
     ) {
       setNestedSelections((prev) => ({ ...prev, RecencyBusiness: "30 days" }));
-      // setSelectedOptionsBusinessEmail(["MX", "Delivery", "RecencyBusiness"]);
-      setSelectedOptionsBusinessEmail(["MX", "RecencyBusiness"]);
+      setSelectedOptionsBusinessEmail(["MX", "Delivery", "RecencyBusiness"]);
       setValidate(false);
     }
 
     if (useCaseType === "Tele Marketing") {
       if (targetAudience === "Both" || targetAudience === "B2B") {
-        // setSelectedOptionsPhone([
-        //   "Last updated date",
-        //   "Confirmation",
-        //   "DNC filter",
-        // ]);
-        setSelectedOptionsPhone([
-          "Confirmation",
-          "DNC filter",
-        ]);
+        setSelectedOptionsPhone(["Last updated date", "Confirmation", "DNC filter",]);
       } else if (targetAudience === "B2C") {
-        // setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
+        setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
         setSelectedOptionsPhone(["DNC filter"]);
       }
       setValidate(false);
     }
 
     if (useCaseType === "Postal") {
-      // if (targetAudience === "Both") {
-      //   setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
-      // } else if (targetAudience === "B2C") {
-      //   setSelectedOptionsPostalCAS(["CAS home address"]);
-      // } else if (targetAudience === "B2B") {
-      //   setSelectedOptionsPostalCAS(["CAS office address"]);
-      // }
+      if (targetAudience === "Both") {
+        setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
+      } else if (targetAudience === "B2C") {
+        setSelectedOptionsPostalCAS(["CAS home address"]);
+      } else if (targetAudience === "B2B") {
+        setSelectedOptionsPostalCAS(["CAS office address"]);
+      }
       setValidate(false);
     }
 
@@ -539,61 +530,58 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
-                        <Checkbox
-                          size="small"
-                          disabled={isValidate}
-                          checked={selectedOptionsPersonalEmail.includes("MX")}
-                          onChange={() =>
-                            handleOptionClick(
-                              setSelectedOptionsPersonalEmail,
-                              "MX"
-                            )
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              size="small"
+                              disabled={isValidate}
+                              checked={selectedOptionsBusinessEmail.includes("MX")}
+                              onChange={() =>
+                                handleOptionClick(
+                                  setSelectedOptionsBusinessEmail,
+                                  "MX"
+                                )
+                              }
+                              sx={{
+                                padding: 0,
+                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                              }}
+                            />
                           }
-                          sx={{
-                            padding: 0,
-                            "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
-                          }}
-                        />
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 2,
-                          }}
-                        >
-                          <Typography className="form-input">MX</Typography>
-                          {(targetAudience === "B2C" ||
-                            targetAudience === "Both") &&
-                            useCaseType === "Email" && (
+                          label={
+                            <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 2 }}>
+                              <Typography className="form-input">MX</Typography>
+                              {(targetAudience === "B2B" || targetAudience === "Both") &&
+                                useCaseType === "Email" && (
+                                  <Typography
+                                    className="table-data"
+                                    sx={{
+                                      color: "rgba(43, 91, 0, 1) !important",
+                                      fontSize: "14px !important",
+                                      backgroundColor: "rgba(234, 248, 221, 1) !important",
+                                      borderRadius: "3px",
+                                      padding: "4px 12px",
+                                    }}
+                                  >
+                                    Recommended
+                                  </Typography>
+                                )}
                               <Typography
                                 className="table-data"
                                 sx={{
-                                  color: "rgba(43, 91, 0, 1) !important",
+                                  color: "rgba(0, 129, 251, 1) !important",
                                   fontSize: "14px !important",
-                                  backgroundColor:
-                                    "rgba(234, 248, 221, 1) !important",
+                                  backgroundColor: "rgba(204, 230, 254, 1) !important",
                                   borderRadius: "3px",
                                   padding: "4px 12px",
                                 }}
                               >
-                                Recommended
+                                Free
                               </Typography>
-                            )}
-                          <Typography
-                            className="table-data"
-                            sx={{
-                              color: "rgba(0, 129, 251, 1) !important",
-                              fontSize: "14px !important",
-                              borderRadius: "3px",
-                              backgroundColor:
-                                "rgba(204, 230, 254, 1) !important",
-                              padding: "4px 12px",
-                            }}
-                          >
-                            Free
-                          </Typography>
-                        </Box>
+                            </Box>
+                          }
+                          sx={{ userSelect: "none", cursor: "pointer" }}
+                        />
                       </Box>
                     </Box>
                     <Divider sx={{ my: 1 }} />
@@ -607,6 +595,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
+                        cursor: "pointer",
                       }}
                     >
                       <Box
@@ -743,41 +732,58 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
-                        <Checkbox
-                          size="small"
-                          disabled={isValidate}
-                          checked={selectedOptionsPersonalEmail.includes(
-                            "Delivery"
-                          )}
-                          onChange={() =>
-                            handleOptionClick(
-                              setSelectedOptionsPersonalEmail,
-                              "Delivery"
-                            )
-                          }
-                          sx={{
-                            padding: 0,
-                            "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
-                          }}
-                        />
-                        <Typography className="form-input">Delivery</Typography>
-                        {(targetAudience === "B2C" ||
-                          targetAudience === "Both") &&
-                          useCaseType === "Email" && (
-                            <Typography
-                              className="table-data"
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              size="small"
+                              disabled={isValidate}
+                              checked={selectedOptionsPersonalEmail.includes("Delivery")}
+                              onChange={() =>
+                                handleOptionClick(
+                                  setSelectedOptionsPersonalEmail,
+                                  "Delivery"
+                                )
+                              }
                               sx={{
-                                color: "rgba(43, 91, 0, 1) !important",
-                                fontSize: "14px !important",
-                                backgroundColor:
-                                  "rgba(234, 248, 221, 1) !important",
-                                borderRadius: "3px",
-                                padding: "4px 12px",
+                                padding: 0,
+                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
                               }}
-                            >
-                              Recommended
-                            </Typography>
-                          )}
+                            />
+                          }
+                          label={
+                            <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 2 }}>
+                              <Typography className="form-input">Delivery</Typography>
+                              {(targetAudience === "B2B" || targetAudience === "Both") &&
+                                useCaseType === "Email" && (
+                                  <Typography
+                                    className="table-data"
+                                    sx={{
+                                      color: "rgba(43, 91, 0, 1) !important",
+                                      fontSize: "14px !important",
+                                      backgroundColor: "rgba(234, 248, 221, 1) !important",
+                                      borderRadius: "3px",
+                                      padding: "4px 12px",
+                                    }}
+                                  >
+                                    Recommended
+                                  </Typography>
+                                )}
+                              <Typography
+                                className="table-data"
+                                sx={{
+                                  color: "rgba(0, 129, 251, 1) !important",
+                                  fontSize: "14px !important",
+                                  backgroundColor: "rgba(204, 230, 254, 1) !important",
+                                  borderRadius: "3px",
+                                  padding: "4px 12px",
+                                }}
+                              >
+                                Free
+                              </Typography>
+                            </Box>
+                          }
+                          sx={{ userSelect: "none", cursor: "pointer" }}
+                        />
                       </Box>
                     </Box>
                   </Box>
@@ -875,61 +881,58 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
-                        <Checkbox
-                          size="small"
-                          disabled={isValidate}
-                          checked={selectedOptionsBusinessEmail.includes("MX")}
-                          onChange={() =>
-                            handleOptionClick(
-                              setSelectedOptionsBusinessEmail,
-                              "MX"
-                            )
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              size="small"
+                              disabled={isValidate}
+                              checked={selectedOptionsBusinessEmail.includes("MX")}
+                              onChange={() =>
+                                handleOptionClick(
+                                  setSelectedOptionsBusinessEmail,
+                                  "MX"
+                                )
+                              }
+                              sx={{
+                                padding: 0,
+                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                              }}
+                            />
                           }
-                          sx={{
-                            padding: 0,
-                            "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
-                          }}
-                        />
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 2,
-                          }}
-                        >
-                          <Typography className="form-input">MX</Typography>
-                          {(targetAudience === "B2B" ||
-                            targetAudience === "Both") &&
-                            useCaseType === "Email" && (
+                          label={
+                            <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 2 }}>
+                              <Typography className="form-input">MX</Typography>
+                              {(targetAudience === "B2B" || targetAudience === "Both") &&
+                                useCaseType === "Email" && (
+                                  <Typography
+                                    className="table-data"
+                                    sx={{
+                                      color: "rgba(43, 91, 0, 1) !important",
+                                      fontSize: "14px !important",
+                                      backgroundColor: "rgba(234, 248, 221, 1) !important",
+                                      borderRadius: "3px",
+                                      padding: "4px 12px",
+                                    }}
+                                  >
+                                    Recommended
+                                  </Typography>
+                                )}
                               <Typography
                                 className="table-data"
                                 sx={{
-                                  color: "rgba(43, 91, 0, 1) !important",
+                                  color: "rgba(0, 129, 251, 1) !important",
                                   fontSize: "14px !important",
-                                  backgroundColor:
-                                    "rgba(234, 248, 221, 1) !important",
+                                  backgroundColor: "rgba(204, 230, 254, 1) !important",
                                   borderRadius: "3px",
                                   padding: "4px 12px",
                                 }}
                               >
-                                Recommended
+                                Free
                               </Typography>
-                            )}
-                          <Typography
-                            className="table-data"
-                            sx={{
-                              color: "rgba(0, 129, 251, 1) !important",
-                              fontSize: "14px !important",
-                              borderRadius: "3px",
-                              backgroundColor:
-                                "rgba(204, 230, 254, 1) !important",
-                              padding: "4px 12px",
-                            }}
-                          >
-                            Free
-                          </Typography>
-                        </Box>
+                            </Box>
+                          }
+                          sx={{ userSelect: "none", cursor: "pointer" }}
+                        />
                       </Box>
                     </Box>
                     <Divider sx={{ my: 1 }} />
@@ -1081,52 +1084,56 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
-                        <Checkbox
-                          size="small"
-                          disabled={isValidate}
-                          checked={selectedOptionsBusinessEmail.includes(
-                            "Delivery"
-                          )}
-                          onChange={() =>
-                            handleOptionClick(
-                              setSelectedOptionsBusinessEmail,
-                              "Delivery"
-                            )
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              size="small"
+                              disabled={isValidate}
+                              checked={selectedOptionsBusinessEmail.includes("Delivery")}
+                              onChange={() =>
+                                handleOptionClick(
+                                  setSelectedOptionsBusinessEmail,
+                                  "Delivery"
+                                )
+                              }
+                              sx={{
+                                padding: 0,
+                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                              }}
+                            />
                           }
-                          sx={{
-                            padding: 0,
-                            "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
-                          }}
-                        />
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 2,
-                          }}
-                        >
-                          <Typography className="form-input">
-                            Delivery
-                          </Typography>
-                          {(targetAudience === "B2B" ||
-                            targetAudience === "Both") &&
-                            useCaseType === "Email" && (
-                              <Typography
-                                className="table-data"
-                                sx={{
-                                  color: "rgba(43, 91, 0, 1) !important",
-                                  fontSize: "14px !important",
-                                  backgroundColor:
-                                    "rgba(234, 248, 221, 1) !important",
-                                  borderRadius: "3px",
-                                  padding: "4px 12px",
-                                }}
-                              >
-                                Recommended
+                          label={
+                            <Box
+                              sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                alignItems: "center",
+                                gap: 2,
+                              }}
+                            >
+                              <Typography className="form-input">
+                                Delivery
                               </Typography>
-                            )}
-                        </Box>
+                              {(targetAudience === "B2B" || targetAudience === "Both") &&
+                                useCaseType === "Email" && (
+                                  <Typography
+                                    className="table-data"
+                                    sx={{
+                                      color: "rgba(43, 91, 0, 1) !important",
+                                      fontSize: "14px !important",
+                                      backgroundColor:
+                                        "rgba(234, 248, 221, 1) !important",
+                                      borderRadius: "3px",
+                                      padding: "4px 12px",
+                                    }}
+                                  >
+                                    Recommended
+                                  </Typography>
+                                )}
+                            </Box>
+                          }
+                          sx={{ userSelect: "none", cursor: "pointer" }}
+                        />
                       </Box>
                     </Box>
                   </Box>
@@ -1217,39 +1224,35 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 gap: 1,
                               }}
                             >
-                              <Checkbox
-                                size="small"
-                                // disabled={isValidate}
-                                disabled={option === "Last updated date"}
-                                checked={selectedOptionsPhone.includes(option)}
-                                onChange={() =>
-                                  handleOptionClick(
-                                    setSelectedOptionsPhone,
-                                    option
-                                  )
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    size="small"
+                                    disabled={isValidate}
+                                    checked={selectedOptionsPhone.includes(option)}
+                                    onChange={() => handleOptionClick(setSelectedOptionsPhone, option)}
+                                    sx={{
+                                      padding: 0,
+                                      pb: index === 2 ? 1 : 0,
+                                      "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                                    }}
+                                  />
                                 }
-                                sx={{
-                                  padding: 0,
-                                  pb: index === 2 ? 1 : 0,
-                                  "&.Mui-checked": {
-                                    color: "rgba(80, 82, 178, 1)",
-                                  },
-                                }}
+
+                                label={
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                    <Typography className="form-input" sx={{ pb: index === 2 ? 1 : 0 }}>
+                                      {option}
+                                    </Typography>
+                                    {isRecommended && (
+                                      <Typography className="table-data" sx={smartAudiences.labelText}>
+                                        Recommended
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                }
+                                sx={{ userSelect: "none", cursor: "pointer" }}
                               />
-                              <Typography
-                                className="form-input"
-                                sx={{ pb: index === 2 ? 1 : 0 }}
-                              >
-                                {option}
-                              </Typography>
-                              {isRecommended && (
-                                <Typography
-                                  className="table-data"
-                                  sx={smartAudiences.labelText}
-                                >
-                                  Recommended
-                                </Typography>
-                              )}
                             </Box>
                           </Box>
                           {(index === 0 || index === 1) && <Divider />}
@@ -1349,36 +1352,40 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 gap: 1,
                               }}
                             >
-                              <Checkbox
-                                size="small"
-                                // disabled={isValidate}
-                                checked={selectedOptionsPostalCAS.includes(
-                                  option
-                                )}
-                                onChange={() =>
-                                  handleOptionClick(
-                                    setSelectedOptionsPostalCAS,
-                                    option
-                                  )
+                              <FormControlLabel
+                                control={
+                                  <Checkbox
+                                    size="small"
+                                    disabled={isValidate}
+                                    checked={selectedOptionsPostalCAS.includes(option)}
+                                    onChange={() => handleOptionClick(setSelectedOptionsPostalCAS, option)}
+                                    sx={{
+                                      padding: 0,
+                                      "&.Mui-checked": {
+                                        color: "rgba(80, 82, 178, 1)",
+                                      },
+                                    }}
+                                  />
                                 }
+                                label={
+                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                    <Typography className="form-input">{option}</Typography>
+                                    {isRecommended && (
+                                      <Typography
+                                        className="table-data"
+                                        sx={smartAudiences.labelText}
+                                      >
+                                        Recommended
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                }
+
                                 sx={{
-                                  padding: 0,
-                                  "&.Mui-checked": {
-                                    color: "rgba(80, 82, 178, 1)",
-                                  },
+                                  userSelect: "none",
+                                  cursor: "pointer",
                                 }}
                               />
-                              <Typography className="form-input">
-                                {option}
-                              </Typography>
-                              {isRecommended && (
-                                <Typography
-                                  className="table-data"
-                                  sx={smartAudiences.labelText}
-                                >
-                                  Recommended
-                                </Typography>
-                              )}
                             </Box>
                           </Box>
                           {index === 0 && <Divider />}
@@ -1437,50 +1444,23 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                   {isOpenLinkedIn ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                 </IconButton>
               </Box>
+
               <Collapse in={isOpenLinkedIn}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    pt: 1,
-                    pl: 2,
-                    pb: 0.75,
-                  }}
-                >
-                  <Box key={"Job validation"}>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Checkbox
-                          disabled={isValidate}
-                          size="small"
-                          checked={selectedOptionsLinkedIn.includes(
-                            "Job validation"
-                          )}
-                          onChange={() =>
-                            handleOptionClick(
-                              setSelectedOptionsLinkedIn,
-                              "Job validation"
-                            )
-                          }
-                          sx={{
-                            padding: 0,
-                            "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
-                          }}
-                        />
+                <Box sx={{ pt: 1, pl: 2, pb: 0.75 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        disabled={isValidate}
+                        size="small"
+                        checked={selectedOptionsLinkedIn.includes("Job validation")}
+                      />
+                    }
+                    label={
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Typography className="form-input">
                           Job validation
                         </Typography>
-                        {(targetAudience === "B2B" ||
-                          targetAudience === "Both") &&
+                        {(targetAudience === "B2B" || targetAudience === "Both") &&
                           useCaseType === "LinkedIn" && (
                             <Typography
                               className="table-data"
@@ -1490,10 +1470,15 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                             </Typography>
                           )}
                       </Box>
-                    </Box>
-                  </Box>
+                    }
+                    onChange={() =>
+                      handleOptionClick(setSelectedOptionsLinkedIn, "Job validation")
+                    }
+                    sx={{ userSelect: "none", cursor: "pointer" }}
+                  />
                 </Box>
               </Collapse>
+
             </Box>
             <Box
               sx={{
