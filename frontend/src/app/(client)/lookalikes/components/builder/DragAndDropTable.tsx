@@ -19,27 +19,21 @@ function DragAndDropTable({
   fields,
   onOrderChange,
 }: LookalikeFieldsGridProps) {
-  // Compute and store the initial sorted order by importance on mount or fields change
   const sortedInitial = React.useMemo(() =>
     [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value)),
     [fields]
   );
   const initDefaultStateRef = React.useRef<Field[]>(sortedInitial);
-  const initialRowsRef = React.useRef<Field[]>(sortedInitial);
-  // Local state for current row order
-  const [rows, setRows] = React.useState<Field[]>(initialRowsRef.current);
+  const [rows, setRows] = React.useState<Field[]>(initDefaultStateRef.current);
   const { resetTrigger, notifyInteraction } = useResetContext();
 
-  // Reset to original sorted order when resetTrigger fires
   React.useEffect(() => {
     setRows(initDefaultStateRef.current);
     onOrderChange?.(initDefaultStateRef.current);
-    // Do not trigger parent on reset; parent can get rows via onOrderChange if needed
   }, [resetTrigger]);
 
   // Sync when the incoming fields change (update reference only)
   React.useEffect(() => {
-    initialRowsRef.current = sortedInitial;
     const kept = rows.filter(r =>
       sortedInitial.some(f => f.id === r.id)
     );
@@ -55,17 +49,22 @@ function DragAndDropTable({
         nextRows.splice(insertIdx, 0, f);
       }
     });
-    console.log(nextRows);
     setRows(nextRows);
 
     if (rows.length === 0) {
-      setRows(initialRowsRef.current);
+      setRows(initDefaultStateRef.current);
       initDefaultStateRef.current = sortedInitial;
     }
     if (rows.length > 0) {
       notifyInteraction("dragTable", handleComparer());
     }
-  }, [sortedInitial]);
+  }, [fields, onOrderChange]);
+
+  React.useEffect(() => {
+    if (fields.length !== rows.length){
+      onOrderChange?.(initDefaultStateRef.current);
+    }
+  }, [fields]);
 
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
