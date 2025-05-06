@@ -159,7 +159,7 @@ const SourcesImport: React.FC = () => {
   };
 
   const handlePixelInstall = () => {
-    router.push("/dashboard");
+    router.push("/integrations");
   }
 
   const handleAdd = () => {
@@ -222,24 +222,29 @@ const SourcesImport: React.FC = () => {
   // Switching
 
   const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
+    handleDeleteFile();
+    setTargetAudience("")
+    setSourceType(event.target.value);
     if (event.target.value === "Website - Pixel") {
       setSourceMethod(2)
-      scrollToBlock(block4Ref)
+      setTimeout( () => {
+        scrollToBlock(block4Ref)
+      }, 0)
       fetchDomainsAndLeads()
     }
     else {
       setSourceMethod(1)
-      scrollToBlock(block2Ref)
+      setTimeout( () => {
+        scrollToBlock(block2Ref)
+      }, 0)
     }
-
-    handleDeleteFile();
-    setTargetAudience("")
-    setSourceType(event.target.value);
   };
 
   const handleTargetAudienceChange = (value: string) => {
     setTargetAudience(value);
-    scrollToBlock(block6Ref)
+    setTimeout( () => {
+      scrollToBlock(block6Ref)
+    }, 0)
   };
 
 
@@ -500,7 +505,9 @@ const SourcesImport: React.FC = () => {
 
       const content = await readFileContent(file);
       await processFileContent(content);
-      scrollToBlock(block3Ref)
+      setTimeout( () => {
+        scrollToBlock(block4Ref)
+      }, 0)
     } catch (error: unknown) {
       if (error instanceof Error) {
         showErrorToast(error.message);
@@ -552,6 +559,9 @@ const SourcesImport: React.FC = () => {
       setMatchedLeads(0);
       setEventType([]);
     }
+    setTimeout( () => {
+      scrollToBlock(block4Ref)
+    }, 0)
   };
 
   const fetchDomainsAndLeads = async () => {
@@ -562,9 +572,8 @@ const SourcesImport: React.FC = () => {
       );
       if (response.status === 200) {
         const domains = response.data;
-        setDomains(domains);
-        const hasNoPixel = domains.some((domain: any) => !domain.pixel_installed);
-        setPixelNotInstalled(hasNoPixel);
+        setDomains(domains.filter((domain: DomainsLeads) => domain.pixel_installed));
+        setPixelNotInstalled(domains.some((domain: DomainsLeads) => !domain.pixel_installed));
       }
     } catch {
     } finally {
@@ -679,6 +688,14 @@ const SourcesImport: React.FC = () => {
                       value={sourceType}
                       onChange={handleChangeSourceType}
                       displayEmpty
+                      MenuProps={{
+                        MenuListProps: {
+                          sx: {
+                            pb: 0,
+                            pt: pixelNotInstalled ? 0 : "inherit" 
+                          },
+                        },
+                      }}
                       sx={{
                         ...sourcesStyles.text,
                         width: "316px",
@@ -693,101 +710,14 @@ const SourcesImport: React.FC = () => {
                       <MenuItem value="" disabled sx={{ display: "none"}}>
                         Choose Source Type
                       </MenuItem>
-                      <MenuItem sx={{fontSize: "14px" }} value={"Website - Pixel"}>Website - Pixel</MenuItem>
-                      <MenuItem sx={{fontSize: "14px" }} value={"Customer Conversions"}>
+                      <MenuItem sx={{fontSize: "14px", borderBottom: "1px solid rgba(228, 228, 228, 1)" }} value={"Website - Pixel"}>Website - Pixel</MenuItem>
+                      <MenuItem sx={{fontSize: "14px", borderBottom:  "1px solid rgba(228, 228, 228, 1)" }} value={"Customer Conversions"}>
                         Customer Conversions (CSV)
                       </MenuItem>
-                      <MenuItem sx={{fontSize: "14px" }} value={"Failed Leads"}>Failed Leads (CSV)</MenuItem>
+                      <MenuItem sx={{fontSize: "14px", borderBottom:  "1px solid rgba(228, 228, 228, 1)"  }} value={"Failed Leads"}>Failed Leads (CSV)</MenuItem>
                       <MenuItem sx={{fontSize: "14px" }} value={"Interest"}>Interest (CSV)</MenuItem>
                     </Select>
                   </FormControl>
-                  {/* <Button
-                    variant="outlined"
-                    startIcon={
-                      <Image
-                        src="../upload-minimalistic.svg"
-                        alt="upload"
-                        width={20}
-                        height={20}
-                      />
-                    }
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      fontWeight: 400,
-                      border: "1px solid rgba(208, 213, 221, 1)",
-                      borderRadius: "4px",
-                      color:
-                        sourceMethod === 1
-                          ? "rgba(32, 33, 36, 1)"
-                          : "rgba(112, 112, 113, 1)",
-                      textTransform: "none",
-                      fontSize: "14px",
-                      padding: "8px 12px",
-                      backgroundColor:
-                        sourceMethod === 1
-                          ? "rgba(246, 248, 250, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                      borderColor:
-                        sourceMethod === 1
-                          ? "rgba(117, 168, 218, 1)"
-                          : "rgba(208, 213, 221, 1)",
-                      ":hover": {
-                        borderColor: "rgba(208, 213, 221, 1)",
-                        backgroundColor: "rgba(236, 238, 241, 1)",
-                      },
-                    }}
-                    onClick={() => {
-                      setSourceMethod(1);
-                      handleDeleteFile();
-                      setSourceType("");
-                    }}
-                  >
-                    Manually upload
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={
-                      <Image
-                        src="../website-icon.svg"
-                        alt="upload"
-                        width={20}
-                        height={20}
-                      />
-                    }
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      fontWeight: 400,
-                      border: "1px solid rgba(208, 213, 221, 1)",
-                      borderRadius: "4px",
-                      color:
-                        sourceMethod === 2
-                          ? "rgba(32, 33, 36, 1)"
-                          : "rgba(112, 112, 113, 1)",
-                      textTransform: "none",
-                      fontSize: "14px",
-                      padding: "8px 12px",
-                      backgroundColor:
-                        sourceMethod === 2
-                          ? "rgba(246, 248, 250, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                      borderColor:
-                        sourceMethod === 2
-                          ? "rgba(117, 168, 218, 1)"
-                          : "rgba(208, 213, 221, 1)",
-                      ":hover": {
-                        borderColor: "rgba(208, 213, 221, 1)",
-                        backgroundColor: "rgba(236, 238, 241, 1)",
-                      },
-                    }}
-                    onClick={() => {
-                      setSourceMethod(2);
-                      handleDeleteFile();
-                      setSourceType("");
-                      fetchDomainsAndLeads();
-                    }}
-                  >
-                    Website - Pixel
-                  </Button> */}
                 </Box>
               </Box>
 
@@ -1338,10 +1268,17 @@ const SourcesImport: React.FC = () => {
                       value={selectedDomain}
                       onChange={handleChangeDomain}
                       displayEmpty
+                      MenuProps={{
+                        MenuListProps: {
+                          sx: {
+                            pb: 0,
+                            pt: pixelNotInstalled ? 0 : "inherit" 
+                          },
+                        },
+                      }}
                       sx={{
                         ...sourcesStyles.text,
                         width: "316px",
-                        pt: 0,
                         borderRadius: "4px",
                         fontFamily: "Roboto",
                         fontSize: "14px",
@@ -1360,33 +1297,54 @@ const SourcesImport: React.FC = () => {
                       >
                         Select domain
                       </MenuItem>
-                      {pixelNotInstalled && 
-                        <Box
-                          sx={{ display: "flex", justifyContent: "center", padding: "6px 16px", borderBottom: "1px solid rgba(228, 228, 228, 1)" }}
-                          onClick={handlePixelInstall}
+                      {pixelNotInstalled && (
+                        <MenuItem
+                          sx={{
+                            p: 0, 
+                            display: "flex",
+                            justifyContent: "center",
+                            width: "100%",
+                            "&:hover": {
+                              backgroundColor: "transparent",
+                            },
+                          }}
                         >
-                          <Typography
+                          <Box
                             sx={{
-                              fontFamily: "Nunito Sans",
-                              lineHeight: "22.4px",
-                              textDecoration: "underline",
-                              fontSize: "14px",
-                              fontWeight: "600",
-                              color: "rgba(80, 82, 178, 1)",
+                              width: "100%",
+                              display: "flex",
+                              justifyContent: "center",
+                              padding: "6px 16px",
+                              borderBottom: "1px solid rgba(228, 228, 228, 1)",
                               cursor: "pointer",
                             }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handlePixelInstall();
+                            }}
                           >
-                            + Add a new pixel to domain
-                          </Typography>
-                        </Box>
-                          }
+                            <Typography
+                              sx={{
+                                fontFamily: "Nunito Sans",
+                                lineHeight: "22.4px",
+                                textDecoration: "underline",
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                color: "rgba(80, 82, 178, 1)",
+                              }}
+                            >
+                              + Add a new pixel to domain
+                            </Typography>
+                          </Box>
+                        </MenuItem>
+                      )}
                       {domains.map((item: DomainsLeads, index) => (
                         <MenuItem
                           sx={{
                             fontFamily: "Roboto",
                             fontWeight: 400,
                             fontSize: "14px",
-                            borderBottom: "1px solid rgba(228, 228, 228, 1)"
+                            borderBottom:  "1px solid rgba(228, 228, 228, 1)" 
                           }}
                           key={index}
                           value={item.name}
@@ -1396,41 +1354,6 @@ const SourcesImport: React.FC = () => {
                       ))}
                     </Select>
                   </FormControl>
-                  {/* {pixelNotInstalled && (
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Roboto",
-                          fontSize: "12px",
-                          color: "rgba(205, 40, 43, 1)",
-                        }}
-                      >
-                        ✗ The selected domain does not have the pixel installed.
-                        Please install the pixel first to continue.
-                      </Typography>
-                      <Button
-                        variant="contained"
-                        onClick={() => router.push("/dashboard")}
-                        className="second-sub-title"
-                        sx={{
-                          alignSelf: "flex-end",
-                          width: "130px",
-                          backgroundColor: "rgba(80, 82, 178, 1)",
-                          textTransform: "none",
-                          padding: "10px 24px",
-                          mt: 3,
-                          color: "#fff !important",
-                          ":hover": {
-                            backgroundColor: "rgba(80, 82, 178, 1)",
-                          },
-                        }}
-                      >
-                        Install Pixel
-                      </Button>
-                    </Box>
-                  )} */}
                   {selectedDomain && (
                     <Box
                       sx={{ display: "flex", flexDirection: "column", gap: 1 }}
@@ -1698,6 +1621,12 @@ const SourcesImport: React.FC = () => {
                         sx={{
                           "&.MuiToggleButton-root.Mui-selected": {
                             backgroundColor: "rgba(246, 248, 250, 1)",
+                            ":hover": {
+                              borderColor: "rgba(208, 213, 221, 1)",
+                              backgroundColor: "rgba(236, 238, 241, 1)",
+                            },
+                          },
+                          "&.MuiToggleButton-root": {
                             ":hover": {
                               borderColor: "rgba(208, 213, 221, 1)",
                               backgroundColor: "rgba(236, 238, 241, 1)",
