@@ -118,24 +118,16 @@ const AudienceDashboard: React.FC = () => {
       ] as const;
 
       const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        const nowUtc = new Date(Date.UTC(
-          new Date().getUTCFullYear(),
-          new Date().getUTCMonth(),
-          new Date().getUTCDate(),
-          new Date().getUTCHours(),
-          new Date().getUTCMinutes(),
-          new Date().getUTCSeconds(),
-          new Date().getUTCMilliseconds()
-        ));
-        const diffMs = nowUtc.getTime() - date.getTime();
-
-        let relative = "";
+        const isoDateStr = dateStr.slice(0, 23);
+        const date = new Date(isoDateStr + "Z");
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
         const diffSec = Math.floor(diffMs / 1000);
         const diffMin = Math.floor(diffSec / 60);
         const diffHour = Math.floor(diffMin / 60);
         const diffDay = Math.floor(diffHour / 24);
 
+        let relative = "";
         if (diffMs < 0) {
           relative = "in the future";
         } else if (diffSec < 60) {
@@ -154,27 +146,16 @@ const AudienceDashboard: React.FC = () => {
           });
         }
 
-        const parts = date
-          .toLocaleString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-            hour12: true
-          })
-          .replace(",", "")
-          .split(" ");
-        const month = parts[0].toUpperCase();
-        const day = parts[1];
-        const year = parts[2];
-        const time = `${parts[3]} ${parts[4]}`;
-        const full = `${day} ${month} ${year} ${time}`;
+        const full = date.toLocaleString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
 
-        return {
-          relative,
-          full,
-        };
+        return { relative, full };
       };
 
       const normalize = (str: string) => str.toLowerCase().replace(/s$/, "");
