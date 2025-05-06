@@ -497,7 +497,12 @@ const AccountSetup = () => {
       router.push(stripeUrl)
     }
     else {
-      router.push(partner ? '/partners' : '/dashboard');
+      if (partner) {
+        router.push('/partners')
+      }
+      else{
+        router.push('/dashboard?welcome=true')
+      }
     }
   }
 
