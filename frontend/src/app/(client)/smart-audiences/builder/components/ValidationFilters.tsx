@@ -543,7 +543,6 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 )
                               }
                               sx={{
-                                padding: 0,
                                 "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
                               }}
                             />
@@ -599,7 +598,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       }}
                     >
                       <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        sx={{ display: "flex", alignItems: "center", gap: 1}}
                       >
                         <Checkbox
                           size="small"
@@ -745,7 +744,6 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 )
                               }
                               sx={{
-                                padding: 0,
                                 "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
                               }}
                             />
@@ -894,7 +892,6 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 )
                               }
                               sx={{
-                                padding: 0,
                                 "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
                               }}
                             />
@@ -1097,7 +1094,6 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 )
                               }
                               sx={{
-                                padding: 0,
                                 "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
                               }}
                             />
@@ -1232,8 +1228,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                     checked={selectedOptionsPhone.includes(option)}
                                     onChange={() => handleOptionClick(setSelectedOptionsPhone, option)}
                                     sx={{
-                                      padding: 0,
-                                      pb: index === 2 ? 1 : 0,
+                                      pr: 1,
                                       "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
                                     }}
                                   />
@@ -1360,7 +1355,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                     checked={selectedOptionsPostalCAS.includes(option)}
                                     onChange={() => handleOptionClick(setSelectedOptionsPostalCAS, option)}
                                     sx={{
-                                      padding: 0,
+                                     
                                       "&.Mui-checked": {
                                         color: "rgba(80, 82, 178, 1)",
                                       },
@@ -1382,6 +1377,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 }
 
                                 sx={{
+                                  padding: 0,
+                                  "&.Mui-checked": {
+                                    color: "rgba(80, 82, 178, 1)",
+                                  },
                                   userSelect: "none",
                                   cursor: "pointer",
                                 }}
@@ -1446,13 +1445,19 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
               </Box>
 
               <Collapse in={isOpenLinkedIn}>
-                <Box sx={{ pt: 1, pl: 2, pb: 0.75 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", pt: 1, pl: 2, pb: 0.75}}>
                   <FormControlLabel
                     control={
                       <Checkbox
                         disabled={isValidate}
                         size="small"
                         checked={selectedOptionsLinkedIn.includes("Job validation")}
+                        sx={{
+                         
+                          "&.Mui-checked": {
+                            color: "rgba(80, 82, 178, 1)",
+                          },
+                        }}
                       />
                     }
                     label={
