@@ -138,7 +138,7 @@ async def process_rmq_message(
             for rec in batch
             if rec["audience_smart_person_id"] not in failed_ids
         ]
-        logging.info(f"Success ids: {success_ids}")
+        logging.info(f"Success ids: len{len(success_ids)}")
         
         if verifications:
             db_session.bulk_save_objects(verifications)
@@ -213,7 +213,8 @@ async def process_rmq_message(
 
     except Exception:
         logging.exception("Error processing matching")
-        await message.ack()
+        await message.reject(requeue=True)
+        return
 
 
 

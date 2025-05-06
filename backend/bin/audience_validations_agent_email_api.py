@@ -158,7 +158,7 @@ async def process_rmq_message(
 
     except Exception as e:
         logging.error(f"Error processing validation: {e}", exc_info=True)
-        await message.ack()
+        await message.reject(requeue=True)
 
 
 

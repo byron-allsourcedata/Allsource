@@ -199,10 +199,10 @@ async def aud_validation_agent(
     except IntegrityError:
         logging.warning(f"AudienceSmart {aud_smart_id} not found; skipping.")
         db_session.rollback()
-        await message.ack()
+        await message.reject(requeue=True)
     except Exception as e:
         logging.error(f"Error in aud_validation_agent: {e}", exc_info=True)
-        await message.ack()
+        await message.reject(requeue=True)
 
 async def main():
     log_level = logging.INFO

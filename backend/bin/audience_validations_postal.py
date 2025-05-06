@@ -85,9 +85,9 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
             existing_verification = db_session.query(AudiencePostalVerification).filter(AudiencePostalVerification.zip_code5 == int(zip_code5)).first()
 
             if not existing_verification:
-                response = requests.get(
+                response = requests.post(
                     'https://api.experianaperture.io/address/lookup/v2',
-                    params={
+                    json={
                         "country_iso": "USA",
                         "datasets": [
                             "us-address"
@@ -98,19 +98,20 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                         }
                     },
                     headers={
-                        "Auth-Token": EXPERIANAPERTURE_API_KEY
+                        "Auth-Token": EXPERIANAPERTURE_API_KEY,
+                        "Content-Type": "application/json"
                     }
                 )
                 response_data = response.json()
 
-                logging.info(f"response: {response.status_code}")
+                logging.debug(f"response: {response.status_code}")
 
                 if response.status_code == 402:
                     failed_ids.append(person_id)
                     continue
 
                 elif response.status_code != 200 and not response_data.get("success"):
-                    logging.info(f"response: {response_data}")
+                    logging.debug(f"response: {response_data}")
                     failed_ids.append(person_id)
 
                 suggestions = response_data.get("result", {}).get("suggestions", [])
@@ -136,7 +137,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 )
 
             else: 
-                logging.info("There is such a Postal in our database")
+                logging.debug("There is such a Postal in our database")
                 is_verify = existing_verification.is_verify
             
 
@@ -226,7 +227,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
             
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.ack()
+        await message.reject(requeue=True)
         return 
 
 
