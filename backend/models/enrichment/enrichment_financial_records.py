@@ -21,14 +21,14 @@ class EnrichmentFinancialRecord(Base):
     net_worth = Column(String(10), nullable=True)
     credit_rating = Column(String(1), nullable=True)
     credit_cards = Column(Text, nullable=True)
-    bank_card = Column(SmallInteger, nullable=True)
-    credit_card_premium = Column(SmallInteger, nullable=True)
-    credit_card_new_issue = Column(SmallInteger, nullable=True)
-    credit_lines = Column(String(1), nullable=True)
-    credit_range_of_new_credit_lines = Column(String(1), nullable=True)
-    donor = Column(SmallInteger, nullable=True)
-    investor = Column(SmallInteger, nullable=True)
-    mail_order_donor = Column(SmallInteger, nullable=True)
+    bank_card = Column(String(8), nullable=False)
+    credit_card_premium = Column(String(8), nullable=False)
+    credit_card_new_issue = Column(String(8), nullable=False)
+    credit_lines = Column(String(8), nullable=False)
+    credit_range_of_new_credit_lines = Column(String(8), nullable=False)
+    donor = Column(String(8), nullable=False)
+    investor = Column(String(8), nullable=False)
+    mail_order_donor = Column(String(8), nullable=False)
     
     __table_args__ = (
         Index("ix_financial_asid", asid),

@@ -293,9 +293,7 @@ class AudienceLookalikesPersistence:
             d = dict(row._mapping)
             updated_dict = {}
             for k, v in d.items():
-                if k == "age" and v:
-                    updated_dict[k] = int(v.lower) if v.lower is not None else None
-                elif k == "zip_code5" and v:
+                if k == "zip_code5" and v:
                     updated_dict[k] = str(v)
                 elif k == "state_abbr":
                     updated_dict["state"] = v
