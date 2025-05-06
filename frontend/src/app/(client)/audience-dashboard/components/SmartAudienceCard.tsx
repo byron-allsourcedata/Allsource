@@ -6,11 +6,16 @@ import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import Image from 'next/image';
 
+interface EventDate {
+    relative: string;
+    full: string;
+}
+
 interface CardData {
     id: string;
     chain_ids: string[];
     status: string;
-    date: string;
+    date: EventDate;
     event_info: Record<string, string | number>;
     tabType: string;
 }
@@ -119,8 +124,6 @@ const SmartAudienceCard: React.FC<SmartAudienceCardProps> = ({
     highlighted = false,
 }) => {
     const { status, date, event_info } = data;
-    console.log(data)
-
     const name = event_info["Name"] as string;
     const useCase = event_info["Use Case"] as string;
     const segment = event_info["Active Segment"];
@@ -157,7 +160,9 @@ const SmartAudienceCard: React.FC<SmartAudienceCardProps> = ({
                     >
                         {status}
                     </Typography>
-                    <Typography className="dashboard-card-text">{date}</Typography>
+                    <Typography className="dashboard-card-text" title={date.full}>
+                        {date.relative}
+                    </Typography>
                 </Box>
 
                 <Typography className="dashboard-card-heading" sx={{ mb: 1 }}>{name}</Typography>

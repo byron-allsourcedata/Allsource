@@ -53,11 +53,9 @@ const B2CTabs: React.FC<B2CTabsProps> = ({ data, fieldRanks }) => {
           sx={{
             flexGrow: 1,
             display: "flex",
-            pt: 2,
-            padding: "1rem 5rem 0rem",
             width: "100%",
-            justifyContent: "start",
-            alignItems: "start",
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
           <Tabs

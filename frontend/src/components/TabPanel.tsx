@@ -25,10 +25,6 @@ export const TabPanel: React.FC<TabPanelProps> = ({
           sx={{
             margin: 0,
             width: "100%",
-            "@media (min-width: 1600px)": {
-              paddingLeft: "4.25rem",
-              paddingRight: "4.25rem",
-            },
             "@media (max-width: 600px)": {
               paddingLeft: "0",
               paddingRight: "0",

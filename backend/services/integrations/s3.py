@@ -1,4 +1,6 @@
-from utils import validate_and_format_phone
+import httpx
+import os
+import logging
 from typing import List
 from fastapi import HTTPException
 import httpx
@@ -7,26 +9,24 @@ import re
 import csv
 import logging
 import tempfile
+import uuid
 from datetime import datetime, timezone
-from utils import format_phone_number
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit, DataSyncType
-from models.five_x_five_users import FiveXFiveUser
 from models.enrichment.enrichment_users import EnrichmentUser
 from uuid import UUID
-import uuid
 from faker import Faker
 from services.integrations.commonIntegration import get_states_dataframe
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
-from schemas.integrations.sendlane import SendlaneContact, SendlaneSender
-from schemas.integrations.integrations import DataMap, IntegrationCredentials, ListFromIntegration
+from schemas.integrations.integrations import DataMap, IntegrationCredentials
 from persistence.domains import UserDomainsPersistence
-from utils import extract_first_email
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 import json
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
+
+logger = logging.getLogger(__name__)
 
 class S3IntegrationService:
 
@@ -205,7 +205,7 @@ class S3IntegrationService:
             s3_client.upload_file(file_path, bucket_name, object_key)
             return ProccessDataSyncResult.SUCCESS.value
         except Exception as e:
-            logging.error(e)
+            logger.error("Error when uploading a file:", e)
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         
     def generate_object_key(self, prefix="data", extension="csv"):

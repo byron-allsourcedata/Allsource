@@ -13,11 +13,17 @@ import MainSectionCard from "./components/MainSectionCards";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import SmartAudienceCard from "./components/SmartAudienceCard";
 
+
+interface EventDate {
+  relative: string;
+  full: string;
+}
+
 interface EventCardData {
   id: string;
   chain_ids: string[];
   status: string;
-  date: string;
+  date: EventDate;
   event_info: Record<string, string | number>;
   tabType: string;
 }
@@ -112,23 +118,44 @@ const AudienceDashboard: React.FC = () => {
       ] as const;
 
       const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        const parts = date
-          .toLocaleString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
+        const isoDateStr = dateStr.slice(0, 23);
+        const date = new Date(isoDateStr + "Z");
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+
+        let relative = "";
+        if (diffMs < 0) {
+          relative = "in the future";
+        } else if (diffSec < 60) {
+          relative = "just now";
+        } else if (diffMin < 60) {
+          relative = `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
+        } else if (diffHour < 24) {
+          relative = `${diffHour} hour${diffHour === 1 ? "" : "s"} ago`;
+        } else if (diffDay < 7) {
+          relative = `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+        } else {
+          relative = date.toLocaleDateString("en-US", {
+            year: "numeric",
             month: "short",
             day: "numeric",
-            hour12: true,
-          })
-          .replace(",", "")
-          .split(" ");
+          });
+        }
 
-        const month = parts[0].toUpperCase();
-        const day = parts[1];
-        const time = `${parts[2]} ${parts[3]}`;
+        const full = date.toLocaleString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
 
-        return `${day} ${month} ${time}`;
+        return { relative, full };
       };
 
       const normalize = (str: string) => str.toLowerCase().replace(/s$/, "");

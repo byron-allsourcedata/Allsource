@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index, BigInteger, text, \
-    String
+    String, DateTime
 from sqlalchemy.dialects.postgresql import ENUM
-from datetime import datetime
+from datetime import datetime, timezone
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.audience_smarts import AudienceSmart
 from models.base import Base
@@ -35,7 +35,10 @@ class IntegrationUserSync(Base):
         server_default=text("'pixel'::data_sync_type")
     )
     is_active = Column(Boolean, nullable=True)
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(
+        DateTime(timezone=False),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+    )
     last_sync_date = Column(TIMESTAMP, nullable=True)
     list_id = Column(VARCHAR, nullable=True)
     list_name = Column(VARCHAR, nullable=True)

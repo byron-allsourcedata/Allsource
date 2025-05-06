@@ -370,6 +370,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
+        db_session.rollback()
         await message.nack()
 
 

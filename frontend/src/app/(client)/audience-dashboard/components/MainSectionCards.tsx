@@ -6,11 +6,16 @@ import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
 import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
 import Image from 'next/image';
 
+interface EventDate {
+  relative: string;
+  full: string;
+}
+
 interface CardData {
   id: string;
   chain_ids: string[];
   status: string;
-  date: string;
+  date: EventDate;
   event_info: Record<string, string | number>;
   tabType: string;
 }
@@ -213,7 +218,9 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
               }}>
               {status}
             </Typography>
-            <Typography className="dashboard-card-text">{date}</Typography>
+            <Typography className="dashboard-card-text" title={date.full}>
+              {date.relative}
+            </Typography>
           </Box>
         </Box>
 
