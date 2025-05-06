@@ -28,20 +28,20 @@ class EnrichmentPersonalProfiles(Base):
         String(16),
         nullable=False
     )
-    gender: Mapped[int] = mapped_column(
-        SmallInteger,
+    gender: Mapped[str] = mapped_column(
+        String(16),
         nullable=False
     )
-    homeowner: Mapped[int] = mapped_column(
-        SmallInteger,
+    homeowner: Mapped[str] = mapped_column(
+        String(16),
         nullable=False
     )
     length_of_residence_years: Mapped[int] = mapped_column(
         SmallInteger,
         nullable=True
     )
-    marital_status: Mapped[int] = mapped_column(
-        SmallInteger,
+    marital_status: Mapped[str] = mapped_column(
+        String(16),
         nullable=True
     )
     business_owner: Mapped[int] = mapped_column(
