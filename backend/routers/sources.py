@@ -111,7 +111,7 @@ def get_sample_customers_list(
 
 @router.get("/get-processing-source", response_model=Optional[SourceResponse])
 def get_processing_source(
-        id: str = Query(...),
+        id: UUID = Query(...),
         sources_service: AudienceSourceService = Depends(get_audience_sources_service)
 ):
     return sources_service.get_processing_source(id)
