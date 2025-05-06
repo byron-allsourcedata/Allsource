@@ -4,6 +4,7 @@ import { USHeatMapCard } from "../USMap";
 
 import { mapState, mapGenericPercentage } from "./mappingUtils";
 import { EmploymentInfo, FieldRankMap } from "@/types/insights";
+import MapChart from "../MapChart";
 
 
 type B2BEmploymentProps = {
@@ -23,20 +24,12 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
           gap: 2,
         }}
       >
-        <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
-        >
-          <USHeatMapCard
-            title="Job Location"
-            regions={mapState(data.job_location)}
-            rank={fieldRanks["job_location"]}
-          />
-        </Box>
+
 
         <Box
           sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
         >
-          <Box sx={{ display: "flex", width: "70%" }}>
+          <Box sx={{ display: "flex", width: "100%" }}>
             <GradientBarChart
               title="№ of jobs(last 5 years)"
               data={mapGenericPercentage(data.number_of_jobs)}
@@ -52,12 +45,8 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
               rank={fieldRanks["company_name"]}
             />
           </Box>
-        </Box>
 
-        <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
-        >
-          <Box sx={{ display: "flex", width: "70%" }}>
+          <Box sx={{ display: "flex", width: "100%" }}>
             <GradientBarChart
               title="Job Tenure"
               data={mapGenericPercentage(data.job_tenure)}
@@ -65,15 +54,32 @@ const B2BEmployment: React.FC<B2BEmploymentProps> = ({ data, fieldRanks }) => {
               rank={fieldRanks["job_tenure"]}
             />
           </Box>
+        </Box>
 
-          <Box sx={{ display: "flex", width: "100%" }}>
+        <Box
+          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
+        >
+
+
+          <Box sx={{ display: "flex", width: "34%" }}>
             <GradientBarChart
               title="Job Title"
               data={mapGenericPercentage(data.job_title)}
               rank={fieldRanks["job_title"]}
             />
           </Box>
+
+          <Box
+            sx={{ display: "flex", flexDirection: "row", width: "66.15%", gap: 2 }}
+          >
+            <MapChart
+              title="Job Location"
+              regions={mapState(data.job_location)}
+              rank={fieldRanks["job_location"]}
+            />
+          </Box>
         </Box>
+
       </Box>
     </Box>
   );
