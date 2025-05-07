@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, BOOLEAN, VARCHAR, TIMESTAMP, Index, Boolean, ForeignKey, BigInteger, \
-    UniqueConstraint, text
+    UniqueConstraint, text, func
 
 from .base import Base
 
@@ -21,6 +21,6 @@ class UserDomains(Base):
     data_provider_id = Column(VARCHAR(64), nullable=True)
     is_pixel_installed = Column(Boolean, nullable=True, server_default=text('false'))
     is_enable = Column(Boolean, nullable=False, server_default=text('true'))
-    created_at = Column(TIMESTAMP, nullable=False)
+    created_at = Column(TIMESTAMP, nullable=True, server_default=func.now())
     api_key = Column(VARCHAR, nullable=True)
     viewed_product_part_url = Column(VARCHAR, nullable=True)
