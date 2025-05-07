@@ -3,6 +3,7 @@ import logging
 from h11._abnf import status_code
 
 from config.base import Base
+from config.sentry import SentryConfig
 from routers import main_router
 from external_api_routers import subapi_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +12,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+import sentry_sdk
 
 logging.basicConfig(
     level=logging.WARNING,
@@ -18,6 +20,15 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+
+if SentryConfig.SENTRY_DSN is not None:
+    logger.info("Error alerts are enabled")
+    sentry_sdk.init(
+        dsn=SentryConfig.SENTRY_DSN,
+        send_default_pii=True,
+    )
+else:
+    logger.warning("Error alerts are disabled")
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 external_api = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
