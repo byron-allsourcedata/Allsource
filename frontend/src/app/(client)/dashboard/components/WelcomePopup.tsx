@@ -13,17 +13,24 @@ import {
   CardActions,
   Card
 } from "@mui/material";
+import { useRouter } from "next/navigation";
 import CloseIcon from '@mui/icons-material/Close';
 import LegendToggleOutlinedIcon from '@mui/icons-material/LegendToggleOutlined';
 import AllInboxOutlinedIcon from '@mui/icons-material/AllInboxOutlined';
 
 const WelcomePopup = () => {
   const [open, setOpen] = useState(true);
+  const router = useRouter();
 
   const handleClose = () => {
     setOpen(false)
     localStorage.removeItem('welcome_popup');
   };
+
+  const navigateToSourcePage = () => {
+    handleClose()
+    router.push("./sources/builder")
+  }
 
 
 
@@ -85,6 +92,7 @@ const WelcomePopup = () => {
                 <Button
                   variant="contained"
                   fullWidth
+                  onClick={navigateToSourcePage}
                   sx={{ backgroundColor: "#3898FC", dropShadow: "#00000040" }}
                 >
                   <IconButton
@@ -177,7 +185,7 @@ const WelcomePopup = () => {
                 />
               </CardContent>
               <CardActions sx={{ pt: 0, pl: 2, pr: 2 }}>
-                <Button variant="outlined" fullWidth>
+                <Button variant="outlined" fullWidth onClick={navigateToSourcePage}>
                   <IconButton
                     sx={{ width: "30px", height: "30px", color: "#3898FC" }}
                     onClick={() => {}}
