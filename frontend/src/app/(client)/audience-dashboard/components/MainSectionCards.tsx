@@ -77,7 +77,7 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
             {label}
           </Typography>
           <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: .5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center'}}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {getUseCaseStyle(value)}
             </Box>
             <Typography className="dashboard-card-heading">
@@ -180,11 +180,11 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
         padding: "0.5rem 0.75rem 1rem",
         maxWidth: "100%",
-        border: highlighted ? `2px solid rgba(5, 105, 226, 1)` : "transparent",
+        border: highlighted ? `1.5px solid rgba(5, 105, 226, 1)` : "1.5px solid rgba(255, 255, 255, 0.25)",
         transition: "border 0.2s ease",
         cursor: "pointer",
         "&:hover": {
-          border: `1px solid rgba(5, 105, 226, 1)`,
+          border: `1.5px solid rgba(5, 105, 226, 1)`,
           transition: "none",
         },
       }}

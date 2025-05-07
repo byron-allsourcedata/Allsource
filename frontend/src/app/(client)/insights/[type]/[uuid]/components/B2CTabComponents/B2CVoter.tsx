@@ -38,7 +38,8 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
     <Box>
       <Box
         sx={{
-          padding: "1.5rem 5rem 1.5rem",
+          padding: "1.5rem",
+          pr: '3rem',
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -48,7 +49,7 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
         <Box
           sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
         >
-          <Box sx={{ display: "flex", width: "100%" }}>
+          <Box sx={{ display: "flex", width: "32%" }}>
             <GradientBarChart
               title="Congressional District"
               data={congressionalData}
@@ -56,7 +57,7 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
             />
           </Box>
 
-          <Box sx={{ display: "flex", width: "100%" }}>
+          <Box sx={{ display: "flex", width: "32%" }}>
             <GradientBarChart
               title="Political Party"
               data={politicalPartyData}
@@ -67,7 +68,7 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
           <Box
             sx={{
               display: "flex",
-              width: '100%'
+              width: '32%'
             }}
           >
             <PieChartWithLegend
