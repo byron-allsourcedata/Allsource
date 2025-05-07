@@ -75,6 +75,7 @@ interface SelectedData {
   sourceLookalike: string;
   selectedSource: string;
   selectedSourceId: string;
+  useCase: string;
 }
 
 interface SmartAudienceTargetProps {
@@ -269,6 +270,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
           sourceLookalike: sourceType,
           selectedSource: row.name,
           selectedSourceId: row.id,
+          useCase: useCaseType,
         },
       ]);
       setOption("");

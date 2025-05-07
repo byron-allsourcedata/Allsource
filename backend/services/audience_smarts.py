@@ -117,13 +117,14 @@ class AudienceSmartsService:
     def transform_datasource(self, raw_data: dict) -> DataSourcesFormat:
         data_sources = {
             "lookalike_ids": {"include": [], "exclude": []},
-            "source_ids": {"include": [], "exclude": []}
+            "source_ids": {"include": [], "exclude": []},
+            "use_case": None
         }
 
         for item in raw_data:
             key = "lookalike_ids" if item["sourceLookalike"] == "Lookalike" else "source_ids"
             include_exclude = "include" if item["includeExclude"] == "include" else "exclude"
-
+            data_sources['use_case'] = item["useCase"].lower()
             data_sources[key][include_exclude].append(item["selectedSourceId"])
 
         return data_sources

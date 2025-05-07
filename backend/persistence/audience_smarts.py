@@ -18,6 +18,12 @@ from models.audience_sources import AudienceSource
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.users import Users
 from models.state import States
+from models.enrichment_user_contact import EnrichmentUserContact
+from models.enrichment_user_ids import EnrichmentUserId
+from models.enrichment_personal_profiles import EnrichmentPersonalProfiles
+from models.emails_enrichment import EmailEnrichment
+from models.emails import Email
+from models.enrichment_user_contact import EnrichmentUserContact
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
@@ -41,63 +47,34 @@ class AudienceSmartsPersistence:
         return use_case[0] if use_case else None
     
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:   
-        AudienceLALP = aliased(AudienceLookalikesPerson)
-        AudienceSMP = aliased(AudienceSourcesMatchedPerson)
+        Lalp = aliased(AudienceLookalikesPerson)
+        Smp  = aliased(AudienceSourcesMatchedPerson)
 
-        lalp_query = (
-            self.db.query(AudienceLALP.enrichment_user_id)
-            .filter(AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"]))
-            .filter(AudienceLALP.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
+        lalp_q = (
+            self.db.query(Lalp.enrichment_user_id.label("uid"))
+            .filter(Lalp.lookalike_id.in_(data["lookalike_ids"]["include"]))
+            .filter(Lalp.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
+        )
+        smp_q = (
+            self.db.query(Smp.enrichment_user_id.label("uid"))
+            .filter(Smp.source_id.in_(data["source_ids"]["include"]))
+            .filter(Smp.source_id.notin_(data["source_ids"]["exclude"]))
+        )
+        
+        combined_subq = lalp_q.union(smp_q).subquery()
+        count_q = (
+            self.db.query(func.count(EnrichmentUserId.id))
+            .select_from(EnrichmentUserId)
+            .join(combined_subq,
+                combined_subq.c.uid == EnrichmentUserId.id)
+            .join(EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUserId.asid)
         )
 
-        smp_query = (
-            self.db.query(AudienceSMP.enrichment_user_id)
-            .filter(AudienceSMP.source_id.in_(data["source_ids"]["include"]))
-            .filter(AudienceSMP.source_id.notin_(data["source_ids"]["exclude"]))
-        )
+        if data.get("use_case") == "linkedin":
+            count_q = count_q.filter(EnrichmentUserContact.linkedin_url.isnot(None))
 
-        combined_query = lalp_query.union(smp_query).subquery()
-
-        count_query = self.db.query(func.count()).select_from(combined_query)
-        return count_query.scalar()
-        
-        # includes_lookalikes = self.db.query(AudienceLALP.lookalike_id).filter(
-        #     AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"])
-        # ).subquery()
-
-        # excludes_lookalikes = self.db.query(AudienceLALP.lookalike_id).filter(
-        #     AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["exclude"])
-        # ).subquery()
-
-        # includes_sources = self.db.query(AudienceSMP.source_id).filter(
-        #     AudienceSMP.source_id.in_(data["source_ids"]["include"])
-        # ).subquery()
-
-        # excludes_sources = self.db.query(AudienceSMP.source_id).filter(
-        #     AudienceSMP.source_id.in_(data["source_ids"]["exclude"])
-        # ).subquery()
-
-        # lalp_query = (
-        #     self.db.query(AudienceLALP.enrichment_user_id)
-        #     .outerjoin(includes_lookalikes, AudienceLALP.lookalike_id == includes_lookalikes.c.lookalike_id)
-        #     .outerjoin(excludes_lookalikes, AudienceLALP.lookalike_id == excludes_lookalikes.c.lookalike_id)
-        #     .filter(includes_lookalikes.c.lookalike_id.isnot(None))
-        #     .filter(excludes_lookalikes.c.lookalike_id.is_(None))
-        # )
-
-        # smp_query = (
-        #     self.db.query(AudienceSMP.enrichment_user_id)
-        #     .outerjoin(includes_sources, AudienceSMP.source_id == includes_sources.c.source_id)
-        #     .outerjoin(excludes_sources, AudienceSMP.source_id == excludes_sources.c.source_id)
-        #     .filter(includes_sources.c.source_id.isnot(None))
-        #     .filter(excludes_sources.c.source_id.is_(None))
-        # )
-
-        # combined_query = union(lalp_query, smp_query)
-        # # combined_query = lalp_query.union(smp_query).subquery()
-        
-        # count_query = self.db.query(func.count()).select_from(combined_query)
-        # return count_query.scalar()
+        return count_q.scalar()
 
     def create_audience_smarts_data_sources(
             self,
