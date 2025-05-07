@@ -30,18 +30,24 @@ const getStatusColor = (status: string, tabType?: string): string => {
 
 const getUseCaseStyle = (status: string) => {
   switch (status.trim()) {
-    case 'Postal':
-      return <Image src="./postal.svg" alt="google icon" width={20} height={20} />
-    case 'Google':
+    case 's3':
+      return <Image src="./s3.svg" alt="s3 icon" width={20} height={20} />
+    case 'google_ads':
       return <Image src="./google-ads.svg" alt="google icon" width={20} height={20} />
-    case 'Meta':
-      return <Image src="./meta.svg" alt="meta icon" width={20} height={20} />
-    case 'Bing':
-      return <Image src="./bing.svg" alt="bing icon" width={20} height={20} />
-    case 'LinkedIn':
-      return <Image src="./linkedIn.svg" alt="linkedin icon" width={20} height={20} />
-    case 'Tele Marketing':
-      return <HeadsetMicOutlinedIcon />
+    case 'mailchimp':
+      return <Image src="./mailchimp-icon.svg" alt="mailchimp icon" width={20} height={20} />
+    case 'sales_force':
+      return <Image src="./salesforce-icon.svg" alt="sales_force icon" width={20} height={20} />
+    case 'hubspot':
+      return <Image src="./hubspot.svg" alt="hubspot icon" width={20} height={20} />
+    case 'bing_ads':
+      return <Image src="./bingads-icon.svg" alt="bing_ads icon" width={20} height={20} />
+    case 'sendlane':
+      return <Image src="./sendlane-icon.svg" alt="sendlane icon" width={20} height={20} />
+    case 'mailchimp':
+      return <Image src="./mailchimp-icon.svg" alt="mailchimp icon" width={20} height={20} />
+    case 'meta':
+      return <Image src="./meta-icon.svg" alt="meta icon" width={20} height={20} />
     default:
       return <MailOutlinedIcon />
   }
