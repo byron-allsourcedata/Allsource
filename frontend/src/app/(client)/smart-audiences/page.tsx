@@ -5,16 +5,24 @@ import {
     IconButton, List, ListItemText, ListItemButton, Popover, DialogActions, DialogContent, DialogContentText,
     LinearProgress, Chip, Tooltip, TextField, TypographyProps, TooltipProps
 } from '@mui/material';
+import {
+  FilterListIcon,
+  ArrowDownwardRoundedIcon,
+  ArrowUpwardRoundedIcon,
+  SwapVertIcon,
+  MoreVert,
+  CloseIcon,
+  MailOutlinedIcon,
+  DateRangeIcon,
+  EditIcon,
+  HeadsetMicOutlinedIcon,
+} from "@/icon";
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { smartAudiences } from './smartAudiences';
 import CreateSyncPopup from './components/SmartAudienceCreateSync';
 import { SliderProvider } from '../../../context/SliderContext';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
-import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
 import dayjs from 'dayjs';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import CustomToolTip from '@/components/customToolTip';
@@ -23,17 +31,11 @@ import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import ThreeDotsLoader from '../sources/components/ThreeDotsLoader';
 import ProgressBar from '../sources/components/ProgressLoader';
-import { MoreVert } from '@mui/icons-material'
 import { useSSE } from '../../../context/SSEContext';
 import FilterPopup from './components/SmartAudienceFilter';
 import DetailsPopup from './components/SmartAudienceDataSources'
-import CloseIcon from '@mui/icons-material/Close';
-import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
-import DateRangeIcon from '@mui/icons-material/DateRange';
 import CalendarPopup from "@/components/CustomCalendar";
-import EditIcon from '@mui/icons-material/Edit';
 import TableCustomCell from "../sources/components/table/TableCustomCell";
-import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
 import { useScrollShadow } from '@/hooks/useScrollShadow';
 
 interface Smarts {
