@@ -169,7 +169,6 @@ class DashboardAudienceService:
 
     def get_events(self, *, user: dict):
         smart_audiences, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
-        lookalike_smart_audiences = self.dashboard_persistence.get_last_lookalike_smart_audiences(user_id=user.get('id'), limit=self.LIMIT, smart_audiences=smart_audiences)
         sources, lookalikes = self.dashboard_persistence.get_last_sources_and_lookalikes(user_id=user.get('id'), limit=self.LIMIT, smart_audiences=smart_audiences)
         group_smart_audiences = self.group_audience_smart_rows(smart_audiences)
         
@@ -204,23 +203,10 @@ class DashboardAudienceService:
                 'smart_audiences': self.merge_data_with_chain(last_audience_smart, 'smart_audiences'),
                 'data_sync': self.merge_data_with_chain(data_sync_dicts, 'data_sync'),
             },
-            'full_info':{
-                'sources': self.merge_and_sort(
-                                datasets=[
-                                    (sources, 'source', ['source_name', 'created_at', 'source_type', 'matched_records'])
-                                ],
-                                limit=self.LIMIT
-                            ),
-                           
-                'lookalikes': self.merge_and_sort(
-                                    datasets=[(lookalikes, 'lookalikes', ['lookalike_size', 'lookalike_name', 'created_at', 'size'])],
-                                    limit=self.LIMIT
-                                ),
-                
-                'smart_audiences': self.merge_and_sort(
-                                        datasets=[([smart_audience for smart_audience in group_smart_audiences], 'smart_audience', ['audience_name', 'use_case', 'active_segment', 'created_at', 'include', 'exclude'])],
-                                        limit=self.LIMIT
-                                    ),
+            'full_info': {
+                'sources': last_sources,
+                'lookalikes': last_lookalikes,
+                'smart_audiences': last_audience_smart,
                 'data_sync': data_sync_dicts
             }
         }
