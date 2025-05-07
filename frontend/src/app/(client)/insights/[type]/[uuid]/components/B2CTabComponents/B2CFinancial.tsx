@@ -4,6 +4,7 @@ import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
 import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
 import { mapGenericPercentage, extractSemiCirclePercent } from "./mappingUtils";
 import { BarData } from "../VerticalGradientBarChart";
+import { FieldRankMap, FinancialInfo } from "@/types/insights";
 
 
 function parseNetWorthStart(label: string): number {
@@ -27,10 +28,75 @@ function sortNetWorthRanges(data: BarData[]): BarData[] {
     return [...data].sort((a, b) => parseNetWorthStart(a.label) - parseNetWorthStart(b.label));
 }
 
+function parseIncomeRangeStart(label: string): number {
+    if (label === "u" || label.toLowerCase() === "unknown") {
+        return Number.MAX_SAFE_INTEGER;
+    }
 
-const B2CFinancial = ({ data }: { data: any }) => {
-    const incomeRangeData = mapGenericPercentage(data.income_range);
-    const creditScoreRangeData = mapGenericPercentage(data.credit_score_range);
+    const lower = label.toLowerCase();
+    if (lower.includes("under")) {
+        return 0;
+    }
+
+    if (lower.includes("plus")) {
+        const match = label.match(/\$([\d,]+)/);
+        return match ? parseInt(match[1].replace(/,/g, ""), 10) + 1_000_000 : Number.MAX_SAFE_INTEGER - 1;
+    }
+
+    const rangeMatch = label.match(/\$([\d,]+)\s*-\s*\$([\d,]+)/);
+    if (rangeMatch) {
+        return parseInt(rangeMatch[1].replace(/,/g, ""), 10);
+    }
+
+    return Number.MAX_SAFE_INTEGER;
+}
+
+function parseCreditScoreStart(label: string): number {
+    const lower = label.toLowerCase().trim();
+
+    if (lower === "unknown" || lower === "u") {
+        return Number.MAX_SAFE_INTEGER;
+    }
+
+    if (lower.startsWith("under")) {
+        const match = label.match(/under\s*(\d+)/i);
+        return match ? 0 : Number.MAX_SAFE_INTEGER;
+    }
+
+    if (lower.endsWith("+") || lower.includes("plus")) {
+        const match = label.match(/(\d+)/);
+        return match ? parseInt(match[1], 10) : Number.MAX_SAFE_INTEGER - 1;
+    }
+
+    const rangeMatch = label.match(/(\d+)\s*-\s*(\d+)/);
+    if (rangeMatch) {
+        return parseInt(rangeMatch[1], 10);
+    }
+
+    const match = label.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : Number.MAX_SAFE_INTEGER;
+}
+
+
+
+function sortIncomeRanges(data: BarData[]): BarData[] {
+    return [...data].sort((a, b) => parseIncomeRangeStart(a.label) - parseIncomeRangeStart(b.label));
+}
+
+function sortCreditScoreRanges(data: BarData[]): BarData[] {
+    return [...data].sort((a, b) => parseCreditScoreStart(a.label) - parseCreditScoreStart(b.label));
+}
+
+
+interface B2CPersonalProps {
+    data: FinancialInfo;
+    fieldRanks: FieldRankMap;
+}
+
+const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
+    console.log(fieldRanks)
+    const incomeRangeData = sortIncomeRanges(mapGenericPercentage(data.income_range));
+    const creditScoreRangeData = sortCreditScoreRanges(mapGenericPercentage(data.credit_score_range));
     const creditCardsData = mapGenericPercentage(data.credit_cards);
     const netWorthRangeData = sortNetWorthRanges(mapGenericPercentage(data.net_worth_range));
     const numberOfCreditLinesData = mapGenericPercentage(
@@ -55,7 +121,8 @@ const B2CFinancial = ({ data }: { data: any }) => {
         <Box>
             <Box
                 sx={{
-                    padding: "1.5rem 5rem 1.5rem",
+                    padding: "1.5rem",
+                    pr: '3rem',
                     width: "100%",
                     display: "flex",
                     flexDirection: "column",
@@ -65,36 +132,35 @@ const B2CFinancial = ({ data }: { data: any }) => {
                 <Box
                     sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
                 >
-                    <Box sx={{ display: "flex", width: "70%" }}>
-                        <GradientBarChart title="Income range" data={incomeRangeData} />
+                    <Box sx={{ display: "flex", width: "22%" }}>
+                        <GradientBarChart title="Income range" data={incomeRangeData} sortByPercent={false} rank={fieldRanks["income_range"]} />
                     </Box>
-                    <Box sx={{ display: "flex", width: "100%" }}>
+                    <Box sx={{ display: "flex", width: "40%" }}>
                         <VerticalGradientBarChart
                             title="Credit score range"
                             data={creditScoreRangeData}
+                            rank={fieldRanks["credit_score_range"]}
                         />
+                    </Box>
+
+                    <Box sx={{ display: "flex", width: "34%" }}>
+                        <GradientBarChart title="Credit Cards" data={creditCardsData} rank={fieldRanks["credit_cards"]} />
                     </Box>
                 </Box>
 
                 <Box
                     sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
                 >
-                    <Box sx={{ display: "flex", width: "100%" }}>
-                        <GradientBarChart title="Credit Cards" data={creditCardsData} />
-                    </Box>
-                    <Box sx={{ display: "flex", width: "100%" }}>
+                    <Box sx={{ display: "flex", width: "22%" }}>
                         <GradientBarChart
                             title="Net worth range"
                             data={netWorthRangeData}
                             sortByPercent={false}
+                            rank={fieldRanks["net_worth_range"]}
                         />
                     </Box>
-                </Box>
 
-                <Box
-                    sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
-                >
-                    <Box sx={{ display: "flex", width: "100%" }}>
+                    <Box sx={{ display: "flex", width: "40%", flexDirection: 'column', gap: 2 }}>
                         <SemiCircularGradientChart
                             title="Bank Card"
                             percent={semiCircleData.bankCardPercent}
@@ -104,12 +170,23 @@ const B2CFinancial = ({ data }: { data: any }) => {
                                 { offset: "11.88%", color: "#62B2FD" },
                                 { offset: "86.9%", color: "#C1E4FF" },
                             ]}
+                            rank={fieldRanks["bank_card"]}
+                        />
+                        <SemiCircularGradientChart
+                            title="Credit Card Premium"
+                            percent={semiCircleData.creditCardPremiumPercent}
+                            labelLeft="Yes"
+                            labelRight="No"
+                            colorStops={[
+                                { offset: "21.13%", color: "#9BDFC4" },
+                                { offset: "78.02%", color: "#D7F2E7" },
+                            ]}
+                            rank={fieldRanks["credit_card_premium"]}
                         />
                     </Box>
                     <Box
                         sx={{
-                            display: "flex",
-                            width: "100%",
+                            display: "flex", width: "34%", flexDirection: 'column', gap: 2
                         }}
                     >
                         <SemiCircularGradientChart
@@ -121,26 +198,8 @@ const B2CFinancial = ({ data }: { data: any }) => {
                                 { offset: "21.13%", color: "#9BDFC4" },
                                 { offset: "78.02%", color: "#D7F2E7" },
                             ]}
+                            rank={fieldRanks["mail_order_donor"]}
                         />
-                    </Box>
-                </Box>
-
-                <Box
-                    sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
-                >
-                    <Box sx={{ display: "flex", width: "100%" }}>
-                        <SemiCircularGradientChart
-                            title="Credit Card Premium"
-                            percent={semiCircleData.creditCardPremiumPercent}
-                            labelLeft="Yes"
-                            labelRight="No"
-                            colorStops={[
-                                { offset: "21.13%", color: "#9BDFC4" },
-                                { offset: "78.02%", color: "#D7F2E7" },
-                            ]}
-                        />
-                    </Box>
-                    <Box sx={{ display: "flex", width: "100%" }}>
                         <SemiCircularGradientChart
                             title="Credit Card New Issue"
                             percent={semiCircleData.creditCardNewIssuePercent}
@@ -150,6 +209,7 @@ const B2CFinancial = ({ data }: { data: any }) => {
                                 { offset: "11.88%", color: "#62B2FD" },
                                 { offset: "86.9%", color: "#C1E4FF" },
                             ]}
+                            rank={fieldRanks["credit_card_new_issue"]}
                         />
                     </Box>
                 </Box>
@@ -160,9 +220,9 @@ const B2CFinancial = ({ data }: { data: any }) => {
                     <Box
                         sx={{
                             display: "flex",
-                            width: "100%",
+                            width: "22%",
                             flexDirection: "column",
-                            gap: 3,
+                            gap: 2,
                         }}
                     >
                         <SemiCircularGradientChart
@@ -174,6 +234,7 @@ const B2CFinancial = ({ data }: { data: any }) => {
                                 { offset: "11.88%", color: "#62B2FD" },
                                 { offset: "86.9%", color: "#C1E4FF" },
                             ]}
+                            rank={fieldRanks["credit_card_new_issue"]}
                         />
                         <SemiCircularGradientChart
                             title="Investor"
@@ -184,26 +245,26 @@ const B2CFinancial = ({ data }: { data: any }) => {
                                 { offset: "21.13%", color: "#9BDFC4" },
                                 { offset: "78.02%", color: "#D7F2E7" },
                             ]}
+                            rank={fieldRanks["investor"]}
                         />
                     </Box>
-                    <Box sx={{ display: "flex", width: "100%" }}>
-                        <GradientBarChart
-                            title="Credit Range Of New Credit"
-                            data={mapGenericPercentage(data.credit_range_of_new_credit)}
-                        />
-                    </Box>
-                </Box>
-
-                <Box
-                    sx={{ display: "flex", flexDirection: "row", width: "65%", gap: 2 }}
-                >
-                    <Box sx={{ display: "flex", width: "100%" }}>
+                    <Box sx={{ display: "flex", width: "40%" }}>
                         <VerticalGradientBarChart
                             title="Number of credit lines"
                             data={numberOfCreditLinesData}
+                            rank={fieldRanks["number_of_credit_lines"]}
                         />
                     </Box>
+                    <Box sx={{ display: "flex", width: "34%" }}>
+                        <GradientBarChart
+                            title="Credit Range Of New Credit"
+                            data={mapGenericPercentage(data.credit_range_of_new_credit)}
+                            rank={fieldRanks["credit_range_of_new_credit"]}
+                        />
+                    </Box>
+
                 </Box>
+
             </Box>
         </Box>
     );

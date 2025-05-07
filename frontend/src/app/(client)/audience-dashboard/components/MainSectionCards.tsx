@@ -1,14 +1,21 @@
 import React from "react";
 import { Card, CardContent, Typography, Box } from "@mui/material";
-import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import PlaylistRemoveIcon from "@mui/icons-material/PlaylistRemove";
+import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import Image from 'next/image';
+
+interface EventDate {
+  relative: string;
+  full: string;
+}
 
 interface CardData {
   id: string;
   chain_ids: string[];
   status: string;
-  date: string;
+  date: EventDate;
   event_info: Record<string, string | number>;
   tabType: string;
 }
@@ -19,17 +26,29 @@ interface MainSectionCardProps {
   highlighted?: boolean;
 }
 
-const getStatusColor = (status: string, tabType?: string): string => {
-  if (status.includes("Audience")) return "rgba(110, 193, 37, 1)";
-  if (status.includes("Lookalike")) return "rgba(224, 176, 5, 1)";
-  if (status.includes("Data")) return "rgba(5, 105, 226, 1)";
-  if (tabType) {
-    if (tabType.includes("Lookalikes")) return "rgba(224, 176, 5, 1)";
-    if (tabType.includes("Smart")) return "rgba(110, 193, 37, 1)";
-    if (tabType.includes("Data")) return "rgba(5, 105, 226, 1)";
-    if (tabType.includes("Source")) return "rgba(80, 82, 178, 1)";
+const getUseCaseStyle = (status: string) => {
+  switch (status.trim()) {
+    case 's3':
+      return <Image src="./s3.svg" alt="s3 icon" width={20} height={20} />
+    case 'google_ads':
+      return <Image src="./google-ads.svg" alt="google icon" width={20} height={20} />
+    case 'mailchimp':
+      return <Image src="./mailchimp-icon.svg" alt="mailchimp icon" width={20} height={20} />
+    case 'sales_force':
+      return <Image src="./salesforce-icon.svg" alt="sales_force icon" width={20} height={20} />
+    case 'hubspot':
+      return <Image src="./hubspot.svg" alt="hubspot icon" width={20} height={20} />
+    case 'bing_ads':
+      return <Image src="./bingads-icon.svg" alt="bing_ads icon" width={20} height={20} />
+    case 'sendlane':
+      return <Image src="./sendlane-icon.svg" alt="sendlane icon" width={20} height={20} />
+    case 'mailchimp':
+      return <Image src="./mailchimp-icon.svg" alt="mailchimp icon" width={20} height={20} />
+    case 'meta':
+      return <Image src="./meta-icon.svg" alt="meta icon" width={20} height={20} />
+    default:
+      return <MailOutlinedIcon />
   }
-  return "";
 };
 
 const MainSectionCard: React.FC<MainSectionCardProps> = ({
@@ -38,7 +57,6 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
   highlighted = false,
 }) => {
   const { status, date, event_info, tabType } = data;
-  const color = getStatusColor(status, tabType);
 
   const renderLabeledValue = (label: string, value: string | number) => {
     const isInclude = label.includes("Include");
@@ -46,10 +64,31 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
     const LabelIcon = isInclude
       ? PlaylistAddIcon
       : isExclude
-      ? PlaylistRemoveIcon
-      : null;
+        ? PlaylistRemoveIcon
+        : null;
 
-    // Include / Exclude с разбором типов и цветом
+
+    if ((label === "Use Case" || label === "Destination") && typeof value === "string") {
+      return (
+        <Box key={label} mb={0.5}>
+
+
+          <Typography className="dashboard-card-text">
+            {label}
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: .5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {getUseCaseStyle(value)}
+            </Box>
+            <Typography className="dashboard-card-heading">
+
+              {value}
+            </Typography>
+          </Box>
+        </Box>
+      );
+    }
+
     if (typeof value === "string" && (isInclude || isExclude)) {
       const parts = value.split(",").map((entry) => entry.trim());
 
@@ -75,13 +114,13 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
               const bgColor = isLookalike
                 ? "rgba(224, 176, 5, 0.2)"
                 : isSource
-                ? "rgba(80, 82, 178, 0.2)"
-                : "rgba(0, 0, 0, 0.05)";
+                  ? "rgba(80, 82, 178, 0.2)"
+                  : "rgba(0, 0, 0, 0.05)";
               const textColor = isLookalike
                 ? "rgba(224, 176, 5, 1)"
                 : isSource
-                ? "rgba(80, 82, 178, 1)"
-                : "rgba(0, 0, 0, 0.8)";
+                  ? "rgba(80, 82, 178, 1)"
+                  : "rgba(0, 0, 0, 0.8)";
 
               return (
                 <Box
@@ -104,7 +143,6 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
       );
     }
 
-    // Обычные значения
     return (
       <Box key={label} mb={1}>
         <Typography className="dashboard-card-text">{label}</Typography>
@@ -140,13 +178,13 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
       sx={{
         borderRadius: 2,
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
-        padding: "1rem 1.5rem",
+        padding: "0.5rem 0.75rem 1rem",
         maxWidth: "100%",
-        border: highlighted ? `2px solid rgba(5, 105, 226, 1)` : "transparent",
+        border: highlighted ? `1.5px solid rgba(5, 105, 226, 1)` : "1.5px solid rgba(255, 255, 255, 0.25)",
         transition: "border 0.2s ease",
         cursor: "pointer",
         "&:hover": {
-          border: `1px solid rgba(5, 105, 226, 1)`,
+          border: `1.5px solid rgba(5, 105, 226, 1)`,
           transition: "none",
         },
       }}
@@ -164,25 +202,31 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
           justifyContent="space-between"
           alignItems="center"
           flexDirection="column"
-          mb={2}
           gap={2}
         >
           <Box
-            width="100%"
             display="flex"
-            alignItems="end"
-            justifyContent="end"
-          >
-            <Typography className="dashboard-card-text">{date}</Typography>
-          </Box>
-          <Box
-            width="100%"
-            display="flex"
+            justifyContent="space-between"
             alignItems="center"
-            justifyContent="start"
+            width="100%"
+            mb={2}
           >
-            <FiberManualRecordIcon sx={{ fontSize: 12, color, mr: 1 }} />
-            <Typography className="dashboard-card-heading">{status}</Typography>
+            <Typography className="paragraph"
+              sx={{
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                cursor: 'pointer',
+                padding: '3px 1rem',
+                textOverflow: 'ellipsis',
+                maxWidth: '120px',
+                backgroundColor: status.includes("Synced") ? "rgba(234, 248, 221, 1)" : 'rgba(222, 237, 255, 1)',
+                color: status.includes("Synced") ? "rgba(43, 91, 0, 1)!important" : 'rgba(5, 105, 226, 1) !important'
+              }}>
+              {status}
+            </Typography>
+            <Typography className="dashboard-card-text" title={date.full}>
+              {date.relative}
+            </Typography>
           </Box>
         </Box>
 
@@ -195,7 +239,6 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
             justifyContent: "space-between",
           }}
         >
-          {/* Левая колонка */}
           <Box display="flex" flexDirection="column">
             {renderSection(event_info)}
           </Box>

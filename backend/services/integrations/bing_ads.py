@@ -4,12 +4,12 @@ from persistence.integrations.integrations_persistence import IntegrationsPresis
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.domains import UserDomainsPersistence
-from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
+from services.integrations.commonIntegration import get_states_dataframe
 from schemas.integrations.integrations import *
 from fastapi import HTTPException
 from faker import Faker
 import re
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit
 import httpx
 from utils import format_phone_number

@@ -34,6 +34,7 @@ import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import ProgressBar from "@/components/ProgressBar";
 import { TableData, LookalikeData, CalculationResponse, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject, PersonalResults, ProfessionalProfileResults, EmploymentHistoryResults } from "@/types"
 import { FeatureImportanceTable, DragAndDropTable, AudienceFieldsSelector, OrderFieldsStep } from "../components"
+import { ResetProvider } from "@/context/ResetContext";
 export const dynamic = 'force-dynamic';
 
 const CreateLookalikePage: React.FC = () => {
@@ -282,7 +283,11 @@ const CreateLookalikePage: React.FC = () => {
   const canProceed = (personalKeys.length + financialKeys.length 
                  + lifestylesKeys.length + voterKeys.length + professionalProfileKeys.length 
                  + employmentHistoryKeys.length) >= 3;
-
+  
+  const handleFieldsOrderChange = (newOrder: Field[]) => {
+    setDndFields(newOrder);
+  };
+  
   return (
     <Box
       sx={{
@@ -379,6 +384,7 @@ const CreateLookalikePage: React.FC = () => {
                             setSearch(e.target.value);
                             setIsTableVisible(true);
                           }}
+                          onClick={() => setIsTableVisible(!isTableVisible)}
                           InputProps={{
                             startAdornment: (
                               <InputAdornment position="start">
@@ -399,7 +405,13 @@ const CreateLookalikePage: React.FC = () => {
                               </IconButton>
                             ),
                           }}
-                          sx={{ pb: "2px" }}
+                          sx={{
+                            pb: "2px",
+                            cursor: "pointer",
+                            "& .MuiInputBase-input": {
+                              cursor: "pointer",
+                            },
+                          }}
                         />
                         {isTableVisible && (
                           <TableContainer
@@ -597,6 +609,7 @@ const CreateLookalikePage: React.FC = () => {
                 }
                 
                 {calculatedResults && (
+                  <>
                   <Box hidden={currentStep !== 2}>
                     <AudienceFieldsSelector
                       personalData={personalData}
@@ -617,16 +630,18 @@ const CreateLookalikePage: React.FC = () => {
                       canProcessed={canProceed}
                     />
                   </Box>
+                  {/* Calculation results block rendered with flex layout */}
+                  <Box hidden={currentStep !== 3}>
+                    <OrderFieldsStep
+                      fields={dndFields}
+                      handlePrevStep={handlePrevStep}
+                      onOrderChange={handleFieldsOrderChange}
+                    />
+                  </Box>
+                  </>
                 )}
 
-                {/* Calculation results block rendered with flex layout */}
-                {currentStep == 3 && (
-                  <OrderFieldsStep
-                  fields={dndFields}
-                  handlePrevStep={handlePrevStep}
-                  onOrderChange={newOrder => setDndFields(newOrder)}
-                  />
-                )}
+                
 
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
                 {currentStep >= 3 && (
@@ -906,7 +921,9 @@ const CreateLookalikePage: React.FC = () => {
 const CreateLookalike: React.FC = () => {
   return (
     <Suspense fallback={<ProgressBar />}>
-      <CreateLookalikePage />
+      <ResetProvider>
+        <CreateLookalikePage />
+      </ResetProvider>
     </Suspense>
   );
 };

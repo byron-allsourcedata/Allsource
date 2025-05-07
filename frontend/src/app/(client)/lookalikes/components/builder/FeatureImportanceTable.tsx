@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
   Box,
   Grid,
@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { FeatureObject, Props } from "@/types";
+import { useResetContext } from "@/context/ResetContext";
 
 const formatKey = (k: string) =>
   k
@@ -25,9 +26,9 @@ export function FeatureImportanceTable<T extends FeatureObject>({
   title,
   onChangeDisplayed,
   columnHeaders = ["Field", "Importance"],
-}: Props<T>) {
+}: Props<T> & { resetTrigger?: number }) {
   const theme = useTheme();
-
+  const { resetTrigger, notifyInteraction } = useResetContext();
   const allPairs = useMemo<[keyof T, number][]>(
     () =>
       Object.entries(features)
@@ -51,7 +52,13 @@ export function FeatureImportanceTable<T extends FeatureObject>({
     [nonZeroPairs, maxSelectable]
   );
 
+  const initialSelectedRef = useRef<(keyof T)[]>(initialSelected);
+
   const [selectedKeys, setSelectedKeys] = useState<(keyof T)[]>(initialSelected);
+
+  useEffect(() => {
+    setSelectedKeys(initialSelectedRef.current);
+  }, [resetTrigger]);
 
   useEffect(() => {
     setSelectedKeys(initialSelected);
@@ -61,12 +68,23 @@ export function FeatureImportanceTable<T extends FeatureObject>({
     if (onChangeDisplayed) {
       onChangeDisplayed(selectedKeys);
     }
-  }, [selectedKeys, onChangeDisplayed]);
+  }, [selectedKeys]);
+  const arraysEqual = (a: any[], b: any[]) => {
+    if (a.length !== b.length) return false;
+    const setB = new Set(b);
+    return a.every(x => setB.has(x));
+  };
+  
 
   const onOptionToggle = (key: keyof T) => {
-    setSelectedKeys(prev =>
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
+    setSelectedKeys(prev => {
+      const newSelected = prev.includes(key)
+        ? prev.filter(x => x !== key)
+        : [...prev, key];
+      const isBackToDefault = arraysEqual(newSelected, initialSelectedRef.current);
+      notifyInteraction(title, isBackToDefault);
+      return newSelected;
+    });
   };
 
   const headerColor =

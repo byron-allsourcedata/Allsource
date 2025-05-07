@@ -62,6 +62,7 @@ class BusinessType(Enum):
 
 class AudienceSettingAlias(Enum):
     AVERAGE_SUCCESS_VALIDATIONS = 'average_success_validations'
+    VALIDATION_PRIORITY = 'validation_priority'
 
 class LeadStatus(Enum):
     ABANDONED_CART = 'abandoned_cart'
@@ -84,6 +85,7 @@ class AudienceSmartStatuses(Enum):
     SYNCED = 'synced'
     N_A = 'n_a'
     DATA_SYNCING = 'data_syncing'
+    FAILED = 'failed'
 
 class CreateDataSync(Enum):
     ZAPIER_CONNECTED = 'ZAPIER_CONNECTED'
@@ -213,8 +215,8 @@ class LoginStatus(Enum):
 
 class PixelStatus(Enum):
     PIXEL_CODE_INSTALLED = 'PIXEL_CODE_INSTALLED'
-    PIXEL_CODE_PARSE_FAILED = 'PIXEL_CODE_PARSE_FAILED'
-    USER_NOT_FOUND = 'USER_NOT_FOUND'
+    INCORRECT_PROVIDER_ID = 'INCORRECT_PROVIDER_ID'
+    PIXEL_MISMATCH = 'PIXEL_MISMATCH'
 
 class UpdateUserStatus(Enum):
     SUCCESS = 'SUCCESS'

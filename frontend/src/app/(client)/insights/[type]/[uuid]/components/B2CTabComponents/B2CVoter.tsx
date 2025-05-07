@@ -1,9 +1,17 @@
-import { mapGenericPercentage, extractSemiCirclePercent } from "./mappingUtils";
+import { mapGenericPercentage, extractSemiCirclePercent, mapPieChart } from "./mappingUtils";
 import { Box } from "@mui/material";
 import { GradientBarChart } from "../GradientHorizontalBarChart";
 import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
+import { FieldRankMap, PercentageMap, VoterInfo } from "@/types/insights";
+import { PieChartWithLegend } from "../CircularChart";
 
-const B2CVoter = ({ data }: { data: any }) => {
+interface B2CVoterProps {
+  data: VoterInfo;
+  fieldRanks: FieldRankMap;
+}
+
+
+const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
   const congressionalData = mapGenericPercentage(data.congressional_district)
     .filter((entry) => entry.percent > 0 && entry.label !== "-")
     .sort((a, b) => b.percent - a.percent)
@@ -19,11 +27,19 @@ const B2CVoter = ({ data }: { data: any }) => {
     "0.10000000149011612"
   );
 
+  const votingPieDataRaw: PercentageMap = {
+    "Will vote": votingPropensityYes.toFixed(2),
+    "Won’t vote": (100 - votingPropensityYes).toFixed(2),
+  };
+
+  const votingPieChartData = mapPieChart(votingPieDataRaw);
+
   return (
     <Box>
       <Box
         sx={{
-          padding: "1.5rem 5rem 1.5rem",
+          padding: "1.5rem",
+          pr: '3rem',
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -33,42 +49,32 @@ const B2CVoter = ({ data }: { data: any }) => {
         <Box
           sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
         >
-          <Box sx={{ display: "flex", width: "100%" }}>
+          <Box sx={{ display: "flex", width: "32%" }}>
             <GradientBarChart
               title="Congressional District"
               data={congressionalData}
+              rank={fieldRanks["congressional_district"]}
             />
           </Box>
 
-          <Box sx={{ display: "flex", width: "100%" }}>
+          <Box sx={{ display: "flex", width: "32%" }}>
             <GradientBarChart
               title="Political Party"
               data={politicalPartyData}
+              rank={fieldRanks["political_party"]}
             />
           </Box>
-        </Box>
 
-        <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
-        >
           <Box
             sx={{
               display: "flex",
-              flexDirection: "column",
-              width: "50%",
-              height: "100%",
-              gap: 2,
+              width: '32%'
             }}
           >
-            <SemiCircularGradientChart
+            <PieChartWithLegend
               title="Voting Propensity"
-              percent={votingPropensityYes}
-              labelLeft="Yes"
-              labelRight="No"
-              colorStops={[
-                { offset: "11.88%", color: "#62B2FD" },
-                { offset: "86.9%", color: "#C1E4FF" },
-              ]}
+              data={votingPieChartData}
+              rank={fieldRanks["voting_propensity"]}
             />
           </Box>
         </Box>

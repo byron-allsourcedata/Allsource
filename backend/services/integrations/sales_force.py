@@ -13,12 +13,12 @@ from schemas.integrations.integrations import *
 from schemas.integrations.sales_force import SalesForceProfile
 from fastapi import HTTPException
 from faker import Faker
-from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
+from services.integrations.commonIntegration import get_states_dataframe
 from datetime import datetime, timedelta
 from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 import httpx
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 import json
 from utils import format_phone_number
 from typing import List
@@ -241,8 +241,12 @@ class SalesForceIntegrationsService:
         
         for enrichment_user in enrichment_users:
             profile = self.__mapped_sales_force_profile(enrichment_user, data_sync.data_map)
-            profiles.append(profile)
-            
+            if profile:
+                profiles.append(profile)
+                
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        
         response_result = self.bulk_upsert_leads(profiles=profiles, instance_url=user_integration.instance_url, access_token=access_token)
         if response_result in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value):
             return profile
@@ -286,61 +290,87 @@ class SalesForceIntegrationsService:
         return properties
     
     def __mapped_sales_force_profile(self, enrichment_user: EnrichmentUser, data_map: dict) -> dict:
-        emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
-        properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
-        first_email = get_valid_email(emails_list)
+        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+        enrichment_contacts = enrichment_user.contacts
+        if not enrichment_contacts:
+            return None
+        first_name = enrichment_contacts.first_name
+        last_name = enrichment_contacts.last_name
         
         fake = Faker()
-
-        first_phone = fake.phone_number()
-        address_parts = fake.address()
-        city_state_zip = address_parts.split("\n")[-1]
-
-        match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
-
-        if match:
-            city = match.group(1).strip()
-            state = match.group(2) if match.group(2) else ''
-            zip_code = match.group(3) if match.group(3) else ''
-        else:
-            city, state, zip_code = '', '', ''
-            
-        company_name = fake.company()
-        first_name = fake.first_name()
-        last_name = fake.last_name()
+        verified_email = fake.email()
+        verified_phone = fake.phone_number()
+        if not verified_email or not first_name or not last_name:
+            return None
         
+        enrichment_personal_profiles = enrichment_user.personal_profiles
+        enrichment_professional_profiles = enrichment_user.professional_profiles
+        city = None
+        state = None
+        zip_code = None
+        gender = None
+        birth_day = None
+        birth_month = None
+        birth_year = None
+        company_name = None
+        
+        if enrichment_professional_profiles:
+            company_name = enrichment_professional_profiles.current_company_name
+            
+        if not company_name:
+            return None
+        
+        if enrichment_personal_profiles:
+            zip_code = str(enrichment_personal_profiles.zip_code5)
+            df_geo = get_states_dataframe()
+            if df_geo['zip'].dtype == object:
+                df_geo['zip'] = df_geo['zip'].astype(int)
+            row = df_geo.loc[df_geo['zip'] == zip_code]
+            if not row.empty:
+                city = row['city'].iat[0]
+                state = row['state_name'].iat[0]
+            
+            if enrichment_personal_profiles.gender == 1:
+                gender = 'm'
+            elif enrichment_personal_profiles.gender == 2:
+                gender = 'f'
+            birth_day = str(enrichment_personal_profiles.birth_day)
+            birth_month = str(enrichment_personal_profiles.birth_month)
+            birth_year = str(enrichment_personal_profiles.birth_year)        
+        
+        #properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
+                
             
         json_data = {
             'FirstName': first_name,
             'LastName': last_name,
-            'Email': first_email,
-            'Phone': first_phone,
-            'MobilePhone': first_phone,
-            'Street': address_parts,
+            'Email': verified_email,
+            'Phone': verified_phone,
+            'MobilePhone': verified_phone,
             'City': city,
             'State': state,
             'Country': 'USA',
             'Company': company_name,
-            'Age__c': properties.get('Age', None),
-            'Gender__c': properties.get('Gender', None),
-            'Estimated_Household_Income_Code__c': properties.get('Estimated household income code', None),
-            'Estimated_Current_Home_Value_Code__c': properties.get('Estimated current home value code', None),
-            'Homeowner_Status__c': properties.get('Homeowner status', None),
-            'Has_Children__c': properties.get('Has children', None),
-            'Number_of_Children__c': properties.get('Number of children', None),
-            'Credit_Rating__c': properties.get('Credit rating', None),
-            'Net_Worth_Code__c': properties.get('Net worth code', None),
-            'Zip_Code__c': properties.get('Zipcode 5', None),
-            'Latitude__c': properties.get('Lat', None),
-            'Longitude__c': properties.get('Lon', None),
-            'Has_Credit_Card__c': properties.get('Has credit card', None),
-            'Length_of_Residence_Years__c': properties.get('Length of residence years', None),
-            'Marital_Status__c': properties.get('Marital status', None),
-            'Occupation_Group_Code__c': properties.get('Occupation group code', None),
-            'Is_Book_Reader__c': properties.get('Is book reader', None),
-            'Is_Online_Purchaser__c': properties.get('Is online purchaser', None),
-            'Is_Traveler__c': properties.get('Is traveler', None),
-            'Rec_Id__c': properties.get('Rec id', None)
+            # 'Age__c': properties.get('Age', None),
+            'Gender__c': gender,
+            # 'Estimated_Household_Income_Code__c': properties.get('Estimated household income code', None),
+            # 'Estimated_Current_Home_Value_Code__c': properties.get('Estimated current home value code', None),
+            # 'Homeowner_Status__c': properties.get('Homeowner status', None),
+            # 'Has_Children__c': properties.get('Has children', None),
+            # 'Number_of_Children__c': properties.get('Number of children', None),
+            # 'Credit_Rating__c': properties.get('Credit rating', None),
+            # 'Net_Worth_Code__c': properties.get('Net worth code', None),
+            # 'Zip_Code__c': properties.get('Zipcode 5', None),
+            # 'Latitude__c': properties.get('Lat', None),
+            # 'Longitude__c': properties.get('Lon', None),
+            # 'Has_Credit_Card__c': properties.get('Has credit card', None),
+            # 'Length_of_Residence_Years__c': properties.get('Length of residence years', None),
+            # 'Marital_Status__c': properties.get('Marital status', None),
+            # 'Occupation_Group_Code__c': properties.get('Occupation group code', None),
+            # 'Is_Book_Reader__c': properties.get('Is book reader', None),
+            # 'Is_Online_Purchaser__c': properties.get('Is online purchaser', None),
+            # 'Is_Traveler__c': properties.get('Is traveler', None),
+            # 'Rec_Id__c': properties.get('Rec id', None)
         }
         
         json_data = {k: v for k, v in json_data.items() if v is not None}

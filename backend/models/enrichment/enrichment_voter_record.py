@@ -1,13 +1,10 @@
 from sqlalchemy import Column, String, Float, ForeignKey, text, Index
 from sqlalchemy.dialects.postgresql import UUID
-from .base import Base
+from models.base import Base
 
 
 class EnrichmentVoterRecord(Base):
     __tablename__ = 'enrichment_voter_record'
-    __table_args__ = (
-        Index("ix_voter_asid", "asid"),
-    )
 
     id = Column(
         UUID(as_uuid=True),
@@ -23,3 +20,7 @@ class EnrichmentVoterRecord(Base):
     party_affiliation = Column(String(20), nullable=True)
     congressional_district = Column(String(10), nullable=True)
     voting_propensity = Column(Float, nullable=True)
+    
+    __table_args__ = (
+        Index("ix_voter_asid", asid),
+    )

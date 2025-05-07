@@ -7,7 +7,7 @@ import json
 import requests
 from rapidfuzz import fuzz
 from aio_pika import IncomingMessage
-from sqlalchemy import create_engine, func
+from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.dialects.postgresql import insert
 from dotenv import load_dotenv
@@ -16,7 +16,6 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
-from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_phones_verification import AudiencePhoneVerification
 from models.audience_smarts_validations import AudienceSmartValidation
@@ -26,6 +25,7 @@ load_dotenv()
 
 AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = 'aud_validation_agent_phone-owner-api'
 AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
+AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
 REAL_TIME_API_KEY = os.getenv('REAL_TIME_API_KEY')
 REAL_TIME_API_URL = os.getenv('REAL_TIME_API_URL')
 
@@ -34,7 +34,8 @@ COLUMN_MAPPING = {
     'business_email_validation_status': 'mx',
     'personal_email_last_seen': 'recency',
     'business_email_last_seen_date': 'recency',
-    'mobile_phone_dnc': 'dnc_filter'
+    'mobile_phone_dnc': 'dnc_filter',
+    'confirmation': 'confirmation'
 }
 
 
@@ -67,10 +68,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
         aud_smart_id = message_body.get("aud_smart_id")
         batch = message_body.get("batch")
         validation_type = message_body.get("validation_type")
-        count_persons_before_validation = message_body.get("count_persons_before_validation")
-        is_last_validation_in_type = message_body.get("is_last_validation_in_type")
-        is_last_iteration_in_last_validation = message_body.get("is_last_iteration_in_last_validation", False) 
-
+        logging.info(f"aud_smart_id: {aud_smart_id}")
+        logging.info(f"validation_type: {validation_type}")
         failed_ids = []
         verifications = []
         verified_phones = []
@@ -102,8 +101,6 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                         False
                     )
 
-                    print(f"is_verify: {is_verify}")
-
                     if not is_verify:
                         response = requests.get(
                             REAL_TIME_API_URL,
@@ -115,14 +112,10 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                         )
                         response_data = response.json()
 
-                        logging.info(f"response: {response.status_code} {response_data}")
+                        logging.debug(f"response: {response.status_code} {response_data}")
 
                         if response.status_code != 200:
                             continue
-
-                        if response.status_code != 200 and phone_field == 'phone_mobile2':
-                            await message.ack()
-
 
                         caller_name = response_data.get("caller_name", "").title()
                         similarity = fuzz.ratio(full_name, caller_name)
@@ -167,9 +160,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 for v in verifications
             ]
 
-            insert_stmt = insert(AudiencePhoneVerification).values(verification_data)
-
-            insert_stmt = insert_stmt.on_conflict_do_nothing(
+            insert_stmt = insert(AudiencePhoneVerification).values(verification_data).on_conflict_do_nothing(
                 index_elements=["phone"]
             )
 
@@ -180,89 +171,87 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
             db_session.bulk_save_objects(verified_phones)
             db_session.commit()
 
-        if len(failed_ids):
+        logging.info(f"Failed ids len: {len(failed_ids)}")
+        
+        success_ids = [
+            rec["audience_smart_person_id"]
+            for rec in batch
+            if rec["audience_smart_person_id"] not in failed_ids
+        ]
+        logging.info(f"Success ids len: {len(success_ids)}")
+        
+        if failed_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
-                [{"id": person_id, "is_validation_processed": False} for person_id in failed_ids]
+                [
+                    {"id": pid, "is_validation_processed": False, "is_valid": False}
+                    for pid in failed_ids
+                ],
             )
-            db_session.commit()
-        
-        # update_stats_validations(db_session, validation_type, count_persons_before_validation, len(failed_ids))
+            db_session.flush()
             
-        if is_last_validation_in_type:
-            aud_smart = db_session.query(AudienceSmart).filter_by(id=aud_smart_id).first()
-            if aud_smart:
-                validations = json.loads(aud_smart.validations)
-                for category in validations.values():
-                    for rule in category:
-                        column_name = COLUMN_MAPPING.get(validation_type)
-                        if column_name in rule:
-                            rule[column_name]["processed"] = True
-                aud_smart.validations = json.dumps(validations)
-        
-            db_session.commit()
-
-        if is_last_iteration_in_last_validation:
-            logging.info(f"is last validation")
-
-            with db_session.begin():
-                # subquery = (
-                #     select(EnrichmentUserId.id)
-                #     .select_from(EnrichmentUserContact)
-                #     .join(EnrichmentUserId, EnrichmentUserId.asid == EnrichmentUserContact.asid)
-                #     .join(AudienceSmartPerson, EnrichmentUserId.id == AudienceSmartPerson.enrichment_user_id)
-                # )
-
-                db_session.query(AudienceSmartPerson).filter(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True,
-                    # AudienceSmartPerson.enrichment_user_id.in_(subquery)
-                ).update({"is_valid": True}, synchronize_session=False)
-
-                total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed == True,
-                    # AudienceSmartPerson.enrichment_user_id.in_(subquery)
-                ).scalar()
-
-                db_session.query(AudienceSmart).filter(
-                    AudienceSmart.id == aud_smart_id
-                ).update(
-                    {
-                        "validated_records": total_validated,
-                        "status": "ready",
-                    }
-                )
-
-                db_session.commit()
-
-            await send_sse(
-                connection,
-                user_id,
-                {
-                    "smart_audience_id": aud_smart_id,
-                    "total_validated": total_validated,
-                }
+        if success_ids:
+            db_session.bulk_update_mappings(
+                AudienceSmartPerson,
+                [
+                    {"id": pid, "is_validation_processed": False}
+                    for pid in success_ids
+                ],
             )
-            logging.info(f"sent sse with total count")
+            db_session.flush()
 
-
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=f"validation_complete",
-            message_body={
-                "aud_smart_id": aud_smart_id,
-                "validation_type": validation_type,
-                "status": "validation_complete"
-            }
+        total_validated = db_session.scalar(
+            select(func.count(AudienceSmartPerson.id)).where(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                AudienceSmartPerson.is_valid.is_(True),
+            )
         )
-        logging.info(f"sent ping {aud_smart_id}.")
+        validation_count = db_session.scalar(
+            select(func.count(AudienceSmartPerson.id)).where(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                AudienceSmartPerson.is_validation_processed.is_(False),
+            )
+        )
+        
+        total_count = db_session.query(AudienceSmartPerson).filter(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id
+            ).count()
+
+        if validation_count == total_count:
+            aud_smart = db_session.get(AudienceSmart, aud_smart_id)
+            validations = {}
+            if aud_smart and aud_smart.validations:
+                validations = json.loads(aud_smart.validations)
+                key = COLUMN_MAPPING.get(validation_type)
+                for cat in validations.values():
+                    for rule in cat:
+                        if key in rule:
+                            rule[key]["processed"] = True
+                aud_smart.validations = json.dumps(validations)
+
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=AUDIENCE_VALIDATION_FILLER,
+                message_body={
+                    "aud_smart_id": str(aud_smart_id),
+                    "user_id": user_id,
+                    "validation_params": validations,
+                },
+            )
+        db_session.commit()
+        await send_sse(
+            connection,
+            user_id,
+            {"smart_audience_id": aud_smart_id, "total_validated": total_validated},
+        )
+        logging.info("sent sse with total count")
 
         await message.ack()
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.ack()
+        db_session.rollback()
+        await message.reject(requeue=True)
         return
 
 

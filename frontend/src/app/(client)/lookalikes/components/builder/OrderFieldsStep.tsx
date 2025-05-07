@@ -1,9 +1,10 @@
 import React from "react";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Button, Grid, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import { Field } from "@/types";
 import  DragAndDropTable  from "./DragAndDropTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
+import { ResetProvider, useResetContext } from "@/context/ResetContext";
 
 interface OrderFieldsStepProps {
     fields: Field[];
@@ -11,13 +12,15 @@ interface OrderFieldsStepProps {
     onOrderChange: (newOrder: Field[]) => void;
 }
 
-export const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
+const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
     fields,
     handlePrevStep,
     onOrderChange,
 }) => {
+    React.useEffect(() => {
+    }, []);
     const [activeStep, setActiveStep] = React.useState(1);
-
+    const { atDefault, userInteracted, resetAll } = useResetContext();
     const handleStep = (step: number) => () => {
         setActiveStep(step);
         if (step === 0) {
@@ -35,7 +38,7 @@ export const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                 mt: 2,
             }}
         >
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2, ml: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 2, ml: 1, width: "600px", justifyContent: "space-between" }}>
             <Stepper 
                 activeStep={activeStep}
                 nonLinear
@@ -62,7 +65,7 @@ export const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                         fontSize: '14px',
                         },
                         '& .MuiStepIcon-root': {
-                        color: index === activeStep ? 'rgba(80, 82, 178, 1)' : 'rgba(212, 212, 212, 1)',
+                        color: index === 1 ? 'rgba(80, 82, 178, 1)' : 'rgba(212, 212, 212, 1)',
                         },
                     }}>
                     {label}
@@ -70,7 +73,25 @@ export const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                 </Step>
                 ))}
             </Stepper>
-      
+            <Button
+                    onClick={resetAll}
+                    disabled={atDefault}
+                    sx={{
+                      border: "1px #5052B2 solid",
+                      color: "#5052B2",
+                      backgroundColor: "#FFFFFF",
+                      textTransform: "none",
+                      "&:hover": {
+                        border: "1px #5052B2 solid",
+                        backgroundColor: "#FFFFFF",
+                      },
+                    }}
+                    variant="outlined"
+                  >
+                    <Typography  fontSize="0.8rem">
+                      Set recommended
+                    </Typography>
+                  </Button>
             </Box>
 
             <Grid container spacing={2} sx={{ mb: 2 }}>
@@ -171,3 +192,5 @@ export const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
             </Grid>
         </Box>
 )};
+
+export default React.memo(OrderFieldsStep);

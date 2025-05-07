@@ -11,12 +11,19 @@ import InfoCard from "./components/SelectedCards";
 import PixelCard from "./components/PixelCard";
 import MainSectionCard from "./components/MainSectionCards";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import SmartAudienceCard from "./components/SmartAudienceCard";
+
+
+interface EventDate {
+  relative: string;
+  full: string;
+}
 
 interface EventCardData {
   id: string;
   chain_ids: string[];
   status: string;
-  date: string;
+  date: EventDate;
   event_info: Record<string, string | number>;
   tabType: string;
 }
@@ -111,23 +118,44 @@ const AudienceDashboard: React.FC = () => {
       ] as const;
 
       const formatDate = (dateStr: string) => {
-        const date = new Date(dateStr);
-        const parts = date
-          .toLocaleString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
+        const isoDateStr = dateStr.slice(0, 23);
+        const date = new Date(isoDateStr + "Z");
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffSec = Math.floor(diffMs / 1000);
+        const diffMin = Math.floor(diffSec / 60);
+        const diffHour = Math.floor(diffMin / 60);
+        const diffDay = Math.floor(diffHour / 24);
+
+        let relative = "";
+        if (diffMs < 0) {
+          relative = "in the future";
+        } else if (diffSec < 60) {
+          relative = "just now";
+        } else if (diffMin < 60) {
+          relative = `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
+        } else if (diffHour < 24) {
+          relative = `${diffHour} hour${diffHour === 1 ? "" : "s"} ago`;
+        } else if (diffDay < 7) {
+          relative = `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+        } else {
+          relative = date.toLocaleDateString("en-US", {
+            year: "numeric",
             month: "short",
             day: "numeric",
-            hour12: true,
-          })
-          .replace(",", "")
-          .split(" ");
+          });
+        }
 
-        const month = parts[0].toUpperCase();
-        const day = parts[1];
-        const time = `${parts[2]} ${parts[3]}`;
+        const full = date.toLocaleString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
 
-        return `${day} ${month} ${time}`;
+        return { relative, full };
       };
 
       const normalize = (str: string) => str.toLowerCase().replace(/s$/, "");
@@ -141,16 +169,9 @@ const AudienceDashboard: React.FC = () => {
         const normalizedTab = normalize(tabType);
 
         if (normalizedType === "data_sync") {
-          if (status === "data_syncing") return "Data Syncing";
-          if (status === "synced") return "Data Sync Finished";
-          return "Data Sync Finished";
-        }
-
-        if (
-          normalizedType === normalizedTab &&
-          normalizedType === "smart_audience"
-        ) {
-          return "Audience Created";
+          if (status === "data_syncing") return "Syncing";
+          if (status === "synced") return "Synced";
+          return "Synced";
         }
 
         if (normalizedType === normalizedTab) {
@@ -601,7 +622,11 @@ const AudienceDashboard: React.FC = () => {
             sx={{
               width: "100%",
               mt: 1,
+              overflowX: "auto",
+              whiteSpace: "nowrap",
               pl: 0.5,
+              pr: 0.5,
+              pt: 1,
               "@media (max-width: 900px)": { mt: 0, mb: 0 },
             }}
           >
@@ -630,42 +655,44 @@ const AudienceDashboard: React.FC = () => {
             }}
           >
             {selectedCard ? (
-              <Box paddingBottom={2}>
-                <Grid container spacing={2}>
-                  {currentTabData.map((card: any, index) => (
-                    <Grid
-                      item
-                      xs={12}
-                      sm={6}
-                      md={6}
-                      lg={6}
-                      key={index}
-                      sx={{ height: "100%" }}
-                    >
-                      <Box sx={{ height: "100%" }}>
-                        <InfoCard data={card} />
-                      </Box>
-                    </Grid>
-                  ))}
-                </Grid>
+              <Box sx={{ overflow: 'hidden', }}>
+                <Box>
+                  <Grid container spacing={2}>
+                    {currentTabData.map((card: any, index) => (
+                      <Grid
+                        item
+                        xs={12}
+                        sm={6}
+                        md={6}
+                        lg={6}
+                        key={index}
+                        sx={{ height: "100%" }}
+                      >
+                        <Box sx={{ height: "100%" }}>
+                          <InfoCard data={card} />
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
 
-                {selectedCard === "Pixel Contacts" && (
-                  <Box>
-                    <AudienceChart selectedDomain={selectedDomain} />
-                  </Box>
-                )}
+                  {selectedCard === "Pixel Contacts" && (
+                    <Box>
+                      <AudienceChart selectedDomain={selectedDomain} />
+                    </Box>
+                  )}
+                </Box>
               </Box>
             ) : (
               <Box sx={{ width: "100%", mb: 2, pl: 0.5 }}>
-                <Grid container spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
-                  <Grid item xs={12} md={2.4}>
+                <Grid container spacing={2} wrap="nowrap" sx={{ flexWrap: 'nowrap', }}>
+                  <Grid item xs={12} sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} md={2.4}>
                     {pixelContacts.map((contact, index) => (
                       <Box key={index} mt={1}>
                         <PixelCard
                           key={index}
                           data={{
                             domain: contact.domain,
-                            date: "last 24h",
+                            date: "Last 24h",
                             contacts_collected: contact.total_leads,
                             visitor: contact.visitors,
                             view_product: contact.view_products,
@@ -683,7 +710,7 @@ const AudienceDashboard: React.FC = () => {
                     ))}
                   </Grid>
 
-                  <Grid item xs={12} md={2.4}>
+                  <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
                     {eventCards.sources.map((card, index) => (
                       <Box key={index} mt={1}>
                         <MainSectionCard
@@ -702,7 +729,7 @@ const AudienceDashboard: React.FC = () => {
                     ))}
                   </Grid>
 
-                  <Grid item xs={12} md={2.4}>
+                  <Grid item xs={12} sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} md={2.4}>
                     {eventCards.lookalikes.map((card, index) => (
                       <Box key={index} mt={1}>
                         <MainSectionCard
@@ -720,10 +747,10 @@ const AudienceDashboard: React.FC = () => {
                       </Box>
                     ))}
                   </Grid>
-                  <Grid item xs={12} md={2.4}>
+                  <Grid item xs={12} sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} md={2.4}>
                     {eventCards.smart_audience.map((card, index) => (
                       <Box key={index} mt={1}>
-                        <MainSectionCard
+                        <SmartAudienceCard
                           key={card.id}
                           data={card}
                           highlighted={activeChainIds.includes(card.id)}
@@ -738,7 +765,7 @@ const AudienceDashboard: React.FC = () => {
                       </Box>
                     ))}
                   </Grid>
-                  <Grid item xs={12} md={2.4}>
+                  <Grid item xs={12} sx={{ "@media (max-width: 600px)": { minWidth: 320, mr: 10, pr: 1.5 } }} md={2.4}>
                     {eventCards.data_sync.map((card, index) => (
                       <Box key={index} mt={1}>
                         <MainSectionCard

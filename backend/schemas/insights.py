@@ -1,7 +1,7 @@
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field, model_validator
 from schemas.mapping.audience_insights_mapping import ETHNICITY_MAP, LANGUAGE_MAP, RELIGION_MAP,\
-    YES_NO_UNKNOWN_MAPS, NET_WORTH_RANGE_MAP, CREDIT_SCORE_RANGE_MAP
+    YES_NO_UNKNOWN_MAPS, NET_WORTH_RANGE_MAP, CREDIT_SCORE_RANGE_MAP, INCOME_RANGE
 
 
 class PersonalProfiles(BaseModel):
@@ -23,10 +23,19 @@ class PersonalProfiles(BaseModel):
 
     @staticmethod
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
-        total = sum(data.values())
+        def is_unknown(key: str) -> bool:
+            lowered = key.lower()
+            return (
+                    "unknown" in lowered
+                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
+                                   "undisclosed"}
+            )
+
+        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        total = sum(filtered_data.values())
         if total == 0:
-            return {k: 0.0 for k in data}
-        return {k: round(v / total * 100, 2) for k, v in data.items()}
+            return {k: 0.0 for k in filtered_data}
+        return {k: round(v / total * 100, 2) for k, v in filtered_data.items()}
 
     @model_validator(mode="after")
     def calculate_percentages(self) -> "PersonalProfiles":
@@ -38,12 +47,19 @@ class PersonalProfiles(BaseModel):
 
             if key in YES_NO_UNKNOWN_MAPS:
                 mapped = {YES_NO_UNKNOWN_MAPS[key].get(k, k): v for k, v in val.items()}
-                total = sum(mapped.values())
+                filtered = {k: v for k, v in mapped.items() if k != "Unknown"}
+                total = sum(filtered.values())
+                setattr(self, key,
+                        {k: round(v / total * 100, 2) for k, v in filtered.items()} if total else {k: 0.0 for k in
+                                                                                                   filtered})
+            elif key == "gender":
+                filtered = {k: v for k, v in val.items() if k != "2"}
+                total = sum(filtered.values())
                 if total == 0:
-                    setattr(self, key, {k: 0.0 for k in mapped})
+                    setattr(self, key, {k: 0.0 for k in filtered})
                 else:
-                    percent_mapped = {k: round(v / total * 100, 2) for k, v in mapped.items()}
-                    setattr(self, key, percent_mapped)
+                    percent = {k: round(v / total * 100, 2) for k, v in filtered.items()}
+                    setattr(self, key, percent)
             else:
                 if key == "ethnicity":
                     val = self._map_keys(val, ETHNICITY_MAP)
@@ -73,10 +89,19 @@ class FinancialProfiles(BaseModel):
 
     @staticmethod
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
-        total = sum(data.values())
+        def is_unknown(key: str) -> bool:
+            lowered = key.lower()
+            return (
+                    "unknown" in lowered
+                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
+                                   "undisclosed"}
+            )
+
+        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        total = sum(filtered_data.values())
         if total == 0:
-            return {k: 0.0 for k in data}
-        return {k: round(v / total * 100, 2) for k, v in data.items()}
+            return {k: 0.0 for k in filtered_data}
+        return {k: round(v / total * 100, 2) for k, v in filtered_data.items()}
 
     @model_validator(mode="after")
     def calculate_percentages(self) -> "FinancialProfiles":
@@ -92,6 +117,10 @@ class FinancialProfiles(BaseModel):
 
             elif key == "credit_score_range":
                 mapped = {CREDIT_SCORE_RANGE_MAP.get(k, k): v for k, v in val.items()}
+                setattr(self, key, self._to_percent(mapped))
+
+            elif key == "income_range":
+                mapped = {INCOME_RANGE.get(k, k): v for k, v in val.items()}
                 setattr(self, key, self._to_percent(mapped))
 
             else:
@@ -119,10 +148,19 @@ class LifestyleProfiles(BaseModel):
 
     @staticmethod
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
-        total = sum(data.values())
+        def is_unknown(key: str) -> bool:
+            lowered = key.lower()
+            return (
+                    "unknown" in lowered
+                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
+                                   "undisclosed"}
+            )
+
+        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        total = sum(filtered_data.values())
         if total == 0:
-            return {k: 0.0 for k in data}
-        return {k: round(v / total * 100, 2) for k, v in data.items()}
+            return {k: 0.0 for k in filtered_data}
+        return {k: round(v / total * 100, 2) for k, v in filtered_data.items()}
 
     @model_validator(mode="after")
     def calculate_percentages(self) -> "LifestyleProfiles":
@@ -140,10 +178,19 @@ class VoterProfiles(BaseModel):
 
     @staticmethod
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
-        total = sum(data.values())
+        def is_unknown(key: str) -> bool:
+            lowered = key.lower()
+            return (
+                    "unknown" in lowered
+                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
+                                   "undisclosed"}
+            )
+
+        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        total = sum(filtered_data.values())
         if total == 0:
-            return {k: 0.0 for k in data}
-        return {k: round(v / total * 100, 2) for k, v in data.items()}
+            return {k: 0.0 for k in filtered_data}
+        return {k: round(v / total * 100, 2) for k, v in filtered_data.items()}
 
     @model_validator(mode="after")
     def calculate_percentages(self) -> "VoterProfiles":
@@ -175,10 +222,19 @@ class ProfessionalProfiles(BaseModel):
 
     @staticmethod
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
-        total = sum(data.values())
+        def is_unknown(key: str) -> bool:
+            lowered = key.lower()
+            return (
+                    "unknown" in lowered
+                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
+                                   "undisclosed"}
+            )
+
+        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        total = sum(filtered_data.values())
         if total == 0:
-            return {k: 0.0 for k in data}
-        return {k: round(v / total * 100, 2) for k, v in data.items()}
+            return {k: 0.0 for k in filtered_data}
+        return {k: round(v / total * 100, 2) for k, v in filtered_data.items()}
 
     @model_validator(mode="after")
     def calculate_percentages(self) -> "ProfessionalProfiles":
@@ -198,10 +254,19 @@ class EmploymentHistory(BaseModel):
 
     @staticmethod
     def _to_percent(data: Dict[str, int]) -> Dict[str, float]:
-        total = sum(data.values())
+        def is_unknown(key: str) -> bool:
+            lowered = key.lower()
+            return (
+                    "unknown" in lowered
+                    or lowered in {"u", "ux", "u1", "u2", "u9", "u0", "uv", "um", "unspecified", "undeclared",
+                                   "undisclosed"}
+            )
+
+        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        total = sum(filtered_data.values())
         if total == 0:
-            return {k: 0.0 for k in data}
-        return {k: round(v / total * 100, 2) for k, v in data.items()}
+            return {k: 0.0 for k in filtered_data}
+        return {k: round(v / total * 100, 2) for k, v in filtered_data.items()}
 
     @model_validator(mode="after")
     def calculate_percentages(self) -> "EmploymentHistory":

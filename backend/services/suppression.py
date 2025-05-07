@@ -112,6 +112,10 @@ class SuppressionService:
     def process_based_urls(self, identifiers, domain_id):
         self.suppression_persistence.process_based_urls(identifiers=identifiers, domain_id=domain_id)
         return SuppressionStatus.SUCCESS
+    
+    def save_suppress_contact_days(self, days, domain_id):
+        self.suppression_persistence.save_suppress_contact_days(domain_id=domain_id, days=days)
+        return SuppressionStatus.SUCCESS
         
     def process_page_views_limit(self, page_views: int, seconds: int, domain_id):
         self.suppression_persistence.process_page_views_limit(page_views=page_views, seconds=seconds, domain_id=domain_id)

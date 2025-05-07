@@ -10,10 +10,6 @@ from models.base import Base
 
 class EnrichmentPersonalProfiles(Base):
     __tablename__ = "enrichment_personal_profiles"
-    __table_args__ = (
-        UniqueConstraint("asid", name="enrichment_personal_profiles_asid_key"),
-        Index("ix_enrichment_personal_profiles_asid", "asid"),
-    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), primary_key=True,
@@ -88,13 +84,20 @@ class EnrichmentPersonalProfiles(Base):
         String(10),
         nullable=True
     )
-    zip_code5: Mapped[int] = mapped_column(
+    zip_code5: Mapped[str] = mapped_column(
         Integer,
         nullable=True
     )
-
-    enrichment_user = relationship(
-        "EnrichmentUserId",
-        back_populates="personal_profiles",
-        foreign_keys=[asid]
+    
+    __table_args__ = (
+        UniqueConstraint(asid, name="enrichment_personal_profiles_asid_key"),
+        Index("ix_enrichment_personal_profiles_asid", asid),
     )
+
+from models.enrichment.enrichment_users import EnrichmentUser
+
+EnrichmentPersonalProfiles.enrichment_user = relationship(
+    EnrichmentUser,
+    back_populates="personal_profiles",
+    foreign_keys=[EnrichmentPersonalProfiles.asid]
+)

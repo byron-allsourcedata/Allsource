@@ -7,16 +7,16 @@ import { useParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import React from "react";
-import { B2BData, B2CData } from "../page";
+import { B2BData, B2CData, FieldRankMap } from "@/types/insights";
 
 type StatisticsTabProps = {
   type: string;
   b2bData: B2BData;
   b2cData: B2CData;
+  fieldRanks: FieldRankMap;
 };
 
-const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData }) => {
-
+const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, fieldRanks }) => {
   const [targetIndex, setTargetIndex] = useState(0);
   const handleTargetChange = (
     event: React.SyntheticEvent,
@@ -152,10 +152,10 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData })
         }}
       >
         <TabPanel value={targetIndex} index={0}>
-          <B2BTabs data={b2bData} />
+          <B2BTabs data={b2bData} fieldRanks={fieldRanks} />
         </TabPanel>
         <TabPanel value={targetIndex} index={1}>
-          <B2CTabs data={b2cData} />
+          <B2CTabs data={b2cData} fieldRanks={fieldRanks} />
         </TabPanel>
       </Box>
     </Box>

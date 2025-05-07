@@ -3,6 +3,9 @@ import { Card, CardContent, Typography, Box } from "@mui/material";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import PlaylistRemoveIcon from "@mui/icons-material/PlaylistRemove";
+import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import Image from 'next/image';
 
 interface CardData {
   status: string;
@@ -25,6 +28,43 @@ const getStatusColor = (status: string, tabType?: string): string => {
   return "";
 };
 
+const getUseCaseStyle = (status: string) => {
+  switch (status.trim()) {
+    case 'Postal':
+      return <Image src="./postal.svg" alt="google icon" width={20} height={20} />
+    case 'Google':
+      return <Image src="./google-ads.svg" alt="google icon" width={20} height={20} />
+    case 'Meta':
+      return <Image src="./meta.svg" alt="meta icon" width={20} height={20} />
+    case 'Bing':
+      return <Image src="./bing.svg" alt="bing icon" width={20} height={20} />
+    case 'LinkedIn':
+      return <Image src="./linkedIn.svg" alt="linkedin icon" width={20} height={20} />
+    case 'Tele Marketing':
+      return <HeadsetMicOutlinedIcon />
+    case 's3':
+      return <Image src="./s3.svg" alt="s3 icon" width={20} height={20} />
+    case 'google_ads':
+      return <Image src="./google-ads.svg" alt="google icon" width={20} height={20} />
+    case 'mailchimp':
+      return <Image src="./mailchimp-icon.svg" alt="mailchimp icon" width={20} height={20} />
+    case 'sales_force':
+      return <Image src="./salesforce-icon.svg" alt="sales_force icon" width={20} height={20} />
+    case 'hubspot':
+      return <Image src="./hubspot.svg" alt="hubspot icon" width={20} height={20} />
+    case 'bing_ads':
+      return <Image src="./bingads-icon.svg" alt="bing_ads icon" width={20} height={20} />
+    case 'sendlane':
+      return <Image src="./sendlane-icon.svg" alt="sendlane icon" width={20} height={20} />
+    case 'mailchimp':
+      return <Image src="./mailchimp-icon.svg" alt="mailchimp icon" width={20} height={20} />
+    case 'meta':
+      return <Image src="./meta-icon.svg" alt="meta icon" width={20} height={20} />
+    default:
+      return <MailOutlinedIcon />
+  }
+};
+
 const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
   const { status, date, left, right, tabType } = data;
   const color = getStatusColor(status, tabType);
@@ -35,8 +75,30 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
     const LabelIcon = isInclude
       ? PlaylistAddIcon
       : isExclude
-      ? PlaylistRemoveIcon
-      : null;
+        ? PlaylistRemoveIcon
+        : null;
+
+
+    if ((label === "Use Case" || label === "Destination") && typeof value === "string") {
+      return (
+        <Box key={label} mb={0.5}>
+
+
+          <Typography className="dashboard-card-text">
+            {label}
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 0.25 }}>
+            <Box>
+              {getUseCaseStyle(value)}
+            </Box>
+            <Typography className="dashboard-card-heading">
+
+              {value}
+            </Typography>
+          </Box>
+        </Box>
+      );
+    }
 
     if (typeof value === "string" && (isInclude || isExclude)) {
       const parts = value.split(",").map((entry) => entry.trim());
@@ -169,6 +231,8 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
     return allEntries.map(([label, value]) => {
       const isInclude = label.includes("Include Names");
       const isExclude = label.includes("Exclude Names");
+      const isUseCase = label.includes("Use Case")
+      const isDestination = label.includes("Destination")
 
       const isLookalike = Math.random() > 0.5;
 
@@ -184,8 +248,13 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
         <PlaylistRemoveIcon sx={{ fontSize: 16, mr: 0.5 }} />
       ) : null;
 
+      const iconDestination =
+        (isUseCase || isDestination) && typeof value === "string" ? (
+          <Box mr={0.5}>{getUseCaseStyle(value)}</Box>
+        ) : null;
+
       return (
-        <Box key={label} mb={1}>
+        <Box key={label} mb={1} sx={{ width: '100%' }}>
           <Typography
             className="dashboard-card-text"
             sx={{
@@ -200,16 +269,19 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
             {icon}
             {label}
           </Typography>
-          <Typography
-            className="dashboard-card-heading"
-            sx={{
-              textWrap: "wrap",
-              maxWidth: "100%",
-              color: isInclude || isExclude ? textColor : undefined,
-            }}
-          >
-            {typeof value === "number" ? value.toLocaleString() : value}
-          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 0.25 }}>
+            {iconDestination}
+            <Typography className="dashboard-card-heading"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                flexWrap: "wrap",
+                maxWidth: "100%",
+                color: isInclude || isExclude ? textColor : undefined,
+              }}>
+              {typeof value === "number" ? value.toLocaleString() : value}
+            </Typography>
+          </Box>
         </Box>
       );
     });
@@ -272,7 +344,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
 
           {/* Правая колонка (если есть) */}
           {right && (
-            <Box display="flex" flexDirection="column">
+            <Box display="flex" flexDirection="column" sx={{ width: "40%", justifyContent: 'start', alignItems: 'start' }}>
               {renderSection(right, false)}
             </Box>
           )}

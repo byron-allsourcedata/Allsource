@@ -1,7 +1,8 @@
 import { Box, Typography } from "@mui/material";
 import Link from "next/link";
 import FeatureListTable from "../FeatureListTable";
-import { SignificantFields } from '../../page';
+import { SignificantFields } from "@/types/insights";
+
 
 type PredictableFieldsTabProps = {
   data: SignificantFields

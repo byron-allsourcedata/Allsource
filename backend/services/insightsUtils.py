@@ -2,11 +2,18 @@ import uuid
 from collections import defaultdict, Counter
 from typing import List, Optional, Dict, Any
 
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
-from models import AudienceSourcesMatchedPerson, EnrichmentUserId, EnrichmentPersonalProfiles, \
-    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, AudienceLookalikesPerson, \
-    ProfessionalProfile, EnrichmentEmploymentHistory
+from models import AudienceSource
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from models.audience_lookalikes_persons import AudienceLookalikesPerson
+
+from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, \
+    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, \
+    EnrichmentProfessionalProfile, EnrichmentEmploymentHistory
+
+
 from schemas.insights import InsightsByCategory
 
 
@@ -31,6 +38,10 @@ class InsightsUtils:
 
     @staticmethod
     def process_insights_for_asids(insights, asids: List[uuid.UUID], db_session: Session):
+        is_invalid = lambda val: (
+                val is None
+                or str(val).upper() in ('UNKNOWN', 'U', '2')
+        )
         # 3) PERSONAL
         personal_fields = [
             "gender", "state", "religion", "homeowner",
@@ -57,16 +68,10 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(personal_fields, row):
-                if field == "age":
-                    key = InsightsUtils.bucket_age(val)
-                elif val is None or str(val).upper() == 'UNKNOWN':
-                    # if field in ("have_children", "gender", "marital_status", "homeowner"):
-                    #     key = "2"
-                    # elif field in ("religion", "ethnicity", "state"):
-                    #     key = "Other"
-                    # else:
-                    #     key = "None"
+                if is_invalid(val):
                     continue
+                elif field == "age":
+                    key = InsightsUtils.bucket_age(val)
                 else:
                     key = str(val)
                 key = key.lower()
@@ -103,7 +108,7 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(financial_fields, row):
-                if val is None or str(val).upper() == 'UNKNOWN':
+                if is_invalid(val):
                     continue
                 elif field == "credit_cards":
                     raw = val.strip("[]")
@@ -156,7 +161,7 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(lifestyle_fields, row):
-                if val is None or str(val).upper() == 'UNKNOWN':
+                if is_invalid(val):
                     continue
 
                 key = str(val).lower()
@@ -178,7 +183,7 @@ class InsightsUtils:
 
         for row in rows:
             for field, val in zip(voter_fields, row):
-                if val is None or str(val).upper() == 'UNKNOWN':
+                if is_invalid(val):
                     continue
                 key = str(val).lower()
                 voter_cts[field][key] += 1
@@ -194,23 +199,23 @@ class InsightsUtils:
         ]
         prof_cts: defaultdict[str, Counter] = defaultdict(Counter)
         prof_rows = db_session.query(
-            ProfessionalProfile.current_job_title,
-            ProfessionalProfile.current_company_name,
-            ProfessionalProfile.job_start_date,
-            ProfessionalProfile.job_duration,
-            ProfessionalProfile.job_location,
-            ProfessionalProfile.job_level,
-            ProfessionalProfile.department,
-            ProfessionalProfile.company_size,
-            ProfessionalProfile.primary_industry,
-            ProfessionalProfile.annual_sales,
+            EnrichmentProfessionalProfile.current_job_title,
+            EnrichmentProfessionalProfile.current_company_name,
+            EnrichmentProfessionalProfile.job_start_date,
+            EnrichmentProfessionalProfile.job_duration,
+            EnrichmentProfessionalProfile.job_location,
+            EnrichmentProfessionalProfile.job_level,
+            EnrichmentProfessionalProfile.department,
+            EnrichmentProfessionalProfile.company_size,
+            EnrichmentProfessionalProfile.primary_industry,
+            EnrichmentProfessionalProfile.annual_sales,
         ).filter(
-            ProfessionalProfile.asid.in_(asids)
+            EnrichmentProfessionalProfile.asid.in_(asids)
         ).all()
 
         for row in prof_rows:
             for field, val in zip(prof_fields, row):
-                if val is None or str(val).upper() == "UNKNOWN" or str(val) == "":
+                if is_invalid(val):
                     continue
                 key = str(val).lower()
                 prof_cts[field][key] += 1
@@ -238,7 +243,7 @@ class InsightsUtils:
 
         for row in emp_rows:
             for field, val in zip(emp_fields, row):
-                if val is None or (isinstance(val, str) and val.upper() == "UNKNOWN"):
+                if is_invalid(val):
                     continue
                 key = str(val).lower()
                 emp_cts[field][key] += 1
@@ -253,25 +258,49 @@ class InsightsUtils:
         source_id: str,
         db_session: Session,
     ) -> "InsightsByCategory":
-        insights = InsightsByCategory()
+        db_session.commit()
+        with db_session.begin():
+            try:
+                source_row = (
+                    db_session.query(AudienceSource)
+                    .filter(AudienceSource.id == source_id)
+                    .with_for_update()
+                    .one()
+                )
+            except NoResultFound:
+                return InsightsByCategory()
 
-        user_ids: List[uuid.UUID] = [
-            uid for (uid,) in db_session
-            .query(AudienceSourcesMatchedPerson.enrichment_user_id)
-            .filter(AudienceSourcesMatchedPerson.source_id == source_id)
-            .all()
-        ]
-        if not user_ids:
-            return insights
+            user_ids = [
+                uid for (uid,) in db_session
+                .query(AudienceSourcesMatchedPerson.enrichment_user_id)
+                .filter(AudienceSourcesMatchedPerson.source_id == source_id)
+                .all()
+            ]
+            if not user_ids:
+                return InsightsByCategory()
 
-        asids: List[uuid.UUID] = [
-            asid for (asid,) in db_session
-            .query(EnrichmentUserId.asid)
-            .filter(EnrichmentUserId.id.in_(user_ids))
-            .all()
-        ]
+            asids = [
+                asid for (asid,) in db_session
+                .query(EnrichmentUser.asid)
+                .filter(EnrichmentUser.id.in_(user_ids))
+                .all()
+            ]
+            if not asids:
+                return InsightsByCategory()
 
-        return InsightsUtils.process_insights_for_asids(insights, asids, db_session)
+            new_insights = InsightsByCategory()
+            new_insights = InsightsUtils.process_insights_for_asids(
+                new_insights, asids, db_session
+            )
+
+            merged = InsightsUtils.merge_insights_json(
+                existing=source_row.insights,
+                new_insights=new_insights
+            )
+            source_row.insights = merged
+
+            source_row.matched_records_status = "complete"
+        return new_insights
 
     @staticmethod
     def compute_insights_for_lookalike(
@@ -290,11 +319,11 @@ class InsightsUtils:
 
         asids = [
             asid for (asid,) in db_session
-            .query(EnrichmentUserId.asid)
-            .filter(EnrichmentUserId.id.in_(user_ids))
+            .query(EnrichmentUser.asid)
+            .filter(EnrichmentUser.id.in_(user_ids))
             .all()
         ]
-        
+
         return InsightsUtils.process_insights_for_asids(insights, asids, db_session)
 
     @staticmethod

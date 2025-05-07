@@ -2,6 +2,7 @@ from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, VARCHAR, Foreign
 from .base import Base, create_timestamps, update_timestamps
 from models.users_domains import UserDomains
 from sqlalchemy.dialects.postgresql import ENUM
+from datetime import datetime, timezone
 
 target_schemas = ENUM('b2c', 'b2b', name='target_schemas', create_type=False)
 
@@ -25,8 +26,8 @@ class AudienceSource(Base):
     created_by_user_id = Column(Integer, ForeignKey('users.id', onupdate='SET NULL'), nullable=True)
     name = Column(VARCHAR(128), nullable=False)
     file_url = Column(VARCHAR(256), nullable=True)
-    created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
-    updated_at = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     source_type = Column(VARCHAR(128), nullable=False)
     source_origin = Column(VARCHAR(64), nullable=False)
     matched_records = Column(Integer, nullable=False, server_default=text('0'))
@@ -41,7 +42,6 @@ class AudienceSource(Base):
         server_default="'b2c'"
     )
     insights = Column(JSON, nullable=True)
+    significant_fields = Column(JSON, nullable=True)
 
 
-event.listen(AudienceSource, "before_insert", create_timestamps)
-event.listen(AudienceSource, "before_update", update_timestamps)

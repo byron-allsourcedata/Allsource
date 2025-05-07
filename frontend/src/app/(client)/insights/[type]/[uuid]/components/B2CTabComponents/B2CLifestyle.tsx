@@ -1,11 +1,13 @@
 import { Box } from "@mui/material";
 import { IconFillIndicator } from "../CustomChart";
 import _ from "lodash";
+import { FieldRankMap, LifestyleData } from "@/types/insights";
 
-type LifestyleData = Record<string, Record<"true" | "false", number>>;
+
 
 interface B2CLifestyleProps {
   data: LifestyleData;
+  fieldRanks: FieldRankMap;
 }
 
 const lifestyleMap: {
@@ -13,50 +15,50 @@ const lifestyleMap: {
   title: string;
   imageSrc: string;
 }[] = [
-  { key: "own_pets", title: "Own Pets", imageSrc: "/pets.svg" },
-  { key: "cooking_interest", title: "Cooking Interest", imageSrc: "/cook.svg" },
-  {
-    key: "mail_order_buyer",
-    title: "Mail-Order Buyer",
-    imageSrc: "/mail-order.svg",
-  },
-  {
-    key: "online_purchaser",
-    title: "Online Purchaser",
-    imageSrc: "/online-purchaser.svg",
-  },
-  {
-    key: "health_and_beauty_interest",
-    title: "Health And Beauty Interest",
-    imageSrc: "/health_and_beauty.svg",
-  },
-  { key: "travel_interest", title: "Travel Interest", imageSrc: "/plains.svg" },
-  {
-    key: "fitness_interest",
-    title: "Fitness Interest",
-    imageSrc: "/fitness.svg",
-  },
-  { key: "book_reader", title: "Book Reader", imageSrc: "/bookreader.svg" },
-  {
-    key: "outdoor_interest",
-    title: "Outdoor Interest",
-    imageSrc: "/outdoor.svg",
-  },
-  { key: "diy_interest", title: "Gardening Interest", imageSrc: "/garden.svg" },
-  { key: "smoker", title: "Smoker", imageSrc: "/sigarette.svg" },
-  { key: "golf_interest", title: "Golf Interest", imageSrc: "/golf.svg" },
-  {
-    key: "beauty_cosmetic_interest",
-    title: "Beauty/Cosmetic Interest",
-    imageSrc: "/cosmetics.svg",
-  },
-];
+    { key: "own_pets", title: "Own Pets", imageSrc: "/pets.svg" },
+    { key: "cooking_interest", title: "Cooking Interest", imageSrc: "/cook.svg" },
+    {
+      key: "mail_order_buyer",
+      title: "Mail-Order Buyer",
+      imageSrc: "/mail-order.svg",
+    },
+    {
+      key: "online_purchaser",
+      title: "Online Purchaser",
+      imageSrc: "/online-purchaser.svg",
+    },
+    {
+      key: "health_and_beauty_interest",
+      title: "Health And Beauty Interest",
+      imageSrc: "/health_and_beauty.svg",
+    },
+    { key: "travel_interest", title: "Travel Interest", imageSrc: "/plains.svg" },
+    {
+      key: "fitness_interest",
+      title: "Fitness Interest",
+      imageSrc: "/fitness.svg",
+    },
+    { key: "book_reader", title: "Book Reader", imageSrc: "/bookreader.svg" },
+    {
+      key: "outdoor_interest",
+      title: "Outdoor Interest",
+      imageSrc: "/outdoor.svg",
+    },
+    { key: "diy_interest", title: "Gardening Interest", imageSrc: "/garden.svg" },
+    { key: "smoker", title: "Smoker", imageSrc: "/sigarette.svg" },
+    { key: "golf_interest", title: "Golf Interest", imageSrc: "/golf.svg" },
+    {
+      key: "beauty_cosmetic_interest",
+      title: "Beauty/Cosmetic Interest",
+      imageSrc: "/cosmetics.svg",
+    },
+  ];
 
-const B2CLifestyle = ({ data }: B2CLifestyleProps) => {
+const B2CLifestyle = ({ data, fieldRanks }: B2CLifestyleProps) => {
   return (
     <Box
       sx={{
-        padding: "1.5rem 5rem 1.5rem 2rem",
+        padding: "1.5rem 6.25rem 1.5rem 1.5rem",
         width: "100%",
         display: "flex",
         flexDirection: "column",
@@ -80,6 +82,7 @@ const B2CLifestyle = ({ data }: B2CLifestyleProps) => {
                   title={title}
                   percentage={percentage}
                   labels={["Yes", "No"]}
+                  rank={fieldRanks[`${key}`]}
                 />
               </Box>
             );

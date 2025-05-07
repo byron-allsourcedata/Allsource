@@ -101,12 +101,14 @@ def create_company_alias(company_name):
 def validate_and_format_phone(phone_numbers: str) -> str:
     if not phone_numbers:
         return None
-    phone_pattern = r'\+\d{11,15}'
+
+    phone_pattern = r'\+[\d\s\-\(\)]+'
     matches = re.findall(phone_pattern, phone_numbers)
+
     formatted_numbers = []
     for phone_number in matches:
         cleaned_phone_number = re.sub(r'\D', '', phone_number)
-        if len(cleaned_phone_number) == 10: 
+        if len(cleaned_phone_number) == 10:
             formatted_phone_number = '+1' + cleaned_phone_number
             formatted_numbers.append(formatted_phone_number)
         elif len(cleaned_phone_number) == 11 and cleaned_phone_number.startswith('1'):
@@ -115,7 +117,7 @@ def validate_and_format_phone(phone_numbers: str) -> str:
         else:
             continue
 
-    unique_numbers = sorted(formatted_numbers)
+    unique_numbers = sorted(set(formatted_numbers))
     return ', '.join(unique_numbers) if unique_numbers else None
 
 def get_url_params_list(url: str) -> str:

@@ -1,42 +1,20 @@
-import { TabPanel } from "@/components/TabPanel";
-import { Box, Tabs, Tab, Typography } from "@mui/material";
-import { useState } from "react";
+import { Box } from "@mui/material";
 import { IconFillIndicator } from "../CustomChart";
 import { GradientBarChart } from "../GradientHorizontalBarChart";
 import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
-import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
 import { PieChartWithLegend } from "../CircularChart";
 import { MultiIconFillIndicator } from "../MultiIconChart";
 import { USHeatMapCard } from "../USMap";
 import { BarData } from "../VerticalGradientBarChart";
+import { mapGender, mapState, mapGenericPercentage, mapPieChart } from "./mappingUtils";
+import { PersonalInfo, BooleanDistribution, FieldRankMap } from "@/types/insights";
+import MapChart from "../MapChart";
 
-import {
-  mapGender,
-  mapState,
-  mapGenericPercentage,
-  mapPieChart,
-  extractSemiCirclePercent,
-} from "./mappingUtils";
-
-type PercentageMap = Record<string, any>;
-type BooleanDistribution = Record<"true" | "false", number>;
-
-interface PersonalInfo {
-  gender: PercentageMap;
-  state: PercentageMap;
-  religion: PercentageMap;
-  age: PercentageMap;
-  ethnicity: PercentageMap;
-  languages: PercentageMap;
-  education_level: PercentageMap;
-  have_children: PercentageMap;
-  marital_status: PercentageMap;
-  homeowner: PercentageMap;
-}
 
 interface B2CPersonalProps {
   data: PersonalInfo;
   pets_data: Record<string, BooleanDistribution>;
+  fieldRanks: FieldRankMap;
 }
 
 function sortAgeGroups(data: BarData[]): BarData[] {
@@ -51,8 +29,8 @@ function sortAgeGroups(data: BarData[]): BarData[] {
 }
 
 
-const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
-  const ownPets = pets_data["own_pets"];
+const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data, fieldRanks }) => {
+  const ownPets = pets_data ? pets_data["own_pets"] : null;
   const trueVal = ownPets?.true ?? 0;
   const falseVal = ownPets?.false ?? 0;
   const total = trueVal + falseVal;
@@ -63,7 +41,8 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
     <Box>
       <Box
         sx={{
-          padding: "1.5rem 5rem 1.5rem",
+          padding: "1.5rem",
+          pr: '3rem',
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -71,121 +50,89 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
         }}
       >
         <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
+          sx={{ display: "flex", width: "100%", gap: 2, flexWrap: "wrap" }}
         >
-          <USHeatMapCard title="Location" regions={mapState(data.state)} />
-        </Box>
-
-        <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
-        >
-          <Box sx={{ display: "flex", width: "70%" }}>
+          <Box sx={{ display: "flex", width: "32%" }}>
             <MultiIconFillIndicator
               title="Gender"
               items={mapGender(data.gender)}
+              rank={fieldRanks["gender"]}
             />
           </Box>
 
-          <Box sx={{ display: "flex", width: "100%" }}>
+          <Box sx={{ display: "flex", width: "32%" }}>
+            <VerticalGradientBarChart
+              title="Age"
+              data={sortAgeGroups(mapGenericPercentage(data.age))}
+              rank={fieldRanks["age"]}
+            />
+          </Box>
+
+          <Box
+            sx={{ display: "flex", width: "32%" }}
+          >
+            <PieChartWithLegend
+              title="Marital Status"
+              data={mapPieChart(data.marital_status)}
+              rank={fieldRanks["marital_status"]}
+            />
+          </Box>
+        </Box>
+
+        <Box
+          sx={{ display: "flex", width: "100%", gap: 2, flexWrap: "wrap" }}
+        >
+
+          <Box sx={{ display: "flex", width: "32%" }}>
             <GradientBarChart
               title="Education Level"
               data={[
                 { label: "Completed High School", percent: 40 },
                 { label: "Completed College", percent: 25 },
-                { label: "Completed Graduate School", percent: 15 },
-                { label: "Attended Vocational/Technical", percent: 13 },
-                { label: "Unknown", percent: 7 },
+                { label: "Completed Graduate School", percent: 18 },
+                { label: "Attended Vocational/Technical", percent: 17 },
               ]}
+              rank={fieldRanks["education_level"]}
+              gradientColor="249, 155, 171"
             />
           </Box>
-        </Box>
 
-        <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
-        >
-          <Box sx={{ display: "flex", width: "100%" }}>
-            <GradientBarChart
-              title="Ethnicity"
-              data={mapGenericPercentage(data.ethnicity)}
-            />
-          </Box>
-          <Box sx={{ display: "flex", width: "60%" }}>
-            <VerticalGradientBarChart
-              title="Age"
-              data={sortAgeGroups(mapGenericPercentage(data.age))}
-            />
-          </Box>
-        </Box>
-
-        <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
-        >
-          <Box sx={{ display: "flex", width: "100%" }}>
+          <Box sx={{ display: "flex", width: "32%" }}>
             <PieChartWithLegend
               title="Home Status"
               data={mapPieChart(data.homeowner)}
+              rank={fieldRanks["homeowner"]}
             />
           </Box>
 
-          <Box sx={{ display: "flex", width: "100%" }}>
+          <Box sx={{ display: "flex", width: "32%" }}>
             <GradientBarChart
               title="Religion"
               data={mapGenericPercentage(data.religion)}
+              rank={fieldRanks["religion"]}
+              gradientColor="249, 155, 171"
             />
           </Box>
         </Box>
 
-        <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
-        >
-          <Box sx={{ display: "flex", width: "100%" }}>
-            <GradientBarChart
-              title="Languages"
-              data={mapGenericPercentage(data.languages)}
-            />
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              width: "60%",
-            }}
-          >
-            <PieChartWithLegend
-              title="Marital Status"
-              data={mapPieChart(data.marital_status)}
-            />
-          </Box>
-        </Box>
+
+
 
         <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
+          sx={{ display: "flex", width: "100%", gap: 2, flexWrap: "wrap" }}
         >
-          <Box sx={{ display: "flex", width: "100%" }}>
+          <Box sx={{ display: "flex", width: "32%" }}>
             <PieChartWithLegend
-              title="Have Children"
+              title="Children"
               data={mapPieChart(data.have_children)}
+              rank={fieldRanks["has_children"]}
             />
           </Box>
 
-          <Box sx={{ display: "flex", width: "100%" }}>
-            <IconFillIndicator
-              imageSrc="/pets.svg"
-              title="Pets"
-              percentage={percentage}
-              labels={["Yes", "No"]}
-            />
-          </Box>
-        </Box>
-
-        <Box
-          sx={{ display: "flex", flexDirection: "row", width: "100%", gap: 2 }}
-        >
           <Box
             sx={{
               display: "flex",
-              width: "49.25%",
-              height: "100%",
+              width: "32%",
             }}
           >
             <VerticalGradientBarChart
@@ -198,6 +145,51 @@ const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data }) => {
                 { label: "15-18", percent: 7 },
                 { label: "18+", percent: 3 },
               ]}
+              rank={fieldRanks["children_ages"]}
+              gradientColor="159, 151, 247"
+            />
+          </Box>
+
+          <Box sx={{ display: "flex", width: "32%" }}>
+            <IconFillIndicator
+              imageSrc="/pets.svg"
+              title="Pets"
+              totalIcons={3}
+              iconSize={100}
+              percentage={percentage}
+              labels={["Yes", "No"]}
+              color="rgba(159, 151, 247, 1)"
+              rank={fieldRanks["pets"]}
+              backgroundColor="rgba(226, 224, 253, 1)"
+            />
+          </Box>
+        </Box>
+
+        <Box
+          sx={{ display: "flex", width: "100%", gap: 2, flexWrap: "wrap" }}
+        >
+          <Box sx={{ display: "flex", width: "65.5%" }}>
+            <MapChart title="Location" regions={mapState(data.state)} rank={fieldRanks["state"]}
+            />
+          </Box>
+
+          <Box sx={{ display: "flex", width: "15.25%" }}>
+            <GradientBarChart
+              title="Ethnicity"
+              data={mapGenericPercentage(data.ethnicity)}
+              rank={fieldRanks["ethnicity"]}
+              gradientColor="155, 223, 196"
+              textPadding={true}
+            />
+          </Box>
+
+          <Box sx={{ display: "flex", width: "15.25%" }}>
+            <GradientBarChart
+              title="Languages"
+              data={mapGenericPercentage(data.languages)}
+              rank={fieldRanks["languages"]}
+              gradientColor="155, 223, 196"
+              textPadding={true}
             />
           </Box>
         </Box>

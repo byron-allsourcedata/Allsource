@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 from sqlalchemy.sql import func
 
 audience_smarts_statuses = ENUM(
-    'unvalidated', 'validating', 'ready', 'synced', 'data_syncing', 'n_a',
+    'unvalidated', 'validating', 'ready', 'synced', 'data_syncing', 'n_a', 'failed',
     name='audience_smarts_statuses', create_type=True
 )
 

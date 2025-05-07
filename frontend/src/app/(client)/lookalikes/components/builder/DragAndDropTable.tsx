@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Box } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import type { Field, LookalikeFieldsGridProps } from "@/types";
+import { useResetContext } from '@/context/ResetContext';
 
 const formatPercent = (value: string) =>
   `${(parseFloat(value) * 100).toFixed(2)}%`;
@@ -18,9 +19,34 @@ function DragAndDropTable({
   fields,
   onOrderChange,
 }: LookalikeFieldsGridProps) {
-  const [rows, setRows] = React.useState<Field[]>(() =>
-    [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value))
+  // Compute and store the initial sorted order by importance on mount or fields change
+  const sortedInitial = React.useMemo(() =>
+    [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value)),
+    [fields]
   );
+  const initialRowsRef = React.useRef<Field[]>(sortedInitial);
+  // Local state for current row order
+  const [rows, setRows] = React.useState<Field[]>(initialRowsRef.current);
+  const { resetTrigger, notifyInteraction } = useResetContext();
+
+  // Sync when the incoming fields change (update reference only)
+  React.useEffect(() => {
+    initialRowsRef.current = sortedInitial;
+    if (rows.length === 0) {
+      setRows(initialRowsRef.current);
+    }
+    if (rows.length > 0) {
+      notifyInteraction("dragTable", handleComparer());
+    }
+  }, [sortedInitial]);
+
+  // Reset to original sorted order when resetTrigger fires
+  React.useEffect(() => {
+    setRows(initialRowsRef.current);
+    onOrderChange?.(initialRowsRef.current);
+    // Do not trigger parent on reset; parent can get rows via onOrderChange if needed
+  }, [resetTrigger]);
+
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
 
@@ -56,6 +82,15 @@ function DragAndDropTable({
     event.dataTransfer.dropEffect = 'move';
   };
 
+  const handleComparer = () => {
+    const initialIds = initialRowsRef.current.map(f => f.id);
+    const currentIds = rows.map(f => f.id);
+    const isSame = 
+      initialIds.length === currentIds.length &&
+      initialIds.every((id, idx) => id === currentIds[idx]);
+    return isSame
+  }
+
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const src = event.dataTransfer.getData('text/plain');
@@ -64,21 +99,17 @@ function DragAndDropTable({
     const to = dragOverIndex;
     if (isNaN(from) || to === null || from === to) return;
 
-    setRows((prev) => {
-      const updated = [...prev];
-      const [moved] = updated.splice(from, 1);
-      updated.splice(to, 0, moved);
-      onOrderChange?.(updated);
-      return updated;
-    });
+    // compute new order outside setState callback to avoid render-phase context updates
+ 
+    const updated = [...rows];
+    const [moved] = updated.splice(from, 1);
+    updated.splice(to, 0, moved);
+    setRows(updated);
+    onOrderChange?.(updated);
 
     setDragIndex(null);
     setDragOverIndex(null);
   };
-
-  const uniqueFields = Array.from(
-    new Map(fields.map(f => [f.id, f])).values()
-  );
 
   return (
     <Box sx={{ width: '100%', maxWidth: 600 }}>

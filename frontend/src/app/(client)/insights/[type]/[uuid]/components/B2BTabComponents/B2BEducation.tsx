@@ -3,20 +3,15 @@ import { GradientBarChart } from "../GradientHorizontalBarChart";
 
 import { mapGenericPercentage } from "./mappingUtils";
 import { VerticalGradientBarChart } from "../VerticalGradientBarChart";
-
-type PercentageMap = Record<string, any>;
-
-type EducationInfo = {
-  institution_name: PercentageMap;
-  post_graduation_time: PercentageMap;
-  degree: PercentageMap;
-};
+import { EducationInfo, FieldRankMap } from "@/types/insights";
+import MapChart from "../MapChart";
 
 interface B2BEducationProps {
   data: EducationInfo;
+  fieldRanks: FieldRankMap;
 }
 
-const B2BEducation: React.FC<B2BEducationProps> = ({ data }) => {
+const B2BEducation: React.FC<B2BEducationProps> = ({ data, fieldRanks }) => {
   return (
     <Box>
       <Box
@@ -35,6 +30,7 @@ const B2BEducation: React.FC<B2BEducationProps> = ({ data }) => {
             <GradientBarChart
               title="Institution Name"
               data={mapGenericPercentage(data?.institution_name)}
+              rank={fieldRanks["institution_name"]}
             />
           </Box>
 
@@ -43,6 +39,7 @@ const B2BEducation: React.FC<B2BEducationProps> = ({ data }) => {
               title="Post-graduation time"
               data={mapGenericPercentage(data?.post_graduation_time)}
               gradientColor="249, 155, 171"
+              rank={fieldRanks["post_graduation_time"]}
             />
           </Box>
         </Box>
@@ -54,6 +51,7 @@ const B2BEducation: React.FC<B2BEducationProps> = ({ data }) => {
             <VerticalGradientBarChart
               title="Degree"
               data={mapGenericPercentage(data?.degree)}
+              rank={fieldRanks["degree"]}
             />
           </Box>
         </Box>

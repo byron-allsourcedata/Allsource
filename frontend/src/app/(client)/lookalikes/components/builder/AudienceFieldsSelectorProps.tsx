@@ -1,5 +1,5 @@
-import React from "react";
-import { Box, Grid, Typography } from "@mui/material";
+import React, { memo, useState } from "react";
+import { Box, Button, FormControlLabel, Grid, styled, Switch, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import type {
   PersonalResults,
@@ -12,6 +12,7 @@ import type {
 } from "@/types";
 import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
+import { ResetProvider, useResetContext } from "@/context/ResetContext";
 
 interface AudienceFieldsSelectorProps {
   personalData?: PersonalResults;
@@ -50,18 +51,14 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   // onRealEstateChange,
   canProcessed
 }) => {
+  const { atDefault, userInteracted, resetAll } = useResetContext();
   const [activeStep, setActiveStep] = React.useState(0);
-  const [completed, setCompleted] = React.useState<{
-    [k: number]: boolean;
-  }>({});
   const canProceed = canProcessed;
-
   const handleStep = (step: number) => () => {
     if (step === 1 && !canProceed) return;
     setActiveStep(step);
     if (step === 1) handleNextStep();
   };
-
   return (
   <Box
     sx={{
@@ -72,7 +69,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
       mt: 2,
     }}
   >
-    <Box sx={{ display: "flex", alignItems: "center", width: "400p", mb: 2, ml: 1 }}>
+    <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "600px", mb: 2, ml: 1 }}>
       <Stepper 
         activeStep={activeStep}
         nonLinear
@@ -107,7 +104,25 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
           </Step>
         ))}
       </Stepper>
-
+      <Button
+    onClick={resetAll}
+    disabled={atDefault}
+    sx={{
+      border: "1px #5052B2 solid",
+      color: "#5052B2",
+      backgroundColor: "#FFFFFF",
+      textTransform: "none",
+      "&:hover": {
+        border: "1px #5052B2 solid",
+        backgroundColor: "#FFFFFF",
+      },
+    }}
+    variant="outlined"
+  >
+    <Typography  fontSize="0.8rem">
+      Set recommended
+    </Typography>
+  </Button>
     </Box>
 
     <Grid container sx={{ mb: 2 }}>
@@ -243,4 +258,4 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   </Box>
 )};
 
-export default React.memo(AudienceFieldsSelector);
+export default memo(AudienceFieldsSelector);

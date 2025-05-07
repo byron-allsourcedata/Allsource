@@ -12,7 +12,7 @@ from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, timezone
 from enums import DataSyncImportedStatus, ProccessDataSyncResult, AudienceSmartStatuses
 from utils import get_utc_aware_date
-from models.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_users import EnrichmentUser
 from typing import Optional
 from uuid import UUID
 from models.audience_smarts_persons import AudienceSmartPerson
@@ -97,7 +97,7 @@ def fetch_enrichment_users_by_data_sync(
         .join(AudienceSmartPerson, AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id)
         .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id)
         .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id)
-        .filter(IntegrationUserSync.id == data_sync_id)
+        .filter(IntegrationUserSync.id == data_sync_id, AudienceSmartPerson.is_valid == True)
     )
     
     if last_sent_enrichment_id is not None:
