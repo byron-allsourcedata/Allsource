@@ -141,12 +141,14 @@ async def aud_validation_agent(
                     AudienceSmartPerson,
                     [{"id": pid, "is_validation_processed": False, "is_valid": False} for pid in failed_ids]
                 )
+                db_session.flush()
                 
             if success_ids:
                 db_session.bulk_update_mappings(
                     AudienceSmartPerson,
                     [{"id": pid, "is_validation_processed": False} for pid in success_ids]
                 )
+                db_session.flush()
 
             total_validated = db_session.execute(
                 select(func.count(AudienceSmartPerson.id))
@@ -202,6 +204,7 @@ async def aud_validation_agent(
         await message.reject(requeue=True)
     except Exception as e:
         logging.error(f"Error in aud_validation_agent: {e}", exc_info=True)
+        db_session.rollback()
         await message.reject(requeue=True)
 
 async def main():

@@ -213,6 +213,7 @@ async def process_rmq_message(
 
     except Exception:
         logging.exception("Error processing matching")
+        db_session.rollback()
         await message.reject(requeue=True)
         return
 

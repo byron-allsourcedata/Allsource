@@ -314,9 +314,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 
     if (useCaseType === "Tele Marketing") {
       if (targetAudience === "Both" || targetAudience === "B2B") {
-        setSelectedOptionsPhone(["Last updated date", "Confirmation", "DNC filter",]);
+        setSelectedOptionsPhone(["Confirmation", "DNC filter",]);
+        // setSelectedOptionsPhone(["Last updated date", "Confirmation", "DNC filter",]);
       } else if (targetAudience === "B2C") {
-        setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
+        // setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
         setSelectedOptionsPhone(["DNC filter"]);
       }
       setValidate(false);
@@ -535,10 +536,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                             <Checkbox
                               size="small"
                               disabled={isValidate}
-                              checked={selectedOptionsBusinessEmail.includes("MX")}
+                              checked={selectedOptionsPersonalEmail.includes("MX")}
                               onChange={() =>
                                 handleOptionClick(
-                                  setSelectedOptionsBusinessEmail,
+                                  setSelectedOptionsPersonalEmail,
                                   "MX"
                                 )
                               }
@@ -1224,7 +1225,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 control={
                                   <Checkbox
                                     size="small"
-                                    disabled={isValidate}
+                                    // disabled={isValidate}
+                                    disabled={option === 'Last updated date'}
                                     checked={selectedOptionsPhone.includes(option)}
                                     onChange={() => handleOptionClick(setSelectedOptionsPhone, option)}
                                     sx={{
