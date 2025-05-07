@@ -76,8 +76,8 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
           <Typography className="dashboard-card-text">
             {label}
           </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 0.25 }}>
-            <Box>
+          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: .5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center'}}>
               {getUseCaseStyle(value)}
             </Box>
             <Typography className="dashboard-card-heading">
