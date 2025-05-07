@@ -501,7 +501,8 @@ const AccountSetup = () => {
         router.push('/partners')
       }
       else{
-        router.push('/dashboard?welcome=true')
+        router.push('/dashboard')
+        localStorage.setItem('welcome_popup', "true");
       }
     }
   }

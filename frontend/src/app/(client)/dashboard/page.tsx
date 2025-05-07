@@ -345,7 +345,13 @@ const Dashboard: React.FC = () => {
   const [typeBusiness, setTypeBusiness] = useState("")
   const searchParams = useSearchParams();
   let statusIntegrate = searchParams.get('message');
-  const welcomePopup = searchParams.get('welcome');
+  const [welcomePopup, setWelcomePopup] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const storedPopup = localStorage.getItem("welcome_popup");
+    setWelcomePopup(storedPopup);
+  }, []);
 
   useEffect(() => {
     if (statusIntegrate) {
