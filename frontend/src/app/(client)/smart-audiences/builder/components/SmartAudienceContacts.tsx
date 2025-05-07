@@ -47,6 +47,10 @@ interface DataItem {
 }
 
 interface SmartAudienceContactsProps {
+  scrollToBlock: (block: React.RefObject<HTMLDivElement>) => void
+  block2Ref: React.RefObject<HTMLDivElement>
+  block3Ref: React.RefObject<HTMLDivElement>
+  block4Ref: React.RefObject<HTMLDivElement>
   useCaseType: string;
   sourceData: DataItem[];
   lookalikeData: DataItem[];
@@ -72,6 +76,10 @@ const formatNumber = (value: string) => {
 };
 
 const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
+  scrollToBlock,
+  block2Ref,
+  block3Ref,
+  block4Ref,
   useCaseType,
   sourceData,
   lookalikeData,
@@ -100,6 +108,9 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 
   const handleSelectSourceType = (event: SelectChangeEvent<string>) => {
     setSourceType(event.target.value);
+    setTimeout( () => {
+      scrollToBlock(block3Ref)
+    }, 0)
   };
 
   const handleSelectOption = (event: SelectChangeEvent<string>) => {
@@ -180,6 +191,9 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
           setAudienceSize(null);
         } else {
           setAudienceSize(response.data);
+          setTimeout( () => {
+            scrollToBlock(block4Ref)
+          }, 100)
         }
       }
     } catch {
@@ -278,6 +292,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
           </Box>
         )}
         <Box
+          ref={block2Ref}
           sx={{
             display: "flex",
             width: "100%",
@@ -493,6 +508,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 
           {option && sourceType && showTable && (
             <Box
+              ref={block3Ref}
               sx={{
                 display: "flex",
                 width: "100%",
@@ -599,6 +615,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
           )}
         </Box>
       </Box>
+      
       {!showForm && selectedSources.length !== 0 && !AudienceSize && (
         <Box
           sx={{
@@ -655,7 +672,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
       )}
 
       {AudienceSize && (
-        <Box>
+        <Box ref={block4Ref}>
           <Box
             sx={{
               display: "flex",

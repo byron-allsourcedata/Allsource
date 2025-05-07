@@ -13,9 +13,10 @@ interface ValidationPopupProps {
         validationCost: number;
         availableCredits: number;
     };
+    scrollToNewBlock: () => void
 }
 
-const CalculationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCancel, onConfirm, CalculationData }) => {
+const CalculationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCancel, onConfirm, scrollToNewBlock, CalculationData }) => {
     return (
         <Dialog open={open} onClose={onClose} fullWidth>
             <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -68,7 +69,10 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCan
                 {CalculationData.availableCredits >= CalculationData.validationCost ? 
                     (
                     <Box sx={{ width: '100%' }}>
-                        <Button fullWidth variant="contained" color="primary" onClick={onConfirm} sx={{
+                        <Button fullWidth variant="contained" color="primary" onClick={ () => {
+                            onConfirm()
+                            scrollToNewBlock()
+                        }} sx={{
                             backgroundColor: "rgba(80, 82, 178, 1)",
                             height: '3rem',
                             ":hover": {
