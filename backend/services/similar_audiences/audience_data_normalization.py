@@ -6,7 +6,7 @@ import pandas as pd
 from fastapi import Depends
 from pandas import DataFrame
 from pandas.errors import PerformanceWarning
-
+import numpy as np
 from config.folders import Folders
 from schemas.similar_audiences import AudienceData, NormalizationConfig, OrderedFeatureRules
 
@@ -79,7 +79,6 @@ class AudienceDataNormalizationService:
         self.convert_ordered_features(df, config.ordered_features)
         self.slice_zipcodes(df)
         self.fill_unknowns(df, config.unordered_features)
-
         df = self.merge_with_geo(df)
         self.fill_unknown_geo(df)
         x, y = self.filter_columns(df, config)
@@ -114,12 +113,20 @@ class AudienceDataNormalizationService:
 
     def fill_unknowns(self, df: DataFrame, cat_columns: List[str]):
         for cat in cat_columns:
-            df.loc[:, cat] = df[cat].fillna('U').astype(str).infer_objects(copy=False)
+            df.loc[:, cat] = df[cat].fillna('U') \
+                                    .astype(str) \
+                                    .infer_objects(copy=False)
 
         if 'age' in df.columns:
-            df["age"] = pd.to_numeric(df["age"], errors="coerce")
-            median_age = df["age"].median(skipna=True)
-            df["age"] = df["age"].fillna(median_age)
+            df['age'] = pd.to_numeric(df['age'], errors='coerce')
+            if df['age'].notna().any():
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=RuntimeWarning)
+                    median_age = df['age'].median(skipna=True)
+            else:
+                median_age = np.nan
+            df['age'] = df['age'].fillna(median_age)
+
         if 'number_of_children' in df.columns:
             df['number_of_children'] = df['number_of_children'].fillna(0)
         if 'length_of_residence_years' in df.columns:

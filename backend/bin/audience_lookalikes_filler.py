@@ -393,7 +393,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
             'user_id': audience_lookalike.user_id,
             'enrichment_user': persons
         }
-    
+
         await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_MATCHING, message_body=message_body)
 
         db_session.commit()
@@ -437,6 +437,9 @@ async def main():
         reader_queue = await channel.declare_queue(
             name=AUDIENCE_LOOKALIKES_READER,
             durable=True,
+            arguments={
+                'x-consumer-timeout': 14400000,
+            }
         )
         await reader_queue.consume(functools.partial(aud_sources_reader, db_session=db_session, connection=connection, similar_audience_service=similar_audience_service, similar_audiences_scores_service=similar_audiences_scores_service))
 
