@@ -135,7 +135,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
                     <Box sx={{ display: "flex", width: "22%" }}>
                         <GradientBarChart title="Income range" data={incomeRangeData} sortByPercent={false} rank={fieldRanks["income_range"]} />
                     </Box>
-                    <Box sx={{ display: "flex", width: "42%" }}>
+                    <Box sx={{ display: "flex", width: "40%" }}>
                         <VerticalGradientBarChart
                             title="Credit score range"
                             data={creditScoreRangeData}
@@ -144,7 +144,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
                     </Box>
 
                     <Box sx={{ display: "flex", width: "34%" }}>
-                        <VerticalGradientBarChart title="Credit Cards" data={creditCardsData} rank={fieldRanks["credit_cards"]} />
+                        <GradientBarChart title="Credit Cards" data={creditCardsData} rank={fieldRanks["credit_cards"]} />
                     </Box>
                 </Box>
 
@@ -160,7 +160,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
                         />
                     </Box>
 
-                    <Box sx={{ display: "flex", width: "42%", flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ display: "flex", width: "40%", flexDirection: 'column', gap: 2 }}>
                         <SemiCircularGradientChart
                             title="Bank Card"
                             percent={semiCircleData.bankCardPercent}
@@ -222,7 +222,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
                             display: "flex",
                             width: "22%",
                             flexDirection: "column",
-                            gap: 3,
+                            gap: 2,
                         }}
                     >
                         <SemiCircularGradientChart
@@ -248,7 +248,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
                             rank={fieldRanks["investor"]}
                         />
                     </Box>
-                    <Box sx={{ display: "flex", width: "41.5%" }}>
+                    <Box sx={{ display: "flex", width: "40%" }}>
                         <VerticalGradientBarChart
                             title="Number of credit lines"
                             data={numberOfCreditLinesData}

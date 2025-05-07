@@ -2,7 +2,7 @@
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { Typography, LinearProgress, FormControl, Select, MenuItem, SelectChangeEvent, Skeleton } from "@mui/material";
 import { Box } from "@mui/system";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { smartAudiences } from "../smartAudiences";
 import SmartAudiencesContacts from "./components/SmartAudienceContacts";
 import SmartAudiencesTarget from "./components/SmartAudienceTarget";
@@ -13,9 +13,37 @@ const SmartAudiencesBuilder: React.FC = () => {
     const [useCaseType, setUseCaseType] = useState<string>("");
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
+    const block1Ref = useRef<HTMLDivElement | null>(null);
+    const block2Ref = useRef<HTMLDivElement | null>(null);
+    const block3Ref = useRef<HTMLDivElement | null>(null);
+    const block4Ref = useRef<HTMLDivElement | null>(null);
+    const block5Ref = useRef<HTMLDivElement | null>(null);
+    const block6Ref = useRef<HTMLDivElement | null>(null);
+    const block7Ref = useRef<HTMLDivElement | null>(null);
+    const block8Ref = useRef<HTMLDivElement | null>(null);
+    const block9Ref = useRef<HTMLDivElement | null>(null);
+    const block10Ref = useRef<HTMLDivElement | null>(null);
+
     const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
-        setUseCaseType(event.target.value);
+        const useCase = event.target.value
+        setUseCaseType(useCase);
+        if (["Google", "Bing", "Meta"].includes(useCase)) {
+            setTimeout( () => {
+                scrollToBlock(block2Ref)
+              }, 0)
+        }
+        else {
+            setTimeout( () => {
+                scrollToBlock(block5Ref)
+              }, 0)
+        }
     };
+
+    const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {
+        if (blockRef.current) {
+          blockRef.current.scrollIntoView({ behavior: "smooth" });
+        }
+      };
 
     const { sourceData, lookalikeData, loading } = useFetchAudienceData();
 
@@ -42,7 +70,7 @@ const SmartAudiencesBuilder: React.FC = () => {
                                 <Typography className='first-sub-title'>Smart Audience Builder</Typography>
                             </Box>
                         </Box>
-                        <Box sx={{ display: "flex", minWidth: '100%', flexDirection: "column", gap: 2, flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2 }}>
+                        <Box ref={block1Ref} sx={{ display: "flex", minWidth: '100%', flexDirection: "column", gap: 2, flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2 }}>
                             {uploadProgress !== null && (
                                 <Box sx={{ width: "100%", position: "absolute", top: 0, left: 0, zIndex: 1200 }}>
                                     <LinearProgress variant="determinate" value={uploadProgress} sx={{ borderRadius: "6px", backgroundColor: '#c6dafc', '& .MuiLinearProgress-bar': { borderRadius: 5, backgroundColor: '#4285f4' } }} />
@@ -68,6 +96,10 @@ const SmartAudiencesBuilder: React.FC = () => {
 
                         {["Google", "Bing", "Meta"].includes(useCaseType) ? (
                             <SmartAudiencesContacts
+                                block2Ref={block2Ref}
+                                block3Ref={block3Ref}
+                                block4Ref={block4Ref}
+                                scrollToBlock={scrollToBlock}
                                 useCaseType={useCaseType}
                                 sourceData={sourceData}
                                 lookalikeData={lookalikeData}
@@ -75,6 +107,13 @@ const SmartAudiencesBuilder: React.FC = () => {
                         ) : (
                             ["Email", "Tele Marketing", "Postal", "LinkedIn"].includes(useCaseType) && (
                                 <SmartAudiencesTarget
+                                    block5Ref={block5Ref}
+                                    block6Ref={block6Ref}
+                                    block7Ref={block7Ref}
+                                    block8Ref={block8Ref}
+                                    block9Ref={block9Ref}
+                                    block10Ref={block10Ref}
+                                    scrollToBlock={scrollToBlock}
                                     useCaseType={useCaseType}
                                     sourceData={sourceData}
                                     lookalikeData={lookalikeData}

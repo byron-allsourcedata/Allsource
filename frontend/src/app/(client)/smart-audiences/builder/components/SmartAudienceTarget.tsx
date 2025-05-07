@@ -78,6 +78,13 @@ interface SelectedData {
 }
 
 interface SmartAudienceTargetProps {
+  scrollToBlock: (block: React.RefObject<HTMLDivElement>) => void
+  block5Ref: React.RefObject<HTMLDivElement>
+  block6Ref: React.RefObject<HTMLDivElement>
+  block7Ref: React.RefObject<HTMLDivElement>
+  block8Ref: React.RefObject<HTMLDivElement>
+  block9Ref: React.RefObject<HTMLDivElement>
+  block10Ref: React.RefObject<HTMLDivElement>
   useCaseType: string;
   sourceData: DataItem[];
   lookalikeData: DataItem[];
@@ -106,6 +113,13 @@ const toSnakeCase = (str: string) => {
 };
 
 const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
+  scrollToBlock,
+  block5Ref,
+  block6Ref,
+  block7Ref,
+  block8Ref,
+  block9Ref,
+  block10Ref,
   useCaseType,
   sourceData,
   lookalikeData,
@@ -184,6 +198,9 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   const handleTargetAudienceChange = (value: string) => {
     setTargetAudience(value);
     setValue(0);
+    setTimeout( () => {
+      scrollToBlock(block6Ref)
+    }, 0)
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,6 +209,9 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
   const handleSelectSourceType = (event: SelectChangeEvent<string>) => {
     setSourceType(event.target.value);
+    setTimeout( () => {
+      scrollToBlock(block7Ref)
+    }, 0)
   };
 
   const handleSelectOption = (event: SelectChangeEvent<string>) => {
@@ -293,6 +313,9 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
           setAudienceSize(null);
         } else {
           setAudienceSize(response.data);
+          setTimeout( () => {
+            scrollToBlock(block8Ref)
+          }, 100)
         }
       }
     } catch {
@@ -408,7 +431,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
             gap: 1,
           }}
         >
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box ref={block5Ref} sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             <Typography
               sx={{
                 fontFamily: "Nunito Sans",
@@ -464,6 +487,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
       {/* Select your Contacts */}
       {targetAudience && useCaseType !== null && (
         <Box
+          ref={block6Ref}
           sx={{
             display: "flex",
             flexDirection: "column",
@@ -503,6 +527,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
             </Box>
           )}
           <Box
+            ref={block7Ref}
             sx={{
               display: "flex",
               width: "100%",
@@ -729,6 +754,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
             {option && sourceType && showTable && (
               <Box
+                ref={block7Ref}
                 sx={{
                   display: "flex",
                   width: "100%",
@@ -897,7 +923,18 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
       {/* VALIDATION*/}
       {AudienceSize && (
         <ExpandableFilter
+          block8Ref={block8Ref}
           targetAudience={targetAudience}
+          scrollToNewBlock={ () => {
+            setTimeout( () => {
+              scrollToBlock(block9Ref)
+            }, 0)
+          }}
+          scrollToEveryOtherBlock={ () => {
+            setTimeout( () => {
+              scrollToBlock(block10Ref)
+            }, 0)
+          }}
           useCaseType={useCaseType}
           onSkip={handleOnSkip}
           onValidate={handleFilterValidation}
@@ -909,6 +946,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
       {/* GENERATE ACTIVE SEGMENTS */}
       {AudienceSize && isValidate && !isValidateSkip && (
         <Box
+          ref={block9Ref}
           sx={{
             display: "flex",
             flexDirection: "column",
@@ -1337,7 +1375,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
         )}
 
       {(isValidateActiveSegments || isValidateSkip) && AudienceSize && (
-        <Box>
+        <Box ref={block10Ref}>
           <Box
             sx={{
               display: "flex",
@@ -1468,6 +1506,12 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
         open={openConfirmValidatePopup}
         onClose={() => setOpenConfrimValidatePopup(false)}
         onCancel={() => setOpenConfrimValidatePopup(false)}
+        scrollToNewBlock={
+          () => {
+            setTimeout( () => {
+              scrollToBlock(block10Ref)
+            }, 0)
+        }}
         onConfirm={handleConfirmValidatePopup}
         CalculationData={{
           validationCost: validationCost ?? 0,
