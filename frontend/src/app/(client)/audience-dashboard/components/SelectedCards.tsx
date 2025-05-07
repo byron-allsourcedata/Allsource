@@ -30,6 +30,18 @@ const getStatusColor = (status: string, tabType?: string): string => {
 
 const getUseCaseStyle = (status: string) => {
   switch (status.trim()) {
+    case 'Postal':
+      return <Image src="./postal.svg" alt="google icon" width={20} height={20} />
+    case 'Google':
+      return <Image src="./google-ads.svg" alt="google icon" width={20} height={20} />
+    case 'Meta':
+      return <Image src="./meta.svg" alt="meta icon" width={20} height={20} />
+    case 'Bing':
+      return <Image src="./bing.svg" alt="bing icon" width={20} height={20} />
+    case 'LinkedIn':
+      return <Image src="./linkedIn.svg" alt="linkedin icon" width={20} height={20} />
+    case 'Tele Marketing':
+      return <HeadsetMicOutlinedIcon />
     case 's3':
       return <Image src="./s3.svg" alt="s3 icon" width={20} height={20} />
     case 'google_ads':

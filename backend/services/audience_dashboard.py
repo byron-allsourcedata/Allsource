@@ -207,24 +207,20 @@ class DashboardAudienceService:
             'full_info':{
                 'sources': self.merge_and_sort(
                                 datasets=[
-                                    (sources, 'source', ['source_name', 'created_at', 'source_type', 'matched_records']),
-                                    ([lookalike for lookalike in lookalikes if lookalike[0]], 'lookalike', ['source_name', 'source_type', 'matched_records', 'lookalike_name', 'created_at', 'lookalike_size', 'size'])
+                                    (sources, 'source', ['source_name', 'created_at', 'source_type', 'matched_records'])
                                 ],
                                 limit=self.LIMIT
                             ),
                            
                 'lookalikes': self.merge_and_sort(
-                                    datasets=[(lookalikes, 'lookalikes', ['lookalike_size', 'lookalike_name', 'created_at', 'size']), 
-                                            ([smart_audience for smart_audience in lookalike_smart_audiences], 'smart_audience', ['lookalike_name', 'lookalike_size', 'size', 'audience_name', 'use_case', 'active_segment', 'created_at']),],
+                                    datasets=[(lookalikes, 'lookalikes', ['lookalike_size', 'lookalike_name', 'created_at', 'size'])],
                                     limit=self.LIMIT
                                 ),
                 
                 'smart_audiences': self.merge_and_sort(
-                                        datasets=[(data_syncs, 'data_sync', ['audience_name', 'created_at', 'status', 'synced_contacts', 'destination']), 
-                                                ([smart_audience for smart_audience in group_smart_audiences], 'smart_audience', ['audience_name', 'use_case', 'active_segment', 'created_at', 'include', 'exclude']),],
+                                        datasets=[([smart_audience for smart_audience in group_smart_audiences], 'smart_audience', ['audience_name', 'use_case', 'active_segment', 'created_at', 'include', 'exclude'])],
                                         limit=self.LIMIT
                                     ),
-                
                 'data_sync': data_sync_dicts
             }
         }
