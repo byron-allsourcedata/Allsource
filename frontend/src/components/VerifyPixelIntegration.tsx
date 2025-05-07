@@ -5,7 +5,7 @@ import axiosInstance from "../axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 
 const VerifyPixelIntegration: React.FC = () => {
-
+    const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN
     const [inputValue, setInputValue] = useState<string>("");
   
     useEffect(() => {
@@ -25,7 +25,7 @@ const VerifyPixelIntegration: React.FC = () => {
         }
    
         const hasQuery = url.includes("?");
-        const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + "&api=https://api-dev.maximiz.ai";
+        const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}`;
         window.open(newUrl, "_blank");
       }
     };
