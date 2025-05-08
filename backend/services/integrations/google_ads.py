@@ -5,7 +5,6 @@ import google.api_core.exceptions
 from google.auth.exceptions import RefreshError
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from services.integrations.commonIntegration import get_states_dataframe
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
@@ -257,13 +256,8 @@ class GoogleAdsIntegrationsService:
         state = None
         
         if enrichment_personal_profiles:
-            df_geo = get_states_dataframe()
-            if df_geo['zip'].dtype == object:
-                df_geo['zip'] = df_geo['zip'].astype(int)
-            row = df_geo.loc[df_geo['zip'] == enrichment_personal_profiles.zip_code5]
-            if not row.empty:
-                city = row['city'].iat[0]
-                state = row['state_name'].iat[0]
+                city = 'city'
+                state = 'state'
             
         return GoogleAdsProfile(
             email=verified_email,

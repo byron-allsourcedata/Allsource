@@ -247,85 +247,51 @@ class HubspotIntegrationsService:
         return ProccessDataSyncResult.SUCCESS.value
 
     
-    def __mapped_profile(self, enrichment_user: EnrichmentUser, data_map: dict) -> dict:
+    def __mapped_profile(self, enrichment_user: EnrichmentUser, data_map: list) -> dict:
         verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
-        enrichment_contacts = enrichment_user.contacts
-        if not enrichment_contacts:
+        contacts = enrichment_user.contacts
+        if not contacts:
             return None
-        first_name = enrichment_contacts.first_name
-        last_name = enrichment_contacts.last_name
-        linkedin_url = enrichment_contacts.linkedin_url
-        
-        fake = Faker()
-        verified_email = fake.email()
-        verified_phone = fake.phone_number()
-        if not verified_email or not first_name or not last_name:
-            return None
-        
-        enrichment_personal_profiles = enrichment_user.personal_profiles
-        enrichment_professional_profiles = enrichment_user.professional_profiles
-        city = None
-        state = None
-        zip_code = None
-        gender = None
-        birth_day = None
-        birth_month = None
-        birth_year = None
-        company_name = None
-        
-        
-        if enrichment_professional_profiles:
-            company_name = enrichment_professional_profiles.current_company_name
-        
-        if enrichment_personal_profiles:
-            zip_code = str(enrichment_personal_profiles.zip_code5)
-            df_geo = get_states_dataframe()
-            if df_geo['zip'].dtype == object:
-                df_geo['zip'] = df_geo['zip'].astype(int)
-            row = df_geo.loc[df_geo['zip'] == zip_code]
-            if not row.empty:
-                city = row['city'].iat[0]
-                state = row['state_name'].iat[0]
-            
-            if enrichment_personal_profiles.gender == 1:
-                gender = 'm'
-            elif enrichment_personal_profiles.gender == 2:
-                gender = 'f'
-            birth_day = str(enrichment_personal_profiles.birth_day)
-            birth_month = str(enrichment_personal_profiles.birth_month)
-            birth_year = str(enrichment_personal_profiles.birth_year)
-            
-        
-        
-        #properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
 
-        return {
+        first_name = contacts.first_name
+        last_name = contacts.last_name
+        if not (verified_email and first_name and last_name):
+            return None
+
+        professional_profiles = enrichment_user.professional_profiles
+        personal_profiles = enrichment_user.personal_profiles
+
+        company_name = professional_profiles.current_company_name if professional_profiles else None
+
+        result = {
             'email': verified_email,
-            'phone': verified_phone,
-            'lifecyclestage': None,
-            'city': city,
-            'state': state,
-            'zip': zip_code,
             'firstname': first_name,
             'lastname': last_name,
             'company': company_name,
-            'website': None,
-            'jobtitle': None,
-            'industry': None,
-            'annualrevenue': None,
-            'gender': gender,
         }
+        
+        required_types = {mapping.get('type') for mapping in data_map}
+        
+        if 'phone' in required_types:
+            result['phone'] = verified_phone
 
+        if personal_profiles:
+            if 'city' in required_types:
+                result['city'] = 'city'
+            if 'state' in required_types:
+                result['state'] = 'state_name'
 
-    def __map_properties(self, five_x_five_user, data_map: List[DataMap]) -> dict:
-        properties = {}
-        for mapping in data_map:
-            five_x_five_field = mapping.get("type")
-            new_field = mapping.get("value")
-            value_field = getattr(five_x_five_user, five_x_five_field, None)
+            if 'zip' in required_types and zip_code:
+                zip_code = str(personal_profiles.zip_code5) if personal_profiles.zip_code5 else None
+                result['zip'] = zip_code
 
-            if value_field is not None:
-                properties[new_field] = value_field.isoformat() if isinstance(value_field, datetime) else value_field
+            if 'gender' in required_types:
+                gender = None
+                if personal_profiles.gender == 1:
+                    gender = 'm'
+                elif personal_profiles.gender == 2:
+                    gender = 'f'
+                if gender:
+                    result['gender'] = gender
 
-        return properties
-
+        return result

@@ -303,15 +303,10 @@ class SalesForceIntegrationsService:
         if not verified_email or not first_name or not last_name:
             return None
         
-        enrichment_personal_profiles = enrichment_user.personal_profiles
         enrichment_professional_profiles = enrichment_user.professional_profiles
         city = None
         state = None
-        zip_code = None
         gender = None
-        birth_day = None
-        birth_month = None
-        birth_year = None
         company_name = None
         
         if enrichment_professional_profiles:
@@ -319,59 +314,34 @@ class SalesForceIntegrationsService:
             
         if not company_name:
             return None
-        
-        if enrichment_personal_profiles:
-            zip_code = str(enrichment_personal_profiles.zip_code5)
-            df_geo = get_states_dataframe()
-            if df_geo['zip'].dtype == object:
-                df_geo['zip'] = df_geo['zip'].astype(int)
-            row = df_geo.loc[df_geo['zip'] == zip_code]
-            if not row.empty:
-                city = row['city'].iat[0]
-                state = row['state_name'].iat[0]
-            
-            if enrichment_personal_profiles.gender == 1:
-                gender = 'm'
-            elif enrichment_personal_profiles.gender == 2:
-                gender = 'f'
-            birth_day = str(enrichment_personal_profiles.birth_day)
-            birth_month = str(enrichment_personal_profiles.birth_month)
-            birth_year = str(enrichment_personal_profiles.birth_year)        
-        
-        #properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
-                
-            
+                    
         json_data = {
+            'Email': verified_email,
             'FirstName': first_name,
             'LastName': last_name,
-            'Email': verified_email,
+            
+            'Business Email': 'Business Email',
+            'Personal Email': 'Personal Email',
             'Phone': verified_phone,
-            'MobilePhone': verified_phone,
             'City': city,
             'State': state,
             'Country': 'USA',
             'Company': company_name,
-            # 'Age__c': properties.get('Age', None),
             'Gender__c': gender,
-            # 'Estimated_Household_Income_Code__c': properties.get('Estimated household income code', None),
-            # 'Estimated_Current_Home_Value_Code__c': properties.get('Estimated current home value code', None),
-            # 'Homeowner_Status__c': properties.get('Homeowner status', None),
-            # 'Has_Children__c': properties.get('Has children', None),
-            # 'Number_of_Children__c': properties.get('Number of children', None),
-            # 'Credit_Rating__c': properties.get('Credit rating', None),
-            # 'Net_Worth_Code__c': properties.get('Net worth code', None),
-            # 'Zip_Code__c': properties.get('Zipcode 5', None),
-            # 'Latitude__c': properties.get('Lat', None),
-            # 'Longitude__c': properties.get('Lon', None),
-            # 'Has_Credit_Card__c': properties.get('Has credit card', None),
-            # 'Length_of_Residence_Years__c': properties.get('Length of residence years', None),
-            # 'Marital_Status__c': properties.get('Marital status', None),
-            # 'Occupation_Group_Code__c': properties.get('Occupation group code', None),
-            # 'Is_Book_Reader__c': properties.get('Is book reader', None),
-            # 'Is_Online_Purchaser__c': properties.get('Is online purchaser', None),
-            # 'Is_Traveler__c': properties.get('Is traveler', None),
-            # 'Rec_Id__c': properties.get('Rec id', None)
+            'Business email last seen date': 'Business email last seen date',
+            'Personal email last seen': 'Personal email last seen',
+            'Linkedin url': 'Linkedin url'
         }
+        
+        required_types = {mapping.get('type') for mapping in data_map}
+        
+        if 'city' in required_types or 'state' in required_types:
+            enrichment_postal = enrichment_user.enrichment_postals 
+            if enrichment_postal:
+                if 'city' in required_types:
+                    json_data['city'] = enrichment_postal.city
+                if 'state' in required_types:
+                    json_data['state'] = enrichment_postal.state_name
         
         json_data = {k: v for k, v in json_data.items() if v is not None}
             

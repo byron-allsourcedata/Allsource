@@ -390,16 +390,12 @@ class MetaIntegrationsService:
         birth_day = None
         birth_month = None
         birth_year = None
+        country = None
         
         if enrichment_personal_profiles:
             zip_code = str(enrichment_personal_profiles.zip_code5)
-            df_geo = get_states_dataframe()
-            if df_geo['zip'].dtype == object:
-                df_geo['zip'] = df_geo['zip'].astype(int)
-            row = df_geo.loc[df_geo['zip'] == zip_code]
-            if not row.empty:
-                city = row['city'].iat[0]
-                state = row['state_name'].iat[0]
+            city = 'city'
+            state = 'state'
             
             if enrichment_personal_profiles.gender == 1:
                 gender = 'm'
@@ -425,7 +421,7 @@ class MetaIntegrationsService:
                 hash_value(state),                                                                 # ST
                 hash_value(city),                                                                  # CT
                 hash_value(zip_code),                                                              # ZIP
-                hash_value('USA'),                                                                 # COUNTRY
+                hash_value(country),                                                               # COUNTRY
             ]
             
     def __mapped_meta_list(self, list):
