@@ -167,6 +167,50 @@ def build_dynamic_query_and_config(
     sig: Dict[str, float]
 ) -> Tuple:
     column_map = get_enrichment_user_column_map()
+    for key in ['job_title', 'company_name', 'start_date', 'end_date', 'is_current', 'location', 'job_description',
+                'party_affiliation', 'congressional_district', 'voting_propensity']:
+        column_map.pop(key, None)
+    employment_subq = (
+        db_session
+        .query(
+            EnrichmentEmploymentHistory.asid.label('asid'),
+            EnrichmentEmploymentHistory.job_title.label('job_title'),
+            EnrichmentEmploymentHistory.company_name.label('company_name'),
+            EnrichmentEmploymentHistory.start_date.label('start_date'),
+            EnrichmentEmploymentHistory.end_date.label('end_date'),
+            EnrichmentEmploymentHistory.is_current.label('is_current'),
+            EnrichmentEmploymentHistory.location.label('location'),
+            EnrichmentEmploymentHistory.job_description.label('job_description')
+        )
+        .filter(EnrichmentEmploymentHistory.is_current == True)
+        .distinct(EnrichmentEmploymentHistory.asid)
+        .subquery('emp_curr')
+    )
+    voter_subq = (
+        db_session
+        .query(
+            EnrichmentVoterRecord.asid.label('asid'),
+            EnrichmentVoterRecord.party_affiliation.label('party_affiliation'),
+            EnrichmentVoterRecord.congressional_district.label('congressional_district'),
+            EnrichmentVoterRecord.voting_propensity.label('voting_propensity')
+        )
+        .distinct(EnrichmentVoterRecord.asid)
+        .subquery('voter_curr')
+    )
+
+    column_map.update({
+        'job_title': employment_subq.c.job_title,
+        'company_name': employment_subq.c.company_name,
+        'start_date': employment_subq.c.start_date,
+        'end_date': employment_subq.c.end_date,
+        'is_current': employment_subq.c.is_current,
+        'location': employment_subq.c.location,
+        'job_description': employment_subq.c.job_description,
+        'party_affiliation': voter_subq.c.party_affiliation,
+        'congressional_district': voter_subq.c.congressional_district,
+        'voting_propensity': voter_subq.c.voting_propensity,
+    })
+
     selected_fields = [name for name in sig.keys() if name in column_map]
     dynamic_columns = [column_map[name] for name in selected_fields]
     select_columns = [
@@ -175,20 +219,10 @@ def build_dynamic_query_and_config(
     ]
     unordered = [f for f in selected_fields if f != "zip_code5"]
 
-    employment_subquery = (
-        db_session
-        .query(EnrichmentEmploymentHistory)
-        .filter(EnrichmentEmploymentHistory.is_current == True)
-        .distinct(EnrichmentEmploymentHistory.asid)
-        .subquery()
-    )
-    employment_history = aliased(EnrichmentEmploymentHistory, employment_subquery)
-
     query = (
         db_session
         .query(*select_columns)
         .select_from(EnrichmentUser)
-        .distinct(EnrichmentVoterRecord.asid)
         .outerjoin(
             EnrichmentPersonalProfiles,
             EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
@@ -202,29 +236,18 @@ def build_dynamic_query_and_config(
             EnrichmentLifestyle.asid == EnrichmentUser.asid
         )
         .outerjoin(
-            employment_history,
-            employment_history.asid == EnrichmentUser.asid
-        )
-        .outerjoin(
-            EnrichmentVoterRecord,
-            EnrichmentVoterRecord.asid == EnrichmentUser.asid
-        )
-        .outerjoin(
             EnrichmentProfessionalProfile,
             EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
         )
+        .outerjoin(
+            employment_subq,
+            employment_subq.c.asid == EnrichmentUser.asid
+        )
+        .outerjoin(
+            voter_subq,
+            voter_subq.c.asid == EnrichmentUser.asid
+        )
     )
-
-    rows = query.all()
-    ids = [row.EnrichmentUser for row in rows]
-    counter = Counter(ids)
-    duplicates = [uid for uid, cnt in counter.items() if cnt > 1]
-
-    logging.info(f"Всего строк: {len(ids)}, уникальных asid: {len(set(ids))}")
-    if duplicates:
-        logging.warning(f"Найдены дубликаты EnrichmentUser (повторяются {len(duplicates)}): {duplicates}")
-    else:
-        logging.info("Повторных EnrichmentUser не найдено")
 
     normalization_config = NormalizationConfig(
         numerical_features=[],
