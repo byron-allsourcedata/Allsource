@@ -389,7 +389,7 @@ const Signin: React.FC = () => {
             />
             <Typography
               variant="body2"
-              className="hyperlink-red"
+              className="hyperlink-blue"
               sx={loginStyles.resetPassword}
             >
               <Link href="/reset-password" sx={loginStyles.loginLink}>
@@ -397,7 +397,7 @@ const Signin: React.FC = () => {
               </Link>
             </Typography>
             <Button
-              className="hyperlink-red"
+              className="hyperlink-blue"
               type="submit"
               variant="contained"
               sx={loginStyles.submitButton}
@@ -415,7 +415,7 @@ const Signin: React.FC = () => {
             Don’t have an account?{" "}
             <Link
               href={`/signup?${searchParams.toString()}`}
-              className="hyperlink-red"
+              className="hyperlink-blue"
               sx={loginStyles.loginLink}
             >
               Signup now

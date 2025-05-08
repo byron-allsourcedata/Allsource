@@ -108,11 +108,11 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
         mt: 2,
         backgroundColor: '#FFFFFF',
         border: '1px solid transparent',
-        borderColor: '#F45745 !important',
+        borderColor: '#3898FC !important',
         borderRadius: '0.25rem',
-        color: '#F45745 !important',
+        color: '#3898FC !important',
         '&:hover': {
-          borderColor: '#F45745',
+          borderColor: '#1E88E5',
           backgroundColor: 'white',
         },
         fontWeight: '600',
@@ -148,7 +148,7 @@ export const confirmStyles: { [key: string]: SxProps<Theme> } = {
         },
       },
       loginLink: {
-        color: '#F45745',
+        color: '#3898FC',
         cursor: 'pointer',
         textDecoration: 'none',
       },

@@ -92,10 +92,10 @@ export const updatepasswordStyles: { [key: string]: SxProps<Theme> } = {
     },
     submitButton: {
       mt: 2,
-      backgroundColor: '#F45745',
-      color: '#FFFFFF !important',
+      backgroundColor: '#3898FC',
+      color: '#fff !important',
       '&:hover': {
-          backgroundColor: red[700],
+        backgroundColor: '#1E88E5',
       },
       marginTop: '2.5rem',
       padding: '10px 24px',
