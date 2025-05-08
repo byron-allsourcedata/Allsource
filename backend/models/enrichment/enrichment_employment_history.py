@@ -5,7 +5,7 @@ from sqlalchemy import (
     String,
     Text,
     ForeignKey,
-    text
+    text, Index
 )
 from sqlalchemy.dialects.postgresql import UUID
 from models.base import Base
@@ -13,7 +13,13 @@ from models.base import Base
 
 class EnrichmentEmploymentHistory(Base):
     __tablename__ = 'enrichment_employment_history'
-
+    __table_args__ = (
+        Index(
+            'idx_emphistory_asid_current',
+            'asid',
+            postgresql_where=text('is_current = TRUE')
+        ),
+    )
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
