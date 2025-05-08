@@ -25,19 +25,10 @@ class CompanyInfoService:
             if not self.user.get('is_with_card') and not self.user.get('is_email_confirmed'):
                 return {'status': CompanyInfoEnum.NEED_EMAIL_VERIFIED}
             
-            if company_info.business_type not in {BusinessType.D2C.value, BusinessType.B2B.value}:
-                company_info.business_type = 'd2c'
-                
             user = self.db.query(Users).filter(Users.id == self.user.get('id')).first()
-            user.company_name = company_info.organization_name
             user.company_website = company_info.company_website
-            user.employees_workers = company_info.employees_workers
-            user.company_role = company_info.company_role
-            user.business_type = company_info.business_type
-            user.company_website_visits = company_info.monthly_visits
             user.is_company_details_filled = True
             self.db.flush()
-            self.partners_persistence.update_partner_info(user.email, user.full_name, company_info.organization_name)
             if self.user.get('source_platform') not in (SourcePlatformEnum.SHOPIFY.value, SourcePlatformEnum.BIG_COMMERCE.value):
                 self.db.add(UserDomains(user_id=self.user.get('id'),
                                         domain=company_info.company_website.replace('https://', '').replace('http://', '')))
@@ -61,7 +52,7 @@ class CompanyInfoService:
 
     def check_company_info_authorization(self):
         if self.user.get('is_with_card'):
-            if self.user.get('company_name'):
+            if self.user.get('company_website'):
                 subscription_plan_exists = self.user.get('current_subscription_id')
                 if subscription_plan_exists:
                     return CompanyInfoEnum.DASHBOARD_ALLOWED
@@ -70,7 +61,7 @@ class CompanyInfoService:
                 return CompanyInfoEnum.SUCCESS
         else:
             if self.user.get('is_email_confirmed'):
-                if self.user.get('company_name'):
+                if self.user.get('company_website'):
                     return CompanyInfoEnum.DASHBOARD_ALLOWED
                 return CompanyInfoEnum.SUCCESS
             else:

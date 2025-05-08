@@ -115,11 +115,11 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
     },
     submitButton: {
         mt: 2,
-        backgroundColor: '#F45745',
-        color: '#FFFFFF !important',
+        backgroundColor: '#3898FC',
+        color: '#fff !important',
         '&:hover': {
-            backgroundColor: red[700],
-          },
+          backgroundColor: '#1E88E5',
+        },
         margin: '0',
         padding: '10px 24px',
         textTransform: 'none',
@@ -145,7 +145,7 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         textAlign: 'left',
     },
     loginLink: {
-        color: '#F45745',
+        color: '#3898FC',
         cursor: 'pointer',
         textDecoration: 'none',
     },

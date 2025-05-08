@@ -227,15 +227,15 @@ const EmailVerificate: React.FC = () => {
             Check your inbox
           </Typography>
           <Box sx={emailStyles.icon}>
-            <Image src="/mail-icon.svg" alt="Mail Icon" width={200} height={200} />
+            <Image src="/mail_icon2.svg" alt="Mail Icon" width={200} height={200} />
           </Box>
           <Box component="form" sx={emailStyles.form}>
             <Typography className='second-sub-title' sx={emailStyles.text}>
               To complete setup and login, click the verification link in the email we’ve sent to <strong>{email}</strong>
             </Typography>
           </Box>
-          <Typography className='hyperlink-red' sx={emailStyles.resetPassword}>
-            <Button onClick={handleResendEmail} className='hyperlink-red' sx={emailStyles.loginLink} disabled={!canResend}>
+          <Typography className='hyperlink-blue' sx={emailStyles.resetPassword}>
+            <Button onClick={handleResendEmail} className='hyperlink-blue' sx={emailStyles.loginLink} disabled={!canResend}>
               {canResend ? 'Resend Verification Email' : `Resend in ${timer}s`}
             </Button>
           </Typography>

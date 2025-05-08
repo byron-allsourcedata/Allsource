@@ -275,7 +275,7 @@ const ForgotPassword: React.FC = () => {
                 ),
               }}
             />
-            <Button className='hyperlink-red'
+            <Button className='hyperlink-blue'
               type="submit"
               variant="contained"
               sx={updatepasswordStyles.submitButton}

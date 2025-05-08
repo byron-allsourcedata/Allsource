@@ -61,26 +61,22 @@ class UsersAuth:
 
     def get_user_authorization_status_without_pixel(self, user):
         if user.get('is_with_card'):
-            if user.get('company_name'):
-                subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.get('id'))
+            subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(user.get('id'))
+            if subscription_plan_is_active:
+                return UserAuthorizationStatus.SUCCESS
+            if user.get('stripe_payment_url'):
+                return UserAuthorizationStatus.PAYMENT_NEEDED
+            return UserAuthorizationStatus.NEED_CHOOSE_PLAN
+        if user.get('is_email_confirmed'):
+            if user.get('is_book_call_passed'):
+                subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(
+                    user.get('id'))
                 if subscription_plan_is_active:
                     return UserAuthorizationStatus.SUCCESS
                 if user.get('stripe_payment_url'):
                     return UserAuthorizationStatus.PAYMENT_NEEDED
                 return UserAuthorizationStatus.NEED_CHOOSE_PLAN
-            return UserAuthorizationStatus.FILL_COMPANY_DETAILS
-        if user.get('is_email_confirmed'):
-            if user.get('company_name'):
-                if user.get('is_book_call_passed'):
-                    subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(
-                        user.get('id'))
-                    if subscription_plan_is_active:
-                        return UserAuthorizationStatus.SUCCESS
-                    if user.get('stripe_payment_url'):
-                        return UserAuthorizationStatus.PAYMENT_NEEDED
-                    return UserAuthorizationStatus.NEED_CHOOSE_PLAN
-                return UserAuthorizationStatus.NEED_BOOK_CALL
-            return UserAuthorizationStatus.FILL_COMPANY_DETAILS
+            return UserAuthorizationStatus.NEED_BOOK_CALL
         return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
 
     def get_utc_aware_date_for_mssql(self, delta: timedelta = timedelta(seconds=0)):
