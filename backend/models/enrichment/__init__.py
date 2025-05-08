@@ -10,6 +10,7 @@ from .enrichment_personal_profiles import EnrichmentPersonalProfiles
 from .enrichment_voter_record import EnrichmentVoterRecord
 from .enrichment_emails import EnrichmentEmails
 from .enrichment_professional_profiles import EnrichmentProfessionalProfile
+from .enrichment_postals import EnrichmentPostal
 
 __all__ = [
     "EnrichmentUser",
@@ -23,5 +24,6 @@ __all__ = [
     "EnrichmentVoterRecord",
     "EnrichmentPersonalProfiles",
     "EnrichmentEmails",
-    "EnrichmentProfessionalProfile"
+    "EnrichmentProfessionalProfile",
+    "EnrichmentPostal"
 ]
