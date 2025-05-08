@@ -497,7 +497,13 @@ const AccountSetup = () => {
       router.push(stripeUrl)
     }
     else {
-      router.push(partner ? '/partners' : '/dashboard');
+      if (partner) {
+        router.push('/partners')
+      }
+      else{
+        router.push('/dashboard')
+        localStorage.setItem('welcome_popup', "true");
+      }
     }
   }
 
