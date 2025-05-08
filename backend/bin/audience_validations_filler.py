@@ -4,12 +4,10 @@ import sys
 import asyncio
 import functools
 import json
-import boto3
-import random
 from uuid import UUID
 from datetime import datetime
 from sqlalchemy import update, create_engine, func
-from aio_pika import IncomingMessage, Message
+from aio_pika import IncomingMessage
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
@@ -23,10 +21,9 @@ from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_settings import AudienceSetting
 from enums import AudienceSettingAlias
 from models.enrichment.enrichment_users import EnrichmentUser
-from models.usa_zip_codes import UsaZipCode
+from models.enrichment.enrichment_postals import EnrichmentPostal
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.enrichment.enrichment_employment_history import EnrichmentEmploymentHistory
-from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
 load_dotenv()
@@ -154,30 +151,47 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
             .all()
         ]
     elif validation_type == "cas_home_address" or validation_type == "cas_office_address":
+        if validation_type == "cas_home_address":
+            address_fields = {
+                "city": EnrichmentPostal.home_city,
+                "state": EnrichmentPostal.home_state,
+                "country": EnrichmentPostal.home_country,
+                "postal_code": EnrichmentPostal.home_postal_code,
+                "address": EnrichmentPostal.home_address_line1,
+            }
+        elif validation_type == "cas_office_address":
+            address_fields = {
+                "city": EnrichmentPostal.business_city,
+                "state": EnrichmentPostal.business_state,
+                "country": EnrichmentPostal.business_country,
+                "postal_code": EnrichmentPostal.business_postal_code,
+                "address": EnrichmentPostal.business_address_line1,
+            }
+
         enrichment_users = [
             {
                 "audience_smart_person_id": user.audience_smart_person_id,
-                "zip_code5": user.zip_code5,
+                "postal_code": user.postal_code,
+                "country": user.country,
                 "city": user.city,
-                "state_name": user.state_name
+                "state_name": user.state,
+                "address": user.address,
             }
             for user in db_session.query(
                 AudienceSmartPerson.id.label("audience_smart_person_id"),
-                EnrichmentPersonalProfiles.zip_code5.label("zip_code5"),
-                UsaZipCode.city.label("city"),
-                UsaZipCode.state_name.label("state_name"),
+                address_fields["city"].label("city"),
+                address_fields["state"].label("state"),
+                address_fields["country"].label("country"),
+                address_fields["postal_code"].label("postal_code"),
+                address_fields["address"].label("address"),
             )
             .join(
                 EnrichmentUser,
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
             .outerjoin(
-                EnrichmentPersonalProfiles,
-                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid,
-            )
-            .outerjoin(
-                UsaZipCode,
-                UsaZipCode.zip == EnrichmentPersonalProfiles.zip_code5,
+                EnrichmentPostal,
+                EnrichmentPostal.asid == EnrichmentUser.asid,
             )
             .filter(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
