@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import type { Field, LookalikeFieldsGridProps } from "@/types";
 import { useResetContext } from '@/context/ResetContext';
+import { useState } from 'react';
 
 const formatPercent = (value: string) =>
   `${(parseFloat(value) * 100).toFixed(2)}%`;
@@ -26,7 +27,7 @@ function DragAndDropTable({
   const initDefaultStateRef = React.useRef<Field[]>(sortedInitial);
   const [rows, setRows] = React.useState<Field[]>(initDefaultStateRef.current);
   const { resetTrigger, notifyInteraction } = useResetContext();
-
+  const [isFirstInit, setIsFirstInit] = useState(true);
   React.useEffect(() => {
     setRows(initDefaultStateRef.current);
     onOrderChange?.(initDefaultStateRef.current);
@@ -51,6 +52,12 @@ function DragAndDropTable({
     });
     setRows(nextRows);
 
+    // if(isFirstInit && initDefaultStateRef.current.length >= 3) {
+    //   console.log("!!!!!!!!!!!!!!!!")
+    //   setIsFirstInit(false)
+    //   setRows(initDefaultStateRef.current);
+    // }
+
     if (rows.length === 0) {
       setRows(initDefaultStateRef.current);
       initDefaultStateRef.current = sortedInitial;
@@ -60,11 +67,11 @@ function DragAndDropTable({
     }
   }, [fields, onOrderChange]);
 
-  React.useEffect(() => {
-    if (fields.length !== rows.length){
-      onOrderChange?.(initDefaultStateRef.current);
-    }
-  }, [fields]);
+  // React.useEffect(() => {
+  //   if (fields.length !== rows.length){
+  //     onOrderChange?.(initDefaultStateRef.current);
+  //   }
+  // }, [fields]);
 
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
