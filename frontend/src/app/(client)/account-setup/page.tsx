@@ -60,6 +60,7 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
+            router.push("/dashboard");
             break;
           default:
             console.error("Unknown status:", status);
@@ -292,11 +293,8 @@ const AccountSetup = () => {
           sx={{
             width: '100%',
             position: 'fixed',
-            top: '5rem',
-            zIndex: 1200,
-            "@media (max-width: 600px)": {
-              top: '9rem',
-            },
+            top: '4.4rem',
+            zIndex: 1200
           }}
         >
           <BorderLinearProgress variant="indeterminate" />
