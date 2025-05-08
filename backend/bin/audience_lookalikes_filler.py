@@ -4,11 +4,13 @@ import sys
 import asyncio
 import functools
 import json
+from collections import Counter
+
 from sqlalchemy import desc, cast, String
 import statistics
 import aioboto3
 from aio_pika import IncomingMessage
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, aliased
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -173,10 +175,20 @@ def build_dynamic_query_and_config(
     ]
     unordered = [f for f in selected_fields if f != "zip_code5"]
 
+    employment_subquery = (
+        db_session
+        .query(EnrichmentEmploymentHistory)
+        .filter(EnrichmentEmploymentHistory.is_current == True)
+        .distinct(EnrichmentEmploymentHistory.asid)
+        .subquery()
+    )
+    employment_history = aliased(EnrichmentEmploymentHistory, employment_subquery)
+
     query = (
         db_session
         .query(*select_columns)
         .select_from(EnrichmentUser)
+        .distinct(EnrichmentVoterRecord.asid)
         .outerjoin(
             EnrichmentPersonalProfiles,
             EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
@@ -190,18 +202,29 @@ def build_dynamic_query_and_config(
             EnrichmentLifestyle.asid == EnrichmentUser.asid
         )
         .outerjoin(
-            EnrichmentVoterRecord,
-            EnrichmentVoterRecord.asid == EnrichmentUser.asid
+            employment_history,
+            employment_history.asid == EnrichmentUser.asid
         )
         .outerjoin(
-            EnrichmentEmploymentHistory,
-            EnrichmentEmploymentHistory.asid == EnrichmentUser.asid
+            EnrichmentVoterRecord,
+            EnrichmentVoterRecord.asid == EnrichmentUser.asid
         )
         .outerjoin(
             EnrichmentProfessionalProfile,
             EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
         )
     )
+
+    rows = query.all()
+    ids = [row.EnrichmentUser for row in rows]
+    counter = Counter(ids)
+    duplicates = [uid for uid, cnt in counter.items() if cnt > 1]
+
+    logging.info(f"Всего строк: {len(ids)}, уникальных asid: {len(set(ids))}")
+    if duplicates:
+        logging.warning(f"Найдены дубликаты EnrichmentUser (повторяются {len(duplicates)}): {duplicates}")
+    else:
+        logging.info("Повторных EnrichmentUser не найдено")
 
     normalization_config = NormalizationConfig(
         numerical_features=[],
