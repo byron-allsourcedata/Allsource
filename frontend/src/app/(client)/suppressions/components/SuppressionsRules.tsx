@@ -418,6 +418,9 @@ const SuppressionRules: React.FC = () => {
             setChecked(data.is_stop_collecting_contacts)
             setCheckedUrl(data.is_url_certain_activation)
             setCheckedUrlParameters(data.is_based_activation)
+            if (typeof data.actual_contect_days !== 'undefined') {
+                setDays(data.actual_contect_days === -1 ? 'Eternal' : data.actual_contect_days);
+              }              
             setChipDataEmail(EmailChip);
             setChipData(ChipData)
             setChipDataParam(ChipDataParam)
