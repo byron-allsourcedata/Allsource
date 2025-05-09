@@ -10,6 +10,7 @@ import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import DataSyncList from "./components/DataSyncList";
 import { useRouter } from "next/navigation";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 
 const centerContainerStyles = {
   display: "flex",
@@ -32,6 +33,7 @@ const centerContainerStyles = {
 import FilterDatasync from "@/components/FilterDatasync";
 import AudiencePopup from "@/components/AudienceSlider";
 import { useNotification } from "@/context/NotificationContext";
+import FirstTimeScree from "./components/FirstTimeScree";
 
 interface DataSyncProps {
   service_name?: string;
@@ -71,10 +73,96 @@ const DataSync = () => {
   if (isLoading) {
     return <CustomizedProgressBar />;
   }
+  const hasIntegrations   = false;
 
   return (
     <>
-      {isLoading && <CustomizedProgressBar />}
+    {isLoading && <CustomizedProgressBar />}
+    {!hasIntegrations && (
+      <>
+        <Box>
+        <Box
+                          sx={{
+                            border: "1px solid rgba(224, 49, 48, 1)",
+                            display: "flex",
+                            flexDirection: "row",
+                            width: "98%",
+                            padding: 2,
+                            borderRadius: "4px",
+                            mb: 3,
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: "row",
+                              width: "100%",
+                              gap: 2,
+                              alignItems: "center",
+                            }}
+                          >
+                            <ReportProblemOutlinedIcon
+                              sx={{ fontSize: "20px", color: "rgba(230, 90, 89, 1)" }}
+                            />
+                            <Typography className="second-sub-title">
+                              You need to import at least one source to create a
+                              lookalike
+                            </Typography>
+                          </Box>
+        
+                          <Box
+                            sx={{
+                              display: "flex",
+                              flexDirection: "row",
+                              width: "100%",
+                              gap: 2,
+                              alignItems: "center",
+                              justifyContent: "end",
+                            }}
+                          >
+                            <Button
+                              sx={{
+                                textTransform: "none",
+                                fontFamily: "Nunito Sans",
+                                fontSize: "14px",
+                                fontWeight: 500,
+                                color: "rgba(224, 49, 48, 1) !important",
+                              }}
+                              onClick={() => {
+                                // setShowNotification(false);
+                              }}
+                            >
+                              Dismiss
+                            </Button>
+                            <Button
+                              onClick={() => {
+                                router.push("/integrations");
+                              }}
+                              sx={{
+                                textTransform: "none",
+                                fontFamily: "Nunito Sans",
+                                fontSize: "14px",
+                                fontWeight: 500,
+                                color: "rgba(255, 255, 255, 1) !important",
+                                backgroundColor: "rgba(224, 49, 48, 1)",
+                                "&:hover": {
+                                  backgroundColor: "rgba(224, 49, 48, 0.85)",
+                                },
+                              }}
+                            >
+                              Add Integration
+                            </Button>
+                          </Box>
+                        </Box>
+                        <FirstTimeScree>
+        
+      </FirstTimeScree>
+      </Box>
+      </>
+      
+    )}
+      {hasIntegrations && (
       <Box sx={datasyncStyle.mainContent}>
         <Box
           sx={{
@@ -242,6 +330,7 @@ const DataSync = () => {
           )}
         </Box>
       </Box>
+      )}
       <FilterDatasync
         open={filterPopup}
         onClose={handleFilterPopupClose}
@@ -251,6 +340,7 @@ const DataSync = () => {
         open={openCreateDataSyncPopup}
         onClose={handleAudiencePopupClose}
       />
+    
     </>
   );
 };
