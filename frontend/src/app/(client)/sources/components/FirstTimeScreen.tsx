@@ -14,43 +14,16 @@ type CardData = {
   title: string;
   description: string;
   icon: string;
-  onClick: () => void;
+  onClick?: () => void;
   isClickable?: boolean;
 };
 
+interface ClickableCardsProps {
+  cardData: CardData[];
+}
 
-const cardData: CardData[] = [
-  {
-    title: "Pixel",
-    description: "Install Pixel on your website to automatically collect visitor information in real-time.",
-    icon: "/Pixel.svg",
-    onClick: () => alert("Pixel clicked"),
-    isClickable: true
-  },
-  {
-    title: "Customer Conversions (CSV)",
-    description: "This file should contain users who successfully completed valuable actions.",
-    icon: "/Pixel.svg",
-    onClick: () => alert("Customer Conversions clicked"),
-    isClickable: false
-  },
-  {
-    title: "Failed Leads (CSV)",
-    description: "This file should contain users who engaged but didn't convert, so you can exclude them later.",
-    icon: "/Pixel.svg",
-    onClick: () => alert("Failed Leads clicked"),
-    isClickable: true
-  },
-  {
-    title: "Interests (CSV)",
-    description: "This file should contain users who recently engaged with specific topics.",
-    icon: "/Pixel.svg",
-    onClick: () => alert("Interests clicked"),
-    isClickable: true
-  },
-];
+const ClickableCards = ({cardData}: ClickableCardsProps) => {
 
-const ClickableCards: React.FC = () => {
   return (
     <Box
       sx={{
@@ -91,7 +64,6 @@ const ClickableCards: React.FC = () => {
 
 const FirstTimeScreen = () => {
   const router = useRouter();
-
   return (
     <Box sx={sourcesStyles.centerContainerStyles}>
       <Typography

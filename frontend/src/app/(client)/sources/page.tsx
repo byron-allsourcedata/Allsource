@@ -90,6 +90,14 @@ interface FilterParams {
   dateRange: { fromDate: number | null; toDate: number | null };
 }
 
+type CardData = {
+  title: string;
+  description: string;
+  icon: string;
+  onClick?: () => void;
+  isClickable?: boolean;
+};
+
 const Sources: React.FC = () => {
   const router = useRouter();
   const { hasNotification } = useNotification();
@@ -132,6 +140,45 @@ const Sources: React.FC = () => {
   const isDebug = searchParams.get("is_debug") === "true";
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
+
+  const cardData: CardData[] = [
+    {
+      title: "Pixel",
+      description: "Install Pixel on your website to automatically collect visitor information in real-time.",
+      icon: "/Pixel.svg",
+      onClick: () => {
+        router.push("/sources/builder?type=pixel");
+      },
+      isClickable: true
+    },
+    {
+      title: "Customer Conversions (CSV)",
+      description: "This file should contain users who successfully completed valuable actions.",
+      icon: "/Pixel.svg",
+      onClick: () => {
+        router.push("/sources/builder?type=customer-conversions");
+      },
+      isClickable: false
+    },
+    {
+      title: "Failed Leads (CSV)",
+      description: "This file should contain users who engaged but didn't convert, so you can exclude them later.",
+      icon: "/Pixel.svg",
+      onClick: () => {
+        router.push("/sources/builder?type=failed-leads");
+      },
+      isClickable: true
+    },
+    {
+      title: "Interests (CSV)",
+      description: "This file should contain users who recently engaged with specific topics.",
+      icon: "/Pixel.svg",
+      onClick: () => {
+        router.push("/sources/builder?type=interests");
+      },
+      isClickable: true
+    },
+  ];
   
   const columns = [
     {
@@ -944,7 +991,7 @@ const Sources: React.FC = () => {
                     {data.length === 0 &&
                       isMakeRequest &&
                       !(selectedFilters.length > 0) && (
-                        <FirstTimeScreen />
+                        <FirstTimeScreen cardData={cardData}/>
                       )
                       }
                     {data.length === 0 &&

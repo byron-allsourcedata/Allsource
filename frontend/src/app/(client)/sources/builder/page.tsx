@@ -15,7 +15,7 @@ import {
   ToggleButton,
 } from "@mui/material";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { sourcesStyles } from "../sourcesStyles";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
@@ -101,6 +101,9 @@ const SourcesImport: React.FC = () => {
   const [totalLeads, setTotalLeads] = useState(0);
   const [matchedLeads, setMatchedLeads] = useState(0);
 
+  const searchParams = useSearchParams();
+  const typeFromSearchParams = searchParams.get("type");
+
   const block1Ref = useRef<HTMLDivElement | null>(null);
   const block2Ref = useRef<HTMLDivElement | null>(null);
   const block3Ref = useRef<HTMLDivElement | null>(null);
@@ -172,6 +175,31 @@ const SourcesImport: React.FC = () => {
       setRows(updatedRows);
     }
   };
+
+  useEffect(() => {
+    let newType = "";
+    if (typeFromSearchParams === "customer-conversions") newType = "Customer Conversions";
+    if (typeFromSearchParams === "failed-leads") newType = "Failed Leads";
+    if (typeFromSearchParams === "interests") newType = "Interest";
+    if (typeFromSearchParams === "pixel") {
+        newType = "Website - Pixel"
+        setTimeout( () => {
+          scrollToBlock(block4Ref)
+        }, 0)
+        fetchDomainsAndLeads()
+        setSourceMethod(2)
+      }
+    else {
+      setSourceMethod(1)
+      setTimeout( () => {
+        scrollToBlock(block2Ref)
+      }, 0)
+    }
+
+    setSourceType(newType);
+  }, [typeFromSearchParams]);
+
+
 
   useEffect(() => {
     let updatedRows = defaultRows.map((row) => {
