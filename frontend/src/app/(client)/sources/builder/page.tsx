@@ -185,26 +185,29 @@ const SourcesImport: React.FC = () => {
   };
 
   useEffect(() => {
-    let newType = "";
-    if (typeFromSearchParams === "customer-conversions")
-      newType = "Customer Conversions";
-    if (typeFromSearchParams === "failed-leads") newType = "Failed Leads";
-    if (typeFromSearchParams === "interests") newType = "Interest";
-    if (typeFromSearchParams === "pixel") {
-      newType = "Website - Pixel";
-      setTimeout(() => {
-        scrollToBlock(block4Ref);
-      }, 0);
-      fetchDomainsAndLeads();
-      setSourceMethod(2);
-    } else {
-      setSourceMethod(1);
-      setTimeout(() => {
-        scrollToBlock(block2Ref);
-      }, 0);
+    if (typeFromSearchParams) {
+      let newType = "";
+      if (typeFromSearchParams === "customer-conversions")
+        newType = "Customer Conversions";
+      if (typeFromSearchParams === "failed-leads") newType = "Failed Leads";
+      if (typeFromSearchParams === "interests") newType = "Interest";
+      if (typeFromSearchParams === "pixel") {
+        newType = "Website - Pixel";
+        setTimeout(() => {
+          scrollToBlock(block4Ref);
+        }, 0);
+        fetchDomainsAndLeads();
+        setSourceMethod(2);
+      } else {
+        setSourceMethod(1);
+        setTimeout(() => {
+          scrollToBlock(block2Ref);
+        }, 0);
+      }
+
+      setSourceType(newType);
     }
 
-    setSourceType(newType);
   }, [typeFromSearchParams]);
 
   useEffect(() => {
