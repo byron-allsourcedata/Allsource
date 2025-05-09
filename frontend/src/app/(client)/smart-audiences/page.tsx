@@ -37,6 +37,7 @@ import DetailsPopup from './components/SmartAudienceDataSources'
 import CalendarPopup from "@/components/CustomCalendar";
 import TableCustomCell from "../sources/components/table/TableCustomCell";
 import { useScrollShadow } from '@/hooks/useScrollShadow';
+import FirstTimeScreen from './components/FirstTimeScreen';
 
 interface Smarts {
     id: string
@@ -65,6 +66,14 @@ interface FilterParams {
     selectedUseCases: Record<string, boolean>;
     selectedStatuses: Record<string, boolean>;
 }
+
+type CardData = {
+    title: string;
+    description: string;
+    icon: string;
+    onClick?: () => void;
+    isClickable?: boolean;
+  };
 
 const getStatusStyle = (status: string) => {
     switch (status) {
@@ -297,6 +306,29 @@ const SmartAudiences: React.FC = () => {
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     const [dataSyncPopupOpen, setDataSyncPopupOpen] = useState(false);
+
+    const cardData: CardData[] = [
+        {
+          title: "Step 1. Select Use Case",
+          description: "Select between digital advertising platforms and direct marketing channels.",
+          icon: "/use-case.svg",
+        },
+        {
+          title: "Step 2. Choose Target Type",
+          description: "Select B2B for business audiences, B2C for consumer targeting, or Both to create parallel segments.",
+          icon: "/target-type.svg",
+        },
+        {
+          title: "Step 3. Audience Refinement",
+          description: "Combine your data sources. Select which source or lookalike to include or exclude.",
+          icon: "/data-source.svg",
+        },
+        {
+          title: "Step 4. Validation*",
+          description: "Before finalizing your audience, verify contact data quality through our validation system.",
+          icon: "/smart-validation.svg",
+        },
+      ];
 
     useEffect(() => {
         fetchSmarts({
@@ -754,149 +786,151 @@ const SmartAudiences: React.FC = () => {
             }}>
                 <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', }}>
                     <Box>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexDirection: 'row',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                marginTop: hasNotification ? '1rem' : '0.5rem',
-                                flexWrap: 'wrap',
-                                gap: '15px',
-                                '@media (max-width: 900px)': {
-                                    marginTop: hasNotification ? '3rem' : '1.125rem',
-                                },
-                                '@media (max-width: 600px)': {
-                                    marginTop: hasNotification ? '2rem' : '0rem',
-                                },
-                            }}>
-                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                                <Typography className='first-sub-title'>
-                                    Smart Audience
-                                </Typography>
-                                <CustomToolTip title={'Discover AI-powered Smart Audiences based on your sorces and lookalikes.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
-                            </Box>
-                            <Box sx={{
-                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr: 2,
-                                '@media (max-width: 900px)': {
-                                    gap: '8px'
-                                }
-                            }}>
-                                <Button
-                                    variant="outlined"
-                                    sx={{
-                                        height: '40px',
-                                        borderRadius: '4px',
-                                        textTransform: 'none',
-                                        fontSize: '14px',
-                                        lineHeight: "19.6px",
-                                        fontWeight: '500',
-                                        color: '#5052B2',
-                                        borderColor: '#5052B2',
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(80, 82, 178, 0.1)',
-                                            borderColor: '#5052B2',
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        router.push("/smart-audiences/builder")
-                                    }}
-                                >
-                                    Generate Smart Audience
-                                </Button>
-                                <Button
-                                    onClick={handleFilterPopupOpen}
-                                    disabled={data?.length === 0}
-                                    sx={{
-                                        textTransform: 'none',
-                                        color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                        border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                        borderRadius: '4px',
-                                        padding: '8px',
-                                        opacity: data?.length === 0 ? '0.5' : '1',
-                                        minWidth: 'auto',
-                                        maxHeight: '40px',
-                                        maxWidth: '40px',
-                                        position: 'relative',
-                                        '@media (max-width: 900px)': {
-                                            border: 'none',
-                                            padding: 0
-                                        },
-                                        '&:hover': {
-                                            backgroundColor: 'transparent',
-                                            border: '1px solid rgba(80, 82, 178, 1)',
-                                            color: 'rgba(80, 82, 178, 1)',
-                                            '& .MuiSvgIcon-root': {
-                                                color: 'rgba(80, 82, 178, 1)'
-                                            }
-                                        }
-                                    }}
-                                >
-                                    <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
-
-                                    {selectedFilters.length > 0 && (
-                                        <Box
-                                            sx={{
-                                                position: 'absolute',
-                                                top: 6,
-                                                right: 8,
-                                                width: '10px',
-                                                height: '10px',
-                                                backgroundColor: 'red',
-                                                borderRadius: '50%',
-                                                '@media (max-width: 900px)': {
-                                                    top: -1,
-                                                    right: 1
-                                                }
-                                            }}
-                                        />
-                                    )}
-                                </Button>
-                                <Button
-                                    disabled={data?.length === 0}
-                                    aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                    aria-haspopup="true"
-                                    aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                    onClick={handleCalendarClick}
-                                    sx={{
-                                        textTransform: 'none',
-                                        color: 'rgba(128, 128, 128, 1)',
-                                        border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                        borderRadius: '4px',
-                                        padding: '8px',
-                                        opacity: data?.length === 0 ? '0.5' : '1',
-                                        minWidth: 'auto',
-                                        '@media (max-width: 900px)': {
-                                            border: 'none',
-                                            padding: 0
-                                        },
-                                        '&:hover': {
-                                            backgroundColor: 'transparent',
-                                            border: '1px solid rgba(80, 82, 178, 1)',
-                                            color: 'rgba(80, 82, 178, 1)',
-                                            '& .MuiSvgIcon-root': {
-                                                color: 'rgba(80, 82, 178, 1)'
-                                            }
-                                        }
-                                    }}
-                                >
-                                    <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
-                                    <Typography variant="body1" sx={{
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: '14px',
-                                        fontWeight: '600',
-                                        lineHeight: '19.6px',
-                                        textAlign: 'left',
-                                        color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                        "@media (max-width: 600px)": {
-                                            display: 'none'
-                                        },
-                                    }}>
-                                        {formattedDates}
+                        {data.length !== 0 &&
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    marginTop: hasNotification ? '1rem' : '0.5rem',
+                                    flexWrap: 'wrap',
+                                    gap: '15px',
+                                    '@media (max-width: 900px)': {
+                                        marginTop: hasNotification ? '3rem' : '1.125rem',
+                                    },
+                                    '@media (max-width: 600px)': {
+                                        marginTop: hasNotification ? '2rem' : '0rem',
+                                    },
+                                }}>
+                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                    <Typography className='first-sub-title'>
+                                        Smart Audience
                                     </Typography>
-                                </Button>
-                            </Box>
-                        </Box>
+                                    <CustomToolTip title={'Discover AI-powered Smart Audiences based on your sorces and lookalikes.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                                </Box>
+                                <Box sx={{
+                                    display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr: 2,
+                                    '@media (max-width: 900px)': {
+                                        gap: '8px'
+                                    }
+                                }}>
+                                    <Button
+                                        variant="outlined"
+                                        sx={{
+                                            height: '40px',
+                                            borderRadius: '4px',
+                                            textTransform: 'none',
+                                            fontSize: '14px',
+                                            lineHeight: "19.6px",
+                                            fontWeight: '500',
+                                            color: '#5052B2',
+                                            borderColor: '#5052B2',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                                borderColor: '#5052B2',
+                                            },
+                                        }}
+                                        onClick={() => {
+                                            router.push("/smart-audiences/builder")
+                                        }}
+                                    >
+                                        Generate Smart Audience
+                                    </Button>
+                                    <Button
+                                        onClick={handleFilterPopupOpen}
+                                        disabled={data?.length === 0}
+                                        sx={{
+                                            textTransform: 'none',
+                                            color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                            border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                            borderRadius: '4px',
+                                            padding: '8px',
+                                            opacity: data?.length === 0 ? '0.5' : '1',
+                                            minWidth: 'auto',
+                                            maxHeight: '40px',
+                                            maxWidth: '40px',
+                                            position: 'relative',
+                                            '@media (max-width: 900px)': {
+                                                border: 'none',
+                                                padding: 0
+                                            },
+                                            '&:hover': {
+                                                backgroundColor: 'transparent',
+                                                border: '1px solid rgba(80, 82, 178, 1)',
+                                                color: 'rgba(80, 82, 178, 1)',
+                                                '& .MuiSvgIcon-root': {
+                                                    color: 'rgba(80, 82, 178, 1)'
+                                                }
+                                            }
+                                        }}
+                                    >
+                                        <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
+
+                                        {selectedFilters.length > 0 && (
+                                            <Box
+                                                sx={{
+                                                    position: 'absolute',
+                                                    top: 6,
+                                                    right: 8,
+                                                    width: '10px',
+                                                    height: '10px',
+                                                    backgroundColor: 'red',
+                                                    borderRadius: '50%',
+                                                    '@media (max-width: 900px)': {
+                                                        top: -1,
+                                                        right: 1
+                                                    }
+                                                }}
+                                            />
+                                        )}
+                                    </Button>
+                                    <Button
+                                        disabled={data?.length === 0}
+                                        aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                                        aria-haspopup="true"
+                                        aria-expanded={isCalendarOpen ? 'true' : undefined}
+                                        onClick={handleCalendarClick}
+                                        sx={{
+                                            textTransform: 'none',
+                                            color: 'rgba(128, 128, 128, 1)',
+                                            border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                            borderRadius: '4px',
+                                            padding: '8px',
+                                            opacity: data?.length === 0 ? '0.5' : '1',
+                                            minWidth: 'auto',
+                                            '@media (max-width: 900px)': {
+                                                border: 'none',
+                                                padding: 0
+                                            },
+                                            '&:hover': {
+                                                backgroundColor: 'transparent',
+                                                border: '1px solid rgba(80, 82, 178, 1)',
+                                                color: 'rgba(80, 82, 178, 1)',
+                                                '& .MuiSvgIcon-root': {
+                                                    color: 'rgba(80, 82, 178, 1)'
+                                                }
+                                            }
+                                        }}
+                                    >
+                                        <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
+                                        <Typography variant="body1" sx={{
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: '14px',
+                                            fontWeight: '600',
+                                            lineHeight: '19.6px',
+                                            textAlign: 'left',
+                                            color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                            "@media (max-width: 600px)": {
+                                                display: 'none'
+                                            },
+                                        }}>
+                                            {formattedDates}
+                                        </Typography>
+                                    </Button>
+                                </Box>
+                            </Box> 
+                        }
 
                         <Box sx={{
                             flex: 1, display: 'flex', flexDirection: 'column', pr: 2, overflow: 'auto', maxWidth: '100%',
@@ -961,47 +995,48 @@ const SmartAudiences: React.FC = () => {
                                         }
                                     }}>
                                         {data.length === 0 &&
-                                            <Box sx={smartAudiences.centerContainerStyles}>
-                                                <Typography variant="h5" sx={{
-                                                    mb: 3,
-                                                    fontFamily: 'Nunito Sans',
-                                                    fontSize: "20px",
-                                                    color: "#4a4a4a",
-                                                    fontWeight: "600",
-                                                    lineHeight: "28px"
-                                                }}>
-                                                    Get Started with Your First Audience
-                                                </Typography>
-                                                <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
-                                                <Typography variant="body1" color="textSecondary"
-                                                    sx={{
-                                                        mt: 3,
-                                                        fontFamily: 'Nunito Sans',
-                                                        fontSize: "14px",
-                                                        color: "#808080",
-                                                        fontWeight: "600",
-                                                        lineHeight: "20px"
-                                                    }}>
-                                                    Supercharge your ad campaigns with high-performing lookalikes. Target those most likely to purchase, optimize your ad spend, and scale your profitability like never before.
-                                                </Typography>
-                                                <Button
-                                                    variant="contained"
-                                                    onClick={() => router.push("/smart-audiences/builder")}
-                                                    className='second-sub-title'
-                                                    sx={{
-                                                        backgroundColor: 'rgba(80, 82, 178, 1)',
-                                                        textTransform: 'none',
-                                                        padding: '10px 24px',
-                                                        mt: 3,
-                                                        color: '#fff !important',
-                                                        ':hover': {
-                                                            backgroundColor: 'rgba(80, 82, 178, 1)'
-                                                        }
-                                                    }}
-                                                >
-                                                    Generate Smart Audience
-                                                </Button>
-                                            </Box>
+                                            <FirstTimeScreen cardData={cardData}/>
+                                            // <Box sx={smartAudiences.centerContainerStyles}>
+                                            //     <Typography variant="h5" sx={{
+                                            //         mb: 3,
+                                            //         fontFamily: 'Nunito Sans',
+                                            //         fontSize: "20px",
+                                            //         color: "#4a4a4a",
+                                            //         fontWeight: "600",
+                                            //         lineHeight: "28px"
+                                            //     }}>
+                                            //         Get Started with Your First Audience
+                                            //     </Typography>
+                                            //     <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
+                                            //     <Typography variant="body1" color="textSecondary"
+                                            //         sx={{
+                                            //             mt: 3,
+                                            //             fontFamily: 'Nunito Sans',
+                                            //             fontSize: "14px",
+                                            //             color: "#808080",
+                                            //             fontWeight: "600",
+                                            //             lineHeight: "20px"
+                                            //         }}>
+                                            //         Supercharge your ad campaigns with high-performing lookalikes. Target those most likely to purchase, optimize your ad spend, and scale your profitability like never before.
+                                            //     </Typography>
+                                            //     <Button
+                                            //         variant="contained"
+                                            //         onClick={() => router.push("/smart-audiences/builder")}
+                                            //         className='second-sub-title'
+                                            //         sx={{
+                                            //             backgroundColor: 'rgba(80, 82, 178, 1)',
+                                            //             textTransform: 'none',
+                                            //             padding: '10px 24px',
+                                            //             mt: 3,
+                                            //             color: '#fff !important',
+                                            //             ':hover': {
+                                            //                 backgroundColor: 'rgba(80, 82, 178, 1)'
+                                            //             }
+                                            //         }}
+                                            //     >
+                                            //         Generate Smart Audience
+                                            //     </Button>
+                                            // </Box>
                                         }
                                         {data.length !== 0 &&
                                             <Grid container spacing={1} sx={{ flex: 1 }}>
