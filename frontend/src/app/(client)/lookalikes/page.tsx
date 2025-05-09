@@ -18,6 +18,32 @@ import CalendarPopup from "@/components/CustomCalendar";
 import dayjs from "dayjs";
 import { ExternalLink } from "@/components/ExternalLink";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import FirstTimeScreen from "../sources/components/FirstTimeScreen";
+import { CardData } from "@/types/first_time_screens";
+
+const cardData: CardData[] = [
+  {
+    title: "Step 1. Select Source",
+    description: "Choose a source that represents your ideal customer profile.",
+    icon: "/lookalike_step1.svg",
+  },
+  {
+    title: "Step 2. Choose Lookalike Size",
+    description: "Specify how closely your lookalike should match the source.",
+    icon: "/lookalike_step2.svg",
+  },
+  {
+    title: "Step 3. Select Fields",
+    description: "Choose which user attributes should carry the most weight.",
+    icon: "/lookalike_step3.svg",
+  },
+  {
+    title: "Step 4. Order Fields",
+    description:
+      "Arrange fields in order of importance to fine-tune audience quality.",
+    icon: "/lookalike_step4.svg",
+  },
+];
 
 interface FilterParams {
   from_date: number | null;
@@ -54,6 +80,7 @@ interface TableRowData {
 
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
+
   const [isLookalikeGenerated, setIsLookalikeGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loaderForTable, setLoaderForTable] = useState(false);
@@ -779,7 +806,7 @@ const CreateLookalikePage: React.FC = () => {
                 },
               }}
             >
-              {sourceCount !== 0 && showNotification && (
+              {sourceCount === 0 && showNotification && (
                 <Box
                   sx={{
                     border: "1px solid rgba(224, 49, 48, 1)",
@@ -850,7 +877,7 @@ const CreateLookalikePage: React.FC = () => {
                         },
                       }}
                     >
-                      Import Source
+                      Create Source
                     </Button>
                   </Box>
                 </Box>
@@ -892,12 +919,25 @@ const CreateLookalikePage: React.FC = () => {
                 sx={{
                   border: "1px solid rgba(237, 237, 237, 1)",
                   width: "100%",
-                  padding: 3,
+                  mt: 3,
+                  borderRadius: "6px",
                 }}
               >
-                <Box></Box>
                 <Box
-                  sx={{ display: "flex", width: "100%", justifyContent: "end" }}
+                  sx={{
+                    textAlign: "left",
+                  }}
+                >
+                  <FirstTimeScreen cardData={cardData} />
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    width: "100%",
+                    justifyContent: "end",
+                    mb: 2,
+                    pr: 4,
+                  }}
                 >
                   <Link href="/lookalikes/builder" passHref>
                     <Button
@@ -908,7 +948,6 @@ const CreateLookalikePage: React.FC = () => {
                         backgroundColor: "rgba(56, 152, 252, 1)",
                         textTransform: "none",
                         padding: "10px 24px",
-                        mt: 3,
                         color: "#fff !important",
                         ":hover": {
                           backgroundColor: "rgba(48, 149, 250, 1)",
