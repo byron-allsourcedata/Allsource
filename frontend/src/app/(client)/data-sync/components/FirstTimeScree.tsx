@@ -16,19 +16,19 @@ interface DataSyncFirstTimeScreenProps {
 
 const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
   return (
-    <Box sx={{ width: "98%", display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+    <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
         <Typography
-                                  variant="h5"
-                                  className="first-sub-title"
-                                  sx={{
-                                    fontFamily: "Nunito Sans",
-                                    fontSize: "24px !important",
-                                    color: "#4a4a4a",
-                                    fontWeight: "500 !important",
-                                    lineHeight: "22px",
-                                  }}
-                                >
+            variant="h5"
+            className="first-sub-title"
+            sx={{
+            fontFamily: "Nunito Sans",
+            fontSize: "24px !important",
+            color: "#4a4a4a",
+            fontWeight: "500 !important",
+            lineHeight: "22px",
+            }}
+        >
           Data Sync
         </Typography>
         <MuiLink
@@ -82,18 +82,28 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
           Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click.
         </Typography>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+        <Box sx={{ display: "flex",
+                    width: "100%",
+                    justifyContent: "end",
+                    pr: 2
+                }}>
           <Button
             variant="contained"
+            className="second-sub-title"
             onClick={onBegin}
             disabled
             sx={{
-              minWidth: 85,
-              minHeight: 40,
-              bgcolor: "#3898FC",
-              fontWeight: 300,
-              textTransform: "none",
-            }}
+                backgroundColor: "rgba(56, 152, 252, 1)",
+                textTransform: "none",
+                padding: "10px 24px",
+                color: "#fff !important",
+                ":hover": {
+                  backgroundColor: "rgba(48, 149, 250, 1)",
+                },
+                ":disabled": {
+                  backgroundColor: "rgba(56, 152, 252, 0.5)",
+                },
+              }}
           >
             Begin
           </Button>
