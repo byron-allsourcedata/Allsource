@@ -73,7 +73,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
               mb: 0.25,
               alignItems: "start",
               "& .MuiTabs-indicator": {
-                backgroundColor: "rgba(80, 82, 178, 1)",
+                backgroundColor: "rgba(30, 136, 229, 1)",
                 height: "1.4px",
               },
               "@media (max-width: 600px)": {
@@ -101,7 +101,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
                 lineHeight: "19.1px",
                 textAlign: "left",
                 "&.Mui-selected": {
-                  color: "rgba(80, 82, 178, 1)",
+                  color: "rgba(30, 136, 229, 1)",
                 },
                 "@media (max-width: 600px)": {
                   mr: 0,
@@ -127,7 +127,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
                 lineHeight: "19.1px",
                 minWidth: "76px",
                 "&.Mui-selected": {
-                  color: "rgba(80, 82, 178, 1)",
+                  color: "rgba(30, 136, 229, 1)",
                 },
                 "@media (max-width: 600px)": {
                   mr: 0,

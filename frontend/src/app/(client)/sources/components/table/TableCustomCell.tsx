@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, ReactNode } from 'react';
-import { TableCell, Tooltip, Typography, Box, TextField, Button } from '@mui/material';
+import { TableCell, Tooltip, Typography, Box, Link } from '@mui/material';
 import { sourcesStyles } from '../../sourcesStyles';
 
 interface MyTableCellProps {
@@ -8,6 +8,7 @@ interface MyTableCellProps {
   customCellStyles?: Record<string, any>;
   children?: ReactNode;
   renderContent?: () => ReactNode;
+  href?: string;
 }
 
 const createCommonCellStyles = () => ({
@@ -22,6 +23,7 @@ const TableCustomCell: React.FC<MyTableCellProps> = ({
   customCellStyles = {},
   children,
   renderContent,
+  href,
 }) => {
   const cellContent = renderContent
     ? renderContent()
@@ -60,16 +62,33 @@ const TableCustomCell: React.FC<MyTableCellProps> = ({
     <Typography
       ref={textRef}
       className="table-data"
+      color="inherit"
       sx={{
         whiteSpace: 'nowrap',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
+        color: href? 'rgba(30, 136, 229, 1) !important': 'rgba(95, 99, 104, 1)' ,  
       }}
     >
       {cellContent}
     </Typography>
   ) : (
     <Box sx={{ width: '100%' }}>{cellContent}</Box>
+  );
+
+  const linkedContent = contentIsString && href ? (
+    <Link
+    href={href}
+    underline="none"                            
+    sx={{
+      display: 'inline-block',
+      width: '100%',     
+    }}
+  >
+       {basicContent}
+     </Link>
+   ) : (
+     basicContent
   );
 
   const finalContent =
@@ -88,6 +107,7 @@ const TableCustomCell: React.FC<MyTableCellProps> = ({
             <Typography
               className="table-data"
               component="div"
+              color="inherit" 
               sx={{ fontSize: '12px !important' }}
             >
               {cellContent}
@@ -112,10 +132,10 @@ const TableCustomCell: React.FC<MyTableCellProps> = ({
         }}
         placement="right"
       >
-        {basicContent}
+        {linkedContent}
       </Tooltip>
     ) : (
-      basicContent
+      linkedContent
     );
 
   return (
