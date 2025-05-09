@@ -1038,6 +1038,7 @@ const SmartAudiences: React.FC = () => {
                                                                         widths,
                                                                     }) => (
                                                                         <TableCell
+                                                                            onClick={sortable ? () => handleSortRequest(key) : undefined}
                                                                             key={key}
                                                                             sx={{
                                                                                 ...smartAudiences.table_column,
@@ -1051,6 +1052,11 @@ const SmartAudiences: React.FC = () => {
                                                                                         : "none",
                                                                                 }),
                                                                             }}
+                                                                            style={{
+                                                                                cursor: sortable
+                                                                                  ? "pointer"
+                                                                                  : "default",
+                                                                              }}
                                                                         >
                                                                             <Box
                                                                                 sx={{
