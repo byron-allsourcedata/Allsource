@@ -37,7 +37,30 @@ export const IconFillIndicator = ({
         borderRadius: "6px",
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
         position: 'relative',
-        flexGrow: 1
+        flexGrow: 1,
+        overflow: 'hidden',
+        '&::before, &::after': {
+            content: '""',
+            position: 'absolute',
+            backgroundRepeat: 'no-repeat',
+            pointerEvents: 'none',
+        },
+        '&::before': {
+            top: 0,
+            right: 0,
+            height: '1px',
+            width: '100%',
+            backgroundImage:
+            'linear-gradient(to left, rgba(30,136,229,1) 0%, rgba(30,136,229,0) 100%)',
+        },
+        '&::after': {
+            top: 0,
+            right: 0,
+            width: '1px',
+            height: '100%',
+            backgroundImage:
+            'linear-gradient(to bottom, rgba(30,136,229,1) 0%, rgba(30,136,229,0) 100%)',
+        },
       }}
     >
       {rank !== undefined && (
