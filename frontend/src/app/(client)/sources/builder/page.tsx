@@ -791,7 +791,7 @@ const SourcesImport: React.FC = () => {
                 </Box>
               </Box>
 
-              {sourceMethod === 1 && (
+              {sourceMethod === 1 && sourceType !== "" && !file && (
                 <Box
                   ref={block2Ref}
                   sx={{
@@ -829,8 +829,13 @@ const SourcesImport: React.FC = () => {
                       />
                     </Box>
                   )}
+
                   <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 1,
+                    }}
                   >
                     <Typography
                       sx={{
@@ -852,86 +857,85 @@ const SourcesImport: React.FC = () => {
                       who have successfully completed an order on your website.
                     </Typography>
                   </Box>
-                  {sourceType !== "" && !file && (
-                    <Box
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "316px",
+                      border: dragActive
+                        ? "2px dashed rgba(80, 82, 178, 1)"
+                        : "1px dashed rgba(80, 82, 178, 1)",
+                      borderRadius: "4px",
+                      padding: "8px 16px",
+                      height: "80px",
+                      gap: "16px",
+                      cursor: "pointer",
+                      backgroundColor: dragActive
+                        ? "rgba(80, 82, 178, 0.1)"
+                        : "rgba(246, 248, 250, 1)",
+                      transition: "background-color 0.3s, border-color 0.3s",
+                      "@media (max-width: 390px)": {
+                        width: "calc(100vw - 74px)",
+                      },
+                    }}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() =>
+                      document.getElementById("fileInput")?.click()
+                    }
+                  >
+                    <IconButton
                       sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        width: "316px",
-                        border: dragActive
-                          ? "2px dashed rgba(80, 82, 178, 1)"
-                          : "1px dashed rgba(80, 82, 178, 1)",
+                        width: "40px",
+                        height: "40px",
                         borderRadius: "4px",
-                        padding: "8px 16px",
-                        height: "80px",
-                        gap: "16px",
-                        cursor: "pointer",
-                        backgroundColor: dragActive
-                          ? "rgba(80, 82, 178, 0.1)"
-                          : "rgba(246, 248, 250, 1)",
-                        transition: "background-color 0.3s, border-color 0.3s",
-                        "@media (max-width: 390px)": {
-                          width: "calc(100vw - 74px)",
-                        },
+                        backgroundColor: "rgba(234, 235, 255, 1)",
                       }}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      onClick={() =>
-                        document.getElementById("fileInput")?.click()
-                      }
                     >
-                      <IconButton
+                      <FileUploadOutlinedIcon
                         sx={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "4px",
-                          backgroundColor: "rgba(234, 235, 255, 1)",
-                        }}
-                      >
-                        <FileUploadOutlinedIcon
-                          sx={{
-                            color: "rgba(80, 82, 178, 1)",
-                          }}
-                        />
-                      </IconButton>
-                      <Box sx={{ flexGrow: 1 }}>
-                        <Typography
-                          sx={{
-                            fontFamily: "Nunito Sans",
-                            fontSize: "16px",
-                            fontWeight: "600",
-                            color: "rgba(80, 82, 178, 1)",
-                          }}
-                        >
-                          Upload a file
-                        </Typography>
-                        <Typography
-                          sx={{
-                            fontFamily: "Nunito Sans",
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            color: "rgba(32, 33, 36, 1)",
-                          }}
-                        >
-                          CSV.Max 100MB
-                        </Typography>
-                      </Box>
-                      <input
-                        id="fileInput"
-                        type="file"
-                        hidden
-                        accept=".csv"
-                        onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                          const file = event.target.files?.[0];
-                          if (file) {
-                            handleFileUpload(file);
-                          }
-                          event.target.value = "";
+                          color: "rgba(80, 82, 178, 1)",
                         }}
                       />
+                    </IconButton>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography
+                        sx={{
+                          fontFamily: "Nunito Sans",
+                          fontSize: "16px",
+                          fontWeight: "600",
+                          color: "rgba(80, 82, 178, 1)",
+                        }}
+                      >
+                        Upload a file
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: "Nunito Sans",
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "rgba(32, 33, 36, 1)",
+                        }}
+                      >
+                        CSV.Max 100MB
+                      </Typography>
                     </Box>
-                  )}
+                    <input
+                      id="fileInput"
+                      type="file"
+                      hidden
+                      accept=".csv"
+                      onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                        const file = event.target.files?.[0];
+                        if (file) {
+                          handleFileUpload(file);
+                        }
+                        event.target.value = "";
+                      }}
+                    />
+                  </Box>
                   {sourceType !== "" && file && (
                     <Box
                       sx={{
