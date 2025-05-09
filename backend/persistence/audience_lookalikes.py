@@ -7,7 +7,7 @@ from psycopg2.extras import NumericRange
 from pydantic.v1 import UUID4
 from sqlalchemy.dialects.postgresql import INT4RANGE
 
-from enums import LookalikeSize
+from enums import LookalikeSize, BusinessType
 from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
     EnrichmentVoterRecord, EnrichmentProfessionalProfile, EnrichmentEmploymentHistory
 from models.audience_sources import AudienceSource
@@ -53,9 +53,8 @@ class AudienceLookalikesPersistence:
             UserDomains.domain,
             AudienceSource.target_schema)\
             .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)\
-            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)\
-            .join(Users, Users.id == AudienceSource.created_by_user_id)\
-            .order_by(desc(AudienceLookalikes.created_date))\
+            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id) \
+            .join(Users, Users.id == AudienceSource.created_by_user_id) \
             .filter(AudienceLookalikes.user_id == user_id)
             
         if search_query:
@@ -236,6 +235,79 @@ class AudienceLookalikesPersistence:
 
         return dict(query._asdict()) if query else None
 
+    def retrieve_source_insights(self, source_uuid: UUID, audience_type: BusinessType,
+                              limit: Optional[int] = None, ) -> List[Dict]:
+        def all_columns_except(model, *skip: str):
+            return tuple(
+                c for c in model.__table__.c
+                if c.name not in skip
+            )
+
+        # for b2c
+        enrichment_models_b2c = [
+            EnrichmentPersonalProfiles,
+            EnrichmentFinancialRecord,
+            EnrichmentLifestyle,
+            EnrichmentVoterRecord,
+        ]
+        # for b2b
+        enrichment_models_b2b = [
+            EnrichmentProfessionalProfile,
+            EnrichmentEmploymentHistory,
+        ]
+
+        if audience_type == BusinessType.B2C:
+            enrichment_models = enrichment_models_b2c
+        elif audience_type == BusinessType.B2B:
+            enrichment_models = enrichment_models_b2b
+        else:
+            enrichment_models = enrichment_models_b2c + enrichment_models_b2b
+
+        select_cols = [
+            AudienceSourcesMatchedPerson.value_score.label("customer_value")
+        ]
+        for model in enrichment_models:
+            select_cols.extend(all_columns_except(model, "id", "asid"))
+
+        q = (
+            self.db.query(*select_cols)
+            .select_from(AudienceSourcesMatchedPerson)
+            .join(
+                EnrichmentUser,
+                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id
+            )
+        )
+
+        for model in enrichment_models:
+            q = q.outerjoin(
+                model,
+                model.asid == EnrichmentUser.asid
+            )
+
+        q = q.filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
+        if limit is not None:
+            q = q.limit(limit)
+        rows = q.all()
+
+        def _row2dict(row) -> Dict[str, Any]:
+            d = dict(row._mapping)
+            updated_dict = {}
+            for k, v in d.items():
+                if k == "age" and v:
+                    updated_dict[k] = int(v.lower) if v.lower is not None else None
+                elif k == "zip_code5" and v:
+                    updated_dict[k] = str(v)
+                elif k == "state_abbr":
+                    updated_dict["state"] = v
+                elif isinstance(v, Decimal):
+                    updated_dict[k] = str(v)
+                else:
+                    updated_dict[k] = v
+            return updated_dict
+
+        result: List[Dict[str, Any]] = [_row2dict(r) for r in rows]
+        return result
+
     def calculate_lookalikes(self, user_id: int, source_uuid: UUID, lookalike_size: str) -> List[Dict]:
         audience_source = (
             self.db.query(AudienceSource)
@@ -267,76 +339,12 @@ class AudienceLookalikesPersistence:
             return int(number)
 
         number_required = get_number_users(lookalike_size, total_matched)
+        atype = {
+            "b2b": BusinessType.B2B,
+            "b2c": BusinessType.B2C,
+        }.get(audience_source.target_schema, BusinessType.ALL)
+        result = self.retrieve_source_insights(source_uuid=source_uuid, audience_type=atype, limit=number_required)
 
-        def all_columns_except(model, *skip: str):
-            return tuple(
-                c for c in model.__table__.c
-                if c.name not in skip
-            )
-
-        q = (
-            self.db.query(
-                AudienceSourcesMatchedPerson.value_score.label("customer_value"),
-                *all_columns_except(EnrichmentPersonalProfiles, "id", "asid"),
-                *all_columns_except(EnrichmentFinancialRecord, "id", "asid"),
-                *all_columns_except(EnrichmentLifestyle, "id", "asid"),
-                *all_columns_except(EnrichmentVoterRecord, "id", "asid"),
-                *all_columns_except(EnrichmentProfessionalProfile, "id", "asid"),
-                *all_columns_except(EnrichmentEmploymentHistory, "id", "asid")
-            )
-            .select_from(AudienceSourcesMatchedPerson)
-            .join(
-                EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id
-            )
-            .outerjoin(
-                EnrichmentPersonalProfiles,
-                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
-            )
-            .outerjoin(
-                EnrichmentFinancialRecord,
-                EnrichmentFinancialRecord.asid == EnrichmentUser.asid
-            )
-            .outerjoin(
-                EnrichmentLifestyle,
-                EnrichmentLifestyle.asid == EnrichmentUser.asid
-            )
-            .outerjoin(
-                EnrichmentVoterRecord,
-                EnrichmentVoterRecord.asid == EnrichmentUser.asid
-            )
-            .outerjoin(
-                EnrichmentProfessionalProfile,
-                EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
-            )
-            .outerjoin(
-                EnrichmentEmploymentHistory,
-                EnrichmentEmploymentHistory.asid == EnrichmentUser.asid
-            )
-            .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
-            .order_by(AudienceSourcesMatchedPerson.value_score.desc())
-            .limit(number_required)
-        )
-
-        rows = q.all()
-
-        def _row2dict(row) -> Dict[str, Any]:
-            d = dict(row._mapping)
-            updated_dict = {}
-            for k, v in d.items():
-                if k == "age" and v:
-                    updated_dict[k] = int(v.lower) if v.lower is not None else None
-                elif k == "zip_code5" and v:
-                    updated_dict[k] = str(v)
-                elif k == "state_abbr":
-                    updated_dict["state"] = v
-                elif isinstance(v, Decimal):
-                    updated_dict[k] = str(v)
-                else:
-                    updated_dict[k] = v
-            return updated_dict
-
-        result: List[Dict[str, Any]] = [_row2dict(r) for r in rows]
         return result
 
 

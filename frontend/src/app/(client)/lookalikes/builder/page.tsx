@@ -608,7 +608,7 @@ const CreateLookalikePage: React.FC = () => {
                 ) 
                 }
                 
-                {calculatedResults && (
+                {calculatedResults && currentStep >= 2 && (
                   <>
                   <Box hidden={currentStep !== 2}>
                     <AudienceFieldsSelector

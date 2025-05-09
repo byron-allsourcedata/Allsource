@@ -5,6 +5,7 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.orm import Session
 
+from enums import BusinessType
 from models import AudienceSource
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
@@ -37,219 +38,217 @@ class InsightsUtils:
         return "Other"
 
     @staticmethod
-    def process_insights_for_asids(insights, asids: List[uuid.UUID], db_session: Session):
+    def process_insights_for_asids(insights, asids: List[uuid.UUID], db_session: Session, audience_type: BusinessType):
         is_invalid = lambda val: (
                 val is None
                 or str(val).upper() in ('UNKNOWN', 'U', '2')
         )
-        # 3) PERSONAL
-        personal_fields = [
-            "gender", "state", "religion", "homeowner",
-            "age", "ethnicity", "languages",
-            "marital_status", "have_children",
-            "education_level", "children_ages", "pets"
-        ]
-        personal_cts: defaultdict[str, Counter] = defaultdict(Counter)
-        rows = (
-            db_session.query(
-                EnrichmentPersonalProfiles.gender,
-                EnrichmentPersonalProfiles.state_abbr,
-                EnrichmentPersonalProfiles.religion,
-                EnrichmentPersonalProfiles.homeowner,
-                EnrichmentPersonalProfiles.age,
-                EnrichmentPersonalProfiles.ethnicity,
-                EnrichmentPersonalProfiles.language_code,
-                EnrichmentPersonalProfiles.marital_status,
-                EnrichmentPersonalProfiles.has_children,
+        if audience_type == BusinessType.B2C or audience_type == BusinessType.ALL:
+            # 3) PERSONAL
+            personal_fields = [
+                "gender", "state", "religion", "homeowner",
+                "age", "ethnicity", "languages",
+                "marital_status", "have_children",
+                "education_level", "children_ages", "pets"
+            ]
+            personal_cts: defaultdict[str, Counter] = defaultdict(Counter)
+            rows = (
+                db_session.query(
+                    EnrichmentPersonalProfiles.gender,
+                    EnrichmentPersonalProfiles.state_abbr,
+                    EnrichmentPersonalProfiles.religion,
+                    EnrichmentPersonalProfiles.homeowner,
+                    EnrichmentPersonalProfiles.age,
+                    EnrichmentPersonalProfiles.ethnicity,
+                    EnrichmentPersonalProfiles.language_code,
+                    EnrichmentPersonalProfiles.marital_status,
+                    EnrichmentPersonalProfiles.has_children,
+                )
+                .filter(EnrichmentPersonalProfiles.asid.in_(asids))
+                .all()
             )
-            .filter(EnrichmentPersonalProfiles.asid.in_(asids))
-            .all()
-        )
 
-        for row in rows:
-            for field, val in zip(personal_fields, row):
-                if is_invalid(val):
-                    continue
-                elif field == "age":
-                    key = InsightsUtils.bucket_age(val)
-                else:
-                    key = str(val)
-                key = key.lower()
-                personal_cts[field][key] += 1
-
-        for field in personal_fields:
-            setattr(insights.personal_profile, field, dict(personal_cts[field]))
-
-        # 4) FINANCIAL
-        financial_fields = [
-            'income_range', 'net_worth_range', 'credit_score_range',
-            'credit_cards', 'bank_card', 'credit_card_premium',
-            'credit_card_new_issue', 'number_of_credit_lines',
-            'credit_range_of_new_credit', 'donor', 'investor',
-            'mail_order_donor'
-        ]
-        fin_cts: defaultdict[str, Counter] = defaultdict(Counter)
-        rows = db_session.query(
-            EnrichmentFinancialRecord.income_range,
-            EnrichmentFinancialRecord.net_worth,
-            EnrichmentFinancialRecord.credit_rating,
-            EnrichmentFinancialRecord.credit_cards,
-            EnrichmentFinancialRecord.bank_card,
-            EnrichmentFinancialRecord.credit_card_premium,
-            EnrichmentFinancialRecord.credit_card_new_issue,
-            EnrichmentFinancialRecord.credit_lines,
-            EnrichmentFinancialRecord.credit_range_of_new_credit_lines,
-            EnrichmentFinancialRecord.donor,
-            EnrichmentFinancialRecord.investor,
-            EnrichmentFinancialRecord.mail_order_donor,
-        ).filter(
-            EnrichmentFinancialRecord.asid.in_(asids)
-        ).all()
-
-        for row in rows:
-            for field, val in zip(financial_fields, row):
-                if is_invalid(val):
-                    continue
-                elif field == "credit_cards":
-                    raw = val.strip("[]")
-                    raw = raw.replace("'", "").replace('"', "")
-                    cards = [c.strip().lower() for c in raw.split(",") if c.strip()]
-                    for card in cards:
-                        fin_cts[field][card] += 1
-                else:
-                    if field == "credit_cards":
-                        key = val.strip("[]")
-                        key = key.replace("'", "").replace('"', "")
-                        key = ", ".join(item.strip() for item in key.split(",") if item)
+            for row in rows:
+                for field, val in zip(personal_fields, row):
+                    if is_invalid(val):
+                        continue
+                    elif field == "age":
+                        key = InsightsUtils.bucket_age(val)
                     else:
                         key = str(val)
-                key = key.lower()
-                fin_cts[field][key] += 1
+                    key = key.lower()
+                    personal_cts[field][key] += 1
 
-        for field in financial_fields:
-            setattr(insights.financial, field, dict(fin_cts[field]))
+            for field in personal_fields:
+                setattr(insights.personal_profile, field, dict(personal_cts[field]))
 
-        # 5) LIFESTYLE
-        lifestyle_fields = [
-            'own_pets', 'cooking_interest', 'travel_interest',
-            'mail_order_buyer', 'online_purchaser', 'book_reader',
-            'health_and_beauty_interest', 'fitness_interest',
-            'outdoor_interest', 'tech_interest', 'diy_interest',
-            'automotive', 'smoker', 'golf_interest',
-            'beauty_cosmetic_interest'
-        ]
-        life_cts: defaultdict[str, Counter] = defaultdict(Counter)
-        rows = db_session.query(
-            EnrichmentLifestyle.pets,
-            EnrichmentLifestyle.cooking_enthusiast,
-            EnrichmentLifestyle.travel,
-            EnrichmentLifestyle.mail_order_buyer,
-            EnrichmentLifestyle.online_purchaser,
-            EnrichmentLifestyle.book_reader,
-            EnrichmentLifestyle.health_and_beauty,
-            EnrichmentLifestyle.fitness,
-            EnrichmentLifestyle.outdoor_enthusiast,
-            EnrichmentLifestyle.tech_enthusiast,
-            EnrichmentLifestyle.diy,
-            EnrichmentLifestyle.automotive_buff,
-            EnrichmentLifestyle.smoker,
-            EnrichmentLifestyle.golf_enthusiasts,
-            EnrichmentLifestyle.beauty_cosmetics,
-        ).filter(
-            EnrichmentLifestyle.asid.in_(asids)
-        ).all()
+            # 4) FINANCIAL
+            financial_fields = [
+                'income_range', 'net_worth_range', 'credit_score_range',
+                'credit_cards', 'bank_card', 'credit_card_premium',
+                'credit_card_new_issue', 'number_of_credit_lines',
+                'credit_range_of_new_credit', 'donor', 'investor',
+                'mail_order_donor'
+            ]
+            fin_cts: defaultdict[str, Counter] = defaultdict(Counter)
+            rows = db_session.query(
+                EnrichmentFinancialRecord.income_range,
+                EnrichmentFinancialRecord.net_worth,
+                EnrichmentFinancialRecord.credit_rating,
+                EnrichmentFinancialRecord.credit_cards,
+                EnrichmentFinancialRecord.bank_card,
+                EnrichmentFinancialRecord.credit_card_premium,
+                EnrichmentFinancialRecord.credit_card_new_issue,
+                EnrichmentFinancialRecord.credit_lines,
+                EnrichmentFinancialRecord.credit_range_of_new_credit_lines,
+                EnrichmentFinancialRecord.donor,
+                EnrichmentFinancialRecord.investor,
+                EnrichmentFinancialRecord.mail_order_donor,
+            ).filter(
+                EnrichmentFinancialRecord.asid.in_(asids)
+            ).all()
 
-        for row in rows:
-            for field, val in zip(lifestyle_fields, row):
-                if is_invalid(val):
-                    continue
+            for row in rows:
+                for field, val in zip(financial_fields, row):
+                    if is_invalid(val):
+                        continue
+                    elif field == "credit_cards":
+                        raw = val.strip("[]")
+                        raw = raw.replace("'", "").replace('"', "")
+                        cards = [c.strip().lower() for c in raw.split(",") if c.strip()]
+                        for card in cards:
+                            fin_cts[field][card] += 1
+                        continue
+                    else:
+                        key = str(val)
+                    key = key.lower()
+                    fin_cts[field][key] += 1
 
-                key = str(val).lower()
-                life_cts[field][key] += 1
+            for field in financial_fields:
+                setattr(insights.financial, field, dict(fin_cts[field]))
 
-        for field in lifestyle_fields:
-            setattr(insights.lifestyle, field, dict(life_cts[field]))
+            # 5) LIFESTYLE
+            lifestyle_fields = [
+                'own_pets', 'cooking_interest', 'travel_interest',
+                'mail_order_buyer', 'online_purchaser', 'book_reader',
+                'health_and_beauty_interest', 'fitness_interest',
+                'outdoor_interest', 'tech_interest', 'diy_interest',
+                'automotive', 'smoker', 'golf_interest',
+                'beauty_cosmetic_interest'
+            ]
+            life_cts: defaultdict[str, Counter] = defaultdict(Counter)
+            rows = db_session.query(
+                EnrichmentLifestyle.pets,
+                EnrichmentLifestyle.cooking_enthusiast,
+                EnrichmentLifestyle.travel,
+                EnrichmentLifestyle.mail_order_buyer,
+                EnrichmentLifestyle.online_purchaser,
+                EnrichmentLifestyle.book_reader,
+                EnrichmentLifestyle.health_and_beauty,
+                EnrichmentLifestyle.fitness,
+                EnrichmentLifestyle.outdoor_enthusiast,
+                EnrichmentLifestyle.tech_enthusiast,
+                EnrichmentLifestyle.diy,
+                EnrichmentLifestyle.automotive_buff,
+                EnrichmentLifestyle.smoker,
+                EnrichmentLifestyle.golf_enthusiasts,
+                EnrichmentLifestyle.beauty_cosmetics,
+            ).filter(
+                EnrichmentLifestyle.asid.in_(asids)
+            ).all()
 
-        # 6) VOTER
-        voter_fields = ['congressional_district', 'voting_propensity', 'political_party']
-        voter_cts: defaultdict[str, Counter] = defaultdict(Counter)
-        rows = db_session.query(
-            EnrichmentVoterRecord.congressional_district,
-            EnrichmentVoterRecord.voting_propensity,
-            EnrichmentVoterRecord.party_affiliation,
-        ).filter(
-            EnrichmentVoterRecord.asid.in_(asids)
-        ).all()
+            for row in rows:
+                for field, val in zip(lifestyle_fields, row):
+                    if is_invalid(val):
+                        continue
 
-        for row in rows:
-            for field, val in zip(voter_fields, row):
-                if is_invalid(val):
-                    continue
-                key = str(val).lower()
-                voter_cts[field][key] += 1
+                    key = str(val).lower()
+                    life_cts[field][key] += 1
 
-        for field in voter_fields:
-            setattr(insights.voter, field, dict(voter_cts[field]))
+            for field in lifestyle_fields:
+                setattr(insights.lifestyle, field, dict(life_cts[field]))
 
-        # 7) PROFESSIONAL PROFILE
-        prof_fields = [
-            "current_job_title", "current_company_name", "job_start_date",
-            "job_duration", "job_location", "job_level", "department",
-            "company_size", "primary_industry", "annual_sales"
-        ]
-        prof_cts: defaultdict[str, Counter] = defaultdict(Counter)
-        prof_rows = db_session.query(
-            EnrichmentProfessionalProfile.current_job_title,
-            EnrichmentProfessionalProfile.current_company_name,
-            EnrichmentProfessionalProfile.job_start_date,
-            EnrichmentProfessionalProfile.job_duration,
-            EnrichmentProfessionalProfile.job_location,
-            EnrichmentProfessionalProfile.job_level,
-            EnrichmentProfessionalProfile.department,
-            EnrichmentProfessionalProfile.company_size,
-            EnrichmentProfessionalProfile.primary_industry,
-            EnrichmentProfessionalProfile.annual_sales,
-        ).filter(
-            EnrichmentProfessionalProfile.asid.in_(asids)
-        ).all()
+            # 6) VOTER
+            voter_fields = ['congressional_district', 'voting_propensity', 'political_party']
+            voter_cts: defaultdict[str, Counter] = defaultdict(Counter)
+            rows = db_session.query(
+                EnrichmentVoterRecord.congressional_district,
+                EnrichmentVoterRecord.voting_propensity,
+                EnrichmentVoterRecord.party_affiliation,
+            ).filter(
+                EnrichmentVoterRecord.asid.in_(asids)
+            ).all()
 
-        for row in prof_rows:
-            for field, val in zip(prof_fields, row):
-                if is_invalid(val):
-                    continue
-                key = str(val).lower()
-                prof_cts[field][key] += 1
+            for row in rows:
+                for field, val in zip(voter_fields, row):
+                    if is_invalid(val):
+                        continue
+                    key = str(val).lower()
+                    voter_cts[field][key] += 1
 
-        for field in prof_fields:
-            setattr(insights.professional_profile, field, dict(prof_cts[field]))
+            for field in voter_fields:
+                setattr(insights.voter, field, dict(voter_cts[field]))
 
-        # 8) EMPLOYMENT HISTORY
-        emp_fields = [
-            "job_title", "company_name", "start_date",
-            "end_date", "is_current", "location", "job_description"
-        ]
-        emp_cts: defaultdict[str, Counter] = defaultdict(Counter)
-        emp_rows = db_session.query(
-            EnrichmentEmploymentHistory.job_title,
-            EnrichmentEmploymentHistory.company_name,
-            EnrichmentEmploymentHistory.start_date,
-            EnrichmentEmploymentHistory.end_date,
-            EnrichmentEmploymentHistory.is_current,
-            EnrichmentEmploymentHistory.location,
-            EnrichmentEmploymentHistory.job_description,
-        ).filter(
-            EnrichmentEmploymentHistory.asid.in_(asids)
-        ).all()
+        if audience_type == BusinessType.B2B or audience_type == BusinessType.ALL:
+            # 7) PROFESSIONAL PROFILE
+            prof_fields = [
+                "current_job_title", "current_company_name", "job_start_date",
+                "job_duration", "job_location", "job_level", "department",
+                "company_size", "primary_industry", "annual_sales"
+            ]
+            prof_cts: defaultdict[str, Counter] = defaultdict(Counter)
+            prof_rows = db_session.query(
+                EnrichmentProfessionalProfile.current_job_title,
+                EnrichmentProfessionalProfile.current_company_name,
+                EnrichmentProfessionalProfile.job_start_date,
+                EnrichmentProfessionalProfile.job_duration,
+                EnrichmentProfessionalProfile.job_location,
+                EnrichmentProfessionalProfile.job_level,
+                EnrichmentProfessionalProfile.department,
+                EnrichmentProfessionalProfile.company_size,
+                EnrichmentProfessionalProfile.primary_industry,
+                EnrichmentProfessionalProfile.annual_sales,
+            ).filter(
+                EnrichmentProfessionalProfile.asid.in_(asids)
+            ).all()
 
-        for row in emp_rows:
-            for field, val in zip(emp_fields, row):
-                if is_invalid(val):
-                    continue
-                key = str(val).lower()
-                emp_cts[field][key] += 1
+            for row in prof_rows:
+                for field, val in zip(prof_fields, row):
+                    if is_invalid(val):
+                        continue
+                    key = str(val).lower()
+                    prof_cts[field][key] += 1
 
-        for field in emp_fields:
-            setattr(insights.employment_history, field, dict(emp_cts[field]))
+            for field in prof_fields:
+                setattr(insights.professional_profile, field, dict(prof_cts[field]))
+
+            # 8) EMPLOYMENT HISTORY
+            emp_fields = [
+                "job_title", "company_name", "start_date",
+                "end_date", "is_current", "location", "job_description"
+            ]
+            emp_cts: defaultdict[str, Counter] = defaultdict(Counter)
+            emp_rows = db_session.query(
+                EnrichmentEmploymentHistory.job_title,
+                EnrichmentEmploymentHistory.company_name,
+                EnrichmentEmploymentHistory.start_date,
+                EnrichmentEmploymentHistory.end_date,
+                EnrichmentEmploymentHistory.is_current,
+                EnrichmentEmploymentHistory.location,
+                EnrichmentEmploymentHistory.job_description,
+            ).filter(
+                EnrichmentEmploymentHistory.asid.in_(asids)
+            ).all()
+
+            for row in emp_rows:
+                for field, val in zip(emp_fields, row):
+                    if is_invalid(val):
+                        continue
+                    key = str(val).lower()
+                    emp_cts[field][key] += 1
+
+            for field in emp_fields:
+                setattr(insights.employment_history, field, dict(emp_cts[field]))
 
         return insights
 
@@ -257,6 +256,7 @@ class InsightsUtils:
     def process_insights(
         source_id: str,
         db_session: Session,
+        audience_type: BusinessType = BusinessType.ALL,
     ) -> "InsightsByCategory":
         db_session.commit()
         with db_session.begin():
@@ -290,7 +290,7 @@ class InsightsUtils:
 
             new_insights = InsightsByCategory()
             new_insights = InsightsUtils.process_insights_for_asids(
-                new_insights, asids, db_session
+                new_insights, asids, db_session, audience_type
             )
 
             merged = InsightsUtils.merge_insights_json(

@@ -53,7 +53,6 @@ class AudienceSourcesPersistence:
             )
                 .join(Users, Users.id == AudienceSource.created_by_user_id)
                 .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
-                .order_by(AudienceSource.created_at.desc())
                 .filter(AudienceSource.user_id == user_id)
         )
 

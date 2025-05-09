@@ -1,10 +1,10 @@
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Set
 from uuid import UUID
 
 from pydantic.v1 import UUID4
 
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
-from enums import BaseEnum
+from enums import BaseEnum, BusinessType
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
@@ -258,54 +258,30 @@ class AudienceLookalikesService:
 
         return b2c, b2b, other
     
-    def build_normalization_config(self):
+    def build_normalization_config(self, audience_data: List[dict]):
+        cleaned_personal = PERSONAL - {"zip_code5"}
+        allowed: Set[str] = (
+                cleaned_personal
+                | FINANCIAL
+                | LIFESTYLE
+                | VOTER
+                | EMPLOYMENT_HISTORY
+                | PROFESSIONAL_PROFILE
+        )
+        present_keys = {key for record in audience_data for key in record.keys()}
+        unordered = [field for field in allowed if field in present_keys]
         return NormalizationConfig(
             numerical_features=[],
             ordered_features={},
-            unordered_features=[
-                # personal
-                "age", "gender", "homeowner", "length_of_residence_years",
-                "marital_status", "business_owner",
-                "birth_day", "birth_month", "birth_year",
-                "has_children", "number_of_children",
-                "religion", "ethnicity", "language_code",
-                "state",
-
-                # financial
-                "income_range", "net_worth", "credit_rating",
-                "credit_cards", "bank_card", "credit_card_premium",
-                "credit_card_new_issue", "credit_lines",
-                "credit_range_of_new_credit_lines",
-                "donor", "investor", "mail_order_donor",
-
-                # lifestyle
-                "pets", "cooking_enthusiast", "travel", "mail_order_buyer",
-                "online_purchaser", "book_reader", "health_and_beauty",
-                "fitness", "outdoor_enthusiast", "tech_enthusiast", "diy",
-                "gardening", "automotive_buff", "golf_enthusiasts",
-                "beauty_cosmetics", "smoker",
-
-                # voter
-                "party_affiliation", "congressional_district",
-                "voting_propensity",
-
-                # employment_history
-                "job_title", "company_name", "start_date", "end_date",
-                "location", "job_description",
-
-                # professional_profile
-                "current_job_title", "current_company_name",
-                "job_start_date", "job_duration", "job_location",
-                "job_level", "department", "company_size",
-                "primary_industry", "annual_sales",
-            ]
+            unordered_features=unordered,
         )
-    def calculate_insights(self, audience_data: List[dict], similar_audience_service: SimilarAudienceService) -> CalculateRequest:
+
+    def calculate_insights(self, audience_data: List[dict], similar_audience_service: SimilarAudienceService, audience_type: BusinessType = BusinessType.ALL) -> CalculateRequest:
         try:
             if len(audience_data) < 2:
                 raise LessThenTwoTrainDataset
 
-            normalization_config = self.build_normalization_config()
+            normalization_config = self.build_normalization_config(audience_data)
             
             audience_feature_dict = similar_audience_service.get_audience_feature_importance_with_config(
                 audience_data=audience_data,

@@ -59,6 +59,7 @@ class BusinessType(Enum):
     D2C = 'd2c'
     B2B = 'b2b'
     B2C = 'b2c'
+    ALL = 'all'
 
 class AudienceSettingAlias(Enum):
     AVERAGE_SUCCESS_VALIDATIONS = 'average_success_validations'
