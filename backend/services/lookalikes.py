@@ -63,7 +63,7 @@ class AudienceLookalikesService:
     def get_lookalikes(self, user, page, per_page, from_date, to_date,
                    sort_by, sort_order, lookalike_size,
                    lookalike_type, search_query):
-        result_query, total, max_page = (
+        result_query, total, max_page, source_count = (
             self.lookalikes_persistence_service.get_lookalikes(
                 user_id=user.get('id'),
                 page=page,
@@ -118,7 +118,14 @@ class AudienceLookalikesService:
                 "target_schema": target_schema
             })
 
-        return result, total, max_page
+        return {
+            "data": result,
+            "meta": {
+                "total": total,
+                "max_page": max_page,
+                "source_count": source_count
+            }
+        }
 
     def get_source_info(self, uuid_of_source, user):
         source_info = self.lookalikes_persistence_service.get_source_info(uuid_of_source, user.get('id'))

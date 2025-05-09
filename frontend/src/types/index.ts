@@ -1,1 +1,1 @@
-export * from "@/types/lookalike"
+export * from "@/types/lookalike";

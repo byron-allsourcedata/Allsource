@@ -30,6 +30,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast } from "@/components/ToastNotification";
 import CircularProgress from "@mui/material/CircularProgress";
+import FirstTimeScreen from "./FirstTimeScreen"
 
 type TableData = {
     id: string;
@@ -39,6 +40,14 @@ type TableData = {
     size: number;
     created_date: string;
 };
+
+type CardData = {
+    title: string;
+    description: string;
+    icon: string;
+    onClick?: () => void;
+    isClickable?: boolean;
+  };
 
 const Insights = () => {
     const router = useRouter();
@@ -59,6 +68,27 @@ const Insights = () => {
     const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
         setTabIndex(newIndex);
     };
+
+    const cardData: CardData[] = [
+        {
+          title: "Sources Insights",
+          description: "Analyze your audience sources to identify high-performing segments and optimize targeting strategies.",
+          icon: "/source.svg",
+          onClick: () => {
+            router.push("/sources/builder?type=pixel");
+          },
+          isClickable: true
+        },
+        {
+          title: "Lookalikes Insights",
+          description: "View the aggregated profile of your generated lookalike audience, showing different insights characteristics.",
+          icon: "/lookalike.svg",
+          onClick: () => {
+            router.push("/sources/builder?type=customer-conversions");
+          },
+          isClickable: true
+        }
+      ];
 
     const toNormalText = (sourceType: string) =>
         sourceType
@@ -472,89 +502,90 @@ const Insights = () => {
                         </Box>
                     </Box>
                 ) : (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            width: "100%",
-                            height: "100%",
-                            alignItems: "center",
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                border: "1px solid rgba(235, 235, 235, 1)",
-                                borderRadius: 2,
-                                padding: 3,
-                                boxSizing: "border-box",
-                                width: "100%",
-                                textAlign: "center",
-                                flex: 1,
-                                "& img": {
-                                    width: "auto",
-                                    height: "auto",
-                                    maxWidth: "100%",
-                                },
-                            }}
-                        >
-                            <Typography
-                                variant="h5"
-                                className="first-sub-title"
-                                sx={{
-                                    mb: 3,
-                                    fontFamily: "Nunito Sans",
-                                    fontSize: "20px",
-                                    color: "#4a4a4a",
-                                    fontWeight: "600",
-                                    lineHeight: "28px",
-                                }}
-                            >
-                                Import Your First Source or Lookalike
-                            </Typography>
-                            <Image
-                                src="/pixel_installation_needed.svg"
-                                alt="Need Pixel Install"
-                                height={250}
-                                width={300}
-                            />
-                            <Typography
-                                variant="body1"
-                                className="table-data"
-                                sx={{
-                                    mt: 3,
-                                    fontFamily: "Nunito Sans",
-                                    fontSize: "14px",
-                                    color: "#808080",
-                                    fontWeight: "600",
-                                    lineHeight: "20px",
-                                }}
-                            >
-                                You don’t have any sources and lookalikes yet. Import your first
-                                source to develop insights.
-                            </Typography>
-                            <Link href="/sources">
-                                <Button
-                                    variant="contained"
-                                    className="second-sub-title"
-                                    sx={{
-                                        backgroundColor: "rgba(80, 82, 178, 1)",
-                                        textTransform: "none",
-                                        padding: "10px 24px",
-                                        mt: 3,
-                                        color: "#fff !important",
-                                        ":hover": {
-                                            backgroundColor: "rgba(80, 82, 178, 1)",
-                                        },
-                                    }}
-                                >
-                                    Import Your First Source
-                                </Button>
-                            </Link>
-                        </Box>
-                    </Box>
+                    <FirstTimeScreen cardData={cardData}/>
+                    // <Box
+                    //     sx={{
+                    //         display: "flex",
+                    //         width: "100%",
+                    //         height: "100%",
+                    //         alignItems: "center",
+                    //     }}
+                    // >
+                    //     <Box
+                    //         sx={{
+                    //             display: "flex",
+                    //             flexDirection: "column",
+                    //             justifyContent: "center",
+                    //             alignItems: "center",
+                    //             border: "1px solid rgba(235, 235, 235, 1)",
+                    //             borderRadius: 2,
+                    //             padding: 3,
+                    //             boxSizing: "border-box",
+                    //             width: "100%",
+                    //             textAlign: "center",
+                    //             flex: 1,
+                    //             "& img": {
+                    //                 width: "auto",
+                    //                 height: "auto",
+                    //                 maxWidth: "100%",
+                    //             },
+                    //         }}
+                    //     >
+                    //         <Typography
+                    //             variant="h5"
+                    //             className="first-sub-title"
+                    //             sx={{
+                    //                 mb: 3,
+                    //                 fontFamily: "Nunito Sans",
+                    //                 fontSize: "20px",
+                    //                 color: "#4a4a4a",
+                    //                 fontWeight: "600",
+                    //                 lineHeight: "28px",
+                    //             }}
+                    //         >
+                    //             Import Your First Source or Lookalike
+                    //         </Typography>
+                    //         <Image
+                    //             src="/pixel_installation_needed.svg"
+                    //             alt="Need Pixel Install"
+                    //             height={250}
+                    //             width={300}
+                    //         />
+                    //         <Typography
+                    //             variant="body1"
+                    //             className="table-data"
+                    //             sx={{
+                    //                 mt: 3,
+                    //                 fontFamily: "Nunito Sans",
+                    //                 fontSize: "14px",
+                    //                 color: "#808080",
+                    //                 fontWeight: "600",
+                    //                 lineHeight: "20px",
+                    //             }}
+                    //         >
+                    //             You don’t have any sources and lookalikes yet. Import your first
+                    //             source to develop insights.
+                    //         </Typography>
+                    //         <Link href="/sources">
+                    //             <Button
+                    //                 variant="contained"
+                    //                 className="second-sub-title"
+                    //                 sx={{
+                    //                     backgroundColor: "rgba(80, 82, 178, 1)",
+                    //                     textTransform: "none",
+                    //                     padding: "10px 24px",
+                    //                     mt: 3,
+                    //                     color: "#fff !important",
+                    //                     ":hover": {
+                    //                         backgroundColor: "rgba(80, 82, 178, 1)",
+                    //                     },
+                    //                 }}
+                    //             >
+                    //                 Import Your First Source
+                    //             </Button>
+                    //         </Link>
+                    //     </Box>
+                    // </Box>
                 )}
             </Box>
         </Box>

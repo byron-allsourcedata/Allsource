@@ -8,7 +8,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useRouter } from "next/navigation";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import CustomToolTip from "@/components/customToolTip";
 import FilterPopup from "./components/LookalikeFilters";
 import Link from "next/link";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -17,6 +16,34 @@ import CustomTablePagination from "@/components/CustomTablePagination";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CalendarPopup from "@/components/CustomCalendar";
 import dayjs from "dayjs";
+import { ExternalLink } from "@/components/ExternalLink";
+import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import FirstTimeScreen from "../sources/components/FirstTimeScreen";
+import { CardData } from "@/types/first_time_screens";
+
+const cardData: CardData[] = [
+  {
+    title: "Step 1. Select Source",
+    description: "Choose a source that represents your ideal customer profile.",
+    icon: "/lookalike_step1.svg",
+  },
+  {
+    title: "Step 2. Choose Lookalike Size",
+    description: "Specify how closely your lookalike should match the source.",
+    icon: "/lookalike_step2.svg",
+  },
+  {
+    title: "Step 3. Select Fields",
+    description: "Choose which user attributes should carry the most weight.",
+    icon: "/lookalike_step3.svg",
+  },
+  {
+    title: "Step 4. Order Fields",
+    description:
+      "Arrange fields in order of importance to fine-tune audience quality.",
+    icon: "/lookalike_step4.svg",
+  },
+];
 
 interface FilterParams {
   from_date: number | null;
@@ -53,12 +80,15 @@ interface TableRowData {
 
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
+
   const [isLookalikeGenerated, setIsLookalikeGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loaderForTable, setLoaderForTable] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [lookalikesData, setLookalikeData] = useState<TableRowData[]>([]);
+  const [sourceCount, setSourceCount] = useState<number>();
+  const [showNotification, setShowNotification] = useState(true);
 
   // Pagination and Sorting
   const [count_lookalikes, setCountLookalike] = useState<number | null>(null);
@@ -241,7 +271,7 @@ const CreateLookalikePage: React.FC = () => {
   }: FetchDataParams) => {
     try {
       isFirstLoad ? setLoading(true) : setLoaderForTable(true);
-      
+
       // Processing "Date Calendly"
       const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
       const startEpoch = appliedDates.start
@@ -283,15 +313,17 @@ const CreateLookalikePage: React.FC = () => {
       processMultiFilter("Search", "search_query");
 
       const response = await axiosInstance.get(url);
-      const [leads, count] = response.data;
-      setLookalikeData(Array.isArray(leads) ? leads : []);
-      // console.log(lookalikesData[0])
-      setCountLookalike(count || 0);
-      if (leads && count > 0) {
+      const { data, meta } = response.data;
+
+      setLookalikeData(Array.isArray(data) ? data : []);
+      setCountLookalike(meta.total || 0);
+      setSourceCount(meta.source_count || 0);
+
+      if (data && meta.total > 0) {
         setIsLookalikeGenerated(true);
       }
       const options = [15, 30, 50, 100, 200, 500];
-      let RowsPerPageOptions = options.filter((option) => option <= count);
+      let RowsPerPageOptions = options.filter((option) => option <= meta.total);
       if (RowsPerPageOptions.length < options.length) {
         RowsPerPageOptions = [
           ...RowsPerPageOptions,
@@ -305,12 +337,10 @@ const CreateLookalikePage: React.FC = () => {
       setRowsPerPage(selectedValue);
     } catch (error) {
     } finally {
-      if (isFirstLoad){
-        setIsFirstLoad(false)
+      if (isFirstLoad) {
+        setIsFirstLoad(false);
         setLoading(false);
-        
-      }
-      else {
+      } else {
         setLoaderForTable(false);
       }
       setIsLoading(false);
@@ -438,191 +468,197 @@ const CreateLookalikePage: React.FC = () => {
     <Box sx={{ width: "100%", pr: 2, flexGrow: 1 }}>
       {loading && <CustomizedProgressBar />}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            pl: "0.5rem",
-            gap: "15px",
-          }}
-        >
+        {isLookalikeGenerated && (
           <Box
             sx={{
               display: "flex",
               flexDirection: "row",
               alignItems: "center",
-              gap: 1,
-              pt: isLookalikeGenerated ? 1 : 2.5,
-            }}
-          >
-            <Typography className="first-sub-title">Lookalikes</Typography>
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              pl: "0.5rem",
               gap: "15px",
-              pt: "16px",
-              "@media (max-width: 900px)": {
-                gap: "8px",
-              },
             }}
           >
-            {isLookalikeGenerated && (
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  gap: 2,
-                  alignItems: "center",
-                  width: "100%",
-                }}
-              >
-                <Button
-                  onClick={() => router.push("/lookalikes/builder")}
-                  variant="outlined"
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 1,
+                pt: isLookalikeGenerated ? 1 : 2.5,
+              }}
+            >
+              <Typography className="first-sub-title">Lookalikes</Typography>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: "15px",
+                pt: "16px",
+                "@media (max-width: 900px)": {
+                  gap: "8px",
+                },
+              }}
+            >
+              {isLookalikeGenerated && (
+                <Box
                   sx={{
-                    height: "40px",
-                    borderRadius: "4px",
-                    textTransform: "none",
-                    fontSize: "14px",
-                    lineHeight: "19.6px",
-                    fontWeight: "500",
-                    color: "#5052B2",
-                    borderColor: "#5052B2",
-                    "&:hover": {
-                      backgroundColor: "rgba(80, 82, 178, 0.1)",
-                      borderColor: "#5052B2",
-                    },
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: 2,
+                    alignItems: "center",
+                    width: "100%",
                   }}
                 >
-                  Create Lookalike
-                </Button>
-                <Button
-                  onClick={handleFilterPopupOpen}
-                  aria-controls={dropdownOpen ? "account-dropdown" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={dropdownOpen ? "true" : undefined}
-                  sx={{
-                    textTransform: "none",
-                    color:
-                      selectedFilters && selectedFilters.length > 0
-                        ? "rgba(80, 82, 178, 1)"
-                        : "rgba(128, 128, 128, 1)",
-                    border:
-                      selectedFilters && selectedFilters.length > 0
-                        ? "1px solid rgba(80, 82, 178, 1)"
-                        : "1px solid rgba(184, 184, 184, 1)",
-                    borderRadius: "4px",
-                    padding: "8px",
-                    minWidth: "auto",
-                    position: "relative",
-                    "@media (max-width: 900px)": {
-                      border: "none",
-                      padding: 0,
-                    },
-                    "&:hover": {
-                      backgroundColor: "transparent",
-                      border: "1px solid rgba(80, 82, 178, 1)",
-                      color: "rgba(80, 82, 178, 1)",
-                      "& .MuiSvgIcon-root": {
-                        color: "rgba(80, 82, 178, 1)",
-                      },
-                    },
-                  }}
-                >
-                  <FilterListIcon
-                    fontSize="medium"
+                  <Button
+                    onClick={() => router.push("/lookalikes/builder")}
+                    variant="outlined"
                     sx={{
+                      height: "40px",
+                      borderRadius: "4px",
+                      textTransform: "none",
+                      fontSize: "14px",
+                      lineHeight: "19.6px",
+                      fontWeight: "500",
+                      color: "#5052B2",
+                      borderColor: "#5052B2",
+                      "&:hover": {
+                        backgroundColor: "rgba(80, 82, 178, 0.1)",
+                        borderColor: "#5052B2",
+                      },
+                    }}
+                  >
+                    Create Lookalike
+                  </Button>
+                  <Button
+                    onClick={handleFilterPopupOpen}
+                    aria-controls={
+                      dropdownOpen ? "account-dropdown" : undefined
+                    }
+                    aria-haspopup="true"
+                    aria-expanded={dropdownOpen ? "true" : undefined}
+                    sx={{
+                      textTransform: "none",
                       color:
                         selectedFilters && selectedFilters.length > 0
                           ? "rgba(80, 82, 178, 1)"
                           : "rgba(128, 128, 128, 1)",
-                    }}
-                  />
-
-                  {selectedFilters && selectedFilters.length > 0 && (
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: 6,
-                        right: 8,
-                        width: "10px",
-                        height: "10px",
-                        backgroundColor: "red",
-                        borderRadius: "50%",
-                        "@media (max-width: 900px)": {
-                          top: -1,
-                          right: 1,
-                        },
-                      }}
-                    />
-                  )}
-                </Button>
-
-                <Button
-                  aria-controls={isCalendarOpen ? "calendar-popup" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={isCalendarOpen ? "true" : undefined}
-                  onClick={handleCalendarClick}
-                  sx={{
-                    textTransform: "none",
-                    color: "rgba(128, 128, 128, 1)",
-                    border: formattedDates
-                      ? "1px solid rgba(80, 82, 178, 1)"
-                      : "1px solid rgba(184, 184, 184, 1)",
-                    borderRadius: "4px",
-                    padding: "8px",
-                    minWidth: "auto",
-                    "@media (max-width: 900px)": {
-                      border: "none",
-                      padding: 0,
-                    },
-                    "&:hover": {
-                      backgroundColor: "transparent",
-                      border: "1px solid rgba(80, 82, 178, 1)",
-                      color: "rgba(80, 82, 178, 1)",
-                      "& .MuiSvgIcon-root": {
-                        color: "rgba(80, 82, 178, 1)",
+                      border:
+                        selectedFilters && selectedFilters.length > 0
+                          ? "1px solid rgba(80, 82, 178, 1)"
+                          : "1px solid rgba(184, 184, 184, 1)",
+                      borderRadius: "4px",
+                      padding: "8px",
+                      minWidth: "auto",
+                      position: "relative",
+                      "@media (max-width: 900px)": {
+                        border: "none",
+                        padding: 0,
                       },
-                    },
-                  }}
-                >
-                  <DateRangeIcon
-                    fontSize="medium"
-                    sx={{
-                      color: formattedDates
-                        ? "rgba(80, 82, 178, 1)"
-                        : "rgba(128, 128, 128, 1)",
-                    }}
-                  />
-                  <Typography
-                    variant="body1"
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                      lineHeight: "19.6px",
-                      textAlign: "left",
-                      color: formattedDates
-                        ? "rgba(80, 82, 178, 1)"
-                        : "rgba(128, 128, 128, 1)",
-                      "@media (max-width: 600px)": {
-                        display: "none",
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                        border: "1px solid rgba(80, 82, 178, 1)",
+                        color: "rgba(80, 82, 178, 1)",
+                        "& .MuiSvgIcon-root": {
+                          color: "rgba(80, 82, 178, 1)",
+                        },
                       },
                     }}
                   >
-                    {formattedDates}
-                  </Typography>
-                </Button>
-              </Box>
-            )}
+                    <FilterListIcon
+                      fontSize="medium"
+                      sx={{
+                        color:
+                          selectedFilters && selectedFilters.length > 0
+                            ? "rgba(80, 82, 178, 1)"
+                            : "rgba(128, 128, 128, 1)",
+                      }}
+                    />
+
+                    {selectedFilters && selectedFilters.length > 0 && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 6,
+                          right: 8,
+                          width: "10px",
+                          height: "10px",
+                          backgroundColor: "red",
+                          borderRadius: "50%",
+                          "@media (max-width: 900px)": {
+                            top: -1,
+                            right: 1,
+                          },
+                        }}
+                      />
+                    )}
+                  </Button>
+
+                  <Button
+                    aria-controls={
+                      isCalendarOpen ? "calendar-popup" : undefined
+                    }
+                    aria-haspopup="true"
+                    aria-expanded={isCalendarOpen ? "true" : undefined}
+                    onClick={handleCalendarClick}
+                    sx={{
+                      textTransform: "none",
+                      color: "rgba(128, 128, 128, 1)",
+                      border: formattedDates
+                        ? "1px solid rgba(80, 82, 178, 1)"
+                        : "1px solid rgba(184, 184, 184, 1)",
+                      borderRadius: "4px",
+                      padding: "8px",
+                      minWidth: "auto",
+                      "@media (max-width: 900px)": {
+                        border: "none",
+                        padding: 0,
+                      },
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                        border: "1px solid rgba(80, 82, 178, 1)",
+                        color: "rgba(80, 82, 178, 1)",
+                        "& .MuiSvgIcon-root": {
+                          color: "rgba(80, 82, 178, 1)",
+                        },
+                      },
+                    }}
+                  >
+                    <DateRangeIcon
+                      fontSize="medium"
+                      sx={{
+                        color: formattedDates
+                          ? "rgba(80, 82, 178, 1)"
+                          : "rgba(128, 128, 128, 1)",
+                      }}
+                    />
+                    <Typography
+                      variant="body1"
+                      sx={{
+                        fontFamily: "Nunito Sans",
+                        fontSize: "14px",
+                        fontWeight: "600",
+                        lineHeight: "19.6px",
+                        textAlign: "left",
+                        color: formattedDates
+                          ? "rgba(80, 82, 178, 1)"
+                          : "rgba(128, 128, 128, 1)",
+                        "@media (max-width: 600px)": {
+                          display: "none",
+                        },
+                      }}
+                    >
+                      {formattedDates}
+                    </Typography>
+                  </Button>
+                </Box>
+              )}
+            </Box>
           </Box>
-        </Box>
+        )}
         <Box
           sx={{
             display: "flex",
@@ -756,10 +792,9 @@ const CreateLookalikePage: React.FC = () => {
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
-                alignItems: "center",
-                border: "1px solid rgba(235, 235, 235, 1)",
+                alignItems: "start",
                 borderRadius: 2,
-                padding: 3,
+                pr: 1,
                 boxSizing: "border-box",
                 width: "100%",
                 textAlign: "center",
@@ -771,59 +806,159 @@ const CreateLookalikePage: React.FC = () => {
                 },
               }}
             >
-              <Typography
-                variant="h5"
-                className="first-sub-title"
-                sx={{
-                  mb: 3,
-                  fontFamily: "Nunito Sans",
-                  fontSize: "20px",
-                  color: "#4a4a4a",
-                  fontWeight: "600",
-                  lineHeight: "28px",
-                }}
-              >
-                Generate Your First Lookalike
-              </Typography>
-              <Image
-                src="/pixel_installation_needed.svg"
-                alt="Need Pixel Install"
-                height={250}
-                width={300}
-              />
-              <Typography
-                variant="body1"
-                className="table-data"
-                sx={{
-                  mt: 3,
-                  fontFamily: "Nunito Sans",
-                  fontSize: "14px",
-                  color: "#808080",
-                  fontWeight: "600",
-                  lineHeight: "20px",
-                }}
-              >
-                To create your first Lookalike, simply click the button below to
-                get started.
-              </Typography>
-              <Link href="/lookalikes/builder" passHref>
-                <Button
-                  variant="contained"
-                  className="second-sub-title"
+              {sourceCount === 0 && showNotification && (
+                <Box
                   sx={{
-                    backgroundColor: "rgba(80, 82, 178, 1)",
-                    textTransform: "none",
-                    padding: "10px 24px",
-                    mt: 3,
-                    color: "#fff !important",
-                    ":hover": {
-                      backgroundColor: "rgba(80, 82, 178, 1)",
-                    },
+                    border: "1px solid rgba(224, 49, 48, 1)",
+                    display: "flex",
+                    flexDirection: "row",
+                    width: "100%",
+                    padding: 2,
+                    borderRadius: "4px",
+                    mb: 3,
+                    justifyContent: "space-between",
                   }}
                 >
-                  Generate Your First Lookalike
-                </Button>
-              </Link>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      width: "100%",
+                      gap: 2,
+                      alignItems: "center",
+                    }}
+                  >
+                    <ReportProblemOutlinedIcon
+                      sx={{ fontSize: "20px", color: "rgba(230, 90, 89, 1)" }}
+                    />
+                    <Typography className="second-sub-title">
+                      You need to import at least one source to create a
+                      lookalike
+                    </Typography>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "row",
+                      width: "100%",
+                      gap: 2,
+                      alignItems: "center",
+                      justifyContent: "end",
+                    }}
+                  >
+                    <Button
+                      sx={{
+                        textTransform: "none",
+                        fontFamily: "Nunito Sans",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "rgba(224, 49, 48, 1) !important",
+                      }}
+                      onClick={() => {
+                        setShowNotification(false);
+                      }}
+                    >
+                      Dismiss
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        router.push("/sources");
+                      }}
+                      sx={{
+                        textTransform: "none",
+                        fontFamily: "Nunito Sans",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "rgba(255, 255, 255, 1) !important",
+                        backgroundColor: "rgba(224, 49, 48, 1)",
+                        "&:hover": {
+                          backgroundColor: "rgba(224, 49, 48, 0.85)",
+                        },
+                      }}
+                    >
+                      Create Source
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <Typography
+                  variant="h5"
+                  className="first-sub-title"
+                  sx={{
+                    fontFamily: "Nunito Sans",
+                    fontSize: "24px !important",
+                    color: "#4a4a4a",
+                    fontWeight: "500 !important",
+                    lineHeight: "22px",
+                  }}
+                >
+                  Create Your First Lookalike
+                </Typography>
+                <ExternalLink href="https://example.com">
+                  Learn more
+                </ExternalLink>
+              </Box>
+              <Typography
+                variant="body1"
+                sx={{
+                  mt: 1,
+                  fontFamily: "Nunito Sans",
+                  fontSize: "14px",
+                  color: "rgba(50, 54, 62, 1)",
+                  fontWeight: "400",
+                  lineHeight: "22px",
+                }}
+              >
+                This tool helps you expand your reach by finding new users who
+                closely resemble your existing high-value audiences
+              </Typography>
+
+              <Box
+                sx={{
+                  border: "1px solid rgba(237, 237, 237, 1)",
+                  width: "100%",
+                  mt: 3,
+                  borderRadius: "6px",
+                }}
+              >
+                <Box
+                  sx={{
+                    textAlign: "left",
+                  }}
+                >
+                  <FirstTimeScreen cardData={cardData} />
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    width: "100%",
+                    justifyContent: "end",
+                    mb: 2,
+                    pr: 4,
+                  }}
+                >
+                  <Link href="/lookalikes/builder" passHref>
+                    <Button
+                      variant="contained"
+                      className="second-sub-title"
+                      disabled={sourceCount === 0}
+                      sx={{
+                        backgroundColor: "rgba(56, 152, 252, 1)",
+                        textTransform: "none",
+                        padding: "10px 24px",
+                        color: "#fff !important",
+                        ":hover": {
+                          backgroundColor: "rgba(48, 149, 250, 1)",
+                        },
+                      }}
+                    >
+                      Begin
+                    </Button>
+                  </Link>
+                </Box>
+              </Box>
             </Box>
           )}
         </Box>

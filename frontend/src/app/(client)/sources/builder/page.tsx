@@ -1,5 +1,11 @@
 "use client";
-import React, { ChangeEvent, useState, useEffect, useRef } from "react";
+import React, {
+  ChangeEvent,
+  useState,
+  useEffect,
+  useRef,
+  Suspense,
+} from "react";
 import {
   Box,
   Grid,
@@ -15,7 +21,7 @@ import {
   ToggleButton,
 } from "@mui/material";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { sourcesStyles } from "../sourcesStyles";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
@@ -26,6 +32,7 @@ import { styled } from "@mui/material/styles";
 import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import Papa, { ParseResult } from "papaparse";
+import ProgressBar from "@/components/ProgressBar";
 
 interface Row {
   id: number;
@@ -97,9 +104,14 @@ const SourcesImport: React.FC = () => {
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
-  const [domainsWithoutPixel, setDomainsWithoutPixel] = useState<DomainsLeads[]>([]);
+  const [domainsWithoutPixel, setDomainsWithoutPixel] = useState<
+    DomainsLeads[]
+  >([]);
   const [totalLeads, setTotalLeads] = useState(0);
   const [matchedLeads, setMatchedLeads] = useState(0);
+
+  const searchParams = useSearchParams();
+  const typeFromSearchParams = searchParams.get("type");
 
   const block1Ref = useRef<HTMLDivElement | null>(null);
   const block2Ref = useRef<HTMLDivElement | null>(null);
@@ -142,7 +154,6 @@ const SourcesImport: React.FC = () => {
     }
   };
 
-
   // Mapping
 
   const handleMapListChange = (id: number, value: string) => {
@@ -161,8 +172,8 @@ const SourcesImport: React.FC = () => {
 
   const handlePixelInstall = () => {
     router.push("/dashboard");
-    sessionStorage.setItem('current_domain', domainsWithoutPixel[0].name);
-  }
+    sessionStorage.setItem("current_domain", domainsWithoutPixel[0].name);
+  };
 
   const handleAdd = () => {
     const hiddenRowIndex = rows.findIndex((row) => row.isHidden);
@@ -174,10 +185,34 @@ const SourcesImport: React.FC = () => {
   };
 
   useEffect(() => {
+    let newType = "";
+    if (typeFromSearchParams === "customer-conversions")
+      newType = "Customer Conversions";
+    if (typeFromSearchParams === "failed-leads") newType = "Failed Leads";
+    if (typeFromSearchParams === "interests") newType = "Interest";
+    if (typeFromSearchParams === "pixel") {
+      newType = "Website - Pixel";
+      setTimeout(() => {
+        scrollToBlock(block4Ref);
+      }, 0);
+      fetchDomainsAndLeads();
+      setSourceMethod(2);
+    } else {
+      setSourceMethod(1);
+      setTimeout(() => {
+        scrollToBlock(block2Ref);
+      }, 0);
+    }
+
+    setSourceType(newType);
+  }, [typeFromSearchParams]);
+
+  useEffect(() => {
     let updatedRows = defaultRows.map((row) => {
       if (row.type === "Transaction Date") {
         let newType = row.type;
-        if (sourceType === "Customer Conversions (CSV)") newType = "Transaction Date";
+        if (sourceType === "Customer Conversions (CSV)")
+          newType = "Transaction Date";
         if (sourceType === "Failed Leads (CSV)") newType = "Lead Date";
         if (sourceType === "Interest (CSV)") newType = "Interest Date";
 
@@ -225,30 +260,28 @@ const SourcesImport: React.FC = () => {
 
   const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
     handleDeleteFile();
-    setTargetAudience("")
+    setTargetAudience("");
     setSourceType(event.target.value);
     if (event.target.value === "Website - Pixel") {
-      setSourceMethod(2)
-      setTimeout( () => {
-        scrollToBlock(block4Ref)
-      }, 0)
-      fetchDomainsAndLeads()
-    }
-    else {
-      setSourceMethod(1)
-      setTimeout( () => {
-        scrollToBlock(block2Ref)
-      }, 0)
+      setSourceMethod(2);
+      setTimeout(() => {
+        scrollToBlock(block4Ref);
+      }, 0);
+      fetchDomainsAndLeads();
+    } else {
+      setSourceMethod(1);
+      setTimeout(() => {
+        scrollToBlock(block2Ref);
+      }, 0);
     }
   };
 
   const handleTargetAudienceChange = (value: string) => {
     setTargetAudience(value);
-    setTimeout( () => {
-      scrollToBlock(block6Ref)
-    }, 0)
+    setTimeout(() => {
+      scrollToBlock(block6Ref);
+    }, 0);
   };
-
 
   // Uploading
 
@@ -507,9 +540,9 @@ const SourcesImport: React.FC = () => {
 
       const content = await readFileContent(file);
       await processFileContent(content);
-      setTimeout( () => {
-        scrollToBlock(block4Ref)
-      }, 0)
+      setTimeout(() => {
+        scrollToBlock(block4Ref);
+      }, 0);
     } catch (error: unknown) {
       if (error instanceof Error) {
         showErrorToast(error.message);
@@ -561,9 +594,9 @@ const SourcesImport: React.FC = () => {
       setMatchedLeads(0);
       setEventType([]);
     }
-    setTimeout( () => {
-      scrollToBlock(block4Ref)
-    }, 0)
+    setTimeout(() => {
+      scrollToBlock(block4Ref);
+    }, 0);
   };
 
   const fetchDomainsAndLeads = async () => {
@@ -574,9 +607,15 @@ const SourcesImport: React.FC = () => {
       );
       if (response.status === 200) {
         const domains = response.data;
-        setDomains(domains.filter((domain: DomainsLeads) => domain.pixel_installed));
-        setDomainsWithoutPixel(domains.filter((domain: DomainsLeads) => !domain.pixel_installed));
-        setPixelNotInstalled(domains.some((domain: DomainsLeads) => !domain.pixel_installed));
+        setDomains(
+          domains.filter((domain: DomainsLeads) => domain.pixel_installed)
+        );
+        setDomainsWithoutPixel(
+          domains.filter((domain: DomainsLeads) => !domain.pixel_installed)
+        );
+        setPixelNotInstalled(
+          domains.some((domain: DomainsLeads) => !domain.pixel_installed)
+        );
       }
     } catch {
     } finally {
@@ -695,7 +734,7 @@ const SourcesImport: React.FC = () => {
                         MenuListProps: {
                           sx: {
                             pb: 0,
-                            pt: pixelNotInstalled ? 0 : "inherit" 
+                            pt: pixelNotInstalled ? 0 : "inherit",
                           },
                         },
                       }}
@@ -703,22 +742,50 @@ const SourcesImport: React.FC = () => {
                         ...sourcesStyles.text,
                         width: "316px",
                         borderRadius: "4px",
-                        fontSize: "14px", fontFamily: "Roboto",
-                        color: sourceType === "" ? "rgba(112, 112, 113, 1)" : "rgba(32, 33, 36, 1)",
+                        fontSize: "14px",
+                        fontFamily: "Roboto",
+                        color:
+                          sourceType === ""
+                            ? "rgba(112, 112, 113, 1)"
+                            : "rgba(32, 33, 36, 1)",
                         "@media (max-width: 390px)": {
                           width: "calc(100vw - 74px)",
                         },
                       }}
                     >
-                      <MenuItem value="" disabled sx={{ display: "none"}}>
+                      <MenuItem value="" disabled sx={{ display: "none" }}>
                         Choose Source Type
                       </MenuItem>
-                      <MenuItem sx={{fontSize: "14px", borderBottom: "1px solid rgba(228, 228, 228, 1)" }} value={"Website - Pixel"}>Website - Pixel</MenuItem>
-                      <MenuItem sx={{fontSize: "14px", borderBottom:  "1px solid rgba(228, 228, 228, 1)" }} value={"Customer Conversions"}>
+                      <MenuItem
+                        sx={{
+                          fontSize: "14px",
+                          borderBottom: "1px solid rgba(228, 228, 228, 1)",
+                        }}
+                        value={"Website - Pixel"}
+                      >
+                        Website - Pixel
+                      </MenuItem>
+                      <MenuItem
+                        sx={{
+                          fontSize: "14px",
+                          borderBottom: "1px solid rgba(228, 228, 228, 1)",
+                        }}
+                        value={"Customer Conversions"}
+                      >
                         Customer Conversions (CSV)
                       </MenuItem>
-                      <MenuItem sx={{fontSize: "14px", borderBottom:  "1px solid rgba(228, 228, 228, 1)"  }} value={"Failed Leads"}>Failed Leads (CSV)</MenuItem>
-                      <MenuItem sx={{fontSize: "14px" }} value={"Interest"}>Interest (CSV)</MenuItem>
+                      <MenuItem
+                        sx={{
+                          fontSize: "14px",
+                          borderBottom: "1px solid rgba(228, 228, 228, 1)",
+                        }}
+                        value={"Failed Leads"}
+                      >
+                        Failed Leads (CSV)
+                      </MenuItem>
+                      <MenuItem sx={{ fontSize: "14px" }} value={"Interest"}>
+                        Interest (CSV)
+                      </MenuItem>
                     </Select>
                   </FormControl>
                 </Box>
@@ -1275,7 +1342,7 @@ const SourcesImport: React.FC = () => {
                         MenuListProps: {
                           sx: {
                             pb: 0,
-                            pt: pixelNotInstalled ? 0 : "inherit" 
+                            pt: pixelNotInstalled ? 0 : "inherit",
                           },
                         },
                       }}
@@ -1285,10 +1352,13 @@ const SourcesImport: React.FC = () => {
                         borderRadius: "4px",
                         fontFamily: "Roboto",
                         fontSize: "14px",
-                        color: selectedDomain === "" ? "rgba(112, 112, 113, 1)" : "rgba(32, 33, 36, 1)",
+                        color:
+                          selectedDomain === ""
+                            ? "rgba(112, 112, 113, 1)"
+                            : "rgba(32, 33, 36, 1)",
                         "@media (max-width: 390px)": {
                           width: "calc(100vw - 74px)",
-                        }
+                        },
                       }}
                     >
                       <MenuItem
@@ -1303,7 +1373,7 @@ const SourcesImport: React.FC = () => {
                       {pixelNotInstalled && (
                         <MenuItem
                           sx={{
-                            p: 0, 
+                            p: 0,
                             display: "flex",
                             justifyContent: "center",
                             width: "100%",
@@ -1347,7 +1417,7 @@ const SourcesImport: React.FC = () => {
                             fontFamily: "Roboto",
                             fontWeight: 400,
                             fontSize: "14px",
-                            borderBottom:  "1px solid rgba(228, 228, 228, 1)" 
+                            borderBottom: "1px solid rgba(228, 228, 228, 1)",
                           }}
                           key={index}
                           value={item.name}
@@ -1386,7 +1456,7 @@ const SourcesImport: React.FC = () => {
                 </Box>
               )}
 
-              {(sourceMethod === 2 && selectedDomainId) ?  
+              {sourceMethod === 2 && selectedDomainId ? (
                 <Box
                   ref={block5Ref}
                   sx={{
@@ -1399,7 +1469,9 @@ const SourcesImport: React.FC = () => {
                     padding: "20px",
                   }}
                 >
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
                     <Typography
                       sx={{
                         fontFamily: "Nunito Sans",
@@ -1538,7 +1610,9 @@ const SourcesImport: React.FC = () => {
                       Converted Sales
                     </Button>
                   </Box>
-                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                  >
                     <Typography
                       sx={{
                         fontFamily: "Roboto",
@@ -1563,9 +1637,9 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   </Box>
                 </Box>
-              : null}
+              ) : null}
 
-              {sourceMethod !== 0 && (selectedDomainId || file)  &&  (
+              {sourceMethod !== 0 && (selectedDomainId || file) && (
                 <Box
                   ref={block4Ref}
                   sx={{
@@ -1652,7 +1726,9 @@ const SourcesImport: React.FC = () => {
                 </Box>
               )}
 
-              {((sourceMethod !== 0 && targetAudience !== "") && (file || selectedDomainId )) ? 
+              {sourceMethod !== 0 &&
+              targetAudience !== "" &&
+              (file || selectedDomainId) ? (
                 <>
                   <Box
                     ref={block6Ref}
@@ -1816,7 +1892,7 @@ const SourcesImport: React.FC = () => {
                     </Box>
                   </Box>
                 </>
-                : null}
+              ) : null}
             </Box>
           </Box>
         </Box>
@@ -1825,4 +1901,12 @@ const SourcesImport: React.FC = () => {
   );
 };
 
-export default SourcesImport;
+const SourceBuilder: React.FC = () => {
+  return (
+    <Suspense fallback={<ProgressBar />}>
+      <SourcesImport />
+    </Suspense>
+  );
+};
+
+export default SourceBuilder;
