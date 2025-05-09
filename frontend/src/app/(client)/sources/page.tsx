@@ -145,7 +145,7 @@ const Sources: React.FC = () => {
     {
       title: "Pixel",
       description: "Install Pixel on your website to automatically collect visitor information in real-time.",
-      icon: "/Pixel.svg",
+      icon: "/pixel.svg",
       onClick: () => {
         router.push("/sources/builder?type=pixel");
       },
@@ -154,7 +154,7 @@ const Sources: React.FC = () => {
     {
       title: "Customer Conversions (CSV)",
       description: "This file should contain users who successfully completed valuable actions.",
-      icon: "/Pixel.svg",
+      icon: "/converted-sale.svg",
       onClick: () => {
         router.push("/sources/builder?type=customer-conversions");
       },
@@ -163,7 +163,7 @@ const Sources: React.FC = () => {
     {
       title: "Failed Leads (CSV)",
       description: "This file should contain users who engaged but didn't convert, so you can exclude them later.",
-      icon: "/Pixel.svg",
+      icon: "/failed-leads.svg",
       onClick: () => {
         router.push("/sources/builder?type=failed-leads");
       },
@@ -172,7 +172,7 @@ const Sources: React.FC = () => {
     {
       title: "Interests (CSV)",
       description: "This file should contain users who recently engaged with specific topics.",
-      icon: "/Pixel.svg",
+      icon: "/interests.svg",
       onClick: () => {
         router.push("/sources/builder?type=interests");
       },
