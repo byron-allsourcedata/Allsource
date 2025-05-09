@@ -57,7 +57,11 @@ class AudienceLookalikesPersistence:
             .join(Users, Users.id == AudienceSource.created_by_user_id)\
             .order_by(desc(AudienceLookalikes.created_date))\
             .filter(AudienceLookalikes.user_id == user_id)
-            
+
+        source_count = self.db.query(AudienceSource.id) \
+            .filter(AudienceSource.user_id == user_id) \
+            .count()
+
         if search_query:
             query = query.filter(
                 or_(
@@ -102,7 +106,7 @@ class AudienceLookalikesPersistence:
         result_query = query.limit(per_page).offset(offset).all()
         count = query.count()
         max_page = math.ceil(count / per_page)
-        return result_query, count, max_page
+        return result_query, count, max_page, source_count
 
     def create_lookalike(self, uuid_of_source, user_id, lookalike_size,
                          lookalike_name, created_by_user_id, audience_feature_importance: AudienceFeatureImportance):
