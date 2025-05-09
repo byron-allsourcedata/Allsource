@@ -940,24 +940,22 @@ const CreateLookalikePage: React.FC = () => {
                     pr: 2,
                   }}
                 >
-                  <Link href="/lookalikes/builder" passHref>
-                    <Button
-                      variant="contained"
-                      className="second-sub-title"
-                      disabled={sourceCount === 0}
-                      sx={{
-                        backgroundColor: "rgba(56, 152, 252, 1)",
-                        textTransform: "none",
-                        padding: "10px 24px",
-                        color: "#fff !important",
-                        ":hover": {
-                          backgroundColor: "rgba(48, 149, 250, 1)",
-                        },
-                      }}
-                    >
-                      Begin
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="contained"
+                    className="second-sub-title"
+                    disabled={sourceCount === 0}
+                    sx={{
+                      backgroundColor: "rgba(56, 152, 252, 1)",
+                      textTransform: "none",
+                      padding: "10px 24px",
+                      color: "#fff !important",
+                      ":hover": {
+                        backgroundColor: "rgba(48, 149, 250, 1)",
+                      },
+                    }}
+                  >
+                    Begin
+                  </Button>
                 </Box>
               </Box>
             </Box>
