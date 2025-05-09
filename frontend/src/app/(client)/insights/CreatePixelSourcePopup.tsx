@@ -135,7 +135,9 @@ const WelcomePopup = ({ open, onClose }: WelcomePopupProps) => {
                   <Button
                     variant="contained"
                     fullWidth
-                    onClick={navigateToSourcePage}
+                    onClick={() => {
+                      router.push("dashboard");
+                    }}
                     sx={{ backgroundColor: "#3898FC", dropShadow: "#00000040" }}
                   >
                     <IconButton

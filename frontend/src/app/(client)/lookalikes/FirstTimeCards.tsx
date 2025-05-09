@@ -32,6 +32,7 @@ const FirstTimeCards = ({ cardData }: ClickableCardsProps) => {
         <Card
           key={index}
           sx={{
+            backgroundColor: "transparent",
             boxShadow: card.isClickable ? "0px 0px 4px rgba(0, 0, 0, 0.3)" : 0,
             borderColor: card.isClickable
               ? "rgba(237, 237, 237, 1)"
