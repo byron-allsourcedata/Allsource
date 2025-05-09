@@ -919,7 +919,6 @@ const CreateLookalikePage: React.FC = () => {
                 sx={{
                   border: "1px solid rgba(237, 237, 237, 1)",
                   width: "100%",
-                  mt: 3,
                   padding: 3,
                   borderRadius: "6px",
                 }}
