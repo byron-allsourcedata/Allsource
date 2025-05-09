@@ -282,6 +282,6 @@ class S3IntegrationService:
             filler = FIELD_FILLERS.get(field_type)
             if filler:
                 filler(result, context)
-        print(result)
+                
         return result
     
