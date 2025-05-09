@@ -16,11 +16,12 @@ type CardData = {
 
 interface ClickableCardsProps {
   cardData: CardData[];
+  hasSource: boolean
 }
 
-const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
+const FirstTimeScreen = ({ cardData, hasSource }: ClickableCardsProps) => {
   const router = useRouter();
-  const [showNotification, setShowNotification] = useState(true);
+  const [showNotification, setShowNotification] = useState(!hasSource);
   return (
     <Box
     sx={{
@@ -176,7 +177,7 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
         <Button
           variant="contained"
           className="second-sub-title"
-          // disabled={sourceCount === 0}
+          disabled={!hasSource}
           onClick={() => {
             router.push("/smart-audiences/builder");
           }}

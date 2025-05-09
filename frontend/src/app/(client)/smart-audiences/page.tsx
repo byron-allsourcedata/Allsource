@@ -307,6 +307,8 @@ const SmartAudiences: React.FC = () => {
 
     const [dataSyncPopupOpen, setDataSyncPopupOpen] = useState(false);
 
+    const [hasSource, setHasSource] = useState(false);
+
     const cardData: CardData[] = [
         {
           title: "Step 1. Select Use Case",
@@ -329,6 +331,17 @@ const SmartAudiences: React.FC = () => {
           icon: "/smart-validation.svg",
         },
       ];
+
+    const checkHasSource = async () => {
+        const response = await axiosInstance.get('/audience-lookalikes/get-sources');
+        if (response.status === 200) {
+            setHasSource(response.data.length > 0);
+        }
+    }
+
+    useEffect(() => {
+        checkHasSource()
+    }, []);
 
     useEffect(() => {
         fetchSmarts({
@@ -995,48 +1008,7 @@ const SmartAudiences: React.FC = () => {
                                         }
                                     }}>
                                         {data.length === 0 &&
-                                            <FirstTimeScreen cardData={cardData}/>
-                                            // <Box sx={smartAudiences.centerContainerStyles}>
-                                            //     <Typography variant="h5" sx={{
-                                            //         mb: 3,
-                                            //         fontFamily: 'Nunito Sans',
-                                            //         fontSize: "20px",
-                                            //         color: "#4a4a4a",
-                                            //         fontWeight: "600",
-                                            //         lineHeight: "28px"
-                                            //     }}>
-                                            //         Get Started with Your First Audience
-                                            //     </Typography>
-                                            //     <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
-                                            //     <Typography variant="body1" color="textSecondary"
-                                            //         sx={{
-                                            //             mt: 3,
-                                            //             fontFamily: 'Nunito Sans',
-                                            //             fontSize: "14px",
-                                            //             color: "#808080",
-                                            //             fontWeight: "600",
-                                            //             lineHeight: "20px"
-                                            //         }}>
-                                            //         Supercharge your ad campaigns with high-performing lookalikes. Target those most likely to purchase, optimize your ad spend, and scale your profitability like never before.
-                                            //     </Typography>
-                                            //     <Button
-                                            //         variant="contained"
-                                            //         onClick={() => router.push("/smart-audiences/builder")}
-                                            //         className='second-sub-title'
-                                            //         sx={{
-                                            //             backgroundColor: 'rgba(80, 82, 178, 1)',
-                                            //             textTransform: 'none',
-                                            //             padding: '10px 24px',
-                                            //             mt: 3,
-                                            //             color: '#fff !important',
-                                            //             ':hover': {
-                                            //                 backgroundColor: 'rgba(80, 82, 178, 1)'
-                                            //             }
-                                            //         }}
-                                            //     >
-                                            //         Generate Smart Audience
-                                            //     </Button>
-                                            // </Box>
+                                            <FirstTimeScreen cardData={cardData} hasSource={hasSource}/>
                                         }
                                         {data.length !== 0 &&
                                             <Grid container spacing={1} sx={{ flex: 1 }}>
