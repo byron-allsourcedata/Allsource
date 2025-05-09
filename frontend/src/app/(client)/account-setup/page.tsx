@@ -497,9 +497,9 @@ const AccountSetup = () => {
         </Menu>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
-        <Box sx={{ ...styles.formContainer, overflow: "hidden" }}>
-          <Box sx={{ ...styles.form, overflow: "auto", marginTop: 3, "&::-webkit-scrollbar": { display: "none" }, "-ms-overflow-style": "none", "scrollbar-width": "none" }}>
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%" }}>
+        <Box sx={{ ...styles.formContainer, overflow: "hidden", marginTop: 0 }}>
+          <Box sx={{ ...styles.form, overflow: "auto", "&::-webkit-scrollbar": { display: "none" }, "-ms-overflow-style": "none", "scrollbar-width": "none" }}>
             <Box
               sx={{
                 "@media (max-width: 600px)": {
