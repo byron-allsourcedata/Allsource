@@ -54,6 +54,7 @@ import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SearchFilter";
 import CloseIcon from "@mui/icons-material/Close";
 import TableCustomCell from "./components/table/TableCustomCell";
+import FirstTimeScreen from "./components/FirstTimeScreen"
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 
 interface Source {
@@ -943,59 +944,61 @@ const Sources: React.FC = () => {
                     {data.length === 0 &&
                       isMakeRequest &&
                       !(selectedFilters.length > 0) && (
-                        <Box sx={sourcesStyles.centerContainerStyles}>
-                          <Typography
-                            variant="h5"
-                            sx={{
-                              mb: 3,
-                              fontFamily: "Nunito Sans",
-                              fontSize: "20px",
-                              color: "#4a4a4a",
-                              fontWeight: "600",
-                              lineHeight: "28px",
-                            }}
-                          >
-                            Import Your First Source
-                          </Typography>
-                          <Image
-                            src="/no-data.svg"
-                            alt="No Data"
-                            height={250}
-                            width={300}
-                          />
-                          <Typography
-                            variant="body1"
-                            color="textSecondary"
-                            sx={{
-                              mt: 3,
-                              fontFamily: "Nunito Sans",
-                              fontSize: "14px",
-                              color: "#808080",
-                              fontWeight: "600",
-                              lineHeight: "20px",
-                            }}
-                          >
-                            Import your first source to generate lookalikes.
-                          </Typography>
-                          <Button
-                            variant="contained"
-                            onClick={() => router.push("/sources/builder")}
-                            className="second-sub-title"
-                            sx={{
-                              backgroundColor: "rgba(80, 82, 178, 1)",
-                              textTransform: "none",
-                              padding: "10px 24px",
-                              mt: 3,
-                              color: "#fff !important",
-                              ":hover": {
-                                backgroundColor: "rgba(80, 82, 178, 1)",
-                              },
-                            }}
-                          >
-                            Import Your First Source
-                          </Button>
-                        </Box>
-                      )}
+                        <FirstTimeScreen />
+                        // <Box sx={sourcesStyles.centerContainerStyles}>
+                        //   <Typography
+                        //     variant="h5"
+                        //     sx={{
+                        //       mb: 3,
+                        //       fontFamily: "Nunito Sans",
+                        //       fontSize: "20px",
+                        //       color: "#4a4a4a",
+                        //       fontWeight: "600",
+                        //       lineHeight: "28px",
+                        //     }}
+                        //   >
+                        //     Import Your First Source
+                        //   </Typography>
+                        //   <Image
+                        //     src="/no-data.svg"
+                        //     alt="No Data"
+                        //     height={250}
+                        //     width={300}
+                        //   />
+                        //   <Typography
+                        //     variant="body1"
+                        //     color="textSecondary"
+                        //     sx={{
+                        //       mt: 3,
+                        //       fontFamily: "Nunito Sans",
+                        //       fontSize: "14px",
+                        //       color: "#808080",
+                        //       fontWeight: "600",
+                        //       lineHeight: "20px",
+                        //     }}
+                        //   >
+                        //     Import your first source to generate lookalikes.
+                        //   </Typography>
+                        //   <Button
+                        //     variant="contained"
+                        //     onClick={() => router.push("/sources/builder")}
+                        //     className="second-sub-title"
+                        //     sx={{
+                        //       backgroundColor: "rgba(80, 82, 178, 1)",
+                        //       textTransform: "none",
+                        //       padding: "10px 24px",
+                        //       mt: 3,
+                        //       color: "#fff !important",
+                        //       ":hover": {
+                        //         backgroundColor: "rgba(80, 82, 178, 1)",
+                        //       },
+                        //     }}
+                        //   >
+                        //     Import Your First Source
+                        //   </Button>
+                        // </Box>
+                      )
+                      }
                     {data.length === 0 &&
                       selectedFilters.length > 0 &&
                       !loaderForTable && (
