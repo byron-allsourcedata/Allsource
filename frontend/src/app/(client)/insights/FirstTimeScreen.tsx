@@ -1,5 +1,5 @@
 import React from 'react';
-import FirstTimeCards from "../../components/FirstTimeCards"
+import FirstTimeCards from "../components/FirstTimeCards"
 import {
   Box,
   Typography,
@@ -52,7 +52,7 @@ const FirstTimeScreen = ({cardData}: ClickableCardsProps) => {
             lineHeight: "22px",
           }}
         >
-          Import Your First Source
+          Insights
         </Typography>
         <ExternalLink href="https://example.com">
           Learn more
@@ -69,7 +69,7 @@ const FirstTimeScreen = ({cardData}: ClickableCardsProps) => {
           lineHeight: "22px",
         }}
       >
-        To begin building your audience, you'll first need to provide a data source. Create a source based on one of this types:
+        Uncover key statistics, trends, and actionable data—it will help you refine your targeting and maximize results
       </Typography>
 
       <Box
