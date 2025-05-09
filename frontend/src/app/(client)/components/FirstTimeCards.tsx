@@ -29,7 +29,7 @@ type CardData = {
       >
         {cardData.map((card, index) => (
           <Card key={index} sx={{ boxShadow: card.isClickable ? "0px 0px 4px rgba(0, 0, 0, 0.3)" : 0, borderColor: card.isClickable ? "rgba(237, 237, 237, 1)" : "inherit" }}>
-            <CardActionArea onClick={card.onClick} sx={{ pointerEvents: !card.isClickable ? "none" : "inherit" }}>
+            <CardActionArea onClick={card.onClick} sx={{ ":hover": { backgroundColor: "rgba(232, 239, 255, 0.4)" }, display: "flex", height: "100%", pointerEvents: !card.isClickable ? "none" : "inherit" }}>
               <CardContent>
                 <Typography className="fiveth-sub-title" sx={{ marginBottom: 2 }}>
                   {card.title}
