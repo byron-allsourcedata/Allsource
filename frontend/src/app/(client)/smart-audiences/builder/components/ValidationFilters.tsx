@@ -25,9 +25,12 @@ import { useRouter } from "next/navigation";
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 interface ExpandableFilterProps {
+  block8Ref: React.RefObject<HTMLDivElement>;
   targetAudience: string;
   useCaseType: string;
   onSkip: () => void;
+  scrollToNewBlock: () => void;
+  scrollToEveryOtherBlock: () => void;
   onValidate: (data: FilterData) => void;
   onEdit: () => void;
   setPersentsData: (value: number) => void;
@@ -66,6 +69,9 @@ interface FilterData {
 }
 
 const AllFilters: React.FC<ExpandableFilterProps> = ({
+  block8Ref,
+  scrollToNewBlock,
+  scrollToEveryOtherBlock,
   targetAudience,
   useCaseType,
   onSkip,
@@ -314,9 +320,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 
     if (useCaseType === "Tele Marketing") {
       if (targetAudience === "Both" || targetAudience === "B2B") {
-        setSelectedOptionsPhone(["Last updated date", "Confirmation", "DNC filter",]);
+        setSelectedOptionsPhone(["Confirmation", "DNC filter",]);
+        // setSelectedOptionsPhone(["Last updated date", "Confirmation", "DNC filter",]);
       } else if (targetAudience === "B2C") {
-        setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
+        // setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
         setSelectedOptionsPhone(["DNC filter"]);
       }
       setValidate(false);
@@ -351,7 +358,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
     Object.keys(nestedSelections).length > 0;
 
   return (
-    <Box>
+    <Box ref={block8Ref}>
       <Box
         sx={{
           display: "flex",
@@ -535,10 +542,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                             <Checkbox
                               size="small"
                               disabled={isValidate}
-                              checked={selectedOptionsBusinessEmail.includes("MX")}
+                              checked={selectedOptionsPersonalEmail.includes("MX")}
                               onChange={() =>
                                 handleOptionClick(
-                                  setSelectedOptionsBusinessEmail,
+                                  setSelectedOptionsPersonalEmail,
                                   "MX"
                                 )
                               }
@@ -1224,7 +1231,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 control={
                                   <Checkbox
                                     size="small"
-                                    disabled={isValidate}
+                                    // disabled={isValidate}
+                                    disabled={option === 'Last updated date'}
                                     checked={selectedOptionsPhone.includes(option)}
                                     onChange={() => handleOptionClick(setSelectedOptionsPhone, option)}
                                     sx={{
@@ -1580,7 +1588,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
             <Button
               variant="contained"
               disabled={!isAnyFilterSelected}
-              onClick={handleValidate}
+              onClick={() => {
+                handleValidate()
+                scrollToNewBlock()
+              }}
               sx={{
                 ...smartAudiences.buttonform,
                 backgroundColor: "rgba(80, 82, 178, 1)",
@@ -1606,7 +1617,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
         open={openPopup}
         onClose={() => setOpenPopup(false)}
         onContinue={() => setOpenPopup(false)}
-        onSkip={handleSkipPopup}
+        onSkip={ () => {
+          handleSkipPopup()
+          scrollToEveryOtherBlock()
+        }}
       />
     </Box>
   );

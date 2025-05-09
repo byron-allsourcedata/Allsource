@@ -90,12 +90,7 @@ class CalendlyUUID(BaseModel):
 
 
 class CompanyInfo(BaseModel):
-    organization_name: str = Field(...)
     company_website: str = Field(...)
-    company_role: str = Field(...)
-    monthly_visits: str = Field(...)
-    employees_workers: str = Field(...)
-    business_type: str = Field(...)
 
 
 class BaseFormResponse(BaseModel):

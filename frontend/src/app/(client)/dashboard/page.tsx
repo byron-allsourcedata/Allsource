@@ -24,6 +24,7 @@ import CalendarPopup from "@/components/CustomCalendar";
 import dayjs from "dayjs";
 import { useNotification } from '../../../context/NotificationContext';
 import RevenueTracking from "@/components/RevenueTracking";
+import WelcomePopup from "./components/WelcomePopup";
 
 
 interface TabPanelProps {
@@ -344,6 +345,14 @@ const Dashboard: React.FC = () => {
   const [typeBusiness, setTypeBusiness] = useState("")
   const searchParams = useSearchParams();
   let statusIntegrate = searchParams.get('message');
+  const [welcomePopup, setWelcomePopup] = useState<string | null>(null);
+
+
+  useEffect(() => {
+    const storedPopup = localStorage.getItem("welcome_popup");
+    setWelcomePopup(storedPopup);
+  }, []);
+
   useEffect(() => {
     if (statusIntegrate) {
       if (statusIntegrate == 'Successfully') {
@@ -771,6 +780,7 @@ const Dashboard: React.FC = () => {
 
       )}
       {showSlider && <Slider />}
+      {welcomePopup && <WelcomePopup />}
     </Box>
   );
 };

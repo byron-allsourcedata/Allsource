@@ -65,34 +65,8 @@ class DashboardAudienceService:
         return {
             "total_counts": total_counts,
             "pixel_contacts": daily_data
-        }
-        
-    def calculate_chain_data_sync(self, user_id) -> list[dict]:
-        stmt_results = self.dashboard_persistence.get_chains_data_syncs(user_id=user_id)
-        chain_data_sync = []  
-        for (
-            audience_source,
-            audience_lookalikes,
-            audience_smart,
-            data_sync
-        ) in stmt_results:
-            tmp = set()
-            if audience_source:
-                tmp.add(audience_source.id)
+        }    
             
-            if audience_lookalikes:
-                tmp.add(audience_lookalikes.id)
-            
-            if audience_smart:
-                tmp.add(audience_smart.id)
-
-            if data_sync:
-                tmp.add(data_sync.id)
-                
-            chain_data_sync.append(list(tmp))
-            
-        return chain_data_sync
-    
     def merge_and_sort(self, *, datasets: list[tuple], limit: int):
         combined = []
 
@@ -113,23 +87,39 @@ class DashboardAudienceService:
         return sorted_combined[:limit]
 
     
-    def merge_data_with_chain(self, data, chains):
-        result = []
-        for row in data:
-            data_id = row.get('id') if isinstance(row, dict) else getattr(row, 'id', None)
-            if isinstance(row, dict):
-                row_data = row
-            elif hasattr(row, '_asdict'):
-                row_data = row._asdict()
-            else:
-                row_data = {col: getattr(row, col) for col in dir(row)
-                            if not col.startswith("_") and not callable(getattr(row, col))}
+    def merge_data_with_chain(self, data, type):
+        ids = [obj.get('id') for obj in data]
+        stmt_results = self.dashboard_persistence.get_chains_data_syncs(ids=ids, type=type)
+        chains = []  
+        for (
+            audience_source,
+            audience_lookalikes,
+            audience_smart,
+            data_sync
+        ) in stmt_results:
+            tmp = set()
+            if audience_source:
+                tmp.add(audience_source.id)
+            
+            if audience_lookalikes:
+                tmp.add(audience_lookalikes.id)
+            
+            if audience_smart:
+                tmp.add(audience_smart.id)
+
+            if data_sync:
+                tmp.add(data_sync.id)
                 
-            matching_chain = next((chain for chain in chains if data_id in chain), None)
-            if matching_chain:
-                row_data['chain_ids'] = matching_chain
-            result.append(row_data)
-        return result
+            chains.append(list(tmp))
+        for row in data:
+            row_id = row.get("id")
+            row_chain = set()
+            for chain in chains:
+                if row_id in chain:
+                    row_chain.update(chain)
+                    
+            row['chain_ids'] = list(row_chain)
+        return data
     
     def group_audience_smart_rows(self, audience_smart_results):
         grouped = OrderedDict()
@@ -147,37 +137,39 @@ class DashboardAudienceService:
                 }
             if row.inc_source_names:
                 for inc_source_name in row.inc_source_names:
-                    grouped[sid]['include'].append({
-                        'type': 'Source',
-                        'name': inc_source_name,
-                    })
+                    if inc_source_name:
+                        grouped[sid]['include'].append({
+                            'type': 'Source',
+                            'name': inc_source_name,
+                        })
             if row.inc_lookalike_names:
                 for inc_lookalike_name in row.inc_lookalike_names:
-                    grouped[sid]['include'].append({
-                        'type': 'Lookalike',
-                        'name': inc_lookalike_name,
-                    })
+                    if inc_lookalike_name:
+                        grouped[sid]['include'].append({
+                            'type': 'Lookalike',
+                            'name': inc_lookalike_name,
+                        })
 
             if row.exc_source_names:
                 for exc_source_name in row.exc_source_names:
-                    grouped[sid]['exclude'].append({
-                        'type': 'Source',
-                        'name': exc_source_name,
-                    })
+                    if exc_source_name:
+                        grouped[sid]['exclude'].append({
+                            'type': 'Source',
+                            'name': exc_source_name,
+                        })
             if row.exc_lookalike_names:
                 for exc_lookalike_name in row.exc_lookalike_names:
-                    grouped[sid]['exclude'].append({
-                        'type': 'Lookalike',
-                        'name': exc_lookalike_name,
-                    })
+                    if exc_lookalike_name:
+                        grouped[sid]['exclude'].append({
+                            'type': 'Lookalike',
+                            'name': exc_lookalike_name,
+                        })
 
         return list(grouped.values())
 
     def get_events(self, *, user: dict):
         smart_audiences, data_syncs = self.dashboard_persistence.get_last_smart_audiences_and_data_syncs(user_id=user.get('id'), limit=self.LIMIT)
-        lookalike_smart_audiences = self.dashboard_persistence.get_last_lookalike_smart_audiences(user_id=user.get('id'), limit=self.LIMIT, smart_audiences=smart_audiences)
         sources, lookalikes = self.dashboard_persistence.get_last_sources_and_lookalikes(user_id=user.get('id'), limit=self.LIMIT, smart_audiences=smart_audiences)
-        data_syncs_chain = self.calculate_chain_data_sync(user_id=user.get('id'))
         group_smart_audiences = self.group_audience_smart_rows(smart_audiences)
         
         last_sources = self.merge_and_sort(
@@ -206,32 +198,15 @@ class DashboardAudienceService:
         
         return {
             'short_info': {
-                'sources': self.merge_data_with_chain(last_sources, data_syncs_chain),
-                'lookalikes': self.merge_data_with_chain(last_lookalikes, data_syncs_chain),
-                'smart_audiences': self.merge_data_with_chain(last_audience_smart, data_syncs_chain),
-                'data_sync': self.merge_data_with_chain(data_sync_dicts, data_syncs_chain)
+                'sources': self.merge_data_with_chain(last_sources, 'sources'),
+                'lookalikes': self.merge_data_with_chain(last_lookalikes, 'lookalikes'),
+                'smart_audiences': self.merge_data_with_chain(last_audience_smart, 'smart_audiences'),
+                'data_sync': self.merge_data_with_chain(data_sync_dicts, 'data_sync'),
             },
-            'full_info':{
-                'sources': self.merge_and_sort(
-                                datasets=[
-                                    (sources, 'source', ['source_name', 'created_at', 'source_type', 'matched_records']),
-                                    ([lookalike for lookalike in lookalikes if lookalike[0]], 'lookalike', ['source_name', 'source_type', 'matched_records', 'lookalike_name', 'created_at', 'lookalike_size', 'size'])
-                                ],
-                                limit=self.LIMIT
-                            ),
-                           
-                'lookalikes': self.merge_and_sort(
-                                    datasets=[(lookalikes, 'lookalikes', ['lookalike_size', 'lookalike_name', 'created_at', 'size']), 
-                                            ([smart_audience for smart_audience in lookalike_smart_audiences], 'smart_audience', ['lookalike_name', 'lookalike_size', 'size', 'audience_name', 'use_case', 'active_segment', 'created_at']),],
-                                    limit=self.LIMIT
-                                ),
-                
-                'smart_audiences': self.merge_and_sort(
-                                        datasets=[(data_syncs, 'data_sync', ['audience_name', 'created_at', 'status', 'synced_contacts', 'destination']), 
-                                                ([smart_audience for smart_audience in group_smart_audiences], 'smart_audience', ['audience_name', 'use_case', 'active_segment', 'created_at', 'include', 'exclude']),],
-                                        limit=self.LIMIT
-                                    ),
-                
+            'full_info': {
+                'sources': last_sources,
+                'lookalikes': last_lookalikes,
+                'smart_audiences': last_audience_smart,
                 'data_sync': data_sync_dicts
             }
         }

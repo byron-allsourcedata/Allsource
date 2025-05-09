@@ -41,63 +41,34 @@ class AudienceSmartsPersistence:
         return use_case[0] if use_case else None
     
     def calculate_smart_audience(self, data: DataSourcesFormat) -> int:   
-        AudienceLALP = aliased(AudienceLookalikesPerson)
-        AudienceSMP = aliased(AudienceSourcesMatchedPerson)
+        Lalp = aliased(AudienceLookalikesPerson)
+        Smp  = aliased(AudienceSourcesMatchedPerson)
 
-        lalp_query = (
-            self.db.query(AudienceLALP.enrichment_user_id)
-            .filter(AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"]))
-            .filter(AudienceLALP.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
+        lalp_q = (
+            self.db.query(Lalp.enrichment_user_id.label("uid"))
+            .filter(Lalp.lookalike_id.in_(data["lookalike_ids"]["include"]))
+            .filter(Lalp.lookalike_id.notin_(data["lookalike_ids"]["exclude"]))
+        )
+        smp_q = (
+            self.db.query(Smp.enrichment_user_id.label("uid"))
+            .filter(Smp.source_id.in_(data["source_ids"]["include"]))
+            .filter(Smp.source_id.notin_(data["source_ids"]["exclude"]))
+        )
+        
+        combined_subq = lalp_q.union(smp_q).subquery()
+        count_q = (
+            self.db.query(func.count(EnrichmentUser.id))
+            .select_from(EnrichmentUser)
+            .join(combined_subq,
+                combined_subq.c.uid == EnrichmentUser.id)
+            .join(EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid)
         )
 
-        smp_query = (
-            self.db.query(AudienceSMP.enrichment_user_id)
-            .filter(AudienceSMP.source_id.in_(data["source_ids"]["include"]))
-            .filter(AudienceSMP.source_id.notin_(data["source_ids"]["exclude"]))
-        )
+        if data.get("use_case") == "linkedin":
+            count_q = count_q.filter(EnrichmentUserContact.linkedin_url.isnot(None))
 
-        combined_query = lalp_query.union(smp_query).subquery()
-
-        count_query = self.db.query(func.count()).select_from(combined_query)
-        return count_query.scalar()
-        
-        # includes_lookalikes = self.db.query(AudienceLALP.lookalike_id).filter(
-        #     AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["include"])
-        # ).subquery()
-
-        # excludes_lookalikes = self.db.query(AudienceLALP.lookalike_id).filter(
-        #     AudienceLALP.lookalike_id.in_(data["lookalike_ids"]["exclude"])
-        # ).subquery()
-
-        # includes_sources = self.db.query(AudienceSMP.source_id).filter(
-        #     AudienceSMP.source_id.in_(data["source_ids"]["include"])
-        # ).subquery()
-
-        # excludes_sources = self.db.query(AudienceSMP.source_id).filter(
-        #     AudienceSMP.source_id.in_(data["source_ids"]["exclude"])
-        # ).subquery()
-
-        # lalp_query = (
-        #     self.db.query(AudienceLALP.enrichment_user_id)
-        #     .outerjoin(includes_lookalikes, AudienceLALP.lookalike_id == includes_lookalikes.c.lookalike_id)
-        #     .outerjoin(excludes_lookalikes, AudienceLALP.lookalike_id == excludes_lookalikes.c.lookalike_id)
-        #     .filter(includes_lookalikes.c.lookalike_id.isnot(None))
-        #     .filter(excludes_lookalikes.c.lookalike_id.is_(None))
-        # )
-
-        # smp_query = (
-        #     self.db.query(AudienceSMP.enrichment_user_id)
-        #     .outerjoin(includes_sources, AudienceSMP.source_id == includes_sources.c.source_id)
-        #     .outerjoin(excludes_sources, AudienceSMP.source_id == excludes_sources.c.source_id)
-        #     .filter(includes_sources.c.source_id.isnot(None))
-        #     .filter(excludes_sources.c.source_id.is_(None))
-        # )
-
-        # combined_query = union(lalp_query, smp_query)
-        # # combined_query = lalp_query.union(smp_query).subquery()
-        
-        # count_query = self.db.query(func.count()).select_from(combined_query)
-        # return count_query.scalar()
+        return count_q.scalar()
 
     def create_audience_smarts_data_sources(
             self,
@@ -313,38 +284,38 @@ class AudienceSmartsPersistence:
                 .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
                 .join(EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid)
                 .join(EnrichmentPersonalProfiles, EnrichmentPersonalProfiles.asid == EnrichmentUser.asid)
-                .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
+                .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id, AudienceSmartPerson.is_valid == True)
         )
 
 
         smarts = query.limit(sent_contacts).all()
         return smarts
     
-    # def get_synced_persons_by_smart_aud_id(self, data_sync_id, enrichment_field_names):
-    #     enrichment_fields = [
-    #         getattr(EnrichmentUser, field) for field in enrichment_field_names
-    #     ]
+    def get_synced_persons_by_smart_aud_id(self, data_sync_id, enrichment_field_names):
+        enrichment_fields = [
+            getattr(EnrichmentUserContact, field) for field in enrichment_field_names
+        ]
 
-    #     fields = [
-    #         Email.email,
-    #         *enrichment_fields,
-    #         States.state_name.label("state"),
-    #     ]
+        fields = [
+            *enrichment_fields,
+            States.state_name.label("state"),
+            EnrichmentPersonalProfiles.gender
+        ]
 
-    #     query = (
-    #         self.db.query(
-    #             *fields
-    #         )
-    #             .select_from(AudienceDataSyncImportedPersons)
-    #             .join(EnrichmentUser, EnrichmentUser.id == AudienceDataSyncImportedPersons.enrichment_user_id)
-    #             .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
-    #             .outerjoin(Email, Email.id == EmailEnrichment.email_id)
-    #             .outerjoin(States, func.lower(States.state_code) == func.lower(EnrichmentUser.state_abbr))  
-    #             .filter(AudienceDataSyncImportedPersons.data_sync_id == data_sync_id)
-    #     )
+        query = (
+            self.db.query(
+                *fields
+            )
+                .select_from(AudienceDataSyncImportedPersons)
+                .join(EnrichmentUser, EnrichmentUser.id == AudienceDataSyncImportedPersons.enrichment_user_id)
+                .outerjoin(EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid)
+                .outerjoin(EnrichmentPersonalProfiles, EnrichmentPersonalProfiles.asid == EnrichmentUser.asid)
+                .outerjoin(States, func.lower(States.state_code) == func.lower(EnrichmentPersonalProfiles.state_abbr))  
+                .filter(AudienceDataSyncImportedPersons.data_sync_id == data_sync_id)
+        )
 
 
-    #     return query.all()
+        return query.all()
 
     def get_processing_sources(self, id):
         query = (

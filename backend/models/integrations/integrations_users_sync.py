@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index, BigInteger, text, \
+from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index, BigInteger, func, text, \
     String, DateTime
+
 from sqlalchemy.dialects.postgresql import ENUM
 from datetime import datetime, timezone
 from models.enrichment.enrichment_users import EnrichmentUser

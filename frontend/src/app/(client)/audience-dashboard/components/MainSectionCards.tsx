@@ -28,18 +28,24 @@ interface MainSectionCardProps {
 
 const getUseCaseStyle = (status: string) => {
   switch (status.trim()) {
-    case 'Postal':
-      return <Image src="./postal.svg" alt="google icon" width={20} height={20} />
-    case 'Google':
+    case 's3':
+      return <Image src="./s3.svg" alt="s3 icon" width={20} height={20} />
+    case 'google_ads':
       return <Image src="./google-ads.svg" alt="google icon" width={20} height={20} />
-    case 'Meta':
-      return <Image src="./meta.svg" alt="meta icon" width={20} height={20} />
-    case 'Bing':
-      return <Image src="./bing.svg" alt="bing icon" width={20} height={20} />
-    case 'LinkedIn':
-      return <Image src="./linkedIn.svg" alt="linkedin icon" width={20} height={20} />
-    case 'Tele Marketing':
-      return <HeadsetMicOutlinedIcon />
+    case 'mailchimp':
+      return <Image src="./mailchimp-icon.svg" alt="mailchimp icon" width={20} height={20} />
+    case 'sales_force':
+      return <Image src="./salesforce-icon.svg" alt="sales_force icon" width={20} height={20} />
+    case 'hubspot':
+      return <Image src="./hubspot.svg" alt="hubspot icon" width={20} height={20} />
+    case 'bing_ads':
+      return <Image src="./bingads-icon.svg" alt="bing_ads icon" width={20} height={20} />
+    case 'sendlane':
+      return <Image src="./sendlane-icon.svg" alt="sendlane icon" width={20} height={20} />
+    case 'mailchimp':
+      return <Image src="./mailchimp-icon.svg" alt="mailchimp icon" width={20} height={20} />
+    case 'meta':
+      return <Image src="./meta-icon.svg" alt="meta icon" width={20} height={20} />
     default:
       return <MailOutlinedIcon />
   }
@@ -70,8 +76,8 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
           <Typography className="dashboard-card-text">
             {label}
           </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 0.25 }}>
-            <Box>
+          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: .5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
               {getUseCaseStyle(value)}
             </Box>
             <Typography className="dashboard-card-heading">
@@ -174,11 +180,11 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
         boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
         padding: "0.5rem 0.75rem 1rem",
         maxWidth: "100%",
-        border: highlighted ? `2px solid rgba(5, 105, 226, 1)` : "transparent",
+        border: highlighted ? `1.5px solid rgba(5, 105, 226, 1)` : "1.5px solid rgba(255, 255, 255, 0.25)",
         transition: "border 0.2s ease",
         cursor: "pointer",
         "&:hover": {
-          border: `1px solid rgba(5, 105, 226, 1)`,
+          border: `1.5px solid rgba(5, 105, 226, 1)`,
           transition: "none",
         },
       }}

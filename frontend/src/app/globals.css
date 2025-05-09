@@ -149,6 +149,14 @@ body {
   color: #202124;
 }
 
+.fourth-sub-title {
+  font-family: 'Nunito Sans';
+  font-size: 16px;
+  line-height: normal;
+  font-weight: 400;
+  color: #5F6368
+}
+
 .table-heading {
   font-family: 'Nunito Sans';
   font-size: 12px;
@@ -198,6 +206,16 @@ body {
   letter-spacing: 0.06px;
 }
 
+.description {
+  font-family: 'Nunito Sans';
+  font-size: 14px;
+  line-height: normal;
+  font-weight: 400;
+  color: #5F6368;
+  text-transform: initial;
+  letter-spacing: 0.06px;
+}
+
 .button {
   font-family: 'Nunito Sans';
   font-size: 14px;
@@ -220,6 +238,14 @@ body {
   line-height: 20px;
   font-weight: 600;
   color: #f45745;
+}
+
+.hyperlink-blue {
+  font-family: 'Nunito Sans';
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: #3898FC;
 }
 
 .tab-heading {

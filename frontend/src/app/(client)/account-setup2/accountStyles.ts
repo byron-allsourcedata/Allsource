@@ -145,7 +145,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
   },
   title: {
     fontWeight: '600',
-    marginBottom: '0.5em',
+    marginBottom: '0.25em',
     textAlign: 'start',
     '@media (max-width: 600px)': { marginBottom: '0.15em', }
   },
@@ -194,7 +194,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
 
   formField: {
     marginTop: 0,
-    marginBottom: '0.75em',
+    marginBottom: '1.5em',
     maxHeight: '56px',
     '& .MuiInputBase-root': {
       maxHeight: '48px',
@@ -219,12 +219,12 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     '@media (max-width: 600px)': { paddingRight: 2.5, paddingLeft: 2.5, }
   },
   submitButton: {
-    backgroundColor: 'rgba(56, 152, 252, 1)',
+    backgroundColor: 'rgba(244, 87, 69, 1)',
     textTransform: 'none',
     padding: '1em',
     color: '#fff !important',
     '&:hover': {
-      backgroundColor: 'rgba(30, 136, 229, 1)',
+      backgroundColor: red[700],
     },
     '@media (max-width: 600px)': { marginBottom: 0.35, fontSize: '14px', fontWeight: '400' }
   },

@@ -181,11 +181,8 @@ const MapChart: FC<MapChartProps> = ({ title, regions, rank }) => {
                                                                 <Typography className="table-data">
                                                                     {regionData.percentage}%
                                                                 </Typography>
-                                                            ) : (
-                                                                <Typography variant="body2" color="text.secondary">
-                                                                    No data
-                                                                </Typography>
-                                                            )}
+                                                            ) : (null)
+                                                            }
                                                         </Typography>
 
                                                     </Box>
@@ -231,12 +228,12 @@ const MapChart: FC<MapChartProps> = ({ title, regions, rank }) => {
                             .map((region, index) => {
                                 const fill = getColorFromPercentage(region.percentage);
                                 return (
-                                    <Grid item xs={2.5} key={index}>
+                                    <Grid item xs={3} key={index}>
                                         <Stack direction="row" alignItems="center" gap={1}>
                                             <Box
-                                                width={12}
-                                                height={12}
-                                                borderRadius="50%"
+                                                width={24}
+                                                height={24}
+                                                borderRadius="8px"
                                                 sx={{ backgroundColor: fill }}
                                             />
                                             <Typography

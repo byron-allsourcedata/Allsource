@@ -111,10 +111,10 @@ export const resetStyles: { [key: string]: SxProps<Theme> } = {
       },
       submitButton: {
         mt: 2,
-        backgroundColor: '#F45745',
-        color: '#FFFFFF !important',
+        backgroundColor: '#3898FC',
+        color: '#fff !important',
         '&:hover': {
-          backgroundColor: red[700],
+          backgroundColor: '#1E88E5',
         },
         fontWeight: '600',
         padding: '10px 8px',

@@ -30,7 +30,7 @@ function sortAgeGroups(data: BarData[]): BarData[] {
 
 
 const B2CPersonal: React.FC<B2CPersonalProps> = ({ data, pets_data, fieldRanks }) => {
-  const ownPets = pets_data["own_pets"];
+  const ownPets = pets_data ? pets_data["own_pets"] : null;
   const trueVal = ownPets?.true ?? 0;
   const falseVal = ownPets?.false ?? 0;
   const total = trueVal + falseVal;

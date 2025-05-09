@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TEXT, UUID, SmallInteger, TIMESTAMP, ForeignKey, text, Boolean, Index
+from sqlalchemy import Column, Integer, TEXT, UUID, SmallInteger, TIMESTAMP, ForeignKey, text, Boolean, Index, inspect
 from sqlalchemy.orm import relationship
 from models.base import Base
 
@@ -40,6 +40,20 @@ class EnrichmentUserContact(Base):
     __table_args__ = (
         Index("ix_enrichment_users_contacts_asid", asid),
     )
+
+    @classmethod
+    def get_fields(cls, exclude_fields=None):
+        exclude_fields = set(exclude_fields or [])
+        return [
+            column.key
+            for column in inspect(cls).columns
+            if column.key not in exclude_fields
+        ]
+
+    @classmethod
+    def get_headers(cls, exclude_fields=None):
+        fields = cls.get_fields(exclude_fields=exclude_fields)
+        return [field.replace("_", " ").title() for field in fields]
 
 from .enrichment_users import EnrichmentUser
 

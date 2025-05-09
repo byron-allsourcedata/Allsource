@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import desc, asc, select
@@ -101,6 +101,7 @@ class AudienceSourcesPersistence:
         source = AudienceSource(
             user_id=creating_data.get("user_id"),
             created_by_user_id=creating_data.get("user_id"),
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             source_type=source_type,
             source_origin=creating_data.get("source_origin"),
             target_schema=creating_data.get("target_schema"),

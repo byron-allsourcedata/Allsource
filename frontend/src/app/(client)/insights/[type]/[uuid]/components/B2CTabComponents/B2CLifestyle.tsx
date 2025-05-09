@@ -58,7 +58,7 @@ const B2CLifestyle = ({ data, fieldRanks }: B2CLifestyleProps) => {
   return (
     <Box
       sx={{
-        padding: "1.5rem 5rem 1.5rem 2rem",
+        padding: "1.5rem 6.25rem 1.5rem 1.5rem",
         width: "100%",
         display: "flex",
         flexDirection: "column",

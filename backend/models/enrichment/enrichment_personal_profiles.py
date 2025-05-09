@@ -85,7 +85,7 @@ class EnrichmentPersonalProfiles(Base):
         nullable=True
     )
     zip_code5: Mapped[str] = mapped_column(
-        Integer,
+        String(10),
         nullable=True
     )
     

@@ -25,7 +25,7 @@ from .base import Base
 from .data_sync_imported_leads import DataSyncImportedLead
 from .enrichment import (EnrichmentEmploymentHistory, EnrichmentFinancialRecord,
                          EnrichmentLifestyle, EnrichmentLookalikeScore, EnrichmentModels, EnrichmentUserContact,
-                         EnrichmentUser, EnrichmentVoterRecord, EnrichmentUsersEmails, EnrichmentPersonalProfiles, EnrichmentEmails)
+                         EnrichmentUser, EnrichmentVoterRecord, EnrichmentUsersEmails, EnrichmentPersonalProfiles, EnrichmentEmails, EnrichmentPostal)
 
 
 from .audience_phones_verification import AudiencePhoneVerification
@@ -110,6 +110,7 @@ __all__ = [
     "EnrichmentEmails",
     "EnrichmentUser",
     "EnrichmentVoterRecord",
+    "EnrichmentPostal",
     "AudiencePhoneVerification",
     "FiveXFiveCookieSyncFile",
     "FiveXFiveEmails",

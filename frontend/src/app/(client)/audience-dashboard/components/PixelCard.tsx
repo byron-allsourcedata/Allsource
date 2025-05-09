@@ -97,6 +97,7 @@ const MainSectionCard: React.FC<PixelCardProps> = ({ data, onClick }) => {
         <Box
           height={160}
           display="flex"
+          position={'relative'}
           justifyContent="center"
           alignItems="center"
         >

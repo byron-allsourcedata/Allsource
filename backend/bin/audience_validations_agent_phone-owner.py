@@ -112,14 +112,10 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                         )
                         response_data = response.json()
 
-                        logging.info(f"response: {response.status_code} {response_data}")
+                        logging.debug(f"response: {response.status_code} {response_data}")
 
                         if response.status_code != 200:
                             continue
-
-                        if response.status_code != 200 and phone_field == 'phone_mobile2':
-                            await message.ack()
-
 
                         caller_name = response_data.get("caller_name", "").title()
                         similarity = fuzz.ratio(full_name, caller_name)
@@ -254,7 +250,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
 
     except Exception as e:
         logging.error(f"Error processing matching: {e}", exc_info=True)
-        await message.ack()
+        db_session.rollback()
+        await message.reject(requeue=True)
         return
 
 

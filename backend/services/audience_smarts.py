@@ -9,7 +9,7 @@ from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_settings import AudienceSettingPersistence
 from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse
 from persistence.audience_smarts import AudienceSmartsPersistence
-from models.enrichment.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from models.users import User
 from enums import AudienceSmartDataSource, QueueName
@@ -20,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 class AudienceSmartsService:
     VALID_DAYS = {30, 60, 90}
+    GENDER_MAPPDING = {0: "male", 1: "female", 2: "unknown"}
 
     def __init__(self, audience_smarts_persistence: AudienceSmartsPersistence,
                  lookalikes_persistence_service: AudienceLookalikesPersistence,
@@ -117,13 +118,14 @@ class AudienceSmartsService:
     def transform_datasource(self, raw_data: dict) -> DataSourcesFormat:
         data_sources = {
             "lookalike_ids": {"include": [], "exclude": []},
-            "source_ids": {"include": [], "exclude": []}
+            "source_ids": {"include": [], "exclude": []},
+            "use_case": None
         }
 
         for item in raw_data:
             key = "lookalike_ids" if item["sourceLookalike"] == "Lookalike" else "source_ids"
             include_exclude = "include" if item["includeExclude"] == "include" else "exclude"
-
+            data_sources['use_case'] = item["useCase"].lower()
             data_sources[key][include_exclude].append(item["selectedSourceId"])
 
         return data_sources
@@ -299,7 +301,11 @@ class AudienceSmartsService:
         writer.writerow(values)
         
         for lead in leads:
-            relevant_data = [getattr(lead, field, "") for field in types]
+            relevant_data = [
+                self.GENDER_MAPPDING.get(getattr(lead, field, ""), getattr(lead, field, ""))
+                if field == "gender" else getattr(lead, field, "")
+                for field in types
+            ]
             writer.writerow(relevant_data)
 
         output.seek(0)
@@ -307,24 +313,28 @@ class AudienceSmartsService:
     
 
     def download_synced_persons(self, data_sync_id):
-        exclude_fields = {"id", "state_abbr", "cid", "lat", "lon", "rec_id"}
+        exclude_fields = {"id", "asid", "up_id", "rsid", "name_prefix", "name_suffix"}
         
-        fields = EnrichmentUser.get_fields(exclude_fields=exclude_fields)
-        headers = EnrichmentUser.get_headers(exclude_fields=exclude_fields)
+        fields = EnrichmentUserContact.get_fields(exclude_fields=exclude_fields)
+        headers = EnrichmentUserContact.get_headers(exclude_fields=exclude_fields)
         
         persons = self.audience_smarts_persistence.get_synced_persons_by_smart_aud_id(data_sync_id, fields)
 
-        fields.insert(0, "email")
-        headers.insert(0, "Email")
         fields.insert(-1, "state")
         headers.insert(-1, "State")
+        fields.insert(-1, "gender")
+        headers.insert(-1, "Gender")
 
         output = io.StringIO()
         writer = csv.writer(output)
         writer.writerow(headers)
         
         for lead in persons:
-            relevant_data = [getattr(lead, field, "") for field in fields]
+            relevant_data = [
+                self.GENDER_MAPPDING.get(getattr(lead, field, ""), getattr(lead, field, ""))
+                if field == "gender" else getattr(lead, field, "")
+                for field in fields
+            ]
             writer.writerow(relevant_data)
 
         output.seek(0)

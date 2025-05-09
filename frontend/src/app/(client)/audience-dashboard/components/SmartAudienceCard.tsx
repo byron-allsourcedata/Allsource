@@ -137,10 +137,10 @@ const SmartAudienceCard: React.FC<SmartAudienceCardProps> = ({
                 borderRadius: 2,
                 boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.25)",
                 padding: "0.5rem 0.75rem 1rem",
-                border: highlighted ? `2px solid rgba(5, 105, 226, 1)` : "transparent",
+                border: highlighted ? `1.5px solid rgba(5, 105, 226, 1)` : "1.5px solid rgba(255, 255, 255, 0.75)",
                 cursor: "pointer",
                 "&:hover": {
-                    border: `1px solid rgba(5, 105, 226, 1)`,
+                    border: `1.5px solid rgba(5, 105, 226, 1)`,
                 },
             }}
         >

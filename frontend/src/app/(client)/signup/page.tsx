@@ -318,7 +318,7 @@ const Signup: React.FC = () => {
       <Box sx={signupStyles.mainContent}>
         <Box sx={signupStyles.container}>
           <Typography variant="h4" component="h1" className='heading-text' sx={signupStyles.title}>
-            Create your Maximiz account
+            Create your Allsource account
           </Typography>
           <GoogleLogin
             onSuccess={async (credentialResponse) => {
@@ -542,7 +542,7 @@ const Signup: React.FC = () => {
             {errors.termsAccepted && (
               <FormHelperText error>{errors.termsAccepted}</FormHelperText>
             )}
-            <Button className='hyperlink-red'
+            <Button className='hyperlink-blue'
               type="submit"
               variant="contained"
               sx={signupStyles.submitButton}
@@ -553,7 +553,7 @@ const Signup: React.FC = () => {
           </Box>
           <Typography variant="body2" className='second-sub-title' sx={signupStyles.loginText}>
             Already have an account?{' '}
-            <Link href={`/signin?${searchParams.toString()}`} sx={signupStyles.loginLink} className='hyperlink-red'>
+            <Link href={`/signin?${searchParams.toString()}`} sx={signupStyles.loginLink} className='hyperlink-blue'>
               Login
             </Link>
           </Typography>

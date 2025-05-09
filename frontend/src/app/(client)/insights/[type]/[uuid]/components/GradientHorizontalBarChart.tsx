@@ -118,7 +118,7 @@ export const GradientBarChart: React.FC<GradientBarChartProps> = ({
                     className="dashboard-card-text"
                     sx={{ color: "rgba(66, 66, 66, 1)", fontWeight: 400 }}
                   >
-                    {label}
+                    {label.charAt(0).toUpperCase() + label.slice(1)}
                   </Typography>
                   <Typography
                     className="dashboard-card-text"
