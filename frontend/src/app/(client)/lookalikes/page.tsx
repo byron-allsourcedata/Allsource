@@ -952,6 +952,9 @@ const CreateLookalikePage: React.FC = () => {
                       ":hover": {
                         backgroundColor: "rgba(48, 149, 250, 1)",
                       },
+                      ":disabled": {
+                        backgroundColor: "rgba(56, 152, 252, 0.5)",
+                      },
                     }}
                   >
                     Begin

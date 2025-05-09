@@ -34,6 +34,7 @@ import FilterDatasync from "@/components/FilterDatasync";
 import AudiencePopup from "@/components/AudienceSlider";
 import { useNotification } from "@/context/NotificationContext";
 import FirstTimeScree from "./components/FirstTimeScree";
+import NotificationBanner from "@/components/NotificationBanner";
 
 interface DataSyncProps {
   service_name?: string;
@@ -73,92 +74,20 @@ const DataSync = () => {
   if (isLoading) {
     return <CustomizedProgressBar />;
   }
-  const hasIntegrations   = false;
+  const hasIntegrations = false;
 
   return (
     <>
     {isLoading && <CustomizedProgressBar />}
     {!hasIntegrations && (
       <>
-        <Box>
-        <Box
-                          sx={{
-                            marginTop: 2,
-                            border: "1px solid rgba(224, 49, 48, 1)",
-                            display: "flex",
-                            flexDirection: "row",
-                            width: "98%",
-                            padding: 2,
-                            borderRadius: "4px",
-                            mb: 3,
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "row",
-                              width: "100%",
-                              gap: 2,
-                              alignItems: "center",
-                            }}
-                          >
-                            <ReportProblemOutlinedIcon
-                              sx={{ fontSize: "20px", color: "rgba(230, 90, 89, 1)" }}
-                            />
-                            <Typography className="second-sub-title">
-                              You need to import at least one source to create a
-                              lookalike
-                            </Typography>
-                          </Box>
-        
-                          <Box
-                            sx={{
-                              display: "flex",
-                              flexDirection: "row",
-                              width: "100%",
-                              gap: 2,
-                              alignItems: "center",
-                              justifyContent: "end",
-                            }}
-                          >
-                            <Button
-                              sx={{
-                                textTransform: "none",
-                                fontFamily: "Nunito Sans",
-                                fontSize: "14px",
-                                fontWeight: 500,
-                                color: "rgba(224, 49, 48, 1) !important",
-                              }}
-                              onClick={() => {
-                                // setShowNotification(false);
-                              }}
-                            >
-                              Dismiss
-                            </Button>
-                            <Button
-                              onClick={() => {
-                                router.push("/integrations");
-                              }}
-                              sx={{
-                                textTransform: "none",
-                                fontFamily: "Nunito Sans",
-                                fontSize: "14px",
-                                fontWeight: 500,
-                                color: "rgba(255, 255, 255, 1) !important",
-                                backgroundColor: "rgba(224, 49, 48, 1)",
-                                "&:hover": {
-                                  backgroundColor: "rgba(224, 49, 48, 0.85)",
-                                },
-                              }}
-                            >
-                              Add Integration
-                            </Button>
-                          </Box>
-                        </Box>
-                        <FirstTimeScree>
-        
-      </FirstTimeScree>
+        <Box sx={{width: "98%", mt: 2}}>
+          <NotificationBanner
+            ctaUrl="/integrations"
+            ctaLabel="Add Integration"
+            message="You need to create at least one integration before you can sync your audience"
+          />
+          <FirstTimeScree />
       </Box>
       </>
       
