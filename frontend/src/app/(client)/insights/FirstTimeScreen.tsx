@@ -1,9 +1,7 @@
-import React from 'react';
-import FirstTimeCards from "../components/FirstTimeCards"
-import {
-  Box,
-  Typography,
-} from "@mui/material";
+import React, { useState } from "react";
+import FirstTimeCards from "../components/FirstTimeCards";
+import { Box, Typography } from "@mui/material";
+import WelcomePopup from "./CreatePixelSourcePopup";
 import { ExternalLink } from "@/components/ExternalLink";
 
 type CardData = {
@@ -14,13 +12,32 @@ type CardData = {
   isClickable?: boolean;
 };
 
+const FirstTimeScreen = () => {
+  const [popupOpen, setPopupOpen] = useState(false);
 
-interface ClickableCardsProps {
-  cardData: CardData[];
-}
+  const handleOpenPopup = () => {
+    setPopupOpen(true);
+  };
 
+  const cardData: CardData[] = [
+    {
+      title: "Sources Insights",
+      description:
+        "Analyze your audience sources to identify high-performing segments and optimize targeting strategies.",
+      icon: "/source.svg",
+      isClickable: true,
+      onClick: handleOpenPopup,
+    },
+    {
+      title: "Lookalikes Insights",
+      description:
+        "View the aggregated profile of your generated lookalike audience, showing different insights characteristics.",
+      icon: "/lookalike.svg",
+      isClickable: true,
+      onClick: handleOpenPopup,
+    },
+  ];
 
-const FirstTimeScreen = ({cardData}: ClickableCardsProps) => {
   return (
     <Box
       sx={{
@@ -54,9 +71,7 @@ const FirstTimeScreen = ({cardData}: ClickableCardsProps) => {
         >
           Insights
         </Typography>
-        <ExternalLink href="https://example.com">
-          Learn more
-        </ExternalLink>
+        <ExternalLink href="https://example.com">Learn more</ExternalLink>
       </Box>
       <Typography
         variant="body1"
@@ -69,7 +84,8 @@ const FirstTimeScreen = ({cardData}: ClickableCardsProps) => {
           lineHeight: "22px",
         }}
       >
-        Uncover key statistics, trends, and actionable data—it will help you refine your targeting and maximize results
+        Uncover key statistics, trends, and actionable data—it will help you
+        refine your targeting and maximize results
       </Typography>
 
       <Box
@@ -77,8 +93,11 @@ const FirstTimeScreen = ({cardData}: ClickableCardsProps) => {
           width: "100%",
         }}
       >
-        <FirstTimeCards cardData={cardData}/>
+        <FirstTimeCards cardData={cardData} />
       </Box>
+      {popupOpen && (
+        <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} />
+      )}
     </Box>
   );
 };
