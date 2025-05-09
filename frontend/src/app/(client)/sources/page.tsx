@@ -158,7 +158,7 @@ const Sources: React.FC = () => {
       onClick: () => {
         router.push("/sources/builder?type=customer-conversions");
       },
-      isClickable: false
+      isClickable: true
     },
     {
       title: "Failed Leads (CSV)",
@@ -740,141 +740,143 @@ const Sources: React.FC = () => {
       >
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Box>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginTop: hasNotification ? "1rem" : "0.5rem",
-                flexWrap: "wrap",
-                pl: "0.5rem",
-                gap: "15px",
-                "@media (max-width: 900px)": {
-                  marginTop: hasNotification ? "3rem" : "1.125rem",
-                },
-                "@media (max-width: 600px)": {
-                  marginTop: hasNotification ? "2rem" : "0rem",
-                },
-              }}
-            >
+            {(data.length !== 0 || selectedFilters.length > 0) && 
               <Box
                 sx={{
                   display: "flex",
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 1,
-                }}
-              >
-                <Typography className="first-sub-title">Sources</Typography>
-                <CustomToolTip
-                  title={"Here you can view your active sources."}
-                  linkText="Learn more"
-                  linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts"
-                />
-              </Box>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: hasNotification ? "1rem" : "0.5rem",
+                  flexWrap: "wrap",
+                  pl: "0.5rem",
                   gap: "15px",
-                  pt: "4px",
-                  pr: 2,
                   "@media (max-width: 900px)": {
-                    gap: "8px",
+                    marginTop: hasNotification ? "3rem" : "1.125rem",
+                  },
+                  "@media (max-width: 600px)": {
+                    marginTop: hasNotification ? "2rem" : "0rem",
                   },
                 }}
               >
-                <Button
-                  variant="outlined"
+                <Box
                   sx={{
-                    height: "40px",
-                    borderRadius: "4px",
-                    textTransform: "none",
-                    fontSize: "14px",
-                    lineHeight: "19.6px",
-                    fontWeight: "500",
-                    color: "#5052B2",
-                    borderColor: "#5052B2",
-                    "&:hover": {
-                      backgroundColor: "rgba(80, 82, 178, 0.1)",
-                      borderColor: "#5052B2",
-                    },
-                  }}
-                  onClick={() => {
-                    router.push("/sources/builder");
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 1,
                   }}
                 >
-                  Import Source
-                </Button>
-                <Button
-                  onClick={handleFilterPopupOpen}
-                  disabled={data?.length === 0}
-                  aria-controls={dropdownOpen ? "account-dropdown" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={dropdownOpen ? "true" : undefined}
+                  <Typography className="first-sub-title">Sources</Typography>
+                  <CustomToolTip
+                    title={"Here you can view your active sources."}
+                    linkText="Learn more"
+                    linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts"
+                  />
+                </Box>
+                <Box
                   sx={{
-                    textTransform: "none",
-                    color:
-                      selectedFilters.length > 0
-                        ? "rgba(80, 82, 178, 1)"
-                        : "rgba(128, 128, 128, 1)",
-                    border:
-                      selectedFilters.length > 0
-                        ? "1px solid rgba(80, 82, 178, 1)"
-                        : "1px solid rgba(184, 184, 184, 1)",
-                    borderRadius: "4px",
-                    padding: "8px",
-                    opacity: data?.length === 0 ? "0.5" : "1",
-                    minWidth: "auto",
-                    maxHeight: "40px",
-                    maxWidth: "40px",
-                    position: "relative",
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: "15px",
+                    pt: "4px",
+                    pr: 2,
                     "@media (max-width: 900px)": {
-                      border: "none",
-                      padding: 0,
-                    },
-                    "&:hover": {
-                      backgroundColor: "transparent",
-                      border: "1px solid rgba(80, 82, 178, 1)",
-                      color: "rgba(80, 82, 178, 1)",
-                      "& .MuiSvgIcon-root": {
-                        color: "rgba(80, 82, 178, 1)",
-                      },
+                      gap: "8px",
                     },
                   }}
                 >
-                  <FilterListIcon
-                    fontSize="medium"
+                  <Button
+                    variant="outlined"
                     sx={{
+                      height: "40px",
+                      borderRadius: "4px",
+                      textTransform: "none",
+                      fontSize: "14px",
+                      lineHeight: "19.6px",
+                      fontWeight: "500",
+                      color: "#5052B2",
+                      borderColor: "#5052B2",
+                      "&:hover": {
+                        backgroundColor: "rgba(80, 82, 178, 0.1)",
+                        borderColor: "#5052B2",
+                      },
+                    }}
+                    onClick={() => {
+                      router.push("/sources/builder");
+                    }}
+                  >
+                    Import Source
+                  </Button>
+                  <Button
+                    onClick={handleFilterPopupOpen}
+                    disabled={data?.length === 0}
+                    aria-controls={dropdownOpen ? "account-dropdown" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={dropdownOpen ? "true" : undefined}
+                    sx={{
+                      textTransform: "none",
                       color:
                         selectedFilters.length > 0
                           ? "rgba(80, 82, 178, 1)"
                           : "rgba(128, 128, 128, 1)",
-                    }}
-                  />
-
-                  {selectedFilters.length > 0 && (
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: 6,
-                        right: 8,
-                        width: "10px",
-                        height: "10px",
-                        backgroundColor: "red",
-                        borderRadius: "50%",
-                        "@media (max-width: 900px)": {
-                          top: -1,
-                          right: 1,
+                      border:
+                        selectedFilters.length > 0
+                          ? "1px solid rgba(80, 82, 178, 1)"
+                          : "1px solid rgba(184, 184, 184, 1)",
+                      borderRadius: "4px",
+                      padding: "8px",
+                      opacity: data?.length === 0 ? "0.5" : "1",
+                      minWidth: "auto",
+                      maxHeight: "40px",
+                      maxWidth: "40px",
+                      position: "relative",
+                      "@media (max-width: 900px)": {
+                        border: "none",
+                        padding: 0,
+                      },
+                      "&:hover": {
+                        backgroundColor: "transparent",
+                        border: "1px solid rgba(80, 82, 178, 1)",
+                        color: "rgba(80, 82, 178, 1)",
+                        "& .MuiSvgIcon-root": {
+                          color: "rgba(80, 82, 178, 1)",
                         },
+                      },
+                    }}
+                  >
+                    <FilterListIcon
+                      fontSize="medium"
+                      sx={{
+                        color:
+                          selectedFilters.length > 0
+                            ? "rgba(80, 82, 178, 1)"
+                            : "rgba(128, 128, 128, 1)",
                       }}
                     />
-                  )}
-                </Button>
+
+                    {selectedFilters.length > 0 && (
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: 6,
+                          right: 8,
+                          width: "10px",
+                          height: "10px",
+                          backgroundColor: "red",
+                          borderRadius: "50%",
+                          "@media (max-width: 900px)": {
+                            top: -1,
+                            right: 1,
+                          },
+                        }}
+                      />
+                    )}
+                  </Button>
+                </Box>
               </Box>
-            </Box>
+            }
 
             <Box
               sx={{
@@ -1809,7 +1811,6 @@ const Sources: React.FC = () => {
                   />
                 </Box>
               </Box>
-              {/* {showSlider && <Slider />} */}
             </Box>
           </Box>
         </Box>

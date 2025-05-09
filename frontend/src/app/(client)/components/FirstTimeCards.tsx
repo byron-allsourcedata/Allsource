@@ -24,11 +24,11 @@ type CardData = {
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
           gap: 2,
-          padding: 2,
+          padding: `16px 0 16px ${cardData[0].isClickable ? "4px" : "0px"}`,
         }}
       >
         {cardData.map((card, index) => (
-          <Card key={index} sx={{ boxShadow: card.isClickable ? 3 : 0, borderColor: card.isClickable ? "rgba(237, 237, 237, 1)" : "inherit" }}>
+          <Card key={index} sx={{ boxShadow: card.isClickable ? "0px 0px 4px rgba(0, 0, 0, 0.3)" : 0, borderColor: card.isClickable ? "rgba(237, 237, 237, 1)" : "inherit" }}>
             <CardActionArea onClick={card.onClick} sx={{ pointerEvents: !card.isClickable ? "none" : "inherit" }}>
               <CardContent>
                 <Typography className="fiveth-sub-title" sx={{ marginBottom: 2 }}>
