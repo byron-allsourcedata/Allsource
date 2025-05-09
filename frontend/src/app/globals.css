@@ -157,6 +157,14 @@ body {
   color: #5F6368
 }
 
+.fiveth-sub-title {
+  font-family: 'Nunito Sans';
+  font-size: 14px;
+  line-height: normal;
+  font-weight: 400;
+  color: #5F6368
+}
+
 .table-heading {
   font-family: 'Nunito Sans';
   font-size: 12px;
