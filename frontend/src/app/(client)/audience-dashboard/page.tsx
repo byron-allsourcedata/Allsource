@@ -126,6 +126,9 @@ const AudienceDashboard: React.FC = () => {
         const diffMin = Math.floor(diffSec / 60);
         const diffHour = Math.floor(diffMin / 60);
         const diffDay = Math.floor(diffHour / 24);
+        const diffWeek = Math.floor(diffDay / 7);
+        const diffMonth = Math.floor(diffDay / 30);
+        const diffYear = Math.floor(diffDay / 365);
 
         let relative = "";
         if (diffMs < 0) {
@@ -138,12 +141,12 @@ const AudienceDashboard: React.FC = () => {
           relative = `${diffHour} hour${diffHour === 1 ? "" : "s"} ago`;
         } else if (diffDay < 7) {
           relative = `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+        } else if (diffWeek < 5) {
+          relative = `${diffWeek} week${diffWeek === 1 ? "" : "s"} ago`;
+        } else if (diffMonth < 12) {
+          relative = `${diffMonth} month${diffMonth === 1 ? "" : "s"} ago`;
         } else {
-          relative = date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          });
+          relative = `${diffYear} year${diffYear === 1 ? "" : "s"} ago`;
         }
 
         const full = date.toLocaleString("en-US", {
