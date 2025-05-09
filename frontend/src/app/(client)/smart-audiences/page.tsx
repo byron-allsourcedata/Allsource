@@ -1583,7 +1583,7 @@ const SmartAudiences: React.FC = () => {
                                     <CreateSyncPopup
                                         open={dataSyncPopupOpen}
                                         id={selectedRowData?.id}
-                                        activeSegmentRecords={selectedRowData?.active_segment_records}
+                                        activeSegmentRecords={selectedRowData?.validated_records}
                                         onClose={handleDataSyncPopupClose}
                                         integrationsList={selectedRowData?.integrations}
                                         isDownloadAction={isDownloadAction}

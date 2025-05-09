@@ -284,38 +284,38 @@ class AudienceSmartsPersistence:
                 .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
                 .join(EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid)
                 .join(EnrichmentPersonalProfiles, EnrichmentPersonalProfiles.asid == EnrichmentUser.asid)
-                .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id)
+                .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id, AudienceSmartPerson.is_valid == True)
         )
 
 
         smarts = query.limit(sent_contacts).all()
         return smarts
     
-    # def get_synced_persons_by_smart_aud_id(self, data_sync_id, enrichment_field_names):
-    #     enrichment_fields = [
-    #         getattr(EnrichmentUser, field) for field in enrichment_field_names
-    #     ]
+    def get_synced_persons_by_smart_aud_id(self, data_sync_id, enrichment_field_names):
+        enrichment_fields = [
+            getattr(EnrichmentUserContact, field) for field in enrichment_field_names
+        ]
 
-    #     fields = [
-    #         Email.email,
-    #         *enrichment_fields,
-    #         States.state_name.label("state"),
-    #     ]
+        fields = [
+            *enrichment_fields,
+            States.state_name.label("state"),
+            EnrichmentPersonalProfiles.gender
+        ]
 
-    #     query = (
-    #         self.db.query(
-    #             *fields
-    #         )
-    #             .select_from(AudienceDataSyncImportedPersons)
-    #             .join(EnrichmentUser, EnrichmentUser.id == AudienceDataSyncImportedPersons.enrichment_user_id)
-    #             .outerjoin(EmailEnrichment, EmailEnrichment.enrichment_user_id == EnrichmentUser.id)
-    #             .outerjoin(Email, Email.id == EmailEnrichment.email_id)
-    #             .outerjoin(States, func.lower(States.state_code) == func.lower(EnrichmentUser.state_abbr))  
-    #             .filter(AudienceDataSyncImportedPersons.data_sync_id == data_sync_id)
-    #     )
+        query = (
+            self.db.query(
+                *fields
+            )
+                .select_from(AudienceDataSyncImportedPersons)
+                .join(EnrichmentUser, EnrichmentUser.id == AudienceDataSyncImportedPersons.enrichment_user_id)
+                .outerjoin(EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid)
+                .outerjoin(EnrichmentPersonalProfiles, EnrichmentPersonalProfiles.asid == EnrichmentUser.asid)
+                .outerjoin(States, func.lower(States.state_code) == func.lower(EnrichmentPersonalProfiles.state_abbr))  
+                .filter(AudienceDataSyncImportedPersons.data_sync_id == data_sync_id)
+        )
 
 
-    #     return query.all()
+        return query.all()
 
     def get_processing_sources(self, id):
         query = (
