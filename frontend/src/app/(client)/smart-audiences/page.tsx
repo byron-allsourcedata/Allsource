@@ -73,6 +73,7 @@ type CardData = {
     icon: string;
     onClick?: () => void;
     isClickable?: boolean;
+    isValidationField?: boolean;
   };
 
 const getStatusStyle = (status: string) => {
@@ -329,6 +330,7 @@ const SmartAudiences: React.FC = () => {
           title: "Step 4. Validation*",
           description: "Before finalizing your audience, verify contact data quality through our validation system.",
           icon: "/smart-validation.svg",
+          isValidationField: true
         },
       ];
 

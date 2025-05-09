@@ -10,6 +10,7 @@ type CardData = {
     icon: string;
     onClick?: () => void;
     isClickable?: boolean;
+    isValidationField?: boolean;
   };
   
   interface ClickableCardsProps {
@@ -57,6 +58,9 @@ type CardData = {
                 <Typography className="fiveth-sub-title">
                   {card.description}
                 </Typography>
+                {card?.isValidationField && <Typography className="sixth-sub-title" sx={{mt: 1}}>
+                  *This step is only  for direct marketing.
+                </Typography>}
               </CardContent>
             </CardActionArea>
           </Card>
