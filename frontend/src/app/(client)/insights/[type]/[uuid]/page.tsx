@@ -188,7 +188,7 @@ const Insights = () => {
             },
           }}
         >
-          <ArrowBackIcon sx={{ color: "#5052B2" }} />
+          <ArrowBackIcon sx={{ color: "#1E88E5" }} />
         </IconButton>
         <Typography
           variant="h4"
@@ -260,7 +260,7 @@ const Insights = () => {
               cursor: type === "sources" ? 'none' : 'pointer',
               alignItems: "start",
               "& .MuiTabs-indicator": {
-                backgroundColor: "rgba(80, 82, 178, 1)",
+                backgroundColor: "rgba(30, 136, 229, 1)",
                 height: type === "sources" ? "0px" : "1.4px",
               },
               "@media (max-width: 600px)": {
@@ -287,7 +287,7 @@ const Insights = () => {
                 lineHeight: "19.1px",
                 textAlign: "left",
                 "&.Mui-selected": {
-                  color: "rgba(80, 82, 178, 1)",
+                  color: "rgba(30, 136, 229, 1)",
                 },
                 "@media (max-width: 600px)": {
                   mr: 0,
@@ -313,7 +313,7 @@ const Insights = () => {
                 lineHeight: "19.1px",
                 minWidth: "120px",
                 "&.Mui-selected": {
-                  color: "rgba(80, 82, 178, 1)",
+                  color: "rgba(30, 136, 229, 1)",
                 },
                 "@media (max-width: 600px)": {
                   mr: 0,

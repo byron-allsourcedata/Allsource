@@ -19,6 +19,7 @@ import {
   InputAdornment,
   LinearProgress,
   Collapse,
+  Link,
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
@@ -455,7 +456,17 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                               )}
                             </IconButton>
                           )}
-                          {row.name}
+                          <Link
+                            href={`/insights/lookalikes/${row.id}`}
+                            underline="none"                            
+                            sx={{
+                              display: 'inline-block',
+                              width: '100%',     
+                            }}
+                          >
+                            {row.name}
+                            </Link>
+                          
                         </Typography>
                         <IconButton
                           className="edit-icon"

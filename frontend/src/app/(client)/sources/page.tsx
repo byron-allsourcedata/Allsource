@@ -1357,6 +1357,7 @@ const Sources: React.FC = () => {
                                             ? "3px 0px 3px #00000033"
                                             : "none",
                                         }}
+                                        href={`/insights/sources/${row.id}`}
                                       />
 
                                       {/* Target Type Column */}
