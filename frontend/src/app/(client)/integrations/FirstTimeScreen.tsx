@@ -1,0 +1,96 @@
+import React, { FC } from "react";
+import {
+  Box,
+  Typography,
+  Link as MuiLink,
+  Button,
+} from "@mui/material";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import Image from "next/image";
+
+interface FirstTimeScreenProps {
+  onBegin?: () => void;
+}
+
+
+const FirstTimeScreen: FC<FirstTimeScreenProps> = ({ onBegin }) => {
+  return (
+    <Box sx={{ width: "98%", display: "flex", flexDirection: "column", gap: 2, marginTop: 2}}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
+        <Typography
+                          variant="h5"
+                          className="first-sub-title"
+                          sx={{
+                            fontFamily: "Nunito Sans",
+                            fontSize: "24px !important",
+                            color: "#4a4a4a",
+                            fontWeight: "500 !important",
+                            lineHeight: "22px",
+                          }}
+                        >
+          Integrations
+        </Typography>
+        <MuiLink
+          href="#"
+          underline="hover"
+          sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
+        >
+          Learn more <OpenInNewIcon sx={{ fontSize: 16 }} />
+        </MuiLink>
+      </Box>
+      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+        Connect your favourite tools to automate tasks and ensure all your data is
+        accessible in one place
+      </Typography>
+
+      <Box
+        sx={{
+          position: "relative",
+          px: 3,
+          py: 3,
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+          borderRadius: 1,
+          border: '1px solid #EDEDED',
+          overflow: 'hidden',
+        }}
+      >
+        <Typography variant="subtitle2" sx={{ color: "#151619", fontWeight: 400 }}>
+          Connect Your Marketing Platforms
+        </Typography>
+
+        <Box
+          sx={{
+            bgcolor: "#E8F0FF",
+            borderRadius: 1,
+            p: 2,
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
+          <Image
+            src="/integrations-first-time-screen.svg"
+            alt="Allsource integrations diagram"
+            width={1000}
+            height={160}
+            style={{ maxWidth: "100%", height: "auto" }}
+          />
+        </Box>
+
+        <Typography variant="body2" sx={{ color: "#7E7E7E" }}>
+          Sync your audience data seamlessly with ad platforms and CRM tools to
+          activate campaigns across channels.
+        </Typography>
+
+        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+          <Button variant="contained" onClick={onBegin} sx={{ minWidth: 85, minHeight: 40, bgcolor: "#3898FC", fontWeight: 300, textTransform: 'none', }}>
+            Begin
+          </Button>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
+export default FirstTimeScreen;

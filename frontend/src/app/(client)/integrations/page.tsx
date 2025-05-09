@@ -45,6 +45,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup"
 import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 import BingAdsIntegrationPopup from "@/components/BingAdsIntegrationPopup";
+import FirstTimeScreen from "./FirstTimeScreen";
 
 
 interface IntegrationBoxProps {
@@ -231,6 +232,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
             width: '156px'
           },
         }}>
+          
           {!is_avalible && (
             <Box sx={{
               display: 'flex',
@@ -1069,10 +1071,28 @@ const Integrations = () => {
   const changeTab = (value: string) => {
     setValue(value)
   }
+  const noIntegrations = integrationsCredentials.length === 0;
+  const [showFirstTime, setShowFirstTime] = useState(true);
+  useEffect(() => {
+    if (!isLoading && integrationsCredentials.length === 0) {
+      setShowFirstTime(true);
+    } else {
+      setShowFirstTime(false);
+    }
+  }, [isLoading, integrationsCredentials]);
+  const handleBegin = () => {
+    setShowFirstTime(false); 
+    setActiveTab('1'); 
+  };
+  if (isLoading) {
+    return <CustomizedProgressBar />;
+  }
   return (
     <>
-      {isLoading && <CustomizedProgressBar />}
-      <TabContext value={value}>
+    {showFirstTime ? (
+        <FirstTimeScreen onBegin={handleBegin} />
+      ) : (
+        <TabContext value={value}>
         <Box
           sx={{
             display: "flex",
@@ -1169,7 +1189,7 @@ const Integrations = () => {
                       }
                     }}
                   />
-                  <Tab label="Pixel Management" value="2" className="main-text"
+                  {/* <Tab label="Pixel Management" value="2" className="main-text"
                     sx={{
                       textTransform: 'none',
                       padding: '4px 10px',
@@ -1192,7 +1212,7 @@ const Integrations = () => {
                           border: '1px solid rgba(220, 220, 239, 1)'
                         },
                       }
-                    }} />
+                    }} /> */}
                 </TabList>
               )}
             </Box>
@@ -1215,6 +1235,7 @@ const Integrations = () => {
           </TabPanel>
         </Box>
       </TabContext>
+      )}
       {showSlider && <Slider />}
     </>
   );
