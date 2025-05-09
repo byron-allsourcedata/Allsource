@@ -4,21 +4,21 @@ export const mapGender = (gender: PercentageMap) => [
   {
     imageSrc: "/male.svg",
     label: "Male",
-    percentage: parseFloat((gender["0"] ?? 0).toString()),
+    percentage: parseFloat((gender["male"] ?? 0).toString()),
     fillColor: "rgba(98, 178, 253, 1)",
     bgColor: "rgba(193, 228, 255, 1)",
   },
   {
     imageSrc: "/female.svg",
     label: "Female",
-    percentage: parseFloat((gender["1"] ?? 0).toString()),
+    percentage: parseFloat((gender["female"] ?? 0).toString()),
     fillColor: "rgba(249, 155, 171, 1)",
     bgColor: "rgba(255, 222, 227, 1)",
   },
   {
     imageSrc: "/male-female.svg",
     label: "Unknown",
-    percentage: parseFloat((gender["2"] ?? 0).toString()),
+    percentage: parseFloat((gender["unknown"] ?? 0).toString()),
     fillColor: "rgb(15, 209, 134)",
     bgColor: "rgba(155, 223, 196, 1)",
   },
@@ -63,11 +63,11 @@ export const getHeatmapColor = (percent: number | string): string => {
 
 export const getColorForLabel = (label: string): string => {
   switch (label.toLowerCase()) {
-    case "home owners":
+    case "homeowner":
     case "married":
     case "have children":
       return "rgba(98, 178, 253, 1)";
-    case "rent home":
+    case "renter":
     case "single":
     case "don’t have children":
       return "rgba(249, 155, 171, 1)";
