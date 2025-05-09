@@ -105,7 +105,6 @@ const Insights = () => {
       .join(", ");
 
   const handleSelectRow = (row: any) => {
-    console.log(row);
     router.push(`/insights/${row.data_source_type}/${row.id}`);
   };
 
