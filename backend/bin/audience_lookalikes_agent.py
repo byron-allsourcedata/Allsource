@@ -5,6 +5,7 @@ import sys
 import asyncio
 import functools
 import json
+
 import boto3
 from sqlalchemy import update, select, func, create_engine
 from aio_pika import IncomingMessage
@@ -55,6 +56,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         enrichment_user_ids = message_body.get("enrichment_user")
         logging.info(f"Processing lookalike_id with ID: {lookalike_id}")
         logging.info(f"Processing len: {len(enrichment_user_ids)}")
+
         lookalike_persons_to_add = []
         for enrichment_user_id in enrichment_user_ids:
             matched_person = AudienceLookalikesPerson(

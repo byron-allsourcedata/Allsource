@@ -771,77 +771,6 @@ async def normalize_persons_failed_leads(
         f"from {data_for_normalize.all_size} matched records."
     )
 
-def calculate_source_data(db_session: Session, source_uuid: UUID, audience_type: BusinessType, limit: Optional[int] = None,) -> List[Dict]:
-        def all_columns_except(model, *skip: str):
-            return tuple(
-                c for c in model.__table__.c
-                if c.name not in skip
-            )
-        # for b2c
-        enrichment_models_b2c = [
-            EnrichmentPersonalProfiles,
-            EnrichmentFinancialRecord,
-            EnrichmentLifestyle,
-            EnrichmentVoterRecord,
-        ]
-        # for b2b
-        enrichment_models_b2b = [
-            EnrichmentProfessionalProfile,
-            EnrichmentEmploymentHistory,
-        ]
-
-        if audience_type == BusinessType.B2C:
-            enrichment_models = enrichment_models_b2c
-        elif audience_type == BusinessType.B2B:
-            enrichment_models = enrichment_models_b2b
-        else:
-            enrichment_models = enrichment_models_b2c + enrichment_models_b2b
-
-        select_cols = [
-            AudienceSourcesMatchedPerson.value_score.label("customer_value")
-        ]
-        for model in enrichment_models:
-            select_cols.extend(all_columns_except(model, "id", "asid"))
-
-        q = (
-            db_session.query(*select_cols)
-            .select_from(AudienceSourcesMatchedPerson)
-            .join(
-                EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id
-            )
-        )
-
-        for model in enrichment_models:
-            q = q.outerjoin(
-                model,
-                model.asid == EnrichmentUser.asid
-            )
-
-        q = q.filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
-        if limit is not None:
-            q = q.limit(limit)
-        rows = q.all()
-
-        def _row2dict(row) -> Dict[str, Any]:
-            d = dict(row._mapping)
-            updated_dict = {}
-            for k, v in d.items():
-                if k == "age" and v:
-                    updated_dict[k] = int(v.lower) if v.lower is not None else None
-                elif k == "zip_code5" and v:
-                    updated_dict[k] = str(v)
-                elif k == "state_abbr":
-                    updated_dict["state"] = v
-                elif isinstance(v, Decimal):
-                    updated_dict[k] = str(v)
-                else:
-                    updated_dict[k] = v
-            return updated_dict
-
-        result: List[Dict[str, Any]] = [_row2dict(r) for r in rows]
-        return result
-
 def to_dict(obj):
     return obj if isinstance(obj, dict) else obj.__dict__
 
@@ -864,7 +793,6 @@ def extract_non_zero_values(*insights):
     return combined
 
 def calculate_and_save_significant_fields(db_session: Session, source_id: UUID, similar_audience_service: SimilarAudienceService, audience_lookalikes_service: AudienceLookalikesService, audience_type: BusinessType):
-    # audience_source_data = calculate_source_data(db_session=db_session, source_uuid=source_id, audience_type=audience_type)
     audience_source_data = audience_lookalikes_service.lookalikes_persistence_service.retrieve_source_insights(source_uuid=source_id, audience_type=audience_type)
     b2c_insights, b2b_insights, other = audience_lookalikes_service.calculate_insights(audience_data=audience_source_data, similar_audience_service=similar_audience_service)
     combined_insights = extract_non_zero_values(b2c_insights, b2b_insights, other)
@@ -958,6 +886,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         ).fetchone()
         logging.info(f"Updated processed and matched records for source_id {source_id}.")
         if processed_records >= total_records:
+
             InsightsUtils.process_insights(source_id=source_id, db_session=db_session)
             if type == 'user_ids':
                 calculate_and_save_significant_fields(db_session=db_session, source_id=source_id,
@@ -967,7 +896,6 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
 
 
             logging.info(f"Source_id {source_id} processing complete.")
-
 
         if type == 'emails' and processed_records >= total_records:
             await process_and_send_chunks(db_session=db_session, source_id=source_id,

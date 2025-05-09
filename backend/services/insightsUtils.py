@@ -1,3 +1,4 @@
+import re
 import uuid
 from collections import defaultdict, Counter
 from typing import List, Optional, Dict, Any
@@ -20,20 +21,25 @@ from schemas.insights import InsightsByCategory
 
 class InsightsUtils:
     @staticmethod
-    def bucket_age(age_range) -> str:
-        try:
-            age = age_range.lower
-        except AttributeError:
+    def bucket_age(age_range: Optional[str]) -> str:
+        low = None
+
+        if low is None and isinstance(age_range, str):
+            m = re.search(r'(\d+)', age_range)
+            if m:
+                low = int(m.group(1))
+
+        if low is None:
             return "Other"
-        if 18 <= age <= 25:
+        if 18 <= low <= 25:
             return "18-25"
-        if 26 <= age <= 30:
+        if 26 <= low <= 30:
             return "26-30"
-        if 31 <= age <= 35:
+        if 31 <= low <= 35:
             return "31-35"
-        if 36 <= age <= 45:
+        if 36 <= low <= 45:
             return "36-45"
-        if 46 <= age <= 65:
+        if 46 <= low <= 65:
             return "46-65"
         return "Other"
 
@@ -41,7 +47,7 @@ class InsightsUtils:
     def process_insights_for_asids(insights, asids: List[uuid.UUID], db_session: Session, audience_type: BusinessType):
         is_invalid = lambda val: (
                 val is None
-                or str(val).upper() in ('UNKNOWN', 'U', '2')
+                or str(val).upper() in ('UNKNOWN', 'U', '2', "")
         )
         if audience_type == BusinessType.B2C or audience_type == BusinessType.ALL:
             # 3) PERSONAL
@@ -72,8 +78,6 @@ class InsightsUtils:
                 for field, val in zip(personal_fields, row):
                     if is_invalid(val):
                         continue
-                    elif field == "age":
-                        key = InsightsUtils.bucket_age(val)
                     else:
                         key = str(val)
                     key = key.lower()
@@ -324,7 +328,7 @@ class InsightsUtils:
             .all()
         ]
 
-        return InsightsUtils.process_insights_for_asids(insights, asids, db_session)
+        return InsightsUtils.process_insights_for_asids(insights, asids, db_session, audience_type=BusinessType.ALL)
 
     @staticmethod
     def merge_insights_json(

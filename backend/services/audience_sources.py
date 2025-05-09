@@ -415,19 +415,8 @@ class AudienceSourceService:
         domains = [domain for _, domain in result]
         return DomainsSourceResponse(domains=domains, has_more=has_more)
 
-    def get_processing_source(self, id: str) -> Optional[SourceResponse]:
-        source = self.audience_sources_persistence.get_processing_sources(id)
-        return None if not source else {
-            'id': source[0],
-            'name': source[1],
-            'target_schema': source[2],
-            'source_origin': source[3],
-            'source_type': source[4],
-            'created_at': source[6],
-            'created_by': source[5],
-            'domain': source[7],
-            'total_records': source[8],
-            'matched_records': source[9],
-            'matched_records_status': source[10],
-            'processed_records': source[11],
-        }
+    def get_processing_source(self, id: UUID) -> Optional[SourceResponse]:
+        row = self.audience_sources_persistence.get_processing_sources(id)
+        if not row:
+            return None
+        return SourceResponse.model_validate(row)
