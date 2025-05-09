@@ -145,6 +145,7 @@ s3transfer==0.10.2
 scikit-learn==1.6.1
 scipy==1.15.2
 sendgrid==6.11.0
+sentry-sdk==2.27.0
 setuptools==75.6.0
 shellingham==1.5.4
 ShopifyAPI==12.7.0
