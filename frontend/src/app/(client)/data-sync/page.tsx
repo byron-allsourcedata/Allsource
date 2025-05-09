@@ -83,6 +83,7 @@ const DataSync = () => {
         <Box>
         <Box
                           sx={{
+                            marginTop: 2,
                             border: "1px solid rgba(224, 49, 48, 1)",
                             display: "flex",
                             flexDirection: "row",
