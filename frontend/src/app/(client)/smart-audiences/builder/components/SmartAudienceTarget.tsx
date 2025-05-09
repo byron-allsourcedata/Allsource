@@ -340,7 +340,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
       setLoading(true);
       const requestData = {
         use_case: toSnakeCase(useCaseType),
-        target_schema: targetAudience,
+        target_schema: targetAudience.toLowerCase(),
         data_sources: selectedSources,
         validation_params: validationFilters,
         contacts_to_validate: isValidateSkip ? null : value,

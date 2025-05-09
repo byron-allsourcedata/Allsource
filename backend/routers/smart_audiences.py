@@ -85,7 +85,8 @@ async def create_smart_audience(
             contacts_to_validate=request.contacts_to_validate,
             active_segment_records=request.active_segment_records,
             is_validate_skip=request.is_validate_skip,
-            total_records=request.total_records
+            total_records=request.total_records,
+            target_schema=request.target_schema
         )
     except ValueError:
         raise HTTPException(status_code=400)

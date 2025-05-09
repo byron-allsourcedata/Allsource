@@ -1,6 +1,6 @@
-from sqlalchemy import Column, TIMESTAMP, Index, ForeignKey, UUID, text, Text
+from sqlalchemy import Column, TIMESTAMP, ForeignKey, UUID, text, Index, VARCHAR
 from .base import Base
-from sqlalchemy.sql import func
+from datetime import datetime, timezone
 from models.audience_smarts_persons import AudienceSmartPerson
 
 class AudienceSmartValidation(Base):
@@ -18,21 +18,28 @@ class AudienceSmartValidation(Base):
         nullable=False
     )
     verified_phone = Column(
-        Text, 
+        VARCHAR(128),
         nullable=True
     )
-    verified_email = Column(
-        Text, 
+    verified_business_email = Column(
+        VARCHAR(128),
+        nullable=True
+    )
+    verified_personal_email = Column(
+        VARCHAR(128),
         nullable=True
     )
     created_at = Column(
-        TIMESTAMP,
+        TIMESTAMP(timezone=False),
         nullable=False,
-        server_default=func.now()
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
     )
     updated_at = Column(
-        TIMESTAMP,
+        TIMESTAMP(timezone=False),
         nullable=False,
-        server_default=func.now(),
-        onupdate=func.now()
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
     )
+    
+    # __table_args__ = (
+    #     Index('audience_smarts_created_at_idx', created_at, unique=True),
+    # )

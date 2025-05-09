@@ -3,7 +3,6 @@ from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID,
 from sqlalchemy.dialects.postgresql import ENUM
 from datetime import datetime, timezone
 from models.enrichment.enrichment_users import EnrichmentUser
-from models.audience_smarts import AudienceSmart
 from models.base import Base
 
 data_sync_type = ENUM('pixel', 'audience', name='data_sync_type', create_type=True)
@@ -36,7 +35,7 @@ class IntegrationUserSync(Base):
     )
     is_active = Column(Boolean, nullable=True)
     created_at = Column(
-        DateTime(timezone=False),
+        TIMESTAMP(timezone=False),
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
     )
     last_sync_date = Column(TIMESTAMP, nullable=True)

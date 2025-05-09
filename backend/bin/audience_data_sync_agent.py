@@ -22,8 +22,7 @@ from enums import ProccessDataSyncResult, DataSyncImportedStatus, SourcePlatform
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
-from models.audience_smarts_validations import AudienceSmartValidation
-from sqlalchemy.orm import sessionmaker, Session, selectinload
+from sqlalchemy.orm import sessionmaker, Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
@@ -65,7 +64,9 @@ def get_lead_attributes(session, enrichment_user_ids, data_sync_id):
     result = session.query(
         EnrichmentUser,
         UserIntegration,
-        IntegrationUserSync
+        IntegrationUserSync,
+        AudienceSmart.target_schema,
+        AudienceSmart.validations
     ) \
     .join(AudienceSmartPerson, AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id) \
     .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id) \
@@ -80,9 +81,11 @@ def get_lead_attributes(session, enrichment_user_ids, data_sync_id):
         enrichment_users = [row[0] for row in result]
         user_integration = result[0][1]
         data_sync = result[0][2]
-        return enrichment_users, user_integration, data_sync
+        target_schema = result[0][3]
+        validations = result[0][4]
+        return enrichment_users, user_integration, data_sync, target_schema, validations
     else:
-        return [], None, None
+        return [], None, None, None, None
 
 
 def update_users_integrations(session, status, integration_data_sync_id, service_name, user_domain_integration_id = None, smart_audience_id=None):
@@ -183,7 +186,7 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         logging.info(f"Data sync id: {data_sync_id}")
         logging.info(f"Lead Users count: {len(enrichment_user_ids)}")
         
-        enrichment_users, user_integration, integration_data_sync = get_lead_attributes(
+        enrichment_users, user_integration, integration_data_sync, target_schema, validations = get_lead_attributes(
             session, enrichment_user_ids, data_sync_id
         )
         if not user_integration or not integration_data_sync:
@@ -205,7 +208,9 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
         if service:
             result = None
             try:
-                result = await service.process_data_sync(user_integration, integration_data_sync, enrichment_users)
+                if validations:
+                    validations = json.loads(validations)
+                result = await service.process_data_sync(user_integration, integration_data_sync, enrichment_users, target_schema, validations)
                 logging.info(f"Result {result}")
             except BaseException as e:
                 logging.error(f"Error processing data sync: {e}", exc_info=True)

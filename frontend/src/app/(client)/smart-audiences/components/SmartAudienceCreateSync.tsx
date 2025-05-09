@@ -214,7 +214,7 @@ const customFieldsList: Row[] = [
     { id: 3, type: 'Phone', value: 'phone' },
     { id: 4, type: 'City', value: 'city' },
     { id: 5, type: 'State', value: 'state' },
-    { id: 6, type: 'Country', value: 'country' },
+    { id: 6, type: 'Country code', value: 'country_code' },
     { id: 7, type: 'Company', value: 'company' },
     { id: 8, type: 'Business email last seen date', value: 'business_email_last_seen_date' },
     { id: 9, type: 'Personal email last seen', value: 'personal_email_last_seen' },
@@ -225,8 +225,9 @@ const customFieldsListHubspot: Row[] = [
     { id: 1, type: 'Phone', value: 'phone' },
     { id: 2, type: 'City', value: 'city' },
     { id: 3, type: 'State', value: 'state' },
-    { id: 4, type: 'Zip', value: 'zip' },
+    { id: 4, type: 'Zip', value: 'zip_code' },
     { id: 5, type: 'Gender', value: 'gender' },
+    { id: 6, type: 'Company', value: 'company' }
 ]
 
 const customFieldsListCSV: Row[] = [
@@ -271,7 +272,6 @@ const defaultRowsHubspot: Row[] = [
     { id: 1, type: 'Email', value: 'email' },
     { id: 2, type: 'Firstname', value: 'firstname' },
     { id: 3, type: 'Lastname', value: 'lastname' },
-    { id: 4, type: 'Company', value: 'company' }
 ];
 
 const defaultRowsMeta: Row[] = [
@@ -293,6 +293,7 @@ const defaultRowsGoogleAds: Row[] = [
     { id: 4, type: 'Phone', value: 'phone' },
     { id: 5, type: 'City', value: 'city' },
     { id: 6, type: 'State', value: 'state' },
+    { id: 7, type: 'Country code', value: 'country_code' },
 ];
 
 const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSmartAudStatus, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction, setIsPageLoading }) => {

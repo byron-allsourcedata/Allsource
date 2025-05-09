@@ -10,7 +10,7 @@ from persistence.domains import UserDomainsPersistence
 import httpx
 import os
 from faker import Faker
-from services.integrations.commonIntegration import get_states_dataframe
+from services.integrations.commonIntegration import resolve_main_email_and_phone
 from datetime import datetime, timedelta
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 from facebook_business.adobjects.adaccount import AdAccount
@@ -19,6 +19,8 @@ from fastapi import HTTPException
 from models.enrichment.enrichment_users import EnrichmentUser
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from datetime import datetime
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import UserIntegration
 from utils import extract_first_email
 from schemas.integrations.integrations import IntegrationCredentials, DataMap, ListFromIntegration
 from utils import format_phone_number
@@ -330,10 +332,10 @@ class MetaIntegrationsService:
         })
         return sync
         
-    async def process_data_sync(self, user_integration, integration_data_sync, enrichment_users: EnrichmentUser):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
         profiles = []
         for enrichment_user in enrichment_users:
-            profile = self.__hash_mapped_meta_user(enrichment_user)
+            profile = self.__hash_mapped_meta_user(enrichment_user, target_schema, validations)
             if profile:
                 profiles.append(profile)
             
@@ -371,18 +373,21 @@ class MetaIntegrationsService:
         
         return ProccessDataSyncResult.SUCCESS.value
     
-    def __hash_mapped_meta_user(self, enrichment_user: EnrichmentUser):
-        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+    def __hash_mapped_meta_user(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict):
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
             return None
+        
+        business_email, personal_email, phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+        main_email, main_phone = resolve_main_email_and_phone(enrichment_contacts, validations, target_schema, business_email, personal_email, phone)
         first_name = enrichment_contacts.first_name
         last_name = enrichment_contacts.last_name
         
-        if not verified_email or not first_name or not last_name:
+        if not main_email or not first_name or not last_name:
             return None
         
         enrichment_personal_profiles = enrichment_user.personal_profiles
+        enrichment_user_postal = enrichment_user.postal
         city = None
         state = None
         zip_code = None
@@ -392,10 +397,19 @@ class MetaIntegrationsService:
         birth_year = None
         country = None
         
+        if enrichment_user_postal:
+            city = enrichment_user_postal.home_city
+            if not city:
+                city = enrichment_user_postal.business_city
+            state = enrichment_user_postal.home_state
+            if not state:
+                state = enrichment_user_postal.business_state
+            country = enrichment_user_postal.home_country
+            if not country:
+                country = enrichment_user_postal.business_country
+        
         if enrichment_personal_profiles:
             zip_code = str(enrichment_personal_profiles.zip_code5)
-            city = 'city'
-            state = 'state'
             
             if enrichment_personal_profiles.gender == 1:
                 gender = 'm'
@@ -407,10 +421,10 @@ class MetaIntegrationsService:
         
         def hash_value(value):
             return hashlib.sha256(value.encode('utf-8')).hexdigest() if value else ""
-
+        
         return [
-                hash_value(verified_email),                                                        # EMAIL
-                hash_value(verified_phone),                                                        # PHONE
+                hash_value(main_email),                                                            # EMAIL
+                hash_value(main_phone),                                                            # PHONE
                 hash_value(gender),                                                                # GEN
                 hash_value(birth_year),                                                            # DOBY
                 hash_value(birth_month),                                                           # DOBM

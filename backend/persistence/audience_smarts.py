@@ -99,6 +99,7 @@ class AudienceSmartsPersistence:
             data_sources: List[dict],
             total_records: int,
             status: str,
+            target_schema: str,
             validation_params: Optional[dict],
             active_segment_records: int,
     ) -> AudienceSmart:
@@ -114,6 +115,7 @@ class AudienceSmartsPersistence:
             use_case_id=use_case_id,
             validations=validation_params,
             total_records=total_records,
+            target_schema=target_schema,
             active_segment_records=active_segment_records,
             status=status
         )

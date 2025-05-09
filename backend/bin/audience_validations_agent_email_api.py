@@ -62,6 +62,7 @@ async def process_rmq_message(
         aud_smart_id = body.get("aud_smart_id")
         batch = body.get("batch", [])
         validation_type = body.get("validation_type")
+        verified_emails = []
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
@@ -74,6 +75,14 @@ async def process_rmq_message(
                 if not million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
+                
+                verified_emails.append(
+                        AudienceSmartValidation(
+                            audience_smart_person_id=rec["audience_smart_person_id"],
+                            verified_personal_email=email
+                        )
+                    )
+                
             elif validation_type == 'business_email':
                 email = rec.get("business_email")
                 if not email:
@@ -83,7 +92,13 @@ async def process_rmq_message(
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
                 
-        
+                verified_emails.append(
+                        AudienceSmartValidation(
+                            audience_smart_person_id=rec["audience_smart_person_id"],
+                            verified_business_email=email
+                        )
+                    )
+            
         success_ids = [
             rec["audience_smart_person_id"]
             for rec in batch
@@ -99,6 +114,10 @@ async def process_rmq_message(
             )
             db_session.flush()
         logging.info(f"Failed ids len: {len(failed_ids)}")
+        if len(verified_emails):
+            db_session.bulk_save_objects(verified_emails)
+            db_session.commit()
+        
         if success_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
