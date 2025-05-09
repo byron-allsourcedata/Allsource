@@ -1,9 +1,6 @@
-import React from 'react';
-import FirstTimeCards from "../../components/FirstTimeCards"
-import {
-  Box,
-  Typography,
-} from "@mui/material";
+import React from "react";
+import FirstTimeCards from "../../components/FirstTimeCards";
+import { Box, Typography } from "@mui/material";
 import { ExternalLink } from "@/components/ExternalLink";
 
 type CardData = {
@@ -14,13 +11,11 @@ type CardData = {
   isClickable?: boolean;
 };
 
-
 interface ClickableCardsProps {
   cardData: CardData[];
 }
 
-
-const FirstTimeScreen = ({cardData}: ClickableCardsProps) => {
+const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
   return (
     <Box
       sx={{
@@ -54,9 +49,7 @@ const FirstTimeScreen = ({cardData}: ClickableCardsProps) => {
         >
           Import Your First Source
         </Typography>
-        <ExternalLink href="https://example.com">
-          Learn more
-        </ExternalLink>
+        <ExternalLink href="https://example.com">Learn more</ExternalLink>
       </Box>
       <Typography
         variant="body1"
@@ -69,7 +62,8 @@ const FirstTimeScreen = ({cardData}: ClickableCardsProps) => {
           lineHeight: "22px",
         }}
       >
-        To begin building your audience, you'll first need to provide a data source. Create a source based on one of this types:
+        To begin building your audience, you&apos;ll first need to provide a
+        data source. Create a source based on one of this types:
       </Typography>
 
       <Box
@@ -77,7 +71,7 @@ const FirstTimeScreen = ({cardData}: ClickableCardsProps) => {
           width: "100%",
         }}
       >
-        <FirstTimeCards cardData={cardData}/>
+        <FirstTimeCards cardData={cardData} />
       </Box>
     </Box>
   );
