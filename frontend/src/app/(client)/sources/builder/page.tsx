@@ -207,7 +207,6 @@ const SourcesImport: React.FC = () => {
 
       setSourceType(newType);
     }
-
   }, [typeFromSearchParams]);
 
   useEffect(() => {
@@ -832,7 +831,6 @@ const SourcesImport: React.FC = () => {
                       />
                     </Box>
                   )}
-
                   <Box
                     sx={{
                       display: "flex",
@@ -860,7 +858,6 @@ const SourcesImport: React.FC = () => {
                       who have successfully completed an order on your website.
                     </Typography>
                   </Box>
-
                   <Box
                     sx={{
                       display: "flex",

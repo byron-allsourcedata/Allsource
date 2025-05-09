@@ -32,6 +32,7 @@ const FirstTimeCards = ({ cardData }: ClickableCardsProps) => {
         <Card
           key={index}
           sx={{
+            backgroundColor: "transparent",
             boxShadow: card.isClickable ? "0px 0px 4px rgba(0, 0, 0, 0.3)" : 0,
             borderColor: card.isClickable
               ? "rgba(237, 237, 237, 1)"
@@ -49,6 +50,7 @@ const FirstTimeCards = ({ cardData }: ClickableCardsProps) => {
                   marginBottom: 2,
                   color: "rgba(21, 22, 25, 1) !important",
                   fontSize: "14px !important",
+                  transition: "color 0.2s ease",
                   fontWeight: "600 !important",
                 }}
               >
