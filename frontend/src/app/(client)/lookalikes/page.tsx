@@ -18,7 +18,7 @@ import CalendarPopup from "@/components/CustomCalendar";
 import dayjs from "dayjs";
 import { ExternalLink } from "@/components/ExternalLink";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
-import FirstTimeScreen from "../sources/components/FirstTimeScreen";
+import FirstTimeScreen from "./FirstTimeScreen";
 import { CardData } from "@/types/first_time_screens";
 
 const cardData: CardData[] = [
@@ -920,6 +920,7 @@ const CreateLookalikePage: React.FC = () => {
                   border: "1px solid rgba(237, 237, 237, 1)",
                   width: "100%",
                   mt: 3,
+                  padding: 3,
                   borderRadius: "6px",
                 }}
               >
@@ -935,8 +936,7 @@ const CreateLookalikePage: React.FC = () => {
                     display: "flex",
                     width: "100%",
                     justifyContent: "end",
-                    mb: 2,
-                    pr: 4,
+                    pr: 2,
                   }}
                 >
                   <Link href="/lookalikes/builder" passHref>
