@@ -32,6 +32,7 @@ import { showErrorToast } from "@/components/ToastNotification";
 import CircularProgress from "@mui/material/CircularProgress";
 import FirstTimeScreen from "./FirstTimeScreen";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import NotificationBanner from "@/components/NotificationBanner";
 
 type TableData = {
   id: string;
@@ -497,80 +498,11 @@ const Insights = () => {
         ) : (
           <Box>
             {sourceData.length === 0 && lookalikeData.length === 0 && (
-              <Box
-                sx={{
-                  border: "1px solid rgba(224, 49, 48, 1)",
-                  display: "flex",
-                  flexDirection: "row",
-                  width: "100%",
-                  padding: 2,
-                  borderRadius: "4px",
-                  mb: 3,
-                  justifyContent: "space-between",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "row",
-                    width: "100%",
-                    gap: 2,
-                    alignItems: "center",
-                  }}
-                >
-                  <ReportProblemOutlinedIcon
-                    sx={{ fontSize: "20px", color: "rgba(230, 90, 89, 1)" }}
-                  />
-                  <Typography className="second-sub-title">
-                    You need to have at least one source or lookalike to unlock
-                    this option
-                  </Typography>
-                </Box>
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "row",
-                    width: "100%",
-                    gap: 2,
-                    alignItems: "center",
-                    justifyContent: "end",
-                  }}
-                >
-                  <Button
-                    sx={{
-                      textTransform: "none",
-                      fontFamily: "Nunito Sans",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "rgba(224, 49, 48, 1) !important",
-                    }}
-                    onClick={() => {
-                      setShowNotification(false);
-                    }}
-                  >
-                    Dismiss
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      router.push("/sources");
-                    }}
-                    sx={{
-                      textTransform: "none",
-                      fontFamily: "Nunito Sans",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "rgba(255, 255, 255, 1) !important",
-                      backgroundColor: "rgba(224, 49, 48, 1)",
-                      "&:hover": {
-                        backgroundColor: "rgba(224, 49, 48, 0.85)",
-                      },
-                    }}
-                  >
-                    Create Source
-                  </Button>
-                </Box>
-              </Box>
+              <NotificationBanner
+                ctaUrl="/sources"
+                ctaLabel="Create Source"
+                message="You need to have at least one source or lookalike to unlock this option"
+              />
             )}
             <FirstTimeScreen />
           </Box>

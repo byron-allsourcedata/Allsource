@@ -32,6 +32,7 @@ import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
 import CompanyFilterPopup from './CompanyFilters';
 import CompanyEmployees from './CompanyEmployees';
+import GettingStartedSection from '@/components/GettingStartedSection';
 
 
 interface FetchDataParams {
@@ -196,7 +197,7 @@ const Leads: React.FC = () => {
                 router.push('/signin');
                 return;
             }
-    
+
             const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
             let url = `/company?page=${page + 1}&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
 
@@ -211,7 +212,7 @@ const Leads: React.FC = () => {
             if (startEpoch !== null && endEpoch !== null) {
                 url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
             }
-    
+
             // Processing "From Date"
             if (selectedFilters.some(filter => filter.label === 'From Date')) {
                 const fromDate = selectedFilters.find(filter => filter.label === 'From Date')?.value || '';
@@ -239,7 +240,7 @@ const Leads: React.FC = () => {
             if (employeeVisits) {
                 url += `&employee_visits=${encodeURIComponent(employeeVisits)}`;
             }
-    
+
             // filter with checkbox or radio button
             const processMultiFilter = (label: string, paramName: string) => {
                 const filter = selectedFilters.find(filter => filter.label === label)?.value;
@@ -247,30 +248,30 @@ const Leads: React.FC = () => {
                     url += `&${paramName}=${encodeURIComponent(filter?.split(', ').join(','))}`;
                 }
             };
-    
+
             processMultiFilter('Regions', 'regions');
             processMultiFilter('Number of Employees', 'employees_range');
             processMultiFilter('Revenue', 'revenue_range');
             processMultiFilter('Industry', 'industry');
-    
+
             // search
             const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
             if (searchQuery) {
                 url += `&search_query=${encodeURIComponent(searchQuery)}`;
             }
-    
+
             // sort
             if (sortBy) {
                 url += `&sort_by=${sortBy}&sort_order=${sortOrder}`;
             }
-    
+
             const response = await axiosInstance.get(url);
             const [leads, count] = response.data;
-    
+
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
-    
+
             const options = [15, 30, 50, 100, 200, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
@@ -295,7 +296,7 @@ const Leads: React.FC = () => {
             setIsLoading(false);
         }
     };
-    
+
 
     const handleIndustry = async () => {
         setLoading(true);
@@ -303,9 +304,9 @@ const Leads: React.FC = () => {
             const response = await axiosInstance.get('/company/industry')
             setIndustry(Array.isArray(response.data) ? response.data : []);
         }
-        catch{
+        catch {
         }
-        finally{ 
+        finally {
             setLoading(false)
         }
     }
@@ -331,19 +332,19 @@ const Leads: React.FC = () => {
             "unknown": boolean,
         };
         checkedFiltersRevenue: {
-        "Below 10k": boolean,
-        "$10k - $50k": boolean,
-        "$50k - $100k": boolean,
-        "$100k - $500k": boolean,
-        "$500k - $1M": boolean,
-        "$1M - $5M": boolean,
-        "$5M - $10M": boolean,
-        "$10M - $50M": boolean,
-        "$50M - $100M": boolean,
-        "$100M - $500M": boolean,
-        "$500M - $1B": boolean,
-        "$1 Billion +": boolean,
-        "unknown": boolean,
+            "Below 10k": boolean,
+            "$10k - $50k": boolean,
+            "$50k - $100k": boolean,
+            "$100k - $500k": boolean,
+            "$500k - $1M": boolean,
+            "$1M - $5M": boolean,
+            "$5M - $10M": boolean,
+            "$10M - $50M": boolean,
+            "$50M - $100M": boolean,
+            "$100M - $500M": boolean,
+            "$500M - $1B": boolean,
+            "$1 Billion +": boolean,
+            "unknown": boolean,
         }
         checkedFilters: {
             lastWeek: boolean;
@@ -351,7 +352,7 @@ const Leads: React.FC = () => {
             last6Months: boolean;
             allTime: boolean;
         };
-        industry: Record<string, boolean>; 
+        industry: Record<string, boolean>;
     }
 
     useEffect(() => {
@@ -551,20 +552,20 @@ const Leads: React.FC = () => {
             { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
             { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
             { condition: filters.selectedPageVisit?.trim() !== '', label: 'Employee Visits', value: filters.selectedPageVisit || '' },
-            { 
-                condition: filters.checkedFiltersNumberOfEmployees && Object.values(filters.checkedFiltersNumberOfEmployees).some(Boolean), 
-                label: 'Number of Employees', 
-                value: () => getSelectedValues(filters.checkedFiltersNumberOfEmployees!) 
+            {
+                condition: filters.checkedFiltersNumberOfEmployees && Object.values(filters.checkedFiltersNumberOfEmployees).some(Boolean),
+                label: 'Number of Employees',
+                value: () => getSelectedValues(filters.checkedFiltersNumberOfEmployees!)
             },
-            { 
-                condition: filters.checkedFiltersRevenue && Object.values(filters.checkedFiltersRevenue).some(Boolean), 
-                label: 'Revenue', 
-                value: () => getSelectedValues(filters.checkedFiltersRevenue!) 
+            {
+                condition: filters.checkedFiltersRevenue && Object.values(filters.checkedFiltersRevenue).some(Boolean),
+                label: 'Revenue',
+                value: () => getSelectedValues(filters.checkedFiltersRevenue!)
             },
-            { 
-                condition: filters.industry && Object.values(filters.industry).some(Boolean), 
-                label: 'Industry', 
-                value: () => getSelectedValues(filters.industry!) 
+            {
+                condition: filters.industry && Object.values(filters.industry).some(Boolean),
+                label: 'Industry',
+                value: () => getSelectedValues(filters.industry!)
             },
         ];
 
@@ -599,7 +600,7 @@ const Leads: React.FC = () => {
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
-            setSelectedDates({start: null, end: null})
+            setSelectedDates({ start: null, end: null })
             setSelectedFilters([]);
         } catch (error) {
             console.error('Error fetching leads:', error);
@@ -612,9 +613,9 @@ const Leads: React.FC = () => {
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
-        
+
         const filters = JSON.parse(sessionStorage.getItem('filters') || '{}');
-    
+
         switch (filterToDelete.label) {
             case 'From Date':
                 filters.from_date = null;
@@ -651,7 +652,7 @@ const Leads: React.FC = () => {
             default:
                 break;
         }
-        
+
         if (!filters.from_date && !filters.to_date) {
             filters.checkedFilters = {
                 lastWeek: false,
@@ -660,15 +661,15 @@ const Leads: React.FC = () => {
                 allTime: false,
             };
         }
-    
+
         sessionStorage.setItem('filters', JSON.stringify(filters));
-    
+
         if (filterToDelete.label === 'Dates') {
             setAppliedDates({ start: null, end: null });
             setFormattedDates('');
             setSelectedDates({ start: null, end: null });
         }
-    
+
         // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             from_date: updatedFilters.find(f => f.label === 'From Date') ? dayjs(updatedFilters.find(f => f.label === 'From Date')!.value).unix() : null,
@@ -725,7 +726,7 @@ const Leads: React.FC = () => {
             },
             industry: Object.fromEntries(Object.keys(filters.industry).map(key => [key, updatedFilters.some(f => f.label === 'Industry' && f.value.includes(key))]))
         };
-    
+
         // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
     };
@@ -734,546 +735,513 @@ const Leads: React.FC = () => {
     return (
         <>
             {loading && (
-                <CustomizedProgressBar/>
+                <CustomizedProgressBar />
             )}
             {companyEmployeesOpen && <CompanyEmployees companyId={companyId} companyName={companyName} onBack={() => {
                 setCompanyEmployeesOpen(false)
                 sessionStorage.removeItem('filters-employee')
-            }}/>}
-            {!companyEmployeesOpen && 
-            <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%', pr:2.5,
-                '@media (max-width: 900px)': {
-                    paddingRight: 0,
-                    minHeight: '100vh'
-                },
-                '@media (max-width: 599px)': {
-                    paddingRight: '16px',
-                    marginLeft: 0,
-                }
-            }}>
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                    <Box
-                        sx={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            marginTop: hasNotification ? '1rem' : '0.5rem',
-                            flexWrap: 'wrap',
-                            pl: '0.5rem',
-                            gap: '15px',
-                            '@media (max-width: 900px)': {
-                                marginTop: hasNotification ? '3rem' : '1.125rem',
-                            },
-                            '@media (max-width: 600px)': {
-                                marginTop: hasNotification ? '2rem' : '0rem',
-                            },
-                        }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                            <Typography className='first-sub-title'>
-                                Company list {data.length === 0 ? '' : `(${count_companies})`}
-                            </Typography>
-                            <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
-                        </Box>
-                        <Box sx={{
-                            display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
-                            '@media (max-width: 900px)': {
-                                gap: '8px'
-                            }
-                        }}>
-                            <Button
-                                aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={dropdownOpen ? 'true' : undefined}
-                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                sx={{
-                                    textTransform: 'none',
-                                    color: 'rgba(128, 128, 128, 1)',
-                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
-                                    border: '1px solid rgba(184, 184, 184, 1)',
-                                    borderRadius: '4px',
-                                    padding: '8px',
-                                    minWidth: 'auto',
-                                    '@media (max-width: 900px)': {
-                                        border: 'none',
-                                        padding: 0
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        color: 'rgba(80, 82, 178, 1)',
-                                        '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        }
-                                    }
-                                }}
-                                onClick={handleDownload}
-                            >
-                                <DownloadIcon fontSize='medium' />
-                            </Button>
-                            <Button
-                                onClick={handleFilterPopupOpen}
-                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={dropdownOpen ? 'true' : undefined}
-                                sx={{
-                                    textTransform: 'none',
-                                    color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                    border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                    borderRadius: '4px',
-                                    padding: '8px',
-                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
-                                    minWidth: 'auto',
-                                    position: 'relative',
-                                    '@media (max-width: 900px)': {
-                                        border: 'none',
-                                        padding: 0
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        color: 'rgba(80, 82, 178, 1)',
-                                        '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        }
-                                    }
-                                }}
-                            >
-                                <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
-
-                                {selectedFilters.length > 0 && (
-                                    <Box
-                                        sx={{
-                                            position: 'absolute',
-                                            top: 6,
-                                            right: 8,
-                                            width: '10px',
-                                            height: '10px',
-                                            backgroundColor: 'red',
-                                            borderRadius: '50%',
-                                            '@media (max-width: 900px)': {
-                                                top: -1,
-                                                right: 1
-                                            }
-                                        }}
-                                    />
-                                )}
-                            </Button>
-
-                            <Button
-                                aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                aria-haspopup="true"
-                                disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                onClick={handleCalendarClick}
-                                sx={{
-                                    textTransform: 'none',
-                                    color: 'rgba(128, 128, 128, 1)',
-                                    border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                    borderRadius: '4px',
-                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
-                                    padding: '8px',
-                                    minWidth: 'auto',
-                                    '@media (max-width: 900px)': {
-                                        border: 'none',
-                                        padding: 0
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        color: 'rgba(80, 82, 178, 1)',
-                                        '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
-                                        }
-                                    }
-                                }}
-                            >
-                                <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
-                                <Typography variant="body1" sx={{
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    lineHeight: '19.6px',
-                                    textAlign: 'left',
-
-                                    "@media (max-width: 600px)": {
-                                        display: 'none'
-                                    },
-                                }}>
-                                    {formattedDates}
-                                </Typography>
-                            </Button>
-                        </Box>
-                    </Box>
-                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
-                        {selectedFilters.length > 0 && (
-                            <Chip
-                                className='second-sub-title'
-                                label="Clear all"
-                                onClick={handleResetFilters}
-                                sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
-                            />
-                        )}
-                        {selectedFilters.map(filter => {
-                            let displayValue = filter.value;
-                            // Если фильтр Regions, применяем форматирование
-                            if (filter.label === 'Regions') {
-                                const regions = filter.value?.split(', ') || [];
-                                const formattedRegions = regions.map(region => {
-                                    const [name] = region?.split('-');
-                                    return name;
-                                });
-                                displayValue = formattedRegions.join(', ');
-                            }
-                            return (
-                                <Chip
-                                    className='paragraph'
-                                    key={filter.label}
-                                    label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
-                                    onDelete={() => handleDeleteFilter(filter)}
-                                    deleteIcon={
-                                        <CloseIcon
-                                            sx={{
-                                                backgroundColor: 'transparent',
-                                                color: '#828282 !important',
-                                                fontSize: '14px !important'
-                                            }}
-                                        />
-                                    }
+            }} />}
+            {!companyEmployeesOpen &&
+                <Box sx={{
+                    display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%', pr: 2.5,
+                    '@media (max-width: 900px)': {
+                        paddingRight: 0,
+                        minHeight: '100vh'
+                    },
+                    '@media (max-width: 599px)': {
+                        paddingRight: '16px',
+                        marginLeft: 0,
+                    }
+                }}>
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        {status !== 'PIXEL_INSTALLATION_NEEDED' && (
+                            <>
+                                <Box
                                     sx={{
-                                        borderRadius: '4.5px',
-                                        backgroundColor: 'rgba(80, 82, 178, 0.10)',
-                                        color: '#5F6368 !important',
-                                        lineHeight: '16px !important'
-                                    }}
-                                />
-                            );
-                        })}
-                    </Box>
-                    <Box sx={{
-                        flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px', pb: '20px',
-                        '@media (max-width: 900px)': {
-                            pt: '2px',
-                            pb: '18px'
-                        }
-                    }}>
-                        {status === 'PIXEL_INSTALLATION_NEEDED' ? (
-                            <Box sx={centerContainerStyles}>
-                                <Typography variant="h5" className='first-sub-title' sx={{
-                                    mb: 3,
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: "20px",
-                                    color: "#4a4a4a",
-                                    fontWeight: "600",
-                                    lineHeight: "28px"
-                                }}>
-                                    Pixel Integration isn&apos;t completed yet!
-                                </Typography>
-                                <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
-                                    height={250} width={300} />
-                                <Typography variant="body1" className='table-data' sx={{
-                                    mt: 3,
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: "14px",
-                                    color: "#808080",
-                                    fontWeight: "600",
-                                    lineHeight: "20px"
-                                }}>
-                                    Install the pixel to unlock and gain valuable insights!
-                                </Typography>
-                                <Button
-                                    variant="contained"
-                                    onClick={installPixel}
-                                    className='second-sub-title'
-                                    sx={{
-                                        backgroundColor: 'rgba(80, 82, 178, 1)',
-                                        textTransform: 'none',
-                                        padding: '10px 24px',
-                                        mt: 3,
-                                        color: '#fff !important',
-                                        ':hover': {
-                                            backgroundColor: 'rgba(80, 82, 178, 1)'
-                                        }
-                                    }}
-                                >
-                                    Setup Pixel
-                                </Button>
-                            </Box>
-                        ) : data.length === 0 ? (
-                            <Box sx={centerContainerStyles}>
-                                <Typography variant="h5" sx={{
-                                    mb: 3,
-                                    fontFamily: 'Nunito Sans',
-                                    fontSize: "20px",
-                                    color: "#4a4a4a",
-                                    fontWeight: "600",
-                                    lineHeight: "28px"
-                                }}>
-                                    Data not matched yet!
-                                </Typography>
-                                <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
-                                <Typography variant="body1" color="textSecondary"
-                                    sx={{
-                                        mt: 3,
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: "14px",
-                                        color: "#808080",
-                                        fontWeight: "600",
-                                        lineHeight: "20px"
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        marginTop: hasNotification ? '1rem' : '0.5rem',
+                                        flexWrap: 'wrap',
+                                        pl: '0.5rem',
+                                        gap: '15px',
+                                        '@media (max-width: 900px)': {
+                                            marginTop: hasNotification ? '3rem' : '1.125rem',
+                                        },
+                                        '@media (max-width: 600px)': {
+                                            marginTop: hasNotification ? '2rem' : '0rem',
+                                        },
                                     }}>
-                                    Please check back later.
-                                </Typography>
-                            </Box>
-                        ) : (
-                            <Grid container spacing={1} sx={{ flex: 1 }}>
-                                <Grid item xs={12}>
-                                    <TableContainer
-                                        component={Paper}
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                        <Typography className='first-sub-title'>
+                                            Company list {data.length === 0 ? '' : `(${count_companies})`}
+                                        </Typography>
+                                        <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                                    </Box>
+                                    <Box sx={{
+                                        display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
+                                        '@media (max-width: 900px)': {
+                                            gap: '8px'
+                                        }
+                                    }}>
+                                        <Button
+                                            aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                                            aria-haspopup="true"
+                                            aria-expanded={dropdownOpen ? 'true' : undefined}
+                                            disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                            sx={{
+                                                textTransform: 'none',
+                                                color: 'rgba(128, 128, 128, 1)',
+                                                opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
+                                                border: '1px solid rgba(184, 184, 184, 1)',
+                                                borderRadius: '4px',
+                                                padding: '8px',
+                                                minWidth: 'auto',
+                                                '@media (max-width: 900px)': {
+                                                    border: 'none',
+                                                    padding: 0
+                                                },
+                                                '&:hover': {
+                                                    backgroundColor: 'transparent',
+                                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    '& .MuiSvgIcon-root': {
+                                                        color: 'rgba(80, 82, 178, 1)'
+                                                    }
+                                                }
+                                            }}
+                                            onClick={handleDownload}
+                                        >
+                                            <DownloadIcon fontSize='medium' />
+                                        </Button>
+                                        <Button
+                                            onClick={handleFilterPopupOpen}
+                                            disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                            aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+                                            aria-haspopup="true"
+                                            aria-expanded={dropdownOpen ? 'true' : undefined}
+                                            sx={{
+                                                textTransform: 'none',
+                                                color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                                border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                                borderRadius: '4px',
+                                                padding: '8px',
+                                                opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
+                                                minWidth: 'auto',
+                                                position: 'relative',
+                                                '@media (max-width: 900px)': {
+                                                    border: 'none',
+                                                    padding: 0
+                                                },
+                                                '&:hover': {
+                                                    backgroundColor: 'transparent',
+                                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    '& .MuiSvgIcon-root': {
+                                                        color: 'rgba(80, 82, 178, 1)'
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
+
+                                            {selectedFilters.length > 0 && (
+                                                <Box
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        top: 6,
+                                                        right: 8,
+                                                        width: '10px',
+                                                        height: '10px',
+                                                        backgroundColor: 'red',
+                                                        borderRadius: '50%',
+                                                        '@media (max-width: 900px)': {
+                                                            top: -1,
+                                                            right: 1
+                                                        }
+                                                    }}
+                                                />
+                                            )}
+                                        </Button>
+
+                                        <Button
+                                            aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                                            aria-haspopup="true"
+                                            disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+                                            aria-expanded={isCalendarOpen ? 'true' : undefined}
+                                            onClick={handleCalendarClick}
+                                            sx={{
+                                                textTransform: 'none',
+                                                color: 'rgba(128, 128, 128, 1)',
+                                                border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                                borderRadius: '4px',
+                                                opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
+                                                padding: '8px',
+                                                minWidth: 'auto',
+                                                '@media (max-width: 900px)': {
+                                                    border: 'none',
+                                                    padding: 0
+                                                },
+                                                '&:hover': {
+                                                    backgroundColor: 'transparent',
+                                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    '& .MuiSvgIcon-root': {
+                                                        color: 'rgba(80, 82, 178, 1)'
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
+                                            <Typography variant="body1" sx={{
+                                                fontFamily: 'Nunito Sans',
+                                                fontSize: '14px',
+                                                fontWeight: '600',
+                                                lineHeight: '19.6px',
+                                                textAlign: 'left',
+
+                                                "@media (max-width: 600px)": {
+                                                    display: 'none'
+                                                },
+                                            }}>
+                                                {formattedDates}
+                                            </Typography>
+                                        </Button>
+                                    </Box>
+                                </Box>
+                                <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
+                                    {selectedFilters.length > 0 && (
+                                        <Chip
+                                            className='second-sub-title'
+                                            label="Clear all"
+                                            onClick={handleResetFilters}
+                                            sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
+                                        />
+                                    )}
+                                    {selectedFilters.map(filter => {
+                                        let displayValue = filter.value;
+                                        // Если фильтр Regions, применяем форматирование
+                                        if (filter.label === 'Regions') {
+                                            const regions = filter.value?.split(', ') || [];
+                                            const formattedRegions = regions.map(region => {
+                                                const [name] = region?.split('-');
+                                                return name;
+                                            });
+                                            displayValue = formattedRegions.join(', ');
+                                        }
+                                        return (
+                                            <Chip
+                                                className='paragraph'
+                                                key={filter.label}
+                                                label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
+                                                onDelete={() => handleDeleteFilter(filter)}
+                                                deleteIcon={
+                                                    <CloseIcon
+                                                        sx={{
+                                                            backgroundColor: 'transparent',
+                                                            color: '#828282 !important',
+                                                            fontSize: '14px !important'
+                                                        }}
+                                                    />
+                                                }
+                                                sx={{
+                                                    borderRadius: '4.5px',
+                                                    backgroundColor: 'rgba(80, 82, 178, 0.10)',
+                                                    color: '#5F6368 !important',
+                                                    lineHeight: '16px !important'
+                                                }}
+                                            />
+                                        );
+                                    })}
+                                </Box>
+                            </>
+                        )}
+
+
+                        <Box sx={{
+                            flex: 1, display: 'flex', flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pb: '20px',
+                            '@media (max-width: 900px)': {
+                                pt: '2px',
+                                pb: '18px'
+                            }
+                        }}>
+                            {status === 'PIXEL_INSTALLATION_NEEDED' ? (
+                                <GettingStartedSection />
+                            ) : data.length === 0 ? (
+                                <Box sx={centerContainerStyles}>
+                                    <Typography variant="h5" sx={{
+                                        mb: 3,
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: "20px",
+                                        color: "#4a4a4a",
+                                        fontWeight: "600",
+                                        lineHeight: "28px"
+                                    }}>
+                                        Data not matched yet!
+                                    </Typography>
+                                    <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
+                                    <Typography variant="body1" color="textSecondary"
                                         sx={{
-                                            border: '1px solid rgba(235, 235, 235, 1)',
-                                            maxHeight: selectedFilters.length > 0
-                                                ? (hasNotification ? '63vh' : '68vh')
-                                                : '72vh',
-                                            overflowY: 'auto',
-                                            "@media (max-height: 800px)": {
+                                            mt: 3,
+                                            fontFamily: 'Nunito Sans',
+                                            fontSize: "14px",
+                                            color: "#808080",
+                                            fontWeight: "600",
+                                            lineHeight: "20px"
+                                        }}>
+                                        Please check back later.
+                                    </Typography>
+                                </Box>
+                            ) : (
+                                <Grid container spacing={1} sx={{ flex: 1 }}>
+                                    <Grid item xs={12}>
+                                        <TableContainer
+                                            component={Paper}
+                                            sx={{
+                                                border: '1px solid rgba(235, 235, 235, 1)',
                                                 maxHeight: selectedFilters.length > 0
-                                                    ? (hasNotification ? '53vh' : '57vh')
-                                                    : '70vh',
-                                            },
-                                            "@media (max-width: 400px)": {
-                                                maxHeight: selectedFilters.length > 0
-                                                    ? (hasNotification ? '53vh' : '60vh')
-                                                    : '67vh',
-                                            },
+                                                    ? (hasNotification ? '63vh' : '68vh')
+                                                    : '72vh',
+                                                overflowY: 'auto',
+                                                "@media (max-height: 800px)": {
+                                                    maxHeight: selectedFilters.length > 0
+                                                        ? (hasNotification ? '53vh' : '57vh')
+                                                        : '70vh',
+                                                },
+                                                "@media (max-width: 400px)": {
+                                                    maxHeight: selectedFilters.length > 0
+                                                        ? (hasNotification ? '53vh' : '60vh')
+                                                        : '67vh',
+                                                },
+                                            }}
+                                        >
+                                            <Table stickyHeader aria-label="leads table">
+                                                <TableHead>
+                                                    <TableRow>
+                                                        {[
+                                                            { key: 'company_name', label: 'Company', sortable: true },
+                                                            { key: 'phone_number', label: 'Phone Number' },
+                                                            { key: 'linkedin', label: 'LinkedIn' },
+                                                            { key: 'employees_visited', label: 'Visitors', sortable: true },
+                                                            { key: 'visited_date', label: 'Visited date', sortable: true },
+                                                            { key: 'revenue', label: 'Revenue', sortable: true },
+                                                            { key: 'number_of_employees', label: 'No. of Employees', sortable: true },
+                                                            { key: 'location', label: 'Location', },
+                                                            { key: 'average_time_sec', label: 'Industry', },
+                                                        ].map(({ key, label, sortable = false }) => (
+                                                            <TableCell
+                                                                key={key}
+                                                                sx={{
+                                                                    ...companyStyles.table_column,
+                                                                    ...(key === 'company_name' && {
+                                                                        position: 'sticky',
+                                                                        left: 0,
+                                                                        zIndex: 10
+                                                                    }),
+                                                                    ...(key === 'average_time_sec' && {
+                                                                        "::after": { content: 'none' }
+                                                                    })
+                                                                }}
+                                                                onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                                style={{ cursor: sortable ? 'pointer' : 'default' }}
+                                                            >
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
+                                                                    <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
+                                                                    {sortable && (
+                                                                        <IconButton size="small">
+                                                                            {orderBy === key ? (
+                                                                                order === 'asc' ? (
+                                                                                    <NorthOutlinedIcon fontSize="inherit" />
+                                                                                ) : (
+                                                                                    <SouthOutlinedIcon fontSize="inherit" />
+                                                                                )
+                                                                            ) : (
+                                                                                <SwapVertIcon fontSize="inherit" />
+                                                                            )}
+                                                                        </IconButton>
+                                                                    )}
+                                                                </Box>
+                                                            </TableCell>
+                                                        ))}
+                                                    </TableRow>
+                                                </TableHead>
+                                                <TableBody>
+                                                    {data.map((row) => (
+                                                        <TableRow
+                                                            key={row.id}
+                                                            selected={selectedRows.has(row.id)}
+                                                            sx={{
+                                                                backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                '&:hover': {
+                                                                    backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                    '& .sticky-cell': {
+                                                                        backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                    }
+                                                                }
+                                                            }}
+                                                        >
+                                                            {/* Company name Column */}
+                                                            <TableCell className="sticky-cell"
+                                                                sx={{
+                                                                    ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
+
+                                                                }} onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    handleOpenPopup(row);
+
+                                                                }}>{row.name ? truncateText(row.name, 20) : '--'}</TableCell>
+
+                                                            {/* Company phone Column */}
+                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
+                                                                {row.phone?.split(',')[0] || '--'}
+                                                            </TableCell>
+
+                                                            {/* Company linkedIn Column */}
+                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
+                                                                {row.linkedin_url ? (
+                                                                    <>
+                                                                        <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
+                                                                        /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
+                                                                    </>
+                                                                ) : (
+                                                                    '--'
+                                                                )}
+                                                            </TableCell>
+
+                                                            {/* Employess Visited  Column */}
+                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
+                                                                {row.employees_visited || '--'}
+                                                            </TableCell>
+
+                                                            {/* Employess Visited date  Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}>
+                                                                {row.visited_date
+                                                                    ? (() => {
+                                                                        const [day, month, year] = row.visited_date.split('.');
+                                                                        return `${month}/${day}/${year}`;
+                                                                    })()
+                                                                    : '--'}
+                                                            </TableCell>
+
+                                                            {/* Company revenue  Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {row.company_revenue || '--'}
+                                                            </TableCell>
+
+                                                            {/* Company employee count  Column */}
+                                                            <TableCell
+                                                                onClick={() => {
+                                                                    setCompanyEmployeesOpen(true)
+                                                                    setCompanyName(row.name)
+                                                                    setCompanyId(row.id)
+                                                                }}
+
+                                                                sx={{
+                                                                    ...companyStyles.table_array, position: 'relative', cursor: "pointer", color: 'rgba(80, 82, 178, 1) !important'
+                                                                }}
+                                                            >
+                                                                {row.employee_count || '--'}
+                                                            </TableCell>
+
+                                                            {/* Company location  Column */}
+                                                            <TableCell
+                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            >
+                                                                {(row.city || row.state)
+                                                                    ? [capitalizeCity(row.city), row.state].filter(Boolean).join(', ')
+                                                                    : '--'}
+                                                            </TableCell>
+
+                                                            {/* Company industry  Column */}
+                                                            <TableCell sx={{ ...companyStyles.table_array, "::after": { content: 'none' }, cursor: row.industry ? "pointer" : "default", }} onClick={(e) => row.industry ? handleOpenPopover(e, row.industry || "--") : ''}>
+                                                                {row.industry && row.industry.length > 30
+                                                                    ? `${row.industry.slice(0, 20)}...`
+                                                                    : row.industry || "--"}
+                                                            </TableCell>
+
+                                                        </TableRow>
+                                                    ))}
+                                                </TableBody>
+                                            </Table>
+                                        </TableContainer>
+                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
+                                            <CustomTablePagination
+                                                count={count_companies ?? 0}
+                                                page={page}
+                                                rowsPerPage={rowsPerPage}
+                                                onPageChange={handleChangePage}
+                                                onRowsPerPageChange={handleChangeRowsPerPage}
+                                                rowsPerPageOptions={rowsPerPageOptions}
+                                            />
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+
+                            )}
+                            {showSlider && <Slider />}
+                        </Box>
+                        <Popover
+                            open={isOpen}
+                            anchorEl={anchorEl}
+                            onClose={handleClosePopover}
+                            anchorOrigin={{
+                                vertical: "bottom",
+                                horizontal: "left",
+                            }}
+                            transformOrigin={{
+                                vertical: "top",
+                                horizontal: "left",
+                            }}
+                            PaperProps={{
+                                sx: {
+                                    width: "184px",
+                                    height: "108px",
+                                    borderRadius: "4px 0px 0px 0px",
+                                    border: "0.2px solid #ddd",
+                                    padding: "8px",
+                                    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                                },
+                            }}
+                        >
+                            <Box sx={{ maxHeight: "92px", overflowY: "auto", backgroundColor: 'rgba(255, 255, 255, 1)' }}>
+                                {selectedIndustry?.split(",").map((part, index) => (
+                                    <Typography
+                                        key={index}
+                                        variant="body2"
+                                        className='second-sub-title'
+                                        sx={{
+                                            wordBreak: "break-word",
+                                            backgroundColor: 'rgba(243, 243, 243, 1)',
+                                            borderRadius: '4px',
+                                            color: 'rgba(95, 99, 104, 1) !important',
+                                            marginBottom: index < selectedIndustry?.split(",").length - 1 ? "4px" : 0, // Отступы между строками
                                         }}
                                     >
-                                        <Table stickyHeader aria-label="leads table">
-                                            <TableHead>
-                                                <TableRow>
-                                                    {[
-                                                        { key: 'company_name', label: 'Company', sortable: true },
-                                                        { key: 'phone_number', label: 'Phone Number' },
-                                                        { key: 'linkedin', label: 'LinkedIn' },
-                                                        { key: 'employees_visited', label: 'Visitors', sortable: true },
-                                                        { key: 'visited_date', label: 'Visited date', sortable: true },
-                                                        { key: 'revenue', label: 'Revenue', sortable: true },
-                                                        { key: 'number_of_employees', label: 'No. of Employees', sortable: true },
-                                                        { key: 'location', label: 'Location', },
-                                                        { key: 'average_time_sec', label: 'Industry', },
-                                                    ].map(({ key, label, sortable = false }) => (
-                                                        <TableCell
-                                                            key={key}
-                                                            sx={{
-                                                                ...companyStyles.table_column,
-                                                                ...(key === 'company_name' && {
-                                                                    position: 'sticky',
-                                                                    left: 0,
-                                                                    zIndex: 10
-                                                                }),
-                                                                ...(key === 'average_time_sec' && {
-                                                                    "::after": { content: 'none' }
-                                                                })
-                                                            }}
-                                                            onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                            style={{ cursor: sortable ? 'pointer' : 'default' }}
-                                                        >
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
-                                                                <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
-                                                                {sortable && (
-                                                                    <IconButton size="small">
-                                                                        {orderBy === key ? (
-                                                                            order === 'asc' ? (
-                                                                                <NorthOutlinedIcon fontSize="inherit" />
-                                                                            ) : (
-                                                                                <SouthOutlinedIcon fontSize="inherit" />
-                                                                            )
-                                                                        ) : (
-                                                                            <SwapVertIcon fontSize="inherit" />
-                                                                        )}
-                                                                    </IconButton>
-                                                                )}
-                                                            </Box>
-                                                        </TableCell>
-                                                    ))}
-                                                </TableRow>
-                                            </TableHead>
-                                            <TableBody>
-                                                {data.map((row) => (
-                                                    <TableRow
-                                                        key={row.id}
-                                                        selected={selectedRows.has(row.id)}
-                                                        sx={{
-                                                            backgroundColor: selectedRows.has(row.id) ? 'rgba(247, 247, 247, 1)' : '#fff',
-                                                            '&:hover': {
-                                                                backgroundColor: 'rgba(247, 247, 247, 1)',
-                                                                '& .sticky-cell': {
-                                                                    backgroundColor: 'rgba(247, 247, 247, 1)',
-                                                                }
-                                                            }
-                                                        }}
-                                                    >
-                                                        {/* Company name Column */}
-                                                        <TableCell className="sticky-cell"
-                                                            sx={{
-                                                                ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
+                                        {part.trim()}
+                                    </Typography>
+                                ))}
+                            </Box>
+                        </Popover>
 
-                                                            }} onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                handleOpenPopup(row);
-
-                                                            }}>{row.name ? truncateText(row.name, 20) : '--'}</TableCell>
-
-                                                        {/* Company phone Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                            {row.phone?.split(',')[0] || '--'}
-                                                        </TableCell>
-
-                                                        {/* Company linkedIn Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
-                                                            {row.linkedin_url ? (
-                                                                <>
-                                                                    <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
-                                                                    /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
-                                                                </>
-                                                            ) : (
-                                                                '--'
-                                                            )}
-                                                        </TableCell>
-
-                                                        {/* Employess Visited  Column */}
-                                                        <TableCell sx={{...companyStyles.table_array, position: 'relative'}}>
-                                                            {row.employees_visited || '--'}
-                                                        </TableCell>
-
-                                                        {/* Employess Visited date  Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                            {row.visited_date
-                                                                ? (() => {
-                                                                    const [day, month, year] = row.visited_date.split('.');
-                                                                    return `${month}/${day}/${year}`;
-                                                                })()
-                                                                : '--'}
-                                                        </TableCell>
-
-                                                        {/* Company revenue  Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                        >
-                                                            {row.company_revenue || '--'}
-                                                        </TableCell>
-
-                                                        {/* Company employee count  Column */}
-                                                        <TableCell
-                                                            onClick={() => {
-                                                                setCompanyEmployeesOpen(true)
-                                                                setCompanyName(row.name)
-                                                                setCompanyId(row.id)
-                                                            }}
-                                                            
-                                                            sx={{
-                                                                ...companyStyles.table_array, position: 'relative', cursor: "pointer", color: 'rgba(80, 82, 178, 1) !important'}}
-                                                        >
-                                                            {row.employee_count || '--'}
-                                                        </TableCell>
-
-                                                        {/* Company location  Column */}
-                                                        <TableCell
-                                                            sx={{ ...companyStyles.table_array, position: 'relative' }}
-                                                        >
-                                                            {(row.city || row.state)
-                                                                ? [capitalizeCity(row.city), row.state].filter(Boolean).join(', ')
-                                                                : '--'}
-                                                        </TableCell>
-
-                                                        {/* Company industry  Column */}
-                                                        <TableCell sx={{ ...companyStyles.table_array, "::after": { content: 'none' }, cursor: row.industry ? "pointer" : "default", }} onClick={(e) => row.industry ? handleOpenPopover(e, row.industry || "--") : ''}>
-                                                            {row.industry && row.industry.length > 30
-                                                                ? `${row.industry.slice(0, 20)}...`
-                                                                : row.industry || "--"}
-                                                        </TableCell>
-
-                                                    </TableRow>
-                                                ))}
-                                            </TableBody>
-                                        </Table>
-                                    </TableContainer>
-                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
-                                        <CustomTablePagination
-                                            count={count_companies ?? 0}
-                                            page={page}
-                                            rowsPerPage={rowsPerPage}
-                                            onPageChange={handleChangePage}
-                                            onRowsPerPageChange={handleChangeRowsPerPage}
-                                            rowsPerPageOptions={rowsPerPageOptions}
-                                        />
-                                    </Box>
-                                </Grid>
-                            </Grid>
-
-                        )}
-                        {showSlider && <Slider />}
+                        <PopupDetails open={openPopup}
+                            onClose={handleClosePopup}
+                            rowData={popupData} />
+                        <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} industry={industry || []} />
+                        <CalendarPopup
+                            anchorEl={calendarAnchorEl}
+                            open={isCalendarOpen}
+                            onClose={handleCalendarClose}
+                            onDateChange={handleDateChange}
+                            onApply={handleApply}
+                            onDateLabelChange={handleDateLabelChange}
+                            selectedDates={selectedDates}
+                        />
                     </Box>
-                    <Popover
-                        open={isOpen}
-                        anchorEl={anchorEl}
-                        onClose={handleClosePopover}
-                        anchorOrigin={{
-                            vertical: "bottom",
-                            horizontal: "left",
-                        }}
-                        transformOrigin={{
-                            vertical: "top",
-                            horizontal: "left",
-                        }}
-                        PaperProps={{
-                            sx: {
-                                width: "184px",
-                                height: "108px",
-                                borderRadius: "4px 0px 0px 0px",
-                                border: "0.2px solid #ddd",
-                                padding: "8px",
-                                boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-                            },
-                        }}
-                    >
-                        <Box sx={{ maxHeight: "92px", overflowY: "auto", backgroundColor: 'rgba(255, 255, 255, 1)' }}>
-                            {selectedIndustry?.split(",").map((part, index) => (
-                                <Typography
-                                    key={index}
-                                    variant="body2"
-                                    className='second-sub-title'
-                                    sx={{
-                                        wordBreak: "break-word",
-                                        backgroundColor: 'rgba(243, 243, 243, 1)',
-                                        borderRadius: '4px',
-                                        color: 'rgba(95, 99, 104, 1) !important',
-                                        marginBottom: index < selectedIndustry?.split(",").length - 1 ? "4px" : 0, // Отступы между строками
-                                    }}
-                                >
-                                    {part.trim()}
-                                </Typography>
-                            ))}
-                        </Box>
-                    </Popover>
-
-                    <PopupDetails open={openPopup}
-                        onClose={handleClosePopup}
-                        rowData={popupData} />
-                    <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} industry={industry || []} />
-                    <CalendarPopup
-                        anchorEl={calendarAnchorEl}
-                        open={isCalendarOpen}
-                        onClose={handleCalendarClose}
-                        onDateChange={handleDateChange}
-                        onApply={handleApply}
-                        onDateLabelChange={handleDateLabelChange}
-                        selectedDates={selectedDates}
-                    />
-                </Box>
-            </Box>}
+                </Box>}
         </>
     );
 };
