@@ -309,6 +309,7 @@ const SmartAudiences: React.FC = () => {
     const [dataSyncPopupOpen, setDataSyncPopupOpen] = useState(false);
 
     const [hasSource, setHasSource] = useState(false);
+    const [isPixelInstalledAnywhere, setIsPixelInstalledAnywhere] = useState<boolean>(false);
 
     const cardData: CardData[] = [
         {
@@ -402,6 +403,16 @@ const SmartAudiences: React.FC = () => {
         };
     }, [data, fetchSmartsMemoized, page, rowsPerPage]);
 
+    const fetchPixelInstalledAnywhere = async () => {
+    try {
+        const { data } = await axiosInstance.get<{ pixel_installed: boolean }>("/domains/pixel-installed-anywhere");
+        setIsPixelInstalledAnywhere(data.pixel_installed);
+    } catch (err) {
+        console.error("Error fetching pixel-installed-anywhere:", err);
+        setIsPixelInstalledAnywhere(false);
+    }
+    };
+
     const fetchSmarts = async ({ sortBy, sortOrder, page, rowsPerPage, appliedDates }: FetchDataParams) => {
         try {
             !intervalRef.current
@@ -469,9 +480,12 @@ const SmartAudiences: React.FC = () => {
 
             const response = await axiosInstance.get(url);
             const { audience_smarts_list, count } = response.data;
+
             setData(audience_smarts_list);
             setCount(count || 0);
-
+            if (audience_smarts_list.length === 0) {
+                await fetchPixelInstalledAnywhere();
+              }
             const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
@@ -1010,7 +1024,7 @@ const SmartAudiences: React.FC = () => {
                                         }
                                     }}>
                                         {data.length === 0 &&
-                                            <FirstTimeScreen cardData={cardData} hasSource={hasSource}/>
+                                            <FirstTimeScreen cardData={cardData} hasSource={hasSource} hasPixel={isPixelInstalledAnywhere}/>
                                         }
                                         {data.length !== 0 &&
                                             <Grid container spacing={1} sx={{ flex: 1 }}>
