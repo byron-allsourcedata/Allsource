@@ -3,6 +3,7 @@ from collections import defaultdict
 from sqlalchemy.sql import func, select, union_all, literal_column, extract, case, literal
 from sqlalchemy.orm import aliased
 from enums import AudienceSmartStatuses
+from models import Users
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
@@ -15,14 +16,34 @@ from models.leads_visits import LeadsVisits
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.leads_users import LeadUser
-from typing import Optional, List
-
+from typing import Optional, List, Dict
 
 
 class DashboardAudiencePersistence:
     def __init__(self, db_session):
         self.db = db_session
-    
+
+    def get_sources_overview(self, user_id) -> tuple[list[tuple[AudienceSource, str]], int]:
+        source_rows = (
+
+            self.db
+            .query(AudienceSource, Users.full_name)
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .filter(AudienceSource.user_id == user_id)
+            .order_by(AudienceSource.created_at.desc())
+            .all()
+        )
+        installed_domains_count = (
+            self.db
+            .query(UserDomains)
+            .filter(
+                UserDomains.user_id == user_id,
+                UserDomains.is_pixel_installed == True,
+            )
+            .count()
+        )
+        return source_rows, installed_domains_count
+
     def get_dashboard_audience_data(self, *, from_date: int, to_date: int, user_id: int):
         from_dt = datetime.fromtimestamp(from_date, tz=timezone.utc)
         to_dt = datetime.fromtimestamp(to_date, tz=timezone.utc)
