@@ -1,10 +1,11 @@
 import React from "react";
 import FirstTimeCards from "../../components/FirstTimeCards";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Link as MuiLink, } from "@mui/material";
 import { ExternalLink } from "@/components/ExternalLink";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 type CardData = {
   title: string;
@@ -131,9 +132,13 @@ const FirstTimeScreen = ({ cardData, hasSource }: ClickableCardsProps) => {
       >
         Generate Smart Audience
       </Typography>
-      <ExternalLink href="https://example.com">
-        Learn more
-      </ExternalLink>
+      <MuiLink
+          href="https://example.com"
+          underline="hover"
+          sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
+        >
+          Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
+        </MuiLink>
     </Box>
     <Typography
       variant="body1"

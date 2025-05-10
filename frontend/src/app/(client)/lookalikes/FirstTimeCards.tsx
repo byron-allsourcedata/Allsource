@@ -44,16 +44,7 @@ const FirstTimeCards = ({ cardData }: ClickableCardsProps) => {
             sx={{ pointerEvents: !card.isClickable ? "none" : "inherit" }}
           >
             <CardContent>
-              <Typography
-                className="fiveth-sub-title"
-                sx={{
-                  marginBottom: 2,
-                  color: "rgba(21, 22, 25, 1) !important",
-                  fontSize: "14px !important",
-                  transition: "color 0.2s ease",
-                  fontWeight: "600 !important",
-                }}
-              >
+            <Typography variant="subtitle2" sx={{ color: "#151619", fontWeight: 400, marginBottom: 2 }}>
                 {card.title}
               </Typography>
               <Box

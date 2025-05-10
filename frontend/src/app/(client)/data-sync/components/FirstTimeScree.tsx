@@ -7,6 +7,7 @@ import {
 } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Image from "next/image";
+import { ExternalLink } from "@/components/ExternalLink";
 
 interface DataSyncFirstTimeScreenProps {
 
@@ -32,11 +33,11 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
           Data Sync
         </Typography>
         <MuiLink
-          href="#"
+          href="https://example.com"
           underline="hover"
           sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
         >
-          Learn more <OpenInNewIcon sx={{ fontSize: 16 }} />
+          Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
         </MuiLink>
       </Box>
       <Typography variant="body2" sx={{ color: "text.secondary" }}>
@@ -52,9 +53,18 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
           flexDirection: "column",
           gap: 3,
           borderRadius: 1,
-          border: '1px solid #EDEDED',
           overflow: 'hidden',
+          border: "1px solid rgba(237, 237, 237, 1)",
+          cursor: "pointer",
+          transition: "background-color .2s, border-color .2s",
+          "&:hover": {
+          backgroundColor: "rgba(232, 239, 255, 0.4)",
+          border: "1px solid rgba(1, 113, 248, 0.5)",
+          "& .fiveth-sub-title": {
+            color: "rgba(21, 22, 25, 1)",
+          }, 
         }}
+      }
       >
         <Typography variant="subtitle2" sx={{ color: "#151619", fontWeight: 400 }}>
           Sync Audience to Any Platform

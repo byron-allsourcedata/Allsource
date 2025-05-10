@@ -42,7 +42,7 @@ type CardData = {
               height: "100%", 
               pointerEvents: !card.isClickable ? "none" : "inherit" }}>
               <CardContent>
-                <Typography className="fiveth-sub-title" sx={{ marginBottom: 2}}>
+                <Typography variant="subtitle2" sx={{ color: "#151619", fontWeight: 400, marginBottom: 2 }}>
                   {card.title}
                 </Typography>
                 <Box

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Box, Typography, TextField, Button, Chip } from "@mui/material";
+import { Box, Typography, TextField, Button, Chip, Link as MuiLink } from "@mui/material";
 import Image from "next/image";
 import DownloadIcon from "@mui/icons-material/Download";
 import CloseIcon from "@mui/icons-material/Close";
@@ -20,6 +20,7 @@ import { ExternalLink } from "@/components/ExternalLink";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import FirstTimeScreen from "./FirstTimeScreen";
 import { CardData } from "@/types/first_time_screens";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
 const cardData: CardData[] = [
   {
@@ -896,9 +897,13 @@ const CreateLookalikePage: React.FC = () => {
                 >
                   Create Your First Lookalike
                 </Typography>
-                <ExternalLink href="https://example.com">
-                  Learn more
-                </ExternalLink>
+                <MuiLink
+                  href="https://example.com"
+                  underline="hover"
+                  sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
+                >
+                  Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
+                </MuiLink>
               </Box>
               <Typography
                 variant="body1"

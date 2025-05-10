@@ -31,11 +31,11 @@ const FirstTimeScreen: FC<FirstTimeScreenProps> = ({ onBegin }) => {
           Integrations
         </Typography>
         <MuiLink
-          href="#"
+          href="https://example.com"
           underline="hover"
           sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
         >
-          Learn more <OpenInNewIcon sx={{ fontSize: 16 }} />
+          Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
         </MuiLink>
       </Box>
       <Typography variant="body2" sx={{ color: "text.secondary" }}>
