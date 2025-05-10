@@ -61,7 +61,7 @@ const styles = {
         lineHeight: '16px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
-            color: 'rgba(80, 82, 178, 1)',
+            color: 'rgba(56, 152, 252, 1)',
         },
     },
     formInput: {
@@ -407,7 +407,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                             color: 'rgba(17, 17, 19, 0.60)',
                             pl: '3px',
                             '&.Mui-focused': {
-                                color: 'rgba(80, 82, 178, 1)',
+                                color: 'rgba(56, 152, 252, 1)',
                             },
                         }
                     }}
@@ -487,7 +487,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                             color: 'rgba(17, 17, 19, 0.60)',
                             pl: '3px',
                             '&.Mui-focused': {
-                                color: 'rgba(80, 82, 178, 1)',
+                                color: 'rgba(56, 152, 252, 1)',
                             },
                         }
                     }}
@@ -595,7 +595,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                                 fontWeight: '400',
                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                 '&.Mui-focused': {
-                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    color: 'rgba(56, 152, 252, 1)',
                                                 },
                                             }
                                         }}
@@ -636,7 +636,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                                         borderColor: '#A3B0C2',
                                                     },
                                                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                        borderColor: 'rgba(56, 152, 252, 1)',
                                                     },
                                                 },
                                                 '&+.MuiFormHelperText-root': {
@@ -721,7 +721,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                 color: 'rgba(17, 17, 19, 0.60)',
                                 pl: '3px',
                                 '&.Mui-focused': {
-                                    color: 'rgba(80, 82, 178, 1)',
+                                    color: 'rgba(56, 152, 252, 1)',
                                 },
                             }
                         }}
@@ -913,7 +913,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                                 borderRadius: '4px',
                                                 border: '1px solid #5052B2',
                                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                backgroundColor: "rgba(80, 82, 178, 1)",
+                                                backgroundColor: "rgba(56, 152, 252, 1)",
                                                 fontFamily: 'Nunito Sans',
                                                 fontSize: '14px',
                                                 fontWeight: '600',
@@ -924,9 +924,9 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                                 ":hover": {
                                                     backgroundColor: "rgba(62, 64, 142, 1)"},
                                                 ":active": {
-                                                    backgroundColor: "rgba(80, 82, 178, 1)"},
+                                                    backgroundColor: "rgba(56, 152, 252, 1)"},
                                                 ":disabled": {
-                                                    borderColor: "rgba(80, 82, 178, 1)",
+                                                    borderColor: "rgba(56, 152, 252, 1)",
                                                     opacity: 0.4,
                                                 },
                                             }}>

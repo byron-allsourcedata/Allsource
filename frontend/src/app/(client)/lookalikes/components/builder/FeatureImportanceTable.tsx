@@ -89,7 +89,7 @@ export function FeatureImportanceTable<T extends FeatureObject>({
 
   const headerColor =
     selectedKeys.length > 0
-      ? "rgba(80, 82, 178, 1)"
+      ? "rgba(56, 152, 252, 1)"
       : theme.palette.text.disabled;
 
   return (
@@ -185,7 +185,7 @@ export function FeatureImportanceTable<T extends FeatureObject>({
                     sx={{
                       fontSize: "12px",
                       "&.Mui-checked": {
-                        color: "rgba(80, 82, 178, 1)",
+                        color: "rgba(56, 152, 252, 1)",
                       },
                     }}
                     onClick={e => e.stopPropagation()}

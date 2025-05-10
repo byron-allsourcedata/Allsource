@@ -162,7 +162,7 @@ const DataSync = () => {
                 color: "rgba(128, 128, 128, 1)",
                 border:
                   filters?.length > 0
-                    ? "1px solid rgba(80, 82, 178, 1)"
+                    ? "1px solid rgba(56, 152, 252, 1)"
                     : "1px solid rgba(184, 184, 184, 1)",
                 borderRadius: "4px",
                 padding: "8px",
@@ -179,7 +179,7 @@ const DataSync = () => {
                 sx={{
                   color:
                     filters?.length > 0
-                      ? "rgba(80, 82, 178, 1)"
+                      ? "rgba(56, 152, 252, 1)"
                       : "rgba(128, 128, 128, 1)",
                 }}
               />
@@ -237,13 +237,13 @@ const DataSync = () => {
                 onClick={installPixel}
                 className="second-sub-title"
                 sx={{
-                  backgroundColor: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "rgba(56, 152, 252, 1)",
                   textTransform: "none",
                   padding: "10px 24px",
                   mt: 3,
                   color: "#fff !important",
                   ":hover": {
-                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "rgba(56, 152, 252, 1)",
                   },
                 }}
               >

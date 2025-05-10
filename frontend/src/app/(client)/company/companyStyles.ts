@@ -25,7 +25,7 @@ export const companyStyles: { [key: string]: SxProps<Theme> } = {
   },
   page_number: {
     backgroundColor: 'rgba(255, 255, 255, 1)',
-    color: 'rgba(80, 82, 178, 1)',
+    color: 'rgba(56, 152, 252, 1)',
     
   },
 

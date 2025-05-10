@@ -53,7 +53,7 @@ const getStatusStyle = (status: string) => {
         case 'Signup':
             return {
                 background: 'rgba(241, 241, 249, 1)',
-                color: 'rgba(80, 82, 178, 1)',
+                color: 'rgba(56, 152, 252, 1)',
             };
         case 'Free trial':
             return {
@@ -106,7 +106,7 @@ const TruncatedText: React.FC<{ text: string; limit: number }> = ({ text, limit 
 
     return (
         <Box onClick={handleToggleExpand} sx={{ cursor: shouldTruncate ? 'pointer' : 'pointer' }}>
-            <Typography className="table-data" sx={{color: 'rgba(80, 82, 178, 1) !important', display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
+            <Typography className="table-data" sx={{color: 'rgba(56, 152, 252, 1) !important', display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
                 {isExpanded ? text : text.substring(0, limit) + (shouldTruncate ? '...' : '')}
             </Typography>
         </Box>
@@ -371,7 +371,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                     textTransform: 'none',
                                     minHeight: 0,
                                     '& .MuiTabs-indicator': {
-                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                        backgroundColor: 'rgba(56, 152, 252, 1)',
                                         height: '1.4px',
                                     },
                                     "@media (max-width: 600px)": {
@@ -396,7 +396,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                         minWidth: 'auto',
                                         mr: 2,
                                         '&.Mui-selected': {
-                                            color: 'rgba(80, 82, 178, 1)'
+                                            color: 'rgba(56, 152, 252, 1)'
                                         },
                                         "@media (max-width: 600px)": {
                                             mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -422,7 +422,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                         minWidth: 'auto',
                                         mr: 2,
                                         '&.Mui-selected': {
-                                            color: 'rgba(80, 82, 178, 1)'
+                                            color: 'rgba(56, 152, 252, 1)'
                                         },
                                     }
                                 }
@@ -479,8 +479,8 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                             onClick={handleCalendarClick}
                             sx={{
                                 textTransform: 'none',
-                                color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                                color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                border: formattedDates ? '1.5px solid rgba(56, 152, 252, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
                                 borderRadius: '4px',
                                 padding: '8px',
                                 minWidth: 'auto',
@@ -489,16 +489,16 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                     padding: 0
                                 },
                                 '&:hover': {
-                                    border: '1.5px solid rgba(80, 82, 178, 1)',
+                                    border: '1.5px solid rgba(56, 152, 252, 1)',
                                     '& .MuiSvgIcon-root': {
-                                        color: 'rgba(80, 82, 178, 1)'
+                                        color: 'rgba(56, 152, 252, 1)'
                                     }
                                 }
                             }}
                         >
                             <DateRangeIcon
                                 fontSize="medium"
-                                sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                                sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }}
                             />
                             <Typography variant="body1" sx={{
                                 fontFamily: 'Roboto',
@@ -599,7 +599,7 @@ const PartnersAccounts: React.FC<PartnersAccountsProps> = ({ appliedDates: appli
                                                         display: "flex",
                                                         alignItems: "center",
                                                         justifyContent: "space-between",
-                                                        color: "rgba(80, 82, 178, 1)",
+                                                        color: "rgba(56, 152, 252, 1)",
                                                         gap: 0,
                                                         "&:hover .icon-button": {
                                                             display: "flex", // Показываем кнопку при наведении

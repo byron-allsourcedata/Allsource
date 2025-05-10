@@ -28,8 +28,8 @@ export default function FourOhFour() {
         The page you&apos;re looking for was not found.
       </Typography>
       <Button variant="contained" onClick={handleNavigate} sx={{
-                    backgroundColor: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
-                    fontWeight: '700', padding: '1em 1em', textWrap: 'nowrap', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                    backgroundColor: 'rgba(56, 152, 252, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
+                    fontWeight: '700', padding: '1em 1em', textWrap: 'nowrap', '&:hover': { backgroundColor: 'rgba(56, 152, 252, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
                     cursor: 'pointer'
                 }}>
                     Go to Dashboard

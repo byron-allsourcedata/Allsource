@@ -282,7 +282,7 @@ const Insights = () => {
                         cursor: "pointer",
                         backgroundColor: "#fff",
                         "&:hover": {
-                          borderColor: "rgba(80, 82, 178, 1)",
+                          borderColor: "rgba(56, 152, 252, 1)",
                         },
                       }}
                       onClick={() => setIsTableVisible(!isTableVisible)}

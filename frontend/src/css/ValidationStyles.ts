@@ -49,7 +49,7 @@ export const ValidationStyle: { [key: string]: SxProps<Theme> } = {
     active_filter_dote: {
         width: '.5rem',
         height: '.5rem',
-        backgroundColor: "rgba(80, 82, 178, 1)",
+        backgroundColor: "rgba(56, 152, 252, 1)",
         borderRadius: "50%",
     },
     collapse_font: {

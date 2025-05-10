@@ -550,7 +550,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 )
                               }
                               sx={{
-                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                               }}
                             />
                           }
@@ -627,7 +627,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                           }}
                           sx={{
                             padding: 0,
-                            "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                            "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                           }}
                         />
 
@@ -751,7 +751,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 )
                               }
                               sx={{
-                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                               }}
                             />
                           }
@@ -899,7 +899,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 )
                               }
                               sx={{
-                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                               }}
                             />
                           }
@@ -976,7 +976,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                           }}
                           sx={{
                             padding: 0,
-                            "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                            "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                           }}
                         />
                         <Box
@@ -1101,7 +1101,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 )
                               }
                               sx={{
-                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                               }}
                             />
                           }
@@ -1237,7 +1237,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                     onChange={() => handleOptionClick(setSelectedOptionsPhone, option)}
                                     sx={{
                                       pr: 1,
-                                      "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                                      "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                                     }}
                                   />
                                 }
@@ -1365,7 +1365,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                     sx={{
                                      
                                       "&.Mui-checked": {
-                                        color: "rgba(80, 82, 178, 1)",
+                                        color: "rgba(56, 152, 252, 1)",
                                       },
                                     }}
                                   />
@@ -1387,7 +1387,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                                 sx={{
                                   padding: 0,
                                   "&.Mui-checked": {
-                                    color: "rgba(80, 82, 178, 1)",
+                                    color: "rgba(56, 152, 252, 1)",
                                   },
                                   userSelect: "none",
                                   cursor: "pointer",
@@ -1463,7 +1463,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                         sx={{
                          
                           "&.Mui-checked": {
-                            color: "rgba(80, 82, 178, 1)",
+                            color: "rgba(56, 152, 252, 1)",
                           },
                         }}
                       />
@@ -1508,7 +1508,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                   sx={{
                     ...smartAudiences.buttonform,
                     backgroundColor: "rgba(255, 255, 255, 1)",
-                    border: "1px solid rgba(80, 82, 178, 1)",
+                    border: "1px solid rgba(56, 152, 252, 1)",
                     boxShadow: 0,
                     width: "120px",
                     ":hover": {
@@ -1519,7 +1519,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                   <Typography
                     sx={{
                       ...smartAudiences.textButton,
-                      color: "rgba(80, 82, 178, 1)",
+                      color: "rgba(56, 152, 252, 1)",
                     }}
                   >
                     Edit
@@ -1532,7 +1532,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                   sx={{
                     ...smartAudiences.buttonform,
                     backgroundColor: "rgba(255, 255, 255, 1)",
-                    border: "1px solid rgba(80, 82, 178, 1)",
+                    border: "1px solid rgba(56, 152, 252, 1)",
                     boxShadow: 0,
                     width: "120px",
                     ":hover": {
@@ -1543,7 +1543,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                   <Typography
                     sx={{
                       ...smartAudiences.textButton,
-                      color: "rgba(80, 82, 178, 1)",
+                      color: "rgba(56, 152, 252, 1)",
                     }}
                   >
                     Skip
@@ -1572,14 +1572,14 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
               variant="outlined"
               sx={{
                 ...smartAudiences.buttonform,
-                borderColor: "rgba(80, 82, 178, 1)",
+                borderColor: "rgba(56, 152, 252, 1)",
                 width: "92px",
               }}
             >
               <Typography
                 sx={{
                   ...smartAudiences.textButton,
-                  color: "rgba(80, 82, 178, 1)",
+                  color: "rgba(56, 152, 252, 1)",
                 }}
               >
                 Cancel
@@ -1594,10 +1594,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
               }}
               sx={{
                 ...smartAudiences.buttonform,
-                backgroundColor: "rgba(80, 82, 178, 1)",
+                backgroundColor: "rgba(56, 152, 252, 1)",
                 width: "237px",
                 ":hover": {
-                  backgroundColor: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "rgba(56, 152, 252, 1)",
                 },
               }}
             >

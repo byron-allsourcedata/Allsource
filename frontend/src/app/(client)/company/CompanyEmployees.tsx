@@ -614,7 +614,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                             <IconButton onClick={onBack}>
-                                <ArrowBackIcon sx={{color: 'rgba(80, 82, 178, 1)'}}/>
+                                <ArrowBackIcon sx={{color: 'rgba(56, 152, 252, 1)'}}/>
                             </IconButton>
                             <Typography className='first-sub-title'>
                                 Employee - {companyName}
@@ -646,10 +646,10 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                     },
                                     '&:hover': {
                                         backgroundColor: 'transparent',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                         '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
+                                            color: 'rgba(56, 152, 252, 1)'
                                         }
                                     }
                                 }}
@@ -665,8 +665,8 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                 aria-expanded={dropdownOpen ? 'true' : undefined}
                                 sx={{
                                     textTransform: 'none',
-                                    color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                    border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                    color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                    border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                     borderRadius: '4px',
                                     padding: '8px',
                                     opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
@@ -678,15 +678,15 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                     },
                                     '&:hover': {
                                         backgroundColor: 'transparent',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                         '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
+                                            color: 'rgba(56, 152, 252, 1)'
                                         }
                                     }
                                 }}
                             >
-                                <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
+                                <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
 
                                 {selectedFilters.length > 0 && (
                                     <Box
@@ -805,13 +805,13 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                     onClick={installPixel}
                                     className='second-sub-title'
                                     sx={{
-                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                        backgroundColor: 'rgba(56, 152, 252, 1)',
                                         textTransform: 'none',
                                         padding: '10px 24px',
                                         mt: 3,
                                         color: '#fff !important',
                                         ':hover': {
-                                            backgroundColor: 'rgba(80, 82, 178, 1)'
+                                            backgroundColor: 'rgba(56, 152, 252, 1)'
                                         }
                                     }}
                                 >
@@ -937,7 +937,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             {/* Full name Column */}
                                                             <TableCell className="sticky-cell"
                                                                 sx={{
-                                                                    ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
+                                                                    ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(56, 152, 252, 1)', backgroundColor: '#fff'
 
                                                                 }} onClick={(e) => {
                                                                     e.stopPropagation();
@@ -964,7 +964,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
                                                             {/* Company linkedIn Column */}
                                                             <TableCell 
-                                                                sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url?.value ? 'rgba(80, 82, 178, 1)' : '', }}
+                                                                sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url?.value ? 'rgba(56, 152, 252, 1)' : '', }}
                                                             >
                                                                 {!row.is_unlocked?.value ? (
                                                                     <UnlockButton onClick={() => getStatusCredits(row.id.value)} label="Unlock contact" />

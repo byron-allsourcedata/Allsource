@@ -336,7 +336,7 @@ const CollectionRules: React.FC = () => {
           onClick={handleCancel}
           sx={{
             backgroundColor: "#fff",
-            color: "rgba(80, 82, 178, 1)",
+            color: "rgba(56, 152, 252, 1)",
             fontFamily: "Nunito Sans",
             textTransform: "none",
             lineHeight: "22.4px",
@@ -344,14 +344,14 @@ const CollectionRules: React.FC = () => {
             padding: "1em 5em",
             textWrap: "nowrap",
             marginRight: "16px",
-            border: "1px solid rgba(80, 82, 178, 1)",
+            border: "1px solid rgba(56, 152, 252, 1)",
             maxWidth: "98px",
             "&:hover": {
               backgroundColor: "#fff",
               boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
               "&.Mui-disabled": {
                 backgroundColor: "rgba(80, 82, 178, 0.6)",
-                color: "rgba(80, 82, 178, 1)",
+                color: "rgba(56, 152, 252, 1)",
                 cursor: "not-allowed",
               },
             },
@@ -364,7 +364,7 @@ const CollectionRules: React.FC = () => {
           disabled={isDisabled}
           onClick={handleSave}
           sx={{
-            backgroundColor: "rgba(80, 82, 178, 1)",
+            backgroundColor: "rgba(56, 152, 252, 1)",
             fontFamily: "Nunito Sans",
             textTransform: "none",
             lineHeight: "22.4px",
@@ -373,7 +373,7 @@ const CollectionRules: React.FC = () => {
             textWrap: "nowrap",
             maxWidth: "120px",
             "&:hover": {
-              backgroundColor: "rgba(80, 82, 178, 1)",
+              backgroundColor: "rgba(56, 152, 252, 1)",
               boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
             },
             cursor: isDisabled ? "not-allowed" : "pointer",

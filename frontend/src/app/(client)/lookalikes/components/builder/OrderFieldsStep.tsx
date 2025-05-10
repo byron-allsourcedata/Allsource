@@ -65,7 +65,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                         fontSize: '14px',
                         },
                         '& .MuiStepIcon-root': {
-                        color: index === 1 ? 'rgba(80, 82, 178, 1)' : 'rgba(212, 212, 212, 1)',
+                        color: index === 1 ? 'rgba(56, 152, 252, 1)' : 'rgba(212, 212, 212, 1)',
                         },
                     }}>
                     {label}
@@ -179,7 +179,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                             href="#"
                             sx={{
                                 fontSize: "14px",
-                                color: "rgba(80, 82, 178, 1)",
+                                color: "rgba(56, 152, 252, 1)",
                                 textDecoration: "underline",
                                 cursor: "pointer",
                                 display: "inline-block",

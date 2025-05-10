@@ -155,7 +155,7 @@ const styles = {
         lineHeight: '16px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
-            color: 'rgba(80, 82, 178, 1)',
+            color: 'rgba(56, 152, 252, 1)',
         },
     },
     formInput: {
@@ -1085,12 +1085,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                         color:
                                                         valueContactSync === 0
                                                             ? "rgba(231, 231, 231, 1)"
-                                                            : "rgba(80, 82, 178, 1)",
+                                                            : "rgba(56, 152, 252, 1)",
                                                         "& .MuiSlider-track": {
-                                                          backgroundColor: "rgba(80, 82, 178, 1)",
+                                                          backgroundColor: "rgba(56, 152, 252, 1)",
                                                         },
                                                         "& .MuiSlider-thumb": {
-                                                          backgroundColor: "rgba(80, 82, 178, 1)",
+                                                          backgroundColor: "rgba(56, 152, 252, 1)",
                                                         },
                                                       }}
                                                 />
@@ -1223,7 +1223,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
                                                                 '&.Mui-focused': {
-                                                                    color: 'rgba(80, 82, 178, 1)',
+                                                                    color: 'rgba(56, 152, 252, 1)',
                                                                     top: 0
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
@@ -1251,7 +1251,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                         borderColor: '#A3B0C2',
                                                                     },
                                                                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                                        borderColor: 'rgba(56, 152, 252, 1)',
                                                                     },
                                                                 },
                                                                 '&+.MuiFormHelperText-root': {
@@ -1306,7 +1306,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
                                                                 '&.Mui-focused': {
-                                                                    color: 'rgba(80, 82, 178, 1)',
+                                                                    color: 'rgba(56, 152, 252, 1)',
                                                                     top: 0
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
@@ -1334,7 +1334,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                         borderColor: '#A3B0C2',
                                                                     },
                                                                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                                        borderColor: 'rgba(56, 152, 252, 1)',
                                                                     },
                                                                 },
                                                                 '&+.MuiFormHelperText-root': {
@@ -1453,7 +1453,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
                                                                 '&.Mui-focused': {
-                                                                    color: 'rgba(80, 82, 178, 1)',
+                                                                    color: 'rgba(56, 152, 252, 1)',
                                                                     top: 0
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
@@ -1480,7 +1480,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                         borderColor: '#A3B0C2',
                                                                     },
                                                                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                                        borderColor: 'rgba(56, 152, 252, 1)',
                                                                     },
                                                                 },
                                                                 '&+.MuiFormHelperText-root': {
@@ -1526,7 +1526,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
                                                                 '&.Mui-focused': {
-                                                                    color: 'rgba(80, 82, 178, 1)',
+                                                                    color: 'rgba(56, 152, 252, 1)',
                                                                     top: 0,
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
@@ -1552,7 +1552,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                     borderColor: '#A3B0C2',
                                                                 },
                                                                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: 'rgba(80, 82, 178, 1)',
+                                                                    borderColor: 'rgba(56, 152, 252, 1)',
                                                                 },
                                                             },
                                                         }}
@@ -1577,7 +1577,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                     aria-haspopup="true"
                                                     sx={{
                                                         textTransform: 'none',
-                                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                                        border: '1px solid rgba(56, 152, 252, 1)',
                                                         borderRadius: '4px',
                                                         padding: '9px 16px',
                                                         minWidth: 'auto',
@@ -1615,9 +1615,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                     onClick={handleClosePopup}
                                     className='second-sub-title'
                                     sx={{
-                                        color: "rgba(80, 82, 178, 1) !important",
+                                        color: "rgba(56, 152, 252, 1) !important",
                                         backgroundColor: '#fff',
-                                        border: ' 1px solid rgba(80, 82, 178, 1)',
+                                        border: ' 1px solid rgba(56, 152, 252, 1)',
                                         textTransform: "none",
                                         padding: "0.75em 2.5em",
                                         '&:hover': {
@@ -1632,12 +1632,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                     onClick={handleNextTab}
                                     className='second-sub-title'
                                     sx={{
-                                        backgroundColor: "rgba(80, 82, 178, 1)",
+                                        backgroundColor: "rgba(56, 152, 252, 1)",
                                         color: 'rgba(255, 255, 255, 1) !important',
                                         textTransform: "none",
                                         padding: "0.75em 2.5em",
                                         '&:hover': {
-                                            backgroundColor: 'rgba(80, 82, 178, 1)'
+                                            backgroundColor: 'rgba(56, 152, 252, 1)'
                                         }
                                     }}
                                 >

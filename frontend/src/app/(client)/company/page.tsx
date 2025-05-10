@@ -804,10 +804,10 @@ const Leads: React.FC = () => {
                                                 },
                                                 '&:hover': {
                                                     backgroundColor: 'transparent',
-                                                    border: '1px solid rgba(80, 82, 178, 1)',
-                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    border: '1px solid rgba(56, 152, 252, 1)',
+                                                    color: 'rgba(56, 152, 252, 1)',
                                                     '& .MuiSvgIcon-root': {
-                                                        color: 'rgba(80, 82, 178, 1)'
+                                                        color: 'rgba(56, 152, 252, 1)'
                                                     }
                                                 }
                                             }}
@@ -823,8 +823,8 @@ const Leads: React.FC = () => {
                                             aria-expanded={dropdownOpen ? 'true' : undefined}
                                             sx={{
                                                 textTransform: 'none',
-                                                color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                                border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                                color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                                border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                                 borderRadius: '4px',
                                                 padding: '8px',
                                                 opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
@@ -836,15 +836,15 @@ const Leads: React.FC = () => {
                                                 },
                                                 '&:hover': {
                                                     backgroundColor: 'transparent',
-                                                    border: '1px solid rgba(80, 82, 178, 1)',
-                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    border: '1px solid rgba(56, 152, 252, 1)',
+                                                    color: 'rgba(56, 152, 252, 1)',
                                                     '& .MuiSvgIcon-root': {
-                                                        color: 'rgba(80, 82, 178, 1)'
+                                                        color: 'rgba(56, 152, 252, 1)'
                                                     }
                                                 }
                                             }}
                                         >
-                                            <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
+                                            <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
 
                                             {selectedFilters.length > 0 && (
                                                 <Box
@@ -874,7 +874,7 @@ const Leads: React.FC = () => {
                                             sx={{
                                                 textTransform: 'none',
                                                 color: 'rgba(128, 128, 128, 1)',
-                                                border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                                border: formattedDates ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                                 borderRadius: '4px',
                                                 opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
                                                 padding: '8px',
@@ -885,15 +885,15 @@ const Leads: React.FC = () => {
                                                 },
                                                 '&:hover': {
                                                     backgroundColor: 'transparent',
-                                                    border: '1px solid rgba(80, 82, 178, 1)',
-                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    border: '1px solid rgba(56, 152, 252, 1)',
+                                                    color: 'rgba(56, 152, 252, 1)',
                                                     '& .MuiSvgIcon-root': {
-                                                        color: 'rgba(80, 82, 178, 1)'
+                                                        color: 'rgba(56, 152, 252, 1)'
                                                     }
                                                 }
                                             }}
                                         >
-                                            <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
+                                            <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)', }} />
                                             <Typography variant="body1" sx={{
                                                 fontFamily: 'Nunito Sans',
                                                 fontSize: '14px',
@@ -1084,7 +1084,7 @@ const Leads: React.FC = () => {
                                                             {/* Company name Column */}
                                                             <TableCell className="sticky-cell"
                                                                 sx={{
-                                                                    ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
+                                                                    ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(56, 152, 252, 1)', backgroundColor: '#fff'
 
                                                                 }} onClick={(e) => {
                                                                     e.stopPropagation();
@@ -1098,7 +1098,7 @@ const Leads: React.FC = () => {
                                                             </TableCell>
 
                                                             {/* Company linkedIn Column */}
-                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(80, 82, 178, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
+                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(56, 152, 252, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
                                                                 {row.linkedin_url ? (
                                                                     <>
                                                                         <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
@@ -1141,7 +1141,7 @@ const Leads: React.FC = () => {
                                                                 }}
 
                                                                 sx={{
-                                                                    ...companyStyles.table_array, position: 'relative', cursor: "pointer", color: 'rgba(80, 82, 178, 1) !important'
+                                                                    ...companyStyles.table_array, position: 'relative', cursor: "pointer", color: 'rgba(56, 152, 252, 1) !important'
                                                                 }}
                                                             >
                                                                 {row.employee_count || '--'}

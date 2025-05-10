@@ -156,9 +156,9 @@ const EmailVerificate: React.FC = () => {
             border: '1px solid rgba(184, 184, 184, 1)',
             borderRadius: '3.27px',
             '&:hover': {
-              border: '1px solid rgba(80, 82, 178, 1)',
+              border: '1px solid rgba(56, 152, 252, 1)',
               '& .MuiSvgIcon-root': {
-                color: 'rgba(80, 82, 178, 1)'
+                color: 'rgba(56, 152, 252, 1)'
               }
             }
           }}

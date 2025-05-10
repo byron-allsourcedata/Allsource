@@ -699,7 +699,7 @@ const Leads: React.FC = () => {
             case 'product_added_to_cart':
                 return {
                     background: 'rgba(241, 241, 249, 1)',
-                    color: 'rgba(80, 82, 178, 1)',
+                    color: 'rgba(56, 152, 252, 1)',
                 };
             default:
                 return {
@@ -988,8 +988,8 @@ const Leads: React.FC = () => {
 
                                 sx={{
                                     textTransform: 'none',
-                                    color: status === 'PIXEL_INSTALLATION_NEEDED' ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
-                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                    color: status === 'PIXEL_INSTALLATION_NEEDED' ? 'rgba(128, 128, 128, 1)' : 'rgba(56, 152, 252, 1)',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
                                     padding: '9px 16px',
                                     opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.4' : '1',
@@ -1027,10 +1027,10 @@ const Leads: React.FC = () => {
                                             },
                                             '&:hover': {
                                                 backgroundColor: 'transparent',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                border: '1px solid rgba(56, 152, 252, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 '& .MuiSvgIcon-root': {
-                                                    color: 'rgba(80, 82, 178, 1)'
+                                                    color: 'rgba(56, 152, 252, 1)'
                                                 }
                                             }
                                         }}
@@ -1046,8 +1046,8 @@ const Leads: React.FC = () => {
                                         aria-expanded={dropdownOpen ? 'true' : undefined}
                                         sx={{
                                             textTransform: 'none',
-                                            color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                            border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                            color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                            border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '8px',
                                             opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
@@ -1059,15 +1059,15 @@ const Leads: React.FC = () => {
                                             },
                                             '&:hover': {
                                                 backgroundColor: 'transparent',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                border: '1px solid rgba(56, 152, 252, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 '& .MuiSvgIcon-root': {
-                                                    color: 'rgba(80, 82, 178, 1)'
+                                                    color: 'rgba(56, 152, 252, 1)'
                                                 }
                                             }
                                         }}
                                     >
-                                        <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
+                                        <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
 
                                         {selectedFilters.length > 0 && (
                                             <Box
@@ -1097,7 +1097,7 @@ const Leads: React.FC = () => {
                                         sx={{
                                             textTransform: 'none',
                                             color: 'rgba(128, 128, 128, 1)',
-                                            border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                            border: formattedDates ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
                                             padding: '8px',
@@ -1108,15 +1108,15 @@ const Leads: React.FC = () => {
                                             },
                                             '&:hover': {
                                                 backgroundColor: 'transparent',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                border: '1px solid rgba(56, 152, 252, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 '& .MuiSvgIcon-root': {
-                                                    color: 'rgba(80, 82, 178, 1)'
+                                                    color: 'rgba(56, 152, 252, 1)'
                                                 }
                                             }
                                         }}
                                     >
-                                        <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
+                                        <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)', }} />
                                         <Typography variant="body1" sx={{
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '14px',
@@ -1136,7 +1136,7 @@ const Leads: React.FC = () => {
                                 aria-haspopup="true"
                                 sx={{
                                     textTransform: 'none',
-                                    color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
+                                    color: selectedRows.size === 0 ? 'rgba(128, 128, 128, 1)' : 'rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
                                     padding: '0',
                                     border: 'none',
@@ -1323,7 +1323,7 @@ const Leads: React.FC = () => {
                                                     >
                                                         <TableCell className="sticky-cell"
                                                             sx={{
-                                                                ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(80, 82, 178, 1)', backgroundColor: '#fff'
+                                                                ...leadsStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(56, 152, 252, 1)', backgroundColor: '#fff'
 
                                                             }} onClick={(e) => {
                                                                 e.stopPropagation();
@@ -1435,7 +1435,7 @@ const Leads: React.FC = () => {
                                                         <TableCell onClick={(e) => {
                                                             e.stopPropagation();
                                                             handleOpenPopup(row)
-                                                        }} sx={{ ...leadsStyles.table_array, position: 'relative', cursor: 'pointer', color: 'rgba(80, 82, 178, 1)' }}>
+                                                        }} sx={{ ...leadsStyles.table_array, position: 'relative', cursor: 'pointer', color: 'rgba(56, 152, 252, 1)' }}>
                                                             <Box onClick={(e) => e.stopPropagation()}>
                                                                 <Tooltip
                                                                     onClick={(e) => {
@@ -1484,7 +1484,7 @@ const Leads: React.FC = () => {
                                                                                             >
                                                                                                 <Typography
                                                                                                     className="table-data"
-                                                                                                    sx={{ fontSize: '12px', maxWidth: 500, textDecoration: 'none', color: 'rgba(80, 82, 178, 1) !important' }}
+                                                                                                    sx={{ fontSize: '12px', maxWidth: 500, textDecoration: 'none', color: 'rgba(56, 152, 252, 1) !important' }}
                                                                                                     component="a"
                                                                                                     href={visit.page.startsWith("http") ? visit.page : `https://${visit.page}`}
                                                                                                     target="_blank"

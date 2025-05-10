@@ -149,7 +149,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates, typeB
 
     const colorPalette = [
         'rgba(244, 87, 69, 1)',
-        'rgba(80, 82, 178, 1)',
+        'rgba(56, 152, 252, 1)',
         'rgba(224, 176, 5, 1)',
         'rgba(144, 190, 109, 1)',
         'rgba(5, 115, 234, 1)',
@@ -157,7 +157,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates, typeB
 
     const colorMapping = {
         total_contacts_collected: 'rgba(244, 87, 69, 1)',
-        total_visitors: 'rgba(80, 82, 178, 1)',
+        total_visitors: 'rgba(56, 152, 252, 1)',
         viewed_product: 'rgba(224, 176, 5, 1)',
         abandoned_cart: 'rgba(144, 190, 109, 1)',
         converted_sale: 'rgba(5, 115, 234, 1)',
@@ -188,7 +188,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates, typeB
 
     const options = [
         { id: 'total_contacts_collected', label: 'Total Contacts Collected', color: 'rgba(244, 87, 69, 1)' },
-        { id: 'total_visitors', label: 'Total Visitors', color: 'rgba(80, 82, 178, 1)' },
+        { id: 'total_visitors', label: 'Total Visitors', color: 'rgba(56, 152, 252, 1)' },
         { id: 'viewed_product', label: 'View Products', color: 'rgba(224, 176, 5, 1)' },
         { id: 'abandoned_cart', label: 'Abandoned cart', color: 'rgba(144, 190, 109, 1)' },
         { id: 'converted_sale', label: 'Converted Sale', color: 'rgba(5, 115, 234, 1)' }
@@ -411,8 +411,8 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates, typeB
                                         ml: 5.5,
                                         height: '20px',
                                         borderRadius: '4px',
-                                        border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
-                                        color: chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                        border: `1.5px solid ${chartType === 'line' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                        color: chartType === 'line' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)',
                                         '@media (max-width: 600px)': {
                                             ml: 2
                                         }
@@ -427,8 +427,8 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates, typeB
                                         width: '20px',
                                         height: '20px',
                                         borderRadius: '4px',
-                                        border: `1.5px solid ${chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
-                                        color: chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                        border: `1.5px solid ${chartType === 'bar' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                        color: chartType === 'bar' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)',
                                     }}
                                 >
                                     <IconBarChart sx={{ fontSize: '20px' }} />
@@ -513,7 +513,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates, typeB
                                                 fontFamily: 'Nunito Sans',
                                                 fontWeight: 600,
                                                 fontSize: '14px',
-                                                color: selectedGraphs.length == 4 ? 'rgba(80, 82, 178, 1)' : 'inherit' // Изменяем цвет текста
+                                                color: selectedGraphs.length == 4 ? 'rgba(56, 152, 252, 1)' : 'inherit' // Изменяем цвет текста
                                             }}
                                         >
                                             All contacts type
@@ -537,7 +537,7 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates, typeB
                                                         borderRadius: '50%',
                                                         backgroundColor: option.color,
                                                     }} />
-                                                <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: 600, fontSize: '14px', color: selectedGraphs.includes(option.id) ? 'rgba(80, 82, 178, 1)' : 'inherit' }}>
+                                                <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: 600, fontSize: '14px', color: selectedGraphs.includes(option.id) ? 'rgba(56, 152, 252, 1)' : 'inherit' }}>
                                                     {option.label}
                                                 </Typography>
                                             </Box>

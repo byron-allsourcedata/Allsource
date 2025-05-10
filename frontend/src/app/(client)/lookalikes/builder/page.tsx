@@ -520,7 +520,7 @@ const CreateLookalikePage: React.FC = () => {
                       variant="outlined"
                       sx={{
                         ...smartAudiences.buttonform,
-                        borderColor: 'rgba(80, 82, 178, 1)',
+                        borderColor: 'rgba(56, 152, 252, 1)',
                         width: '92px',
                         mt: 2,
                         alignSelf: 'flex-end',
@@ -532,7 +532,7 @@ const CreateLookalikePage: React.FC = () => {
                       <Typography
                         sx={{
                           ...smartAudiences.textButton,
-                          color: 'rgba(80, 82, 178, 1)',
+                          color: 'rgba(56, 152, 252, 1)',
                         }}
                       >
                         Edit
@@ -588,10 +588,10 @@ const CreateLookalikePage: React.FC = () => {
                       onClick={handleCalculate}
                       sx={{
                         ...smartAudiences.buttonform,
-                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                         width: "120px",
                         ":hover": {
-                          backgroundColor: "rgba(80, 82, 178, 1)",
+                          backgroundColor: "rgba(56, 152, 252, 1)",
                         },
                       }}
                     >
@@ -895,14 +895,14 @@ const CreateLookalikePage: React.FC = () => {
                   variant="contained"
                   onClick={() => router.push("/smart-audiences/builder")}
                   sx={{
-                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "rgba(56, 152, 252, 1)",
                     textTransform: "none",
                     padding: "10px 24px",
                     color: "#fff !important",
-                    ":hover": { backgroundColor: "rgba(80, 82, 178, 1)" },
-                    ":active": { backgroundColor: "rgba(80, 82, 178, 1)" },
+                    ":hover": { backgroundColor: "rgba(56, 152, 252, 1)" },
+                    ":active": { backgroundColor: "rgba(56, 152, 252, 1)" },
                     ":disabled": {
-                      backgroundColor: "rgba(80, 82, 178, 1)",
+                      backgroundColor: "rgba(56, 152, 252, 1)",
                       opacity: 0.6,
                     },
                   }}

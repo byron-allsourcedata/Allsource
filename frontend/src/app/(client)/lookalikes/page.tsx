@@ -566,11 +566,11 @@ const CreateLookalikePage: React.FC = () => {
                       textTransform: "none",
                       color:
                         selectedFilters && selectedFilters.length > 0
-                          ? "rgba(80, 82, 178, 1)"
+                          ? "rgba(56, 152, 252, 1)"
                           : "rgba(128, 128, 128, 1)",
                       border:
                         selectedFilters && selectedFilters.length > 0
-                          ? "1px solid rgba(80, 82, 178, 1)"
+                          ? "1px solid rgba(56, 152, 252, 1)"
                           : "1px solid rgba(184, 184, 184, 1)",
                       borderRadius: "4px",
                       padding: "8px",
@@ -582,10 +582,10 @@ const CreateLookalikePage: React.FC = () => {
                       },
                       "&:hover": {
                         backgroundColor: "transparent",
-                        border: "1px solid rgba(80, 82, 178, 1)",
-                        color: "rgba(80, 82, 178, 1)",
+                        border: "1px solid rgba(56, 152, 252, 1)",
+                        color: "rgba(56, 152, 252, 1)",
                         "& .MuiSvgIcon-root": {
-                          color: "rgba(80, 82, 178, 1)",
+                          color: "rgba(56, 152, 252, 1)",
                         },
                       },
                     }}
@@ -595,7 +595,7 @@ const CreateLookalikePage: React.FC = () => {
                       sx={{
                         color:
                           selectedFilters && selectedFilters.length > 0
-                            ? "rgba(80, 82, 178, 1)"
+                            ? "rgba(56, 152, 252, 1)"
                             : "rgba(128, 128, 128, 1)",
                       }}
                     />
@@ -630,7 +630,7 @@ const CreateLookalikePage: React.FC = () => {
                       textTransform: "none",
                       color: "rgba(128, 128, 128, 1)",
                       border: formattedDates
-                        ? "1px solid rgba(80, 82, 178, 1)"
+                        ? "1px solid rgba(56, 152, 252, 1)"
                         : "1px solid rgba(184, 184, 184, 1)",
                       borderRadius: "4px",
                       padding: "8px",
@@ -641,10 +641,10 @@ const CreateLookalikePage: React.FC = () => {
                       },
                       "&:hover": {
                         backgroundColor: "transparent",
-                        border: "1px solid rgba(80, 82, 178, 1)",
-                        color: "rgba(80, 82, 178, 1)",
+                        border: "1px solid rgba(56, 152, 252, 1)",
+                        color: "rgba(56, 152, 252, 1)",
                         "& .MuiSvgIcon-root": {
-                          color: "rgba(80, 82, 178, 1)",
+                          color: "rgba(56, 152, 252, 1)",
                         },
                       },
                     }}
@@ -653,7 +653,7 @@ const CreateLookalikePage: React.FC = () => {
                       fontSize="medium"
                       sx={{
                         color: formattedDates
-                          ? "rgba(80, 82, 178, 1)"
+                          ? "rgba(56, 152, 252, 1)"
                           : "rgba(128, 128, 128, 1)",
                       }}
                     />
@@ -666,7 +666,7 @@ const CreateLookalikePage: React.FC = () => {
                         lineHeight: "19.6px",
                         textAlign: "left",
                         color: formattedDates
-                          ? "rgba(80, 82, 178, 1)"
+                          ? "rgba(56, 152, 252, 1)"
                           : "rgba(128, 128, 128, 1)",
                         "@media (max-width: 600px)": {
                           display: "none",

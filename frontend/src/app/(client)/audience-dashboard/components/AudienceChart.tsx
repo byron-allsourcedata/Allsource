@@ -266,7 +266,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
 
   const colorPalette = [
     "rgba(244, 87, 69, 1)",
-    "rgba(80, 82, 178, 1)",
+    "rgba(56, 152, 252, 1)",
     "rgba(224, 176, 5, 1)",
     "rgba(144, 190, 109, 1)",
     "rgba(5, 115, 234, 1)",
@@ -274,7 +274,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
 
   const colorMapping = {
     total_contacts_collected: "rgba(244, 87, 69, 1)",
-    total_visitors: "rgba(80, 82, 178, 1)",
+    total_visitors: "rgba(56, 152, 252, 1)",
     viewed_product: "rgba(224, 176, 5, 1)",
     abandoned_cart: "rgba(144, 190, 109, 1)",
     converted_sale: "rgba(5, 115, 234, 1)",
@@ -292,7 +292,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
     {
       id: "total_visitors",
       label: "Total Visitors",
-      color: "rgba(80, 82, 178, 1)",
+      color: "rgba(56, 152, 252, 1)",
     },
     {
       id: "viewed_product",
@@ -661,11 +661,11 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
               textTransform: "none",
               color:
                 formattedDates || selectedDateLabel
-                  ? "rgba(80, 82, 178, 1)"
+                  ? "rgba(56, 152, 252, 1)"
                   : "rgba(128, 128, 128, 1)",
               border:
                 formattedDates || selectedDateLabel
-                  ? ".0938rem solid rgba(80, 82, 178, 1)"
+                  ? ".0938rem solid rgba(56, 152, 252, 1)"
                   : ".0938rem solid rgba(184, 184, 184, 1)",
               borderRadius: ".25rem",
               padding: ".5rem",
@@ -674,9 +674,9 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
                 maxHeight: '41px'
               },
               "&:hover": {
-                border: ".0938rem solid rgba(80, 82, 178, 1)",
+                border: ".0938rem solid rgba(56, 152, 252, 1)",
                 "& .MuiSvgIcon-root": {
-                  color: "rgba(80, 82, 178, 1)",
+                  color: "rgba(56, 152, 252, 1)",
                 },
               },
             }}
@@ -686,7 +686,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
               sx={{
                 color:
                   formattedDates || selectedDateLabel
-                    ? "rgba(80, 82, 178, 1)"
+                    ? "rgba(56, 152, 252, 1)"
                     : "rgba(128, 128, 128, 1)",
               }}
             />
@@ -760,12 +760,12 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
                       height: "20px",
                       borderRadius: "4px",
                       border: `1.5008px solid ${chartType === "line"
-                        ? "rgba(80, 82, 178, 1)"
+                        ? "rgba(56, 152, 252, 1)"
                         : "rgba(115, 115, 115, 1)"
                         }`,
                       color:
                         chartType === "line"
-                          ? "rgba(80, 82, 178, 1)"
+                          ? "rgba(56, 152, 252, 1)"
                           : "rgba(115, 115, 115, 1)",
                       "@media (max-width: 600px)": {
                         ml: 2,
@@ -782,12 +782,12 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
                       height: "20px",
                       borderRadius: "4px",
                       border: `1.5008px solid ${chartType === "bar"
-                        ? "rgba(80, 82, 178, 1)"
+                        ? "rgba(56, 152, 252, 1)"
                         : "rgba(115, 115, 115, 1)"
                         }`,
                       color:
                         chartType === "bar"
-                          ? "rgba(80, 82, 178, 1)"
+                          ? "rgba(56, 152, 252, 1)"
                           : "rgba(115, 115, 115, 1)",
                     }}
                   >
@@ -916,7 +916,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
                           fontSize: "14px",
                           color:
                             selectedGraphs.length == 4
-                              ? "rgba(80, 82, 178, 1)"
+                              ? "rgba(56, 152, 252, 1)"
                               : "inherit",
                         }}
                       >
@@ -960,7 +960,7 @@ const AudienceChart: React.FC<AudienceChartProps> = ({ selectedDomain }) => {
                               fontWeight: 600,
                               fontSize: "14px",
                               color: selectedGraphs.includes(option.id)
-                                ? "rgba(80, 82, 178, 1)"
+                                ? "rgba(56, 152, 252, 1)"
                                 : "inherit",
                             }}
                           >

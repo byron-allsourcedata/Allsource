@@ -18,6 +18,7 @@ import LegendToggleOutlinedIcon from "@mui/icons-material/LegendToggleOutlined";
 import AllInboxOutlinedIcon from "@mui/icons-material/AllInboxOutlined";
 import { useRouter } from "next/navigation";
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import Image from "next/image";
 
 type WelcomePopupProps = {
   open: boolean;
@@ -379,17 +380,22 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
               </Typography>
               <Box sx={{p: 4}}>
                 <Box
-                  sx={{
-                    height: 140,
-                    backgroundColor: "#f0f4ff",
-                    backgroundImage: "url(./integrations-first-time-screen.svg)",
-                    backgroundPosition: "center",
-                    backgroundRepeat: "no-repeat",
-                    backgroundSize: "contain",
-                    borderRadius: 2,
-                  }}
-                >
-                </Box>
+                          sx={{
+                            bgcolor: "#E8F0FF",
+                            borderRadius: 1,
+                            p: 2,
+                            display: "flex",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Image
+                            src="/integrations-first-time-screen.svg"
+                            alt="Allsource integrations diagram"
+                            width={1000}
+                            height={160}
+                            style={{ maxWidth: "100%", height: "auto" }}
+                          />
+                        </Box>
                 <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
                 <Button
                         variant="outlined"

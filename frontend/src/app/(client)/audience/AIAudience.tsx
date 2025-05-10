@@ -190,8 +190,8 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                 disabled={!isAnySelected} 
                                 sx={{
                                     textTransform: 'none',
-                                    color: !isAnySelected ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
-                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                    color: !isAnySelected ? 'rgba(128, 128, 128, 1)' : 'rgba(56, 152, 252, 1)',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
                                     padding: '9px 16px',
                                     opacity: !isAnySelected ? '0.6' : '1',
@@ -216,8 +216,8 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                 disabled={!isAnySelected} 
                                 sx={{
                                     textTransform: 'none',
-                                    color: !isAnySelected ? 'rgba(128, 128, 128, 1)' : 'rgba(80, 82, 178, 1)',
-                                    border: !isAnySelected ? '1px solid rgba(128, 128, 128, 1)' : '1px solid rgba(80, 82, 178, 1)',
+                                    color: !isAnySelected ? 'rgba(128, 128, 128, 1)' : 'rgba(56, 152, 252, 1)',
+                                    border: !isAnySelected ? '1px solid rgba(128, 128, 128, 1)' : '1px solid rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
                                     padding: '9px 16px',
                                     opacity: !isAnySelected ? '0.6' : '1',
@@ -253,10 +253,10 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                     },
                                     '&:hover': {
                                         backgroundColor: 'transparent',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                         '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
+                                            color: 'rgba(56, 152, 252, 1)'
                                         }
                                     }
                                 }}
@@ -322,7 +322,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                         fontWeight: "600",
                                         lineHeight: "20px",
                                         letterSpacing: "normal",
-                                        color: "rgba(80, 82, 178, 1)",
+                                        color: "rgba(56, 152, 252, 1)",
                                         textTransform: "none",
                                         padding: 0,
                                         margin: 0,
@@ -413,7 +413,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                     fontWeight: "600",
                                     lineHeight: "20px",
                                     letterSpacing: "normal",
-                                    color: "rgba(80, 82, 178, 1)",
+                                    color: "rgba(56, 152, 252, 1)",
                                 }}
                             >
                                 <MoreVertOutlined />
@@ -664,7 +664,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                             step={1}
                                             valueLabelDisplay="auto"
                                             sx={{
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                             }}
                                         />
                                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0 }}>

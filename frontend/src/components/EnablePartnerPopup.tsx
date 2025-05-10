@@ -241,15 +241,15 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                 }}
             >
                 <Button variant="contained" onClick={action === "Terminate" ? handleDeletePartner : handleSubmit} disabled={!buttonContain}  sx={{
-                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "rgba(56, 152, 252, 1)",
                     width: "70px",
                     height: "40px",
                     ":hover": {
                         backgroundColor: "rgba(62, 64, 142, 1)"},
                     ":active": {
-                        backgroundColor: "rgba(80, 82, 178, 1)"},
+                        backgroundColor: "rgba(56, 152, 252, 1)"},
                     ":disabled": {
-                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                         opacity: 0.6,
                     },
                 }}>
@@ -268,22 +268,22 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                     </Typography>
                 </Button> 
                 <Button variant="outlined" onClick={handleClose} disabled={!buttonContain}  sx={{
-                    borderColor: "rgba(80, 82, 178, 1)",
+                    borderColor: "rgba(56, 152, 252, 1)",
                     width: "67px",
                     height: "40px",
                     ":hover": {
                         borderColor: "rgba(62, 64, 142, 1)"},
                     ":active": {
-                        borderColor: "rgba(80, 82, 178, 1)"},
+                        borderColor: "rgba(56, 152, 252, 1)"},
                     ":disabled": {
-                        borderColor: "rgba(80, 82, 178, 1)",
+                        borderColor: "rgba(56, 152, 252, 1)",
                         opacity: 0.4,
                     },
                 }}>
                     <Typography
                         sx={{
                         textAlign: "center",
-                        color: "rgba(80, 82, 178, 1)",
+                        color: "rgba(56, 152, 252, 1)",
                         textTransform: "none",
                         fontFamily: "Nunito Sans",
                         fontWeight: "600",

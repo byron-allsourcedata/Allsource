@@ -69,10 +69,10 @@ const ToggleButtons: React.FC<ToggleButtonsProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 border: isSelected
-                  ? "1px solid rgba(80, 82, 178, 1)"
+                  ? "1px solid rgba(56, 152, 252, 1)"
                   : "1px solid rgba(220, 220, 239, 1)",
                 color: isSelected
-                  ? "rgba(80, 82, 178, 1) !important"
+                  ? "rgba(56, 152, 252, 1) !important"
                   : "#5F6368 !important",
                 backgroundColor: isSelected
                   ? "rgba(237, 237, 247, 1)"

@@ -102,7 +102,7 @@ const billingStyles = {
     },
     page_number: {
         backgroundColor: 'rgba(255, 255, 255, 1)',
-        color: 'rgba(80, 82, 178, 1)',
+        color: 'rgba(56, 152, 252, 1)',
     },
 }
 
@@ -1427,7 +1427,7 @@ export const SettingsBilling: React.FC = () => {
                                                                 width: '24px',
                                                                 height: '24px',
                                                                 color: 'rgba(188, 188, 188, 1)',
-                                                                ':hover': { color: 'rgba(80, 82, 178, 1)' }
+                                                                ':hover': { color: 'rgba(56, 152, 252, 1)' }
                                                             }}
                                                         />
                                                     </IconButton>
@@ -1442,7 +1442,7 @@ export const SettingsBilling: React.FC = () => {
                                                                 width: '24px',
                                                                 height: '24px',
                                                                 color: 'rgba(188, 188, 188, 1)',
-                                                                ':hover': { color: 'rgba(80, 82, 178, 1)' }
+                                                                ':hover': { color: 'rgba(56, 152, 252, 1)' }
                                                             }}
                                                         />
                                                     </IconButton>

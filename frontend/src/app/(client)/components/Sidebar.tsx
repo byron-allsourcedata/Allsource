@@ -128,11 +128,11 @@ const sidebarStyles = {
   },
   activeItem: {
     cursor: "pointer",
-    borderLeft: "3px solid rgba(80, 82, 178, 1)",
-    color: "rgba(80, 82, 178, 1)",
+    borderLeft: "3px solid rgba(56, 152, 252, 1)",
+    color: "rgba(56, 152, 252, 1)",
     minHeight: "4.5em",
     "& .MuiSvgIcon-root": {
-      color: "rgba(80, 82, 178, 1)",
+      color: "rgba(56, 152, 252, 1)",
     },
   },
 };
@@ -576,7 +576,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           zIndex: 10,
         }}
       >
-        <SetupSection percent_steps={activatePercent ? activatePercent : 0} />
+        {/* <SetupSection percent_steps={activatePercent ? activatePercent : 0} /> */}
         <Box sx={sidebarStyles.settings}>
           <ListItem
             button
