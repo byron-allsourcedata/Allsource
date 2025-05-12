@@ -29,7 +29,11 @@ const WelcomePopup = () => {
 
   const navigateToSourcePage = () => {
     handleClose();
-    router.push("./sources/builder");
+    router.push("./sources");
+  };
+
+  const navigateToDashboardPage = () => {
+    handleClose();
   };
 
   return (
@@ -129,14 +133,19 @@ const WelcomePopup = () => {
                   <Button
                     variant="contained"
                     fullWidth
-                    onClick={() => {
-                      router.push("dashboard");
-                    }}
-                    sx={{ backgroundColor: "#3898FC", dropShadow: "#00000040" }}
+                    onClick={navigateToDashboardPage}
+                    sx={{ 
+                      backgroundColor: "#3898FC", 
+                      '&:hover': {
+                        backgroundColor: '#1E88E5',
+                      },
+                      '&:active': {
+                        backgroundColor: '#74B7FD',
+                      },
+                      dropShadow: "#00000040" }}
                   >
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#fff" }}
-                      onClick={() => {}}
                     >
                       <LegendToggleOutlinedIcon />
                     </IconButton>
@@ -234,10 +243,17 @@ const WelcomePopup = () => {
                     variant="outlined"
                     fullWidth
                     onClick={navigateToSourcePage}
+                    sx={{
+                      '&:hover': {
+                        borderColor: '#1E88E5',
+                      },
+                      '&:active': {
+                        borderColor: '#74B7FD',
+                      },
+                    }}
                   >
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-                      onClick={() => {}}
                     >
                       <AllInboxOutlinedIcon />
                     </IconButton>
