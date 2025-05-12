@@ -52,6 +52,7 @@ type CardData = {
                       backgroundImage: `url(${card.icon})`,
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
+                      // backgroundSize: "contain",
                       borderRadius: 2,
                       marginBottom: 2
                     }}

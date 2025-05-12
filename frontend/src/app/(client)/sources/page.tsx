@@ -145,7 +145,7 @@ const Sources: React.FC = () => {
     {
       title: "Pixel",
       description: "Install Pixel on your website to automatically collect visitor information in real-time.",
-      icon: "/pixel.svg",
+      icon: "/pixel-website.svg",
       onClick: () => {
         router.push("/sources/builder?type=pixel");
       },
