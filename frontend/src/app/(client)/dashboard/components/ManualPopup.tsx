@@ -187,10 +187,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                   onClick={handleButtonClick}
                   sx={{
                     ml: 2,
-                    border: '1px solid rgba(80, 82, 178, 1)',
+                    border: '1px solid rgba(56, 152, 252, 1)',
                     textTransform: 'none',
                     background: '#fff',
-                    color: 'rgba(80, 82, 178, 1)',
+                    color: 'rgba(56, 152, 252, 1)',
                     fontFamily: 'Nunito Sans',
                     padding: '0.65em 2em',
                     mr: 1,
@@ -198,7 +198,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                   }}
                 >
                   <Typography className='second-sub-title' sx={{
-                    color:'rgba(80, 82, 178, 1) !important', textAlign: 'left'
+                    color:'rgba(56, 152, 252, 1) !important', textAlign: 'left'
                   }}>
                     Send
                   </Typography>
@@ -209,10 +209,10 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
         </Box>
 
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'flex-end', paddingBottom: '0em', '@media (max-width: 600px)': { justifyContent: 'center', pb: 3, width: '94%', pl: 2 } }}>
-          <Button variant="outlined" className='second-sub-title'  sx={{ mr: 2, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(80, 82, 178, 1) !important', textTransform: 'none', padding: '0.75em 2em', border: '1px solid rgba(80, 82, 178, 1)', '@media (max-width: 600px)': { width: '100%' }, }}>
+          <Button variant="outlined" className='second-sub-title'  sx={{ mr: 2, backgroundColor: 'rgba(255, 255, 255, 1)', color: 'rgba(56, 152, 252, 1) !important', textTransform: 'none', padding: '0.75em 2em', border: '1px solid rgba(56, 152, 252, 1)', '@media (max-width: 600px)': { width: '100%' }, }}>
             Contact support
           </Button>
-          <Button variant="contained" onClick={handleClose} className='second-sub-title' sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1) !important',  textTransform: 'none', padding: '0.75em 3em', '@media (max-width: 600px)': { width: '100%' } }}>
+          <Button variant="contained" onClick={handleClose} className='second-sub-title' sx={{ backgroundColor: 'rgba(56, 152, 252, 1)', color: 'rgba(255, 255, 255, 1) !important',  textTransform: 'none', padding: '0.75em 3em', '@media (max-width: 600px)': { width: '100%' } }}>
             Next
           </Button>
         </Box>

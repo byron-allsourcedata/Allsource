@@ -261,7 +261,7 @@ const Insights = () => {
               alignItems: "start",
               "& .MuiTabs-indicator": {
                 backgroundColor: "rgba(30, 136, 229, 1)",
-                height: type === "sources" ? "0px" : "1.4px",
+                // height: type === "sources" ? "0px" : "1.4px",
               },
               "@media (max-width: 600px)": {
                 border: "1px solid rgba(228, 228, 228, 1)",

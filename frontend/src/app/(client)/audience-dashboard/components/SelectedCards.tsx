@@ -23,7 +23,7 @@ const getStatusColor = (status: string, tabType?: string): string => {
     if (tabType.includes("Lookalikes")) return "rgba(224, 176, 5, 1)";
     if (tabType.includes("Smart")) return "rgba(110, 193, 37, 1)";
     if (tabType.includes("Data")) return "rgba(5, 105, 226, 1)";
-    if (tabType.includes("Source")) return "rgba(80, 82, 178, 1)";
+    if (tabType.includes("Source")) return "rgba(56, 152, 252, 1)";
   }
   return "";
 };
@@ -125,7 +125,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
                 : "rgba(80, 82, 178, 0.2)";
               const textColor = isLookalike
                 ? "rgba(224, 176, 5, 1)"
-                : "rgba(80, 82, 178, 1)";
+                : "rgba(56, 152, 252, 1)";
 
               return (
                 <Box
@@ -241,7 +241,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
         : "rgba(80, 82, 178, 0.2)";
       const textColor = isLookalike
         ? "rgba(224, 176, 5, 1)"
-        : "rgba(80, 82, 178, 1)";
+        : "rgba(56, 152, 252, 1)";
       const icon = isInclude ? (
         <PlaylistAddIcon sx={{ fontSize: 16, mr: 0.5 }} />
       ) : isExclude ? (

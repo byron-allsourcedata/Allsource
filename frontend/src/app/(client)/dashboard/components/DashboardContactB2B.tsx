@@ -129,7 +129,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
 
     const colorPalette = [
         'rgba(244, 87, 69, 1)',
-        'rgba(80, 82, 178, 1)',
+        'rgba(56, 152, 252, 1)',
         'rgba(224, 176, 5, 1)',
         'rgba(144, 190, 109, 1)',
         'rgba(5, 115, 234, 1)',
@@ -137,7 +137,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
 
     const colorMapping = {
         total_leads: 'rgba(244, 87, 69, 1)',
-        new_leads: 'rgba(80, 82, 178, 1)',
+        new_leads: 'rgba(56, 152, 252, 1)',
         returning_visitors: 'rgba(224, 176, 5, 1)',
         page_views: 'rgba(144, 190, 109, 1)',
     };
@@ -165,7 +165,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
 
     const options = [
         { id: 'total_leads', label: 'Total Leads', color: 'rgba(244, 87, 69, 1)' },
-        { id: 'new_leads', label: 'New Leads', color: 'rgba(80, 82, 178, 1)' },
+        { id: 'new_leads', label: 'New Leads', color: 'rgba(56, 152, 252, 1)' },
         { id: 'returning_visitors', label: 'Returning Visitors', color: 'rgba(224, 176, 5, 1)' },
         { id: 'page_views', label: 'Page Views', color: 'rgba(144, 190, 109, 1)' },
     ];
@@ -366,8 +366,8 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                                         ml: 5.5,
                                         height: '20px',
                                         borderRadius: '4px',
-                                        border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
-                                        color: chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                        border: `1.5px solid ${chartType === 'line' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                        color: chartType === 'line' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)',
                                         '@media (max-width: 600px)': {
                                             ml:2
                                         }
@@ -382,8 +382,8 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                                         width: '20px',
                                         height: '20px',
                                         borderRadius: '4px',
-                                        border: `1.5px solid ${chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
-                                        color: chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                        border: `1.5px solid ${chartType === 'bar' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                        color: chartType === 'bar' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)',
                                     }}
                                 >
                                     <IconBarChart sx={{ fontSize: '20px' }} />
@@ -468,7 +468,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                                                 fontFamily: 'Nunito Sans',
                                                 fontWeight: 600,
                                                 fontSize: '14px',
-                                                color: selectedGraphs.length == 4 ? 'rgba(80, 82, 178, 1)' : 'inherit' // Изменяем цвет текста
+                                                color: selectedGraphs.length == 4 ? 'rgba(56, 152, 252, 1)' : 'inherit' // Изменяем цвет текста
                                             }}
                                         >
                                             All contacts type
@@ -492,7 +492,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                                                         borderRadius: '50%',
                                                         backgroundColor: option.color,
                                                     }} />
-                                                <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: 600, fontSize: '14px', color: selectedGraphs.includes(option.id) ? 'rgba(80, 82, 178, 1)' : 'inherit' }}>
+                                                <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: 600, fontSize: '14px', color: selectedGraphs.includes(option.id) ? 'rgba(56, 152, 252, 1)' : 'inherit' }}>
                                                     {option.label}
                                                 </Typography>
                                             </Box>

@@ -350,7 +350,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
               sx={{
                 ...style.button_date,
                 color:
-                  activeLabel === "Today" ? "rgba(80, 82, 178, 1)" : "inherit",
+                  activeLabel === "Today" ? "rgba(56, 152, 252, 1)" : "inherit",
               }}
               onClick={handleToday}
             >
@@ -361,7 +361,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                 ...style.button_date,
                 color:
                   activeLabel === "Yesterday"
-                    ? "rgba(80, 82, 178, 1)"
+                    ? "rgba(56, 152, 252, 1)"
                     : "inherit",
               }}
               onClick={handleYesterday}
@@ -373,7 +373,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                 ...style.button_date,
                 color:
                   activeLabel === "This Week"
-                    ? "rgba(80, 82, 178, 1)"
+                    ? "rgba(56, 152, 252, 1)"
                     : "inherit",
               }}
               onClick={handleThisWeek}
@@ -385,7 +385,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                 ...style.button_date,
                 color:
                   activeLabel === "Last 7 days"
-                    ? "rgba(80, 82, 178, 1)"
+                    ? "rgba(56, 152, 252, 1)"
                     : "inherit",
               }}
               onClick={handleLast7Days}
@@ -397,7 +397,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                 ...style.button_date,
                 color:
                   activeLabel === "Last 30 days"
-                    ? "rgba(80, 82, 178, 1)"
+                    ? "rgba(56, 152, 252, 1)"
                     : "inherit",
               }}
               onClick={handleLast30Days}
@@ -409,7 +409,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                 ...style.button_date,
                 color:
                   activeLabel === "This Month"
-                    ? "rgba(80, 82, 178, 1)"
+                    ? "rgba(56, 152, 252, 1)"
                     : "inherit",
               }}
               onClick={handleThisMonth}
@@ -421,7 +421,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                 ...style.button_date,
                 color:
                   activeLabel === "Last Month"
-                    ? "rgba(80, 82, 178, 1)"
+                    ? "rgba(56, 152, 252, 1)"
                     : "inherit",
               }}
               onClick={handleLastMonth}
@@ -433,7 +433,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                 ...style.button_date,
                 color:
                   activeLabel === "Last Quarter"
-                    ? "rgba(80, 82, 178, 1)"
+                    ? "rgba(56, 152, 252, 1)"
                     : "inherit",
               }}
               onClick={handleLastQuarter}
@@ -445,7 +445,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                 ...style.button_date,
                 color:
                   activeLabel === "All Time"
-                    ? "rgba(80, 82, 178, 1)"
+                    ? "rgba(56, 152, 252, 1)"
                     : "inherit",
               }}
               onClick={handleAllTime}
@@ -690,9 +690,9 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                   onClick={handleCustomGoBack}
                   sx={{
                     backgroundColor: "rgba(255, 255, 255, 1)",
-                    color: "rgba(80, 82, 178, 1) !important",
+                    color: "rgba(56, 152, 252, 1) !important",
                     textTransform: "none",
-                    border: "1px solid rgba(80, 82, 178, 1)",
+                    border: "1px solid rgba(56, 152, 252, 1)",
                     padding: "6px 12px",
                   }}
                 >
@@ -744,9 +744,9 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
               className="second-sub-title"
               sx={{
                 backgroundColor: "rgba(255, 255, 255, 1)",
-                color: "rgba(80, 82, 178, 1) !important",
+                color: "rgba(56, 152, 252, 1) !important",
                 textTransform: "none",
-                border: "1px solid rgba(80, 82, 178, 1)",
+                border: "1px solid rgba(56, 152, 252, 1)",
                 padding: "6px 12px",
                 "@media (max-width: 600px)": { width: "100%" },
               }}
@@ -758,7 +758,7 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
               onClick={handleApply}
               className="second-sub-title"
               sx={{
-                backgroundColor: "rgba(80, 82, 178, 1)",
+                backgroundColor: "rgba(56, 152, 252, 1)",
                 color: "rgba(255, 255, 255, 1) !important",
                 textTransform: "none",
                 padding: "6px 12px",

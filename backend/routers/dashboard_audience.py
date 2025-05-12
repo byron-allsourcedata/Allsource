@@ -1,11 +1,17 @@
 from fastapi import APIRouter, Depends, Query, Path
 from datetime import datetime, timezone
-from dependencies import get_audience_dashboard_service
+from dependencies import get_audience_dashboard_service, check_user_authorization_without_pixel
 from dependencies import check_user_authorization
 from services.audience_dashboard import DashboardAudienceService
 
 router = APIRouter()
 
+@router.get("/get-sources")
+async def get_all_sources(
+        user: dict = Depends(check_user_authorization_without_pixel),
+        dashboard_service: DashboardAudienceService = Depends(get_audience_dashboard_service),
+):
+    return dashboard_service.get_sources_overview(user=user)
 
 @router.get("")
 def get_contact(

@@ -25,7 +25,7 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
   },
   page_number: {
     backgroundColor: 'rgba(255, 255, 255, 1)',
-    color: 'rgba(80, 82, 178, 1)',
+    color: 'rgba(56, 152, 252, 1)',
 
   },
 
@@ -300,8 +300,8 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
     },
   },
   textLink: {
-    color: 'rgba(80, 82, 178, 1)',
-    textDecorationColor: 'rgba(80, 82, 178, 1)'
+    color: 'rgba(56, 152, 252, 1)',
+    textDecorationColor: 'rgba(56, 152, 252, 1)'
   },
   textButton: {
     fontFamily: "Nunito Sans",
@@ -314,10 +314,10 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
   buttonform: {
     height: "40px",
     ":active": {
-      backgroundColor: "rgba(80, 82, 178, 1)"
+      backgroundColor: "rgba(56, 152, 252, 1)"
     },
     ":disabled": {
-      backgroundColor: "rgba(80, 82, 178, 1)",
+      backgroundColor: "rgba(56, 152, 252, 1)",
       opacity: 0.6,
     },
   },
@@ -330,7 +330,7 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
     mb:2,
     fontFamily: 'Nunito Sans',
     "&:focus": {
-      borderColor: "rgba(80, 82, 178, 1)",
+      borderColor: "rgba(56, 152, 252, 1)",
       "&::before": {
         borderBottom: "none",
         padding: 0,

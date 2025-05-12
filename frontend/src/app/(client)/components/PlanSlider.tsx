@@ -469,7 +469,7 @@ const PlanSlider: React.FC<PopupProps> = ({
                                     variant="contained"
                                     onClick={handleChoosePlan}
                                     sx={{
-                                        backgroundColor: "rgba(80, 82, 178, 1)",
+                                        backgroundColor: "rgba(56, 152, 252, 1)",
                                         fontFamily: "Nunito Sans",
                                         textTransform: "none",
                                         lineHeight: "19.6px",

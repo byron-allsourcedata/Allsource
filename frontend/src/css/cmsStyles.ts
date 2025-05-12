@@ -58,7 +58,7 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     display: 'flex', flexDirection: 'column', width: '100%', justifyContent: 'center', alignContent: 'center', '@media (max-width: 400px)': { paddingLeft: 2.5, }, '@media (max-width: 600px)': { paddingRight: 2.5, paddingLeft: 2.5, }
   },
   submitButton: {
-    backgroundColor: 'rgba(80, 82, 178, 1)',
+    backgroundColor: 'rgba(56, 152, 252, 1)',
     textTransform: 'none',
     fontFamily: 'Nunito Sans',
     fontWeight: '600',

@@ -8,7 +8,7 @@
 .react-datepicker__header {
     background-color: #f0f0f0;
     border-bottom: 1px solid #ddd;
-    color: rgba(80, 82, 178, 1);
+    color: rgba(56, 152, 252, 1);
 }
 
 .react-datepicker__current-month {
@@ -20,18 +20,18 @@
 }
 
 .react-datepicker__day--selected {
-    background-color: rgba(80, 82, 178, 1);
+    background-color: rgba(56, 152, 252, 1);
     color: #fff;
     border-radius: 9px;
 }
 .react-datepicker__day--in-range {
-    background-color: rgba(80, 82, 178, 1);
+    background-color: rgba(56, 152, 252, 1);
     color: #fff;
     border-radius: 9px;
 }
 
 .react-datepicker__day--range-end {
-    background-color: rgba(80, 82, 178, 1);
+    background-color: rgba(56, 152, 252, 1);
     color: #fff;
     border-radius: 9px;
 }
@@ -48,7 +48,7 @@
     gap: 10px;
     text-decoration: none;
     text-transform: none;
-    box-shadow: 0px 1px 2px 0px rgba(80, 82, 178, 1);
+    box-shadow: 0px 1px 2px 0px rgba(56, 152, 252, 1);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -68,7 +68,7 @@
 
 
 .button-apply {
-    background: rgba(80, 82, 178, 1);
+    background: rgba(56, 152, 252, 1);
     color: #fff;
     text-decoration: none;
     text-transform: none;

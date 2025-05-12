@@ -1597,7 +1597,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                 aria-haspopup="true"
                                                 sx={{
                                                     textTransform: 'none',
-                                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                                    border: '1px solid rgba(56, 152, 252, 1)',
                                                     borderRadius: '4px',
                                                     padding: '9px 16px',
                                                     minWidth: 'auto',

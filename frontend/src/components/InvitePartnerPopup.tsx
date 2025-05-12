@@ -404,22 +404,22 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                     }}
                 >
                     <Button variant="outlined" onClick={handleClose}  sx={{
-                        borderColor: "rgba(80, 82, 178, 1)",
+                        borderColor: "rgba(56, 152, 252, 1)",
                         width: "92px",
                         height: "40px",
                         ":hover": {
                             borderColor: "rgba(62, 64, 142, 1)"},
                         ":active": {
-                            borderColor: "rgba(80, 82, 178, 1)"},
+                            borderColor: "rgba(56, 152, 252, 1)"},
                         ":disabled": {
-                            borderColor: "rgba(80, 82, 178, 1)",
+                            borderColor: "rgba(56, 152, 252, 1)",
                             opacity: 0.4,
                         },
                     }}>
                         <Typography
                             sx={{
                             textAlign: "center",
-                            color: "rgba(80, 82, 178, 1)",
+                            color: "rgba(56, 152, 252, 1)",
                             textTransform: "none",
                             fontFamily: "Nunito Sans",
                             fontWeight: "600",
@@ -432,15 +432,15 @@ const InvitePartnerPopup: React.FC<FormUploadPopupProps> = ({ maxCommission, mas
                         </Typography>
                     </Button> 
                     <Button variant="contained" onClick={handleSubmit} disabled={!buttonContain}  sx={{
-                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                         width: "120px",
                         height: "40px",
                         ":hover": {
                             backgroundColor: "rgba(62, 64, 142, 1)"},
                         ":active": {
-                            backgroundColor: "rgba(80, 82, 178, 1)"},
+                            backgroundColor: "rgba(56, 152, 252, 1)"},
                         ":disabled": {
-                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            backgroundColor: "rgba(56, 152, 252, 1)",
                             opacity: 0.6,
                         },
                     }}>

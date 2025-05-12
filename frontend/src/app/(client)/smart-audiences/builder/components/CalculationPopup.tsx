@@ -73,10 +73,10 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCan
                             onConfirm()
                             scrollToNewBlock()
                         }} sx={{
-                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            backgroundColor: "rgba(56, 152, 252, 1)",
                             height: '3rem',
                             ":hover": {
-                                backgroundColor: "rgba(80, 82, 178, 1)"
+                                backgroundColor: "rgba(56, 152, 252, 1)"
                             },
                         }}>
                             <Typography sx={{ ...smartAudiences.textButton, textTransform: 'none' }}>Confirm</Typography>
@@ -86,7 +86,7 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCan
                                 backgroundColor: "#fff"
                             }
                         }} onClick={onCancel}>
-                            <Typography sx={{ ...smartAudiences.textButton, textTransform: 'none', color: 'rgba(80, 82, 178, 1)' }}>Cancel</Typography>
+                            <Typography sx={{ ...smartAudiences.textButton, textTransform: 'none', color: 'rgba(56, 152, 252, 1)' }}>Cancel</Typography>
                         </Button>
                     </Box>
                     )
@@ -94,10 +94,10 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCan
                     (
                     <Box sx={{ width: '100%' }}>
                         <Button fullWidth variant="contained" color="primary" onClick={onConfirm} sx={{
-                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            backgroundColor: "rgba(56, 152, 252, 1)",
                             height: '3rem',
                             ":hover": {
-                                backgroundColor: "rgba(80, 82, 178, 1)"
+                                backgroundColor: "rgba(56, 152, 252, 1)"
                             },
                         }}>
                             <Typography sx={{ ...smartAudiences.textButton, textTransform: 'none' }}>Buy credits</Typography>
@@ -107,7 +107,7 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCan
                                 backgroundColor: "#fff"
                             }
                         }} onClick={onCancel}>
-                            <Typography sx={{ ...smartAudiences.textButton, textTransform: 'none', color: 'rgba(80, 82, 178, 1)' }}>Change Order</Typography>
+                            <Typography sx={{ ...smartAudiences.textButton, textTransform: 'none', color: 'rgba(56, 152, 252, 1)' }}>Change Order</Typography>
                         </Button>
                     </Box>
                     )}

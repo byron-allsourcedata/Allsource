@@ -182,13 +182,13 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 <Button
                                     sx={{
                                         textTransform: 'none',
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                         borderRadius: '4px',
                                         padding: '1px',
                                         margin: '4px',
                                         mb: 2,
                                         minWidth: 'auto',
-                                        '& :hover': {color: 'rgba(80, 82, 178, 1)'},
+                                        '& :hover': {color: 'rgba(56, 152, 252, 1)'},
                                         '@media (max-width: 900px)': {
                                             border: 'none',
                                             padding: 0
@@ -196,7 +196,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     }}
                                     onClick={handleDownload}
                                 >
-                                    <DownloadIcon fontSize='medium' sx={{color: 'rgba(128, 128, 128, 1)', '& :hover': {color: 'rgba(80, 82, 178, 1)'}}} />
+                                    <DownloadIcon fontSize='medium' sx={{color: 'rgba(128, 128, 128, 1)', '& :hover': {color: 'rgba(56, 152, 252, 1)'}}} />
                                 </Button>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
@@ -207,7 +207,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             underline="none"
-                                            sx={{ ...companyStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1, color: 'rgba(80, 82, 178, 1)' }}
+                                            sx={{ ...companyStyles.header_text, display: 'flex', flexDirection: 'row', gap: 1, color: 'rgba(56, 152, 252, 1)' }}
                                         >
                                             <Image src={'/web.svg'} width={18} height={18} alt='web icon' />
                                             {`https://${company.domain}` || '--'}
@@ -228,7 +228,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: 1,
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                     }}
                                 >
                                     {company.phone ? (
@@ -236,7 +236,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                             href={`tel:${company.phone.split(',')[0]}` || '--'}
                                             underline="none"
                                             sx={{
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: 1
@@ -332,14 +332,14 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography sx={{ ...companyStyles.title_text }}>
                                 LinkedIn url
                             </Typography>
-                            <Typography component="div" sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
+                            <Typography component="div" sx={{ ...companyStyles.text, color: 'rgba(56, 152, 252, 1)' }}>
                                 {company.linkedin_url ? (
                                     <Link
                                         href={`https://${company.linkedin_url}`}
                                         underline="none"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                        sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(56, 152, 252, 1)', }}
                                     >
                                         {company.linkedin_url}
                                     </Link>

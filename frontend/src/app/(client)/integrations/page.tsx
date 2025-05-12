@@ -85,7 +85,7 @@ const integrationStyle = {
     textAlign: 'left',
     mr: 2,
     '&.Mui-selected': {
-      color: 'rgba(80, 82, 178, 1)'
+      color: 'rgba(56, 152, 252, 1)'
     },
     "@media (max-width: 600px)": {
       flexGrow: 1,
@@ -344,7 +344,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               color: "rgba(32, 33, 36, 1)",
               fontWeight: 600,
               ":hover": {
-                color: "rgba(80, 82, 178, 1)",
+                color: "rgba(56, 152, 252, 1)",
                 backgroundColor: "rgba(80, 82, 178, 0.1)",
               },
             }}
@@ -362,7 +362,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               color: "rgba(32, 33, 36, 1)",
               fontWeight: 600,
               ":hover": {
-                color: "rgba(80, 82, 178, 1)",
+                color: "rgba(56, 152, 252, 1)",
                 backgroundColor: "rgba(80, 82, 178, 0.1)",
               },
             }}
@@ -907,7 +907,7 @@ const PixelManagment = () => {
             textTransform: 'none',
             minHeight: 0,
             '& .MuiTabs-indicator': {
-              backgroundColor: 'rgba(80, 82, 178, 1)',
+              backgroundColor: 'rgba(56, 152, 252, 1)',
               height: '1.4px',
             },
             "@media (max-width: 600px)": {
@@ -1156,7 +1156,7 @@ const Integrations = () => {
                       minHeight: 0,
                       pb: 0,
                       '& .MuiTabs-indicator': {
-                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                        backgroundColor: 'rgba(56, 152, 252, 1)',
                         height: '1.4px',
                       },
                       "@media (max-width: 600px)": {
@@ -1167,31 +1167,7 @@ const Integrations = () => {
                     }}
                     onChange={handleTabChange}
                   >
-                    <Tab value="1" label="Integrations" className="main-text"
-                      sx={{
-                        textTransform: 'none',
-                        padding: '4px 10px',
-                        pb: '10px',
-                        flexGrow: 1,
-                        marginRight: '3em',
-                        minHeight: 'auto',
-                        minWidth: 'auto',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        lineHeight: '19.1px',
-                        textAlign: 'left',
-                        mr: 2,
-                        '&.Mui-selected': {
-                          color: 'rgba(80, 82, 178, 1)'
-                        },
-                        "@media (max-width: 600px)": {
-                          mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                            border: '1px solid rgba(220, 220, 239, 1)'
-                          },
-                        }
-                      }}
-                    />
+                    
                     {/* <Tab label="Pixel Management" value="2" className="main-text"
                       sx={{
                         textTransform: 'none',
@@ -1207,7 +1183,7 @@ const Integrations = () => {
                         textAlign: 'left',
                         mr: 2,
                         '&.Mui-selected': {
-                          color: 'rgba(80, 82, 178, 1)'
+                          color: 'rgba(56, 152, 252, 1)'
                         },
                         "@media (max-width: 600px)": {
                           mr: 0, borderRadius: '4px', '&.Mui-selected': {

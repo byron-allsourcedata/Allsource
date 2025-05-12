@@ -51,7 +51,7 @@ export const filterStyles: { [key: string]: SxProps<Theme> } = {
     active_filter_dote: {
         width: '8px',
         height: '8px',
-        backgroundColor: "rgba(80, 82, 178, 1)",
+        backgroundColor: "rgba(56, 152, 252, 1)",
         borderRadius: "50%",
     },
     collapse_font: {

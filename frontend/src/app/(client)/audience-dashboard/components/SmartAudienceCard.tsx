@@ -57,7 +57,7 @@ const renderTags = (value: string, type: "include" | "exclude") => {
             },
             source: {
                 bg: 'rgba(80, 82, 178, 0.2)',
-                color: 'rgba(80, 82, 178, 1)'
+                color: 'rgba(56, 152, 252, 1)'
             },
         },
         exclude: {
@@ -67,7 +67,7 @@ const renderTags = (value: string, type: "include" | "exclude") => {
             },
             source: {
                 bg: 'rgba(80, 82, 178, 0.2)',
-                color: 'rgba(80, 82, 178, 1)'
+                color: 'rgba(56, 152, 252, 1)'
             },
         },
         default: {

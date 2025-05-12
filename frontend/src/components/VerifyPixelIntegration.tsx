@@ -7,7 +7,7 @@ import { showErrorToast, showToast } from '@/components/ToastNotification';
 const VerifyPixelIntegration: React.FC = () => {
 
     const [inputValue, setInputValue] = useState<string>("");
-  
+    const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN
     useEffect(() => {
       const storedValue = sessionStorage.getItem('current_domain');
       if (storedValue !== null) {
@@ -25,7 +25,7 @@ const VerifyPixelIntegration: React.FC = () => {
         }
    
         const hasQuery = url.includes("?");
-        const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + "&api=https://api-dev.maximiz.ai";
+        const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}`;
         window.open(newUrl, "_blank");
       }
     };
@@ -102,10 +102,10 @@ const VerifyPixelIntegration: React.FC = () => {
             onClick={handleButtonClick}
             sx={{
               ml: 2,
-              border: "1px solid rgba(80, 82, 178, 1)",
+              border: "1px solid rgba(56, 152, 252, 1)",
               textTransform: "none",
               background: "#fff",
-              color: "rgba(80, 82, 178, 1)",
+              color: "rgba(56, 152, 252, 1)",
               fontFamily: "Nunito Sans",
               fontWeight: 600,
               fontSize: '14px',

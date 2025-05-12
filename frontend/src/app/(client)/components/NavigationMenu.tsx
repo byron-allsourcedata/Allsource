@@ -74,10 +74,10 @@ const navigationmenuStyles = {
     overflow: "auto",
   },
   activeItem: {
-    borderLeft: "0.25rem solid rgba(80, 82, 178, 1)",
-    color: "rgba(80, 82, 178, 1)",
+    borderLeft: "0.25rem solid rgba(56, 152, 252, 1)",
+    color: "rgba(56, 152, 252, 1)",
     "& .MuiSvgIcon-root": {
-      color: "rgba(80, 82, 178, 1)",
+      color: "rgba(56, 152, 252, 1)",
     },
   },
   mobileDrawerList: {
@@ -271,7 +271,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
               />
             )}
             <NotificationsNoneIcon
-              sx={{ color: hasNotification ? "rgba(80, 82, 178, 1)" : "" }}
+              sx={{ color: hasNotification ? "rgba(56, 152, 252, 1)" : "" }}
             />
           </IconButton>
           <IconButton onClick={handleSupportButton}>

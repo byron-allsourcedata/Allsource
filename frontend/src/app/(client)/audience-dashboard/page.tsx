@@ -93,6 +93,7 @@ const AudienceDashboard: React.FC = () => {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [pixelCardActive, setPixelCardActive] = useState(false);
+  const [hasValid, setHasValid] = useState<boolean>(false);
   const { hasNotification } = useNotification();
   const [loading, setLoading] = useState(true);
   const [activeChainIds, setActiveChainIds] = useState<string[]>([]);
@@ -528,14 +529,14 @@ const AudienceDashboard: React.FC = () => {
   const handleSourceData = async () => {
     try {
       setLoading(true);
-      const response = await axiosInterceptorInstance.get(
-        `/audience-lookalikes/get-sources`
-      );
-      if (response.data) {
-        setSourceData(
-          Array.isArray(response.data) ? response.data : [response.data]
-        );
-      }
+      const { data } = await axiosInterceptorInstance.get<{
+        sources: CardData;
+        has_valid: boolean;
+      }>(`/audience-dashboard/get-sources`);
+
+      const sourcesArray = Array.isArray(data.sources) ? data.sources : [];
+      setSourceData(sourcesArray);
+      setHasValid(Boolean(data.has_valid));
     } catch {
       showErrorToast(
         "An error occurred while loading sources. Please try again later."
@@ -596,7 +597,7 @@ const AudienceDashboard: React.FC = () => {
         }}
       >
         {loading && <CustomizedProgressBar />}
-        {sourceData.length > 0 ? (
+        {hasValid ? (
           <Box>
             <Box
               sx={{

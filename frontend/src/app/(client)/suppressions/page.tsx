@@ -12,6 +12,8 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import Image from "next/image";
 import { useNotification } from '../../../context/NotificationContext';
 import { showErrorToast } from "@/components/ToastNotification";
+import GettingStartedSection from '@/components/GettingStartedSection';
+import { SliderProvider } from "@/context/SliderContext";
 
 const centerContainerStyles = {
     display: 'flex',
@@ -32,9 +34,6 @@ const centerContainerStyles = {
         maxWidth: '100%'
     }
 };
-
-
-
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -100,175 +99,141 @@ const Suppressions: React.FC = () => {
     }
 
     return (
-        <Box sx={{...suppressionsStyle.mainContent}}>
-            <Box
-    sx={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        position: 'sticky',
-        top:0,
-        pl: '0.5rem',
-        zIndex: 10,
-        pt:1.5,
-        backgroundColor: '#fff',
-        justifyContent: 'space-between',
-        width: '100%',
-        "@media (max-width: 900px)": {
-            zIndex: 10
-        },
-        "@media (max-width: 600px)": {
-            pt: '4.25rem',
-            flexDirection: 'column',
-            pl: '0.5rem',
-            alignItems: 'flex-start',
-            zIndex: 10,
-            width: '100%',
-            pr: 1.5
-        },
-        "@media (max-width: 440px)": {
-            flexDirection: 'column',
-            zIndex: 1,
-            justifyContent: 'flex-start'
-        },
-        "@media (max-width: 400px)": {
-            pb: '6px',
-        }
-    }}
->
-                <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 },  }}>
-                    <Typography className="first-sub-title">Suppressions</Typography>
-                    <Box sx={{"@media (max-width: 600px)": { display: 'none' }}}><CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/suppression" /></Box>
-                </Box>
-
-                <Box sx={{ flexGrow: 1, flexShrink:1, display: 'flex', overflow: 'hidden', justifyContent: 'center', width: '100%', pr: '10%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '100%', pr: '0' } }}>
-                    {status === 'PIXEL_INSTALLATION_NEEDED' ? '' : (
-                        <Tabs
-                            value={tabIndex}
-                            onChange={handleTabChange}
-                            sx={{
-                                textTransform: 'none',
-                                minHeight: 0,
-                                '& .MuiTabs-indicator': {
-                                    backgroundColor: 'rgba(80, 82, 178, 1)',
-                                    height: '1.4px',
-                                },
-                                "@media (max-width: 600px)": {
-                                    border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
-                                        height: '0',
-                                    },
-                                }
-                            }}
-                            aria-label="suppression tabs"
-                        >
-                            <Tab className="main-text"
-                                sx={{
-                                    textTransform: 'none',
-                                    padding: '4px 10px',
-                                    pb: '10px',
-                                    flexGrow: 1,
-                                    marginRight: '3em',
-                                    minHeight: 'auto',
-                                    minWidth: 'auto',
-                                    fontSize: '14px',
-                                    fontWeight: 700,
-                                    lineHeight: '19.1px',
-                                    textAlign: 'left',
-                                    mr: 2,
-                                    '&.Mui-selected': {
-                                        color: 'rgba(80, 82, 178, 1)'
-                                    },
-                                    "@media (max-width: 600px)": {
-                                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                                            border: '1px solid rgba(220, 220, 239, 1)'
-                                        },
-                                    }
-                                }}
-                                label="Suppression Rules"
-                            />
-                            <Tab className="main-text"
-                                sx={{
-                                    textTransform: 'none',
-                                    padding: '4px 10px',
-                                    minHeight: 'auto',
-                                    flexGrow: 1,
-                                    pb: '10px',
-                                    textAlign: 'center',
-                                    fontSize: '14px',
-                                    fontWeight: 700,
-                                    lineHeight: '19.1px',
-                                    minWidth: 'auto',
-                                    '&.Mui-selected': {
-                                        color: 'rgba(80, 82, 178, 1)'
-                                    },
-                                    "@media (max-width: 600px)": {
-                                        mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                                            border: '1px solid rgba(220, 220, 239, 1)'
-                                        },
-                                    }
-                                }}
-                                label="Collection Rules"
-                            />
-                        </Tabs>
-                    )}
-                </Box>
-
-            </Box>
-            {status === 'PIXEL_INSTALLATION_NEEDED' ? (
-                <Box sx={centerContainerStyles}>
-                    <Typography variant="h5" className='first-sub-title' sx={{
-                        mb: 3,
-                        fontFamily: "Nunito Sans",
-                        fontSize: "20px",
-                        color: "#4a4a4a",
-                        fontWeight: "600",
-                        lineHeight: "28px"
-                    }}>
-                        Pixel Integration isn&apos;t completed yet!
-                    </Typography>
-                    <Image src='/pixel_installation_needed.svg' alt='Need Pixel Install'
-                        height={250} width={300} />
-                    <Typography variant="body1" className='table-data' sx={{
-                        mt: 3,
-                        fontFamily: "Nunito Sans",
-                        fontSize: "14px",
-                        color: "#808080",
-                        fontWeight: "600",
-                        lineHeight: "20px"
-                    }}>
-                        Install the pixel to unlock and gain valuable insights! Start viewing your leads now
-                    </Typography>
-                    <Button
-                        variant="contained"
-                        onClick={installPixel}
-                        className='second-sub-title'
+        <Box sx={{ ...suppressionsStyle.mainContent }}>
+            {status !== 'PIXEL_INSTALLATION_NEEDED' && (
+                    <>
+                    <Box
                         sx={{
-                            backgroundColor: 'rgba(80, 82, 178, 1)',
-                            textTransform: 'none',
-                            padding: '10px 24px',
-                            mt: 3,
-                            color: '#fff !important',
-                            ':hover': {
-                                backgroundColor: 'rgba(80, 82, 178, 1)'
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            position: 'sticky',
+                            top: 0,
+                            pl: '0.5rem',
+                            zIndex: 10,
+                            pt: 1.5,
+                            backgroundColor: '#fff',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                            "@media (max-width: 900px)": {
+                                zIndex: 10
+                            },
+                            "@media (max-width: 600px)": {
+                                pt: '4.25rem',
+                                flexDirection: 'column',
+                                pl: '0.5rem',
+                                alignItems: 'flex-start',
+                                zIndex: 10,
+                                width: '100%',
+                                pr: 1.5
+                            },
+                            "@media (max-width: 440px)": {
+                                flexDirection: 'column',
+                                zIndex: 1,
+                                justifyContent: 'flex-start'
+                            },
+                            "@media (max-width: 400px)": {
+                                pb: '6px',
                             }
                         }}
                     >
-                        Setup Pixel
-                    </Button>
-                </Box>
+                
+                        <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 }, }}>
+                            <Typography className="first-sub-title">Suppressions</Typography>
+                            <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/suppression" /></Box>
+                        </Box>
+                        <Box sx={{ flexGrow: 1, flexShrink: 1, display: 'flex', overflow: 'hidden', justifyContent: 'center', width: '100%', pr: '10%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '100%', pr: '0' } }}>
+                            {status === 'PIXEL_INSTALLATION_NEEDED' ? '' : (
+                                <Tabs
+                                    value={tabIndex}
+                                    onChange={handleTabChange}
+                                    sx={{
+                                        textTransform: 'none',
+                                        minHeight: 0,
+                                        '& .MuiTabs-indicator': {
+                                            backgroundColor: 'rgba(56, 152, 252, 1)',
+                                            height: '1.4px',
+                                        },
+                                        "@media (max-width: 600px)": {
+                                            border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
+                                                height: '0',
+                                            },
+                                        }
+                                    }}
+                                    aria-label="suppression tabs"
+                                >
+                                    <Tab className="main-text"
+                                        sx={{
+                                            textTransform: 'none',
+                                            padding: '4px 10px',
+                                            pb: '10px',
+                                            flexGrow: 1,
+                                            marginRight: '3em',
+                                            minHeight: 'auto',
+                                            minWidth: 'auto',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            lineHeight: '19.1px',
+                                            textAlign: 'left',
+                                            mr: 2,
+                                            '&.Mui-selected': {
+                                                color: 'rgba(56, 152, 252, 1)'
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                    backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                    border: '1px solid rgba(220, 220, 239, 1)'
+                                                },
+                                            }
+                                        }}
+                                        label="Suppression Rules"
+                                    />
+                                    <Tab className="main-text"
+                                        sx={{
+                                            textTransform: 'none',
+                                            padding: '4px 10px',
+                                            minHeight: 'auto',
+                                            flexGrow: 1,
+                                            pb: '10px',
+                                            textAlign: 'center',
+                                            fontSize: '14px',
+                                            fontWeight: 700,
+                                            lineHeight: '19.1px',
+                                            minWidth: 'auto',
+                                            '&.Mui-selected': {
+                                                color: 'rgba(56, 152, 252, 1)'
+                                            },
+                                            "@media (max-width: 600px)": {
+                                                mr: 0, borderRadius: '4px', '&.Mui-selected': {
+                                                    backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                    border: '1px solid rgba(220, 220, 239, 1)'
+                                                },
+                                            }
+                                        }}
+                                        label="Collection Rules"
+                                    />
+                                </Tabs>
+                            )}
+                        </Box>
+                 
+            </Box>
+            </>
+                )}
+            {status === 'PIXEL_INSTALLATION_NEEDED' ? (
+                <GettingStartedSection />
             ) : (
-                <Box sx={{flexGrow: 1,
+                <Box sx={{
+                    flexGrow: 1,
                     overflow: 'auto',
 
-                    width: '100%', pr: '2.5rem', pl:'2.5rem', "@media (max-width: 600px)": { pr: 0, pl:0 }, }}>
+                    width: '100%', pr: '2.5rem', pl: '2.5rem', "@media (max-width: 600px)": { pr: 0, pl: 0 },
+                }}>
                     <Box sx={{ width: '100%' }}>
                         <TabPanel value={tabIndex} index={0}>
                             <SuppressionRules />
                         </TabPanel>
                     </Box>
-                    <Box sx={{ width: '100%',  "@media (max-width: 600px)": { pr:'8px'} }}>
+                    <Box sx={{ width: '100%', "@media (max-width: 600px)": { pr: '8px' } }}>
                         <TabPanel value={tabIndex} index={1}>
                             <CollectionRules />
                         </TabPanel>
@@ -281,7 +246,9 @@ const Suppressions: React.FC = () => {
 const SuppressionsPage: React.FC = () => {
     return (
         <Suspense fallback={<CustomizedProgressBar />}>
-            <Suppressions />
+            <SliderProvider>
+                <Suppressions />
+            </SliderProvider>
         </Suspense>
     );
 };

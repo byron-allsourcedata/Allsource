@@ -84,7 +84,7 @@ const CustomNotification: React.FC<CustomNotificationProps> = ({ id, message, sh
                     onClick={handleDismiss}
                     className='second-sub-title'
                     sx={{
-                        color: 'rgba(80, 82, 178, 1) !important',
+                        color: 'rgba(56, 152, 252, 1) !important',
                         textTransform: 'none',
                         '@media (max-width: 600px)': { fontSize: '12px !important'},
                     }}

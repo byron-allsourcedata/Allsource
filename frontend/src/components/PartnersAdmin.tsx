@@ -54,7 +54,7 @@ const getStatusStyle = (status: string) => {
         case 'Signup':
             return {
                 background: 'rgba(241, 241, 249, 1)',
-                color: 'rgba(80, 82, 178, 1)',
+                color: 'rgba(56, 152, 252, 1)',
             };
         case 'Invitation sent':
             return {
@@ -593,7 +593,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                 textTransform: 'none',
                                                 minHeight: 0,
                                                 '& .MuiTabs-indicator': {
-                                                    backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                    backgroundColor: 'rgba(56, 152, 252, 1)',
                                                     height: '1.4px',
                                                 },
                                                 "@media (max-width: 600px)": {
@@ -618,7 +618,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                     minWidth: 'auto',
                                                     mr: 2,
                                                     '&.Mui-selected': {
-                                                        color: 'rgba(80, 82, 178, 1)'
+                                                        color: 'rgba(56, 152, 252, 1)'
                                                     },
                                                     "@media (max-width: 600px)": {
                                                         mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -644,7 +644,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                     minWidth: 'auto',
                                                     mr: 2,
                                                     '&.Mui-selected': {
-                                                        color: 'rgba(80, 82, 178, 1)'
+                                                        color: 'rgba(56, 152, 252, 1)'
                                                     },
                                                     "@media (max-width: 600px)": {
                                                         mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -667,7 +667,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                     fontWeight: 700,
                                                     lineHeight: '19.1px',
                                                     '&.Mui-selected': {
-                                                        color: 'rgba(80, 82, 178, 1)'
+                                                        color: 'rgba(56, 152, 252, 1)'
                                                     },
                                                     "@media (max-width: 600px)": {
                                                         mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -748,8 +748,8 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                 onClick={handleCalendarClick}
                                                 sx={{
                                                     textTransform: 'none',
-                                                    color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                                    border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                                                    color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                                    border: formattedDates ? '1.5px solid rgba(56, 152, 252, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
                                                     borderRadius: '4px',
                                                     padding: '8px',
                                                     minWidth: 'auto',
@@ -758,16 +758,16 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                         padding: 0
                                                     },
                                                     '&:hover': {
-                                                        border: '1.5px solid rgba(80, 82, 178, 1)',
+                                                        border: '1.5px solid rgba(56, 152, 252, 1)',
                                                         '& .MuiSvgIcon-root': {
-                                                            color: 'rgba(80, 82, 178, 1)'
+                                                            color: 'rgba(56, 152, 252, 1)'
                                                         }
                                                     }
                                                 }}
                                             >
                                                 <DateRangeIcon
                                                     fontSize="medium"
-                                                    sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                                                    sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }}
                                                 />
                                                 <Typography variant="body1" sx={{
                                                     fontFamily: 'Roboto',
@@ -864,7 +864,7 @@ const PartnersAdmin: React.FC<PartnersAdminProps> = ({masterData, setMasterData,
                                                                             display: "flex", 
                                                                             alignItems: "center", 
                                                                             justifyContent: "space-between", 
-                                                                            color: 'rgba(80, 82, 178, 1)'
+                                                                            color: 'rgba(56, 152, 252, 1)'
                                                                         }}>
                                                                         {data.partner_name}
                                                                         <IconButton

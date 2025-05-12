@@ -12,6 +12,27 @@ class DashboardAudienceService:
         self.dashboard_persistence = dashboard_audience_persistence
         self.LIMIT = 5
 
+    def get_sources_overview(self, user):
+        sources, count_domains = self.dashboard_persistence.get_sources_overview(user.get('id'))
+        sources_list = [
+            {'id': source.id,
+             'name': source.name,
+             'target_schema': source.target_schema,
+             'source': source.source_origin,
+             'type': source.source_type,
+             'created_date': source.created_at,
+             'created_by': created_by,
+             'number_of_customers': source.total_records,
+             'matched_records': source.matched_records,
+             }
+            for source, created_by in sources
+        ]
+
+        return {
+            'sources': sources_list,
+            'has_valid': len(sources_list) > 0 or count_domains > 0
+        }
+
     def get_contacts_for_pixel_contacts_statistics(self, *, user: dict):
         user_id = user.get('id')
         user_domains = self.dashboard_persistence.get_user_domains(user_id=user_id)

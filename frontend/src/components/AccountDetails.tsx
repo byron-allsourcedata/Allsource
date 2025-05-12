@@ -175,13 +175,13 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                 <Button
                                     sx={{
                                         textTransform: 'none',
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                         borderRadius: '4px',
                                         padding: '1px',
                                         margin: '4px',
                                         mb: 2,
                                         minWidth: 'auto',
-                                        '& :hover': { color: 'rgba(80, 82, 178, 1)' },
+                                        '& :hover': { color: 'rgba(56, 152, 252, 1)' },
                                         '@media (max-width: 900px)': {
                                             border: 'none',
                                             padding: 0
@@ -189,7 +189,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     }}
                                     onClick={handleDownload}
                                 >
-                                    <DownloadIcon fontSize='medium' sx={{ color: 'rgba(128, 128, 128, 1)', '& :hover': { color: 'rgba(80, 82, 178, 1)' } }} />
+                                    <DownloadIcon fontSize='medium' sx={{ color: 'rgba(128, 128, 128, 1)', '& :hover': { color: 'rgba(56, 152, 252, 1)' } }} />
                                 </Button>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
@@ -219,7 +219,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: 1,
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                     }}
                                 >
                                     {lead.mobile_phone || lead.personal_phone ? (
@@ -227,7 +227,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                             href={`tel:${lead.mobile_phone ? lead.mobile_phone.split(',')[0] : lead.personal_phone.split(',')[0]}`}
                                             underline="none"
                                             sx={{
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 gap: 1
@@ -374,7 +374,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     href={lead.linkedin_url.startsWith('http') ? lead.linkedin_url : `https://${lead.linkedin_url}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                    sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(56, 152, 252, 1)', }}
                                 >
                                     {lead.linkedin_url}
                                 </Link>
@@ -418,7 +418,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                                 sx={{
                                                     ...accountStyles.text,
                                                     textDecoration: "none",
-                                                    color: "rgba(80, 82, 178, 1)",
+                                                    color: "rgba(56, 152, 252, 1)",
                                                 }}
                                             >
                                                 {trimmedPage}
@@ -545,7 +545,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                                     href={`https://${lead.company_domain}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                    sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(56, 152, 252, 1)', }}
                                 >
                                     {lead.company_domain}
                                 </Link>
@@ -711,14 +711,14 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                             <Typography sx={{ ...accountStyles.title_text }}>
                                 Company LinkedIn url
                             </Typography>
-                            <Typography component="div" sx={{ ...accountStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
+                            <Typography component="div" sx={{ ...accountStyles.text, color: 'rgba(56, 152, 252, 1)' }}>
                                 {lead.company_linkedin_url ? (
                                     <Link
                                         href={`https://${lead.company_linkedin_url}`}
                                         underline="none"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                        sx={{ ...accountStyles.text, textDecoration: 'none', color: 'rgba(56, 152, 252, 1)', }}
                                     >
                                         {lead.company_linkedin_url}
                                     </Link>

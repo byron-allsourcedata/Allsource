@@ -38,7 +38,7 @@ const styles = {
         lineHeight: '16px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
-            color: 'rgba(80, 82, 178, 1)',
+            color: 'rgba(56, 152, 252, 1)',
         },
     },
     formInput: {
@@ -191,7 +191,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
                             letterSpacing: '0.06px',
                             top: '5px',
                             '&.Mui-focused': {
-                                color: 'rgba(80, 82, 178, 1)',
+                                color: 'rgba(56, 152, 252, 1)',
                             },
                         }
                     }}
@@ -300,7 +300,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
                                                 fontWeight: '400',
                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                 '&.Mui-focused': {
-                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    color: 'rgba(56, 152, 252, 1)',
                                                 },
                                             }
                                         }}
@@ -344,7 +344,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
                                                         borderColor: '#A3B0C2',
                                                     },
                                                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                        borderColor: 'rgba(56, 152, 252, 1)',
                                                     },
                                                 },
                                                 '&+.MuiFormHelperText-root': {

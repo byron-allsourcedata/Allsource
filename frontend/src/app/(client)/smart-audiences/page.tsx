@@ -242,7 +242,7 @@ const OverflowTooltipText = ({
                 ref={textRef}
                 onClick={onClick}
                 className='table-data'
-                style={{ color: "rgba(80, 82, 178, 1)" }}
+                style={{ color: "rgba(56, 152, 252, 1)" }}
                 sx={{
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -309,6 +309,7 @@ const SmartAudiences: React.FC = () => {
     const [dataSyncPopupOpen, setDataSyncPopupOpen] = useState(false);
 
     const [hasSource, setHasSource] = useState(false);
+    const [isPixelInstalledAnywhere, setIsPixelInstalledAnywhere] = useState<boolean>(false);
 
     const cardData: CardData[] = [
         {
@@ -402,6 +403,16 @@ const SmartAudiences: React.FC = () => {
         };
     }, [data, fetchSmartsMemoized, page, rowsPerPage]);
 
+    const fetchPixelInstalledAnywhere = async () => {
+    try {
+        const { data } = await axiosInstance.get<{ pixel_installed: boolean }>("/domains/pixel-installed-anywhere");
+        setIsPixelInstalledAnywhere(data.pixel_installed);
+    } catch (err) {
+        console.error("Error fetching pixel-installed-anywhere:", err);
+        setIsPixelInstalledAnywhere(false);
+    }
+    };
+
     const fetchSmarts = async ({ sortBy, sortOrder, page, rowsPerPage, appliedDates }: FetchDataParams) => {
         try {
             !intervalRef.current
@@ -469,9 +480,12 @@ const SmartAudiences: React.FC = () => {
 
             const response = await axiosInstance.get(url);
             const { audience_smarts_list, count } = response.data;
+
             setData(audience_smarts_list);
             setCount(count || 0);
-
+            if (audience_smarts_list.length === 0) {
+                await fetchPixelInstalledAnywhere();
+              }
             const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
@@ -857,8 +871,8 @@ const SmartAudiences: React.FC = () => {
                                         disabled={data?.length === 0}
                                         sx={{
                                             textTransform: 'none',
-                                            color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                            border: selectedFilters.length > 0 ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                            color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                            border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '8px',
                                             opacity: data?.length === 0 ? '0.5' : '1',
@@ -872,15 +886,15 @@ const SmartAudiences: React.FC = () => {
                                             },
                                             '&:hover': {
                                                 backgroundColor: 'transparent',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                border: '1px solid rgba(56, 152, 252, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 '& .MuiSvgIcon-root': {
-                                                    color: 'rgba(80, 82, 178, 1)'
+                                                    color: 'rgba(56, 152, 252, 1)'
                                                 }
                                             }
                                         }}
                                     >
-                                        <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }} />
+                                        <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
 
                                         {selectedFilters.length > 0 && (
                                             <Box
@@ -909,7 +923,7 @@ const SmartAudiences: React.FC = () => {
                                         sx={{
                                             textTransform: 'none',
                                             color: 'rgba(128, 128, 128, 1)',
-                                            border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                            border: formattedDates ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                             borderRadius: '4px',
                                             padding: '8px',
                                             opacity: data?.length === 0 ? '0.5' : '1',
@@ -920,22 +934,22 @@ const SmartAudiences: React.FC = () => {
                                             },
                                             '&:hover': {
                                                 backgroundColor: 'transparent',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                border: '1px solid rgba(56, 152, 252, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 '& .MuiSvgIcon-root': {
-                                                    color: 'rgba(80, 82, 178, 1)'
+                                                    color: 'rgba(56, 152, 252, 1)'
                                                 }
                                             }
                                         }}
                                     >
-                                        <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
+                                        <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)', }} />
                                         <Typography variant="body1" sx={{
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '14px',
                                             fontWeight: '600',
                                             lineHeight: '19.6px',
                                             textAlign: 'left',
-                                            color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
+                                            color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
                                             "@media (max-width: 600px)": {
                                                 display: 'none'
                                             },
@@ -1010,7 +1024,7 @@ const SmartAudiences: React.FC = () => {
                                         }
                                     }}>
                                         {data.length === 0 &&
-                                            <FirstTimeScreen cardData={cardData} hasSource={hasSource}/>
+                                            <FirstTimeScreen cardData={cardData} hasSource={hasSource} hasPixel={isPixelInstalledAnywhere}/>
                                         }
                                         {data.length !== 0 &&
                                             <Grid container spacing={1} sx={{ flex: 1 }}>
@@ -1265,19 +1279,19 @@ const SmartAudiences: React.FC = () => {
                                                                                         fullWidth
                                                                                         sx={{
                                                                                             "& label.Mui-focused": {
-                                                                                                color: "rgba(80, 82, 178, 1)",
+                                                                                                color: "rgba(56, 152, 252, 1)",
                                                                                             },
                                                                                             "& .MuiOutlinedInput-root:hover fieldset": {
-                                                                                                color: "rgba(80, 82, 178, 1)",
+                                                                                                color: "rgba(56, 152, 252, 1)",
                                                                                             },
                                                                                             "& .MuiOutlinedInput-root": {
                                                                                                 "&:hover fieldset": {
-                                                                                                    borderColor: "rgba(80, 82, 178, 1)",
-                                                                                                    border: "1px solid rgba(80, 82, 178, 1)",
+                                                                                                    borderColor: "rgba(56, 152, 252, 1)",
+                                                                                                    border: "1px solid rgba(56, 152, 252, 1)",
                                                                                                 },
                                                                                                 "&.Mui-focused fieldset": {
-                                                                                                    borderColor: "rgba(80, 82, 178, 1)",
-                                                                                                    border: "1px solid rgba(80, 82, 178, 1)",
+                                                                                                    borderColor: "rgba(56, 152, 252, 1)",
+                                                                                                    border: "1px solid rgba(56, 152, 252, 1)",
                                                                                                 },
                                                                                             },
                                                                                         }}
@@ -1299,7 +1313,7 @@ const SmartAudiences: React.FC = () => {
                                                                                             onClick={handleCloseEditPopover}
                                                                                             sx={{
                                                                                                 backgroundColor: "#fff",
-                                                                                                color: "rgba(80, 82, 178, 1) !important",
+                                                                                                color: "rgba(56, 152, 252, 1) !important",
                                                                                                 fontSize: "14px",
                                                                                                 textTransform: "none",
                                                                                                 padding: "0.75em 1em",
@@ -1312,7 +1326,7 @@ const SmartAudiences: React.FC = () => {
                                                                                                 },
                                                                                             }}
                                                                                         >
-                                                                                            <Typography className="second-sub-title" sx={{ color: 'rgba(80, 82, 178, 1) !important' }}>Cancel</Typography>
+                                                                                            <Typography className="second-sub-title" sx={{ color: 'rgba(56, 152, 252, 1) !important' }}>Cancel</Typography>
                                                                                         </Button>
                                                                                         <Button
                                                                                             onClick={() => {
@@ -1321,7 +1335,7 @@ const SmartAudiences: React.FC = () => {
                                                                                             }}
                                                                                             sx={{
                                                                                                 backgroundColor: "#fff",
-                                                                                                color: "rgba(80, 82, 178, 1) !important",
+                                                                                                color: "rgba(56, 152, 252, 1) !important",
                                                                                                 fontSize: "14px",
                                                                                                 textTransform: "none",
                                                                                                 padding: "0.75em 1em",
@@ -1333,7 +1347,7 @@ const SmartAudiences: React.FC = () => {
                                                                                                 },
                                                                                             }}
                                                                                         >
-                                                                                            <Typography className="second-sub-title" sx={{ color: 'rgba(80, 82, 178, 1) !important' }}>Save</Typography>
+                                                                                            <Typography className="second-sub-title" sx={{ color: 'rgba(56, 152, 252, 1) !important' }}>Save</Typography>
                                                                                         </Button>
                                                                                     </Box>
                                                                                 </Box>
@@ -1512,11 +1526,11 @@ const SmartAudiences: React.FC = () => {
                                                                                                     onClick={handleCloseConfirmDialog}
                                                                                                     sx={{
                                                                                                         backgroundColor: '#fff',
-                                                                                                        color: 'rgba(80, 82, 178, 1) !important',
+                                                                                                        color: 'rgba(56, 152, 252, 1) !important',
                                                                                                         fontSize: '14px',
                                                                                                         textTransform: 'none',
                                                                                                         padding: '0.75em 1em',
-                                                                                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                                                                                        border: '1px solid rgba(56, 152, 252, 1)',
                                                                                                         maxWidth: '50px',
                                                                                                         maxHeight: '30px',
                                                                                                         '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
@@ -1528,15 +1542,15 @@ const SmartAudiences: React.FC = () => {
                                                                                                     className="second-sub-title"
                                                                                                     onClick={handleDeleteSmartAudience}
                                                                                                     sx={{
-                                                                                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                                                                        backgroundColor: 'rgba(56, 152, 252, 1)',
                                                                                                         color: '#fff !important',
                                                                                                         fontSize: '14px',
                                                                                                         textTransform: 'none',
                                                                                                         padding: '0.75em 1em',
-                                                                                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                                                                                        border: '1px solid rgba(56, 152, 252, 1)',
                                                                                                         maxWidth: '60px',
                                                                                                         maxHeight: '30px',
-                                                                                                        '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                                                                        '&:hover': { backgroundColor: 'rgba(56, 152, 252, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
                                                                                                     }}
                                                                                                 >
                                                                                                     Delete

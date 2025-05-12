@@ -103,7 +103,7 @@ const ExpandableCheckboxFilter: React.FC<ExpandableCheckboxFilterProps> = ({
                     sx={{
                       fontSize: '12px',
                       "&.Mui-checked": {
-                        color: "rgba(80, 82, 178, 1)",
+                        color: "rgba(56, 152, 252, 1)",
                       },
                     }}
                   />
@@ -113,7 +113,7 @@ const ExpandableCheckboxFilter: React.FC<ExpandableCheckboxFilterProps> = ({
                     sx={{
                       fontSize: '12px',
                       color: selectedOptions.includes(option)
-                        ? "rgba(80, 82, 178, 1) !important"
+                        ? "rgba(56, 152, 252, 1) !important"
                         : "rgba(74, 74, 74, 1)",
                     }}
                   >

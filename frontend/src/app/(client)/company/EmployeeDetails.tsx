@@ -262,13 +262,13 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                 <Button
                                     sx={{
                                         textTransform: 'none',
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                         borderRadius: '4px',
                                         padding: '1px',
                                         margin: '4px',
                                         mb: 2,
                                         minWidth: 'auto',
-                                        '& :hover': {color: 'rgba(80, 82, 178, 1)'},
+                                        '& :hover': {color: 'rgba(56, 152, 252, 1)'},
                                         '@media (max-width: 900px)': {
                                             border: 'none',
                                             padding: 0
@@ -276,7 +276,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                     }}
                                     onClick={handleDownload}
                                 >
-                                    <DownloadIcon fontSize='medium' sx={{color: 'rgba(128, 128, 128, 1)', '& :hover': {color: 'rgba(80, 82, 178, 1)'}}} />
+                                    <DownloadIcon fontSize='medium' sx={{color: 'rgba(128, 128, 128, 1)', '& :hover': {color: 'rgba(56, 152, 252, 1)'}}} />
                                 </Button>
                             </Box>
                             <Box sx={{ display: 'flex', flexDirection: 'row', gap: 5, '@media (max-width: 600px)': { flexDirection: 'column', gap: 1 }, }}>
@@ -296,7 +296,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                         display: 'flex',
                                         alignItems: 'center',
                                         gap: 1,
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                     }}
                                 >   
                                     <SmartphoneOutlinedIcon width={18} height={18}/>
@@ -307,7 +307,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                                     href={`tel:${popupData?.mobile_phone.value?.split(',')[0]}` || '--'}
                                                     underline="none"
                                                     sx={{
-                                                        color: 'rgba(80, 82, 178, 1)',
+                                                        color: 'rgba(56, 152, 252, 1)',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         gap: 1
@@ -441,7 +441,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                             <Typography sx={{ ...companyStyles.title_text }}>
                                 Personal LinkedIn url
                             </Typography>
-                            <Typography sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
+                            <Typography sx={{ ...companyStyles.text, color: 'rgba(56, 152, 252, 1)' }}>
                                  {!popupData?.is_unlocked.value ? (
                                         <UnlockButton onClick={getStatusCredits} label="Unlock contact" />
                                     ) : (
@@ -451,7 +451,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                                                 underline="none"
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                                sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(56, 152, 252, 1)', }}
                                             >
                                                 {popupData?.linkedin_url.value}
                                             </Link>
@@ -552,14 +552,14 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, companyId, e
                             <Typography sx={{ ...companyStyles.title_text }}>
                                 Company LinkedIn url:
                             </Typography>
-                            <Typography sx={{ ...companyStyles.text, color: 'rgba(80, 82, 178, 1)' }}>
+                            <Typography sx={{ ...companyStyles.text, color: 'rgba(56, 152, 252, 1)' }}>
                                 {popupData?.company_linkedin_url.value ? (
                                     <Link
                                         href={`https://${popupData?.company_linkedin_url.value}`}
                                         underline="none"
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(80, 82, 178, 1)', }}
+                                        sx={{ ...companyStyles.text, textDecoration: 'none', color: 'rgba(56, 152, 252, 1)', }}
                                     >
                                         {popupData?.company_linkedin_url.value}
                                     </Link>

@@ -24,13 +24,26 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
   ) => {
     setTargetIndex(newIndex);
   };
-
-  useEffect(() => {
-    if (type === 'b2c') {
-      setTargetIndex(1)
-    }
-  }, [type])
-
+  const tabs = type.toLowerCase() === "b2c"
+    ? [
+        {
+          key: "b2c",
+          label: "B2C",
+          content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
+        },
+      ]
+    : [
+        {
+          key: "b2b",
+          label: "B2B",
+          content: <B2BTabs data={b2bData} fieldRanks={fieldRanks} />,
+        },
+        {
+          key: "b2c",
+          label: "B2C",
+          content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
+        },
+      ];
   return (
     <Box>
       <Box
@@ -88,32 +101,35 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
             }}
             aria-label="insights tabs"
           >
-            <Tab
-              className="main-text"
-              sx={{
-                textTransform: "none",
-                padding: "4px 24px",
-                flexGrow: 1,
-                minHeight: "auto",
-                minWidth: "76px",
-                fontSize: "14px",
-                fontWeight: 700,
-                lineHeight: "19.1px",
-                textAlign: "left",
-                "&.Mui-selected": {
-                  color: "rgba(30, 136, 229, 1)",
-                },
-                "@media (max-width: 600px)": {
-                  mr: 0,
-                  borderRadius: "4px",
+            { type.toUpperCase() !== "B2C" && (
+                <Tab
+                className="main-text"
+                sx={{
+                  textTransform: "none",
+                  padding: "4px 24px",
+                  flexGrow: 1,
+                  minHeight: "auto",
+                  minWidth: "76px",
+                  fontSize: "14px",
+                  fontWeight: 700,
+                  lineHeight: "19.1px",
+                  textAlign: "left",
                   "&.Mui-selected": {
-                    backgroundColor: "rgba(249, 249, 253, 1)",
-                    border: "1px solid rgba(220, 220, 239, 1)",
+                    color: "rgba(30, 136, 229, 1)",
                   },
-                },
-              }}
-              label="B2B"
-            />
+                  "@media (max-width: 600px)": {
+                    mr: 0,
+                    borderRadius: "4px",
+                    "&.Mui-selected": {
+                      backgroundColor: "rgba(249, 249, 253, 1)",
+                      border: "1px solid rgba(220, 220, 239, 1)",
+                    },
+                  },
+                }}
+                label="B2B"
+              />
+            )}
+            
             <Tab
               className="main-text"
               sx={{
@@ -151,12 +167,11 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
           flexGrow: 1,
         }}
       >
-        <TabPanel value={targetIndex} index={0}>
-          <B2BTabs data={b2bData} fieldRanks={fieldRanks} />
-        </TabPanel>
-        <TabPanel value={targetIndex} index={1}>
-          <B2CTabs data={b2cData} fieldRanks={fieldRanks} />
-        </TabPanel>
+        {tabs.map((tab, idx) => (
+          <TabPanel key={tab.key} value={targetIndex} index={idx}>
+            {tab.content}
+          </TabPanel>
+        ))}
       </Box>
     </Box>
   );

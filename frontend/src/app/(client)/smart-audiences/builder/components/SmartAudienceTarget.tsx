@@ -670,7 +670,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   variant="outlined"
                   sx={{
                     ...smartAudiences.buttonform,
-                    borderColor: "rgba(80, 82, 178, 1)",
+                    borderColor: "rgba(56, 152, 252, 1)",
                     width: "120px",
                     ":hover": {
                       backgroundColor: "#fff",
@@ -680,7 +680,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   <Typography
                     sx={{
                       ...smartAudiences.textButton,
-                      color: "rgba(80, 82, 178, 1)",
+                      color: "rgba(56, 152, 252, 1)",
                     }}
                   >
                     Edit
@@ -857,7 +857,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   sx={{
                     textTransform: "none",
                     textDecoration: "underline",
-                    color: "rgba(80, 82, 178, 1) !important",
+                    color: "rgba(56, 152, 252, 1) !important",
                   }}
                 >
                   + Add more
@@ -884,14 +884,14 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
               variant="outlined"
               sx={{
                 ...smartAudiences.buttonform,
-                borderColor: "rgba(80, 82, 178, 1)",
+                borderColor: "rgba(56, 152, 252, 1)",
                 width: "92px",
               }}
             >
               <Typography
                 sx={{
                   ...smartAudiences.textButton,
-                  color: "rgba(80, 82, 178, 1)",
+                  color: "rgba(56, 152, 252, 1)",
                 }}
               >
                 Cancel
@@ -902,10 +902,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
               onClick={handleCalculate}
               sx={{
                 ...smartAudiences.buttonform,
-                backgroundColor: "rgba(80, 82, 178, 1)",
+                backgroundColor: "rgba(56, 152, 252, 1)",
                 width: "120px",
                 ":hover": {
-                  backgroundColor: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "rgba(56, 152, 252, 1)",
                 },
               }}
             >
@@ -1079,13 +1079,13 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                       color:
                         value === 0
                           ? "rgba(231, 231, 231, 1)"
-                          : "rgba(80, 82, 178, 1)",
+                          : "rgba(56, 152, 252, 1)",
                       maxWidth: "280px",
                       "& .MuiSlider-track": {
-                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                       },
                       "& .MuiSlider-thumb": {
-                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                       },
                     }}
                   />
@@ -1238,7 +1238,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                 variant="outlined"
                 sx={{
                   ...smartAudiences.buttonform,
-                  borderColor: "rgba(80, 82, 178, 1)",
+                  borderColor: "rgba(56, 152, 252, 1)",
                   width: "120px",
                   ":hover": {
                     backgroundColor: "#fff",
@@ -1248,7 +1248,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                 <Typography
                   sx={{
                     ...smartAudiences.textButton,
-                    color: "rgba(80, 82, 178, 1)",
+                    color: "rgba(56, 152, 252, 1)",
                   }}
                 >
                   Edit
@@ -1279,14 +1279,14 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                 variant="outlined"
                 sx={{
                   ...smartAudiences.buttonform,
-                  borderColor: "rgba(80, 82, 178, 1)",
+                  borderColor: "rgba(56, 152, 252, 1)",
                   width: "92px",
                 }}
               >
                 <Typography
                   sx={{
                     ...smartAudiences.textButton,
-                    color: "rgba(80, 82, 178, 1)",
+                    color: "rgba(56, 152, 252, 1)",
                   }}
                 >
                   Cancel
@@ -1298,10 +1298,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                 onClick={() => handleCalculateActiveSegments(value ?? 0)}
                 sx={{
                   ...smartAudiences.buttonform,
-                  backgroundColor: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "rgba(56, 152, 252, 1)",
                   width: "120px",
                   ":hover": {
-                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "rgba(56, 152, 252, 1)",
                   },
                 }}
               >
@@ -1338,14 +1338,14 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                 variant="outlined"
                 sx={{
                   ...smartAudiences.buttonform,
-                  borderColor: "rgba(80, 82, 178, 1)",
+                  borderColor: "rgba(56, 152, 252, 1)",
                   width: "92px",
                 }}
               >
                 <Typography
                   sx={{
                     ...smartAudiences.textButton,
-                    color: "rgba(80, 82, 178, 1)",
+                    color: "rgba(56, 152, 252, 1)",
                   }}
                 >
                   Cancel
@@ -1356,10 +1356,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                 onClick={handleOpenConfirmValidatePopup}
                 sx={{
                   ...smartAudiences.buttonform,
-                  backgroundColor: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "rgba(56, 152, 252, 1)",
                   width: "120px",
                   ":hover": {
-                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "rgba(56, 152, 252, 1)",
                   },
                 }}
               >
@@ -1448,14 +1448,14 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                 variant="outlined"
                 sx={{
                   ...smartAudiences.buttonform,
-                  borderColor: "rgba(80, 82, 178, 1)",
+                  borderColor: "rgba(56, 152, 252, 1)",
                   width: "92px",
                 }}
               >
                 <Typography
                   sx={{
                     ...smartAudiences.textButton,
-                    color: "rgba(80, 82, 178, 1)",
+                    color: "rgba(56, 152, 252, 1)",
                   }}
                 >
                   Cancel
@@ -1467,10 +1467,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                 onClick={handleGenerateSmartAudience}
                 sx={{
                   ...smartAudiences.buttonform,
-                  backgroundColor: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "rgba(56, 152, 252, 1)",
                   width: "237px",
                   ":hover": {
-                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "rgba(56, 152, 252, 1)",
                   },
                 }}
               >

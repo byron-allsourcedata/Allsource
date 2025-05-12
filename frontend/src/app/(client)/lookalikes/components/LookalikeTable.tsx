@@ -544,19 +544,19 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         fullWidth
                         sx={{
                           "& label.Mui-focused": {
-                            color: "rgba(80, 82, 178, 1)",
+                            color: "rgba(56, 152, 252, 1)",
                           },
                           "& .MuiOutlinedInput-root:hover fieldset": {
-                            color: "rgba(80, 82, 178, 1)",
+                            color: "rgba(56, 152, 252, 1)",
                           },
                           "& .MuiOutlinedInput-root": {
                             "&:hover fieldset": {
-                              borderColor: "rgba(80, 82, 178, 1)",
-                              border: "1px solid rgba(80, 82, 178, 1)",
+                              borderColor: "rgba(56, 152, 252, 1)",
+                              border: "1px solid rgba(56, 152, 252, 1)",
                             },
                             "&.Mui-focused fieldset": {
-                              borderColor: "rgba(80, 82, 178, 1)",
-                              border: "1px solid rgba(80, 82, 178, 1)",
+                              borderColor: "rgba(56, 152, 252, 1)",
+                              border: "1px solid rgba(56, 152, 252, 1)",
                             },
                           },
                         }}
@@ -584,7 +584,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           onClick={handleCloseEditPopover}
                           sx={{
                             backgroundColor: "#fff",
-                            color: "rgba(80, 82, 178, 1) !important",
+                            color: "rgba(56, 152, 252, 1) !important",
                             fontSize: "14px",
                             textTransform: "none",
                             padding: "0.75em 1em",
@@ -599,7 +599,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         >
                           <Typography
                             className="second-sub-title"
-                            sx={{ color: "rgba(80, 82, 178, 1) !important" }}
+                            sx={{ color: "rgba(56, 152, 252, 1) !important" }}
                           >
                             Cancel
                           </Typography>
@@ -611,7 +611,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           }}
                           sx={{
                             backgroundColor: "#fff",
-                            color: "rgba(80, 82, 178, 1) !important",
+                            color: "rgba(56, 152, 252, 1) !important",
                             fontSize: "14px",
                             textTransform: "none",
                             padding: "0.75em 1em",
@@ -625,7 +625,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         >
                           <Typography
                             className="second-sub-title"
-                            sx={{ color: "rgba(80, 82, 178, 1) !important" }}
+                            sx={{ color: "rgba(56, 152, 252, 1) !important" }}
                           >
                             Save
                           </Typography>
@@ -832,11 +832,11 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         className="second-sub-title"
                         sx={{
                           backgroundColor: "#fff",
-                          color: "rgba(80, 82, 178, 1) !important",
+                          color: "rgba(56, 152, 252, 1) !important",
                           fontSize: "14px",
                           textTransform: "none",
                           padding: "0.75em 1em",
-                          border: "1px solid rgba(80, 82, 178, 1)",
+                          border: "1px solid rgba(56, 152, 252, 1)",
                           maxWidth: "50px",
                           maxHeight: "30px",
                           "&:hover": {
@@ -851,16 +851,16 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                       <Button
                         className="second-sub-title"
                         sx={{
-                          backgroundColor: "rgba(80, 82, 178, 1)",
+                          backgroundColor: "rgba(56, 152, 252, 1)",
                           color: "#fff !important",
                           fontSize: "14px",
                           textTransform: "none",
                           padding: "0.75em 1em",
-                          border: "1px solid rgba(80, 82, 178, 1)",
+                          border: "1px solid rgba(56, 152, 252, 1)",
                           maxWidth: "60px",
                           maxHeight: "30px",
                           "&:hover": {
-                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            backgroundColor: "rgba(56, 152, 252, 1)",
                             boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
                           },
                         }}
