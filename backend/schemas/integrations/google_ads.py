@@ -10,3 +10,4 @@ class GoogleAdsProfile(BaseModel):
     city: tp.Optional[str] = None
     state: tp.Optional[str] = None
     address: tp.Optional[str] = None
+    country_code: tp.Optional[str] = None

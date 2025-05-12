@@ -291,7 +291,8 @@ class IntegrationsUserSyncPersistence:
     def get_verified_email_and_phone(self, enrichment_user_id):
         rows = (
             self.db.query(
-                AudienceSmartValidation.verified_email,
+                AudienceSmartValidation.verified_business_email,
+                AudienceSmartValidation.verified_personal_email,
                 AudienceSmartValidation.verified_phone
             )
             .join(
@@ -304,15 +305,17 @@ class IntegrationsUserSyncPersistence:
             .limit(2)
             .all()
         )
-
-        email = ''
+        business_email = ''
+        personal_email = ''
         phone = ''
-        for verified_email, verified_phone in rows:
-            if verified_email:
-                email = verified_email
+        for verified_business_email, verified_personal_email, verified_phone in rows:
+            if verified_business_email:
+                business_email = verified_business_email
+            if verified_personal_email:
+                personal_email = verified_personal_email
             if verified_phone:
                 phone = verified_phone
 
-        return email, phone
+        return business_email, personal_email, phone
 
 

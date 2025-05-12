@@ -5,11 +5,13 @@ import google.api_core.exceptions
 from google.auth.exceptions import RefreshError
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from services.integrations.commonIntegration import get_states_dataframe
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
+from services.integrations.commonIntegration import resolve_main_email_and_phone
 from models.enrichment.enrichment_users import EnrichmentUser
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import UserIntegration
 from faker import Faker
 from google.auth.transport.requests import Request
 from google.ads.googleads.client import GoogleAdsClient
@@ -148,16 +150,16 @@ class GoogleAdsIntegrationsService:
         })
         return sync
 
-    async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
         profiles = []
         for enrichment_user in enrichment_users:
-            result = self.__mapped_googleads_profile(enrichment_user)
+            result = self.__mapped_googleads_profile(enrichment_user, target_schema, validations)
             if result:
                 profiles.append(result)
         if not profiles:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
-        list_response = self.__add_profile_to_list(access_token=user_integration.access_token, customer_id=data_sync.customer_id, user_list_id=data_sync.list_id, profiles=profiles)
+        list_response = self.__add_profile_to_list(access_token=user_integration.access_token, customer_id=integration_data_sync.customer_id, user_list_id=integration_data_sync.list_id, profiles=profiles)
         
         if not list_response:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
@@ -242,36 +244,43 @@ class GoogleAdsIntegrationsService:
             self.integrations_persistence.db.commit()
             return {'message': 'successfuly'}
     
-    def __mapped_googleads_profile(self, enrichment_user: EnrichmentUser) -> GoogleAdsProfile:
-        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+    def __mapped_googleads_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict) -> GoogleAdsProfile:
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
             return None
+        
+        business_email, personal_email, phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+        main_email, main_phone = resolve_main_email_and_phone(enrichment_contacts, validations, target_schema, business_email, personal_email, phone)
         first_name = enrichment_contacts.first_name
         last_name = enrichment_contacts.last_name
-        if not verified_email or not first_name or not last_name:
-            return None
         
-        enrichment_personal_profiles = enrichment_user.personal_profiles
+        if not main_email or not first_name or not last_name:
+            return None
+                
+        enrichment_user_postal = enrichment_user.postal
         city = None
         state = None
-        
-        if enrichment_personal_profiles:
-            df_geo = get_states_dataframe()
-            if df_geo['zip'].dtype == object:
-                df_geo['zip'] = df_geo['zip'].astype(int)
-            row = df_geo.loc[df_geo['zip'] == enrichment_personal_profiles.zip_code5]
-            if not row.empty:
-                city = row['city'].iat[0]
-                state = row['state_name'].iat[0]
+        country_code = None
+        if enrichment_user_postal:
+            city = enrichment_user_postal.home_city
+            if not city:
+                city = enrichment_user_postal.business_city
+            state = enrichment_user_postal.home_state
+            if not state:
+                state = enrichment_user_postal.business_state
+                
+            country_code = enrichment_user_postal.home_country
+            if not country_code:
+                country_code = enrichment_user_postal.business_country
             
         return GoogleAdsProfile(
-            email=verified_email,
+            email=main_email,
             first_name=first_name,
             last_name=last_name,
-            phone=validate_and_format_phone(verified_phone),
+            phone=main_phone,
             city=city,
-            state=state
+            state=state,
+            country_code=country_code
             )
         
     def get_google_ads_client(self, refresh_token):
@@ -384,7 +393,7 @@ class GoogleAdsIntegrationsService:
                 "email": profile.email,
                 "first_name": profile.first_name,
                 "last_name": profile.last_name,
-                "country_code": "US",
+                "country_code": profile.country_code,
                 "phone": profile.phone,
                 "city": profile.city,
                 "state": profile.state,

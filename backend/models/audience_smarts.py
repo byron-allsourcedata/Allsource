@@ -14,18 +14,7 @@ audience_smarts_statuses = ENUM(
 
 class AudienceSmart(Base):
     __tablename__ = 'audience_smarts'
-    __table_args__ = (
-        Index('audience_smarts_active_segment_records_idx', 'active_segment_records'),
-        Index('audience_smarts_created_at_idx', 'created_at', unique=True),
-        Index('audience_smarts_created_at_user_id_idx', 'created_at', 'user_id'),
-        Index('audience_smarts_status_idx', 'status'),
-        Index('audience_smarts_total_records_idx', 'total_records'),
-        Index('audience_smarts_use_case_id_idx', 'use_case_id'),
-        Index('audience_smarts_user_id_idx', 'user_id'),
-        Index('audience_smarts_user_created_at', 'user_id', 'created_at'),
-        Index('audience_smarts_pkey', 'id', unique=True),
-    )
-
+    
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
@@ -70,3 +59,16 @@ class AudienceSmart(Base):
         nullable=True
     )
     validations = Column(JSON, nullable=True)
+    target_schema = Column(VARCHAR(128), nullable=False)
+    
+    __table_args__ = (
+        Index('audience_smarts_active_segment_records_idx', active_segment_records),
+        Index('audience_smarts_created_at_idx', created_at, unique=True),
+        Index('audience_smarts_created_at_user_id_idx', created_at, user_id),
+        Index('audience_smarts_status_idx', status),
+        Index('audience_smarts_total_records_idx', total_records),
+        Index('audience_smarts_use_case_id_idx', use_case_id),
+        Index('audience_smarts_user_id_idx', user_id),
+        Index('audience_smarts_user_created_at', user_id, created_at),
+        Index('audience_smarts_pkey', id, unique=True),
+    )

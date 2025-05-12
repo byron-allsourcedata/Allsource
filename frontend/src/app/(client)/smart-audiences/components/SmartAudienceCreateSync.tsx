@@ -209,28 +209,25 @@ const integrationsImage = [
 ];
 
 const customFieldsList: Row[] = [
-    { id: 1, type: 'Cid', value: 'cid' },
-    { id: 2, type: 'Age', value: 'age' },
-    { id: 3, type: 'Gender', value: 'gender' },
-    { id: 4, type: 'Estimated household income code', value: 'estimated_household_income_code' },
-    { id: 5, type: 'Estimated current home value code', value: 'estimated_current_home_value_code' },
-    { id: 6, type: 'Homeowner status', value: 'homeowner_status' },
-    { id: 7, type: 'Has children', value: 'has_children' },
-    { id: 8, type: 'Number of children', value: 'number_of_children' },
-    { id: 9, type: 'Credit rating', value: 'credit_rating' },
-    { id: 10, type: 'Net worth code', value: 'net_worth_code' },
-    { id: 11, type: 'Zipcode 5', value: 'zip_code5' },
-    { id: 12, type: 'Lat', value: 'lat' },
-    { id: 13, type: 'Lon', value: 'lon' },
-    { id: 14, type: 'Has credit card', value: 'has_credit_card' },
-    { id: 15, type: 'Length of residence years', value: 'length_of_residence_years' },
-    { id: 16, type: 'Marital status', value: 'marital_status' },
-    { id: 17, type: 'Occupation group code', value: 'occupation_group_code' },
-    { id: 18, type: 'Is book reader', value: 'is_book_reader' },
-    { id: 19, type: 'Is online purchaser', value: 'is_online_purchaser' },
-    { id: 20, type: 'Is book reader', value: 'is_book_reader' },
-    { id: 21, type: 'Is traveler', value: 'is_traveler' },
-    { id: 22, type: 'Rec id', value: 'rec_id' },
+    { id: 1, type: 'Business Email', value: 'business_email' },
+    { id: 2, type: 'Personal Email', value: 'personal_email' },
+    { id: 3, type: 'Phone', value: 'phone' },
+    { id: 4, type: 'City', value: 'city' },
+    { id: 5, type: 'State', value: 'state' },
+    { id: 6, type: 'Country code', value: 'country_code' },
+    { id: 7, type: 'Company', value: 'company' },
+    { id: 8, type: 'Business email last seen date', value: 'business_email_last_seen_date' },
+    { id: 9, type: 'Personal email last seen', value: 'personal_email_last_seen' },
+    { id: 10, type: 'Linkedin url', value: 'linkedin_url' }
+]
+
+const customFieldsListHubspot: Row[] = [
+    { id: 1, type: 'Phone', value: 'phone' },
+    { id: 2, type: 'City', value: 'city' },
+    { id: 3, type: 'State', value: 'state' },
+    { id: 4, type: 'Zip', value: 'zip_code' },
+    { id: 5, type: 'Gender', value: 'gender' },
+    { id: 6, type: 'Company', value: 'company' }
 ]
 
 const customFieldsListCSV: Row[] = [
@@ -259,7 +256,44 @@ const customFieldsListCSV: Row[] = [
 ]
 
 const defaultRows: Row[] = [
-    { id: 1, type: 'Email', value: 'email' }
+    { id: 1, type: 'Email', value: 'email' },
+    { id: 2, type: 'Firstname', value: 'firstname' },
+    { id: 3, type: 'Lastname', value: 'lastname' },
+];
+
+const defaultSalesForce: Row[] = [
+    { id: 1, type: 'Email', value: 'email' },
+    { id: 2, type: 'Firstname', value: 'firstname' },
+    { id: 3, type: 'Lastname', value: 'lastname' },
+    { id: 4, type: 'Company', value: 'company' },
+];
+
+const defaultRowsHubspot: Row[] = [
+    { id: 1, type: 'Email', value: 'email' },
+    { id: 2, type: 'Firstname', value: 'firstname' },
+    { id: 3, type: 'Lastname', value: 'lastname' },
+];
+
+const defaultRowsMeta: Row[] = [
+    { id: 1, type: 'Email', value: 'email' },
+    { id: 2, type: 'Phone', value: 'phone' },
+    { id: 3, type: 'Gender', value: 'gender' },
+    { id: 4, type: 'Birth date', value: 'birth_date' },
+    { id: 7, type: 'First name', value: 'first_name' },
+    { id: 8, type: 'Last name', value: 'last_name' },
+    { id: 9, type: 'State', value: 'state' },
+    { id: 10, type: 'City', value: 'city' },
+    { id: 11, type: 'Zip code', value: 'zip_code' }
+];
+
+const defaultRowsGoogleAds: Row[] = [
+    { id: 1, type: 'Email', value: 'email' },
+    { id: 2, type: 'First name', value: 'first_name' },
+    { id: 3, type: 'Last name', value: 'last_name' },
+    { id: 4, type: 'Phone', value: 'phone' },
+    { id: 5, type: 'City', value: 'city' },
+    { id: 6, type: 'State', value: 'state' },
+    { id: 7, type: 'Country code', value: 'country_code' },
 ];
 
 const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSmartAudStatus, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction, setIsPageLoading }) => {
@@ -525,20 +559,18 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         if (activeService === "meta") {
             setContactSyncTab(true)
             fetchAdAccount()
-            setRows(defaultRows)
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            setRows(defaultRowsMeta)
         }
 
         if (activeService === "google_ads") {
             setContactSyncTab(true)
             getCustomersInfo()
-            setRows(defaultRows)
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            setRows(defaultRowsGoogleAds)
         }
 
         if (activeService === "hubspot") {
-            setRows(defaultRows)
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            setRows(defaultRowsHubspot)
+            setCustomFields(customFieldsListHubspot.map(field => ({ type: field.value, value: field.type })))
         }
 
         if (activeService === "CSV") {
@@ -547,7 +579,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         }
 
         if (activeService === "sales_force") {
-            setRows(defaultRows)
+            setRows(defaultSalesForce)
             setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
         }
         if (activeService === "s3") {

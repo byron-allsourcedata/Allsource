@@ -1,5 +1,6 @@
 from sqlalchemy import Column, VARCHAR, TIMESTAMP, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 from uuid import uuid4
 from models.base import Base
 
@@ -32,4 +33,12 @@ class EnrichmentPostal(Base):
        
     __table_args__ = (
         Index("enrichment_postals_asid_idx", asid),
+    )
+    
+    enrichment_user = relationship(
+        "EnrichmentUser",
+        back_populates='postal',
+        foreign_keys=[asid],
+        uselist=False,
+        lazy="select"
     )

@@ -24,6 +24,7 @@ class EnrichmentUser(Base):
 from .enrichment_user_contact import EnrichmentUserContact
 from .enrichment_personal_profiles import EnrichmentPersonalProfiles
 from .enrichment_professional_profiles import EnrichmentProfessionalProfile
+from .enrichment_postals import EnrichmentPostal
 
 EnrichmentUser.contacts = relationship(
     EnrichmentUserContact,
@@ -49,3 +50,11 @@ EnrichmentUser.professional_profiles = relationship(
     uselist=False,
     lazy="select"
 )
+
+EnrichmentUser.postal = relationship(
+        EnrichmentPostal,
+        back_populates='enrichment_user',
+        foreign_keys=[EnrichmentPostal.asid],
+        uselist=False,
+        lazy="select"
+    )
