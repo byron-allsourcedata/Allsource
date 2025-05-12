@@ -47,12 +47,12 @@ type CardData = {
                 </Typography>
                 <Box
                     sx={{
-                      height: 140,
+                      height: 100,
                       backgroundColor: "rgba(232, 239, 255, 1)",
                       backgroundImage: `url(${card.icon})`,
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
-                      // backgroundSize: "contain",
+                      backgroundSize: "contain",
                       borderRadius: 2,
                       marginBottom: 2
                     }}

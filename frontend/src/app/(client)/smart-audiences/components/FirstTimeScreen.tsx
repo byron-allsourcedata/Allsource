@@ -151,6 +151,9 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
               ":disabled": {
                 backgroundColor: "rgba(56, 152, 252, 0.5)",
               },
+              "&:active": { 
+                backgroundColor: "rgba(116, 183, 253, 1)" 
+              },
             }}
           >
             Begin
