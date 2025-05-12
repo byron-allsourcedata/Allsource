@@ -3,15 +3,18 @@ import csv
 import pandas as pd
 from fastapi import UploadFile
 from io import StringIO
+from typing import Dict, Any
 from fastapi.responses import StreamingResponse
 from enums import SuppressionStatus
+from persistence.leads_persistence import LeadsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
 
 
 class SuppressionService:
 
-    def __init__(self, suppression_persistence: SuppressionPersistence):
+    def __init__(self, suppression_persistence: SuppressionPersistence, leads_persistence: LeadsPersistence):
         self.suppression_persistence = suppression_persistence
+        self.leads_persistence = leads_persistence
         
     def get_sample_suppression_list(self):
         return os.path.join(os.getcwd(), "data/sample-suppression-list.csv")
@@ -22,24 +25,43 @@ class SuppressionService:
                 'is_url_certain_activation': is_url_certain_activation
                 }
     
-    def process_suppression_list(self, file: UploadFile, domain_id):
-        file_name = file.filename
-        if not file_name.lower().endswith('.csv'):
-            return SuppressionStatus.INCOMPLETE
-        file_name = file_name.replace('.csv', '')
-        contents = file.file.read().decode('utf-8')
-        df = pd.read_csv(StringIO(contents))
-        email_list = []
-        
-        for index, row in df.iterrows():
-            email = row.get('email')
-            if email and (email is not None):
-                email_list.append(email)
-        if len(email) <= 0:
-            return SuppressionStatus.NO_EMAILS_FOUND
-        self.suppression_persistence.save_suppressions_list(email_list=email_list, list_name=file_name, domain_id=domain_id)
-            
-        return SuppressionStatus.SUCCESS
+    def process_suppression_list(
+        self, file: UploadFile, domain_id: int
+    ) -> Dict[str, Any]:
+        filename = file.filename.lower()
+        if not filename.endswith(".csv"):
+            return {"status": SuppressionStatus.INCOMPLETE, "leads_count": 0}
+
+        text = file.file.read().decode("utf-8", errors="replace")
+        df = pd.read_csv(StringIO(text), usecols=["email"])
+        email_list = (
+            df["email"]
+            .dropna()
+            .astype(str)
+            .str.strip()
+            .loc[lambda s: s != ""]
+            .tolist()
+        )
+
+        if not email_list:
+            return {"status": SuppressionStatus.NO_EMAILS_FOUND, "leads_count": 0}
+
+        list_name = file.filename.rsplit(".", 1)[0]
+        self.suppression_persistence.save_suppressions_list(
+            email_list=email_list, list_name=list_name, domain_id=domain_id
+        )
+
+        rules = self.suppression_persistence.get_rules(domain_id=domain_id)
+        delete_flag = getattr(rules, "is_delete_contacts", False)
+        if delete_flag:
+            leads_ids = self.leads_persistence.get_leads_by_emails(
+                email_list=email_list, domain_id=domain_id
+            )
+            if leads_ids:
+                self.leads_persistence.unconfirm_leads(leads_ids=leads_ids)
+            return {"status": SuppressionStatus.SUCCESS, "leads_count": len(leads_ids)}
+
+        return {"status": SuppressionStatus.SUCCESS, "leads_count": 0}
     
     def get_suppression_list(self, page, per_page, domain_id):
         suppression_list, total_count, max_page = self.suppression_persistence.get_suppression_list(page=page, per_page=per_page, domain_id=domain_id)
@@ -102,6 +124,12 @@ class SuppressionService:
     def process_certain_urls(self, urls, domain_id):
         self.suppression_persistence.process_certain_urls(url_list=urls, domain_id=domain_id)
         return SuppressionStatus.SUCCESS
+
+    def process_delete_contacts(self, domain_id):
+        is_process_delete_contacts = self.suppression_persistence.process_delete_contacts(domain_id=domain_id)
+        return {'status': SuppressionStatus.SUCCESS,
+                'is_process_delete_contacts': is_process_delete_contacts
+                }
         
     def process_based_activation(self, domain_id):
         is_based_activation = self.suppression_persistence.process_based_activation(domain_id=domain_id)
