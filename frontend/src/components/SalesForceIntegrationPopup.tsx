@@ -93,8 +93,8 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
                                 fontSize: '14px',
                                 fontWeight: '600',
                                 lineHeight: '20px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
+                                color: 'rgba(56, 152, 252, 1)',
+                                textDecorationColor: 'rgba(56, 152, 252, 1)'
                             }}>Tutorial</Link> */}
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />

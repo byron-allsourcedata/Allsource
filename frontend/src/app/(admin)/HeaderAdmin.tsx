@@ -129,20 +129,20 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
               minWidth: '32px',
               padding: '6px',
               color: 'rgba(128, 128, 128, 1)',
-              border: (hasNewNotifications || hasNotification) ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+              border: (hasNewNotifications || hasNotification) ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
               borderRadius: '3.27px',
               marginRight: '1.5rem',
               '&:hover': {
-                border: '1px solid rgba(80, 82, 178, 1)',
+                border: '1px solid rgba(56, 152, 252, 1)',
                 '& .MuiSvgIcon-root': {
-                  color: 'rgba(80, 82, 178, 1)'
+                  color: 'rgba(56, 152, 252, 1)'
                 }
               }
             }}
           >
             <NotificationsOutlinedIcon sx={{
               fontSize: '22px',
-              color: (hasNewNotifications || hasNotification) ? 'rgba(80, 82, 178, 1)' : 'inherit'
+              color: (hasNewNotifications || hasNotification) ? 'rgba(56, 152, 252, 1)' : 'inherit'
             }} />
             {(hasNewNotifications || hasNotification) && (
               <Box
@@ -175,9 +175,9 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
               border: '1px solid rgba(184, 184, 184, 1)',
               borderRadius: '3.27px',
               '&:hover': {
-                border: '1px solid rgba(80, 82, 178, 1)',
+                border: '1px solid rgba(56, 152, 252, 1)',
                 '& .MuiSvgIcon-root': {
-                  color: 'rgba(80, 82, 178, 1)'
+                  color: 'rgba(56, 152, 252, 1)'
                 }
               }
             }}

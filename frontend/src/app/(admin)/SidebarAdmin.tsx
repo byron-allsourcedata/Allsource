@@ -105,11 +105,11 @@ const sidebarStyles = {
         ml: '3px'
     },
     activeItem: {
-        borderLeft: '3px solid rgba(80, 82, 178, 1)',
-        color: 'rgba(80, 82, 178, 1)',
+        borderLeft: '3px solid rgba(56, 152, 252, 1)',
+        color: 'rgba(56, 152, 252, 1)',
         minHeight: '4.5em',
         '& .MuiSvgIcon-root': {
-            color: 'rgba(80, 82, 178, 1)',
+            color: 'rgba(56, 152, 252, 1)',
         },
     },
     inactiveItem: {

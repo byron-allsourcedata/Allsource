@@ -311,7 +311,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                 p: 0
             },
             '&.Mui-selected': {
-                color: '#5052b2',
+                color: 'rgba(56, 152, 252, 1)',
                 fontWeight: '700'
             }
         },
@@ -360,7 +360,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                         onClick={handleNextTab}
                         disabled={!selectedRadioValue}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -371,7 +371,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -386,7 +386,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                         disabled={!selectedOption && !listName}
                         onClick={handleSaveList}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -397,7 +397,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -412,7 +412,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                         onClick={handleSaveSync}
                         disabled={!listName && !selectedRadioValue.trim()}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -423,7 +423,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -596,8 +596,8 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                         }}>Tutorial</Link>
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -609,7 +609,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
                                 <TabList centered aria-label="Connect to Slack Tabs"
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
                                             overflowX: 'auto !important',
@@ -647,7 +647,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                 <FormControlLabel value="allContacts" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
 
                                                 }} />} label="All Contacts"
@@ -675,7 +675,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                 <FormControlLabel value="visitor" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Visitors"
                                                     componentsProps={{
@@ -702,7 +702,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                 <FormControlLabel value="viewed_product" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="View Product"
                                                     componentsProps={{
@@ -729,7 +729,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                 <FormControlLabel value="abandoned_cart" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Abandoned cart"
                                                     componentsProps={{
@@ -756,7 +756,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                 <FormControlLabel value="converted_sales" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Converted Sales"
                                                     componentsProps={{
@@ -878,7 +878,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                             sx: {
                                                                 fontFamily: "Nunito Sans",
                                                                 fontSize: "14px",
-                                                                color: showCreateForm ? "#5052B2" : "#202124",
+                                                                color: showCreateForm ? "rgba(56, 152, 252, 1)" : "#202124",
                                                                 fontWeight: "500",
                                                                 lineHeight: "20px",
 
@@ -989,14 +989,14 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                                         disabled={listNameError || !newListName}
                                                                         sx={{
                                                                             borderRadius: '4px',
-                                                                            border: '1px solid #5052B2',
+                                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                                             background: '#fff',
                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                                             fontFamily: 'Nunito Sans',
                                                                             fontSize: '14px',
                                                                             fontWeight: '600',
                                                                             lineHeight: '20px',
-                                                                            color: '#5052b2',
+                                                                            color: 'rgba(56, 152, 252, 1)',
                                                                             textTransform: 'none',
                                                                             padding: '4px 22px',
                                                                             '&:hover': {
@@ -1004,7 +1004,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({ open, onClose, data, 
                                                                             },
                                                                             '&.Mui-disabled': {
                                                                                 background: 'transparent',
-                                                                                color: '#5052b2'
+                                                                                color: 'rgba(56, 152, 252, 1)'
                                                                             }
                                                                         }}>
                                                                         Save

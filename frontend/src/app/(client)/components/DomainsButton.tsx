@@ -189,9 +189,9 @@ const AddDomainPopup = ({ open, handleClose, handleSave }: AddDomainProps) => {
       <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
         <Button className='hyperlink-red' onClick={handleSubmit} sx={{
           borderRadius: '4px',
-          border: '1px solid #5052b2',
+          border: '1px solid rgba(56, 152, 252, 1)',
           boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-          color: '#5052b2 !important',
+          color: 'rgba(56, 152, 252, 1) !important',
           textTransform: 'none',
           padding: '6px 24px'
         }}>
@@ -331,7 +331,7 @@ const DomainButton: React.FC = () => {
         {sourcePlatform !== 'shopify' && (
           <Box>
             <MenuItem onClick={() => setDomainPopup(true)}>
-              <Typography className='second-sub-title' sx={{ color: '#5052B2 ' }}> + Add new domain</Typography>
+              <Typography className='second-sub-title' sx={{ color: 'rgba(56, 152, 252, 1) ' }}> + Add new domain</Typography>
             </MenuItem>
             <AddDomainPopup
               open={showDomainPopup}

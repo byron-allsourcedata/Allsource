@@ -30,13 +30,13 @@ const accontDetailsStyles = {
                 color: '#202124 !important',
             },
             '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#5052B2',
+                borderColor: 'rgba(56, 152, 252, 1)',
             },
             '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#5052B2',
+                borderColor: 'rgba(56, 152, 252, 1)',
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#5052B2',
+                borderColor: 'rgba(56, 152, 252, 1)',
             },
         },
     },
@@ -497,10 +497,10 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveAccountDetails('full_name')}
                             sx={{
                                 borderRadius: '4px',
-                                border: '1px solid #5052B2',
+                                border: '1px solid rgba(56, 152, 252, 1)',
                                 background: '#fff',
                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                color: '#5052b2 !important',
+                                color: 'rgba(56, 152, 252, 1) !important',
                                 textTransform: 'none',
                                 padding: '10px 24px',
                                 height: '40px',
@@ -661,10 +661,10 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveAccountDetails('email_address')}
                             sx={{
                                 borderRadius: '4px',
-                                border: '1px solid #5052B2',
+                                border: '1px solid rgba(56, 152, 252, 1)',
                                 background: '#fff',
                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                color: '#5052b2 !important',
+                                color: 'rgba(56, 152, 252, 1) !important',
                                 textTransform: 'none',
                                 padding: '10px 24px',
                                 height: '40px',
@@ -725,10 +725,10 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         <Button className='hyperlink-red' variant="contained" color="secondary" onClick={handleChangePasswordPopupOpen}
                             sx={{
                                 borderRadius: '4px',
-                                border: '1px solid #5052B2',
+                                border: '1px solid rgba(56, 152, 252, 1)',
                                 background: '#fff',
                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                color: '#5052b2 !important',
+                                color: 'rgba(56, 152, 252, 1) !important',
                                 textTransform: 'none',
                                 padding: '10px 24px',
                                 height: '40px',
@@ -924,10 +924,10 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     sx={{
                                         backgroundColor: '#fff',
                                         letterSpacing: 'normal',
-                                        color: "#5052b2 !important",
+                                        color: "rgba(56, 152, 252, 1) !important",
                                         textTransform: 'none',
                                         padding: '10px 24px',
-                                        border: '1px solid #5052B2',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
                                         boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.25)',
                                         '&:hover': {
                                             backgroundColor: '#fff'
@@ -941,13 +941,13 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                                     className='hyperlink-red'
                                     onClick={handleChangePassword}
                                     sx={{
-                                        backgroundColor: '#5052B2',
+                                        backgroundColor: 'rgba(56, 152, 252, 1)',
                                         letterSpacing: 'normal',
                                         color: "#fff !important",
                                         textTransform: 'none',
                                         padding: '10px 24px',
                                         '&:hover': {
-                                            backgroundColor: '#5052B2'
+                                            backgroundColor: 'rgba(56, 152, 252, 1)'
                                         },
                                         borderRadius: '4px',
                                         boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.25)'
@@ -1039,10 +1039,10 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('organizationName')}
                                 sx={{
                                     borderRadius: '4px',
-                                    border: '1px solid #5052B2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     background: '#fff',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2 !important',
+                                    color: 'rgba(56, 152, 252, 1) !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     height: '40px',
@@ -1127,10 +1127,10 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('companyWebsite')}
                                 sx={{
                                     borderRadius: '4px',
-                                    border: '1px solid #5052B2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     background: '#fff',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2 !important',
+                                    color: 'rgba(56, 152, 252, 1) !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     height: '40px',
@@ -1215,10 +1215,10 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                             <Button className='hyperlink-red' variant="contained" color="primary" onClick={() => handleSaveBusinessInfo('monthlyVisits')}
                                 sx={{
                                     borderRadius: '4px',
-                                    border: '1px solid #5052B2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     background: '#fff',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2 !important',
+                                    color: 'rgba(56, 152, 252, 1) !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     height: '40px',

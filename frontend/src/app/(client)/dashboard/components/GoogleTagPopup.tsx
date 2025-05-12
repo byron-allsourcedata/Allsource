@@ -390,8 +390,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                 fontSize: '14px',
                                 fontWeight: '600',
                                 lineHeight: '19.6px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
+                                color: 'rgba(56, 152, 252, 1)',
+                                textDecorationColor: 'rgba(56, 152, 252, 1)'
                             }}>Tutorial</Link>
 
                             <IconButton onClick={handleClose} sx={{

@@ -378,7 +378,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                 p: 0
             },
             '&.Mui-selected': {
-                color: '#5052b2',
+                color: 'rgba(56, 152, 252, 1)',
                 fontWeight: '700'
             }
         },
@@ -403,7 +403,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                     fontWeight: '400'
                 },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#5052B2',
+                    borderColor: 'rgba(56, 152, 252, 1)',
                 },
             },
             '&+.MuiFormHelperText-root': {
@@ -463,7 +463,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
 
     // Define the keywords and their styles
     const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' }, // Blue and bold
+        'Klaviyo': { color: 'rgba(56, 152, 252, 1)', fontWeight: '500' }, // Blue and bold
         'Settings': { color: '#707071', fontWeight: '500' }, // Bold only
         'Create Private API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
         'Lists': { color: '#707071', fontWeight: '500' }, // Bold only
@@ -487,7 +487,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                         onClick={handleNextTab}
                         disabled={!selectedRadioValue}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -498,7 +498,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -513,7 +513,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                         disabled={!isDropdownValid}
                         onClick={handleSaveSync}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -524,7 +524,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -539,7 +539,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                         onClick={handleSaveSync}
                         disabled={!selectedOption || !selectedRadioValue.trim()}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -550,7 +550,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -739,8 +739,8 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                         }}>Tutorial</Link>
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -752,7 +752,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
                                 <TabList centered aria-label="Connect to Mailchimp Tabs"
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
                                             overflowX: 'auto !important',
@@ -790,7 +790,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                 <FormControlLabel value="allContacts" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
 
                                                 }} />} label="All Contacts"
@@ -818,7 +818,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                 <FormControlLabel value="visitor" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Visitors"
                                                     componentsProps={{
@@ -845,7 +845,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                 <FormControlLabel value="viewed_product" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="View Product"
                                                     componentsProps={{
@@ -872,7 +872,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                 <FormControlLabel value="abandoned_cart" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Abandoned cart"
                                                     componentsProps={{
@@ -899,7 +899,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                 <FormControlLabel value="converted_sales" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Converted Sales"
                                                     componentsProps={{
@@ -1017,7 +1017,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                             sx: {
                                                                 fontFamily: "Nunito Sans",
                                                                 fontSize: "14px",
-                                                                color: showCreateForm ? "#5052B2" : "#202124",
+                                                                color: showCreateForm ? "rgba(56, 152, 252, 1)" : "#202124",
                                                                 fontWeight: "500",
                                                                 lineHeight: "20px",
 
@@ -1123,14 +1123,14 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                                         disabled={listNameError || !newListName}
                                                                         sx={{
                                                                             borderRadius: '4px',
-                                                                            border: '1px solid #5052B2',
+                                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                                             background: '#fff',
                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                                             fontFamily: 'Nunito Sans',
                                                                             fontSize: '14px',
                                                                             fontWeight: '600',
                                                                             lineHeight: '20px',
-                                                                            color: '#5052b2',
+                                                                            color: 'rgba(56, 152, 252, 1)',
                                                                             textTransform: 'none',
                                                                             padding: '4px 22px',
                                                                             '&:hover': {
@@ -1138,7 +1138,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                                             },
                                                                             '&.Mui-disabled': {
                                                                                 background: 'transparent',
-                                                                                color: '#5052b2'
+                                                                                color: 'rgba(56, 152, 252, 1)'
                                                                             }
                                                                         }}>
                                                                         Save
@@ -1418,9 +1418,9 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                                     <Box display="flex" justifyContent="flex-end" mt={2}>
                                                                         <Button onClick={handleDeleteClose} sx={{
                                                                             borderRadius: '4px',
-                                                                            border: '1px solid #5052b2',
+                                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                            color: '#5052b2',
+                                                                            color: 'rgba(56, 152, 252, 1)',
                                                                             fontFamily: 'Nunito Sans',
                                                                             fontSize: '14px',
                                                                             fontWeight: '600',
@@ -1431,9 +1431,9 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                                             Clear
                                                                         </Button>
                                                                         <Button onClick={handleDelete} sx={{
-                                                                            background: '#5052B2',
+                                                                            background: 'rgba(56, 152, 252, 1)',
                                                                             borderRadius: '4px',
-                                                                            border: '1px solid #5052b2',
+                                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                                             color: '#fff',
                                                                             fontFamily: 'Nunito Sans',
@@ -1442,7 +1442,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                                             lineHeight: '20px',
                                                                             textTransform: 'none',
                                                                             '&:hover': {
-                                                                                color: '#5052B2'
+                                                                                color: 'rgba(56, 152, 252, 1)'
                                                                             }
                                                                         }}>
                                                                             Delete
@@ -1613,7 +1613,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                                                     fontSize: '16px',
                                                     textAlign: 'left',
                                                     fontWeight: '500',
-                                                    color: '#5052B2'
+                                                    color: 'rgba(56, 152, 252, 1)'
                                                 }}>
                                                     Add
                                                 </Typography>

@@ -406,7 +406,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                     </Typography>
                                                     <IconButton
                                                         onClick={(event) => handleOpenMenu(event, index)}
-                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(80, 82, 178, 1) !important' }, padding: 0 }}
+                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(56, 152, 252, 1) !important' }, padding: 0 }}
                                                     >
                                                         <KeyboardArrowDownIcon />
                                                     </IconButton>
@@ -439,7 +439,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                     color: "rgba(32, 33, 36, 1)",
                                                                     fontWeight: 600,
                                                                     ":hover": {
-                                                                        color: "rgba(80, 82, 178, 1)",
+                                                                        color: "rgba(56, 152, 252, 1)",
                                                                         backgroundColor: "rgba(80, 82, 178, 0.1)",
                                                                     },
                                                                 }}
@@ -459,7 +459,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                     color: "rgba(32, 33, 36, 1)",
                                                                     fontWeight: 600,
                                                                     ":hover": {
-                                                                        color: "rgba(80, 82, 178, 1)",
+                                                                        color: "rgba(56, 152, 252, 1)",
                                                                         backgroundColor: "rgba(80, 82, 178, 0.1)",
                                                                     },
                                                                 }}

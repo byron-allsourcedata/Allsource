@@ -640,7 +640,7 @@ const SuppressionRules: React.FC = () => {
                                                 transform: 'translateX(32px)', // Adjust for larger width
                                                 color: '#fff',
                                                 '&+.MuiSwitch-track': {
-                                                    backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                    backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                     opacity: checked ? '1' : '1',
                                                 }
                                             },
@@ -651,10 +651,10 @@ const SuppressionRules: React.FC = () => {
                                         },
                                         '& .MuiSwitch-track': {
                                             borderRadius: 20 / 2,
-                                            backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                            backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                             opacity: checked ? '1' : '1',
                                             '& .MuiSwitch-track.Mui-checked': {
-                                                backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                 opacity: checked ? '1' : '1',
                                             }
                                         },
@@ -749,7 +749,7 @@ const SuppressionRules: React.FC = () => {
                                                 transform: 'translateX(32px)', // Adjust for larger width
                                                 color: '#fff',
                                                 '&+.MuiSwitch-track': {
-                                                    backgroundColor: checkedUrl ? '#5052b2' : '#7b7b7b',
+                                                    backgroundColor: checkedUrl ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                     opacity: checkedUrl ? '1' : '1',
                                                 }
                                             },
@@ -760,10 +760,10 @@ const SuppressionRules: React.FC = () => {
                                         },
                                         '& .MuiSwitch-track': {
                                             borderRadius: 20 / 2,
-                                            backgroundColor: checkedUrl ? '#5052b2' : '#7b7b7b',
+                                            backgroundColor: checkedUrl ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                             opacity: checkedUrl ? '1' : '1',
                                             '& .MuiSwitch-track.Mui-checked': {
-                                                backgroundColor: checkedUrl ? '#5052b2' : '#7b7b7b',
+                                                backgroundColor: checkedUrl ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                 opacity: checkedUrl ? '1' : '1',
                                             }
                                         },
@@ -915,7 +915,7 @@ const SuppressionRules: React.FC = () => {
                                                 transform: 'translateX(32px)', // Adjust for larger width
                                                 color: '#fff',
                                                 '&+.MuiSwitch-track': {
-                                                    backgroundColor: checkedUrlParameters ? '#5052b2' : '#7b7b7b',
+                                                    backgroundColor: checkedUrlParameters ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                     opacity: checkedUrlParameters ? '1' : '1',
                                                 }
                                             },
@@ -926,10 +926,10 @@ const SuppressionRules: React.FC = () => {
                                         },
                                         '& .MuiSwitch-track': {
                                             borderRadius: 20 / 2,
-                                            backgroundColor: checkedUrlParameters ? '#5052b2' : '#7b7b7b',
+                                            backgroundColor: checkedUrlParameters ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                             opacity: checkedUrlParameters ? '1' : '1',
                                             '& .MuiSwitch-track.Mui-checked': {
-                                                backgroundColor: checkedUrlParameters ? '#5052b2' : '#7b7b7b',
+                                                backgroundColor: checkedUrlParameters ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                 opacity: checkedUrlParameters ? '1' : '1',
                                             }
                                         },

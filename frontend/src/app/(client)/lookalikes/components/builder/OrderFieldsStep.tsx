@@ -77,12 +77,12 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                     onClick={resetAll}
                     disabled={atDefault}
                     sx={{
-                      border: "1px #5052B2 solid",
-                      color: "#5052B2",
+                      border: "1px rgba(56, 152, 252, 1) solid",
+                      color: "rgba(56, 152, 252, 1)",
                       backgroundColor: "#FFFFFF",
                       textTransform: "none",
                       "&:hover": {
-                        border: "1px #5052B2 solid",
+                        border: "1px rgba(56, 152, 252, 1) solid",
                         backgroundColor: "#FFFFFF",
                       },
                     }}

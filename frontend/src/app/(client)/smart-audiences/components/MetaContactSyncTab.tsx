@@ -51,7 +51,7 @@ const styles = {
             p: 0
         },
         '&.Mui-selected': {
-            color: '#5052b2',
+            color: 'rgba(56, 152, 252, 1)',
             fontWeight: '700'
         }
     },
@@ -80,10 +80,10 @@ const styles = {
             },
             '&:hover .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#A3B0C2',
-                // borderColor: '#5052B2',
+                // borderColor: 'rgba(56, 152, 252, 1)',
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#5052B2',
+                borderColor: 'rgba(56, 152, 252, 1)',
             },
         },
         '&+.MuiFormHelperText-root': {
@@ -543,7 +543,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                             sx: {
                                 fontFamily: "Nunito Sans",
                                 fontSize: "14px",
-                                color: showCreateFormMeta ? "#5052B2" : "#202124",
+                                color: showCreateFormMeta ? "rgba(56, 152, 252, 1)" : "#202124",
                                 fontWeight: "500",
                                 lineHeight: "20px",
 
@@ -652,14 +652,14 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                         disabled={listNameError || !newListName}
                                         sx={{
                                             borderRadius: '4px',
-                                            border: '1px solid #5052B2',
+                                            border: '1px solid rgba(56, 152, 252, 1)',
                                             background: '#fff',
                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '14px',
                                             fontWeight: '600',
                                             lineHeight: '20px',
-                                            color: '#5052b2',
+                                            color: 'rgba(56, 152, 252, 1)',
                                             textTransform: 'none',
                                             padding: '4px 22px',
                                             '&:hover': {
@@ -667,7 +667,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                             },
                                             '&.Mui-disabled': {
                                                 background: 'transparent',
-                                                color: '#5052b2'
+                                                color: 'rgba(56, 152, 252, 1)'
                                             }
                                         }}>
                                         Save
@@ -780,7 +780,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                 sx: {
                                     fontFamily: "Nunito Sans",
                                     fontSize: "14px",
-                                    color: showCreateFormCampaignMeta ? "#5052B2" : "#202124",
+                                    color: showCreateFormCampaignMeta ? "rgba(56, 152, 252, 1)" : "#202124",
                                     fontWeight: "500",
                                     lineHeight: "20px",
 
@@ -911,7 +911,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                             disabled={!isCheckedMeta}
                                             sx={{
                                                 borderRadius: '4px',
-                                                border: '1px solid #5052B2',
+                                                border: '1px solid rgba(56, 152, 252, 1)',
                                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                 backgroundColor: "rgba(56, 152, 252, 1)",
                                                 fontFamily: 'Nunito Sans',

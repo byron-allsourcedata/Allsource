@@ -317,8 +317,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                           }}>Tutorial</Link>
                       </Box>
                       </>
@@ -333,8 +333,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           fontSize: '14px',
                           fontWeight: '600',
                           lineHeight: '20px',
-                          color: '#5052b2',
-                          textDecorationColor: '#5052b2'
+                          color: 'rgba(56, 152, 252, 1)',
+                          textDecorationColor: 'rgba(56, 152, 252, 1)'
                         }}>Tutorial</Link>
                     </Box> </>
                     ) : ( selectedCMS === 'Bigcommerce' && (
@@ -347,8 +347,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                           }}>Tutorial</Link>
                       </Box>
                     )))

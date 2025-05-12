@@ -209,7 +209,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
           backgroundColor: !is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
             ? 'rgba(80, 82, 178, 0.1)'
             : 'transparent',
-          border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
+          border: active ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #E4E4E4',
           position: 'relative',
           display: 'flex',
           borderRadius: '4px',
@@ -297,7 +297,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
 
               }}
             >
-              <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
+              <AddIcon sx={{ color: "rgba(56, 152, 252, 1)", fontSize: 45 }} />
             </Box>
           )}
           <Image
@@ -494,10 +494,10 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
         }}>
           <Button
             sx={{
-              border: '1px #5052B2 solid',
-              color: '#5052B2',
+              border: '1px rgba(56, 152, 252, 1) solid',
+              color: 'rgba(56, 152, 252, 1)',
               '&:hover': {
-                border: '1px #5052B2 solid',
+                border: '1px rgba(56, 152, 252, 1) solid',
               }
             }}
             variant='outlined'
@@ -509,9 +509,9 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
             sx={{
               margin: '0 16px',
               fontFamily: 'Nunito Sans',
-              background: '#5052B2',
+              background: 'rgba(56, 152, 252, 1)',
               '&:hover': {
-                backgroundColor: '#5052B2',
+                backgroundColor: 'rgba(56, 152, 252, 1)',
               },
               "&.Mui-disabled": {
                 backgroundColor: "rgba(80, 82, 178, 0.6)",
@@ -902,7 +902,7 @@ const PixelManagment = () => {
         <TabList
           centered
           aria-label="Integrations Tabs"
-          TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+          TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
           sx={{
             textTransform: 'none',
             minHeight: 0,
@@ -1150,7 +1150,7 @@ const Integrations = () => {
                   <TabList
                     centered
                     aria-label="Integrations Tabs"
-                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                    TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                     sx={{
                       textTransform: 'none',
                       minHeight: 0,

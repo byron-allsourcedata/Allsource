@@ -545,11 +545,11 @@ const CreateLookalikePage: React.FC = () => {
                       fontSize: "14px",
                       lineHeight: "19.6px",
                       fontWeight: "500",
-                      color: "#5052B2",
-                      borderColor: "#5052B2",
+                      color: "rgba(56, 152, 252, 1)",
+                      borderColor: "rgba(56, 152, 252, 1)",
                       "&:hover": {
                         backgroundColor: "rgba(80, 82, 178, 0.1)",
-                        borderColor: "#5052B2",
+                        borderColor: "rgba(56, 152, 252, 1)",
                       },
                     }}
                   >
@@ -696,7 +696,7 @@ const CreateLookalikePage: React.FC = () => {
               label="Clear all"
               onClick={handleResetFilters}
               sx={{
-                color: "#5052B2 !important",
+                color: "rgba(56, 152, 252, 1) !important",
                 backgroundColor: "transparent",
                 lineHeight: "20px !important",
                 fontWeight: "400 !important",

@@ -396,7 +396,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 <ListItem sx={{
                                     p: 0,
                                     borderRadius: '4px',
-                                    border: '1px dotted #5052B2',
+                                    border: '1px dotted rgba(56, 152, 252, 1)',
                                     width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)',
