@@ -46,6 +46,7 @@ import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup"
 import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 import BingAdsIntegrationPopup from "@/components/BingAdsIntegrationPopup";
 import FirstTimeScreen from "./FirstTimeScreen";
+import { hasIn } from "lodash";
 
 
 interface IntegrationBoxProps {
@@ -971,6 +972,7 @@ const Integrations = () => {
   const { needsSync, setNeedsSync } = useIntegrationContext();
   const [value, setValue] = useState('1');
   const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationCredentials[]>([]);
+  const [hasIntegrations, setHasIntegrations] = useState<Boolean>(false);
   const [integrations, setIntegrations] = useState<any[]>([])
   const [status, setStatus] = useState<string>('');
   const router = useRouter();
@@ -1013,6 +1015,7 @@ const Integrations = () => {
         const response = await axiosInstance.get('/integrations/credentials/')
         if (response.status === 200) {
           setIntegrationsCredentials(response.data)
+          setHasIntegrations(response.data.length > 0)
         }
       }
       catch (error) {
@@ -1071,15 +1074,14 @@ const Integrations = () => {
   const changeTab = (value: string) => {
     setValue(value)
   }
-  const noIntegrations = integrationsCredentials.length === 0;
   const [showFirstTime, setShowFirstTime] = useState(true);
   useEffect(() => {
-    if (!isLoading && integrationsCredentials.length === 0) {
+    if (!isLoading && !hasIntegrations) {
       setShowFirstTime(true);
     } else {
       setShowFirstTime(false);
     }
-  }, [isLoading, integrationsCredentials]);
+  }, [isLoading, hasIntegrations]);
   const handleBegin = () => {
     setShowFirstTime(false); 
     setActiveTab('1'); 

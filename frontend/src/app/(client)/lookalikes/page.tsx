@@ -23,6 +23,7 @@ import { CardData } from "@/types/first_time_screens";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import NotificationBanner from "@/components/NotificationBanner";
 import WelcomePopup from "@/components/CreatePixelSourcePopup";
+import { getInteractiveSx } from "@/components/utils";
 
 const cardData: CardData[] = [
   {
@@ -880,15 +881,7 @@ const CreateLookalikePage: React.FC = () => {
                   pt: 0,
                   borderRadius: "6px",
                   border: "1px solid rgba(237, 237, 237, 1)",
-                  cursor: "pointer",
-                  transition: "background-color .2s, border-color .2s",
-                  "&:hover": {
-                    backgroundColor: "rgba(232, 239, 255, 0.4)",
-                    border: "1px solid rgba(1, 113, 248, 0.5)",
-                    "& .fiveth-sub-title": {
-                      color: "rgba(21, 22, 25, 1)",
-                    },
-                  }
+                  ...getInteractiveSx(sourceCount === 0),
                 }}
               >
                 <Box
@@ -907,6 +900,9 @@ const CreateLookalikePage: React.FC = () => {
                   }}
                 >
                   <Button
+                    onClick={()=> {
+                      router.push("/lookalikes/builder")
+                    }}
                     variant="contained"
                     className="second-sub-title"
                     disabled={sourceCount === 0}
@@ -927,7 +923,7 @@ const CreateLookalikePage: React.FC = () => {
                   </Button>
                 </Box>
               </Box>
-              {popupOpen && (
+              {popupOpen && sourceCount === 0 && (
                 <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} variant={isPixelInstalledAnywhere? "alternate": "welcome" }/>
               )}
             </Box>
