@@ -343,7 +343,7 @@ const DomainButton: React.FC = () => {
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', marginTop: '0.5rem' }}>
           <span style={{ border: '1px solid #CDCDCD', marginBottom: '0.5rem', width: '100%' }}></span>
         </Box>
-        {domains.map((domain) => (
+        {domains?.map((domain) => (
           <MenuItem key={domain.id} onClick={() => {
             handleSetDomain(domain.domain);
           }}

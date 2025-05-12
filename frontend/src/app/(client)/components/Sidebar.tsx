@@ -254,7 +254,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   useEffect(() => {
     if (currentDomain) {
-      const domain = domains.find((d) => d.domain === currentDomain);
+      const domain = domains?.find((d) => d.domain === currentDomain);
       if (domain) {
         setActivatePercent(domain.activate_percent);
       }
