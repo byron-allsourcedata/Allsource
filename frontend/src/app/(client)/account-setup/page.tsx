@@ -60,7 +60,7 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
-            router.push("/dashboard");
+            router.push("/audience-dashboard");
             break;
           default:
             console.error("Unknown status:", status);
@@ -499,7 +499,7 @@ const AccountSetup = () => {
 
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%" }}>
         <Box sx={{ ...styles.formContainer, overflow: "hidden", marginTop: 0 }}>
-          <Box sx={{ ...styles.form, overflow: "auto", "&::-webkit-scrollbar": { display: "none" }, "-ms-overflow-style": "none", "scrollbar-width": "none" }}>
+          <Box sx={{ ...styles.form, overflow: "auto", "&::-webkit-scrollbar": { display: "none" }, "msOverflowStyle": "none", "scrollbarWwidth": "none" }}>
             <Box
               sx={{
                 "@media (max-width: 600px)": {

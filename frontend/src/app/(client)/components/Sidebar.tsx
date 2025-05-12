@@ -274,17 +274,19 @@ const Sidebar: React.FC<SidebarProps> = ({
         return;
       }
 
-      const response = await axiosInstance.get("/check-user-authorization");
-      const status = response.data.status;
+      else {
+        const response = await axiosInstance.get("/check-user-authorization");
+        const status = response.data.status;
 
-      if (status === "SUCCESS") {
-        isAuthorized.current = true;
-        router.push(route);
-      } else if (status === "NEED_BOOK_CALL") {
-        sessionStorage.setItem("is_slider_opened", "true");
-        setShowSlider(true);
-      } else {
-        router.push(route);
+        if (status === "SUCCESS") {
+          isAuthorized.current = true;
+          router.push(route);
+        } else if (status === "NEED_BOOK_CALL") {
+          sessionStorage.setItem("is_slider_opened", "true");
+          setShowSlider(true);
+        } else {
+          router.push(route);
+        }
       }
     } catch (error) {
       if (error instanceof AxiosError) {
