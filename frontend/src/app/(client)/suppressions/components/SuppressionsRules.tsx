@@ -158,6 +158,7 @@ const SuppressionRules: React.FC = () => {
             setLoading(true)
             const response = await axiosInstance.post('/suppressions/delete-contacts');
         } catch (error) {
+            showErrorToast('Failed to switch change delete contacts')
         } finally {
             setLoading(false)
         }
@@ -284,6 +285,9 @@ const SuppressionRules: React.FC = () => {
                 showToast('File uploaded successfully.');
                 handleUpdateSuppressionList();
                 handleDeleteFile();
+                if (response.data.leads_count > 0) {
+                    showToast(`You have ${response.data.leads_count} leads to delete`)
+                }
             } else {
                 showErrorToast('Failed to upload file.');
             }
