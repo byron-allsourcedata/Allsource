@@ -49,6 +49,7 @@ const SuppressionRules: React.FC = () => {
     const [checkedUrl, setCheckedUrl] = useState(false);
     const [checkedUrlParameters, setCheckedUrlParameters] = useState(false);
     const [checkedDeleteContacts, setCheckedDeleteContacts] = useState(false);
+    const [countDeleteContacts, setCountDeleteContacts] = useState<number | null>(null);
 
     /// Days
     const [days, setDays] = useState<string>('');
@@ -285,9 +286,7 @@ const SuppressionRules: React.FC = () => {
                 showToast('File uploaded successfully.');
                 handleUpdateSuppressionList();
                 handleDeleteFile();
-                if (response.data.leads_count > 0) {
-                    showToast(`You have ${response.data.leads_count} leads to delete`)
-                }
+                setCountDeleteContacts(response.data.leads_count);
             } else {
                 showErrorToast('Failed to upload file.');
             }
@@ -1164,7 +1163,7 @@ const SuppressionRules: React.FC = () => {
                                     <Typography
                                         className="second-text" sx={{ ...suppressionsStyles.subtitle, ml: 2, mt: 1 }}
                                     >
-                                        short description
+                                        Exclude these contacts from all previously created audiences in your account.
                                     </Typography>
                                 </Box>
                                 <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', mt: 1, position: 'relative', }}>
@@ -1250,7 +1249,21 @@ const SuppressionRules: React.FC = () => {
                                     </Box>
                                 </Box>
                             </Box>
-
+                            {
+                                countDeleteContacts != null && (
+                                    <Typography
+                                        className="main-text"
+                                        sx={{
+                                            ...suppressionsStyles.text,
+                                            color: countDeleteContacts > 0 ? 'green' : 'red',
+                                        }}
+                                    >
+                                        {countDeleteContacts === 0
+                                            ? '✗ No contacts were excluded from your contact list'
+                                            : `✓ ${countDeleteContacts} contact${countDeleteContacts === 1 ? '' : 's'} were successfully excluded from your contact list`}
+                                    </Typography>
+                                )
+                            }
                             <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'start', flexDirection: 'row', mt: '1.5rem', gap: 2 }}>
 
                                 <Box onClick={handleClick}
