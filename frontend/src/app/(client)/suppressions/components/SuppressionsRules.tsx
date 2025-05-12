@@ -1255,7 +1255,7 @@ const SuppressionRules: React.FC = () => {
                                         className="main-text"
                                         sx={{
                                             ...suppressionsStyles.text,
-                                            color: countDeleteContacts > 0 ? 'green' : 'red',
+                                            color: 'green',
                                         }}
                                     >
                                         {countDeleteContacts === 0
