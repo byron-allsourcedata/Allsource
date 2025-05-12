@@ -126,6 +126,9 @@ export const signupStyles: { [key: string]: SxProps<Theme> } = {
     '&:hover': {
       backgroundColor: '#1E88E5',
     },
+    '&:active': {
+      backgroundColor: '#74B7FD',
+    },
     margin: '24px 0px 0 0px',
     textTransform: 'none',
     minHeight: '3rem',

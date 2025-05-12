@@ -120,6 +120,9 @@ export const loginStyles: { [key: string]: SxProps<Theme> } = {
         '&:hover': {
           backgroundColor: '#1E88E5',
         },
+        '&:active': {
+          backgroundColor: '#74B7FD',
+        },
         margin: '0',
         padding: '10px 24px',
         textTransform: 'none',
