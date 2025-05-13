@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pydantic import BaseModel
 from datetime import datetime
 from enums import LeadStatus
@@ -45,6 +45,12 @@ class DataSource(BaseModel):
     name: str
     source_type: str
     size: int
+
+class ValidationHistory(BaseModel):
+    types_validation: List[str]
+    count_submited: int
+    count_validated: int
+    count_cost: int
 
 class DataSourcesResponse(BaseModel):
     includes: List[DataSource]

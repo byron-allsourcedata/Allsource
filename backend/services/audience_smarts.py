@@ -7,7 +7,7 @@ import csv
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_settings import AudienceSettingPersistence
-from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse
+from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse, ValidationHistory
 from persistence.audience_smarts import AudienceSmartsPersistence
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
@@ -247,6 +247,41 @@ class AudienceSmartsService:
                 excludes.append(source_data)
 
         return {"includes": includes, "excludes": excludes}
+
+
+    def get_validations_by_aud_smart_id(self, id: UUID) -> List[Dict[str, ValidationHistory]]:
+        raw_validations_obj = self.audience_smarts_persistence.get_validations_by_aud_smart_id(id)
+    
+        parsed_validations = json.loads(raw_validations_obj.validations)
+        
+        result = []
+        
+        for key, value in parsed_validations.items():
+            if len(value):  # check that the list is not empty
+                types_validation = []
+                count_submited = 0
+                count_validated = 0
+                
+                for item in value:
+                    for subkey in item.keys():
+                        types_validation.append(subkey)
+                        count_submited += item[subkey].get("count_submited", 0)
+                        count_validated += item[subkey].get("count_validated", 0)
+                
+                validation_entry = {
+                    key: {
+                        "types_validation": types_validation,
+                        "count_submited": count_submited,
+                        "count_validated": count_validated,
+                        "count_cost": 0,
+                    }
+                }
+                result.append(validation_entry)
+                
+            
+        print(result)
+        
+        return result
 
 
     def get_datasource(self, user: dict):
