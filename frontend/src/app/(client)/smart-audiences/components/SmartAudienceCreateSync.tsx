@@ -145,7 +145,7 @@ const styles = {
             p: 0
         },
         '&.Mui-selected': {
-            color: '#5052b2',
+            color: 'rgba(56, 152, 252, 1)',
             fontWeight: '700'
         }
     },
@@ -174,10 +174,10 @@ const styles = {
             },
             '&:hover .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#A3B0C2',
-                // borderColor: '#5052B2',
+                // borderColor: 'rgba(56, 152, 252, 1)',
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#5052B2',
+                borderColor: 'rgba(56, 152, 252, 1)',
             },
         },
         '&+.MuiFormHelperText-root': {
@@ -977,8 +977,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                         }}>Tutorial</Link>
                         <IconButton onClick={handleClosePopup} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -990,7 +990,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                         <TabContext value={value}>
                             <Box sx={{ pt: 3, pb: 3, position: "sticky", top: 60, backgroundColor: "#fff", zIndex: 10 }}>
                                 <TabList centered
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                                     sx={{
                                         gap: 3,
                                         "& .MuiTabs-scroller": {
@@ -1427,9 +1427,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                     <Box display="flex" justifyContent="flex-end" mt={2}>
                                                                         <Button onClick={handleDeleteClose} sx={{
                                                                             borderRadius: '4px',
-                                                                            border: '1px solid #5052b2',
+                                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                            color: '#5052b2',
+                                                                            color: 'rgba(56, 152, 252, 1)',
                                                                             fontFamily: 'Nunito Sans',
                                                                             fontSize: '14px',
                                                                             fontWeight: '600',
@@ -1440,9 +1440,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                             Clear
                                                                         </Button>
                                                                         <Button onClick={handleDelete} sx={{
-                                                                            background: '#5052B2',
+                                                                            background: 'rgba(56, 152, 252, 1)',
                                                                             borderRadius: '4px',
-                                                                            border: '1px solid #5052b2',
+                                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                                             color: '#fff',
                                                                             fontFamily: 'Nunito Sans',
@@ -1451,7 +1451,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                             lineHeight: '20px',
                                                                             textTransform: 'none',
                                                                             '&:hover': {
-                                                                                color: '#5052B2'
+                                                                                color: 'rgba(56, 152, 252, 1)'
                                                                             }
                                                                         }}>
                                                                             Delete
@@ -1625,7 +1625,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                         fontSize: '16px',
                                                         textAlign: 'left',
                                                         fontWeight: '500',
-                                                        color: '#5052B2'
+                                                        color: 'rgba(56, 152, 252, 1)'
                                                     }}>
                                                         Add
                                                     </Typography>

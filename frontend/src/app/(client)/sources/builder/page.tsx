@@ -272,6 +272,7 @@ const SourcesImport: React.FC = () => {
       fetchDomainsAndLeads();
     } else {
       setSourceMethod(1);
+      setPixelNotInstalled(false);
       setTimeout(() => {
         scrollToBlock(block2Ref);
       }, 0);

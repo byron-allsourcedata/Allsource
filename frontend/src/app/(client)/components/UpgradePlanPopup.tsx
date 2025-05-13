@@ -102,18 +102,18 @@ export const UpgradePlanPopup: React.FC<Props> = ({ open, handleClose, limitName
           >
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', width: '100%', borderTop: '1px solid rgba(255, 255, 255, 1)', marginBottom: '1rem', pt: 2 }}>
               <Button sx={{
-                border: '1px #5052B2 solid',
-                color: '#5052B2',
+                border: '1px rgba(56, 152, 252, 1) solid',
+                color: 'rgba(56, 152, 252, 1)',
                 '&:hover': {
-                  border: '1px #5052B2 solid',
+                  border: '1px rgba(56, 152, 252, 1) solid',
                 }
               }} variant='outlined' onClick={() => handleClose()}><Typography padding={'0.5rem 2rem'} fontSize={'0.8rem'}>Cancel</Typography></Button>
               <Button sx={{
                 marginLeft: '2.5em',
                 marginRight: '1rem',
-                background: '#5052B2',
+                background: 'rgba(56, 152, 252, 1)',
                 '&:hover': {
-                  backgroundColor: '#5052B2',
+                  backgroundColor: 'rgba(56, 152, 252, 1)',
                 }
               }} variant='contained' onClick={() => { router.push('/settings?section=subscription') }}><Typography padding={'0.5rem 2rem'} fontSize={'0.8rem'}>Upgrade</Typography></Button>
             </Box>

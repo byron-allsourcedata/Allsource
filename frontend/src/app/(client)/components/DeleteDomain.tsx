@@ -181,10 +181,10 @@ const ConfirmDeleteDomain = ({ open, handleClose, domain, handleDelete }: Props)
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 4 }}>
           <Button
             sx={{
-              border: '1px #5052B2 solid',
-              color: '#5052B2',
+              border: '1px rgba(56, 152, 252, 1) solid',
+              color: 'rgba(56, 152, 252, 1)',
               '&:hover': {
-                border: '1px #5052B2 solid',
+                border: '1px rgba(56, 152, 252, 1) solid',
               }
             }}
             variant='outlined'
@@ -197,9 +197,9 @@ const ConfirmDeleteDomain = ({ open, handleClose, domain, handleDelete }: Props)
               marginLeft: '2.5em',
               marginRight: '1rem',
               fontFamily: 'Nunito Sans',
-              background: '#5052B2',
+              background: 'rgba(56, 152, 252, 1)',
               '&:hover': {
-                backgroundColor: '#5052B2',
+                backgroundColor: 'rgba(56, 152, 252, 1)',
               },
               "&.Mui-disabled": {
                 backgroundColor: "rgba(80, 82, 178, 0.6)",

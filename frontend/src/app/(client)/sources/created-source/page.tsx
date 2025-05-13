@@ -247,11 +247,11 @@ const SourcesList: React.FC = () => {
                   fontSize: "14px",
                   lineHeight: "19.6px",
                   fontWeight: "500",
-                  color: "#5052B2",
-                  borderColor: "#5052B2",
+                  color: "rgba(56, 152, 252, 1)",
+                  borderColor: "rgba(56, 152, 252, 1)",
                   "&:hover": {
                     backgroundColor: "rgba(80, 82, 178, 0.1)",
-                    borderColor: "#5052B2",
+                    borderColor: "rgba(56, 152, 252, 1)",
                   },
                 }}
                 onClick={() => {
@@ -583,11 +583,11 @@ const SourcesList: React.FC = () => {
                     fontSize: "14px",
                     lineHeight: "19.6px",
                     fontWeight: "500",
-                    color: "#5052B2",
-                    borderColor: "#5052B2",
+                    color: "rgba(56, 152, 252, 1)",
+                    borderColor: "rgba(56, 152, 252, 1)",
                     "&:hover": {
                       backgroundColor: "rgba(80, 82, 178, 0.1)",
-                      borderColor: "#5052B2",
+                      borderColor: "rgba(56, 152, 252, 1)",
                     },
                   }}
                 >

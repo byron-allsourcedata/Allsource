@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import NotificationBanner from "@/components/NotificationBanner";
 import WelcomePopup from "@/components/CreatePixelSourcePopup";
+import { getInteractiveSx } from "@/components/utils";
 
 type CardData = {
   title: string;
@@ -103,19 +104,7 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
           pt: 0,
           borderRadius: "6px",
           border: "1px solid rgba(237, 237, 237, 1)",
-          cursor: "pointer",
-          transition: "background-color .2s, border-color .2s",
-          "&:hover": {
-            backgroundColor: "rgba(232, 239, 255, 0.4)",
-            border: "1px solid rgba(1, 113, 248, 0.5)",
-            "& .fiveth-sub-title": {
-              color: "rgba(21, 22, 25, 1)",
-            },
-            "& .MuiCardActionArea-root": {
-              backgroundColor: "rgba(232, 239, 255, 0.4)",
-              transition: "background-color .2s, border-color .2s",
-            },
-          },
+          ...getInteractiveSx(!hasSource),
         }}
       >
         <Box
@@ -161,7 +150,7 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
         </Box>
         
       </Box>
-      {popupOpen && (
+      {popupOpen && !hasSource && (
         <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} variant={hasPixel? "alternate": "welcome"}/>
       )}
     </Box>

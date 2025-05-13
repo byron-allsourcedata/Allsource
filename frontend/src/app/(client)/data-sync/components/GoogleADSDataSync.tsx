@@ -192,7 +192,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                 p: 0
             },
             '&.Mui-selected': {
-                color: '#5052b2',
+                color: 'rgba(56, 152, 252, 1)',
                 fontWeight: '700'
             }
         },
@@ -217,7 +217,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                     fontWeight: '400'
                 },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#5052B2',
+                    borderColor: 'rgba(56, 152, 252, 1)',
                 },
             },
             '&+.MuiFormHelperText-root': {
@@ -377,7 +377,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                 p: 0
             },
             '&.Mui-selected': {
-                color: '#5052b2',
+                color: 'rgba(56, 152, 252, 1)',
                 fontWeight: '700'
             }
         },
@@ -402,7 +402,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                     fontWeight: '400'
                 },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#5052B2',
+                    borderColor: 'rgba(56, 152, 252, 1)',
                 },
             },
             '&+.MuiFormHelperText-root': {
@@ -420,7 +420,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                         onClick={handleNextTab}
                         disabled={!selectedRadioValue}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -431,7 +431,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -446,7 +446,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                         disabled={inputListName === "" || inputCustomerName === ""}
                         onClick={handleSaveList}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -457,7 +457,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -472,7 +472,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                         onClick={handleSaveSync}
                         disabled={!inputListName || !selectedRadioValue.trim()}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -483,7 +483,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -657,8 +657,8 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                         }}>Tutorial</Link> */}
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -683,13 +683,13 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                     Please <strong>create a new account</strong> or add the Google account to an existing Ads account.
                                 </Typography>
 
-                                <Typography variant="body2" sx={{ color: '#5052b2', fontWeight: 'bold' }}>
+                                <Typography variant="body2" sx={{ color: 'rgba(56, 152, 252, 1)', fontWeight: 'bold' }}>
                                     <Link href="https://ads.google.com/signup" target="_blank" className="main-text" sx={{
                                         fontSize: '14px',
                                         fontWeight: '600',
                                         lineHeight: '20px',
-                                        color: '#5052b2',
-                                        textDecorationColor: '#5052b2'
+                                        color: 'rgba(56, 152, 252, 1)',
+                                        textDecorationColor: 'rgba(56, 152, 252, 1)'
                                     }}>Register for Google Ads</Link>
                                 </Typography>
                             </Box>
@@ -697,7 +697,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                             <TabContext value={value}>
                                 <Box sx={{ pb: 4 }}>
                                     <TabList centered aria-label="Connect to GoogleAds Tabs"
-                                        TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                        TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                                         sx={{
                                             "& .MuiTabs-scroller": {
                                                 overflowX: 'auto !important',
@@ -735,7 +735,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     <FormControlLabel value="allContacts" control={<Radio sx={{
                                                         color: '#e4e4e4',
                                                         '&.Mui-checked': {
-                                                            color: '#5052b2',
+                                                            color: 'rgba(56, 152, 252, 1)',
                                                         }
                                                     }} />} label="All Contacts"
                                                         componentsProps={{
@@ -762,7 +762,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     <FormControlLabel value="visitor" control={<Radio sx={{
                                                         color: '#e4e4e4',
                                                         '&.Mui-checked': {
-                                                            color: '#5052b2',
+                                                            color: 'rgba(56, 152, 252, 1)',
                                                         }
                                                     }} />} label="Visitors"
                                                         componentsProps={{
@@ -789,7 +789,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     <FormControlLabel value="viewed_product" control={<Radio sx={{
                                                         color: '#e4e4e4',
                                                         '&.Mui-checked': {
-                                                            color: '#5052b2',
+                                                            color: 'rgba(56, 152, 252, 1)',
                                                         }
                                                     }} />} label="View Product"
                                                         componentsProps={{
@@ -816,7 +816,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     <FormControlLabel value="added_to_cart" control={<Radio sx={{
                                                         color: '#e4e4e4',
                                                         '&.Mui-checked': {
-                                                            color: '#5052b2',
+                                                            color: 'rgba(56, 152, 252, 1)',
                                                         }
                                                     }} />} label="Abandoned cart"
                                                         componentsProps={{
@@ -843,7 +843,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                     <FormControlLabel value="converted_sales" control={<Radio sx={{
                                                         color: '#e4e4e4',
                                                         '&.Mui-checked': {
-                                                            color: '#5052b2',
+                                                            color: 'rgba(56, 152, 252, 1)',
                                                         }
                                                     }} />} label="Converted Sales"
                                                         componentsProps={{
@@ -1040,7 +1040,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                                 sx: {
                                                                     fontFamily: "Nunito Sans",
                                                                     fontSize: "14px",
-                                                                    color: showCreateForm ? "#5052B2" : "#202124",
+                                                                    color: showCreateForm ? "rgba(56, 152, 252, 1)" : "#202124",
                                                                     fontWeight: "500",
                                                                     lineHeight: "20px",
 
@@ -1143,14 +1143,14 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                                             disabled={listNameError || !newListName}
                                                                             sx={{
                                                                                 borderRadius: '4px',
-                                                                                border: '1px solid #5052B2',
+                                                                                border: '1px solid rgba(56, 152, 252, 1)',
                                                                                 background: '#fff',
                                                                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                                                 fontFamily: 'Nunito Sans',
                                                                                 fontSize: '14px',
                                                                                 fontWeight: '600',
                                                                                 lineHeight: '20px',
-                                                                                color: '#5052b2',
+                                                                                color: 'rgba(56, 152, 252, 1)',
                                                                                 textTransform: 'none',
                                                                                 padding: '4px 22px',
                                                                                 '&:hover': {
@@ -1158,7 +1158,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                                                                                 },
                                                                                 '&.Mui-disabled': {
                                                                                     background: 'transparent',
-                                                                                    color: '#5052b2'
+                                                                                    color: 'rgba(56, 152, 252, 1)'
                                                                                 }
                                                                             }}>
                                                                             Save

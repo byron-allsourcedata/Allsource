@@ -42,7 +42,7 @@ const klaviyoStyles = {
             p: 0
         },
         '&.Mui-selected': {
-            color: '#5052b2',
+            color: 'rgba(56, 152, 252, 1)',
             fontWeight: '700'
         }
     },
@@ -130,7 +130,7 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
     };
 
     const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' },
+        'Klaviyo': { color: 'rgba(56, 152, 252, 1)', fontWeight: '500' },
         'Settings': { color: '#707071', fontWeight: '500' },
         'Create Private API Key': { color: '#707071', fontWeight: '500' },
         'Lists': { color: '#707071', fontWeight: '500' },
@@ -163,7 +163,7 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
                         variant="contained"
                         onClick={handleClose}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -174,7 +174,7 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -229,8 +229,8 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
                                 fontSize: '14px',
                                 fontWeight: '600',
                                 lineHeight: '20px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
+                                color: 'rgba(56, 152, 252, 1)',
+                                textDecorationColor: 'rgba(56, 152, 252, 1)'
                             }}>Tutorial</Link>
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -292,8 +292,8 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
                                                         fontSize: '14px',
                                                         fontWeight: '600',
                                                         lineHeight: '20px',
-                                                        color: '#5052b2',
-                                                        textDecorationColor: '#5052b2'
+                                                        color: 'rgba(56, 152, 252, 1)',
+                                                        textDecorationColor: 'rgba(56, 152, 252, 1)'
                                                     }}>Learn More</Link>
                                 </Box>
                                 </Box>

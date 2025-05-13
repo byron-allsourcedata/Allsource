@@ -39,7 +39,7 @@ const klaviyoStyles = {
             p: 0
         },
         '&.Mui-selected': {
-            color: '#5052b2',
+            color: 'rgba(56, 152, 252, 1)',
             fontWeight: '700'
         }
     },
@@ -186,7 +186,7 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                         onClick={handleApiKeySave}
                         disabled={!apiKey || disableButton || !apiIdKey}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -197,7 +197,7 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -211,7 +211,7 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                         variant="contained"
                         onClick={handleSave}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -222,7 +222,7 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -304,8 +304,8 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                                 fontSize: '14px',
                                 fontWeight: '600',
                                 lineHeight: '20px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
+                                color: 'rgba(56, 152, 252, 1)',
+                                textDecorationColor: 'rgba(56, 152, 252, 1)'
                             }}>Tutorial</Link> */}
 
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
@@ -319,7 +319,7 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
                                 <TabList centered aria-label="Connect to Sendlaene Tabs"
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
                                             overflowX: 'auto !important',
@@ -440,7 +440,7 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                                                                 transform: 'translateX(32px)', // Adjust for larger width
                                                                 color: '#fff',
                                                                 '&+.MuiSwitch-track': {
-                                                                    backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                                    backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                                     opacity: checked ? '1' : '1',
                                                                 }
                                                             },
@@ -451,10 +451,10 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                                                         },
                                                         '& .MuiSwitch-track': {
                                                             borderRadius: 20 / 2,
-                                                            backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                            backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                             opacity: checked ? '1' : '1',
                                                             '& .MuiSwitch-track.Mui-checked': {
-                                                                backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                                backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                                 opacity: checked ? '1' : '1',
                                                             }
                                                         },

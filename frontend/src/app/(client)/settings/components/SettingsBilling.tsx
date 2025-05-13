@@ -608,7 +608,7 @@ export const SettingsBilling: React.FC = () => {
                                     <CustomTooltip title={"View detailed information about your card, including balance, transactions, and expiration date."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/add-the-credit-card" />
                                 </Box>
                                 <Box sx={{
-                                    border: '1px dashed #5052B2',
+                                    border: '1px dashed rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
                                     width: '24px',
                                     height: '24px',
@@ -933,7 +933,7 @@ export const SettingsBilling: React.FC = () => {
                                                                 transform: 'translateX(32px)', // Adjust for larger width
                                                                 color: '#fff',
                                                                 '&+.MuiSwitch-track': {
-                                                                    backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                                    backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                                     opacity: checked ? '1' : '1',
                                                                 }
                                                             },
@@ -944,10 +944,10 @@ export const SettingsBilling: React.FC = () => {
                                                         },
                                                         '& .MuiSwitch-track': {
                                                             borderRadius: 20 / 2,
-                                                            backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                            backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                             opacity: checked ? '1' : '1',
                                                             '& .MuiSwitch-track.Mui-checked': {
-                                                                backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                                backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                                 opacity: checked ? '1' : '1',
                                                             }
                                                         },
@@ -1039,23 +1039,23 @@ export const SettingsBilling: React.FC = () => {
                                                         <Box display="flex" justifyContent="flex-end" mt={2}>
                                                             <Button className='hyperlink-red' onClick={handleOverageClose} sx={{
                                                                 borderRadius: '4px',
-                                                                border: '1px solid #5052b2',
+                                                                border: '1px solid rgba(56, 152, 252, 1)',
                                                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                color: '#5052b2 !important',
+                                                                color: 'rgba(56, 152, 252, 1) !important',
                                                                 marginRight: '16px',
                                                                 textTransform: 'none'
                                                             }}>
                                                                 Cancel
                                                             </Button>
                                                             <Button className='hyperlink-red' onClick={handleSendChangeOverage} sx={{
-                                                                background: '#5052B2',
+                                                                background: 'rgba(56, 152, 252, 1)',
                                                                 borderRadius: '4px',
-                                                                border: '1px solid #5052b2',
+                                                                border: '1px solid rgba(56, 152, 252, 1)',
                                                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                                 color: '#fff !important',
                                                                 textTransform: 'none',
                                                                 '&:hover': {
-                                                                    color: '#5052B2 !important'
+                                                                    color: 'rgba(56, 152, 252, 1) !important'
                                                                 }
                                                             }}>
                                                                 Confirm
@@ -1308,15 +1308,15 @@ export const SettingsBilling: React.FC = () => {
                                 disabled={true}
                                 onClick={handleBuyCredits}
                                 sx={{
-                                    background: '#5052B2',
+                                    background: 'rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                     color: '#fff !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     '&:hover': {
-                                        color: '#5052B2 !important'
+                                        color: 'rgba(56, 152, 252, 1) !important'
                                     }
                                 }}
                             >
@@ -1525,9 +1525,9 @@ export const SettingsBilling: React.FC = () => {
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Button className="hyperlink-red" onClick={handleRemovePopupClose} sx={{
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2 !important',
+                                    color: 'rgba(56, 152, 252, 1) !important',
                                     marginRight: '16px',
                                     textTransform: 'none',
                                     padding: '10px 24px'
@@ -1535,15 +1535,15 @@ export const SettingsBilling: React.FC = () => {
                                     Cancel
                                 </Button>
                                 <Button className="hyperlink-red" onClick={handleDeleteCard} sx={{
-                                    background: '#5052B2',
+                                    background: 'rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                     color: '#fff !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     '&:hover': {
-                                        color: '#5052B2 !important'
+                                        color: 'rgba(56, 152, 252, 1) !important'
                                     }
                                 }}>
                                     Delete
@@ -1620,9 +1620,9 @@ export const SettingsBilling: React.FC = () => {
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Button className='hyperlink-red' onClick={handleSendInvoicePopupClose} sx={{
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2 !important',
+                                    color: 'rgba(56, 152, 252, 1) !important',
                                     marginRight: '16px',
                                     textTransform: 'none',
                                     padding: '10px 24px'
@@ -1634,16 +1634,16 @@ export const SettingsBilling: React.FC = () => {
                                     disabled={!isFormValidThird()}
                                     onClick={handleSendInvoice}
                                     sx={{
-                                        background: isFormValidThird() ? '#5052B2' : '#D3D3D3',
+                                        background: isFormValidThird() ? 'rgba(56, 152, 252, 1)' : '#D3D3D3',
                                         borderRadius: '4px',
                                         border: '1px solid',
-                                        borderColor: isFormValidThird() ? '#5052b2' : '#D3D3D3',
+                                        borderColor: isFormValidThird() ? 'rgba(56, 152, 252, 1)' : '#D3D3D3',
                                         boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                         color: isFormValidThird() ? '#fff !important' : '#A9A9A9',
                                         textTransform: 'none',
                                         padding: '10px 24px',
                                         '&:hover': {
-                                            color: isFormValidThird() ? '#5052B2 !important' : '#A9A9A9'
+                                            color: isFormValidThird() ? 'rgba(56, 152, 252, 1) !important' : '#A9A9A9'
                                         }
                                     }}
                                 >

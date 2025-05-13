@@ -203,7 +203,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChang
             case 'NEED_CONFIRM_EMAIL':
                 return {
                     background: 'rgba(241, 241, 249, 1)',
-                    color: 'rgba(80, 82, 178, 1) !important',
+                    color: 'rgba(56, 152, 252, 1) !important',
                 };
             case "NEED_CHOOSE_PLAN":
                 return {
@@ -329,7 +329,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChang
                                         color: "rgba(32, 33, 36, 1)",
                                         fontWeight: 600,
                                         ":hover": {
-                                            color: "rgba(80, 82, 178, 1)",
+                                            color: "rgba(56, 152, 252, 1)",
                                             backgroundColor: "rgba(80, 82, 178, 0.1)",
                                         },
                                     }}
@@ -350,7 +350,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChang
                                         color: "rgba(32, 33, 36, 1)",
                                         fontWeight: 600,
                                         ":hover": {
-                                            color: "rgba(80, 82, 178, 1)",
+                                            color: "rgba(56, 152, 252, 1)",
                                             backgroundColor: "rgba(80, 82, 178, 0.1)",
                                         },
                                     }}
@@ -371,7 +371,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChang
                                         color: "rgba(32, 33, 36, 1)",
                                         fontWeight: 600,
                                         ":hover": {
-                                            color: "rgba(80, 82, 178, 1)",
+                                            color: "rgba(56, 152, 252, 1)",
                                             backgroundColor: "rgba(80, 82, 178, 0.1)",
                                         },
                                     }}
@@ -393,7 +393,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChang
                                             color: "rgba(32, 33, 36, 1)",
                                             fontWeight: 600,
                                             ":hover": {
-                                                color: "rgba(80, 82, 178, 1)",
+                                                color: "rgba(56, 152, 252, 1)",
                                                 backgroundColor: "rgba(80, 82, 178, 0.1)",
                                             },
                                         }}
@@ -415,7 +415,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChang
                                             color: "rgba(32, 33, 36, 1)",
                                             fontWeight: 600,
                                             ":hover": {
-                                                color: "rgba(80, 82, 178, 1)",
+                                                color: "rgba(56, 152, 252, 1)",
                                                 backgroundColor: "rgba(80, 82, 178, 0.1)",
                                             },
                                         }}
@@ -437,7 +437,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChang
                                         color: "rgba(32, 33, 36, 1)",
                                         fontWeight: 600,
                                         ":hover": {
-                                            color: "rgba(80, 82, 178, 1)",
+                                            color: "rgba(56, 152, 252, 1)",
                                             backgroundColor: "rgba(80, 82, 178, 0.1)",
                                         },
                                     }}
@@ -458,7 +458,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChang
                                         color: "rgba(32, 33, 36, 1)",
                                         fontWeight: 600,
                                         ":hover": {
-                                            color: "rgba(80, 82, 178, 1)",
+                                            color: "rgba(56, 152, 252, 1)",
                                             backgroundColor: "rgba(80, 82, 178, 0.1)",
                                         },
                                     }}

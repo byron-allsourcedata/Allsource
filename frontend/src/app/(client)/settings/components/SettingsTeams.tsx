@@ -547,7 +547,7 @@ export const SettingsTeams: React.FC = () => {
                         </Typography>
                         <CustomTooltip title={"Invite team members for shared access and teamwork on projects."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/invite-a-team-member" />
                     </Box>
-                    <Box sx={{ border: '1px dashed #5052B2', borderRadius: '4px' }}>
+                    <Box sx={{ border: '1px dashed rgba(56, 152, 252, 1)', borderRadius: '4px' }}>
                         <Button onClick={handleInviteUsersPopupOpen}><Image src="/add-square.svg" alt="add-square" height={24} width={24} /></Button>
                         <UpgradePlanPopup open={upgradePlanPopup} limitName={'team members'} handleClose={() => setUpgradePlanPopup(false)} />
                     </Box>
@@ -824,9 +824,9 @@ export const SettingsTeams: React.FC = () => {
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Button className="hyperlink-red" onClick={handleRevokePopupClose} sx={{
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2 !important',
+                                    color: 'rgba(56, 152, 252, 1) !important',
                                     marginRight: '16px',
                                     textTransform: 'none',
                                     padding: '10px 24px'
@@ -839,15 +839,15 @@ export const SettingsTeams: React.FC = () => {
                                         }
                                         handleRevokePopupClose(); // Close the drawer after revoking
                                     }} sx={{
-                                    background: '#5052B2',
+                                    background: 'rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                     color: '#fff !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     '&:hover': {
-                                        color: '#5052B2 !important'
+                                        color: 'rgba(56, 152, 252, 1) !important'
                                     }
                                 }}>
                                     Revoke
@@ -916,9 +916,9 @@ export const SettingsTeams: React.FC = () => {
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Button className="hyperlink-red" onClick={handleRemovePopupClose} sx={{
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2 !important',
+                                    color: 'rgba(56, 152, 252, 1) !important',
                                     marginRight: '16px',
                                     textTransform: 'none',
                                     padding: '10px 24px'
@@ -931,15 +931,15 @@ export const SettingsTeams: React.FC = () => {
                                         }
                                         handleRemovePopupClose(); // Close the drawer after revoking
                                     }} sx={{
-                                    background: '#5052B2',
+                                    background: 'rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                     color: '#fff !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     '&:hover': {
-                                        color: '#5052B2 !important'
+                                        color: 'rgba(56, 152, 252, 1) !important'
                                     }
                                 }}>
                                     Delete

@@ -79,8 +79,8 @@ const RevenueTracking = () => {
                         fontSize: '14px',
                         fontWeight: '600',
                         lineHeight: '20px',
-                        color: '#5052b2',
-                        textDecorationColor: '#5052b2'
+                        color: 'rgba(56, 152, 252, 1)',
+                        textDecorationColor: 'rgba(56, 152, 252, 1)'
                     }}>here</Link>
       </Typography>
       </Box>

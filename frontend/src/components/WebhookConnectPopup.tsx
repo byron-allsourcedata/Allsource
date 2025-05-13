@@ -53,7 +53,7 @@ const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow,
                         variant="contained"
                         onClick={handleApiKeySave}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -64,7 +64,7 @@ const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow,
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -146,8 +146,8 @@ const WebhookConnectPopup = ({ handleClose, open, onSave, initApiKey, boxShadow,
                                 fontSize: '14px',
                                 fontWeight: '600',
                                 lineHeight: '20px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
+                                color: 'rgba(56, 152, 252, 1)',
+                                textDecorationColor: 'rgba(56, 152, 252, 1)'
                             }}>Tutorial</Link> */}
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />

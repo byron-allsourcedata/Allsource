@@ -916,7 +916,7 @@ const Leads: React.FC = () => {
                                             className='second-sub-title'
                                             label="Clear all"
                                             onClick={handleResetFilters}
-                                            sx={{ color: '#5052B2 !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
+                                            sx={{ color: 'rgba(56, 152, 252, 1) !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
                                         />
                                     )}
                                     {selectedFilters.map(filter => {

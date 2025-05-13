@@ -1,5 +1,7 @@
 import httpx
 from sqlalchemy.orm import Session
+
+from models import UserDomains
 from services.aws import AWSService
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -59,6 +61,22 @@ class IntegrationService:
 
     def get_user_service_credentials(self, domain_id, filters, user_id):
         return self.integration_persistence.get_integration_by_user(domain_id, filters, user_id)
+
+    def has_integration_and_data_sync(self, user: dict, domain: UserDomains) -> dict:
+        has_integration = self.integration_persistence.has_integration_and_data_sync(
+            user_id=user.get("id"),
+            domain_id=domain.id
+        )
+        has_any_sync = self.integration_persistence.has_any_sync(
+            user_id=user.get("id"),
+            domain_id=domain.id
+        )
+        return {
+            "hasIntegration": has_integration,
+            "hasAnySync": has_any_sync,
+        }
+
+
 
     def delete_integration(self, service_name: str, domain, user: dict):
         self.integration_persistence.delete_integration(domain.id, service_name, user.get('id'))

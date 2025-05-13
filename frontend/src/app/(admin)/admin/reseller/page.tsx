@@ -163,7 +163,7 @@ const Reseller: React.FC = () => {
               <Button variant="contained"
               size='large'
                 sx={{ marginRight: '4em',
-                      backgroundColor: 'rgba(80, 82, 178, 1)',
+                      backgroundColor: 'rgba(56, 152, 252, 1)',
                       fontFamily: "Nunito Sans", textTransform: 'none',
                       fontWeight: 'bold',
                       mt: 3 }}

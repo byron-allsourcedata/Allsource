@@ -205,7 +205,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                     marginRight: '0.5em',
                                     padding: 0.2,
                                     textAlign: 'left',
-                                    color: '#5052B2 !important'
+                                    color: 'rgba(56, 152, 252, 1) !important'
                                 }}>
                                     Save
                                 </Typography>
@@ -231,7 +231,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                     marginRight: '0.5em',
                                     padding: 0.2,
                                     textAlign: 'left',
-                                    color: '#5052B2 !important'
+                                    color: 'rgba(56, 152, 252, 1) !important'
                                 }}>
                                     Audience Sync
                                 </Typography>
@@ -491,14 +491,14 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                             {currentStep === 1 && (
                                 <Button
                                     sx={{
-                                        border: '1px #5052B2 solid',
+                                        border: '1px rgba(56, 152, 252, 1) solid',
                                         color: '#FFFFFF',
-                                        backgroundColor: '#5052B2',
+                                        backgroundColor: 'rgba(56, 152, 252, 1)',
                                         textTransform: 'none',
                                         mt: 2,
                                         '&:hover': {
-                                            border: '1px #5052B2 solid',
-                                            backgroundColor: '#5052B2'
+                                            border: '1px rgba(56, 152, 252, 1) solid',
+                                            backgroundColor: 'rgba(56, 152, 252, 1)'
                                         },
                                         '&.Mui-disabled': {
                                             opacity: 0.5,
@@ -580,14 +580,14 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                             {currentStep === 2 && (
                                 <Button
                                     sx={{
-                                        border: '1px #5052B2 solid',
+                                        border: '1px rgba(56, 152, 252, 1) solid',
                                         color: '#FFFFFF',
-                                        backgroundColor: '#5052B2',
+                                        backgroundColor: 'rgba(56, 152, 252, 1)',
                                         textTransform: 'none',
                                         mt: 2,
                                         '&:hover': {
-                                            border: '1px #5052B2 solid',
-                                            backgroundColor: '#5052B2'
+                                            border: '1px rgba(56, 152, 252, 1) solid',
+                                            backgroundColor: 'rgba(56, 152, 252, 1)'
                                         }
                                     }}
                                     variant="outlined"
@@ -687,13 +687,13 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                         <Box sx={{ display: 'flex', justifyContent: 'end', gap: 2, borderTop: '1px solid rgba(228, 228, 228, 1)', mt: 2, pr: 2, pt: '0.5rem' }}>
                             <Button
                                 sx={{
-                                    border: '1px #5052B2 solid', 
-                                    color: '#5052B2',
+                                    border: '1px rgba(56, 152, 252, 1) solid', 
+                                    color: 'rgba(56, 152, 252, 1)',
                                     backgroundColor: '#FFFFFF',
                                     textTransform: 'none',
                                     mt: 1,
                                     '&:hover': {
-                                        border: '1px #5052B2 solid',
+                                        border: '1px rgba(56, 152, 252, 1) solid',
                                         backgroundColor: '#FFFFFF'
                                     }
                                 }}
@@ -704,15 +704,15 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                             </Button>
                             <Button
                                 sx={{
-                                    border: '1px #5052B2 solid',
+                                    border: '1px rgba(56, 152, 252, 1) solid',
                                     color: '#FFFFFF',
-                                    backgroundColor: '#5052B2',
+                                    backgroundColor: 'rgba(56, 152, 252, 1)',
                                     textTransform: 'none',
                                     gap: 0,
                                     mt: 1,
                                     '&:hover': {
-                                        border: '1px #5052B2 solid',
-                                        backgroundColor: '#5052B2'
+                                        border: '1px rgba(56, 152, 252, 1) solid',
+                                        backgroundColor: 'rgba(56, 152, 252, 1)'
                                     }
                                 }}
                                 variant="outlined"
