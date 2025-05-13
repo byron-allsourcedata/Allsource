@@ -13,11 +13,11 @@ import { getInteractiveSx } from "@/components/utils";
 
 interface DataSyncFirstTimeScreenProps {
   onBegin?: () => void;
-  hasIntegrations?: Boolean
+  hasDataSync?: Boolean
 }
 
 
-const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasIntegrations }) => {
+const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasDataSync }) => {
   const [popupOpen, setPopupOpen] = useState(false);
 
   const handleOpenPopup = () => {
@@ -63,7 +63,7 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasIntegrat
           borderRadius: 1,
           overflow: 'hidden',
           border: "1px solid rgba(237, 237, 237, 1)",
-          ...getInteractiveSx(!hasIntegrations),
+          ...getInteractiveSx(!hasDataSync),
         }
         }
       >
@@ -103,7 +103,7 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasIntegrat
             variant="contained"
             className="second-sub-title"
             onClick={onBegin}
-            disabled={!hasIntegrations}
+            disabled={!hasDataSync}
             sx={{
               backgroundColor: "rgba(56, 152, 252, 1)",
               textTransform: "none",
@@ -121,7 +121,7 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasIntegrat
           </Button>
         </Box>
       </Box>
-      {popupOpen && !hasIntegrations && (
+      {popupOpen && !hasDataSync && (
         <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} variant="integration"/>
       )}
     </Box>

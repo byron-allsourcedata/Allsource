@@ -48,6 +48,11 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
     router.push("/integrations");
   };
 
+  const navigateToSmartAudiencePage = () => {
+    handleClose();
+    router.push("/smart-audiences");
+  };
+
   const navigateToExamplePage = () => {
     handleClose();
     window.location.href = "https://example.com";
@@ -370,13 +375,13 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                 textAlign="center"
                 fontFamily="Nunito Sans"
               >
-                Add your first integration
+                Generate your Smart Audience first
               </Typography>
 
             </DialogTitle>
             <DialogContent sx={{ p: 3 }}>
               <Typography className="fourth-sub-title" sx={{ textAlign: "center" }}>
-                To get started, connect at least one integration so you can sync data across your platforms
+                To synk your data you need to generate smart audience
               </Typography>
               <Box sx={{ p: 4 }}>
                 <Box
@@ -390,8 +395,8 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                 >
                   <Image
                     src="/smart-audience-first-time-screen.svg"
-                    alt="Allsource integrations diagram"
-                    width={1000}
+                    alt="Smart audience diagram"
+                    width={500}
                     height={160}
                     style={{ maxWidth: "100%", height: "auto" }}
                   />
@@ -419,7 +424,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                   <Button
                     variant="contained"
                     fullWidth
-                    onClick={navigateToIntegrationPage}
+                    onClick={navigateToSmartAudiencePage}
                     sx={{ backgroundColor: "#3898FC", dropShadow: "#00000040" }}
                   >
                     <IconButton
@@ -431,7 +436,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                       className="description"
                       style={{ color: "#fff" }}
                     >
-                      Add Integration
+                      Generate Smart Audience
                     </Typography>
                   </Button>
                 </Box>
