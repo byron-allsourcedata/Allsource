@@ -224,7 +224,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                 p: 0
             },
             '&.Mui-selected': {
-                color: '#5052b2',
+                color: 'rgba(56, 152, 252, 1)',
                 fontWeight: '700'
             }
         },
@@ -308,7 +308,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
 
     // Define the keywords and their styles
     const highlightConfig: HighlightConfig = {
-        'Hubspot': { color: '#5052B2', fontWeight: '500' }, // Blue and bold
+        'Hubspot': { color: 'rgba(56, 152, 252, 1)', fontWeight: '500' }, // Blue and bold
         'Settings': { color: '#707071', fontWeight: '500' }, // Bold only
         'Create Private API Key': { color: '#707071', fontWeight: '500' }, // Blue and bold
         'Lists': { color: '#707071', fontWeight: '500' }, // Bold only
@@ -332,7 +332,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                         onClick={handleNextTab}
                         disabled={!selectedRadioValue}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -343,7 +343,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -358,7 +358,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                         onClick={handleSaveSync}
                         disabled={!selectedRadioValue}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -369,7 +369,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -563,8 +563,8 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                         fontSize: '14px',
                         fontWeight: '600',
                         lineHeight: '20px',
-                        color: '#5052b2',
-                        textDecorationColor: '#5052b2'
+                        color: 'rgba(56, 152, 252, 1)',
+                        textDecorationColor: 'rgba(56, 152, 252, 1)'
                     }}>Tutorial</Link> */}
                     <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                         <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -576,7 +576,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                 <TabContext value={value}>
                     <Box sx={{pb: 4}}>
                         <TabList centered aria-label="Connect to Hubspot Tabs"
-                        TabIndicatorProps={{sx: {backgroundColor: "#5052b2" } }} 
+                        TabIndicatorProps={{sx: {backgroundColor: "rgba(56, 152, 252, 1)" } }} 
                         sx={{
                             "& .MuiTabs-scroller": {
                                 overflowX: 'auto !important',
@@ -613,7 +613,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                 <FormControlLabel value="allContacts" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
 
                                                 }} />} label="All Contacts"
@@ -641,7 +641,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                 <FormControlLabel value="visitor" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Visitors"
                                                     componentsProps={{
@@ -668,7 +668,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                 <FormControlLabel value="viewed_product" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="View Product"
                                                     componentsProps={{
@@ -695,7 +695,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                 <FormControlLabel value="abandoned_cart" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Abandoned cart"
                                                     componentsProps={{
@@ -722,7 +722,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                 <FormControlLabel value="converted_sales" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Converted Sales"
                                                     componentsProps={{
@@ -981,9 +981,9 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                                     <Box display="flex" justifyContent="flex-end" mt={2}>
                                                                         <Button onClick={handleDeleteClose} sx={{
                                                                             borderRadius: '4px',
-                                                                            border: '1px solid #5052b2',
+                                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                            color: '#5052b2',
+                                                                            color: 'rgba(56, 152, 252, 1)',
                                                                             fontFamily: 'Nunito Sans',
                                                                             fontSize: '14px',
                                                                             fontWeight: '600',
@@ -994,9 +994,9 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                                             Clear
                                                                         </Button>
                                                                         <Button onClick={handleDelete} sx={{
-                                                                            background: '#5052B2',
+                                                                            background: 'rgba(56, 152, 252, 1)',
                                                                             borderRadius: '4px',
-                                                                            border: '1px solid #5052b2',
+                                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                                             color: '#fff',
                                                                             fontFamily: 'Nunito Sans',
@@ -1005,7 +1005,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                                             lineHeight: '20px',
                                                                             textTransform: 'none',
                                                                             '&:hover': {
-                                                                                color: '#5052B2'
+                                                                                color: 'rgba(56, 152, 252, 1)'
                                                                             }
                                                                         }}>
                                                                             Delete
@@ -1161,7 +1161,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                 aria-haspopup="true"
                                                 sx={{
                                                     textTransform: 'none',
-                                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                                    border: '1px solid rgba(56, 152, 252, 1)',
                                                     borderRadius: '4px',
                                                     padding: '6px 12px',
                                                     minWidth: 'auto',
@@ -1177,7 +1177,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                                                     fontSize: '16px',
                                                     textAlign: 'left',
                                                     fontWeight: '500',
-                                                    color: '#5052B2'
+                                                    color: 'rgba(56, 152, 252, 1)'
                                                 }}>
                                                     Add
                                                 </Typography>

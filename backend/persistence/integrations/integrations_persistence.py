@@ -1,3 +1,4 @@
+from models import UserDomains, IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration, Integration
 from models.integrations.external_apps_installations import ExternalAppsInstall
 from models.kajabi import Kajabi
@@ -44,6 +45,31 @@ class IntegrationsPresistence:
                 .first()
         )
         return user_integration
+
+    def has_integration_and_data_sync(self, user_id: int) -> bool:
+        row = (
+            self.db.query(UserIntegration)
+            .filter(
+                UserIntegration.user_id == user_id,
+            )
+            .first()
+        )
+        return row is not None
+
+    def has_any_sync(self, user_id: int) -> bool:
+        row = (
+            self.db.query(UserIntegration)
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.integration_id == UserIntegration.id
+            )
+            .filter(
+                UserIntegration.user_id == user_id,
+            )
+            .first()
+        )
+        return row is not None
+
 
     def get_external_apps_installations_by_shop_hash(self, shop_hash):
         external_apps_install = self.db.query(ExternalAppsInstall).filter(

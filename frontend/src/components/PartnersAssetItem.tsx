@@ -193,10 +193,10 @@ const PartnersAssetItem: React.FC<PartnersAseetsProps> = ({
                     </Typography>
                 </Box>}
                 {isAdmin ? <IconButton onClick={handleOpenMenu} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
-                <MoreVertOutlinedIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
+                <MoreVertOutlinedIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(56, 152, 252, 1)' } }} />
             </IconButton> :
             <IconButton onClick={handleDownloadFile} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
-                <DownloadIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
+                <DownloadIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(56, 152, 252, 1)' } }} />
             </IconButton>}
             <Popover
                 open={open}

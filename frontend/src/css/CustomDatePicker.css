@@ -1,16 +1,16 @@
 .start-date {
-    background-color: rgba(80, 82, 178, 1) !important;
+    background-color: rgba(56, 152, 252, 1) !important;
     color: white !important;
 }
 
 .end-date {
-    background-color: rgba(80, 82, 178, 1) !important;
+    background-color: rgba(56, 152, 252, 1) !important;
     color: white !important;
 }
 
 .in-range {
     background-color: rgba(80, 82, 178, 0.24) !important;
-    color: rgba(80, 82, 178, 1) !important;
+    color: rgba(56, 152, 252, 1) !important;
 }
 
 .react-datepicker__day:hover {
@@ -25,6 +25,6 @@
 
 
 .react-datepicker__day--selected {
-    background-color: rgba(80, 82, 178, 1) !important;
+    background-color: rgba(56, 152, 252, 1) !important;
     color: white !important;
 }

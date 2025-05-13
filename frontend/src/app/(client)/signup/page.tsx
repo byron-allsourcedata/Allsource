@@ -251,9 +251,13 @@ const Signup: React.FC = () => {
             case 'TEAM_INVITATION_INVALID':
               showErrorToast("The email provided is not valid for team invitation.");
               break;
+            // case "FILL_COMPANY_DETAILS":
+            //   get_me()
+            //   router.push("/account-setup")
+            //   break;
             case "FILL_COMPANY_DETAILS":
               get_me()
-              router.push("/account-setup")
+              router.push("/dashboard")
               break;
             case "PIXEL_INSTALLATION_NEEDED":
               get_me()
@@ -362,7 +366,8 @@ const Signup: React.FC = () => {
                     break;
                   case 'FILL_COMPANY_DETAILS':
                     get_me()
-                    navigateTo('/account-setup');
+                    navigateTo('/dashboard');
+                    // navigateTo('/account-setup');
                     break;
                   case 'NEED_BOOK_CALL':
                     get_me()

@@ -119,7 +119,7 @@ const MainSectionCard: React.FC<MainSectionCardProps> = ({
               const textColor = isLookalike
                 ? "rgba(224, 176, 5, 1)"
                 : isSource
-                  ? "rgba(80, 82, 178, 1)"
+                  ? "rgba(56, 152, 252, 1)"
                   : "rgba(0, 0, 0, 0.8)";
 
               return (

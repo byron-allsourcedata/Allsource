@@ -288,7 +288,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
                             onDragLeave={handleDragLeave}
                             onDrop={handleDrop}
                             sx={{
-                                border: "1px dashed rgba(80, 82, 178, 1)",
+                                border: "1px dashed rgba(56, 152, 252, 1)",
                                 marginTop: "24px",
                                 height: "180px",
                                 width: "100%",
@@ -303,7 +303,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
                             onClick={() => document.getElementById("fileInput")?.click()}>
                             <IconButton sx={{ width: "40px", height: "40px", borderRadius: "4px", backgroundColor: "rgba(234, 235, 255, 1)",  }} >
                                 <FileUploadOutlinedIcon sx={{
-                                    color: "rgba(80, 82, 178, 1)" }} />
+                                    color: "rgba(56, 152, 252, 1)" }} />
                             </IconButton>
                             <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "14px" }}>
                                 Drag & drop
@@ -317,7 +317,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
                                 fontFamily: "Nunito Sans",
                                 fontSize: "14px",
                                 textTransform: "none",
-                                color: "rgba(80, 82, 178, 1)",
+                                color: "rgba(56, 152, 252, 1)",
                                 }}
                             >
                                 Upload a file
@@ -410,12 +410,12 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
                 }}
             >
                 <Button variant="outlined" onClick={handleClose} disabled={!buttonContain}  sx={{
-                    borderColor: "rgba(80, 82, 178, 1)",
+                    borderColor: "rgba(56, 152, 252, 1)",
                 }}>
                     <Typography
                         sx={{
                         textAlign: "center",
-                        color: "rgba(80, 82, 178, 1)",
+                        color: "rgba(56, 152, 252, 1)",
                         textTransform: "none",
                         fontFamily: "Nunito Sans",
                         fontWeight: "600",
@@ -427,7 +427,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({ updateOrAddAsset
                     </Typography>
                 </Button> 
                 <Button variant="contained" onClick={handleSubmit} disabled={!buttonContain}  sx={{
-                    backgroundColor: "rgba(80, 82, 178, 1)"
+                    backgroundColor: "rgba(56, 152, 252, 1)"
                 }}>
                     <Typography
                         sx={{

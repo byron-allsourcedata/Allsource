@@ -21,7 +21,7 @@ const slackStyles = {
             p: 0
         },
         '&.Mui-selected': {
-            color: '#5052b2',
+            color: 'rgba(56, 152, 252, 1)',
             fontWeight: '700'
         }
     },
@@ -146,8 +146,8 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key 
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                         }}>Tutorial</Link>
                     <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                         <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -159,7 +159,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key 
                     <TabContext value={value}>
                         <Box sx={{ pb: 4 }}>
                             <TabList centered aria-label="Connect to Slack Tabs"
-                                TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                                 sx={{
                                     "& .MuiTabs-scroller": {
                                         overflowX: 'auto !important',
@@ -272,9 +272,9 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key 
                                                 fontSize: '14px',
                                                 fontWeight: '600',
                                                 lineHeight: '20px',
-                                                color: '#5052b2',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 cursor: 'pointer',
-                                                textDecorationColor: '#5052b2'
+                                                textDecorationColor: 'rgba(56, 152, 252, 1)'
                                             }}>Tutorial</Link>
                                         </Box>
                                     </Box>
@@ -306,7 +306,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key 
                             variant="contained"
                             onClick={handlePopupClose}
                             sx={{
-                                backgroundColor: '#5052B2',
+                                backgroundColor: 'rgba(56, 152, 252, 1)',
                                 fontFamily: "Nunito Sans",
                                 fontSize: '14px',
                                 fontWeight: '600',
@@ -317,7 +317,7 @@ const SlackConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key 
                                 padding: '10px 24px',
                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                 '&:hover': {
-                                    backgroundColor: '#5052B2'
+                                    backgroundColor: 'rgba(56, 152, 252, 1)'
                                 },
                                 borderRadius: '4px',
                             }}

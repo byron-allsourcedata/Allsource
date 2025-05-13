@@ -586,7 +586,7 @@ const SuppressionRules: React.FC = () => {
                             <Box sx={{ padding: 0 }}>
                                 <Button variant="outlined" onClick={handleSubmitDaysContacts} sx={{
                                     backgroundColor: '#fff',
-                                    color: 'rgba(80, 82, 178, 1)',
+                                    color: 'rgba(56, 152, 252, 1)',
                                     fontFamily: "Nunito Sans",
                                     textTransform: 'none',
                                     lineHeight: '22.4px',
@@ -594,7 +594,7 @@ const SuppressionRules: React.FC = () => {
                                     padding: '1em 1em',
                                     marginBottom: 1,
                                     textWrap: 'nowrap',
-                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     maxWidth: '79px',
                                     maxHeight: '40px',
                                     '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', },
@@ -640,7 +640,7 @@ const SuppressionRules: React.FC = () => {
                                                 transform: 'translateX(32px)', // Adjust for larger width
                                                 color: '#fff',
                                                 '&+.MuiSwitch-track': {
-                                                    backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                    backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                     opacity: checked ? '1' : '1',
                                                 }
                                             },
@@ -651,10 +651,10 @@ const SuppressionRules: React.FC = () => {
                                         },
                                         '& .MuiSwitch-track': {
                                             borderRadius: 20 / 2,
-                                            backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                            backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                             opacity: checked ? '1' : '1',
                                             '& .MuiSwitch-track.Mui-checked': {
-                                                backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                 opacity: checked ? '1' : '1',
                                             }
                                         },
@@ -749,7 +749,7 @@ const SuppressionRules: React.FC = () => {
                                                 transform: 'translateX(32px)', // Adjust for larger width
                                                 color: '#fff',
                                                 '&+.MuiSwitch-track': {
-                                                    backgroundColor: checkedUrl ? '#5052b2' : '#7b7b7b',
+                                                    backgroundColor: checkedUrl ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                     opacity: checkedUrl ? '1' : '1',
                                                 }
                                             },
@@ -760,10 +760,10 @@ const SuppressionRules: React.FC = () => {
                                         },
                                         '& .MuiSwitch-track': {
                                             borderRadius: 20 / 2,
-                                            backgroundColor: checkedUrl ? '#5052b2' : '#7b7b7b',
+                                            backgroundColor: checkedUrl ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                             opacity: checkedUrl ? '1' : '1',
                                             '& .MuiSwitch-track.Mui-checked': {
-                                                backgroundColor: checkedUrl ? '#5052b2' : '#7b7b7b',
+                                                backgroundColor: checkedUrl ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                 opacity: checkedUrl ? '1' : '1',
                                             }
                                         },
@@ -858,7 +858,7 @@ const SuppressionRules: React.FC = () => {
                             <Box sx={{ padding: 0, }}>
                                 <Button variant="outlined" onClick={handleSubmitUrl} sx={{
                                     backgroundColor: '#fff',
-                                    color: 'rgba(80, 82, 178, 1)',
+                                    color: 'rgba(56, 152, 252, 1)',
                                     fontFamily: "Nunito Sans",
                                     textTransform: 'none',
                                     lineHeight: '22.4px',
@@ -867,7 +867,7 @@ const SuppressionRules: React.FC = () => {
                                     padding: '1em 1em',
                                     marginBottom: 1,
                                     textWrap: 'nowrap',
-                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     maxWidth: '79px',
                                     maxHeight: '40px',
                                     '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
@@ -915,7 +915,7 @@ const SuppressionRules: React.FC = () => {
                                                 transform: 'translateX(32px)', // Adjust for larger width
                                                 color: '#fff',
                                                 '&+.MuiSwitch-track': {
-                                                    backgroundColor: checkedUrlParameters ? '#5052b2' : '#7b7b7b',
+                                                    backgroundColor: checkedUrlParameters ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                     opacity: checkedUrlParameters ? '1' : '1',
                                                 }
                                             },
@@ -926,10 +926,10 @@ const SuppressionRules: React.FC = () => {
                                         },
                                         '& .MuiSwitch-track': {
                                             borderRadius: 20 / 2,
-                                            backgroundColor: checkedUrlParameters ? '#5052b2' : '#7b7b7b',
+                                            backgroundColor: checkedUrlParameters ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                             opacity: checkedUrlParameters ? '1' : '1',
                                             '& .MuiSwitch-track.Mui-checked': {
-                                                backgroundColor: checkedUrlParameters ? '#5052b2' : '#7b7b7b',
+                                                backgroundColor: checkedUrlParameters ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                 opacity: checkedUrlParameters ? '1' : '1',
                                             }
                                         },
@@ -1012,7 +1012,7 @@ const SuppressionRules: React.FC = () => {
                             <Box sx={{ padding: 0 }}>
                                 <Button variant="outlined" onClick={handleSubmitUrlParam} sx={{
                                     backgroundColor: '#fff',
-                                    color: 'rgba(80, 82, 178, 1)',
+                                    color: 'rgba(56, 152, 252, 1)',
                                     fontFamily: "Nunito Sans",
                                     textTransform: 'none',
                                     lineHeight: '22.4px',
@@ -1021,7 +1021,7 @@ const SuppressionRules: React.FC = () => {
                                     padding: '1em 1em',
                                     marginBottom: 1,
                                     textWrap: 'nowrap',
-                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     maxWidth: '79px',
                                     maxHeight: '40px',
                                     '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
@@ -1072,7 +1072,7 @@ const SuppressionRules: React.FC = () => {
                         <Box sx={{ padding: 0 }}>
                             <Button variant="outlined" onClick={handleSubmitEmail} sx={{
                                 backgroundColor: '#fff',
-                                color: 'rgba(80, 82, 178, 1)',
+                                color: 'rgba(56, 152, 252, 1)',
                                 fontFamily: "Nunito Sans",
                                 textTransform: 'none',
                                 lineHeight: '22.4px',
@@ -1080,7 +1080,7 @@ const SuppressionRules: React.FC = () => {
                                 padding: '1em 1em',
                                 marginBottom: 1,
                                 textWrap: 'nowrap',
-                                border: '1px solid rgba(80, 82, 178, 1)',
+                                border: '1px solid rgba(56, 152, 252, 1)',
                                 maxWidth: '79px',
                                 maxHeight: '40px',
                                 '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
@@ -1132,7 +1132,7 @@ const SuppressionRules: React.FC = () => {
 
                                 <Box onClick={handleClick}
                                     sx={{
-                                        border: '1px dashed rgba(80, 82, 178, 1)',
+                                        border: '1px dashed rgba(56, 152, 252, 1)',
                                         borderRadius: '4px',
                                         display: 'flex',
                                         width: '49%',
@@ -1162,7 +1162,7 @@ const SuppressionRules: React.FC = () => {
                                             <Image src='upload.svg' alt="upload" width={40} height={40} />
                                         </Button>
                                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', justifyContent: 'start' }}>
-                                            <Typography className="main-text" sx={{ color: 'rgba(80, 82, 178, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
+                                            <Typography className="main-text" sx={{ color: 'rgba(56, 152, 252, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
                                                 Upload a file
                                             </Typography>
                                             <Typography className="main-text" sx={{ color: 'rgba(32, 33, 36, 1)', mb: 0, padding: 0, fontWeight: 500 }}>
@@ -1215,13 +1215,13 @@ const SuppressionRules: React.FC = () => {
                             <Typography className="main-text" component="div"
                                 sx={{ ...suppressionsStyles.text, gap: 0.25, pt: 1, "@media (max-width: 700px)": { mb: 1 } }}
                             >
-                                Sample doc: <Typography onClick={downloadFile} component="span" sx={{ ...suppressionsStyles.text, color: 'rgba(80, 82, 178, 1)', cursor: 'pointer', fontWeight: 400 }}>sample suppression-list.csv</Typography>
+                                Sample doc: <Typography onClick={downloadFile} component="span" sx={{ ...suppressionsStyles.text, color: 'rgba(56, 152, 252, 1)', cursor: 'pointer', fontWeight: 400 }}>sample suppression-list.csv</Typography>
                             </Typography>
 
                             <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end' }}>
                                 <Button variant="outlined" onClick={saveFile} sx={{
                                     backgroundColor: '#fff',
-                                    color: 'rgba(80, 82, 178, 1)',
+                                    color: 'rgba(56, 152, 252, 1)',
                                     fontFamily: "Nunito Sans",
                                     textTransform: 'none',
                                     lineHeight: '22.4px',
@@ -1229,7 +1229,7 @@ const SuppressionRules: React.FC = () => {
                                     padding: '1em 1em',
                                     marginBottom: 1,
                                     textWrap: 'nowrap',
-                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     maxWidth: '79px',
                                     maxHeight: '40px',
                                     '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
@@ -1331,10 +1331,10 @@ const SuppressionRules: React.FC = () => {
                                                 '@media (max-width: 800px)': { display: 'flex', flexDirection: 'row', pl: 5 }
                                             }}>
                                                 <IconButton onClick={() => handleDownloadFile(suppression.id)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0, mr: 1 }}>
-                                                    <DownloadIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
+                                                    <DownloadIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(56, 152, 252, 1)' } }} />
                                                 </IconButton>
                                                 <IconButton onClick={(event) => handleClickOpen(event, suppression.id)} sx={{ ':hover': { backgroundColor: 'transparent', }, padding: 0 }}>
-                                                    <DeleteIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(80, 82, 178, 1)' } }} />
+                                                    <DeleteIcon sx={{ width: '20px', height: '20px', color: 'rgba(188, 188, 188, 1)', ':hover': { color: 'rgba(56, 152, 252, 1)' } }} />
                                                 </IconButton>
                                                 <Popover
                                                     open={Boolean(anchorEl)}
@@ -1367,11 +1367,11 @@ const SuppressionRules: React.FC = () => {
                                                     <DialogActions>
                                                         <Button className="second-sub-title" onClick={handleClose} sx={{
                                                             backgroundColor: '#fff',
-                                                            color: 'rgba(80, 82, 178, 1) !important',
+                                                            color: 'rgba(56, 152, 252, 1) !important',
                                                             fontSize: '14px',
                                                             textTransform: 'none',
                                                             padding: '0.75em 1em',
-                                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                             maxWidth: '50px',
                                                             maxHeight: '30px',
                                                             '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
@@ -1379,15 +1379,15 @@ const SuppressionRules: React.FC = () => {
                                                             Cancel
                                                         </Button>
                                                         <Button className="second-sub-title" onClick={handleDeleteTableFile} sx={{
-                                                            backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                            backgroundColor: 'rgba(56, 152, 252, 1)',
                                                             color: '#fff !important',
                                                             fontSize: '14px',
                                                             textTransform: 'none',
                                                             padding: '0.75em 1em',
-                                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                             maxWidth: '60px',
                                                             maxHeight: '30px',
-                                                            '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                            '&:hover': { backgroundColor: 'rgba(56, 152, 252, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
                                                         }}>
                                                             Delete
                                                         </Button>

@@ -10,16 +10,14 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 import httpx
 import os
-from faker import Faker
-from datetime import datetime, timedelta
+from services.integrations.commonIntegration import *
+from models.integrations.users_domains_integrations import UserIntegration
+from models.integrations.integrations_users_sync import IntegrationUserSync
 from fastapi import HTTPException
 from models.enrichment.enrichment_users import EnrichmentUser
 from typing import List
-
-from schemas.integrations.hubspot import HubspotProfile
 from schemas.integrations.integrations import DataMap
 from schemas.integrations.integrations import IntegrationCredentials
-from services.integrations.commonIntegration import get_states_dataframe
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from uuid import UUID
 
@@ -118,7 +116,7 @@ class HubspotIntegrationsService:
                 raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
-        integartions = self.__save_integrations(credentials.hubspot.access_token, domain.id, user)
+        integartions = self.__save_integrations(credentials.hubspot.access_token, None if domain is None else domain.id, user)
         return {
             'integartions': integartions,
             'status': IntegrationsStatus.SUCCESS.value
@@ -159,10 +157,10 @@ class HubspotIntegrationsService:
 
         return sync
 
-    async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
         profiles = []
         for enrichment_user in enrichment_users:
-            profile = self.__mapped_profile(enrichment_user, data_sync.data_map)
+            profile = self.__mapped_profile(enrichment_user, target_schema, validations, integration_data_sync.data_map)
             if profile:
                 profiles.append(profile)
         
@@ -247,85 +245,37 @@ class HubspotIntegrationsService:
         return ProccessDataSyncResult.SUCCESS.value
 
     
-    def __mapped_profile(self, enrichment_user: EnrichmentUser, data_map: dict) -> dict:
-        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+    def __mapped_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict, data_map: list) -> dict:
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
             return None
+        
+        business_email, personal_email, phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+        main_email, main_phone = resolve_main_email_and_phone(enrichment_contacts=enrichment_contacts, validations=validations, target_schema=target_schema, 
+                                                              business_email=business_email, personal_email=personal_email, phone=phone)
         first_name = enrichment_contacts.first_name
         last_name = enrichment_contacts.last_name
-        linkedin_url = enrichment_contacts.linkedin_url
         
-        fake = Faker()
-        verified_email = fake.email()
-        verified_phone = fake.phone_number()
-        if not verified_email or not first_name or not last_name:
+        if not main_email or not first_name or not last_name:
             return None
-        
-        enrichment_personal_profiles = enrichment_user.personal_profiles
-        enrichment_professional_profiles = enrichment_user.professional_profiles
-        city = None
-        state = None
-        zip_code = None
-        gender = None
-        birth_day = None
-        birth_month = None
-        birth_year = None
-        company_name = None
-        
-        
-        if enrichment_professional_profiles:
-            company_name = enrichment_professional_profiles.current_company_name
-        
-        if enrichment_personal_profiles:
-            zip_code = str(enrichment_personal_profiles.zip_code5)
-            df_geo = get_states_dataframe()
-            if df_geo['zip'].dtype == object:
-                df_geo['zip'] = df_geo['zip'].astype(int)
-            row = df_geo.loc[df_geo['zip'] == zip_code]
-            if not row.empty:
-                city = row['city'].iat[0]
-                state = row['state_name'].iat[0]
-            
-            if enrichment_personal_profiles.gender == 1:
-                gender = 'm'
-            elif enrichment_personal_profiles.gender == 2:
-                gender = 'f'
-            birth_day = str(enrichment_personal_profiles.birth_day)
-            birth_month = str(enrichment_personal_profiles.birth_month)
-            birth_year = str(enrichment_personal_profiles.birth_year)
-            
-        
-        
-        #properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
 
-        return {
-            'email': verified_email,
-            'phone': verified_phone,
-            'lifecyclestage': None,
-            'city': city,
-            'state': state,
-            'zip': zip_code,
+        result = {
+            'email': main_email,
             'firstname': first_name,
-            'lastname': last_name,
-            'company': company_name,
-            'website': None,
-            'jobtitle': None,
-            'industry': None,
-            'annualrevenue': None,
-            'gender': gender,
+            'lastname': last_name
+        }
+        
+        required_types = {m['type'] for m in data_map}
+        context = {
+            'main_phone': main_phone,
+            'professional_profiles': enrichment_user.professional_profiles,
+            'postal': enrichment_user.postal,
+            'personal_profiles': enrichment_user.personal_profiles
         }
 
-
-    def __map_properties(self, five_x_five_user, data_map: List[DataMap]) -> dict:
-        properties = {}
-        for mapping in data_map:
-            five_x_five_field = mapping.get("type")
-            new_field = mapping.get("value")
-            value_field = getattr(five_x_five_user, five_x_five_field, None)
-
-            if value_field is not None:
-                properties[new_field] = value_field.isoformat() if isinstance(value_field, datetime) else value_field
-
-        return properties
-
+        for field_type in required_types:
+            filler = FIELD_FILLERS.get(field_type)
+            if filler:
+                filler(result, context)
+                
+        return result

@@ -816,11 +816,17 @@ const AccountSetup = () => {
       setCmsData(response.data);
       setWordPressId(response.data.pixel_client_id)
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        if (error.response.data.status === 'NEED_BOOK_CALL') {
-          sessionStorage.setItem('is_slider_opened', 'true');
-        } else {
-          sessionStorage.setItem('is_slider_opened', 'false');
+      if (axios.isAxiosError(error) && error.response) {
+        const { status, data } = error.response;
+        if (status === 400 && data?.status === "DOMAIN_NOT_FOUND") {
+          showErrorToast("Please set up your domain to continue");
+          return;
+        }
+        if (status === 403 && data?.status === "NEED_BOOK_CALL") {
+          sessionStorage.setItem("is_slider_opened", "true");
+        }
+        else {
+          sessionStorage.setItem("is_slider_opened", "false");
         }
       }
     }
@@ -1095,7 +1101,7 @@ const AccountSetup = () => {
                 textAlign: "left",
                 textDecoration: "underline",
                 textTransform: 'none',
-                color: "rgba(80, 82, 178, 1)",
+                color: "rgba(56, 152, 252, 1)",
                 position: 'absolute',
 
               }}
@@ -1116,9 +1122,9 @@ const AccountSetup = () => {
               border: '1px solid rgba(184, 184, 184, 1)',
               borderRadius: '3.27px',
               '&:hover': {
-                border: '1px solid rgba(80, 82, 178, 1)',
+                border: '1px solid rgba(56, 152, 252, 1)',
                 '& .MuiSvgIcon-root': {
-                  color: 'rgba(80, 82, 178, 1)'
+                  color: 'rgba(56, 152, 252, 1)'
                 }
               },
               "@media (max-width: 600px)": {
@@ -1521,9 +1527,9 @@ const AccountSetup = () => {
             border: '1px solid rgba(184, 184, 184, 1)',
             borderRadius: '3.27px',
             '&:hover': {
-              border: '1px solid rgba(80, 82, 178, 1)',
+              border: '1px solid rgba(56, 152, 252, 1)',
               '& .MuiSvgIcon-root': {
-                color: 'rgba(80, 82, 178, 1)'
+                color: 'rgba(56, 152, 252, 1)'
               }
             },
             "@media (max-width: 600px)": {
@@ -1821,7 +1827,7 @@ const AccountSetup = () => {
                         </Typography>
                       </Box>
                       <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-insta"
-                        target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
+                        target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(56, 152, 252, 1)" }}
                         sx={{ textDecoration: "underline", cursor: "pointer" }}>
                         Tutorial
                       </Link>
@@ -1875,17 +1881,17 @@ const AccountSetup = () => {
                             }}
                             sx={{
                               m: 0,
-                              border: '1px solid rgba(80, 82, 178, 1)',
+                              border: '1px solid rgba(56, 152, 252, 1)',
                               textTransform: 'none',
                               background: '#fff',
-                              color: 'rgba(80, 82, 178, 1)',
+                              color: 'rgba(56, 152, 252, 1)',
                               fontFamily: 'Nunito Sans',
                               padding: '0.65em 2em',
                               '@media (max-width: 600px)': { padding: '0.5em 1.5em', left: 0 }
                             }}
                           >
                             <Typography className='second-sub-title' sx={{
-                              color: 'rgba(80, 82, 178, 1) !important', textAlign: 'left'
+                              color: 'rgba(56, 152, 252, 1) !important', textAlign: 'left'
                             }}>
                               Save
                             </Typography>
@@ -1897,7 +1903,7 @@ const AccountSetup = () => {
                             {domainName}
                           </Typography>
                           <IconButton onClick={() => setEditingName(true)} sx={{ p: "4px", ':hover': { backgroundColor: 'transparent', } }} >
-                            <EditIcon height={8} width={8} sx={{ color: "rgba(80, 82, 178, 1)" }} />
+                            <EditIcon height={8} width={8} sx={{ color: "rgba(56, 152, 252, 1)" }} />
                           </IconButton>
                         </Box>
 
@@ -2004,10 +2010,10 @@ const AccountSetup = () => {
                             onClick={handleButtonClick}
                             sx={{
                               ml: 2,
-                              border: '1px solid rgba(80, 82, 178, 1)',
+                              border: '1px solid rgba(56, 152, 252, 1)',
                               textTransform: 'none',
                               background: '#fff',
-                              color: 'rgba(80, 82, 178, 1)',
+                              color: 'rgba(56, 152, 252, 1)',
                               fontFamily: 'Nunito Sans',
                               padding: '0.65em 2em',
                               mr: 1,
@@ -2015,7 +2021,7 @@ const AccountSetup = () => {
                             }}
                           >
                             <Typography className='second-sub-title' sx={{
-                              color: 'rgba(80, 82, 178, 1) !important', textAlign: 'left'
+                              color: 'rgba(56, 152, 252, 1) !important', textAlign: 'left'
                             }}>
                               Send
                             </Typography>
@@ -2059,7 +2065,7 @@ const AccountSetup = () => {
                         </Typography>
                       </Box>
                       <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
-                        target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
+                        target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(56, 152, 252, 1)" }}
                         sx={{ textDecoration: "underline", cursor: "pointer" }}>
                         Tutorial
                       </Link>
@@ -2097,7 +2103,7 @@ const AccountSetup = () => {
                           mb: 0,
                           "& .MuiOutlinedInput-root": {
                             "& fieldset": {
-                              borderColor: "rgba(80, 82, 178, 1)",
+                              borderColor: "rgba(56, 152, 252, 1)",
                             },
                             "&:hover fieldset": {
                               borderColor: "rgba(86, 153, 237, 1)",
@@ -2147,7 +2153,7 @@ const AccountSetup = () => {
                           mb: 0,
                           "& .MuiOutlinedInput-root": {
                             "& fieldset": {
-                              borderColor: "rgba(80, 82, 178, 1)",
+                              borderColor: "rgba(56, 152, 252, 1)",
                             },
                             "&:hover fieldset": {
                               borderColor: "rgba(86, 153, 237, 1)",
@@ -2215,7 +2221,7 @@ const AccountSetup = () => {
                         </Typography>
                       </Box>
                       <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-bigcommerce-to-maximiz"
-                        target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
+                        target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(56, 152, 252, 1)" }}
                         sx={{ textDecoration: "underline", cursor: "pointer" }}>
                         Tutorial
                       </Link>
@@ -2246,7 +2252,7 @@ const AccountSetup = () => {
                           m: 0,
                           "& .MuiOutlinedInput-root": {
                             "& fieldset": {
-                              borderColor: "rgba(80, 82, 178, 1)",
+                              borderColor: "rgba(56, 152, 252, 1)",
                             },
                             "&:hover fieldset": {
                               borderColor: "rgba(86, 153, 237, 1)",
@@ -2312,7 +2318,7 @@ const AccountSetup = () => {
                         </Typography>
                       </Box>
                       <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-to-i-install-maximiz-pixel-on-google-tag-manager"
-                        target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
+                        target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(56, 152, 252, 1)" }}
                         sx={{ textDecoration: "underline", cursor: "pointer", '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
                         Tutorial
                       </Link>
@@ -2434,7 +2440,7 @@ const AccountSetup = () => {
                                   borderRadius: '4px',
                                   border: '1px solid rgba(224, 224, 224, 1)',
                                   '&:focus': {
-                                    borderColor: 'rgba(80, 82, 178, 1)',
+                                    borderColor: 'rgba(56, 152, 252, 1)',
                                     boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
                                   },
                                 }}
@@ -2465,7 +2471,7 @@ const AccountSetup = () => {
                                   borderRadius: '4px',
                                   border: '1px solid rgba(224, 224, 224, 1)',
                                   '&:focus': {
-                                    borderColor: 'rgba(80, 82, 178, 1)',
+                                    borderColor: 'rgba(56, 152, 252, 1)',
                                     boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
                                   },
                                 }}
@@ -2508,7 +2514,7 @@ const AccountSetup = () => {
                                   borderRadius: '4px',
                                   border: '1px solid rgba(224, 224, 224, 1)',
                                   '&:focus': {
-                                    borderColor: 'rgba(80, 82, 178, 1)',
+                                    borderColor: 'rgba(56, 152, 252, 1)',
                                     boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
                                   },
                                 }}
@@ -2572,7 +2578,7 @@ const AccountSetup = () => {
                         </Typography>
                       </Box>
                       <Link href="https://wordpress.org/plugins/maximiz/"
-                        target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(80, 82, 178, 1)" }}
+                        target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(56, 152, 252, 1)" }}
                         sx={{ textDecoration: "underline", cursor: "pointer" }}>
                         Tutorial
                       </Link>
@@ -2586,7 +2592,7 @@ const AccountSetup = () => {
                         <Typography className='first-sub-title' sx={{ ...maintext, p: 0, fontWeight: '500' }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
                       </Box>
                       <Box />
-                      <Button component={Link} href="https://wordpress.org/plugins/maximiz/" target="_blank" variant="outlined" sx={{ backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', width: "110px", height: "40px", textTransform: 'none', padding: '1.2 3', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)' } }}>
+                      <Button component={Link} href="https://wordpress.org/plugins/maximiz/" target="_blank" variant="outlined" sx={{ backgroundColor: 'rgba(56, 152, 252, 1)', color: 'rgba(255, 255, 255, 1)', width: "110px", height: "40px", textTransform: 'none', padding: '1.2 3', border: '1px solid rgba(56, 152, 252, 1)', '&:hover': { backgroundColor: 'rgba(56, 152, 252, 1)' } }}>
                         <Typography className='second-sub-title' sx={{ fontSize: '14px !important', color: '#fff !important', textWrap: 'wrap' }}>Get plugin</Typography>
                       </Button>
                     </Box>
@@ -2641,8 +2647,8 @@ const AccountSetup = () => {
                         <Typography className='first-sub-title' sx={{ ...maintext, p: 0, fontWeight: '500' }}>Verify if Maximiz is receiving data from your site</Typography>
                       </Box>
                       <Box />
-                      <Button variant="outlined" sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', width: "156px", textTransform: 'none', padding: '10px 24px', border: '1px solid rgba(80, 82, 178, 1)' }}>
-                        <Typography sx={{ fontSize: '14px !important', fontWeight: "400", color: 'rgba(80, 82, 178, 1) !important', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>View installation</Typography>
+                      <Button variant="outlined" sx={{ backgroundColor: 'rgba(255, 255, 255, 1)', width: "156px", textTransform: 'none', padding: '10px 24px', border: '1px solid rgba(56, 152, 252, 1)' }}>
+                        <Typography sx={{ fontSize: '14px !important', fontWeight: "400", color: 'rgba(56, 152, 252, 1) !important', lineHeight: '22.4px', textAlign: 'left', textWrap: 'wrap' }}>View installation</Typography>
                       </Button>
                     </Box>
 

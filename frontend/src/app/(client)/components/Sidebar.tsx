@@ -128,11 +128,11 @@ const sidebarStyles = {
   },
   activeItem: {
     cursor: "pointer",
-    borderLeft: "3px solid rgba(80, 82, 178, 1)",
-    color: "rgba(80, 82, 178, 1)",
+    borderLeft: "3px solid rgba(56, 152, 252, 1)",
+    color: "rgba(56, 152, 252, 1)",
     minHeight: "4.5em",
     "& .MuiSvgIcon-root": {
-      color: "rgba(80, 82, 178, 1)",
+      color: "rgba(56, 152, 252, 1)",
     },
   },
 };
@@ -254,7 +254,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   useEffect(() => {
     if (currentDomain) {
-      const domain = domains.find((d) => d.domain === currentDomain);
+      const domain = domains?.find((d) => d.domain === currentDomain);
       if (domain) {
         setActivatePercent(domain.activate_percent);
       }
@@ -274,17 +274,19 @@ const Sidebar: React.FC<SidebarProps> = ({
         return;
       }
 
-      const response = await axiosInstance.get("/check-user-authorization");
-      const status = response.data.status;
+      else {
+        const response = await axiosInstance.get("/check-user-authorization");
+        const status = response.data.status;
 
-      if (status === "SUCCESS") {
-        isAuthorized.current = true;
-        router.push(route);
-      } else if (status === "NEED_BOOK_CALL") {
-        sessionStorage.setItem("is_slider_opened", "true");
-        setShowSlider(true);
-      } else {
-        router.push(route);
+        if (status === "SUCCESS") {
+          isAuthorized.current = true;
+          router.push(route);
+        } else if (status === "NEED_BOOK_CALL") {
+          sessionStorage.setItem("is_slider_opened", "true");
+          setShowSlider(true);
+        } else {
+          router.push(route);
+        }
       }
     } catch (error) {
       if (error instanceof AxiosError) {
@@ -576,7 +578,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           zIndex: 10,
         }}
       >
-        <SetupSection percent_steps={activatePercent ? activatePercent : 0} />
+        {/* <SetupSection percent_steps={activatePercent ? activatePercent : 0} /> */}
         <Box sx={sidebarStyles.settings}>
           <ListItem
             button

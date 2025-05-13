@@ -52,14 +52,14 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
 
     const colorPalette = [
         'rgba(244, 87, 69, 1)',
-        'rgba(80, 82, 178, 1)',
+        'rgba(56, 152, 252, 1)',
         'rgba(224, 176, 5, 1)',
         'rgba(144, 190, 109, 1)'
     ];
 
     const colorMapping = {
         total_revenue: 'rgba(244, 87, 69, 1)',
-        visitors: 'rgba(80, 82, 178, 1)',
+        visitors: 'rgba(56, 152, 252, 1)',
         viewed_product: 'rgba(224, 176, 5, 1)',
         abandoned_cart: 'rgba(144, 190, 109, 1)'
     };
@@ -565,8 +565,8 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         ml: 5,
                                         height: '20px',
                                         borderRadius: '4px', // Квадратная форма
-                                        border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
-                                        color: chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                        border: `1.5px solid ${chartType === 'line' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                        color: chartType === 'line' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)',
                                     }}
                                 >
                                     <ShowChart sx={{ fontSize: '20px' }} />
@@ -578,8 +578,8 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                         width: '20px',
                                         height: '20px',
                                         borderRadius: '4px', // Квадратная форма
-                                        border: `1.5px solid ${chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
-                                        color: chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                        border: `1.5px solid ${chartType === 'bar' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                        color: chartType === 'bar' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)',
                                     }}
                                 >
                                     <IconBarChart sx={{ fontSize: '20px' }} />
@@ -616,8 +616,8 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                 ml: 5,
                                                 height: '20px',
                                                 borderRadius: '4px', // square form
-                                                border: `1.5px solid ${chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
-                                                color: chartType === 'line' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                                border: `1.5px solid ${chartType === 'line' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                                color: chartType === 'line' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)',
                                             }}
                                         >
                                             <ShowChart sx={{ fontSize: '20px' }} />
@@ -629,8 +629,8 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                 width: '20px',
                                                 height: '20px',
                                                 borderRadius: '4px', // square form
-                                                border: `1.5px solid ${chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)'}`,
-                                                color: chartType === 'bar' ? 'rgba(80, 82, 178, 1)' : 'rgba(115, 115, 115, 1)',
+                                                border: `1.5px solid ${chartType === 'bar' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)'}`,
+                                                color: chartType === 'bar' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)',
                                             }}
                                         >
                                             <IconBarChart sx={{ fontSize: '20px' }} />
@@ -707,7 +707,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                     fontFamily: 'Nunito Sans',
                                                     fontWeight: 600,
                                                     fontSize: '14px',
-                                                    color: selectedGraphs.length == 4 ? 'rgba(80, 82, 178, 1)' : 'inherit' // Изменяем цвет текста
+                                                    color: selectedGraphs.length == 4 ? 'rgba(56, 152, 252, 1)' : 'inherit' // Изменяем цвет текста
                                                 }}
                                             >
                                                 All revenue type
@@ -732,7 +732,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                                             backgroundColor: option.color,
                                                         }}
                                                     />
-                                                    <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: 600, fontSize: '14px', color: selectedGraphs.includes(option.id) ? 'rgba(80, 82, 178, 1)' : 'inherit' }}>
+                                                    <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: 600, fontSize: '14px', color: selectedGraphs.includes(option.id) ? 'rgba(56, 152, 252, 1)' : 'inherit' }}>
                                                         {option.label}
                                                     </Typography>
                                                 </Box>
@@ -1097,7 +1097,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 width: '52px',
                                 height: '52px',
                                 borderRadius: '4px',
-                                border: '1px solid rgba(80, 82, 178, 1)'
+                                border: '1px solid rgba(56, 152, 252, 1)'
                             }}>
                                 <Image src={'/PersonMarked.svg'} alt={'Total Visitors'} width={28} height={28} />
                             </Box>
@@ -1213,7 +1213,7 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
                                 width: '52px',
                                 height: '52px',
                                 borderRadius: '4px',
-                                border: '1px solid rgba(80, 82, 178, 1)'
+                                border: '1px solid rgba(56, 152, 252, 1)'
                             }}>
                                 <Image src={'/distribution.svg'} alt={'Distribution'} width={30} height={30} />
                             </Box>

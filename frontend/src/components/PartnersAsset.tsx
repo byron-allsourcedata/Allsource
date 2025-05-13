@@ -111,7 +111,7 @@ const PartnersAsset: React.FC<PartnersAssetProps> = ({data, deleteAsset = () => 
                         updateOrAddAsset={updateOrAddAsset}
                         type={typeAsset} />
                     {isAdmin && <Box onClick={() => handleFormOpenPopup(data.type)} sx={{ 
-                        border: "1px dashed rgba(80, 82, 178, 1)", 
+                        border: "1px dashed rgba(56, 152, 252, 1)", 
                         width: "62px", 
                         height: "62px", 
                         borderRadius: "4px", 

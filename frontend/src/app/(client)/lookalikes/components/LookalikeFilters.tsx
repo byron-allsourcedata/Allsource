@@ -478,10 +478,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
                         alignItems: "flex-start",
                         justifyContent: "center",
                         border: isSelected
-                          ? "1px solid rgba(80, 82, 178, 1)"
+                          ? "1px solid rgba(56, 152, 252, 1)"
                           : "1px solid rgba(220, 220, 239, 1)",
                         color: isSelected
-                          ? "rgba(80, 82, 178, 1) !important"
+                          ? "rgba(56, 152, 252, 1) !important"
                           : "#5F6368 !important",
                         backgroundColor: isSelected
                           ? "rgba(237, 237, 247, 1)"
@@ -539,9 +539,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               onClick={handleClearFilters}
               className='second-sub-title'
               sx={{
-                color: "rgba(80, 82, 178, 1) !important",
+                color: "rgba(56, 152, 252, 1) !important",
                 backgroundColor: '#fff',
-                border: ' 1px solid rgba(80, 82, 178, 1)',
+                border: ' 1px solid rgba(56, 152, 252, 1)',
                 textTransform: "none",
                 padding: "0.75em 2.5em",
                 '&:hover': {
@@ -556,12 +556,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
               onClick={handleApply}
               className='second-sub-title'
               sx={{
-                backgroundColor: "rgba(80, 82, 178, 1)",
+                backgroundColor: "rgba(56, 152, 252, 1)",
                 color: 'rgba(255, 255, 255, 1) !important',
                 textTransform: "none",
                 padding: "0.75em 2.5em",
                 '&:hover': {
-                  backgroundColor: 'rgba(80, 82, 178, 1)'
+                  backgroundColor: 'rgba(56, 152, 252, 1)'
                 }
               }}
             >

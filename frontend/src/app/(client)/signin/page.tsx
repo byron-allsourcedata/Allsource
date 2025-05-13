@@ -177,11 +177,6 @@ const Signin: React.FC = () => {
               router.push("/settings?section=subscription");
               break;
 
-            case "FILL_COMPANY_DETAILS":
-              await fetchUserData();
-              router.push("/account-setup");
-              break;
-
             case "NEED_BOOK_CALL":
               await fetchUserData();
               router.push("/audience-dashboard");
@@ -284,9 +279,6 @@ const Signin: React.FC = () => {
                     break;
                   case "NON_SHOPIFY_ACCOUNT":
                     showErrorToast("non shopify account");
-                    break;
-                  case "FILL_COMPANY_DETAILS":
-                    router.push("/account-setup");
                     break;
                   case "NEED_BOOK_CALL":
                     sessionStorage.setItem("is_slider_opened", "true");

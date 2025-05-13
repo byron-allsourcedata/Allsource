@@ -272,6 +272,7 @@ const SourcesImport: React.FC = () => {
       fetchDomainsAndLeads();
     } else {
       setSourceMethod(1);
+      setPixelNotInstalled(false);
       setTimeout(() => {
         scrollToBlock(block2Ref);
       }, 0);
@@ -864,8 +865,8 @@ const SourcesImport: React.FC = () => {
                       alignItems: "center",
                       width: "316px",
                       border: dragActive
-                        ? "2px dashed rgba(80, 82, 178, 1)"
-                        : "1px dashed rgba(80, 82, 178, 1)",
+                        ? "2px dashed rgba(56, 152, 252, 1)"
+                        : "1px dashed rgba(56, 152, 252, 1)",
                       borderRadius: "4px",
                       padding: "8px 16px",
                       height: "80px",
@@ -896,7 +897,7 @@ const SourcesImport: React.FC = () => {
                     >
                       <FileUploadOutlinedIcon
                         sx={{
-                          color: "rgba(80, 82, 178, 1)",
+                          color: "rgba(56, 152, 252, 1)",
                         }}
                       />
                     </IconButton>
@@ -906,7 +907,7 @@ const SourcesImport: React.FC = () => {
                           fontFamily: "Nunito Sans",
                           fontSize: "16px",
                           fontWeight: "600",
-                          color: "rgba(80, 82, 178, 1)",
+                          color: "rgba(56, 152, 252, 1)",
                         }}
                       >
                         Upload a file
@@ -1003,7 +1004,7 @@ const SourcesImport: React.FC = () => {
                         component="span"
                         sx={{
                           ...sourcesStyles.text,
-                          color: "rgba(80, 82, 178, 1)",
+                          color: "rgba(56, 152, 252, 1)",
                           cursor: "pointer",
                           fontWeight: 400,
                         }}
@@ -1123,7 +1124,7 @@ const SourcesImport: React.FC = () => {
                                   color: "rgba(17, 17, 19, 0.60)",
                                   top: "-5px",
                                   "&.Mui-focused": {
-                                    color: "rgba(80, 82, 178, 1)",
+                                    color: "rgba(56, 152, 252, 1)",
                                     top: 0,
                                   },
                                   "&.MuiInputLabel-shrink": {
@@ -1152,7 +1153,7 @@ const SourcesImport: React.FC = () => {
                                       },
                                     "&.Mui-focused .MuiOutlinedInput-notchedOutline":
                                       {
-                                        borderColor: "rgba(80, 82, 178, 1)",
+                                        borderColor: "rgba(56, 152, 252, 1)",
                                       },
                                   },
                                   "&+.MuiFormHelperText-root": {
@@ -1210,7 +1211,7 @@ const SourcesImport: React.FC = () => {
                                       },
                                     "&.Mui-focused .MuiOutlinedInput-notchedOutline":
                                       {
-                                        borderColor: "rgba(80, 82, 178, 1)",
+                                        borderColor: "rgba(56, 152, 252, 1)",
                                       },
                                   },
                                 }}
@@ -1274,7 +1275,7 @@ const SourcesImport: React.FC = () => {
                           lineHeight: "22.4px",
                           fontSize: "14px",
                           fontWeight: "600",
-                          color: "rgba(80, 82, 178, 1)",
+                          color: "rgba(56, 152, 252, 1)",
                           cursor: "pointer",
                         }}
                       >
@@ -1407,7 +1408,7 @@ const SourcesImport: React.FC = () => {
                                 textDecoration: "underline",
                                 fontSize: "14px",
                                 fontWeight: "600",
-                                color: "rgba(80, 82, 178, 1)",
+                                color: "rgba(56, 152, 252, 1)",
                               }}
                             >
                               + Add a new pixel to domain
@@ -1826,17 +1827,17 @@ const SourcesImport: React.FC = () => {
                           router.push("/sources");
                         }}
                         sx={{
-                          borderColor: "rgba(80, 82, 178, 1)",
+                          borderColor: "rgba(56, 152, 252, 1)",
                           width: "92px",
                           height: "40px",
                           ":hover": {
                             borderColor: "rgba(62, 64, 142, 1)",
                           },
                           ":active": {
-                            borderColor: "rgba(80, 82, 178, 1)",
+                            borderColor: "rgba(56, 152, 252, 1)",
                           },
                           ":disabled": {
-                            borderColor: "rgba(80, 82, 178, 1)",
+                            borderColor: "rgba(56, 152, 252, 1)",
                             opacity: 0.4,
                           },
                         }}
@@ -1844,7 +1845,7 @@ const SourcesImport: React.FC = () => {
                         <Typography
                           sx={{
                             textAlign: "center",
-                            color: "rgba(80, 82, 178, 1)",
+                            color: "rgba(56, 152, 252, 1)",
                             textTransform: "none",
                             fontFamily: "Nunito Sans",
                             fontWeight: "600",
@@ -1864,17 +1865,17 @@ const SourcesImport: React.FC = () => {
                           pixelNotInstalled
                         }
                         sx={{
-                          backgroundColor: "rgba(80, 82, 178, 1)",
+                          backgroundColor: "rgba(56, 152, 252, 1)",
                           width: "120px",
                           height: "40px",
                           ":hover": {
                             backgroundColor: "rgba(62, 64, 142, 1)",
                           },
                           ":active": {
-                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            backgroundColor: "rgba(56, 152, 252, 1)",
                           },
                           ":disabled": {
-                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            backgroundColor: "rgba(56, 152, 252, 1)",
                             opacity: 0.6,
                           },
                         }}

@@ -197,19 +197,19 @@ const ReferralOverview: React.FC = () => {
                                         mr: 2,
                                         textWrap: 'nowrap',
                                         backgroundColor: '#fff',
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                         fontFamily: "Nunito Sans",
                                         textTransform: 'none',
                                         lineHeight: '22.4px',
                                         fontWeight: '600',
                                         padding: '0.75em 2em',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
                                         '&:hover': {
                                             backgroundColor: '#fff',
                                             boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
                                             '&.Mui-disabled': {
                                                 backgroundColor: 'rgba(80, 82, 178, 0.6)',
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 cursor: 'not-allowed',
                                             }
                                         }
@@ -282,7 +282,7 @@ const ReferralOverview: React.FC = () => {
                                     sx={{
                                         textTransform: 'none',
                                         color: 'rgba(128, 128, 128, 1)',
-                                        border: formattedDates ? '1px solid rgba(80, 82, 178, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                        border: formattedDates ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                         borderRadius: '4px',
                                         padding: '8px',
                                         minWidth: 'auto',
@@ -292,15 +292,15 @@ const ReferralOverview: React.FC = () => {
                                         },
                                         '&:hover': {
                                             backgroundColor: 'transparent',
-                                            border: '1px solid rgba(80, 82, 178, 1)',
-                                            color: 'rgba(80, 82, 178, 1)',
+                                            border: '1px solid rgba(56, 152, 252, 1)',
+                                            color: 'rgba(56, 152, 252, 1)',
                                             '& .MuiSvgIcon-root': {
-                                                color: 'rgba(80, 82, 178, 1)'
+                                                color: 'rgba(56, 152, 252, 1)'
                                             }
                                         }
                                     }}
                                 >
-                                    <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)', }} />
+                                    <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)', }} />
                                     <Typography variant="body1" sx={{
                                         fontFamily: 'Nunito Sans',
                                         fontSize: '14px',

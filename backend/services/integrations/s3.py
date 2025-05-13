@@ -10,12 +10,14 @@ import csv
 import logging
 import tempfile
 import uuid
+from services.integrations.commonIntegration import *
+from models.integrations.users_domains_integrations import UserIntegration
+from models.integrations.integrations_users_sync import IntegrationUserSync
 from datetime import datetime, timezone
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit, DataSyncType
 from models.enrichment.enrichment_users import EnrichmentUser
 from uuid import UUID
 from faker import Faker
-from services.integrations.commonIntegration import get_states_dataframe
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from schemas.integrations.integrations import DataMap, IntegrationCredentials
 from persistence.domains import UserDomainsPersistence
@@ -150,7 +152,7 @@ class S3IntegrationService:
             error_code = e.response['Error']['Code']
             raise HTTPException(status_code=400, detail={'status': 'CREDENTIALS_INVALID', 'message': f'AWS error: {error_code}'})
         
-        return self.__save_integrations(secret_id=credentials.s3.secret_id, secret_key=credentials.s3.secret_key,domain_id=domain.id, user=user)
+        return self.__save_integrations(secret_id=credentials.s3.secret_id, secret_key=credentials.s3.secret_key,domain_id=None if domain is None else domain.id, user=user)
  
     async def create_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
         credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
@@ -181,10 +183,10 @@ class S3IntegrationService:
         })
         return sync
 
-    async def process_data_sync(self, user_integration, integration_data_sync, enrichment_users: EnrichmentUser):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
         profiles = []
         for enrichment_user in enrichment_users:
-            profile = self.__mapped_s3_contact(enrichment_user, integration_data_sync.data_map)
+            profile = self.__mapped_s3_contact(enrichment_user, target_schema, validations, integration_data_sync.data_map)
             profiles.append(profile)
         
         list_response = self.__send_contacts(access_token=user_integration.access_token, bucket_name=integration_data_sync.list_name, profiles=profiles)
@@ -218,13 +220,13 @@ class S3IntegrationService:
         secret_id = parsed_data["secret_id"]
         secret_key = parsed_data["secret_key"]
 
-        headers = profiles[0].keys() if profiles else []
+        headers = sorted({key for profile in profiles for key in profile}) if profiles else []
         
         with tempfile.NamedTemporaryFile(mode="w", newline="", suffix=".csv", delete=False, encoding="utf-8") as temp_csv:
             writer = csv.DictWriter(temp_csv, fieldnames=headers)
             writer.writeheader()
             for row in profiles:
-                writer.writerow(row)
+                writer.writerow({key: row.get(key, "") for key in headers})
             temp_file_path = temp_csv.name
 
         result = self.upload_file_to_bucket(
@@ -237,84 +239,49 @@ class S3IntegrationService:
 
         return result
     
-    def __map_properties(self, enrichment_user: EnrichmentUser, data_map: List[DataMap]) -> dict:
-        properties = {}
-        for mapping in data_map:
-            five_x_five_field = mapping.get("type")
-            new_field = mapping.get("value")
-            value_field = getattr(enrichment_user, five_x_five_field, None)
-
-            if value_field is not None:
-                properties[new_field] = value_field.isoformat() if isinstance(value_field, datetime) else value_field
-
-        return properties
-    
-    def __mapped_s3_contact(self, enrichment_user: EnrichmentUser, data_map):
-        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+    def __mapped_s3_contact(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict, data_map: list):
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
             return None
+        
+        business_email, personal_email, phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+        main_email, main_phone = resolve_main_email_and_phone(enrichment_contacts=enrichment_contacts, validations=validations, target_schema=target_schema, 
+                                                              business_email=business_email, personal_email=personal_email, phone=phone)
         first_name = enrichment_contacts.first_name
         last_name = enrichment_contacts.last_name
-        linkedin_url = enrichment_contacts.linkedin_url
         
-        fake = Faker()
-        verified_email = fake.email()
-        verified_phone = fake.phone_number()
-        if not verified_email or not first_name or not last_name:
+        if not main_email or not first_name or not last_name:
             return None
-        
-        enrichment_personal_profiles = enrichment_user.personal_profiles
-        enrichment_professional_profiles = enrichment_user.professional_profiles
-        city = None
-        state = None
-        zip_code = None
-        gender = None
-        birth_day = None
-        birth_month = None
-        birth_year = None
-        company_name = None
-        homeowner = None
-        
-        if enrichment_professional_profiles:
-            company_name = enrichment_professional_profiles.current_company_name
-        
-        if enrichment_personal_profiles:
-            zip_code = str(enrichment_personal_profiles.zip_code5)
-            df_geo = get_states_dataframe()
-            if df_geo['zip'].dtype == object:
-                df_geo['zip'] = df_geo['zip'].astype(int)
-            row = df_geo.loc[df_geo['zip'] == zip_code]
-            if not row.empty:
-                city = row['city'].iat[0]
-                state = row['state_name'].iat[0]
-            
-            if enrichment_personal_profiles.gender == 1:
-                gender = 'm'
-            elif enrichment_personal_profiles.gender == 2:
-                gender = 'f'
-            birth_day = str(enrichment_personal_profiles.birth_day)
-            birth_month = str(enrichment_personal_profiles.birth_month)
-            birth_year = str(enrichment_personal_profiles.birth_year)
-            homeowner = str(enrichment_personal_profiles.homeowner)
-            
-        
-        
-        #properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
-        
-        return {
-            'email': verified_email,
-            'first_name': first_name,
-            'last_name': last_name,
-            'phone': verified_phone,
-            'gender': gender,
-            'city': city,
-            'state': state,
-            'zip_code': zip_code,
-            'linkedin_url': linkedin_url,
-            'birth_date': (f"{birth_year}-{birth_month}-{birth_day}"),
-            'company_name': company_name,
-            'homeowner': homeowner
-            
-            # **properties
+
+        result = {
+            'email': main_email,
+            'firstname': first_name,
+            'lastname': last_name
         }
+        
+        required_types = {m['type'] for m in data_map}
+        context = {
+            'main_phone': main_phone,
+            'professional_profiles': enrichment_user.professional_profiles,
+            'postal': enrichment_user.postal,
+            'personal_profiles': enrichment_user.personal_profiles,
+            'business_email': business_email,
+            'personal_email': personal_email,
+            'country_code': enrichment_user.postal,
+            'gender': enrichment_user.personal_profiles,
+            'zip_code': enrichment_user.personal_profiles,
+            'state': enrichment_user.postal,
+            'city': enrichment_user.postal,
+            'company': enrichment_user.professional_profiles,
+            'business_email_last_seen_date': enrichment_contacts,
+            'personal_email_last_seen': enrichment_contacts,
+            'linkedin_url': enrichment_contacts
+        }
+
+        for field_type in required_types:
+            filler = FIELD_FILLERS.get(field_type)
+            if filler:
+                filler(result, context)
+                
+        return result
+    

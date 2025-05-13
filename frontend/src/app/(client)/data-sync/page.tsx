@@ -64,37 +64,51 @@ const DataSync = () => {
   };
 
   const onApply = (filter: any) => {
-    setFilters(filter);
+    setFilters(filter); 
   };
 
   const installPixel = () => {
     router.push("/dashboard");
   };
 
+  const [hasIntegrations, setHasIntegrations] = useState<boolean>(false);
+  const [hasDataSync, setHasDataSync] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchIntegrations = async () => {
+      try {
+        setIsLoading(true)
+        const domain = sessionStorage.getItem("current_domain") || "";
+        const response = await axiosInstance.get(
+          "/data-sync/has-integration-and-smart-audiences",
+          {
+            headers: { domain },
+          }
+        );
+        setHasIntegrations(response.data.hasIntegration);
+        setHasDataSync(response.data.hasAnySync)
+      } catch (err) {
+        console.error("Error checking integrations:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchIntegrations();
+  }, []);
+
   if (isLoading) {
     return <CustomizedProgressBar />;
   }
-  const hasIntegrations = false;
+
 
   return (
     <>
     {isLoading && <CustomizedProgressBar />}
-    {!hasIntegrations && (
-      <>
-        <Box sx={{width: "98%", mt: 2}}>
-          <NotificationBanner
-            ctaUrl="/integrations"
-            ctaLabel="Add Integration"
-            message="You need to create at least one integration before you can sync your audience"
-          />
-          <FirstTimeScree />
-      </Box>
-      </>
-      
-    )}
-      {hasIntegrations && (
+      {(
       <Box sx={datasyncStyle.mainContent}>
-        <Box
+        {hasDataSync &&(
+          <Box
           sx={{
             display: "flex",
             flexDirection: "row",
@@ -162,7 +176,7 @@ const DataSync = () => {
                 color: "rgba(128, 128, 128, 1)",
                 border:
                   filters?.length > 0
-                    ? "1px solid rgba(80, 82, 178, 1)"
+                    ? "1px solid rgba(56, 152, 252, 1)"
                     : "1px solid rgba(184, 184, 184, 1)",
                 borderRadius: "4px",
                 padding: "8px",
@@ -179,13 +193,14 @@ const DataSync = () => {
                 sx={{
                   color:
                     filters?.length > 0
-                      ? "rgba(80, 82, 178, 1)"
+                      ? "rgba(56, 152, 252, 1)"
                       : "rgba(128, 128, 128, 1)",
                 }}
               />
             </Button>
           </Box>
         </Box>
+        )}
         <Box
           sx={{
             width: "100%",
@@ -237,13 +252,13 @@ const DataSync = () => {
                 onClick={installPixel}
                 className="second-sub-title"
                 sx={{
-                  backgroundColor: "rgba(80, 82, 178, 1)",
+                  backgroundColor: "rgba(56, 152, 252, 1)",
                   textTransform: "none",
                   padding: "10px 24px",
                   mt: 3,
                   color: "#fff !important",
                   ":hover": {
-                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "rgba(56, 152, 252, 1)",
                   },
                 }}
               >
@@ -252,7 +267,19 @@ const DataSync = () => {
             </Box>
           ) : (
             !isLoading &&
-            filters && (
+            filters && !hasDataSync ? (
+              <>
+                <Box sx={{width: "98%", mt: 2}}>
+                  <NotificationBanner
+                    ctaUrl="/integrations"
+                    ctaLabel="Add Integration"
+                    message="You need to create at least one integration before you can sync your audience"
+                  />
+                  <FirstTimeScree onBegin={()=> {router.push("/smart-audiences")}} hasDataSync={hasDataSync}/>
+              </Box>
+              </>
+              
+            ) : (
               <>
                 <DataSyncList filters={filters} />
               </>

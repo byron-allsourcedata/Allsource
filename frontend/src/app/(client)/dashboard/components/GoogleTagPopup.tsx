@@ -390,8 +390,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                 fontSize: '14px',
                                 fontWeight: '600',
                                 lineHeight: '19.6px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
+                                color: 'rgba(56, 152, 252, 1)',
+                                textDecorationColor: 'rgba(56, 152, 252, 1)'
                             }}>Tutorial</Link>
 
                             <IconButton onClick={handleClose} sx={{
@@ -520,7 +520,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                                 borderRadius: '4px',
                                                 border: '1px solid rgba(224, 224, 224, 1)',
                                                 '&:focus': {
-                                                    borderColor: 'rgba(80, 82, 178, 1)',
+                                                    borderColor: 'rgba(56, 152, 252, 1)',
                                                     boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
                                                 },
                                             }}
@@ -551,7 +551,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                                 borderRadius: '4px',
                                                 border: '1px solid rgba(224, 224, 224, 1)',
                                                 '&:focus': {
-                                                    borderColor: 'rgba(80, 82, 178, 1)',
+                                                    borderColor: 'rgba(56, 152, 252, 1)',
                                                     boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
                                                 },
                                             }}
@@ -594,7 +594,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                                 borderRadius: '4px',
                                                 border: '1px solid rgba(224, 224, 224, 1)',
                                                 '&:focus': {
-                                                    borderColor: 'rgba(80, 82, 178, 1)',
+                                                    borderColor: 'rgba(56, 152, 252, 1)',
                                                     boxShadow: '0 0 0 2px rgba(80, 82, 178, 0.2)',
                                                 },
                                             }}
@@ -621,8 +621,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                                             fontSize: '16px',
                                             fontWeight: '600',
                                             textTransform: 'none',
-                                            border: '1px solid rgba(80, 82, 178, 1)',
-                                            color: 'rgba(80, 82, 178, 1)',
+                                            border: '1px solid rgba(56, 152, 252, 1)',
+                                            color: 'rgba(56, 152, 252, 1)',
                                             transition: 'background-color 0.3s, border-color 0.3s',
                                             '&:hover': {
                                                 backgroundColor: 'rgba(80, 82, 178, 0.1)',

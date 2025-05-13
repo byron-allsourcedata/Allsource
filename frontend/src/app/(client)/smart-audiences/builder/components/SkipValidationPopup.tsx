@@ -28,17 +28,17 @@ const ValidationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCont
         <Typography variant="body1" className="form-input">Are you sure you want to skip validation?</Typography>
       </DialogContent>
       <DialogActions sx={{ flexDirection: "column", gap: 1, padding: "16px" }}>
-        <Button fullWidth variant="contained" color="primary" onClick={onContinue} sx={{backgroundColor: "rgba(80, 82, 178, 1)",
+        <Button fullWidth variant="contained" color="primary" onClick={onContinue} sx={{backgroundColor: "rgba(56, 152, 252, 1)",
         height: '3rem',
                         ":hover": {
-                            backgroundColor: "rgba(80, 82, 178, 1)"
+                            backgroundColor: "rgba(56, 152, 252, 1)"
                         },}}>
         <Typography sx={{...smartAudiences.textButton, textTransform: 'none'}}>Continue Validation</Typography>
         </Button>
         <Button fullWidth variant="text" sx={{height: '3rem', ":hover": {
                             backgroundColor: "#fff"
                         }}}  onClick={onSkip}>
-          <Typography sx={{...smartAudiences.textButton, textTransform: 'none', color: 'rgba(80, 82, 178, 1)'}}>Skip Anyway</Typography>
+          <Typography sx={{...smartAudiences.textButton, textTransform: 'none', color: 'rgba(56, 152, 252, 1)'}}>Skip Anyway</Typography>
         </Button>
       </DialogActions>
     </Dialog>

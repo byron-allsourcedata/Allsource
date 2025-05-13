@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, Body, HTTPException
 from starlette.responses import StreamingResponse
-from dependencies import get_audience_smarts_service, check_user_authorization_without_pixel
+from dependencies import get_audience_smarts_service, check_user_authorization_without_pixel, check_domain
 from services.audience_smarts import AudienceSmartsService
 from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest, CreateSmartAudienceRequest, \
     DataSourcesResponse, SmartsResponse
@@ -85,7 +85,8 @@ async def create_smart_audience(
             contacts_to_validate=request.contacts_to_validate,
             active_segment_records=request.active_segment_records,
             is_validate_skip=request.is_validate_skip,
-            total_records=request.total_records
+            total_records=request.total_records,
+            target_schema=request.target_schema
         )
     except ValueError:
         raise HTTPException(status_code=400)
@@ -100,8 +101,6 @@ def get_datasource(
             user=user,
         )
         return data_source
-
-
 
 @router.get("/search")
 def search_audience_smart(

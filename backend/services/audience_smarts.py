@@ -179,6 +179,7 @@ class AudienceSmartsService:
             validation_params: Optional[dict],
             active_segment_records: int,
             total_records: int,
+            target_schema: str,
             is_validate_skip: Optional[bool] = None,
             contacts_to_validate: Optional[int] = None,
     ) -> SmartsResponse:
@@ -211,6 +212,7 @@ class AudienceSmartsService:
             data_sources=data_sources,
             active_segment_records=active_segment_records,
             total_records=total_records,
+            target_schema=target_schema,
             status=status
         )
         await self.start_scripts_for_matching(created_data.id, user.get("id"), need_validate, data_sources, active_segment_records, validation_params)
@@ -248,7 +250,7 @@ class AudienceSmartsService:
 
 
     def get_datasource(self, user: dict):
-        lookalikes, count, max_page = self.lookalikes_persistence_service.get_lookalikes(
+        lookalikes, count, max_page, _ = self.lookalikes_persistence_service.get_lookalikes(
             user_id=user.get('id'), page=1, per_page=50
         )
 

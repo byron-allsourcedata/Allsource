@@ -231,7 +231,7 @@ const Partners: React.FC = () => {
                                         textTransform: 'none',
                                         minHeight: 0,
                                         '& .MuiTabs-indicator': {
-                                            backgroundColor: 'rgba(80, 82, 178, 1)',
+                                            backgroundColor: 'rgba(56, 152, 252, 1)',
                                             height: '1.4px',
                                         },
                                         "@media (max-width: 600px)": {
@@ -257,7 +257,7 @@ const Partners: React.FC = () => {
                                             textAlign: 'left',
                                             mr: 2,
                                             '&.Mui-selected': {
-                                                color: 'rgba(80, 82, 178, 1)'
+                                                color: 'rgba(56, 152, 252, 1)'
                                             },
                                             "@media (max-width: 600px)": {
                                                 mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -281,7 +281,7 @@ const Partners: React.FC = () => {
                                             lineHeight: '19.1px',
                                             minWidth: 'auto',
                                             '&.Mui-selected': {
-                                                color: 'rgba(80, 82, 178, 1)'
+                                                color: 'rgba(56, 152, 252, 1)'
                                             },
                                             "@media (max-width: 600px)": {
                                                 mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -305,7 +305,7 @@ const Partners: React.FC = () => {
                                             lineHeight: '19.1px',
                                             minWidth: 'auto',
                                             '&.Mui-selected': {
-                                                color: 'rgba(80, 82, 178, 1)'
+                                                color: 'rgba(56, 152, 252, 1)'
                                             },
                                             "@media (max-width: 600px)": {
                                                 mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -329,7 +329,7 @@ const Partners: React.FC = () => {
                                             lineHeight: '19.1px',
                                             minWidth: 'auto',
                                             '&.Mui-selected': {
-                                                color: 'rgba(80, 82, 178, 1)'
+                                                color: 'rgba(56, 152, 252, 1)'
                                             },
                                             "@media (max-width: 600px)": {
                                                 mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -353,7 +353,7 @@ const Partners: React.FC = () => {
                                             lineHeight: '19.1px',
                                             minWidth: 'auto',
                                             '&.Mui-selected': {
-                                                color: 'rgba(80, 82, 178, 1)'
+                                                color: 'rgba(56, 152, 252, 1)'
                                             },
                                             "@media (max-width: 600px)": {
                                                 mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -405,11 +405,11 @@ const Partners: React.FC = () => {
                                     fontSize: '14px',
                                     lineHeight: "19.6px",
                                     fontWeight: '500',
-                                    color: '#5052B2',
-                                    borderColor: '#5052B2',
+                                    color: 'rgba(56, 152, 252, 1)',
+                                    borderColor: 'rgba(56, 152, 252, 1)',
                                     '&:hover': {
                                         backgroundColor: 'rgba(80, 82, 178, 0.1)',
-                                        borderColor: '#5052B2',
+                                        borderColor: 'rgba(56, 152, 252, 1)',
                                     },
                                 }}
                                 onClick={() => {
@@ -437,8 +437,8 @@ const Partners: React.FC = () => {
                                 onClick={handleCalendarClick}
                                 sx={{
                                     textTransform: 'none',
-                                    color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                    border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                                    color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                    border: formattedDates ? '1.5px solid rgba(56, 152, 252, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
                                     borderRadius: '4px',
                                     padding: '8px',
                                     minWidth: 'auto',
@@ -447,16 +447,16 @@ const Partners: React.FC = () => {
                                         padding: 0
                                     },
                                     '&:hover': {
-                                        border: '1.5px solid rgba(80, 82, 178, 1)',
+                                        border: '1.5px solid rgba(56, 152, 252, 1)',
                                         '& .MuiSvgIcon-root': {
-                                            color: 'rgba(80, 82, 178, 1)'
+                                            color: 'rgba(56, 152, 252, 1)'
                                         }
                                     }
                                 }}
                             >
                                 <DateRangeIcon
                                     fontSize="medium"
-                                    sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                                    sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }}
                                 />
                                 <Typography variant="body1" sx={{
                                     fontFamily: 'Roboto',

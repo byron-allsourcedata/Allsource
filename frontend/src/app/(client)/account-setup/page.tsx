@@ -60,7 +60,7 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
-            router.push("/dashboard");
+            router.push("/audience-dashboard");
             break;
           default:
             console.error("Unknown status:", status);
@@ -328,7 +328,7 @@ const AccountSetup = () => {
                 textAlign: "left",
                 textDecoration: "underline",
                 textTransform: 'none',
-                color: "rgba(80, 82, 178, 1)",
+                color: "rgba(56, 152, 252, 1)",
                 position: 'absolute',
 
               }}
@@ -349,9 +349,9 @@ const AccountSetup = () => {
               border: '1px solid rgba(184, 184, 184, 1)',
               borderRadius: '3.27px',
               '&:hover': {
-                border: '1px solid rgba(80, 82, 178, 1)',
+                border: '1px solid rgba(56, 152, 252, 1)',
                 '& .MuiSvgIcon-root': {
-                  color: 'rgba(80, 82, 178, 1)'
+                  color: 'rgba(56, 152, 252, 1)'
                 }
               },
               "@media (max-width: 600px)": {
@@ -430,9 +430,9 @@ const AccountSetup = () => {
             border: '1px solid rgba(184, 184, 184, 1)',
             borderRadius: '3.27px',
             '&:hover': {
-              border: '1px solid rgba(80, 82, 178, 1)',
+              border: '1px solid rgba(56, 152, 252, 1)',
               '& .MuiSvgIcon-root': {
-                color: 'rgba(80, 82, 178, 1)'
+                color: 'rgba(56, 152, 252, 1)'
               }
             },
             "@media (max-width: 600px)": {
@@ -499,7 +499,7 @@ const AccountSetup = () => {
 
       <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%" }}>
         <Box sx={{ ...styles.formContainer, overflow: "hidden", marginTop: 0 }}>
-          <Box sx={{ ...styles.form, overflow: "auto", "&::-webkit-scrollbar": { display: "none" }, "-ms-overflow-style": "none", "scrollbar-width": "none" }}>
+          <Box sx={{ ...styles.form, overflow: "auto", "&::-webkit-scrollbar": { display: "none" }, "msOverflowStyle": "none", "scrollbarWwidth": "none" }}>
             <Box
               sx={{
                 "@media (max-width: 600px)": {

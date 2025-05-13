@@ -145,7 +145,7 @@ const styles = {
             p: 0
         },
         '&.Mui-selected': {
-            color: '#5052b2',
+            color: 'rgba(56, 152, 252, 1)',
             fontWeight: '700'
         }
     },
@@ -155,7 +155,7 @@ const styles = {
         lineHeight: '16px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
-            color: 'rgba(80, 82, 178, 1)',
+            color: 'rgba(56, 152, 252, 1)',
         },
     },
     formInput: {
@@ -174,10 +174,10 @@ const styles = {
             },
             '&:hover .MuiOutlinedInput-notchedOutline': {
                 borderColor: '#A3B0C2',
-                // borderColor: '#5052B2',
+                // borderColor: 'rgba(56, 152, 252, 1)',
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#5052B2',
+                borderColor: 'rgba(56, 152, 252, 1)',
             },
         },
         '&+.MuiFormHelperText-root': {
@@ -209,28 +209,25 @@ const integrationsImage = [
 ];
 
 const customFieldsList: Row[] = [
-    { id: 1, type: 'Cid', value: 'cid' },
-    { id: 2, type: 'Age', value: 'age' },
-    { id: 3, type: 'Gender', value: 'gender' },
-    { id: 4, type: 'Estimated household income code', value: 'estimated_household_income_code' },
-    { id: 5, type: 'Estimated current home value code', value: 'estimated_current_home_value_code' },
-    { id: 6, type: 'Homeowner status', value: 'homeowner_status' },
-    { id: 7, type: 'Has children', value: 'has_children' },
-    { id: 8, type: 'Number of children', value: 'number_of_children' },
-    { id: 9, type: 'Credit rating', value: 'credit_rating' },
-    { id: 10, type: 'Net worth code', value: 'net_worth_code' },
-    { id: 11, type: 'Zipcode 5', value: 'zip_code5' },
-    { id: 12, type: 'Lat', value: 'lat' },
-    { id: 13, type: 'Lon', value: 'lon' },
-    { id: 14, type: 'Has credit card', value: 'has_credit_card' },
-    { id: 15, type: 'Length of residence years', value: 'length_of_residence_years' },
-    { id: 16, type: 'Marital status', value: 'marital_status' },
-    { id: 17, type: 'Occupation group code', value: 'occupation_group_code' },
-    { id: 18, type: 'Is book reader', value: 'is_book_reader' },
-    { id: 19, type: 'Is online purchaser', value: 'is_online_purchaser' },
-    { id: 20, type: 'Is book reader', value: 'is_book_reader' },
-    { id: 21, type: 'Is traveler', value: 'is_traveler' },
-    { id: 22, type: 'Rec id', value: 'rec_id' },
+    { id: 1, type: 'Business Email', value: 'business_email' },
+    { id: 2, type: 'Personal Email', value: 'personal_email' },
+    { id: 3, type: 'Phone', value: 'phone' },
+    { id: 4, type: 'City', value: 'city' },
+    { id: 5, type: 'State', value: 'state' },
+    { id: 6, type: 'Country code', value: 'country_code' },
+    { id: 7, type: 'Company', value: 'company' },
+    { id: 8, type: 'Business email last seen date', value: 'business_email_last_seen_date' },
+    { id: 9, type: 'Personal email last seen', value: 'personal_email_last_seen' },
+    { id: 10, type: 'Linkedin url', value: 'linkedin_url' }
+]
+
+const customFieldsListHubspot: Row[] = [
+    { id: 1, type: 'Phone', value: 'phone' },
+    { id: 2, type: 'City', value: 'city' },
+    { id: 3, type: 'State', value: 'state' },
+    { id: 4, type: 'Zip', value: 'zip_code' },
+    { id: 5, type: 'Gender', value: 'gender' },
+    { id: 6, type: 'Company', value: 'company' }
 ]
 
 const customFieldsListCSV: Row[] = [
@@ -259,7 +256,44 @@ const customFieldsListCSV: Row[] = [
 ]
 
 const defaultRows: Row[] = [
-    { id: 1, type: 'Email', value: 'email' }
+    { id: 1, type: 'Email', value: 'email' },
+    { id: 2, type: 'Firstname', value: 'firstname' },
+    { id: 3, type: 'Lastname', value: 'lastname' },
+];
+
+const defaultSalesForce: Row[] = [
+    { id: 1, type: 'Email', value: 'email' },
+    { id: 2, type: 'Firstname', value: 'firstname' },
+    { id: 3, type: 'Lastname', value: 'lastname' },
+    { id: 4, type: 'Company', value: 'company' },
+];
+
+const defaultRowsHubspot: Row[] = [
+    { id: 1, type: 'Email', value: 'email' },
+    { id: 2, type: 'Firstname', value: 'firstname' },
+    { id: 3, type: 'Lastname', value: 'lastname' },
+];
+
+const defaultRowsMeta: Row[] = [
+    { id: 1, type: 'Email', value: 'email' },
+    { id: 2, type: 'Phone', value: 'phone' },
+    { id: 3, type: 'Gender', value: 'gender' },
+    { id: 4, type: 'Birth date', value: 'birth_date' },
+    { id: 7, type: 'First name', value: 'first_name' },
+    { id: 8, type: 'Last name', value: 'last_name' },
+    { id: 9, type: 'State', value: 'state' },
+    { id: 10, type: 'City', value: 'city' },
+    { id: 11, type: 'Zip code', value: 'zip_code' }
+];
+
+const defaultRowsGoogleAds: Row[] = [
+    { id: 1, type: 'Email', value: 'email' },
+    { id: 2, type: 'First name', value: 'first_name' },
+    { id: 3, type: 'Last name', value: 'last_name' },
+    { id: 4, type: 'Phone', value: 'phone' },
+    { id: 5, type: 'City', value: 'city' },
+    { id: 6, type: 'State', value: 'state' },
+    { id: 7, type: 'Country code', value: 'country_code' },
 ];
 
 const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSmartAudStatus, integrationsList: integ = [], id, activeSegmentRecords = 0, isDownloadAction, setIsPageLoading }) => {
@@ -525,20 +559,18 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         if (activeService === "meta") {
             setContactSyncTab(true)
             fetchAdAccount()
-            setRows(defaultRows)
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            setRows(defaultRowsMeta)
         }
 
         if (activeService === "google_ads") {
             setContactSyncTab(true)
             getCustomersInfo()
-            setRows(defaultRows)
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            setRows(defaultRowsGoogleAds)
         }
 
         if (activeService === "hubspot") {
-            setRows(defaultRows)
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
+            setRows(defaultRowsHubspot)
+            setCustomFields(customFieldsListHubspot.map(field => ({ type: field.value, value: field.type })))
         }
 
         if (activeService === "CSV") {
@@ -547,7 +579,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         }
 
         if (activeService === "sales_force") {
-            setRows(defaultRows)
+            setRows(defaultSalesForce)
             setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
         }
         if (activeService === "s3") {
@@ -945,8 +977,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                         }}>Tutorial</Link>
                         <IconButton onClick={handleClosePopup} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -958,7 +990,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                         <TabContext value={value}>
                             <Box sx={{ pt: 3, pb: 3, position: "sticky", top: 60, backgroundColor: "#fff", zIndex: 10 }}>
                                 <TabList centered
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                                     sx={{
                                         gap: 3,
                                         "& .MuiTabs-scroller": {
@@ -1085,12 +1117,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                         color:
                                                         valueContactSync === 0
                                                             ? "rgba(231, 231, 231, 1)"
-                                                            : "rgba(80, 82, 178, 1)",
+                                                            : "rgba(56, 152, 252, 1)",
                                                         "& .MuiSlider-track": {
-                                                          backgroundColor: "rgba(80, 82, 178, 1)",
+                                                          backgroundColor: "rgba(56, 152, 252, 1)",
                                                         },
                                                         "& .MuiSlider-thumb": {
-                                                          backgroundColor: "rgba(80, 82, 178, 1)",
+                                                          backgroundColor: "rgba(56, 152, 252, 1)",
                                                         },
                                                       }}
                                                 />
@@ -1223,7 +1255,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
                                                                 '&.Mui-focused': {
-                                                                    color: 'rgba(80, 82, 178, 1)',
+                                                                    color: 'rgba(56, 152, 252, 1)',
                                                                     top: 0
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
@@ -1251,7 +1283,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                         borderColor: '#A3B0C2',
                                                                     },
                                                                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                                        borderColor: 'rgba(56, 152, 252, 1)',
                                                                     },
                                                                 },
                                                                 '&+.MuiFormHelperText-root': {
@@ -1306,7 +1338,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
                                                                 '&.Mui-focused': {
-                                                                    color: 'rgba(80, 82, 178, 1)',
+                                                                    color: 'rgba(56, 152, 252, 1)',
                                                                     top: 0
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
@@ -1334,7 +1366,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                         borderColor: '#A3B0C2',
                                                                     },
                                                                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                                        borderColor: 'rgba(56, 152, 252, 1)',
                                                                     },
                                                                 },
                                                                 '&+.MuiFormHelperText-root': {
@@ -1395,9 +1427,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                     <Box display="flex" justifyContent="flex-end" mt={2}>
                                                                         <Button onClick={handleDeleteClose} sx={{
                                                                             borderRadius: '4px',
-                                                                            border: '1px solid #5052b2',
+                                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                            color: '#5052b2',
+                                                                            color: 'rgba(56, 152, 252, 1)',
                                                                             fontFamily: 'Nunito Sans',
                                                                             fontSize: '14px',
                                                                             fontWeight: '600',
@@ -1408,9 +1440,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                             Clear
                                                                         </Button>
                                                                         <Button onClick={handleDelete} sx={{
-                                                                            background: '#5052B2',
+                                                                            background: 'rgba(56, 152, 252, 1)',
                                                                             borderRadius: '4px',
-                                                                            border: '1px solid #5052b2',
+                                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                                             color: '#fff',
                                                                             fontFamily: 'Nunito Sans',
@@ -1419,7 +1451,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                             lineHeight: '20px',
                                                                             textTransform: 'none',
                                                                             '&:hover': {
-                                                                                color: '#5052B2'
+                                                                                color: 'rgba(56, 152, 252, 1)'
                                                                             }
                                                                         }}>
                                                                             Delete
@@ -1453,7 +1485,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
                                                                 '&.Mui-focused': {
-                                                                    color: 'rgba(80, 82, 178, 1)',
+                                                                    color: 'rgba(56, 152, 252, 1)',
                                                                     top: 0
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
@@ -1480,7 +1512,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                         borderColor: '#A3B0C2',
                                                                     },
                                                                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                                        borderColor: 'rgba(56, 152, 252, 1)',
                                                                     },
                                                                 },
                                                                 '&+.MuiFormHelperText-root': {
@@ -1526,7 +1558,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                                 top: '-5px',
                                                                 '&.Mui-focused': {
-                                                                    color: 'rgba(80, 82, 178, 1)',
+                                                                    color: 'rgba(56, 152, 252, 1)',
                                                                     top: 0,
                                                                 },
                                                                 '&.MuiInputLabel-shrink': {
@@ -1552,7 +1584,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                                     borderColor: '#A3B0C2',
                                                                 },
                                                                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                                    borderColor: 'rgba(80, 82, 178, 1)',
+                                                                    borderColor: 'rgba(56, 152, 252, 1)',
                                                                 },
                                                             },
                                                         }}
@@ -1577,7 +1609,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                     aria-haspopup="true"
                                                     sx={{
                                                         textTransform: 'none',
-                                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                                        border: '1px solid rgba(56, 152, 252, 1)',
                                                         borderRadius: '4px',
                                                         padding: '9px 16px',
                                                         minWidth: 'auto',
@@ -1593,7 +1625,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                         fontSize: '16px',
                                                         textAlign: 'left',
                                                         fontWeight: '500',
-                                                        color: '#5052B2'
+                                                        color: 'rgba(56, 152, 252, 1)'
                                                     }}>
                                                         Add
                                                     </Typography>
@@ -1615,9 +1647,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                     onClick={handleClosePopup}
                                     className='second-sub-title'
                                     sx={{
-                                        color: "rgba(80, 82, 178, 1) !important",
+                                        color: "rgba(56, 152, 252, 1) !important",
                                         backgroundColor: '#fff',
-                                        border: ' 1px solid rgba(80, 82, 178, 1)',
+                                        border: ' 1px solid rgba(56, 152, 252, 1)',
                                         textTransform: "none",
                                         padding: "0.75em 2.5em",
                                         '&:hover': {
@@ -1632,12 +1664,12 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                     onClick={handleNextTab}
                                     className='second-sub-title'
                                     sx={{
-                                        backgroundColor: "rgba(80, 82, 178, 1)",
+                                        backgroundColor: "rgba(56, 152, 252, 1)",
                                         color: 'rgba(255, 255, 255, 1) !important',
                                         textTransform: "none",
                                         padding: "0.75em 2.5em",
                                         '&:hover': {
-                                            backgroundColor: 'rgba(80, 82, 178, 1)'
+                                            backgroundColor: 'rgba(56, 152, 252, 1)'
                                         }
                                     }}
                                 >

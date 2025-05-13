@@ -39,7 +39,8 @@ class AudienceLookalikesPersistence:
 
         return source
     
-    def get_lookalikes(self, user_id: int, page: Optional[int] = None, per_page: Optional[int] = None, from_date: Optional[int] = None, to_date: Optional[int] = None,
+    def get_lookalikes(self, user_id: int, page: Optional[int] = None, per_page: Optional[int] = None,
+                       from_date: Optional[int] = None, to_date: Optional[int] = None,
                        sort_by: Optional[str] = None, sort_order: Optional[str] = None,
                        lookalike_size: Optional[str] = None, lookalike_type: Optional[str] = None,
                        search_query: Optional[str] = None):

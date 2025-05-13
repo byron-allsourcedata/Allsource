@@ -43,7 +43,7 @@ const IntegrationBox: React.FC<IntegrationBoxProps> = ({ image, handleClick, ser
               : active
                 ? 'rgba(80, 82, 178, 0.1)'
                 : 'transparent',
-              border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
+              border: active ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #E4E4E4',
               position: 'relative',
               display: 'flex',
               borderRadius: '4px',
@@ -106,7 +106,7 @@ const IntegrationBox: React.FC<IntegrationBoxProps> = ({ image, handleClick, ser
 
               }}
             >
-              <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
+              <AddIcon sx={{ color: "rgba(56, 152, 252, 1)", fontSize: 45 }} />
             </Box>
           )}
           <Image

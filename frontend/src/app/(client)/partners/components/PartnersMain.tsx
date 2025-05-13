@@ -58,7 +58,7 @@ const getStatusStyle = (status: string) => {
         case 'Signup':
             return {
                 background: 'rgba(241, 241, 249, 1)',
-                color: 'rgba(80, 82, 178, 1)',
+                color: 'rgba(56, 152, 252, 1)',
             };
         case 'Invitation sent':
             return {
@@ -113,7 +113,7 @@ const TruncatedText: React.FC<{ text: string; limit: number, status: string }> =
 
     return (
         <Box onClick={handleToggleExpand} sx={{ cursor: (shouldTruncate && status !== 'Invitation sent' ) ? 'pointer' : 'default' }}>
-            <Typography className="table-data" sx={{maxWidth: '120px', color:status === 'Invitation sent' ? '' : 'rgba(80, 82, 178, 1) !important', display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textWrap: 'wrap', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
+            <Typography className="table-data" sx={{maxWidth: '120px', color:status === 'Invitation sent' ? '' : 'rgba(56, 152, 252, 1) !important', display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', textWrap: 'wrap', textOverflow: 'ellipsis', WebkitLineClamp: isExpanded ? 'none' : 3 }}>
                 {isExpanded ? text : text.substring(0, limit) + (shouldTruncate ? '...' : '')}
             </Typography>
         </Box>
@@ -330,7 +330,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, loading, masterId, 
                     alignItems: "center",
                     width: 70,
                     height: 24,
-                    backgroundColor: isActive ? "rgba(80, 82, 178, 1)" : "rgba(123, 123, 123, 1)",
+                    backgroundColor: isActive ? "rgba(56, 152, 252, 1)" : "rgba(123, 123, 123, 1)",
                     borderRadius: "20px",
                     cursor: "pointer",
                     position: "relative",
@@ -513,7 +513,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, loading, masterId, 
                                                                 alignItems: "center",
                                                                 overflowWrap: 'break-word',
                                                                 justifyContent: 'space-between',
-                                                                color: "rgba(80, 82, 178, 1)",
+                                                                color: "rgba(56, 152, 252, 1)",
                                                                 gap: 0,
                                                                 "&:hover .icon-button": {
                                                                     display: "flex",
@@ -531,7 +531,7 @@ const PartnersMain: React.FC<PartnersProps> = ({ setLoading, loading, masterId, 
                                                                     sx={{
                                                                         display: "none",
                                                                         alignItems: "center",
-                                                                        color: "rgba(80, 82, 178, 1)",
+                                                                        color: "rgba(56, 152, 252, 1)",
                                                                         gap: 0,
                                                                         "&:hover .icon-button": {
                                                                             display: "flex",

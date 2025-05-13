@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useState } from "react";
 import {
   Box,
   Typography,
@@ -8,27 +8,34 @@ import {
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Image from "next/image";
 import { ExternalLink } from "@/components/ExternalLink";
+import WelcomePopup from "@/components/CreatePixelSourcePopup";
+import { getInteractiveSx } from "@/components/utils";
 
 interface DataSyncFirstTimeScreenProps {
-
   onBegin?: () => void;
+  hasDataSync?: Boolean
 }
 
 
-const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
+const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasDataSync }) => {
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  const handleOpenPopup = () => {
+    setPopupOpen(true);
+  };
   return (
     <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
       <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
         <Typography
-            variant="h5"
-            className="first-sub-title"
-            sx={{
+          variant="h5"
+          className="first-sub-title"
+          sx={{
             fontFamily: "Nunito Sans",
             fontSize: "24px !important",
             color: "#4a4a4a",
             fontWeight: "500 !important",
             lineHeight: "22px",
-            }}
+          }}
         >
           Data Sync
         </Typography>
@@ -45,6 +52,7 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
       </Typography>
 
       <Box
+        onClick={handleOpenPopup}
         sx={{
           position: "relative",
           px: 3,
@@ -55,16 +63,9 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
           borderRadius: 1,
           overflow: 'hidden',
           border: "1px solid rgba(237, 237, 237, 1)",
-          cursor: "pointer",
-          transition: "background-color .2s, border-color .2s",
-          "&:hover": {
-          backgroundColor: "rgba(232, 239, 255, 0.4)",
-          border: "1px solid rgba(1, 113, 248, 0.5)",
-          "& .fiveth-sub-title": {
-            color: "rgba(21, 22, 25, 1)",
-          }, 
-        }}
-      }
+          ...getInteractiveSx(!hasDataSync),
+        }
+        }
       >
         <Typography variant="subtitle2" sx={{ color: "#151619", fontWeight: 400 }}>
           Sync Audience to Any Platform
@@ -92,33 +93,37 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
           Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click.
         </Typography>
 
-        <Box sx={{ display: "flex",
-                    width: "100%",
-                    justifyContent: "end",
-                    pr: 2
-                }}>
+        <Box sx={{
+          display: "flex",
+          width: "100%",
+          justifyContent: "end",
+          pr: 2
+        }}>
           <Button
             variant="contained"
             className="second-sub-title"
             onClick={onBegin}
-            disabled
+            disabled={!hasDataSync}
             sx={{
-                backgroundColor: "rgba(56, 152, 252, 1)",
-                textTransform: "none",
-                padding: "10px 24px",
-                color: "#fff !important",
-                ":hover": {
-                  backgroundColor: "rgba(48, 149, 250, 1)",
-                },
-                ":disabled": {
-                  backgroundColor: "rgba(56, 152, 252, 0.5)",
-                },
-              }}
+              backgroundColor: "rgba(56, 152, 252, 1)",
+              textTransform: "none",
+              padding: "10px 24px",
+              color: "#fff !important",
+              ":hover": {
+                backgroundColor: "rgba(48, 149, 250, 1)",
+              },
+              ":disabled": {
+                backgroundColor: "rgba(56, 152, 252, 0.5)",
+              },
+            }}
           >
             Begin
           </Button>
         </Box>
       </Box>
+      {popupOpen && !hasDataSync && (
+        <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} variant="integration"/>
+      )}
     </Box>
   );
 };

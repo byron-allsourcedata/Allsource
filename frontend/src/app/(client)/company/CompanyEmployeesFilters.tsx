@@ -514,7 +514,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                             value={item}
                             size='small'
                             sx={{
-                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                             }}
                             />
                             <ListItemText sx={{}}>
@@ -523,7 +523,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                                 fontFamily: "Nunito Sans",
                                 fontWeight: 500,
                                 lineHeight: "19.6px",
-                                color: checkedFiltersJobTitles[item] ? "rgba(80, 82, 178, 1)" : "rgba(32, 33, 36, 1)"
+                                color: checkedFiltersJobTitles[item] ? "rgba(56, 152, 252, 1)" : "rgba(32, 33, 36, 1)"
                             }}>
                                 {item}
                             </Typography>
@@ -618,7 +618,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                             value={item}
                             size='small'
                             sx={{
-                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                             }}
                             />
                             <ListItemText sx={{}}>
@@ -627,7 +627,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                                 fontFamily: "Nunito Sans",
                                 fontWeight: 500,
                                 lineHeight: "19.6px",
-                                color: checkedFiltersSeniority[item] ? "rgba(80, 82, 178, 1)" : "rgba(32, 33, 36, 1)"
+                                color: checkedFiltersSeniority[item] ? "rgba(56, 152, 252, 1)" : "rgba(32, 33, 36, 1)"
                             }}>
                                 {item}
                             </Typography>
@@ -722,7 +722,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                             value={item}
                             size='small'
                             sx={{
-                                "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                             }}
                             />
                             <ListItemText sx={{}}>
@@ -731,7 +731,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                                 fontFamily: "Nunito Sans",
                                 fontWeight: 500,
                                 lineHeight: "19.6px",
-                                color: checkedFiltersDepartment[item] ? "rgba(80, 82, 178, 1)" : "rgba(32, 33, 36, 1)"
+                                color: checkedFiltersDepartment[item] ? "rgba(56, 152, 252, 1)" : "rgba(32, 33, 36, 1)"
                             }}>
                                 {item}
                             </Typography>
@@ -871,9 +871,9 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                 onClick={handleClearFilters}
                 className='second-sub-title'
                 sx={{
-                color: "rgba(80, 82, 178, 1) !important",
+                color: "rgba(56, 152, 252, 1) !important",
                 backgroundColor: '#fff',
-                border: ' 1px solid rgba(80, 82, 178, 1)',
+                border: ' 1px solid rgba(56, 152, 252, 1)',
                 textTransform: "none",
                 padding: "0.75em 2.5em",
                 '&:hover': {
@@ -888,12 +888,12 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                 onClick={handleApply}
                 className='second-sub-title'
                 sx={{
-                backgroundColor: "rgba(80, 82, 178, 1)",
+                backgroundColor: "rgba(56, 152, 252, 1)",
                 color: 'rgba(255, 255, 255, 1) !important',
                 textTransform: "none",
                 padding: "0.75em 2.5em",
                 '&:hover': {
-                    backgroundColor: 'rgba(80, 82, 178, 1)'
+                    backgroundColor: 'rgba(56, 152, 252, 1)'
                 }
                 }}
             >

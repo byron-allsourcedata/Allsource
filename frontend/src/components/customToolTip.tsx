@@ -22,7 +22,7 @@ const CustomTooltip: React.FC<CustomTooltipProps> = ({ title, linkText, linkUrl 
             <Typography className='table-data' component='div' sx={{ fontSize: '12px !important', }}>
               {title}
               {linkText && linkUrl && (
-                <Typography className='table-heading' component='span' sx={{ pl: 0.5, color: 'rgba(80, 82, 178, 1) !important', whiteSpace: 'nowrap', fontSize: '12px !important', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <Typography className='table-heading' component='span' sx={{ pl: 0.5, color: 'rgba(56, 152, 252, 1) !important', whiteSpace: 'nowrap', fontSize: '12px !important', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   <Link href={linkUrl} target="_blank" rel="noopener" underline="none" color="inherit">
                     {linkText}
                   </Link>

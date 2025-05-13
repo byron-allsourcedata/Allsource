@@ -1012,7 +1012,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                   color: "rgba(32, 33, 36, 1)",
                   fontWeight: 600,
                   ":hover": {
-                    color: "rgba(80, 82, 178, 1)",
+                    color: "rgba(56, 152, 252, 1)",
                     backgroundColor: "background: rgba(80, 82, 178, 0.1)",
                   },
                 }}
@@ -1030,7 +1030,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                   color: "rgba(32, 33, 36, 1)",
                   fontWeight: 600,
                   ":hover": {
-                    color: "rgba(80, 82, 178, 1)",
+                    color: "rgba(56, 152, 252, 1)",
                     backgroundColor: "background: rgba(80, 82, 178, 0.1)",
                   },
                 }}
@@ -1050,7 +1050,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                   color: "rgba(32, 33, 36, 1)",
                   fontWeight: 600,
                   ":hover": {
-                    color: "rgba(80, 82, 178, 1)",
+                    color: "rgba(56, 152, 252, 1)",
                     backgroundColor: "background: rgba(80, 82, 178, 0.1)",
                   },
                 }}
@@ -1070,7 +1070,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                     fontSize: "14px",
                     fontWeight: 600,
                     ":hover": {
-                      color: "rgba(80, 82, 178, 1)",
+                      color: "rgba(56, 152, 252, 1)",
                       backgroundColor: "background: rgba(80, 82, 178, 0.1)",
                     },
                   }}

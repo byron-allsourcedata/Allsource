@@ -132,9 +132,9 @@ const SourcesCard: React.FC<CardProps> = ({ value, onClick, isActive }) => (
   <StatCard
     value={value}
     title="Sources"
-    icon={<AllInboxIcon sx={{ color: "#5052B2", fontSize: "36px" }} />}
+    icon={<AllInboxIcon sx={{ color: "rgba(56, 152, 252, 1)", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
-    borderColor="#5052B233"
+    borderColor="rgba(56, 152, 252, 1)33"
     onClick={onClick}
     isActive={isActive}
   />

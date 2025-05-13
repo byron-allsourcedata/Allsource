@@ -46,6 +46,7 @@ import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup"
 import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 import BingAdsIntegrationPopup from "@/components/BingAdsIntegrationPopup";
 import FirstTimeScreen from "./FirstTimeScreen";
+import { hasIn } from "lodash";
 
 
 interface IntegrationBoxProps {
@@ -85,7 +86,7 @@ const integrationStyle = {
     textAlign: 'left',
     mr: 2,
     '&.Mui-selected': {
-      color: 'rgba(80, 82, 178, 1)'
+      color: 'rgba(56, 152, 252, 1)'
     },
     "@media (max-width: 600px)": {
       flexGrow: 1,
@@ -209,7 +210,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
           backgroundColor: !is_integrated ? 'rgba(0, 0, 0, 0.04)' : active
             ? 'rgba(80, 82, 178, 0.1)'
             : 'transparent',
-          border: active ? '1px solid #5052B2' : '1px solid #E4E4E4',
+          border: active ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #E4E4E4',
           position: 'relative',
           display: 'flex',
           borderRadius: '4px',
@@ -297,7 +298,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
 
               }}
             >
-              <AddIcon sx={{ color: "#5052B2", fontSize: 45 }} />
+              <AddIcon sx={{ color: "rgba(56, 152, 252, 1)", fontSize: 45 }} />
             </Box>
           )}
           <Image
@@ -344,7 +345,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               color: "rgba(32, 33, 36, 1)",
               fontWeight: 600,
               ":hover": {
-                color: "rgba(80, 82, 178, 1)",
+                color: "rgba(56, 152, 252, 1)",
                 backgroundColor: "rgba(80, 82, 178, 0.1)",
               },
             }}
@@ -362,7 +363,7 @@ const IntegrationBox = ({ image, handleClick, handleDelete, service_name, active
               color: "rgba(32, 33, 36, 1)",
               fontWeight: 600,
               ":hover": {
-                color: "rgba(80, 82, 178, 1)",
+                color: "rgba(56, 152, 252, 1)",
                 backgroundColor: "rgba(80, 82, 178, 0.1)",
               },
             }}
@@ -494,10 +495,10 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
         }}>
           <Button
             sx={{
-              border: '1px #5052B2 solid',
-              color: '#5052B2',
+              border: '1px rgba(56, 152, 252, 1) solid',
+              color: 'rgba(56, 152, 252, 1)',
               '&:hover': {
-                border: '1px #5052B2 solid',
+                border: '1px rgba(56, 152, 252, 1) solid',
               }
             }}
             variant='outlined'
@@ -509,9 +510,9 @@ const DeleteIntegrationPopup = ({ service_name, open, handleDelete, onClose }: D
             sx={{
               margin: '0 16px',
               fontFamily: 'Nunito Sans',
-              background: '#5052B2',
+              background: 'rgba(56, 152, 252, 1)',
               '&:hover': {
-                backgroundColor: '#5052B2',
+                backgroundColor: 'rgba(56, 152, 252, 1)',
               },
               "&.Mui-disabled": {
                 backgroundColor: "rgba(80, 82, 178, 0.6)",
@@ -562,12 +563,21 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
   const handleAddIntegration = async (service_name: string) => {
     try {
       setIsLoading(true)
-      const response = await axiosInstance.get('/integrations/check-limit-reached')
-      if (response.status === 200 && response.data == true) {
-        setUpgradePlanPopup(true)
-        return
-      }
+      // const response = await axiosInstance.get('/integrations/check-limit-reached')
+      // if (response.status === 200 && response.data == true) {
+      //   setUpgradePlanPopup(true)
+      //   return
+      // }
+      // console.log(response)
+
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const { status, data } = error.response;
+        if (status === 400 && data?.status === "DOMAIN_NOT_FOUND") {
+          showErrorToast("Please set up your domain to continue");
+          return;
+        }
+      }
     }
     finally {
       setIsLoading(false)
@@ -902,12 +912,12 @@ const PixelManagment = () => {
         <TabList
           centered
           aria-label="Integrations Tabs"
-          TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+          TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
           sx={{
             textTransform: 'none',
             minHeight: 0,
             '& .MuiTabs-indicator': {
-              backgroundColor: 'rgba(80, 82, 178, 1)',
+              backgroundColor: 'rgba(56, 152, 252, 1)',
               height: '1.4px',
             },
             "@media (max-width: 600px)": {
@@ -971,6 +981,7 @@ const Integrations = () => {
   const { needsSync, setNeedsSync } = useIntegrationContext();
   const [value, setValue] = useState('1');
   const [integrationsCredentials, setIntegrationsCredentials] = useState<IntegrationCredentials[]>([]);
+  const [hasIntegrations, setHasIntegrations] = useState<Boolean>(false);
   const [integrations, setIntegrations] = useState<any[]>([])
   const [status, setStatus] = useState<string>('');
   const router = useRouter();
@@ -1013,6 +1024,7 @@ const Integrations = () => {
         const response = await axiosInstance.get('/integrations/credentials/')
         if (response.status === 200) {
           setIntegrationsCredentials(response.data)
+          setHasIntegrations(response.data.length > 0)
         }
       }
       catch (error) {
@@ -1071,15 +1083,14 @@ const Integrations = () => {
   const changeTab = (value: string) => {
     setValue(value)
   }
-  const noIntegrations = integrationsCredentials.length === 0;
   const [showFirstTime, setShowFirstTime] = useState(true);
   useEffect(() => {
-    if (!isLoading && integrationsCredentials.length === 0) {
+    if (!isLoading && !hasIntegrations) {
       setShowFirstTime(true);
     } else {
       setShowFirstTime(false);
     }
-  }, [isLoading, integrationsCredentials]);
+  }, [isLoading, hasIntegrations]);
   const handleBegin = () => {
     setShowFirstTime(false); 
     setActiveTab('1'); 
@@ -1150,13 +1161,13 @@ const Integrations = () => {
                   <TabList
                     centered
                     aria-label="Integrations Tabs"
-                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                    TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                     sx={{
                       textTransform: 'none',
                       minHeight: 0,
                       pb: 0,
                       '& .MuiTabs-indicator': {
-                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                        backgroundColor: 'rgba(56, 152, 252, 1)',
                         height: '1.4px',
                       },
                       "@media (max-width: 600px)": {
@@ -1167,31 +1178,7 @@ const Integrations = () => {
                     }}
                     onChange={handleTabChange}
                   >
-                    <Tab value="1" label="Integrations" className="main-text"
-                      sx={{
-                        textTransform: 'none',
-                        padding: '4px 10px',
-                        pb: '10px',
-                        flexGrow: 1,
-                        marginRight: '3em',
-                        minHeight: 'auto',
-                        minWidth: 'auto',
-                        fontSize: '14px',
-                        fontWeight: 700,
-                        lineHeight: '19.1px',
-                        textAlign: 'left',
-                        mr: 2,
-                        '&.Mui-selected': {
-                          color: 'rgba(80, 82, 178, 1)'
-                        },
-                        "@media (max-width: 600px)": {
-                          mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                            border: '1px solid rgba(220, 220, 239, 1)'
-                          },
-                        }
-                      }}
-                    />
+                    
                     {/* <Tab label="Pixel Management" value="2" className="main-text"
                       sx={{
                         textTransform: 'none',
@@ -1207,7 +1194,7 @@ const Integrations = () => {
                         textAlign: 'left',
                         mr: 2,
                         '&.Mui-selected': {
-                          color: 'rgba(80, 82, 178, 1)'
+                          color: 'rgba(56, 152, 252, 1)'
                         },
                         "@media (max-width: 600px)": {
                           mr: 0, borderRadius: '4px', '&.Mui-selected': {

@@ -520,7 +520,7 @@ const CreateLookalikePage: React.FC = () => {
                       variant="outlined"
                       sx={{
                         ...smartAudiences.buttonform,
-                        borderColor: 'rgba(80, 82, 178, 1)',
+                        borderColor: 'rgba(56, 152, 252, 1)',
                         width: '92px',
                         mt: 2,
                         alignSelf: 'flex-end',
@@ -532,7 +532,7 @@ const CreateLookalikePage: React.FC = () => {
                       <Typography
                         sx={{
                           ...smartAudiences.textButton,
-                          color: 'rgba(80, 82, 178, 1)',
+                          color: 'rgba(56, 152, 252, 1)',
                         }}
                       >
                         Edit
@@ -588,10 +588,10 @@ const CreateLookalikePage: React.FC = () => {
                       onClick={handleCalculate}
                       sx={{
                         ...smartAudiences.buttonform,
-                        backgroundColor: "rgba(80, 82, 178, 1)",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                         width: "120px",
                         ":hover": {
-                          backgroundColor: "rgba(80, 82, 178, 1)",
+                          backgroundColor: "rgba(56, 152, 252, 1)",
                         },
                       }}
                     >
@@ -711,13 +711,13 @@ const CreateLookalikePage: React.FC = () => {
                 >
                   <Button
                     sx={{
-                      border: "1px #5052B2 solid",
-                      color: "#5052B2",
+                      border: "1px rgba(56, 152, 252, 1) solid",
+                      color: "rgba(56, 152, 252, 1)",
                       backgroundColor: "#FFFFFF",
                       textTransform: "none",
                       mt: 1,
                       "&:hover": {
-                        border: "1px #5052B2 solid",
+                        border: "1px rgba(56, 152, 252, 1) solid",
                         backgroundColor: "#FFFFFF",
                       },
                     }}
@@ -730,20 +730,20 @@ const CreateLookalikePage: React.FC = () => {
                   </Button>
                   <Button
                     sx={{
-                      border: "1px #5052B2 solid",
+                      border: "1px rgba(56, 152, 252, 1) solid",
                       color: "#FFFFFF",
-                      backgroundColor: "#5052B2",
+                      backgroundColor: "rgba(56, 152, 252, 1)",
                       textTransform: "none",
                       gap: 0,
                       mt: 1,
                       "&:hover": {
-                        border: "1px #5052B2 solid",
-                        backgroundColor: "#5052B2",
+                        border: "1px rgba(56, 152, 252, 1) solid",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                       },
                       "&.Mui-disabled": {
                         color: "#FFFFFF",
-                        border: "1px #5052B2 solid",
-                        backgroundColor: "#5052B2",
+                        border: "1px rgba(56, 152, 252, 1) solid",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                         opacity: 0.6,
                       },
                     }}
@@ -773,13 +773,13 @@ const CreateLookalikePage: React.FC = () => {
                 >
                   <Button
                     sx={{
-                      border: "1px #5052B2 solid",
-                      color: "#5052B2",
+                      border: "1px rgba(56, 152, 252, 1) solid",
+                      color: "rgba(56, 152, 252, 1)",
                       backgroundColor: "#FFFFFF",
                       textTransform: "none",
                       mt: 1,
                       "&:hover": {
-                        border: "1px #5052B2 solid",
+                        border: "1px rgba(56, 152, 252, 1) solid",
                         backgroundColor: "#FFFFFF",
                       },
                     }}
@@ -792,21 +792,21 @@ const CreateLookalikePage: React.FC = () => {
                   </Button>
                   <Button
                     sx={{
-                      border: "1px #5052B2 solid",
+                      border: "1px rgba(56, 152, 252, 1) solid",
                       color: "#FFFFFF",
-                      backgroundColor: "#5052B2",
+                      backgroundColor: "rgba(56, 152, 252, 1)",
                       textTransform: "none",
                       gap: 0,
                       mt: 1,
                       opacity: sourceName.trim() === "" ? 0.6 : 1,
                       "&:hover": {
-                        border: "1px #5052B2 solid",
-                        backgroundColor: "#5052B2",
+                        border: "1px rgba(56, 152, 252, 1) solid",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                       },
                       "&.Mui-disabled": {
                         color: "#FFFFFF",
-                        border: "1px #5052B2 solid",
-                        backgroundColor: "#5052B2",
+                        border: "1px rgba(56, 152, 252, 1) solid",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                         opacity: 0.6,
                       },
                     }}
@@ -881,11 +881,11 @@ const CreateLookalikePage: React.FC = () => {
                     fontSize: "14px",
                     lineHeight: "19.6px",
                     fontWeight: "500",
-                    color: "#5052B2 !important",
-                    borderColor: "#5052B2",
+                    color: "rgba(56, 152, 252, 1) !important",
+                    borderColor: "rgba(56, 152, 252, 1)",
                     "&:hover": {
                       backgroundColor: "#fff",
-                      borderColor: "#5052B2",
+                      borderColor: "rgba(56, 152, 252, 1)",
                     },
                   }}
                 >
@@ -895,14 +895,14 @@ const CreateLookalikePage: React.FC = () => {
                   variant="contained"
                   onClick={() => router.push("/smart-audiences/builder")}
                   sx={{
-                    backgroundColor: "rgba(80, 82, 178, 1)",
+                    backgroundColor: "rgba(56, 152, 252, 1)",
                     textTransform: "none",
                     padding: "10px 24px",
                     color: "#fff !important",
-                    ":hover": { backgroundColor: "rgba(80, 82, 178, 1)" },
-                    ":active": { backgroundColor: "rgba(80, 82, 178, 1)" },
+                    ":hover": { backgroundColor: "rgba(56, 152, 252, 1)" },
+                    ":active": { backgroundColor: "rgba(56, 152, 252, 1)" },
                     ":disabled": {
-                      backgroundColor: "rgba(80, 82, 178, 1)",
+                      backgroundColor: "rgba(56, 152, 252, 1)",
                       opacity: 0.6,
                     },
                   }}

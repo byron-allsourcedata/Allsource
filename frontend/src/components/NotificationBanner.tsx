@@ -51,6 +51,8 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
             fontSize: "14px",
             fontWeight: 500,
             color: "rgba(224, 49, 48, 1)",
+            "&:hover": { bgcolor: "rgba(253, 247, 247, 1)" },
+            "&:active": { bgcolor: "rgba(241, 192, 192, 1)" },
           }}
         >
           Dismiss
@@ -64,7 +66,8 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
             fontSize: "14px",
             fontWeight: 500,
             bgcolor: "rgba(224,49,48,1)",
-            "&:hover": { bgcolor: "rgba(224,49,48,0.85)" },
+            "&:hover": { bgcolor: "rgba(198, 40, 40, 1)" },
+            "&:active": { bgcolor: "rgba(224, 109, 109, 1)" },
           }}
         >
           {ctaLabel}

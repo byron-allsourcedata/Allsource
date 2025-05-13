@@ -28,7 +28,7 @@ const styles = {
             p: 0
         },
         '&.Mui-selected': {
-            color: '#5052b2',
+            color: 'rgba(56, 152, 252, 1)',
             fontWeight: '700'
         }
     },
@@ -38,7 +38,7 @@ const styles = {
         lineHeight: '16px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
-            color: 'rgba(80, 82, 178, 1)',
+            color: 'rgba(56, 152, 252, 1)',
         },
     },
     formInput: {
@@ -60,7 +60,7 @@ const styles = {
                 
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#5052B2',
+                borderColor: 'rgba(56, 152, 252, 1)',
             },
         },
         '&+.MuiFormHelperText-root': {
@@ -191,7 +191,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
                             letterSpacing: '0.06px',
                             top: '5px',
                             '&.Mui-focused': {
-                                color: 'rgba(80, 82, 178, 1)',
+                                color: 'rgba(56, 152, 252, 1)',
                             },
                         }
                     }}
@@ -248,7 +248,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
                             sx: {
                                 fontFamily: "Nunito Sans",
                                 fontSize: "14px",
-                                color: showCreateFormMailchimp ? "#5052B2" : "#202124",
+                                color: showCreateFormMailchimp ? "rgba(56, 152, 252, 1)" : "#202124",
                                 fontWeight: "500",
                                 lineHeight: "20px",
 
@@ -300,7 +300,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
                                                 fontWeight: '400',
                                                 color: 'rgba(17, 17, 19, 0.60)',
                                                 '&.Mui-focused': {
-                                                    color: 'rgba(80, 82, 178, 1)',
+                                                    color: 'rgba(56, 152, 252, 1)',
                                                 },
                                             }
                                         }}
@@ -344,7 +344,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
                                                         borderColor: '#A3B0C2',
                                                     },
                                                     '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                                                        borderColor: 'rgba(80, 82, 178, 1)',
+                                                        borderColor: 'rgba(56, 152, 252, 1)',
                                                     },
                                                 },
                                                 '&+.MuiFormHelperText-root': {
@@ -359,14 +359,14 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
                                         disabled={listNameError || !newListName}
                                         sx={{
                                             borderRadius: '4px',
-                                            border: '1px solid #5052B2',
+                                            border: '1px solid rgba(56, 152, 252, 1)',
                                             background: '#fff',
                                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '14px',
                                             fontWeight: '600',
                                             lineHeight: '20px',
-                                            color: '#5052b2',
+                                            color: 'rgba(56, 152, 252, 1)',
                                             textTransform: 'none',
                                             padding: '4px 22px',
                                             '&:hover': {
@@ -374,7 +374,7 @@ const MailchimpContactSyncTab: React.FC<MailchimpContactSyncTabProps> = ({ setIs
                                             },
                                             '&.Mui-disabled': {
                                                 background: 'transparent',
-                                                color: '#5052b2'
+                                                color: 'rgba(56, 152, 252, 1)'
                                             }
                                         }}>
                                         Save

@@ -93,7 +93,7 @@ const Categories: React.FC<PredictableFieldsTabProps> = ({ data }) => {
         <Box>
           <Link
             style={{
-              color: "rgba(80, 82, 178, 1) !important",
+              color: "rgba(56, 152, 252, 1) !important",
               fontSize: "12px",
               fontFamily: "Roboto",
               width: "auto",

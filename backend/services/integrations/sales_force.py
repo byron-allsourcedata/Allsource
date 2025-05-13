@@ -12,8 +12,9 @@ from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.sales_force import SalesForceProfile
 from fastapi import HTTPException
-from faker import Faker
-from services.integrations.commonIntegration import get_states_dataframe
+from services.integrations.commonIntegration import *
+from models.integrations.users_domains_integrations import UserIntegration
+from models.integrations.integrations_users_sync import IntegrationUserSync
 from datetime import datetime, timedelta
 from utils import extract_first_email
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
@@ -124,11 +125,20 @@ class SalesForceIntegrationsService:
     def _to_csv(self, records: list[dict]) -> str:
         if not records:
             return ""
+        
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=records[0].keys(), lineterminator='\n')
-        writer.writeheader()
+        
+        all_keys = set()
         for rec in records:
-            writer.writerow(rec)
+            all_keys.update(rec.keys())
+        
+        writer = csv.DictWriter(output, fieldnames=list(all_keys), lineterminator='\n')
+        writer.writeheader()
+        
+        for rec in records:
+            full_rec = {key: rec.get(key, "") for key in all_keys}
+            writer.writerow(full_rec)
+        
         return output.getvalue()
     
     def generate_external_id(self, profile: dict) -> str:
@@ -192,7 +202,7 @@ class SalesForceIntegrationsService:
             access_token = token_data.get('access_token')
             refresh_token = token_data.get('refresh_token')
             instance_url = token_data.get('instance_url')
-            integrations = self.__save_integrations(refresh_token, instance_url, domain.id, user)
+            integrations = self.__save_integrations(refresh_token, instance_url, None if domain is None else domain.id, user)
             return {
                 'integrations': integrations,
                 'status': IntegrationsStatus.SUCCESS.value
@@ -233,14 +243,14 @@ class SalesForceIntegrationsService:
         response.raise_for_status()
         return response.text
 
-    async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
         profiles = []
         access_token = self.get_access_token(user_integration.access_token)
         if not access_token:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         
         for enrichment_user in enrichment_users:
-            profile = self.__mapped_sales_force_profile(enrichment_user, data_sync.data_map)
+            profile = self.__mapped_sales_force_profile(enrichment_user, target_schema, validations, integration_data_sync.data_map)
             if profile:
                 profiles.append(profile)
                 
@@ -289,90 +299,66 @@ class SalesForceIntegrationsService:
             
         return properties
     
-    def __mapped_sales_force_profile(self, enrichment_user: EnrichmentUser, data_map: dict) -> dict:
-        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+    def __mapped_sales_force_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict, data_map: list) -> dict:
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
             return None
+        
+        business_email, personal_email, phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+        main_email, main_phone = resolve_main_email_and_phone(enrichment_contacts=enrichment_contacts, validations=validations, target_schema=target_schema, 
+                                                              business_email=business_email, personal_email=personal_email, phone=phone)
         first_name = enrichment_contacts.first_name
         last_name = enrichment_contacts.last_name
         
-        fake = Faker()
-        verified_email = fake.email()
-        verified_phone = fake.phone_number()
-        if not verified_email or not first_name or not last_name:
+        if not main_email or not first_name or not last_name:
             return None
-        
-        enrichment_personal_profiles = enrichment_user.personal_profiles
-        enrichment_professional_profiles = enrichment_user.professional_profiles
-        city = None
-        state = None
-        zip_code = None
-        gender = None
-        birth_day = None
-        birth_month = None
-        birth_year = None
-        company_name = None
-        
-        if enrichment_professional_profiles:
-            company_name = enrichment_professional_profiles.current_company_name
-            
-        if not company_name:
-            return None
-        
-        if enrichment_personal_profiles:
-            zip_code = str(enrichment_personal_profiles.zip_code5)
-            df_geo = get_states_dataframe()
-            if df_geo['zip'].dtype == object:
-                df_geo['zip'] = df_geo['zip'].astype(int)
-            row = df_geo.loc[df_geo['zip'] == zip_code]
-            if not row.empty:
-                city = row['city'].iat[0]
-                state = row['state_name'].iat[0]
-            
-            if enrichment_personal_profiles.gender == 1:
-                gender = 'm'
-            elif enrichment_personal_profiles.gender == 2:
-                gender = 'f'
-            birth_day = str(enrichment_personal_profiles.birth_day)
-            birth_month = str(enrichment_personal_profiles.birth_month)
-            birth_year = str(enrichment_personal_profiles.birth_year)        
-        
-        #properties = self.__map_properties(enrichment_user, data_map) if data_map else {}
-                
-            
-        json_data = {
+
+        result = {
+            'Email': main_email,
             'FirstName': first_name,
-            'LastName': last_name,
-            'Email': verified_email,
-            'Phone': verified_phone,
-            'MobilePhone': verified_phone,
-            'City': city,
-            'State': state,
-            'Country': 'USA',
-            'Company': company_name,
-            # 'Age__c': properties.get('Age', None),
-            'Gender__c': gender,
-            # 'Estimated_Household_Income_Code__c': properties.get('Estimated household income code', None),
-            # 'Estimated_Current_Home_Value_Code__c': properties.get('Estimated current home value code', None),
-            # 'Homeowner_Status__c': properties.get('Homeowner status', None),
-            # 'Has_Children__c': properties.get('Has children', None),
-            # 'Number_of_Children__c': properties.get('Number of children', None),
-            # 'Credit_Rating__c': properties.get('Credit rating', None),
-            # 'Net_Worth_Code__c': properties.get('Net worth code', None),
-            # 'Zip_Code__c': properties.get('Zipcode 5', None),
-            # 'Latitude__c': properties.get('Lat', None),
-            # 'Longitude__c': properties.get('Lon', None),
-            # 'Has_Credit_Card__c': properties.get('Has credit card', None),
-            # 'Length_of_Residence_Years__c': properties.get('Length of residence years', None),
-            # 'Marital_Status__c': properties.get('Marital status', None),
-            # 'Occupation_Group_Code__c': properties.get('Occupation group code', None),
-            # 'Is_Book_Reader__c': properties.get('Is book reader', None),
-            # 'Is_Online_Purchaser__c': properties.get('Is online purchaser', None),
-            # 'Is_Traveler__c': properties.get('Is traveler', None),
-            # 'Rec_Id__c': properties.get('Rec id', None)
+            'LastName': last_name
         }
         
-        json_data = {k: v for k, v in json_data.items() if v is not None}
-            
-        return json_data
+        required_types = {m['type'] for m in data_map}
+        context = {
+            'main_phone': main_phone,
+            'professional_profiles': enrichment_user.professional_profiles,
+            'postal': enrichment_user.postal,
+            'personal_profiles': enrichment_user.personal_profiles,
+            'business_email': business_email,
+            'personal_email': personal_email,
+            'country_code': enrichment_user.postal,
+            'gender': enrichment_user.personal_profiles,
+            'zip_code': enrichment_user.personal_profiles,
+            'state': enrichment_user.postal,
+            'city': enrichment_user.postal,
+            'company': enrichment_user.professional_profiles,
+            'business_email_last_seen_date': enrichment_contacts,
+            'personal_email_last_seen': enrichment_contacts,
+            'linkedin_url': enrichment_contacts
+        }
+        result_map = {}
+        for field_type in required_types:
+            filler = FIELD_FILLERS.get(field_type)
+            if filler:
+                filler(result_map, context)
+                    
+        salesforce_field_mapping = {
+            'business_email': 'Business_Email__c',
+            'personal_email': 'Personal_Email__c',
+            'phone': 'Phone',
+            'city': 'City__c',
+            'state': 'State__c',
+            'country_code': 'Country__c',
+            'company': 'Company',
+            'gender': 'Gender__c',
+            'business_email_last_seen_date': 'Business_email_last_seen_date__c',
+            'personal_email_last_seen': 'Personal_email_last_seen__c',
+            'linkedin_url': 'Linkedin_url__c'
+        }
+        for key, sf_key in salesforce_field_mapping.items():
+            value = result_map.get(key)
+            if value is not None:
+                result[sf_key] = value
+                
+        return result

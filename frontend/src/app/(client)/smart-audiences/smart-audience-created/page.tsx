@@ -380,11 +380,11 @@ const SourcesList: React.FC = () => {
                                         fontSize: '14px',
                                         lineHeight: "19.6px",
                                         fontWeight: '500',
-                                        color: '#5052B2',
-                                        borderColor: '#5052B2',
+                                        color: 'rgba(56, 152, 252, 1)',
+                                        borderColor: 'rgba(56, 152, 252, 1)',
                                         '&:hover': {
                                             backgroundColor: 'rgba(80, 82, 178, 0.1)',
-                                            borderColor: '#5052B2',
+                                            borderColor: 'rgba(56, 152, 252, 1)',
                                         },
                                     }}
                                 >
@@ -395,16 +395,16 @@ const SourcesList: React.FC = () => {
                                     onClick={() => router.push(`/smart-audiences/builder`)}
                                     className='second-sub-title'
                                     sx={{
-                                        backgroundColor: 'rgba(80, 82, 178, 1)',
+                                        backgroundColor: 'rgba(56, 152, 252, 1)',
                                         textTransform: 'none',
                                         padding: '10px 24px',
                                         color: '#fff !important',
                                         ":hover": {
                                             backgroundColor: "rgba(62, 64, 142, 1)"},
                                         ":active": {
-                                            backgroundColor: "rgba(80, 82, 178, 1)"},
+                                            backgroundColor: "rgba(56, 152, 252, 1)"},
                                         ":disabled": {
-                                            backgroundColor: "rgba(80, 82, 178, 1)",
+                                            backgroundColor: "rgba(56, 152, 252, 1)",
                                             opacity: 0.6,
                                         },
                                     }}
@@ -518,11 +518,11 @@ const SourcesList: React.FC = () => {
                                             onClick={handleCloseConfirmDialog}
                                             sx={{
                                                 backgroundColor: '#fff',
-                                                color: 'rgba(80, 82, 178, 1) !important',
+                                                color: 'rgba(56, 152, 252, 1) !important',
                                                 fontSize: '14px',
                                                 textTransform: 'none',
                                                 padding: '0.75em 1em',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
+                                                border: '1px solid rgba(56, 152, 252, 1)',
                                                 maxWidth: '50px',
                                                 maxHeight: '30px',
                                                 '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
@@ -534,15 +534,15 @@ const SourcesList: React.FC = () => {
                                             className="second-sub-title"
                                             onClick={handleDeleteSource}
                                             sx={{
-                                                backgroundColor: 'rgba(80, 82, 178, 1)',
+                                                backgroundColor: 'rgba(56, 152, 252, 1)',
                                                 color: '#fff !important',
                                                 fontSize: '14px',
                                                 textTransform: 'none',
                                                 padding: '0.75em 1em',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
+                                                border: '1px solid rgba(56, 152, 252, 1)',
                                                 maxWidth: '60px',
                                                 maxHeight: '30px',
-                                                '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                '&:hover': { backgroundColor: 'rgba(56, 152, 252, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
                                             }}
                                         >
                                             Delete

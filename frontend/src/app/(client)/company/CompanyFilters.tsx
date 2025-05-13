@@ -1081,7 +1081,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                       control={
                         <Radio
                           sx={{
-                            '&.Mui-checked': { color: "rgba(80, 82, 178, 1)" }
+                            '&.Mui-checked': { color: "rgba(56, 152, 252, 1)" }
                           }}
                         />
                       }
@@ -1089,7 +1089,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                         <Typography
                           className='table-data'
                           sx={{
-                            color: selectedPageVisit === name ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)"
+                            color: selectedPageVisit === name ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)"
                           }}
                         >
                           {label}
@@ -1170,12 +1170,12 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                         size='small'
                         sx={{
                           '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
+                            color: "rgba(56, 152, 252, 1)",
                           },
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.lastWeek ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFilters.lastWeek ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -1186,12 +1186,12 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                         size='small'
                         sx={{
                           '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
+                            color: "rgba(56, 152, 252, 1)",
                           },
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.last30Days ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFilters.last30Days ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
@@ -1204,12 +1204,12 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                         size='small'
                         sx={{
                           '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
+                            color: "rgba(56, 152, 252, 1)",
                           },
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.last6Months ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFilters.last6Months ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
                   />
                   <FormControlLabel
                     control={
@@ -1220,12 +1220,12 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                         size='small'
                         sx={{
                           '&.Mui-checked': {
-                            color: "rgba(80, 82, 178, 1)",
+                            color: "rgba(56, 152, 252, 1)",
                           },
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.allTime ? "rgba(80, 82, 178, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedFilters.allTime ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
                   />
                 </Box>
               </Box>
@@ -1360,7 +1360,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                             name={range}
                             size="small"
                             sx={{
-                              "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                              "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                             }}
                           />
                         }
@@ -1369,7 +1369,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                             className="table-data"
                             sx={{
                               color: checkedFiltersRevenue[range as keyof typeof checkedFiltersRevenue]
-                                ? "rgba(80, 82, 178, 1) !important"
+                                ? "rgba(56, 152, 252, 1) !important"
                                 : "rgba(74, 74, 74, 1)",
                             }}
                           >
@@ -1440,7 +1440,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                             name={range}
                             size="small"
                             sx={{
-                              "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                              "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                             }}
                           />
                         }
@@ -1449,7 +1449,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                             className="table-data"
                             sx={{
                               color: checkedFiltersNumberOfEmployees[range as keyof typeof checkedFiltersNumberOfEmployees]
-                                ? "rgba(80, 82, 178, 1) !important"
+                                ? "rgba(56, 152, 252, 1) !important"
                                 : "rgba(74, 74, 74, 1)",
                             }}
                           >
@@ -1543,7 +1543,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                             value={item}
                             size='small'
                             sx={{
-                              "&.Mui-checked": { color: "rgba(80, 82, 178, 1)" },
+                              "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
                             }}
                           />
                           <ListItemText sx={{}}>
@@ -1552,7 +1552,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
                               fontFamily: "Nunito Sans",
                               fontWeight: 500,
                               lineHeight: "19.6px",
-                              color: checkedFiltersIndustries[item] ? "rgba(80, 82, 178, 1)" : "rgba(32, 33, 36, 1)"
+                              color: checkedFiltersIndustries[item] ? "rgba(56, 152, 252, 1)" : "rgba(32, 33, 36, 1)"
                             }}>
                               {item}
                             </Typography>
@@ -1697,9 +1697,9 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
               onClick={handleClearFilters}
               className='second-sub-title'
               sx={{
-                color: "rgba(80, 82, 178, 1) !important",
+                color: "rgba(56, 152, 252, 1) !important",
                 backgroundColor: '#fff',
-                border: ' 1px solid rgba(80, 82, 178, 1)',
+                border: ' 1px solid rgba(56, 152, 252, 1)',
                 textTransform: "none",
                 padding: "0.75em 2.5em",
                 '&:hover': {
@@ -1714,12 +1714,12 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply
               onClick={handleApply}
               className='second-sub-title'
               sx={{
-                backgroundColor: "rgba(80, 82, 178, 1)",
+                backgroundColor: "rgba(56, 152, 252, 1)",
                 color: 'rgba(255, 255, 255, 1) !important',
                 textTransform: "none",
                 padding: "0.75em 2.5em",
                 '&:hover': {
-                  backgroundColor: 'rgba(80, 82, 178, 1)'
+                  backgroundColor: 'rgba(56, 152, 252, 1)'
                 }
               }}
             >

@@ -96,7 +96,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
                 fontSize: '14px',
                 },
                 '& .MuiStepIcon-root': {
-                color: index === 0 ? 'rgba(80, 82, 178, 1) !important' : 'rgba(212, 212, 212, 1)',
+                color: index === 0 ? 'rgba(56, 152, 252, 1) !important' : 'rgba(212, 212, 212, 1)',
                 },
             }}>
               {label}
@@ -108,12 +108,12 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
     onClick={resetAll}
     disabled={atDefault}
     sx={{
-      border: "1px #5052B2 solid",
-      color: "#5052B2",
+      border: "1px rgba(56, 152, 252, 1) solid",
+      color: "rgba(56, 152, 252, 1)",
       backgroundColor: "#FFFFFF",
       textTransform: "none",
       "&:hover": {
-        border: "1px #5052B2 solid",
+        border: "1px rgba(56, 152, 252, 1) solid",
         backgroundColor: "#FFFFFF",
       },
     }}
@@ -244,7 +244,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
             href="#"
             sx={{
               fontSize: "14px",
-              color: "rgba(80, 82, 178, 1)",
+              color: "rgba(56, 152, 252, 1)",
               textDecoration: "underline",
               cursor: "pointer",
               display: "inline-block",

@@ -145,7 +145,7 @@ const Sources: React.FC = () => {
     {
       title: "Pixel",
       description: "Install Pixel on your website to automatically collect visitor information in real-time.",
-      icon: "/pixel.svg",
+      icon: "/pixel-website.svg",
       onClick: () => {
         router.push("/sources/builder?type=pixel");
       },
@@ -796,11 +796,11 @@ const Sources: React.FC = () => {
                       fontSize: "14px",
                       lineHeight: "19.6px",
                       fontWeight: "500",
-                      color: "#5052B2",
-                      borderColor: "#5052B2",
+                      color: "rgba(56, 152, 252, 1)",
+                      borderColor: "rgba(56, 152, 252, 1)",
                       "&:hover": {
                         backgroundColor: "rgba(80, 82, 178, 0.1)",
-                        borderColor: "#5052B2",
+                        borderColor: "rgba(56, 152, 252, 1)",
                       },
                     }}
                     onClick={() => {
@@ -819,11 +819,11 @@ const Sources: React.FC = () => {
                       textTransform: "none",
                       color:
                         selectedFilters.length > 0
-                          ? "rgba(80, 82, 178, 1)"
+                          ? "rgba(56, 152, 252, 1)"
                           : "rgba(128, 128, 128, 1)",
                       border:
                         selectedFilters.length > 0
-                          ? "1px solid rgba(80, 82, 178, 1)"
+                          ? "1px solid rgba(56, 152, 252, 1)"
                           : "1px solid rgba(184, 184, 184, 1)",
                       borderRadius: "4px",
                       padding: "8px",
@@ -838,10 +838,10 @@ const Sources: React.FC = () => {
                       },
                       "&:hover": {
                         backgroundColor: "transparent",
-                        border: "1px solid rgba(80, 82, 178, 1)",
-                        color: "rgba(80, 82, 178, 1)",
+                        border: "1px solid rgba(56, 152, 252, 1)",
+                        color: "rgba(56, 152, 252, 1)",
                         "& .MuiSvgIcon-root": {
-                          color: "rgba(80, 82, 178, 1)",
+                          color: "rgba(56, 152, 252, 1)",
                         },
                       },
                     }}
@@ -851,7 +851,7 @@ const Sources: React.FC = () => {
                       sx={{
                         color:
                           selectedFilters.length > 0
-                            ? "rgba(80, 82, 178, 1)"
+                            ? "rgba(56, 152, 252, 1)"
                             : "rgba(128, 128, 128, 1)",
                       }}
                     />
@@ -929,7 +929,7 @@ const Sources: React.FC = () => {
                         label="Clear all"
                         onClick={handleResetFilters}
                         sx={{
-                          color: "#5052B2 !important",
+                          color: "rgba(56, 152, 252, 1) !important",
                           backgroundColor: "transparent",
                           lineHeight: "20px !important",
                           fontWeight: "400 !important",
@@ -1649,12 +1649,12 @@ const Sources: React.FC = () => {
                                                   sx={{
                                                     backgroundColor: "#fff",
                                                     color:
-                                                      "rgba(80, 82, 178, 1) !important",
+                                                      "rgba(56, 152, 252, 1) !important",
                                                     fontSize: "14px",
                                                     textTransform: "none",
                                                     padding: "0.75em 1em",
                                                     border:
-                                                      "1px solid rgba(80, 82, 178, 1)",
+                                                      "1px solid rgba(56, 152, 252, 1)",
                                                     maxWidth: "50px",
                                                     maxHeight: "30px",
                                                     "&:hover": {
@@ -1671,18 +1671,18 @@ const Sources: React.FC = () => {
                                                   onClick={handleDeleteSource}
                                                   sx={{
                                                     backgroundColor:
-                                                      "rgba(80, 82, 178, 1)",
+                                                      "rgba(56, 152, 252, 1)",
                                                     color: "#fff !important",
                                                     fontSize: "14px",
                                                     textTransform: "none",
                                                     padding: "0.75em 1em",
                                                     border:
-                                                      "1px solid rgba(80, 82, 178, 1)",
+                                                      "1px solid rgba(56, 152, 252, 1)",
                                                     maxWidth: "60px",
                                                     maxHeight: "30px",
                                                     "&:hover": {
                                                       backgroundColor:
-                                                        "rgba(80, 82, 178, 1)",
+                                                        "rgba(56, 152, 252, 1)",
                                                       boxShadow:
                                                         "0 2px 2px rgba(0, 0, 0, 0.3)",
                                                     },

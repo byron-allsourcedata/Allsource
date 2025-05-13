@@ -317,8 +317,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                           }}>Tutorial</Link>
                       </Box>
                       </>
@@ -333,8 +333,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           fontSize: '14px',
                           fontWeight: '600',
                           lineHeight: '20px',
-                          color: '#5052b2',
-                          textDecorationColor: '#5052b2'
+                          color: 'rgba(56, 152, 252, 1)',
+                          textDecorationColor: 'rgba(56, 152, 252, 1)'
                         }}>Tutorial</Link>
                     </Box> </>
                     ) : ( selectedCMS === 'Bigcommerce' && (
@@ -347,8 +347,8 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                           }}>Tutorial</Link>
                       </Box>
                     )))
@@ -374,7 +374,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                         width: 'auto',
                       }}
                     >
-                      <ArrowBackIcon sx={{ color: 'rgba(80, 82, 178, 1)', padding: 0 }} />
+                      <ArrowBackIcon sx={{ color: 'rgba(56, 152, 252, 1)', padding: 0 }} />
                     </Button>
                     <Typography className='table-data' sx={{ ...subtext, marginTop: '0.75em' }}>
                       Follow the instructions to install in Maximiz
@@ -470,7 +470,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                             opacity: isFormValid() ? 1 : 0.6,
                             pointerEvents: isFormValid() ? "auto" : "none",
                             backgroundColor: isFormValid()
-                              ? "rgba(80, 82, 178, 1)"
+                              ? "rgba(56, 152, 252, 1)"
                               : "rgba(80, 82, 178, 0.4)",
                             "&.Mui-disabled": {
                               backgroundColor: "rgba(80, 82, 178, 0.6)",
@@ -493,7 +493,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                         <Typography className='first-sub-title' sx={{ ...maintext, textAlign: 'center', padding: '1em 0em 1em 1em', fontWeight: '500', '@media (max-width: 600px)': { textAlign: 'left' } }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
                       </Box>
                       <Box>
-                        <Button component={Link} href="https://wordpress.org/plugins/maximiz/" target="_blank" variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(80, 82, 178, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(80, 82, 178, 1)', '&:hover': { backgroundColor: 'rgba(80, 82, 178, 1)' } }}>
+                        <Button component={Link} href="https://wordpress.org/plugins/maximiz/" target="_blank" variant="outlined" sx={{ ml: 5, backgroundColor: 'rgba(56, 152, 252, 1)', color: 'rgba(255, 255, 255, 1)', textTransform: 'none', padding: '1em 2em', border: '1px solid rgba(56, 152, 252, 1)', '&:hover': { backgroundColor: 'rgba(56, 152, 252, 1)' } }}>
                           <Typography className='second-sub-title' sx={{ fontSize: '14px !important', color: '#fff !important', textAlign: 'left', textWrap: 'wrap' }}>Get plugin</Typography>
                         </Button>
                       </Box>
@@ -567,14 +567,14 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                           backgroundColor: 'rgba(255, 255, 255, 1)',
                           textTransform: 'none',
                           padding: '1em 2em',
-                          border: '1px solid rgba(80, 82, 178, 1)'
+                          border: '1px solid rgba(56, 152, 252, 1)'
                         }}
                       >
                         <Typography
                           className='second-sub-title'
                           sx={{
                             fontSize: '14px !important',
-                            color: 'rgba(80, 82, 178, 1) !important',
+                            color: 'rgba(56, 152, 252, 1) !important',
                             lineHeight: '22.4px',
                             textAlign: 'left',
                             textWrap: 'wrap'
@@ -647,7 +647,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                             ...styles.submitButton,
                             marginTop: 'auto',
                             pointerEvents: !!storeHash ? "auto" : "none",
-                            backgroundColor: "rgba(80, 82, 178, 1)",
+                            backgroundColor: "rgba(56, 152, 252, 1)",
                             "&.Mui-disabled": {
                               backgroundColor: "rgba(80, 82, 178, 0.3)",
                               color: "#fff",

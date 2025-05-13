@@ -247,19 +247,19 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                 ml: 2,
                                                 textWrap: 'nowrap',
                                                 backgroundColor: '#fff',
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 fontFamily: "Nunito Sans",
                                                 textTransform: 'none',
                                                 lineHeight: '22.4px',
                                                 fontWeight: '600',
                                                 padding: '0.75em 2em',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
+                                                border: '1px solid rgba(56, 152, 252, 1)',
                                                 '&:hover': {
                                                     backgroundColor: '#fff',
                                                     boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
                                                     '&.Mui-disabled': {
                                                         backgroundColor: 'rgba(80, 82, 178, 0.6)',
-                                                        color: 'rgba(80, 82, 178, 1)',
+                                                        color: 'rgba(56, 152, 252, 1)',
                                                         cursor: 'not-allowed',
                                                     }
                                                 }
@@ -370,19 +370,19 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                                 ml: 2,
                                                 textWrap: 'nowrap',
                                                 backgroundColor: '#fff',
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 fontFamily: "Nunito Sans",
                                                 textTransform: 'none',
                                                 lineHeight: '22.4px',
                                                 fontWeight: '600',
                                                 padding: '0.75em 2em',
-                                                border: '1px solid rgba(80, 82, 178, 1)',
+                                                border: '1px solid rgba(56, 152, 252, 1)',
                                                 '&:hover': {
                                                     backgroundColor: '#fff',
                                                     boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
                                                     '&.Mui-disabled': {
                                                         backgroundColor: 'rgba(80, 82, 178, 0.6)',
-                                                        color: 'rgba(80, 82, 178, 1)',
+                                                        color: 'rgba(56, 152, 252, 1)',
                                                         cursor: 'not-allowed',
                                                     }
                                                 }
@@ -435,19 +435,19 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
                                         display: 'flex',
                                         textWrap: 'nowrap',
                                         backgroundColor: '#fff',
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                         fontFamily: "Nunito Sans",
                                         textTransform: 'none',
                                         lineHeight: '22.4px',
                                         fontWeight: '600',
                                         padding: '0.75em 2em',
-                                        border: '1px solid rgba(80, 82, 178, 1)',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
                                         '&:hover': {
                                             backgroundColor: '#fff',
                                             boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)',
                                             '&.Mui-disabled': {
                                                 backgroundColor: 'rgba(80, 82, 178, 0.6)',
-                                                color: 'rgba(80, 82, 178, 1)',
+                                                color: 'rgba(56, 152, 252, 1)',
                                                 cursor: 'not-allowed',
                                             }
                                         }
@@ -670,11 +670,11 @@ const PartnersOverview: React.FC<PartnersOverviewProps> = ({ isMaster }) => {
 
                             <Button variant="outlined" sx={{
                                 textWrap: 'nowrap',
-                                backgroundColor: '#fff', color: 'rgba(80, 82, 178, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
-                                fontWeight: '600', padding: '0.75em 3em', marginRight: '16px', border: '1px solid rgba(80, 82, 178, 1)', maxWidth: '109px', '&:hover': {
+                                backgroundColor: '#fff', color: 'rgba(56, 152, 252, 1)', fontFamily: "Nunito Sans", textTransform: 'none', lineHeight: '22.4px',
+                                fontWeight: '600', padding: '0.75em 3em', marginRight: '16px', border: '1px solid rgba(56, 152, 252, 1)', maxWidth: '109px', '&:hover': {
                                     backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)', '&.Mui-disabled': {
                                         backgroundColor: 'rgba(80, 82, 178, 0.6)',
-                                        color: 'rgba(80, 82, 178, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
                                         cursor: 'not-allowed',
                                     }
                                 }

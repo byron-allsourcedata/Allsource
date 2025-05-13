@@ -46,6 +46,12 @@ def delete_domain(domain_id: int, domain_service: UserDomainsService = Depends(g
     domain_service.delete_domain(user.get('id'), domain_id)
     return {'status': "SUCCESS"}
 
+@router.get("/pixel-installed-anywhere")
+def pixel_installed_anywhere(
+    user: dict = Depends(check_user_authorization_without_pixel),
+    domain_service: UserDomainsService = Depends(get_domain_service)
+):
+    return domain_service.pixel_installed_anywhere(user)
 
 @router.get('/api_key')
 def get_api_key_domain(domain = Depends(check_domain), 

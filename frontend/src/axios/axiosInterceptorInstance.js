@@ -67,7 +67,8 @@ axiosInterceptorInstance.interceptors.response.use(
         case 403:
           switch (error.response.data.status) {
             case "DOMAIN_NOT_FOUND":
-              navigateTo("/account-setup");
+              navigateTo('dashboard');
+              // navigateTo("/account-setup");
               break;
             case "NEED_BOOK_CALL":
               sessionStorage.setItem("is_slider_opened", "true");
@@ -78,7 +79,8 @@ axiosInterceptorInstance.interceptors.response.use(
             case "PIXEL_INSTALLATION_NEEDED":
               break;
             case "FILL_COMPANY_DETAILS":
-              navigateTo("/account-setup");
+              navigateTo('dashboard');
+              // navigateTo("/account-setup");
               break;
             case "TEAM_TOKEN_EXPIRED":
               localStorage.clear();

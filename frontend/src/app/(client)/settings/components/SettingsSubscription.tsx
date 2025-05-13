@@ -42,7 +42,7 @@ const subscriptionStyles = {
         textTransform: 'none',
         fontWeight: '400 !important',
         '&.Mui-selected': {
-            background: '#5052b2',
+            background: 'rgba(56, 152, 252, 1)',
             color: '#fff',
             border: 'none',
             '& .active-text-color': {
@@ -447,9 +447,9 @@ export const SettingsSubscription: React.FC = () => {
                         <Button variant="outlined" className='hyperlink-red' sx={{
                             position: 'absolute',
                             right: 0,
-                            color: '#5052B2 !important',
+                            color: 'rgba(56, 152, 252, 1) !important',
                             borderRadius: '4px',
-                            border: '1px solid #5052B2',
+                            border: '1px solid rgba(56, 152, 252, 1)',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             textTransform: 'none',
                             padding: '9px 16px',
@@ -487,9 +487,9 @@ export const SettingsSubscription: React.FC = () => {
             </Box>
             {sourcePlatform !== 'shopify' && (
                 <Button variant="outlined" className='hyperlink-red' sx={{
-                    color: '#5052B2 !important',
+                    color: 'rgba(56, 152, 252, 1) !important',
                     borderRadius: '4px',
-                    border: '1px solid #5052B2',
+                    border: '1px solid rgba(56, 152, 252, 1)',
                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                     textTransform: 'none',
                     padding: '9px 16px',
@@ -673,9 +673,9 @@ export const SettingsSubscription: React.FC = () => {
                     <Box>
                         <Button variant="contained" className='hyperlink-red' color="primary" disabled={true} onClick={handleBuyCredits}
                             sx={{
-                                background: '#5052b2 !important',
+                                background: 'rgba(56, 152, 252, 1) !important',
                                 borderRadius: '4px',
-                                border: '1px solid #5052B2',
+                                border: '1px solid rgba(56, 152, 252, 1)',
                                 padding: '9px 24px',
                                 color: '#fff !important',
                                 textTransform: 'none',
@@ -714,7 +714,7 @@ export const SettingsSubscription: React.FC = () => {
                         borderRadius: '4px',
                         border: 'none',
                         padding: '9px 24px',
-                        color: '#5052b2 !important',
+                        color: 'rgba(56, 152, 252, 1) !important',
                         textTransform: 'none',
                         whiteSpace: 'nowrap',
                         boxShadow: 'none !important',
@@ -800,7 +800,7 @@ export const SettingsSubscription: React.FC = () => {
                                         borderRadius: '4px',
                                         border: 'none',
                                         lineHeight: '22.4px',
-                                        backgroundColor: '#5052B2',
+                                        backgroundColor: 'rgba(56, 152, 252, 1)',
                                         textTransform: 'none',
                                         textAlign: 'center',
                                         cursor: 'pointer',
@@ -864,9 +864,9 @@ export const SettingsSubscription: React.FC = () => {
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Button className="hyperlink-red" sx={{
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2 !important',
+                                    color: 'rgba(56, 152, 252, 1) !important',
                                     marginRight: '16px',
                                     textTransform: 'none',
                                     padding: '10px 24px'
@@ -876,15 +876,15 @@ export const SettingsSubscription: React.FC = () => {
                                     Yes
                                 </Button>
                                 <Button className="hyperlink-red" onClick={handleCancelSubscriptionPlanPopupClose} sx={{
-                                    background: '#5052B2',
+                                    background: 'rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                     color: '#fff !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     '&:hover': {
-                                        color: '#5052B2 !important'
+                                        color: 'rgba(56, 152, 252, 1) !important'
                                     }
                                 }}>
                                     No
@@ -949,9 +949,9 @@ export const SettingsSubscription: React.FC = () => {
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Button className="hyperlink-red" sx={{
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2 !important',
+                                    color: 'rgba(56, 152, 252, 1) !important',
                                     marginRight: '16px',
                                     textTransform: 'none',
                                     padding: '10px 24px'
@@ -961,15 +961,15 @@ export const SettingsSubscription: React.FC = () => {
                                     Confirm cancellation
                                 </Button>
                                 <Button className="hyperlink-red" sx={{
-                                    background: '#5052B2',
+                                    background: 'rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                     color: '#fff !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     '&:hover': {
-                                        color: '#5052B2 !important'
+                                        color: 'rgba(56, 152, 252, 1) !important'
                                     }
                                 }}>
                                     Claim offer
@@ -1049,9 +1049,9 @@ export const SettingsSubscription: React.FC = () => {
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Button className="hyperlink-red" onClick={handleSubmit} sx={{
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#5052b2 !important',
+                                    color: 'rgba(56, 152, 252, 1) !important',
                                     marginRight: '16px',
                                     textTransform: 'none',
                                     padding: '10px 24px'
@@ -1061,15 +1061,15 @@ export const SettingsSubscription: React.FC = () => {
                                     Yes
                                 </Button>
                                 <Button className="hyperlink-red" onClick={handleConfirmCancellationPopupClose} sx={{
-                                    background: '#5052B2',
+                                    background: 'rgba(56, 152, 252, 1)',
                                     borderRadius: '4px',
-                                    border: '1px solid #5052b2',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
                                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                     color: '#fff !important',
                                     textTransform: 'none',
                                     padding: '10px 24px',
                                     '&:hover': {
-                                        color: '#5052B2 !important'
+                                        color: 'rgba(56, 152, 252, 1) !important'
                                     }
                                 }}>
                                     No

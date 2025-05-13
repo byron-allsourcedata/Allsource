@@ -129,3 +129,4 @@ class CreateSmartAudienceRequest(BaseModel):
     is_validate_skip: Optional[bool] = None
     total_records: int
     active_segment_records: int
+    target_schema: Optional[str] = None

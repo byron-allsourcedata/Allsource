@@ -299,7 +299,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                 p: 0
             },
             '&.Mui-selected': {
-                color: '#5052b2',
+                color: 'rgba(56, 152, 252, 1)',
                 fontWeight: '700'
             }
         },
@@ -353,7 +353,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                         onClick={handleNextTab}
                         disabled={!selectedRadioValue}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -364,7 +364,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -379,7 +379,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                         disabled={newListName == '' || url == '' || error}
                         onClick={handleSaveSync}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -390,7 +390,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -405,7 +405,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                         onClick={handleSaveSync}
                         disabled={!selectedRadioValue.trim() || customFields.length == 0}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -416,7 +416,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -566,8 +566,8 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                         }}>Tutorial</Link> */}
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -580,7 +580,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
                                 <TabList centered aria-label="Connect to Webhook Tabs"
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
                                             overflowX: 'auto !important',
@@ -618,7 +618,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 <FormControlLabel value="allContacts" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
 
                                                 }} />} label="All Contacts"
@@ -646,7 +646,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 <FormControlLabel value="visitor" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Visitors"
                                                     componentsProps={{
@@ -673,7 +673,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 <FormControlLabel value="viewed_product" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="View Product"
                                                     componentsProps={{
@@ -700,7 +700,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 <FormControlLabel value="abandoned_cart" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Abandoned cart"
                                                     componentsProps={{
@@ -727,7 +727,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 <FormControlLabel value="converted_sales" control={<Radio sx={{
                                                     color: '#e4e4e4',
                                                     '&.Mui-checked': {
-                                                        color: '#5052b2', // checked color
+                                                        color: 'rgba(56, 152, 252, 1)', // checked color
                                                     }
                                                 }} />} label="Converted Sales"
                                                     componentsProps={{
@@ -1028,7 +1028,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                 aria-haspopup="true"
                                                 sx={{
                                                     textTransform: 'none',
-                                                    border: '1px solid rgba(80, 82, 178, 1)',
+                                                    border: '1px solid rgba(56, 152, 252, 1)',
                                                     borderRadius: '4px',
                                                     padding: '9px 16px',
                                                     minWidth: 'auto',
@@ -1044,7 +1044,7 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({ open, onClose, da
                                                     fontSize: '16px',
                                                     textAlign: 'left',
                                                     fontWeight: '500',
-                                                    color: '#5052B2'
+                                                    color: 'rgba(56, 152, 252, 1)'
                                                 }}>
                                                     Add
                                                 </Typography>

@@ -328,8 +328,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                             onClick={handleCalendarClick}
                             sx={{
                                 textTransform: 'none',
-                                color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)',
-                                border: formattedDates ? '1.5px solid rgba(80, 82, 178, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
+                                color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                border: formattedDates ? '1.5px solid rgba(56, 152, 252, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
                                 borderRadius: '4px',
                                 padding: '8px',
                                 minWidth: 'auto',
@@ -338,16 +338,16 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                     padding: 0
                                 },
                                 '&:hover': {
-                                    border: '1.5px solid rgba(80, 82, 178, 1)',
+                                    border: '1.5px solid rgba(56, 152, 252, 1)',
                                     '& .MuiSvgIcon-root': {
-                                        color: 'rgba(80, 82, 178, 1)'
+                                        color: 'rgba(56, 152, 252, 1)'
                                     }
                                 }
                             }}
                         >
                             <DateRangeIcon
                                 fontSize="medium"
-                                sx={{ color: formattedDates ? 'rgba(80, 82, 178, 1)' : 'rgba(128, 128, 128, 1)' }}
+                                sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }}
                             />
                             <Typography variant="body1" sx={{
                                 fontFamily: 'Roboto',
@@ -448,7 +448,7 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                     ...payoutsStyle.tableBodyColumn,
                                                     cursor: 'pointer',
                                                     position: 'sticky',
-                                                    color: 'rgba(80, 82, 178, 1) !important',
+                                                    color: 'rgba(56, 152, 252, 1) !important',
                                                     left: 0,
                                                     zIndex: 1,
                                                     backgroundColor: '#fff',
@@ -520,8 +520,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                             fontWeight: '600',
                                                             lineHeight: '20px',
                                                             letterSpacing: 'normal',
-                                                            color: "rgba(80, 82, 178, 1)",
-                                                            border: '1px solid rgba(80, 82, 178, 1)',
+                                                            color: "rgba(56, 152, 252, 1)",
+                                                            border: '1px solid rgba(56, 152, 252, 1)',
                                                             textTransform: 'none',
                                                             padding: '5px 8px',
                                                             margin: 0,
@@ -529,8 +529,8 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ open, onBack, selectedMonth
                                                             opacity: item.reward_status === 'paid' ? 0.6 : 1,
                                                             pointerEvents: item.reward_status === 'paid' ? 'none' : 'auto',
                                                             '&:hover': {
-                                                                backgroundColor: item.reward_status === 'paid' ? '#FFF' : '#5052B2',
-                                                                color: item.reward_status === 'paid' ? "rgba(80, 82, 178, 1)" : '#fff',
+                                                                backgroundColor: item.reward_status === 'paid' ? '#FFF' : 'rgba(56, 152, 252, 1)',
+                                                                color: item.reward_status === 'paid' ? "rgba(56, 152, 252, 1)" : '#fff',
                                                             },
                                                             borderRadius: '4px'
                                                         }}

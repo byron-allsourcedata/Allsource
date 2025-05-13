@@ -34,6 +34,11 @@ class UserDomainsService:
             self.domain_mapped(domain)
             for i, domain in enumerate(sorted_domains)
         ]
+
+    def pixel_installed_anywhere(self, user):
+        domains = self.domain_persistence.get_domains_by_user(user.get("id"))
+        installed_any = any(d.is_pixel_installed for d in domains)
+        return {"pixel_installed": installed_any}
     
     def get_domains_with_leads(self, user):
         domains = self.domain_persistence.get_domains_with_leads(user.get("id"))

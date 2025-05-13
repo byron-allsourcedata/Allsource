@@ -226,6 +226,9 @@ export const styles: { [key: string]: SxProps<Theme> } = {
     '&:hover': {
       backgroundColor: 'rgba(30, 136, 229, 1)',
     },
+    '&:active': {
+      backgroundColor: 'rgba(116, 183, 253, 1)',
+    },
     '@media (max-width: 600px)': { marginBottom: 0.35, fontSize: '14px', fontWeight: '400' }
   },
 };

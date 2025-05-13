@@ -9,8 +9,10 @@ import hashlib
 import os
 from faker import Faker
 import re
+from services.integrations.commonIntegration import *
+from models.integrations.users_domains_integrations import UserIntegration
+from models.integrations.integrations_users_sync import IntegrationUserSync
 import logging
-from services.integrations.commonIntegration import get_states_dataframe
 from models.enrichment.enrichment_users import EnrichmentUser
 from fastapi import HTTPException
 from datetime import datetime, timedelta
@@ -221,17 +223,17 @@ class MailchimpIntegrationsService:
         })
         return sync
 
-    async def process_data_sync(self, access_token: str, integration_data_sync, enrichment_users: EnrichmentUser):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
         profiles = []
         for enrichment_user in enrichment_users:
-            profile = self.__mapped_member_into_list(enrichment_user, integration_data_sync.data_map)
+            profile = self.__mapped_member_into_list(enrichment_user, target_schema, validations, integration_data_sync.data_map)
             if profile:
                 profiles.append(profile)
             
         if not profiles:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
         
-        profile = self.__create_profile(access_token, integration_data_sync, profiles)
+        profile = self.__create_profile(user_integration, integration_data_sync, profiles)
         if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.LIST_NOT_EXISTS.value):
             return profile
 
@@ -272,12 +274,18 @@ class MailchimpIntegrationsService:
         try:
             existing_fields = self.client.lists.get_list_merge_fields(integration_data_sync.list_id)
             existing_field_names = [field['name'] for field in existing_fields['merge_fields']]
-            if "estimated_household_income_code" not in existing_field_names:
-                self.client.lists.add_list_merge_field(integration_data_sync.list_id, {
-                    "name": "estimated_household_income_code",
-                    "type": "number",
-                    "tag": "EstimatedHouseholdIncomeCode"
-                })
+            all_merge_keys = set()
+            for profile in profiles:
+                merge_fields = profile.get("merge_fields", {})
+                all_merge_keys.update(merge_fields.keys())
+
+            for key in all_merge_keys:
+                if key not in existing_field_names:
+                    self.client.lists.add_list_merge_field(integration_data_sync.list_id, {
+                        "name": key,
+                        "type": "text",
+                        "tag": key.upper()
+                    })
 
         except ApiClientError as error:
             if error.status_code == 404:
@@ -306,99 +314,81 @@ class MailchimpIntegrationsService:
     def __mapped_list(self, list):
         return ListFromIntegration(id=list['id'], list_name=list['name'])
 
-    def __mapped_member_into_list(self, enrichment_user: EnrichmentUser, data_map: dict):
-        verified_email, verified_phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+    def __mapped_member_into_list(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict, data_map: list):
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
             return None
+        
+        business_email, personal_email, phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+        main_email, main_phone = resolve_main_email_and_phone(enrichment_contacts=enrichment_contacts, validations=validations, target_schema=target_schema, 
+                                                              business_email=business_email, personal_email=personal_email, phone=phone)
         first_name = enrichment_contacts.first_name
         last_name = enrichment_contacts.last_name
         
-        fake = Faker()
-        verified_email = fake.email()
-        verified_phone = fake.phone_number()
-        if not verified_email or not first_name or not last_name:
+        if not main_email or not first_name or not last_name:
             return None
-        
-        enrichment_personal_profiles = enrichment_user.personal_profiles
-        enrichment_professional_profiles = enrichment_user.professional_profiles
-        city = None
-        state = None
-        zip_code = None
-        gender = None
-        birth_day = None
-        birth_month = None
-        birth_year = None
-        company_name = None
-        address_parts = None
-        
-        if enrichment_professional_profiles:
-            company_name = enrichment_professional_profiles.current_company_name
-        
-        if enrichment_personal_profiles:
-            zip_code = str(enrichment_personal_profiles.zip_code5)
-            df_geo = get_states_dataframe()
-            if df_geo['zip'].dtype == object:
-                df_geo['zip'] = df_geo['zip'].astype(int)
-            row = df_geo.loc[df_geo['zip'] == zip_code]
-            if not row.empty:
-                city = row['city'].iat[0]
-                state = row['state_name'].iat[0]
-            
-            if enrichment_personal_profiles.gender == 1:
-                gender = 'm'
-            elif enrichment_personal_profiles.gender == 2:
-                gender = 'f'
-            birth_day = str(enrichment_personal_profiles.birth_day)
-            birth_month = str(enrichment_personal_profiles.birth_month)
-            birth_year = str(enrichment_personal_profiles.birth_year) 
-        
-        if data_map:
-            properties = self.__map_properties(enrichment_user, data_map)
-        else:
-            properties = {}
-                    
-        json_data = {
-            'email_address': verified_email,
+
+        result = {
+            'email_address': main_email,
             'status': 'subscribed',
             'email_type': 'text',
             "merge_fields": {
                 "FNAME": first_name,
                 "LNAME": last_name,
-                'PHONE': verified_phone if verified_phone else 'N/A',
-                'COMPANY': 'N/A',
-                "ADDRESS": {
-                    "addr1": address_parts or 'N/A',
-                    "city": city or 'N/A',
-                    "state": state or 'N/A',
-                    "zip": zip_code or 'N/A',
-                },
-                # **properties
             },
         }
-        return json_data
+        
+        required_types = {m['type'] for m in data_map}
+        context = {
+            'main_phone': main_phone,
+            'professional_profiles': enrichment_user.professional_profiles,
+            'postal': enrichment_user.postal,
+            'personal_profiles': enrichment_user.personal_profiles,
+            'business_email': business_email,
+            'personal_email': personal_email,
+            'country_code': enrichment_user.postal,
+            'gender': enrichment_user.personal_profiles,
+            'zip_code': enrichment_user.personal_profiles,
+            'state': enrichment_user.postal,
+            'city': enrichment_user.postal,
+            'company': enrichment_user.professional_profiles,
+            'business_email_last_seen_date': enrichment_contacts,
+            'personal_email_last_seen': enrichment_contacts,
+            'linkedin_url': enrichment_contacts
+        }
+        result_map = {}
+        for field_type in required_types:
+            filler = FIELD_FILLERS.get(field_type)
+            if filler:
+                filler(result_map, context)
+        address_data = {}
+        
+        for key, value in result_map.items():
+            key_upper = key.upper()
+            
+            if key in ['city', 'state', 'zip_code', 'addr1', 'address']:
+                address_data[key] = value
+            elif key == 'country' or key == 'country_code':
+                result['merge_fields']['COUNTRY'] = value
+            elif key == 'company':
+                result['merge_fields']['COMPANY'] = value
+            elif key in ['business_email_last_seen_date', 'personal_email_last_seen']:
+                merge_key = key.upper()
+                result['merge_fields'][merge_key] = str(value)
+            elif key == 'linkedin_url':
+                result['merge_fields']['LINKEDIN'] = value
+            elif key in ['business_email', 'personal_email', 'phone']:
+                merge_key = key.upper()
+                result['merge_fields'][merge_key] = value
+            else:
+                result['merge_fields'][key_upper] = value
 
-    def __map_properties(self, five_x_five_user: FiveXFiveUser, data_map: List[DataMap]) -> dict:
-        properties = {}
-        for mapping in data_map:
-            five_x_five_field = mapping.get("type")
-            new_field = mapping.get("value")
-            value_field = getattr(five_x_five_user, five_x_five_field, None)
-            if value_field is not None:
-                new_field = new_field.replace(" ", "_").upper()
-                if isinstance(value_field, datetime):
-                    properties[new_field] = value_field.strftime("%Y-%m-%d")
-                else:
-                    if isinstance(value_field, str):
-                        if len(value_field) > 2048:
-                            value_field = value_field[:2048]
-                    properties[new_field] = value_field
-
-        mapped_fields = {mapping.get("value") for mapping in data_map}
-        if "Time on site" in mapped_fields or "URL Visited" in mapped_fields:
-            time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
-        if "Time on site" in mapped_fields:
-            properties["TIMEONSITE"] = time_on_site
-        if "URL Visited" in mapped_fields:
-            properties["URLVISITED"] = url_visited
-        return properties
+        if any(k in address_data for k in ['addr1', 'city', 'state', 'zip_code']):
+            result['merge_fields']['ADDRESS'] = {
+                "addr1": address_data.get('addr1', 'N/A'),
+                "city": address_data.get('city', 'N/A'),
+                "state": address_data.get('state', 'N/A'),
+                "zip": address_data.get('zip_code', 'N/A'),
+            }
+        
+        return result

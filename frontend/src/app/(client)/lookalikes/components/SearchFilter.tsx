@@ -212,7 +212,7 @@ const SearchFilter: React.FC<SearchFilterProps> = () => {
                 <Button
                     variant="contained"
                     sx={{
-                        backgroundColor: "#5052B2",
+                        backgroundColor: "rgba(56, 152, 252, 1)",
                         width: "120px",
                         height: "40px",
                         textTransform: "none",

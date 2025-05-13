@@ -22,7 +22,7 @@ const styles = {
             p: 0
         },
         '&.Mui-selected': {
-            color: '#5052b2',
+            color: 'rgba(56, 152, 252, 1)',
             fontWeight: '700'
         }
     },
@@ -32,7 +32,7 @@ const styles = {
         lineHeight: '16px',
         color: 'rgba(17, 17, 19, 0.60)',
         '&.Mui-focused': {
-            color: 'rgba(80, 82, 178, 1)',
+            color: 'rgba(56, 152, 252, 1)',
         },
     },
     formInput: {
@@ -54,7 +54,7 @@ const styles = {
                 
             },
             '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#5052B2',
+                borderColor: 'rgba(56, 152, 252, 1)',
             },
         },
         '&+.MuiFormHelperText-root': {
