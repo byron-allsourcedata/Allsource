@@ -266,7 +266,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                 p: 0
             },
             '&.Mui-selected': {
-                color: '#5052b2',
+                color: 'rgba(56, 152, 252, 1)',
                 fontWeight: '700'
             }
         },
@@ -291,7 +291,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                     fontWeight: '400'
                 },
                 '&:hover .MuiOutlinedInput-notchedOutline': {
-                    borderColor: '#5052B2',
+                    borderColor: 'rgba(56, 152, 252, 1)',
                 },
             },
             '&+.MuiFormHelperText-root': {
@@ -474,8 +474,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
-                            color: '#5052b2',
-                            textDecorationColor: '#5052b2'
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
                         }}>Tutorial</Link>
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -497,7 +497,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
                                 <TabList centered aria-label="Tabs"
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
                                             overflowX: 'auto !important',
@@ -678,7 +678,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                                                 sx: {
                                                                     fontFamily: "Nunito Sans",
                                                                     fontSize: "14px",
-                                                                    color: showCreateForm ? "#5052B2" : "#202124",
+                                                                    color: showCreateForm ? "rgba(56, 152, 252, 1)" : "#202124",
                                                                     fontWeight: "500",
                                                                     lineHeight: "20px",
 
@@ -783,14 +783,14 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                                                             disabled={listNameError || !newListName}
                                                                             sx={{
                                                                                 borderRadius: '4px',
-                                                                                border: '1px solid #5052B2',
+                                                                                border: '1px solid rgba(56, 152, 252, 1)',
                                                                                 background: '#fff',
                                                                                 boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                                                                                 fontFamily: 'Nunito Sans',
                                                                                 fontSize: '14px',
                                                                                 fontWeight: '600',
                                                                                 lineHeight: '20px',
-                                                                                color: '#5052b2',
+                                                                                color: 'rgba(56, 152, 252, 1)',
                                                                                 textTransform: 'none',
                                                                                 padding: '4px 22px',
                                                                                 '&:hover': {
@@ -798,7 +798,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                                                                                 },
                                                                                 '&.Mui-disabled': {
                                                                                     background: 'transparent',
-                                                                                    color: '#5052b2'
+                                                                                    color: 'rgba(56, 152, 252, 1)'
                                                                                 }
                                                                             }}>
                                                                             Save
@@ -857,7 +857,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                         onClick={handleNextTab}
                         disabled={!isDropdownValid}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -868,7 +868,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data }) =
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}

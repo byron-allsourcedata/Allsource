@@ -627,11 +627,11 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                   margin: "6px",
                 },
                 "& .react-datepicker__day--keyboard-selected": {
-                  backgroundColor: "#5052B2 !important",
+                  backgroundColor: "rgba(56, 152, 252, 1) !important",
                   color: "#fff !important",
                 },
                 "& .react-datepicker__day:hover": {
-                  backgroundColor: "#5052B2 !important",
+                  backgroundColor: "rgba(56, 152, 252, 1) !important",
                   color: "#fff !important",
                 },
                 "& .react-datepicker__day--disabled:hover": {

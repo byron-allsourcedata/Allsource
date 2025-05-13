@@ -226,7 +226,7 @@ const Insights = () => {
               "@media (max-width: 600px)": {},
             }}
           >
-            <ArrowBackIcon sx={{ color: "#5052B2" }} />
+            <ArrowBackIcon sx={{ color: "rgba(56, 152, 252, 1)" }} />
           </IconButton>
           <Typography
             variant="h4"

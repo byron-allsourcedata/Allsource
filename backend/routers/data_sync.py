@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, Query, HTTPException, status
-from dependencies import get_integration_service, get_audience_smarts_service, IntegrationService, check_domain, check_user_authorization, check_user_authentication 
+from dependencies import get_integration_service, get_audience_smarts_service, IntegrationService, check_domain, \
+    check_user_authorization, check_user_authentication, check_user_authorization_without_pixel
+from models import UserDomains
 from schemas.integrations.integrations import *
 from services.audience_smarts import AudienceSmartsService
 from enums import TeamAccessLevel, BaseEnum
@@ -19,6 +21,14 @@ async def get_smart_sync(service_name: str | None = Query(None), integrations_us
                          integration_service: IntegrationService = Depends(get_integration_service),
                          user=Depends(check_user_authorization)):
     return integration_service.get_all_audience_sync(user, service_name, integrations_users_sync_id)
+
+@router.get("/has-integration-and-smart-audiences")
+def has_integration_and_data_sync(
+    user: dict = Depends(check_user_authorization_without_pixel),
+        domain: UserDomains = Depends(check_domain),
+    integration_service: IntegrationService = Depends(get_integration_service),
+):
+    return integration_service.has_integration_and_data_sync(user=user, domain=domain)
 
 
 @router.post('/sync/switch-toggle-smart-audience-sync')

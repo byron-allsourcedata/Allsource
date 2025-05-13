@@ -439,10 +439,10 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({ open, onClos
                         {roleError && <FormHelperText error>{roleError}</FormHelperText>}
                     </FormControl>
                     <Button className='hyperlink-red' sx={{
-                        border: '1px solid #5052b2',
+                        border: '1px solid rgba(56, 152, 252, 1)',
                         borderRadius: '4px',
                         padding: '10px 24px',
-                        color: '#5052b2 !important',
+                        color: 'rgba(56, 152, 252, 1) !important',
                         textTransform: 'none',
                         height: '40px'
                     }}

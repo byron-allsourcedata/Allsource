@@ -165,7 +165,7 @@ const NotificationPopup: React.FC<NotificationPopupProps> = ({ open, onClose, an
                                         width: '8px',
                                         height: '8px',
                                         borderRadius: '50%',
-                                        backgroundColor: '#5052B2',
+                                        backgroundColor: 'rgba(56, 152, 252, 1)',
                                         position: 'absolute',
                                         left: 4,
                                         top: '15px',

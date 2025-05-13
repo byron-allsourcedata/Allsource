@@ -9,14 +9,15 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Image from "next/image";
 import { ExternalLink } from "@/components/ExternalLink";
 import WelcomePopup from "@/components/CreatePixelSourcePopup";
+import { getInteractiveSx } from "@/components/utils";
 
 interface DataSyncFirstTimeScreenProps {
-
   onBegin?: () => void;
+  hasIntegrations?: Boolean
 }
 
 
-const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
+const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasIntegrations }) => {
   const [popupOpen, setPopupOpen] = useState(false);
 
   const handleOpenPopup = () => {
@@ -62,15 +63,7 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
           borderRadius: 1,
           overflow: 'hidden',
           border: "1px solid rgba(237, 237, 237, 1)",
-          cursor: "pointer",
-          transition: "background-color .2s, border-color .2s",
-          "&:hover": {
-            backgroundColor: "rgba(232, 239, 255, 0.4)",
-            border: "1px solid rgba(1, 113, 248, 0.5)",
-            "& .fiveth-sub-title": {
-              color: "rgba(21, 22, 25, 1)",
-            },
-          }
+          ...getInteractiveSx(!hasIntegrations),
         }
         }
       >
@@ -110,7 +103,7 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
             variant="contained"
             className="second-sub-title"
             onClick={onBegin}
-            disabled
+            disabled={!hasIntegrations}
             sx={{
               backgroundColor: "rgba(56, 152, 252, 1)",
               textTransform: "none",
@@ -128,7 +121,7 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin }) => {
           </Button>
         </Box>
       </Box>
-      {popupOpen && (
+      {popupOpen && !hasIntegrations && (
         <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} variant="integration"/>
       )}
     </Box>

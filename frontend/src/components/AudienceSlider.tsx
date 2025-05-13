@@ -498,7 +498,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 {/* HubSpot */}
                                 {integrationsCredentials.some(integration => integration.service_name === 'hubspot') && (
                                     <ListItem sx={{
-                                        p: 0, borderRadius: '4px', border: selectedIntegration === 'hubspot' ? '1px solid #5052B2' : '1px solid #e4e4e4', width: 'auto',
+                                        p: 0, borderRadius: '4px', border: selectedIntegration === 'hubspot' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4', width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)'
                                         }
@@ -536,7 +536,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'klaviyo' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'klaviyo' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -575,7 +575,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'klaviyo' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'klaviyo' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -614,7 +614,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'sales_force' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'sales_force' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -653,7 +653,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'webhook' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'webhook' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -692,7 +692,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'omnisend' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -731,7 +731,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'omnisend' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'omnisend' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -770,7 +770,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'google_ads' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'google_ads' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -809,7 +809,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'mailchimp' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'mailchimp' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -848,7 +848,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'sendlane' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -887,7 +887,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 's3' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 's3' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -925,7 +925,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
-                                        border: selectedIntegration === 'sendlane' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        border: selectedIntegration === 'sendlane' ? '1px solid rgba(56, 152, 252, 1)' : '1px solid #e4e4e4',
                                         width: 'auto',
                                         '@media (max-width:600px)': {
                                             flexBasis: 'calc(50% - 8px)',
@@ -962,7 +962,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                 <ListItem sx={{
                                     p: 0,
                                     borderRadius: '4px',
-                                    border: '1px dotted #5052B2',
+                                    border: '1px dotted rgba(56, 152, 252, 1)',
                                     width: 'auto',
                                     '@media (max-width:600px)': {
                                         flexBasis: 'calc(50% - 8px)',

@@ -64,35 +64,48 @@ const DataSync = () => {
   };
 
   const onApply = (filter: any) => {
-    setFilters(filter);
+    setFilters(filter); 
   };
 
   const installPixel = () => {
     router.push("/dashboard");
   };
 
+  const [hasIntegrations, setHasIntegrations] = useState<boolean>(false);
+  const [hasDataSync, setHasDataSync] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchIntegrations = async () => {
+      try {
+        setIsLoading(true)
+        const domain = sessionStorage.getItem("current_domain") || "";
+        const response = await axiosInstance.get(
+          "/data-sync/has-integration-and-smart-audiences",
+          {
+            headers: { domain },
+          }
+        );
+        setHasIntegrations(response.data.hasIntegration);
+        setHasDataSync(response.data.hasAnySync)
+      } catch (err) {
+        console.error("Error checking integrations:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchIntegrations();
+  }, []);
+
   if (isLoading) {
     return <CustomizedProgressBar />;
   }
-  const hasIntegrations = false;
+
 
   return (
     <>
     {isLoading && <CustomizedProgressBar />}
-    {!hasIntegrations && (
-      <>
-        <Box sx={{width: "98%", mt: 2}}>
-          <NotificationBanner
-            ctaUrl="/integrations"
-            ctaLabel="Add Integration"
-            message="You need to create at least one integration before you can sync your audience"
-          />
-          <FirstTimeScree />
-      </Box>
-      </>
-      
-    )}
-      {hasIntegrations && (
+      {(
       <Box sx={datasyncStyle.mainContent}>
         <Box
           sx={{
@@ -252,7 +265,19 @@ const DataSync = () => {
             </Box>
           ) : (
             !isLoading &&
-            filters && (
+            filters && !hasDataSync ? (
+              <>
+                <Box sx={{width: "98%", mt: 2}}>
+                  <NotificationBanner
+                    ctaUrl="/integrations"
+                    ctaLabel="Add Integration"
+                    message="You need to create at least one integration before you can sync your audience"
+                  />
+                  <FirstTimeScree onBegin={()=> {router.push("/smart-audiences")}} hasIntegrations={hasIntegrations}/>
+              </Box>
+              </>
+              
+            ) : (
               <>
                 <DataSyncList filters={filters} />
               </>

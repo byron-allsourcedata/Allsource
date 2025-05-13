@@ -137,9 +137,9 @@ export const planStyles: { [key: string]: SxProps<Theme> } = {
           background: 'none',
         },
         '&.MuiButton-contained': {
-            color: '#5052b2',
+            color: 'rgba(56, 152, 252, 1)',
             background: 'transparent',
-            borderBottom: '1.4px solid #5052b2',
+            borderBottom: '1.4px solid rgba(56, 152, 252, 1)',
             fontWeight: '700',
             '&:hover': {
               boxShadow: 'none'

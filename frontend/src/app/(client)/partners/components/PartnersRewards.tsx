@@ -318,7 +318,7 @@ const PartnersRewards: React.FC<RewardProps> = ({ isMaster, partnerId, loading, 
                     padding: '10px 24px',
                     boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                     '&:hover': {
-                      backgroundColor: '#5052B2',
+                      backgroundColor: 'rgba(56, 152, 252, 1)',
                       color: '#fff'
                     },
                     borderRadius: '4px',

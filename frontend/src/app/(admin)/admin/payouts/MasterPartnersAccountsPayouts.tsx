@@ -231,7 +231,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                 textTransform: 'none',
                                 minHeight: 0,
                                 '& .MuiTabs-indicator': {
-                                    backgroundColor: 'rgba(80, 82, 178, 1)',
+                                    backgroundColor: 'rgba(56, 152, 252, 1)',
                                     height: '1.4px',
                                 },
                                 "@media (max-width: 600px)": {
@@ -257,7 +257,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                     textAlign: 'left',
                                     mr: 2,
                                     '&.Mui-selected': {
-                                        color: 'rgba(80, 82, 178, 1)'
+                                        color: 'rgba(56, 152, 252, 1)'
                                     },
                                     "@media (max-width: 600px)": {
                                         mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -281,7 +281,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                     lineHeight: '19.1px',
                                     minWidth: 'auto',
                                     '&.Mui-selected': {
-                                        color: 'rgba(80, 82, 178, 1)'
+                                        color: 'rgba(56, 152, 252, 1)'
                                     },
                                     "@media (max-width: 600px)": {
                                         mr: 0, borderRadius: '4px', '&.Mui-selected': {
@@ -472,7 +472,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                     </Typography>
                                                     <IconButton
                                                         onClick={(event) => handleOpenMenu(event, index)}
-                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(80, 82, 178, 1) !important' }, padding: 0 }}
+                                                        sx={{ ':hover': { backgroundColor: 'transparent', color: 'rgba(56, 152, 252, 1) !important' }, padding: 0 }}
                                                     >
                                                         <KeyboardArrowDownIcon />
                                                     </IconButton>
@@ -505,7 +505,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                     color: "rgba(32, 33, 36, 1)",
                                                                     fontWeight: 600,
                                                                     ":hover": {
-                                                                        color: "rgba(80, 82, 178, 1)",
+                                                                        color: "rgba(56, 152, 252, 1)",
                                                                         backgroundColor: "rgba(80, 82, 178, 0.1)",
                                                                     },
                                                                 }}
@@ -525,7 +525,7 @@ const PartnerAccounts: React.FC<PartnerAccountsProps> = ({ partnerName, open, on
                                                                     color: "rgba(32, 33, 36, 1)",
                                                                     fontWeight: 600,
                                                                     ":hover": {
-                                                                        color: "rgba(80, 82, 178, 1)",
+                                                                        color: "rgba(56, 152, 252, 1)",
                                                                         backgroundColor: "rgba(80, 82, 178, 0.1)",
                                                                     },
                                                                 }}

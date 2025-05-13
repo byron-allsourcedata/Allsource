@@ -47,7 +47,7 @@ const klaviyoStyles = {
             p: 0
         },
         '&.Mui-selected': {
-            color: '#5052b2',
+            color: 'rgba(56, 152, 252, 1)',
             fontWeight: '700'
         }
     },
@@ -199,7 +199,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, inv
     }
 
     const highlightConfig: HighlightConfig = {
-        'Klaviyo': { color: '#5052B2', fontWeight: '500' },
+        'Klaviyo': { color: 'rgba(56, 152, 252, 1)', fontWeight: '500' },
         'Settings': { color: '#707071', fontWeight: '500' },
         'Create Private API Key': { color: '#707071', fontWeight: '500' },
         'Lists': { color: '#707071', fontWeight: '500' },
@@ -236,7 +236,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, inv
                         onClick={handleApiKeySave}
                         disabled={!apiKey || disableButton || apiKeyError}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -247,7 +247,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, inv
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -261,7 +261,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, inv
                         variant="contained"
                         onClick={handleSave}
                         sx={{
-                            backgroundColor: '#5052B2',
+                            backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
                             fontSize: '14px',
                             fontWeight: '600',
@@ -272,7 +272,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, inv
                             padding: '10px 24px',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             '&:hover': {
-                                backgroundColor: '#5052B2'
+                                backgroundColor: 'rgba(56, 152, 252, 1)'
                             },
                             borderRadius: '4px',
                         }}
@@ -355,8 +355,8 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, inv
                                 fontSize: '14px',
                                 fontWeight: '600',
                                 lineHeight: '20px',
-                                color: '#5052b2',
-                                textDecorationColor: '#5052b2'
+                                color: 'rgba(56, 152, 252, 1)',
+                                textDecorationColor: 'rgba(56, 152, 252, 1)'
                             }}>Tutorial</Link>
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
@@ -368,7 +368,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, inv
                         <TabContext value={value}>
                             <Box sx={{ pb: 4 }}>
                                 <TabList centered aria-label="Connect to Omnisend Tabs"
-                                    TabIndicatorProps={{ sx: { backgroundColor: "#5052b2" } }}
+                                    TabIndicatorProps={{ sx: { backgroundColor: "rgba(56, 152, 252, 1)" } }}
                                     sx={{
                                         "& .MuiTabs-scroller": {
                                             overflowX: 'auto !important',
@@ -520,7 +520,7 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, inv
                                                                 transform: 'translateX(32px)', // Adjust for larger width
                                                                 color: '#fff',
                                                                 '&+.MuiSwitch-track': {
-                                                                    backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                                    backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                                     opacity: checked ? '1' : '1',
                                                                 }
                                                             },
@@ -531,10 +531,10 @@ const OmnisendConnect = ({ handleClose, open, onSave, initApiKey, boxShadow, inv
                                                         },
                                                         '& .MuiSwitch-track': {
                                                             borderRadius: 20 / 2,
-                                                            backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                            backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                             opacity: checked ? '1' : '1',
                                                             '& .MuiSwitch-track.Mui-checked': {
-                                                                backgroundColor: checked ? '#5052b2' : '#7b7b7b',
+                                                                backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                                 opacity: checked ? '1' : '1',
                                                             }
                                                         },

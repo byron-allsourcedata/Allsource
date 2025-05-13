@@ -451,7 +451,7 @@ const PlanSlider: React.FC<PopupProps> = ({
                                         borderRadius: "4px",
                                         border: "none",
                                         lineHeight: "22.4px",
-                                        backgroundColor: "#5052B2",
+                                        backgroundColor: "rgba(56, 152, 252, 1)",
                                         textTransform: "none",
                                         textAlign: "center",
                                         cursor: "pointer",

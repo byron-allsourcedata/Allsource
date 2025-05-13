@@ -250,7 +250,7 @@ class AudienceSmartsService:
 
 
     def get_datasource(self, user: dict):
-        lookalikes, count, max_page = self.lookalikes_persistence_service.get_lookalikes(
+        lookalikes, count, max_page, _ = self.lookalikes_persistence_service.get_lookalikes(
             user_id=user.get('id'), page=1, per_page=50
         )
 

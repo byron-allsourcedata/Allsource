@@ -67,11 +67,11 @@ async def get_integrations_smart_audinece_sync(
 async def get_integrations_credentials(integration_serivce: IntegrationService = Depends(get_integration_service),
                                        user=Depends(check_user_authorization),
                                        domain=Depends(check_domain)):
+    print(domain)
     filters = []
     source_platform = user.get('source_platform')
     if source_platform in ['big_commerce', 'shopify']:
         filters = ['big_commerce', 'shopify']
-        
     integration = integration_serivce.get_user_service_credentials(domain_id=domain.id, filters=filters, user_id=user.get('id'))
     return integration
 

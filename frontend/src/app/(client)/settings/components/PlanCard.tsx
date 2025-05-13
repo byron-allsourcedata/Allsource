@@ -53,7 +53,7 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string, activePlanPeriod:
                             backgroundColor: '#EDEDF7',
                             borderRadius: '4px',
                             padding: '6px 8px',
-                            color: '#5052B2 !important',
+                            color: 'rgba(56, 152, 252, 1) !important',
                             fontWeight: '600'
                         }}>
                             Popular
@@ -88,15 +88,15 @@ const PlanCard: React.FC<{ plan: any; activePlanTitle: string, activePlanPeriod:
                         onClick={() => onChoose(plan.alias)}
                         disabled={plan.is_active}
                         sx={{
-                            color: plan.is_active ? '#5f6368 !important' : '#5052B2 !important',
+                            color: plan.is_active ? '#5f6368 !important' : 'rgba(56, 152, 252, 1) !important',
                             backgroundColor: plan.is_active ? '#e7e7e7' : 'transparent',
                             borderRadius: '4px',
-                            border: plan.is_active ? '1px solid #f8464b' : '1px solid #5052B2',
+                            border: plan.is_active ? '1px solid #f8464b' : '1px solid rgba(56, 152, 252, 1)',
                             boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
                             textTransform: 'none',
                             padding: '9px 24px',
                             '&:hover': {
-                                backgroundColor: '#5052B2',
+                                backgroundColor: 'rgba(56, 152, 252, 1)',
                                 color: '#fff !important'
                             }
                         }}

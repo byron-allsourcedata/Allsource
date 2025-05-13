@@ -237,7 +237,7 @@ body {
   font-size: 14px;
   line-height: normal;
   font-weight: 400;
-  color: #5052b2;
+  color: rgba(56, 152, 252, 1);
 }
 
 .hyperlink {
@@ -245,7 +245,7 @@ body {
   font-size: 14px;
   line-height: normal;
   font-weight: 400;
-  color: #5052b2;
+  color: rgba(56, 152, 252, 1);
 }
 
 .hyperlink-red {
