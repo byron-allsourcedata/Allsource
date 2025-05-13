@@ -173,12 +173,15 @@ class DashboardAudienceService:
         group_smart_audiences = self.group_audience_smart_rows(smart_audiences)
         
         last_sources = self.merge_and_sort(
-            datasets=[(sources, 'source', ['id', 'source_name', 'created_at', 'source_type', 'matched_records'])],
+            datasets=[(sources, 'source', ['id', 'source_name', 'created_at', 'source_type', 'matched_records',
+                                           'target_type', 'no_of_customers', 'domain'
+                                           ])],
             limit=self.LIMIT
         )
         
         last_lookalikes = self.merge_and_sort(
-            datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size'])],
+            datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size',
+                                                  'target_type', 'source_type', ])],
             limit=self.LIMIT
         )
         

@@ -3,9 +3,9 @@ import { Card, CardContent, Typography, Box } from "@mui/material";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import PlaylistAddIcon from "@mui/icons-material/PlaylistAdd";
 import PlaylistRemoveIcon from "@mui/icons-material/PlaylistRemove";
-import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
-import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
-import Image from 'next/image';
+import HeadsetMicOutlinedIcon from "@mui/icons-material/HeadsetMicOutlined";
+import MailOutlinedIcon from "@mui/icons-material/MailOutlined";
+import Image from "next/image";
 
 interface CardData {
   status: string;
@@ -30,38 +30,100 @@ const getStatusColor = (status: string, tabType?: string): string => {
 
 const getUseCaseStyle = (status: string) => {
   switch (status.trim()) {
-    case 'Postal':
-      return <Image src="./postal.svg" alt="google icon" width={20} height={20} />
-    case 'Google':
-      return <Image src="./google-ads.svg" alt="google icon" width={20} height={20} />
-    case 'Meta':
-      return <Image src="./meta.svg" alt="meta icon" width={20} height={20} />
-    case 'Bing':
-      return <Image src="./bing.svg" alt="bing icon" width={20} height={20} />
-    case 'LinkedIn':
-      return <Image src="./linkedIn.svg" alt="linkedin icon" width={20} height={20} />
-    case 'Tele Marketing':
-      return <HeadsetMicOutlinedIcon />
-    case 's3':
-      return <Image src="./s3.svg" alt="s3 icon" width={20} height={20} />
-    case 'google_ads':
-      return <Image src="./google-ads.svg" alt="google icon" width={20} height={20} />
-    case 'mailchimp':
-      return <Image src="./mailchimp-icon.svg" alt="mailchimp icon" width={20} height={20} />
-    case 'sales_force':
-      return <Image src="./salesforce-icon.svg" alt="sales_force icon" width={20} height={20} />
-    case 'hubspot':
-      return <Image src="./hubspot.svg" alt="hubspot icon" width={20} height={20} />
-    case 'bing_ads':
-      return <Image src="./bingads-icon.svg" alt="bing_ads icon" width={20} height={20} />
-    case 'sendlane':
-      return <Image src="./sendlane-icon.svg" alt="sendlane icon" width={20} height={20} />
-    case 'mailchimp':
-      return <Image src="./mailchimp-icon.svg" alt="mailchimp icon" width={20} height={20} />
-    case 'meta':
-      return <Image src="./meta-icon.svg" alt="meta icon" width={20} height={20} />
+    case "Postal":
+      return (
+        <Image src="./postal.svg" alt="google icon" width={20} height={20} />
+      );
+    case "Google":
+      return (
+        <Image
+          src="./google-ads.svg"
+          alt="google icon"
+          width={20}
+          height={20}
+        />
+      );
+    case "Meta":
+      return <Image src="./meta.svg" alt="meta icon" width={20} height={20} />;
+    case "Bing":
+      return <Image src="./bing.svg" alt="bing icon" width={20} height={20} />;
+    case "LinkedIn":
+      return (
+        <Image
+          src="./linkedIn.svg"
+          alt="linkedin icon"
+          width={20}
+          height={20}
+        />
+      );
+    case "Tele Marketing":
+      return <HeadsetMicOutlinedIcon />;
+    case "s3":
+      return <Image src="./s3.svg" alt="s3 icon" width={20} height={20} />;
+    case "google_ads":
+      return (
+        <Image
+          src="./google-ads.svg"
+          alt="google icon"
+          width={20}
+          height={20}
+        />
+      );
+    case "mailchimp":
+      return (
+        <Image
+          src="./mailchimp-icon.svg"
+          alt="mailchimp icon"
+          width={20}
+          height={20}
+        />
+      );
+    case "sales_force":
+      return (
+        <Image
+          src="./salesforce-icon.svg"
+          alt="sales_force icon"
+          width={20}
+          height={20}
+        />
+      );
+    case "hubspot":
+      return (
+        <Image src="./hubspot.svg" alt="hubspot icon" width={20} height={20} />
+      );
+    case "bing_ads":
+      return (
+        <Image
+          src="./bingads-icon.svg"
+          alt="bing_ads icon"
+          width={20}
+          height={20}
+        />
+      );
+    case "sendlane":
+      return (
+        <Image
+          src="./sendlane-icon.svg"
+          alt="sendlane icon"
+          width={20}
+          height={20}
+        />
+      );
+    case "mailchimp":
+      return (
+        <Image
+          src="./mailchimp-icon.svg"
+          alt="mailchimp icon"
+          width={20}
+          height={20}
+        />
+      );
+    case "meta":
+      return (
+        <Image src="./meta-icon.svg" alt="meta icon" width={20} height={20} />
+      );
     default:
-      return <MailOutlinedIcon />
+      return <MailOutlinedIcon />;
   }
 };
 
@@ -75,26 +137,28 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
     const LabelIcon = isInclude
       ? PlaylistAddIcon
       : isExclude
-        ? PlaylistRemoveIcon
-        : null;
+      ? PlaylistRemoveIcon
+      : null;
 
-
-    if ((label === "Use Case" || label === "Destination") && typeof value === "string") {
+    if (
+      (label === "Use Case" || label === "Destination") &&
+      typeof value === "string"
+    ) {
       return (
         <Box key={label} mb={0.5}>
-
-
-          <Typography className="dashboard-card-text">
-            {label}
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 0.25 }}>
-            <Box>
-              {getUseCaseStyle(value)}
-            </Box>
-            <Typography className="dashboard-card-heading">
-
-              {value}
-            </Typography>
+          <Typography className="dashboard-card-text">{label}</Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "start",
+              alignItems: "center",
+              width: "100%",
+              gap: 0.25,
+            }}
+          >
+            <Box>{getUseCaseStyle(value)}</Box>
+            <Typography className="dashboard-card-heading">{value}</Typography>
           </Box>
         </Box>
       );
@@ -190,7 +254,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
           }}
         >
           {nameEntry && (
-            <Box mb={2}>
+            <Box>
               <Typography className="dashboard-card-text">Name</Typography>
               <Typography
                 className="dashboard-card-heading"
@@ -203,25 +267,11 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
             </Box>
           )}
 
-          {Array.from({ length: Math.ceil(otherEntries.length / 2) }).map(
-            (_, i) => {
-              const pair = otherEntries.slice(i * 2, i * 2 + 2);
-              return (
-                <Box
-                  key={i}
-                  display="flex"
-                  justifyContent="space-between"
-                  sx={{ width: "100%", gap: 2 }}
-                >
-                  {pair.map(([label, value]) => (
-                    <Box key={label} sx={{ width: "50%" }}>
-                      {renderLabeledValue(label, value)}
-                    </Box>
-                  ))}
-                </Box>
-              );
-            }
-          )}
+          {otherEntries.map(([label, value]) => (
+            <Box key={label} sx={{ width: "100%" }}>
+              {renderLabeledValue(label, value)}
+            </Box>
+          ))}
         </Box>
       );
     }
@@ -231,8 +281,8 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
     return allEntries.map(([label, value]) => {
       const isInclude = label.includes("Include Names");
       const isExclude = label.includes("Exclude Names");
-      const isUseCase = label.includes("Use Case")
-      const isDestination = label.includes("Destination")
+      const isUseCase = label.includes("Use Case");
+      const isDestination = label.includes("Destination");
 
       const isLookalike = Math.random() > 0.5;
 
@@ -254,7 +304,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
         ) : null;
 
       return (
-        <Box key={label} mb={1} sx={{ width: '100%' }}>
+        <Box key={label} mb={1} sx={{ width: "100%" }}>
           <Typography
             className="dashboard-card-text"
             sx={{
@@ -269,16 +319,27 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
             {icon}
             {label}
           </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'start', alignItems: 'center', width: '100%', gap: 0.25 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "start",
+              alignItems: "center",
+              width: "100%",
+              gap: 0.25,
+            }}
+          >
             {iconDestination}
-            <Typography className="dashboard-card-heading"
+            <Typography
+              className="dashboard-card-heading"
               sx={{
                 display: "flex",
                 alignItems: "center",
                 flexWrap: "wrap",
                 maxWidth: "100%",
                 color: isInclude || isExclude ? textColor : undefined,
-              }}>
+              }}
+            >
               {typeof value === "number" ? value.toLocaleString() : value}
             </Typography>
           </Box>
@@ -344,7 +405,15 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
 
           {/* Правая колонка (если есть) */}
           {right && (
-            <Box display="flex" flexDirection="column" sx={{ width: "40%", justifyContent: 'start', alignItems: 'start' }}>
+            <Box
+              display="flex"
+              flexDirection="column"
+              sx={{
+                width: "40%",
+                justifyContent: "start",
+                alignItems: "start",
+              }}
+            >
               {renderSection(right, false)}
             </Box>
           )}

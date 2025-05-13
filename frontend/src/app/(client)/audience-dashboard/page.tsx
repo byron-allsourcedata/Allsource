@@ -245,7 +245,16 @@ const AudienceDashboard: React.FC = () => {
       const eventInfoBuilder = (
         event: Record<string, any>
       ): Record<string, string | number> => {
-        const excludeKeys = ["created_at", "type", "id", "chain_ids", "status"];
+        const excludeKeys = [
+          "created_at",
+          "type",
+          "id",
+          "chain_ids",
+          "status",
+          "target_type",
+          "no_of_customers",
+          "domain",
+        ];
 
         return Object.entries(event)
           .filter(([key]) => !excludeKeys.includes(key))
@@ -410,9 +419,11 @@ const AudienceDashboard: React.FC = () => {
           }
         } else if (tabType === "sources") {
           if (isMainType) {
+            console.log(123);
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
                 let formattedKey = formatKey(key);
+                console.log(key);
                 if (/^(source|lookalike|data_sync|audience)_name$/.test(key)) {
                   formattedKey = "Name";
                 }
@@ -420,15 +431,33 @@ const AudienceDashboard: React.FC = () => {
                   formattedKey = "Type";
                 }
                 if (value !== null && value !== undefined && value !== "") {
-                  leftInfo[formattedKey] = value;
+                  leftInfo[formattedKey] = value ?? "-";
                 }
               }
             });
           } else {
+            console.log(456);
+            console.log(event);
             if (event.source_name) leftInfo["Name"] = event.source_name;
-            if (event.source_type) leftInfo["Type"] = event.source_type;
-            if (event.matched_records)
-              leftInfo["Matched Records"] = event.matched_records;
+            if (event.target_type) leftInfo["Target Type"] = event.target_type;
+            if (event.source_type) leftInfo["Target"] = event.source_type;
+            if (event.domain !== undefined) {
+              rightInfo["Domain"] = event.domain || "-";
+            }
+
+            if (
+              event.no_of_customers !== undefined &&
+              event.no_of_customers !== null
+            ) {
+              rightInfo["No of Customers"] = event.no_of_customers;
+            }
+
+            if (
+              event.matched_records !== undefined &&
+              event.matched_records !== null
+            ) {
+              rightInfo["Matched Records"] = event.matched_records;
+            }
 
             if (event.lookalike_name)
               rightInfo["Lookalike Name"] = event.lookalike_name;
@@ -511,6 +540,7 @@ const AudienceDashboard: React.FC = () => {
         groupedSelectedCards.smart_audience
       );
       const dataSync = buildChainedPairs(groupedSelectedCards.data_sync);
+      console.log(sources);
 
       setChainedCards({
         sources,
@@ -711,7 +741,7 @@ const AudienceDashboard: React.FC = () => {
               >
                 {selectedCard ? (
                   <Box sx={{ overflow: "hidden" }}>
-                    <Box>
+                    <Box mb={1}>
                       <Grid container spacing={2}>
                         {currentTabData.map((card: any, index) => (
                           <Grid
