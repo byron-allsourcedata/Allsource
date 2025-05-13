@@ -273,7 +273,7 @@ const DataSync = () => {
                     ctaLabel="Add Integration"
                     message="You need to create at least one integration before you can sync your audience"
                   />
-                  <FirstTimeScree onBegin={()=> {router.push("/smart-audiences")}} hasIntegrations={hasIntegrations}/>
+                  <FirstTimeScree onBegin={()=> {router.push("/smart-audiences")}} hasDataSync={hasDataSync}/>
               </Box>
               </>
               

@@ -59,7 +59,7 @@ class AudienceSmart(Base):
         nullable=True
     )
     validations = Column(JSON, nullable=True)
-    target_schema = Column(VARCHAR(128), nullable=False)
+    target_schema = Column(VARCHAR(128), nullable=False, server_default='both')
     
     __table_args__ = (
         Index('audience_smarts_active_segment_records_idx', active_segment_records),
