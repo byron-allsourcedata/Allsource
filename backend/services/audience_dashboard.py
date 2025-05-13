@@ -202,7 +202,7 @@ class DashboardAudienceService:
         
         last_lookalikes = self.merge_and_sort(
             datasets=[(lookalikes, 'lookalikes', ['id', 'lookalike_size', 'lookalike_name', 'created_at', 'size',
-                                                  'target_type', 'source_type', ])],
+                                                  'target_type', 'source_type', 'source_name' ])],
             limit=self.LIMIT
         )
         

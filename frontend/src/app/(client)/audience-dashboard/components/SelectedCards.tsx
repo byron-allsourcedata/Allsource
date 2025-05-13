@@ -374,8 +374,25 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
           mb={1}
         >
           <Box display="flex" alignItems="center">
-            <FiberManualRecordIcon sx={{ fontSize: 12, color, mr: 1 }} />
-            <Typography className="dashboard-card-heading">{status}</Typography>
+            <Typography
+              className="paragraph"
+              sx={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                cursor: "pointer",
+                padding: "3px 1rem",
+                textOverflow: "ellipsis",
+                maxWidth: "120px",
+                backgroundColor: status.includes("Synced")
+                  ? "rgba(234, 248, 221, 1)"
+                  : "rgba(222, 237, 255, 1)",
+                color: status.includes("Synced")
+                  ? "rgba(43, 91, 0, 1)!important"
+                  : "rgba(5, 105, 226, 1) !important",
+              }}
+            >
+              {status}
+            </Typography>
           </Box>
           <Typography className="dashboard-card-text">{date}</Typography>
         </Box>
@@ -409,7 +426,7 @@ const InfoCard: React.FC<{ data: CardData }> = ({ data }) => {
               display="flex"
               flexDirection="column"
               sx={{
-                width: "40%",
+                width: "45%",
                 justifyContent: "start",
                 alignItems: "start",
               }}

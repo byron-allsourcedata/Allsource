@@ -177,7 +177,8 @@ class DashboardAudiencePersistence:
             AudienceLookalikes.name.label('lookalike_name'),
             AudienceLookalikes.created_date.label('created_at'),
             AudienceLookalikes.lookalike_size.label('lookalike_size'),
-            AudienceLookalikes.size.label('size')
+            AudienceLookalikes.size.label('size'),
+            AudienceSource.target_schema.label('target_type')
         )\
         .join(AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid)\
         .filter(
