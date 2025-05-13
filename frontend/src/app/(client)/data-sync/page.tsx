@@ -107,7 +107,8 @@ const DataSync = () => {
     {isLoading && <CustomizedProgressBar />}
       {(
       <Box sx={datasyncStyle.mainContent}>
-        <Box
+        {hasDataSync &&(
+          <Box
           sx={{
             display: "flex",
             flexDirection: "row",
@@ -199,6 +200,7 @@ const DataSync = () => {
             </Button>
           </Box>
         </Box>
+        )}
         <Box
           sx={{
             width: "100%",

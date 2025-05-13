@@ -816,11 +816,17 @@ const AccountSetup = () => {
       setCmsData(response.data);
       setWordPressId(response.data.pixel_client_id)
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        if (error.response.data.status === 'NEED_BOOK_CALL') {
-          sessionStorage.setItem('is_slider_opened', 'true');
-        } else {
-          sessionStorage.setItem('is_slider_opened', 'false');
+      if (axios.isAxiosError(error) && error.response) {
+        const { status, data } = error.response;
+        if (status === 400 && data?.status === "DOMAIN_NOT_FOUND") {
+          showErrorToast("Please set up your domain to continue");
+          return;
+        }
+        if (status === 403 && data?.status === "NEED_BOOK_CALL") {
+          sessionStorage.setItem("is_slider_opened", "true");
+        }
+        else {
+          sessionStorage.setItem("is_slider_opened", "false");
         }
       }
     }

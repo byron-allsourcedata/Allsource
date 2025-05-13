@@ -46,9 +46,7 @@ class IntegrationsPresistence:
         )
         return user_integration
 
-    def has_integration_and_data_sync(self, user_id: int, domain_id: int) -> bool:
-        print(user_id)
-        print(domain_id)
+    def has_integration_and_data_sync(self, user_id: int) -> bool:
         row = (
             self.db.query(UserIntegration)
             .filter(
@@ -58,7 +56,7 @@ class IntegrationsPresistence:
         )
         return row is not None
 
-    def has_any_sync(self, user_id: int, domain_id: int) -> bool:
+    def has_any_sync(self, user_id: int) -> bool:
         row = (
             self.db.query(UserIntegration)
             .join(

@@ -462,8 +462,7 @@ const Dashboard: React.FC = () => {
 
         </Grid>
       ) : (
-        <GettingStartedSection>
-        </GettingStartedSection>
+        <GettingStartedSection />
       )}
       {showSlider && <Slider />}
       {welcomePopup && <WelcomePopup />}

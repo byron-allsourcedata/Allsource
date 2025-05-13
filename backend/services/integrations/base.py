@@ -1,4 +1,5 @@
 import httpx
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from models import UserDomains
@@ -14,7 +15,7 @@ from persistence.integrations.external_apps_installations import ExternalAppsIns
 from .attentive import AttentiveIntegrationsService
 from .hubspot import HubspotIntegrationsService
 from .shopify import ShopifyIntegrationService
-from enums import ProccessDataSyncResult
+from enums import ProccessDataSyncResult, DomainStatus
 from datetime import datetime, timedelta
 from utils import extract_first_email, format_phone_number
 from .sendlane import SendlaneIntegrationService
@@ -59,17 +60,22 @@ class IntegrationService:
         self.eai_persistence = epi_persistence
         self.UNLIMITED = -1
 
-    def get_user_service_credentials(self, domain_id, filters, user_id):
-        return self.integration_persistence.get_integration_by_user(domain_id, filters, user_id)
+    def get_user_service_credentials(self, domain, user):
+        filters = []
+        source_platform = user.get('source_platform')
+        if source_platform in ['big_commerce', 'shopify']:
+            filters = ['big_commerce', 'shopify']
 
-    def has_integration_and_data_sync(self, user: dict, domain: UserDomains) -> dict:
+        domain_id = None if domain is None else domain.id
+
+        return self.integration_persistence.get_integration_by_user(domain_id, filters, user.get('id'))
+
+    def has_integration_and_data_sync(self, user: dict) -> dict:
         has_integration = self.integration_persistence.has_integration_and_data_sync(
             user_id=user.get("id"),
-            domain_id=domain.id
         )
         has_any_sync = self.integration_persistence.has_any_sync(
             user_id=user.get("id"),
-            domain_id=domain.id
         )
         return {
             "hasIntegration": has_integration,
@@ -79,7 +85,8 @@ class IntegrationService:
 
 
     def delete_integration(self, service_name: str, domain, user: dict):
-        self.integration_persistence.delete_integration(domain.id, service_name, user.get('id'))
+
+        self.integration_persistence.delete_integration(None if domain is None else domain.id, service_name, user.get('id'))
 
     def get_sync_domain(self, domain_id: int, service_name: str = None, integrations_users_sync_id: int = None):
         return self.integrations_user_sync_persistence.get_filter_by(domain_id=domain_id, service_name=service_name,
@@ -96,9 +103,12 @@ class IntegrationService:
     def get_sync_by_hook_url(self, hook_url):
         return self.integrations_user_sync_persistence.get_data_sync_filter_by(hook_url=hook_url)
 
-    def is_integration_limit_reached(self, user_id: int, domain_id: int):
+    def is_integration_limit_reached(self, user: dict, domain: UserDomains):
+        if domain is None:
+            raise HTTPException(status_code=400, detail={'status': DomainStatus.DOMAIN_NOT_FOUND.value})
+
         integration_limit, domain_integrations_count = self.integrations_user_sync_persistence.get_limits_integrations(
-            user_id, domain_id)
+            user.get("id"), domain.id)
         if integration_limit != self.UNLIMITED and domain_integrations_count >= integration_limit:
             return True
         return False

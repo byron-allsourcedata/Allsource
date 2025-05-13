@@ -65,15 +65,9 @@ async def get_integrations_smart_audinece_sync(
 
 @router.get('/credentials/')
 async def get_integrations_credentials(integration_serivce: IntegrationService = Depends(get_integration_service),
-                                       user=Depends(check_user_authorization),
+                                       user=Depends(check_user_authorization_without_pixel),
                                        domain=Depends(check_domain)):
-    print(domain)
-    filters = []
-    source_platform = user.get('source_platform')
-    if source_platform in ['big_commerce', 'shopify']:
-        filters = ['big_commerce', 'shopify']
-    integration = integration_serivce.get_user_service_credentials(domain_id=domain.id, filters=filters, user_id=user.get('id'))
-    return integration
+    return integration_serivce.get_user_service_credentials(domain=domain, user=user)
 
 
 @router.get('/credentials/{platform}')
@@ -82,16 +76,13 @@ async def get_credential_service(platform: str,
                                  user=Depends(check_user_authorization), domain: UserDomains = Depends(check_domain)):
     with integration_service as service:
         service = getattr(service, platform.lower())
-        return service.get_credentials(domain.id)
+        domain_id = None if domain is None else domain.id
+        return service.get_credentials(domain_id)
 
 @router.get('/check-limit-reached', status_code=200)
 async def check_limit_reached(integration_service: IntegrationService = Depends(get_integration_service),
                              user=Depends(check_user_authentication), domain=Depends(check_domain)):
-
-    if integration_service.is_integration_limit_reached(user.get('id'), domain.id):
-            return True
-    
-    return False
+    return integration_service.is_integration_limit_reached(user, domain)
 
 @router.post('/', status_code=200)
 async def create_integration(credentials: IntegrationCredentials, service_name: str = Query(...),
@@ -105,8 +96,8 @@ async def create_integration(credentials: IntegrationCredentials, service_name: 
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only."
             )
-    if integration_service.is_integration_limit_reached(user.get('id'), domain.id):
-            raise HTTPException(status_code=403, detail={'status': SubscriptionStatus.NEED_UPGRADE_PLAN.value})
+    # if integration_service.is_integration_limit_reached(user, domain):
+    #         raise HTTPException(status_code=403, detail={'status': SubscriptionStatus.NEED_UPGRADE_PLAN.value})
     
     with integration_service as service:
         service = getattr(service, service_name.lower())

@@ -115,7 +115,7 @@ class BingAdsIntegrationsService:
             token_data = response.json()
             access_token = token_data.get('access_token')
             refresh_token = token_data.get('refresh_token')
-            integrations = self.__save_integrations(refresh_token, domain.id, user)
+            integrations = self.__save_integrations(refresh_token, None if domain is None else domain.id, user)
             return {
                 'integrations': integrations,
                 'status': IntegrationsStatus.SUCCESS.value

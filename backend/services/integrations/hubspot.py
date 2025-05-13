@@ -116,7 +116,7 @@ class HubspotIntegrationsService:
                 raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
-        integartions = self.__save_integrations(credentials.hubspot.access_token, domain.id, user)
+        integartions = self.__save_integrations(credentials.hubspot.access_token, None if domain is None else domain.id, user)
         return {
             'integartions': integartions,
             'status': IntegrationsStatus.SUCCESS.value

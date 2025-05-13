@@ -2,12 +2,15 @@ import hashlib
 import logging
 import os
 import re
+
+from fastapi import HTTPException, status
+from ffmpeg import run_async
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from bs4 import BeautifulSoup
 import requests
 
-from enums import BaseEnum, SendgridTemplate, PixelStatus
+from enums import BaseEnum, SendgridTemplate, PixelStatus, DomainStatus
 from models.subscriptions import UserSubscriptions
 from models.users import Users
 from models.users_domains import UserDomains
@@ -25,6 +28,9 @@ class PixelInstallationService:
         self.send_grid_persistence_service = send_grid_persistence_service
 
     def get_manual(self, user, domain):
+        if domain is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'status': DomainStatus.DOMAIN_NOT_FOUND.value})
+
         client_id = domain.data_provider_id
         if client_id is None:
             client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()

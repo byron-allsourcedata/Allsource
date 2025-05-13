@@ -99,7 +99,8 @@ const EmailVerificate: React.FC = () => {
           if (response.status === 200 && response.data.status === 'EMAIL_VERIFIED') {
             showToast('Verification done successfully');
             clearInterval(interval);
-            router.push('/account-setup');
+            router.push('/dashboard');
+            // router.push('/account-setup');
           }
         })
         .catch((error) => console.error('Error:', error));
