@@ -114,7 +114,7 @@ class GoogleAdsIntegrationsService:
         if not access_token:
             raise HTTPException(status_code=400, detail="Failed to get access token")
 
-        integrations = self.__save_integrations(access_token, domain.id, user)
+        integrations = self.__save_integrations(access_token, None if domain is None else domain.id, user)
         return {
             'integrations': integrations,
             'status': IntegrationsStatus.SUCCESS.value

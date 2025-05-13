@@ -202,7 +202,7 @@ class SalesForceIntegrationsService:
             access_token = token_data.get('access_token')
             refresh_token = token_data.get('refresh_token')
             instance_url = token_data.get('instance_url')
-            integrations = self.__save_integrations(refresh_token, instance_url, domain.id, user)
+            integrations = self.__save_integrations(refresh_token, instance_url, None if domain is None else domain.id, user)
             return {
                 'integrations': integrations,
                 'status': IntegrationsStatus.SUCCESS.value

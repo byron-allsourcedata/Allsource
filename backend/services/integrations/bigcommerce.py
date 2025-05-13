@@ -142,7 +142,7 @@ class BigcommerceIntegrationsService:
         if not credentials and info.domain != domain.domain:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value)
         integration = self.__save_integrations(store_hash=eai.store_hash, 
-                                 access_token=eai.access_token, domain_id=domain.id, user=user)
+                                 access_token=eai.access_token, domain_id=None if domain is None else domain.id, user=user)
         self.__set_pixel(user.get('id'), domain, shop_domain=integration.shop_domain, access_token=integration.access_token)
         if not integration:
             raise HTTPException(status_code=409, detail=IntegrationsStatus.CREATE_IS_FAILED.value)
@@ -199,7 +199,7 @@ class BigcommerceIntegrationsService:
         if not credentials and info.domain != domain.domain:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value)
         integration = self.__save_integrations(store_hash=new_credentials.bigcommerce.shop_domain, 
-                                 access_token=new_credentials.bigcommerce.access_token, domain_id=domain.id, user=user)
+                                 access_token=new_credentials.bigcommerce.access_token, domain_id=None if domain is None else domain.id, user=user)
         self.__set_pixel(user.get('id'), domain, shop_domain=integration.shop_domain, access_token=integration.access_token)
         if not integration:
             raise HTTPException(status_code=409, detail=IntegrationsStatus.CREATE_IS_FAILED.value)

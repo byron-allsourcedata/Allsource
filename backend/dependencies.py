@@ -320,15 +320,23 @@ def check_domain(
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'NEED_CONFIRM_EMAIL'})
         if user.get('is_company_details_filled') is False:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={'status': 'FILL_COMPANY_DETAILS'})
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'status': "DOMAIN_NOT_FOUND"})
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'status': DomainStatus.DOMAIN_NOT_FOUND.value})
 
     return current_domain[0]
 
 
 def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
-    if domain and not domain.is_pixel_installed:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value})
+    if domain is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value}
+        )
+    if not (
+            domain.is_pixel_installed):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={'status': UserAuthorizationStatus.PIXEL_INSTALLATION_NEEDED.value}
+        )
     return domain
 
 
