@@ -1,9 +1,10 @@
 "use client";
-import { Box, Typography, Button, Menu, MenuItem, IconButton } from "@mui/material";
+import { Box, Typography, Button, Menu, MenuItem, IconButton, Switch } from "@mui/material";
 import Image from "next/image";
 import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../../context/UserContext";
+import { useHints } from "../../../context/HintsContext";
 import TrialStatus from "./TrialLabel";
 import DomainButton from "./DomainsButton";
 import NavigationMenu from "@/app/(client)/components/NavigationMenu";
@@ -68,6 +69,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
   const [hasNewNotifications, setHasNewNotifications] = useState<boolean>(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [visibleButton, setVisibleButton] = useState(false)
+  const { showHints, toggleHints } = useHints();
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -161,52 +163,102 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
   }
   return (
     <Box sx={{display: 'flex', width: '100%', flexDirection: 'column',  }}>
-    <Box sx={{ display: 'block',  }}>
-      <Box sx={{ display: { md: 'none' } }}>
-        <SliderProvider><NavigationMenu NewRequestNotification={hasNewNotifications || hasNewNotifications} /></SliderProvider>
-      </Box>
-      <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
-        <Box sx={headerStyles.logoContainer}>
-          <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' }, cursor: 'pointer', padding: '2px' }}>
-            <Image priority src="/logo.svg" alt="logo" height={30} width={130} />
-          </IconButton>
-          {visibleButton && (
+      <Box sx={{ display: 'block',  }}>
+        <Box sx={{ display: { md: 'none' } }}>
+          <SliderProvider><NavigationMenu NewRequestNotification={hasNewNotifications || hasNewNotifications} /></SliderProvider>
+        </Box>
+        <Box sx={{ ...headerStyles.headers, display: { xs: 'none', md: 'flex' } }}>
+          <Box sx={headerStyles.logoContainer}>
+            <IconButton onClick={handleLogoClick} sx={{ "&:hover": { backgroundColor: 'transparent' }, cursor: 'pointer', padding: '2px' }}>
+              <Image priority src="/logo.svg" alt="logo" height={30} width={130} />
+            </IconButton>
+            {visibleButton && (
+              <Button
+                onClick={handleReturnToMain}
+                sx={{
+                  fontFamily: "Nunito Sans",
+                  fontSize: "14px",
+                  fontWeight: 600,
+                  lineHeight: "19.1px",
+                  textAlign: "left",
+                  textDecoration: "underline",
+                  textTransform: 'none',
+                  color: "rgba(56, 152, 252, 1)",
+                  marginRight: "1.5rem",
+                }}
+              >
+                Return to main
+              </Button>
+            )}
+            <Box sx={{ display: 'flex', ml: 3 }}>
+              {!pathname.includes('audience-dashboard') &&
+                (pathname.includes('dashboard') || 
+                pathname.includes('leads') || 
+                pathname.includes('company') || 
+                pathname.includes('suppressions')) && <DomainButton />}
+            </Box>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <TrialStatus />
+
+            <Typography className="fiveth-sub-title" style={{color: "rgba(50, 54, 62, 1)"}}>Hints</Typography>
+            <Switch checked={showHints} onChange={toggleHints} sx={{
+              '& .MuiSwitch-switchBase': {
+                  '&.Mui-checked': {
+                      color: '#fff',
+                      '&+.MuiSwitch-track': {
+                          backgroundColor: showHints ? 'rgba(163, 176, 194, 1)' : 'rgba(163, 176, 194, 1)',
+                      }
+                  },
+              },
+            }} />
+
             <Button
-              onClick={handleReturnToMain}
+              onClick={handleNotificationIconPopupOpen}
+              ref={buttonRef}
               sx={{
-                fontFamily: "Nunito Sans",
-                fontSize: "14px",
-                fontWeight: 600,
-                lineHeight: "19.1px",
-                textAlign: "left",
-                textDecoration: "underline",
-                textTransform: 'none',
-                color: "rgba(56, 152, 252, 1)",
-                marginRight: "1.5rem",
+                minWidth: '32px',
+                padding: '6px',
+                color: 'rgba(128, 128, 128, 1)',
+                border: (hasNewNotifications || hasNotification) ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                borderRadius: '3.27px',
+                marginRight: '1.5rem',
+                '&:hover': {
+                  border: '1px solid rgba(56, 152, 252, 1)',
+                  '& .MuiSvgIcon-root': {
+                    color: 'rgba(56, 152, 252, 1)'
+                  }
+                }
               }}
             >
-              Return to main
+              <NotificationsOutlinedIcon sx={{
+                fontSize: '22px',
+                color: (hasNewNotifications || hasNotification) ? 'rgba(56, 152, 252, 1)' : 'inherit'
+              }} />
+              {(hasNewNotifications || hasNotification) && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 5,
+                    right: 6.5,
+                    width: '8px',
+                    height: '8px',
+                    backgroundColor: 'rgba(248, 70, 75, 1)',
+                    borderRadius: '50%',
+                    '@media (max-width: 900px)': {
+                      top: -1,
+                      right: 1
+                    }
+                  }}
+                />
+              )}
             </Button>
-          )}
-          <Box sx={{ display: 'flex', ml: 3 }}>
-  {!pathname.includes('audience-dashboard') &&
-    (pathname.includes('dashboard') || 
-     pathname.includes('leads') || 
-     pathname.includes('company') || 
-     pathname.includes('suppressions')) && <DomainButton />}
-</Box>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center" }}>
-          <TrialStatus />
 
-          <Button
-            onClick={handleNotificationIconPopupOpen}
-            ref={buttonRef}
-            sx={{
+            <Button onClick={handleSupportButton} sx={{
               minWidth: '32px',
               padding: '6px',
               color: 'rgba(128, 128, 128, 1)',
-              border: (hasNewNotifications || hasNotification) ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
+              border: '1px solid rgba(184, 184, 184, 1)',
               borderRadius: '3.27px',
               marginRight: '1.5rem',
               '&:hover': {
@@ -216,137 +268,99 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
                 }
               }
             }}
-          >
-            <NotificationsOutlinedIcon sx={{
-              fontSize: '22px',
-              color: (hasNewNotifications || hasNotification) ? 'rgba(56, 152, 252, 1)' : 'inherit'
-            }} />
-            {(hasNewNotifications || hasNotification) && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 5,
-                  right: 6.5,
-                  width: '8px',
-                  height: '8px',
-                  backgroundColor: 'rgba(248, 70, 75, 1)',
-                  borderRadius: '50%',
-                  '@media (max-width: 900px)': {
-                    top: -1,
-                    right: 1
+            >
+              <QuestionMarkOutlinedIcon sx={{
+                fontSize: '22px',
+              }} />
+            </Button>
+
+            <Button
+              aria-controls={open ? "profile-menu" : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? "true" : undefined}
+              onClick={handleProfileMenuClick}
+              sx={{
+                minWidth: '32px',
+                padding: '6px',
+                color: 'rgba(128, 128, 128, 1)',
+                border: '1px solid rgba(184, 184, 184, 1)',
+                borderRadius: '3.27px',
+                '&:hover': {
+                  border: '1px solid rgba(56, 152, 252, 1)',
+                  '& .MuiSvgIcon-root': {
+                    color: 'rgba(56, 152, 252, 1)'
                   }
-                }}
-              />
-            )}
-          </Button>
-
-          <Button onClick={handleSupportButton} sx={{
-            minWidth: '32px',
-            padding: '6px',
-            color: 'rgba(128, 128, 128, 1)',
-            border: '1px solid rgba(184, 184, 184, 1)',
-            borderRadius: '3.27px',
-            marginRight: '1.5rem',
-            '&:hover': {
-              border: '1px solid rgba(56, 152, 252, 1)',
-              '& .MuiSvgIcon-root': {
-                color: 'rgba(56, 152, 252, 1)'
-              }
-            }
-          }}
-          >
-            <QuestionMarkOutlinedIcon sx={{
-              fontSize: '22px',
-            }} />
-          </Button>
-
-          <Button
-            aria-controls={open ? "profile-menu" : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? "true" : undefined}
-            onClick={handleProfileMenuClick}
-            sx={{
-              minWidth: '32px',
-              padding: '6px',
-              color: 'rgba(128, 128, 128, 1)',
-              border: '1px solid rgba(184, 184, 184, 1)',
-              borderRadius: '3.27px',
-              '&:hover': {
-                border: '1px solid rgba(56, 152, 252, 1)',
-                '& .MuiSvgIcon-root': {
-                  color: 'rgba(56, 152, 252, 1)'
                 }
-              }
-            }}
-          >
-            <PersonIcon sx={{ fontSize: '22px' }} />
-          </Button>
-          <Menu
-            id="profile-menu"
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleProfileMenuClose}
-            MenuListProps={{
-              "aria-labelledby": "profile-menu-button",
-            }}
-            sx={{
-              mt: 0.5,
-              ml: -1
-            }}
-          >
-            <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
-              <Typography
-                variant="h6"
+              }}
+            >
+              <PersonIcon sx={{ fontSize: '22px' }} />
+            </Button>
+            <Menu
+              id="profile-menu"
+              anchorEl={anchorEl}
+              open={open}
+              onClose={handleProfileMenuClose}
+              MenuListProps={{
+                "aria-labelledby": "profile-menu-button",
+              }}
+              sx={{
+                mt: 0.5,
+                ml: -1
+              }}
+            >
+              <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontFamily: 'Nunito Sans',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    lineHeight: '19.6px',
+                    color: 'rgba(0, 0, 0, 0.89)',
+                    mb: 0.25
+                  }}
+                >
+                  {full_name}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  color="textSecondary"
+                  sx={{
+                    fontFamily: 'Nunito Sans',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    lineHeight: '19.6px',
+                    color: 'rgba(0, 0, 0, 0.89)',
+                  }}
+                >
+                  {email}
+                </Typography>
+              </Box>
+              <MenuItem
                 sx={{
                   fontFamily: 'Nunito Sans',
                   fontSize: '14px',
-                  fontWeight: 600,
+                  fontWeight: 500,
                   lineHeight: '19.6px',
-                  color: 'rgba(0, 0, 0, 0.89)',
-                  mb: 0.25
                 }}
+                onClick={handleSettingsClick}
               >
-                {full_name}
-              </Typography>
-              <Typography
-                variant="body2"
-                color="textSecondary"
+                Settings
+              </MenuItem>
+              <MenuItem
                 sx={{
                   fontFamily: 'Nunito Sans',
                   fontSize: '14px',
-                  fontWeight: 600,
+                  fontWeight: 500,
                   lineHeight: '19.6px',
-                  color: 'rgba(0, 0, 0, 0.89)',
                 }}
+                onClick={handleSignOut}
               >
-                {email}
-              </Typography>
-            </Box>
-            <MenuItem
-              sx={{
-                fontFamily: 'Nunito Sans',
-                fontSize: '14px',
-                fontWeight: 500,
-                lineHeight: '19.6px',
-              }}
-              onClick={handleSettingsClick}
-            >
-              Settings
-            </MenuItem>
-            <MenuItem
-              sx={{
-                fontFamily: 'Nunito Sans',
-                fontSize: '14px',
-                fontWeight: 500,
-                lineHeight: '19.6px',
-              }}
-              onClick={handleSignOut}
-            >
-              Sign Out
-            </MenuItem>
-          </Menu>
+                Sign Out
+              </MenuItem>
+            </Menu>
+          </Box>
         </Box>
-      </Box>
       </Box>
       <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} anchorEl={anchorElNotificate} />
       {NotificationData && (

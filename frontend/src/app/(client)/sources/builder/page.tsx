@@ -33,6 +33,8 @@ import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import Papa, { ParseResult } from "papaparse";
 import ProgressBar from "@/components/ProgressBar";
+import { useHints } from '@/context/HintsContext';
+import HintCard from "../components/HintCard"
 
 interface Row {
   id: number;
@@ -80,6 +82,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 const SourcesImport: React.FC = () => {
+  const { showHints } = useHints();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
@@ -101,6 +104,7 @@ const SourcesImport: React.FC = () => {
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
+  const [activeStep, setActiveStep] = useState(0);
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -671,6 +675,13 @@ const SourcesImport: React.FC = () => {
                 />
               </Box>
             </Box>
+            <HintCard
+      title="Failed Leads"
+      description="This dataset contains users who engaged but didn't convert - abandoned carts, incomplete sign-ups, or declined offers. Use it to identify systemic drop-off points and exclude them from your audience list."
+      steps={3}
+      activeStep={activeStep}
+      onStepChange={setActiveStep}
+    />
             <Box
               sx={{
                 flex: 1,
