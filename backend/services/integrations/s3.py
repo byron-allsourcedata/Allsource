@@ -152,7 +152,7 @@ class S3IntegrationService:
             error_code = e.response['Error']['Code']
             raise HTTPException(status_code=400, detail={'status': 'CREDENTIALS_INVALID', 'message': f'AWS error: {error_code}'})
         
-        return self.__save_integrations(secret_id=credentials.s3.secret_id, secret_key=credentials.s3.secret_key,domain_id=domain.id, user=user)
+        return self.__save_integrations(secret_id=credentials.s3.secret_id, secret_key=credentials.s3.secret_key,domain_id=None if domain is None else domain.id, user=user)
  
     async def create_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
         credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))

@@ -16,10 +16,11 @@ import { useSlider } from "@/context/SliderContext";
 import ManualPopup from "./ManualPopup";
 import { useState, useMemo } from "react";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import { useUser } from "@/context/UserContext";
 import { useRouter } from "next/navigation";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { showErrorToast } from "@/components/ToastNotification";
 
 const CustomButton = styled(Button)(({ theme }) => ({
   width: "100%",
@@ -86,7 +87,7 @@ export const ProgressSection: React.FC = () => {
         try {
           const parsed = JSON.parse(savedMe);
           return parsed.source_platform || '';
-        } catch (error) {}
+        } catch (error) { }
       }
     }
     return '';
@@ -102,11 +103,17 @@ export const ProgressSection: React.FC = () => {
       setPixelCode(response.data.manual);
       setOpen(true);
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        if (error.response.data.status === "NEED_BOOK_CALL") {
+      if (axios.isAxiosError(error) && error.response) {
+        const { status, data } = error.response;
+        if (status === 400 && data?.status === "DOMAIN_NOT_FOUND") {
+          showErrorToast("Please set up your domain to continue");
+          return;
+        }
+        if (status === 403 && data?.status === "NEED_BOOK_CALL") {
           sessionStorage.setItem("is_slider_opened", "true");
           setShowSlider(true);
-        } else {
+        }
+        else {
           sessionStorage.setItem("is_slider_opened", "false");
           setShowSlider(false);
         }

@@ -48,6 +48,11 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
     router.push("/integrations");
   };
 
+  const navigateToSmartAudiencePage = () => {
+    handleClose();
+    router.push("/smart-audiences");
+  };
+
   const navigateToExamplePage = () => {
     handleClose();
     window.location.href = "https://example.com";
@@ -66,7 +71,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
       />
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         {variant === "welcome" ? (
-          
+
           <>
             <DialogTitle sx={{ p: "16px 16px 8px" }}>
               <Box
@@ -302,7 +307,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
               <Typography className="fourth-sub-title" sx={{ textAlign: "center" }}>
                 To create a lookalike you need to import at least one source
               </Typography>
-              <Box sx={{p: 4}}>
+              <Box sx={{ p: 4 }}>
                 <Box
                   sx={{
                     height: 140,
@@ -316,42 +321,42 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                 >
                 </Box>
                 <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-                <Button
-                        variant="outlined"
-                        fullWidth
-                        onClick={navigateToExamplePage}
-                      >
-                        <Typography
-                          className="description"
-                          style={{ color: "#3898FC" }}
-                        >
-                          Learn more
-                        </Typography>
-                        <IconButton
-                          sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-                          onClick={() => { }}
-                        >
-                          <OpenInNewIcon sx={{fontSize: 20}}/>
-                        </IconButton>
-                      </Button>
                   <Button
-                        variant="contained"
-                        fullWidth
-                        onClick={navigateToSourcePage}
-                        sx={{ backgroundColor: "#3898FC", dropShadow: "#00000040" }}
-                      >
-                        <IconButton
-                          sx={{ width: "30px", height: "30px", color: "#fff" }}
-                          onClick={() => { }}
-                        >
-                        </IconButton>
-                        <Typography
-                          className="description"
-                          style={{ color: "#fff" }}
-                        >
-                          Import Source
-                        </Typography>
-                      </Button>
+                    variant="outlined"
+                    fullWidth
+                    onClick={navigateToExamplePage}
+                  >
+                    <Typography
+                      className="description"
+                      style={{ color: "#3898FC" }}
+                    >
+                      Learn more
+                    </Typography>
+                    <IconButton
+                      sx={{ width: "30px", height: "30px", color: "#3898FC" }}
+                      onClick={() => { }}
+                    >
+                      <OpenInNewIcon sx={{ fontSize: 20 }} />
+                    </IconButton>
+                  </Button>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={navigateToSourcePage}
+                    sx={{ backgroundColor: "#3898FC", dropShadow: "#00000040" }}
+                  >
+                    <IconButton
+                      sx={{ width: "30px", height: "30px", color: "#fff" }}
+                      onClick={() => { }}
+                    >
+                    </IconButton>
+                    <Typography
+                      className="description"
+                      style={{ color: "#fff" }}
+                    >
+                      Import Source
+                    </Typography>
+                  </Button>
                 </Box>
               </Box>
             </DialogContent>
@@ -370,70 +375,70 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                 textAlign="center"
                 fontFamily="Nunito Sans"
               >
-                Add your first integration
+                Generate your Smart Audience first
               </Typography>
 
             </DialogTitle>
             <DialogContent sx={{ p: 3 }}>
               <Typography className="fourth-sub-title" sx={{ textAlign: "center" }}>
-              To get started, connect at least one integration so you can sync data across your platforms
+                To synk your data you need to generate smart audience
               </Typography>
-              <Box sx={{p: 4}}>
+              <Box sx={{ p: 4 }}>
                 <Box
-                          sx={{
-                            bgcolor: "#E8F0FF",
-                            borderRadius: 1,
-                            p: 2,
-                            display: "flex",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Image
-                            src="/integrations-first-time-screen.svg"
-                            alt="Allsource integrations diagram"
-                            width={1000}
-                            height={160}
-                            style={{ maxWidth: "100%", height: "auto" }}
-                          />
-                        </Box>
+                  sx={{
+                    bgcolor: "#E8F0FF",
+                    borderRadius: 1,
+                    p: 2,
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Image
+                    src="/smart-audience-first-time-screen.svg"
+                    alt="Smart audience diagram"
+                    width={500}
+                    height={160}
+                    style={{ maxWidth: "100%", height: "auto" }}
+                  />
+                </Box>
                 <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
-                <Button
-                        variant="outlined"
-                        fullWidth
-                        onClick={navigateToExamplePage}
-                      >
-                        
-                        <Typography
-                          className="description"
-                          style={{ color: "#3898FC" }}
-                        >
-                          Learn more
-                        </Typography>
-                        <IconButton
-                          sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-                          onClick={() => { }}
-                        >
-                          <OpenInNewIcon sx={{fontSize: 20}}/>
-                        </IconButton>
-                      </Button>
                   <Button
-                        variant="contained"
-                        fullWidth
-                        onClick={navigateToIntegrationPage}
-                        sx={{ backgroundColor: "#3898FC", dropShadow: "#00000040" }}
-                      >
-                        <IconButton
-                          sx={{ width: "30px", height: "30px", color: "#fff" }}
-                          onClick={() => { }}
-                        >
-                        </IconButton>
-                        <Typography
-                          className="description"
-                          style={{ color: "#fff" }}
-                        >
-                          Add Integration
-                        </Typography>
-                      </Button>
+                    variant="outlined"
+                    fullWidth
+                    onClick={navigateToExamplePage}
+                  >
+
+                    <Typography
+                      className="description"
+                      style={{ color: "#3898FC" }}
+                    >
+                      Learn more
+                    </Typography>
+                    <IconButton
+                      sx={{ width: "30px", height: "30px", color: "#3898FC" }}
+                      onClick={() => { }}
+                    >
+                      <OpenInNewIcon sx={{ fontSize: 20 }} />
+                    </IconButton>
+                  </Button>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={navigateToSmartAudiencePage}
+                    sx={{ backgroundColor: "#3898FC", dropShadow: "#00000040" }}
+                  >
+                    <IconButton
+                      sx={{ width: "30px", height: "30px", color: "#fff" }}
+                      onClick={() => { }}
+                    >
+                    </IconButton>
+                    <Typography
+                      className="description"
+                      style={{ color: "#fff" }}
+                    >
+                      Generate Smart Audience
+                    </Typography>
+                  </Button>
                 </Box>
               </Box>
             </DialogContent>

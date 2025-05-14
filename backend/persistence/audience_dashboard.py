@@ -177,7 +177,8 @@ class DashboardAudiencePersistence:
             AudienceLookalikes.name.label('lookalike_name'),
             AudienceLookalikes.created_date.label('created_at'),
             AudienceLookalikes.lookalike_size.label('lookalike_size'),
-            AudienceLookalikes.size.label('size')
+            AudienceLookalikes.size.label('size'),
+            AudienceSource.target_schema.label('target_type')
         )\
         .join(AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid)\
         .filter(
@@ -206,8 +207,12 @@ class DashboardAudiencePersistence:
             AudienceSource.created_at.label('created_at'),
             AudienceSource.source_type.label('source_type'),
             AudienceSource.matched_records.label('matched_records'),
-        )\
-        .filter(
+            AudienceSource.target_schema.label('target_type'),
+            AudienceSource.total_records.label('no_of_customers'),
+            UserDomains.domain.label('domain')
+        ) \
+            .join(UserDomains, AudienceSource.domain_id == UserDomains.id, isouter=True) \
+            .filter(
             AudienceSource.user_id == user_id
         )\
         .order_by(

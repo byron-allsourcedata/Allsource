@@ -25,10 +25,9 @@ async def get_smart_sync(service_name: str | None = Query(None), integrations_us
 @router.get("/has-integration-and-smart-audiences")
 def has_integration_and_data_sync(
     user: dict = Depends(check_user_authorization_without_pixel),
-        domain: UserDomains = Depends(check_domain),
     integration_service: IntegrationService = Depends(get_integration_service),
 ):
-    return integration_service.has_integration_and_data_sync(user=user, domain=domain)
+    return integration_service.has_integration_and_data_sync(user=user)
 
 
 @router.post('/sync/switch-toggle-smart-audience-sync')

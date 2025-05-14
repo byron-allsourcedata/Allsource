@@ -2,7 +2,7 @@
 import { Box, Grid, Typography, Button } from "@mui/material";
 import Image from "next/image";
 import axiosInterceptorInstance from "../../../../axios/axiosInterceptorInstance";
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import { useSlider } from '../../../../context/SliderContext';
 import React, { useEffect, useState, useMemo } from "react";
 import ManualPopup from '../components/ManualPopup';
@@ -10,6 +10,7 @@ import GoogleTagPopup from '../components/GoogleTagPopup';
 import CRMPopup from "./CMSPopup";
 import CustomizedProgressBar from "../../../../components/CustomizedProgressBar";
 import CustomTooltip from "../../../../components/customToolTip";
+import { showErrorToast } from "@/components/ToastNotification";
 
 
 
@@ -29,12 +30,18 @@ const PixelInstallation: React.FC = () => {
       setPixelCode(response.data.manual);
       setOpen(true);
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        if (error.response.data.status === 'NEED_BOOK_CALL') {
-          sessionStorage.setItem('is_slider_opened', 'true');
+      if (axios.isAxiosError(error) && error.response) {
+        const { status, data } = error.response;
+        if (status === 400 && data?.status === "DOMAIN_NOT_FOUND") {
+          showErrorToast("Please set up your domain to continue");
+          return;
+        }
+        if (status === 403 && data?.status === "NEED_BOOK_CALL") {
+          sessionStorage.setItem("is_slider_opened", "true");
           setShowSlider(true);
-        } else {
-          sessionStorage.setItem('is_slider_opened', 'false');
+        }
+        else {
+          sessionStorage.setItem("is_slider_opened", "false");
           setShowSlider(false);
         }
       }
@@ -113,12 +120,18 @@ const PixelInstallation: React.FC = () => {
       setCmsData(response.data);
       setCMSOpen(true);
     } catch (error) {
-      if (error instanceof AxiosError && error.response?.status === 403) {
-        if (error.response.data.status === 'NEED_BOOK_CALL') {
-          sessionStorage.setItem('is_slider_opened', 'true');
+      if (axios.isAxiosError(error) && error.response) {
+        const { status, data } = error.response;
+        if (status === 400 && data?.status === "DOMAIN_NOT_FOUND") {
+          showErrorToast("Please set up your domain to continue");
+          return;
+        }
+        if (status === 403 && data?.status === "NEED_BOOK_CALL") {
+          sessionStorage.setItem("is_slider_opened", "true");
           setShowSlider(true);
-        } else {
-          sessionStorage.setItem('is_slider_opened', 'false');
+        }
+        else {
+          sessionStorage.setItem("is_slider_opened", "false");
           setShowSlider(false);
         }
       }

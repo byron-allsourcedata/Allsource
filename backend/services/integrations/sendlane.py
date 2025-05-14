@@ -109,7 +109,7 @@ class SendlaneIntegrationService:
         lists = self.__get_list(credentials.sendlane.api_key)
         if lists.status_code == 401:
             raise HTTPException(status_code=400, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
-        return self.__save_integrations(credentials.sendlane.api_key, domain_id=domain.id, user=user)
+        return self.__save_integrations(credentials.sendlane.api_key, domain_id=None if domain is None else domain.id, user=user)
 
     
     def __get_sender(self, api_key):

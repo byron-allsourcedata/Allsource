@@ -107,7 +107,8 @@ const DataSync = () => {
     {isLoading && <CustomizedProgressBar />}
       {(
       <Box sx={datasyncStyle.mainContent}>
-        <Box
+        {hasDataSync &&(
+          <Box
           sx={{
             display: "flex",
             flexDirection: "row",
@@ -199,6 +200,7 @@ const DataSync = () => {
             </Button>
           </Box>
         </Box>
+        )}
         <Box
           sx={{
             width: "100%",
@@ -273,7 +275,7 @@ const DataSync = () => {
                     ctaLabel="Add Integration"
                     message="You need to create at least one integration before you can sync your audience"
                   />
-                  <FirstTimeScree onBegin={()=> {router.push("/smart-audiences")}} hasIntegrations={hasIntegrations}/>
+                  <FirstTimeScree onBegin={()=> {router.push("/smart-audiences")}} hasDataSync={hasDataSync}/>
               </Box>
               </>
               

@@ -563,12 +563,21 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
   const handleAddIntegration = async (service_name: string) => {
     try {
       setIsLoading(true)
-      const response = await axiosInstance.get('/integrations/check-limit-reached')
-      if (response.status === 200 && response.data == true) {
-        setUpgradePlanPopup(true)
-        return
-      }
+      // const response = await axiosInstance.get('/integrations/check-limit-reached')
+      // if (response.status === 200 && response.data == true) {
+      //   setUpgradePlanPopup(true)
+      //   return
+      // }
+      // console.log(response)
+
     } catch (error) {
+      if (axios.isAxiosError(error) && error.response) {
+        const { status, data } = error.response;
+        if (status === 400 && data?.status === "DOMAIN_NOT_FOUND") {
+          showErrorToast("Please set up your domain to continue");
+          return;
+        }
+      }
     }
     finally {
       setIsLoading(false)
