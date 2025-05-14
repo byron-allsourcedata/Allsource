@@ -89,6 +89,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
         user_id = message_body.get("user_id")
         aud_smart_id = message_body.get("aud_smart_id")
         batch = message_body.get("batch")
+        count_persons_before_validation = message_body.get("count_persons_before_validation")
         validation_type = message_body.get("validation_type")
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
@@ -217,6 +218,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                     for rule in cat:
                         if key in rule:
                             rule[key]["processed"] = True
+                            rule[key]["count_validated"] = count_persons_before_validation - len(failed_ids)
+                            rule[key]["count_submited"] = count_persons_before_validation
                 aud_smart.validations = json.dumps(validations)
 
             await publish_rabbitmq_message(

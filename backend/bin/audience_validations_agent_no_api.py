@@ -109,6 +109,7 @@ async def aud_validation_agent(
         user_id = body.get("user_id")
         aud_smart_id = body.get("aud_smart_id")
         batch = body.get("batch", [])
+        count_persons_before_validation = body.get("count_persons_before_validation")
         recency_personal_days = body.get("recency_personal_days", 0)
         recency_business_days = body.get("recency_business_days", 0)
         validation_type = body.get("validation_type")
@@ -165,9 +166,13 @@ async def aud_validation_agent(
                     AudienceSmartPerson.is_validation_processed.is_(False)
                 )
             ).scalar_one()
+
             total_count = db_session.query(AudienceSmartPerson).filter(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id
             ).count()
+
+            print("validation_count, total_count", validation_count, total_count)
+            
             if validation_count == total_count:
                 aud_smart = db_session.get(AudienceSmart, aud_smart_id)
                 if aud_smart and aud_smart.validations:
@@ -177,6 +182,8 @@ async def aud_validation_agent(
                         for rule in category:
                             if key in rule:
                                 rule[key]["processed"] = True
+                                rule[key]["count_validated"] = count_persons_before_validation - len(failed_ids)
+                                rule[key]["count_submited"] = count_persons_before_validation
                     aud_smart.validations = json.dumps(validations)
 
                 await publish_rabbitmq_message(

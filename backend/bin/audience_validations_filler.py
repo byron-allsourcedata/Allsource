@@ -360,7 +360,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                         "confirmation": AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
                                         "cas_home_address": AUDIENCE_VALIDATION_AGENT_POSTAL, "cas_office_address": AUDIENCE_VALIDATION_AGENT_POSTAL,
                                         "business_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API, "personal_email": AUDIENCE_VALIDATION_AGENT_EMAIL_API,
-                                        "mobile_phone_dnc": AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API
+                                        "mobile_phone_dnc": AUDIENCE_VALIDATION_AGENT_NOAPI
                                         
                                     }
                                     queue_name = queue_map[column_name]

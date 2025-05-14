@@ -62,6 +62,7 @@ async def process_rmq_message(
         aud_smart_id = body.get("aud_smart_id")
         batch = body.get("batch", [])
         validation_type = body.get("validation_type")
+        count_persons_before_validation = body.get("count_persons_before_validation")
         verified_emails = []
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
@@ -153,6 +154,8 @@ async def process_rmq_message(
                     for rule in validations[validation_type]:
                         if "delivery" in rule:
                             rule["delivery"]["processed"] = True
+                            rule["delivery"]["count_validated"] = count_persons_before_validation - len(failed_ids)
+                            rule["delivery"]["count_submited"] = count_persons_before_validation
 
                 aud_smart.validations = json.dumps(validations)
 

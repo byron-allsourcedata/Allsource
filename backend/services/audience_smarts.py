@@ -264,9 +264,11 @@ class AudienceSmartsService:
                 
                 for item in value:
                     for subkey in item.keys():
-                        types_validation.append(subkey)
                         count_submited += item[subkey].get("count_submited", 0)
                         count_validated += item[subkey].get("count_validated", 0)
+                        if subkey == "recency":
+                            subkey = "recency " + str(item[subkey].get("days")) + " days"
+                        types_validation.append(subkey)
                 
                 validation_entry = {
                     key: {

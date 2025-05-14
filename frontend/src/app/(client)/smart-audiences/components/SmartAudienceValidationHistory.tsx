@@ -18,7 +18,7 @@ interface ValidationHistoryResponse {
 
 
 interface ValidationHistory {
-    types_validation: string[]
+    types_validation?: string[]
     count_submited: number
     count_validated: number
     count_cost: number
@@ -72,10 +72,10 @@ const ValidationsTable = ({ validations }: {validations: ValidationHistoryRespon
         borderTop: "none", 
         boxShadow: "rgba(0, 0, 0, 0.2)"}}>
           <Box sx={{ width: "100%", py: 1, gap: 4, borderBottom: "1px solid rgba(240, 240, 240, 1)", display: "flex", justifyContent: "space-between"}}>
-              <Typography sx={{flex: 1}} className='table-data'>Validation Parameter</Typography>
-              <Typography sx={{flex: 1}} className='table-data'>Records Submited</Typography>
-              <Typography sx={{flex: 1}} className='table-data'>Validated</Typography>
-              <Typography sx={{flex: 1}} className='table-data'>Cost</Typography>
+              <Box sx={{display: "flex", width: "25%"}}><Typography sx={{flex: 1}} className='table-data'>Validation Parameter</Typography></Box>
+              <Box sx={{display: "flex", width: "25%"}}><Typography sx={{flex: 1}} className='table-data'>Records Submited</Typography></Box>
+              <Box sx={{display: "flex", width: "25%"}}><Typography sx={{flex: 1}} className='table-data'>Validated</Typography></Box>
+              <Box sx={{display: "flex", width: "25%"}}><Typography sx={{flex: 1}} className='table-data'>Cost</Typography></Box>
           </Box>
           {validations.map((validationObj, index) => (
             <Box key={index} sx={{ width: "100%" }}>
@@ -87,15 +87,15 @@ const ValidationsTable = ({ validations }: {validations: ValidationHistoryRespon
                             pt: "12px",
                             pb: "12px",
                             gap: 4,
-                            borderBottom: "1px solid rgba(240, 240, 240, 1)",
+                            borderBottom: index === validations.length - 1 ? "none" : "1px solid rgba(240, 240, 240, 1)",
                             display: "flex",
                             justifyContent: "space-between",
                         }}
                         >
-                        <Box sx={{display: "flex", flexDirection: "column", gap: 1}}> 
+                        <Box sx={{display: "flex", flexDirection: "column", width: "25%", gap: 1}}> 
                             <Typography sx={{ flex: 1 }} className="black-table-header">{setSourceType(key)}</Typography>
-                            <Box sx={{ display: "inline-flex", flexWrap: "wrap", width: "10rem", gap: 1 }}>
-                                {validation.types_validation.map((type, index) => ( //["dnc_filter", "MX", "confirmation", "job_validation"]
+                            <Box sx={{ display: "inline-flex", flexWrap: "wrap", gap: 1 }}>
+                                {validation.types_validation?.map((type, index) => ( //["dnc_filter", "MX", "confirmation", "job_validation"]
                                     <Box sx={{border: "1px solid rgba(229, 229, 229, 1)", p: "2px 8px", borderRadius: "3px", textAlign: "center"}}> 
                                         <Typography key={index} className="paragraph">
                                             {setSourceType(type)}
@@ -134,8 +134,8 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({ open, onClose, i
         try {
             const response = await axiosInstance.get(`/audience-smarts/${id}/validation-history`);
             if (response.status === 200) {
-              console.log(response.data)
-              setValidations(response.data)
+              console.log([...response.data, { "total": {count_submited: 0, count_validated: 0, count_cost: 0} }])
+              setValidations([...response.data, { "total": {count_submited: 0, count_validated: 0, count_cost: 0} }])
             }
         } 
         catch {
