@@ -1,64 +1,102 @@
-import React, { useState, } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Grid, Typography } from "@mui/material";
 import { dashboardStyles } from "@/app/(client)/dashboard/dashboardStyles";
-import CustomTooltip from "@/components/customToolTip";
-import { ProgressSection } from "@/app/(client)/dashboard/components/ProgressSection";
+import {
+  StepConfig,
+  VerticalStepper,
+} from "@/app/(client)/dashboard/components/VerticalStepper";
 import PixelInstallation from "@/app/(client)/dashboard/components/PixelInstallation";
 import VerifyPixelIntegration from "../components/VerifyPixelIntegration";
 import RevenueTracking from "@/components/RevenueTracking";
-import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance"
-import { SliderProvider, useSlider } from "@/context/SliderContext";
-import axios, { AxiosError } from "axios";
-import CustomizedProgressBar from "./CustomizedProgressBar";
-import ManualPopup from "@/app/(client)/dashboard/components/ManualPopup";
-import Image from "next/image";
-import SendIcon from '@mui/icons-material/Send';
-import { showErrorToast } from "./ToastNotification";
-
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import DomainVerificationOutlinedIcon from "@mui/icons-material/DomainVerificationOutlined";
+import OpenInBrowserOutlinedIcon from "@mui/icons-material/OpenInBrowserOutlined";
+import VerifiedIcon from "@mui/icons-material/Verified";
+import DomainSelector from "@/app/(client)/dashboard/components/DomainSelector";
 
 const GettingStartedSection: React.FC = () => {
-  const [openManually, setOpen] = useState(false);
-  const [pixelCode, setPixelCode] = useState("");
-  const { setShowSlider } = useSlider();
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedDomain, setSelectedDomain] = useState("");
+  const [stepData, setStepData] = useState<StepConfig[]>([
+    {
+      label: "Choose a domain",
+      status: "active",
+      icon: (
+        <DomainVerificationOutlinedIcon
+          sx={{ color: "rgba(255, 255, 255, 1)", fontSize: "17px" }}
+        />
+      ),
+    },
+    {
+      label: "Select Installation Method",
+      status: "default",
+      icon: (
+        <OpenInBrowserOutlinedIcon
+          sx={{ color: "rgba(255, 255, 255, 1)", fontSize: "17px" }}
+        />
+      ),
+    },
+    {
+      label: "Verify integration",
+      status: "default",
+      icon: (
+        <VerifiedIcon
+          sx={{ color: "rgba(255, 255, 255, 1)", fontSize: "17px" }}
+        />
+      ),
+    },
+  ]);
 
-  const installManually = async () => {
-    try {
-      setIsLoading(true);
-      const response = await axiosInterceptorInstance.get(
-        "/install-pixel/manually"
-      );
-      setPixelCode(response.data.manual);
-      setOpen(true);
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response) {
-        const { status, data } = error.response;
-        if (status === 400 && data?.status === "DOMAIN_NOT_FOUND") {
-          showErrorToast("Please set up your domain to continue");
-          return;
-        }
-        if (status === 403 && data?.status === "NEED_BOOK_CALL") {
-          const flag = error.response.data.status === "NEED_BOOK_CALL";
-          sessionStorage.setItem(
-            "is_slider_opened",
-            flag ? "true" : "false"
-          );
-          setShowSlider(flag);
-        }
-        else {
-          console.error("Error fetching data:", error);
-        }
-      }
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (selectedDomain !== "") {
+      setStepData((prev) => [
+        { ...prev[0], status: "completed" },
+        { ...prev[1], status: "active" },
+        { ...prev[2], status: "default" },
+      ]);
+    } else {
+      setStepData((prev) => [
+        { ...prev[0], status: "completed" },
+        { ...prev[1], status: "default" },
+        { ...prev[2], status: "default" },
+      ]);
     }
-  }
-  const sendEmail = () => installManually();
-  const handleManualClose = () => setOpen(false);
+  }, [selectedDomain]);
+
+  const defaultStepIcons = [
+    <DomainVerificationOutlinedIcon
+      sx={{ color: "white", fontSize: "17px" }}
+    />,
+    <OpenInBrowserOutlinedIcon sx={{ color: "white", fontSize: "17px" }} />,
+    <VerifiedIcon sx={{ color: "white", fontSize: "17px" }} />,
+  ];
+
+  const handleInstallSelected = (
+    method: "manual" | "google" | "cms" | null
+  ) => {
+    const newStepData: StepConfig[] = [
+      {
+        label: "Choose a domain",
+        status: "completed",
+        icon: defaultStepIcons[0],
+      },
+      {
+        label: "Select Installation Method",
+        status: "completed",
+        icon: defaultStepIcons[1],
+      },
+      {
+        label: "Verify integration",
+        status: method === null ? "default" : "active",
+        icon: defaultStepIcons[2],
+      },
+    ];
+
+    setStepData(newStepData);
+  };
 
   return (
-    <Grid container sx={{ height: '100%', pt: 3, pr: 2 }}>
-      <Grid item xs={12} sx={{ display: { md: 'none' }, overflow: 'hidden' }}>
+    <Grid container sx={{ height: "100%", pt: 3, pr: 2 }}>
+      <Grid item xs={12} sx={{ display: { md: "none" }, overflow: "hidden" }}>
         <Typography
           variant="h4"
           component="h1"
@@ -68,11 +106,21 @@ const GettingStartedSection: React.FC = () => {
           Let&apos;s Get Started!
         </Typography>
         <Typography className="table-data" sx={dashboardStyles.description}>
-          Install our pixel on your website to start capturing anonymous visitor data on your store.
+          Install our pixel on your website to start capturing anonymous visitor
+          data on your store.
         </Typography>
-        <ProgressSection />
-        <PixelInstallation />
-        <VerifyPixelIntegration />
+        <VerticalStepper steps={stepData} />
+        <DomainSelector
+          onDomainSelected={(domain) => {
+            setSelectedDomain(domain.domain);
+          }}
+        />
+        <PixelInstallation
+          onInstallSelected={(method) => {
+            handleInstallSelected(method);
+          }}
+        />
+        <VerifyPixelIntegration domain={selectedDomain} />
         <RevenueTracking />
       </Grid>
 
@@ -80,50 +128,57 @@ const GettingStartedSection: React.FC = () => {
         item
         xs={12}
         lg={8}
-        sx={{ display: { xs: 'none', md: 'block' }, overflow: 'hidden' }}
+        sx={{ display: { xs: "none", md: "block" }, overflow: "hidden" }}
       >
         <Typography
           variant="h4"
           component="h1"
-          className="heading-text"
+          className="first-sub-title"
           sx={dashboardStyles.title}
         >
-          Let’s Get Started!{' '}
-          <CustomTooltip
+          Install Your Pixel {selectedDomain}
+          {/* <CustomTooltip
             title="Boost engagement and reduce cart abandonment with personalized messages tailored for your visitors."
             linkText="Learn more"
             linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai"
+          /> */}
+        </Typography>
+        <Box sx={{ pl: 8, mt: 3 }}>
+          <DomainSelector
+            onDomainSelected={(domain) => {
+              setSelectedDomain(domain.domain);
+            }}
           />
-        </Typography>
-        <Typography
-          className="table-data"
-          sx={{ ...dashboardStyles.description, mb: 4 }}
-        >
-          Install our pixel on your website to start capturing anonymous visitor data on your store.
-        </Typography>
-        <PixelInstallation />
-        <VerifyPixelIntegration />
+          <PixelInstallation
+            onInstallSelected={(method) => {
+              handleInstallSelected(method);
+            }}
+          />
+          <VerifyPixelIntegration domain={selectedDomain} />
+        </Box>
       </Grid>
 
       <Grid
         item
         xs={12}
-        lg={4}
-        sx={{ display: { xs: 'none', md: 'block' } }}
+        lg={3}
+        sx={{ display: { xs: "none", md: "block" }, mt: 6 }}
       >
-        <ProgressSection />
+        <VerticalStepper steps={stepData} />
       </Grid>
 
-      <Grid item xs={12}>
-        <Box sx={{
-          position: "fixed",
-          bottom: 20,
-          width: "86%",
-          '@media (max-width: 1400px)': {
-            position: 'static',
-            width: '100%',
-          }
-        }}>
+      {/* <Grid item xs={12}>
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: 20,
+            width: "86%",
+            "@media (max-width: 1400px)": {
+              position: "static",
+              width: "100%",
+            },
+          }}
+        >
           <Box
             sx={{
               padding: "1em 0em 1em 1em",
@@ -133,17 +188,17 @@ const GettingStartedSection: React.FC = () => {
               textAlign: "left",
               width: "100%",
               border: "1px solid rgba(228, 228, 228, 1)",
-              '@media (max-width: 1199px)': {
-                width: '100%',
-                position: 'relative',
+              "@media (max-width: 1199px)": {
+                width: "100%",
+                position: "relative",
                 padding: "1em 0em 1.5em 1em",
-                borderRadius: '4px',
-                border: '0.0625rem solid #E4E4E4',
-                background: '#F7F7F7'
+                borderRadius: "4px",
+                border: "0.0625rem solid #E4E4E4",
+                background: "#F7F7F7",
               },
-              '@media (max-width: 900px)': {
-                marginBottom: 0
-              }
+              "@media (max-width: 900px)": {
+                marginBottom: 0,
+              },
             }}
           >
             <Typography
@@ -173,19 +228,19 @@ const GettingStartedSection: React.FC = () => {
                 onClick={sendEmail}
                 sx={{
                   textWrap: "nowrap",
-                  pt: '0.5em',
+                  pt: "0.5em",
                   color: "rgba(56, 152, 252, 1)",
                   fontFamily: "Nunito Sans",
                   border: "none",
                   fontWeight: 600,
-                  fontSize: '14px',
+                  fontSize: "14px",
                   textDecoration: "none",
                   lineHeight: "22.4px",
                   backgroundColor: "transparent",
                   textTransform: "none",
                   cursor: "pointer",
-                  marginLeft: '1.5em',
-                  gap: '8px'
+                  marginLeft: "1.5em",
+                  gap: "8px",
                 }}
               >
                 Send this to my developer
@@ -196,28 +251,34 @@ const GettingStartedSection: React.FC = () => {
                   }}
                 />
               </Button>
-              <ManualPopup open={openManually} handleClose={handleManualClose} pixelCode={pixelCode} />
+              <ManualPopup
+                open={openManually}
+                handleClose={handleManualClose}
+                pixelCode={pixelCode}
+              />
               {isLoading && (
-                <Box sx={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  zIndex: 1,
-                }}>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    zIndex: 1,
+                  }}
+                >
                   <CustomizedProgressBar />
                 </Box>
               )}
             </Grid>
           </Box>
         </Box>
-      </Grid>
+      </Grid> */}
     </Grid>
-  )
+  );
 };
 
 export default GettingStartedSection;
