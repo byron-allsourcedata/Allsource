@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, RootModel
 from datetime import datetime
 from enums import LeadStatus
 from uuid import UUID
@@ -47,7 +47,7 @@ class DataSource(BaseModel):
     size: int
 
 class ValidationHistory(BaseModel):
-    types_validation: List[str]
+    type_validation: str
     count_submited: int
     count_validated: int
     count_cost: int

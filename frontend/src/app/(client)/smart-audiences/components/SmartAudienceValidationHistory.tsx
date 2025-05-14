@@ -18,7 +18,7 @@ interface ValidationHistoryResponse {
 
 
 interface ValidationHistory {
-    types_validation?: string[]
+    type_validation?: string
     count_submited: number
     count_validated: number
     count_cost: number
@@ -44,6 +44,10 @@ const setSourceType = (sourceType: string) => {
         .split('_')
         .map(subItem => subItem.charAt(0).toUpperCase() + subItem.slice(1))
         .join(' ')
+}
+
+const setNameValidation = (validation: string) => {
+  return validation.split('-')[0]
 }
 
 
@@ -93,15 +97,15 @@ const ValidationsTable = ({ validations }: {validations: ValidationHistoryRespon
                         }}
                         >
                         <Box sx={{display: "flex", flexDirection: "column", width: "25%", gap: 1}}> 
-                            <Typography sx={{ flex: 1 }} className="black-table-header">{setSourceType(key)}</Typography>
+                            <Typography sx={{ flex: 1 }} className="black-table-header">{setSourceType(setNameValidation(key))}</Typography>
                             <Box sx={{ display: "inline-flex", flexWrap: "wrap", gap: 1 }}>
-                                {validation.types_validation?.map((type, index) => ( //["dnc_filter", "MX", "confirmation", "job_validation"]
+                                {validation.type_validation && 
                                     <Box sx={{border: "1px solid rgba(229, 229, 229, 1)", p: "2px 8px", borderRadius: "3px", textAlign: "center"}}> 
                                         <Typography key={index} className="paragraph">
-                                            {setSourceType(type)}
+                                            {setSourceType(validation.type_validation)}
                                         </Typography>
                                     </Box>
-                                ))}
+                                }
                             </Box>
                         </Box>
                         
@@ -133,9 +137,21 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({ open, onClose, i
         setIsLoading(true)
         try {
             const response = await axiosInstance.get(`/audience-smarts/${id}/validation-history`);
-            if (response.status === 200) {
-              console.log([...response.data, { "total": {count_submited: 0, count_validated: 0, count_cost: 0} }])
-              setValidations([...response.data, { "total": {count_submited: 0, count_validated: 0, count_cost: 0} }])
+            if (response.status === 200 && smartAudience) {
+              const validationsResponse = response.data
+              const lastValidation = validationsResponse.at(-1);
+              const lastValidationKey = lastValidation ? Object.keys(lastValidation)[0] : undefined;
+              const countValidated = lastValidationKey
+              ? lastValidation[lastValidationKey]?.count_validated || 0
+              : 0;
+
+              setValidations([...validationsResponse, { 
+                "total": {
+                  count_submited: smartAudience[2].value, 
+                  count_validated: countValidated, 
+                  count_cost: 0
+                } 
+              }])
             }
         } 
         catch {

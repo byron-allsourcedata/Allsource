@@ -248,42 +248,42 @@ class AudienceSmartsService:
 
         return {"includes": includes, "excludes": excludes}
 
-
     def get_validations_by_aud_smart_id(self, id: UUID) -> List[Dict[str, ValidationHistory]]:
         raw_validations_obj = self.audience_smarts_persistence.get_validations_by_aud_smart_id(id)
+        validation_priority = self.audience_settings_persistence.get_validation_priority()
+
+        priority_order = validation_priority.split(",") if validation_priority else []
     
         parsed_validations = json.loads(raw_validations_obj.validations)
         
         result = []
         
         for key, value in parsed_validations.items():
-            if len(value):  # check that the list is not empty
-                types_validation = []
-                count_submited = 0
-                count_validated = 0
+            if len(value):
                 
                 for item in value:
                     for subkey in item.keys():
-                        count_submited += item[subkey].get("count_submited", 0)
-                        count_validated += item[subkey].get("count_validated", 0)
+                        count_submited = item[subkey].get("count_submited", 0)
+                        count_validated = item[subkey].get("count_validated", 0)
+
                         if subkey == "recency":
-                            subkey = "recency " + str(item[subkey].get("days")) + " days"
-                        types_validation.append(subkey)
-                
-                validation_entry = {
-                    key: {
-                        "types_validation": types_validation,
-                        "count_submited": count_submited,
-                        "count_validated": count_validated,
-                        "count_cost": 0,
-                    }
-                }
-                result.append(validation_entry)
-                
-            
-        print(result)
+                            subkey_with_param = "recency " + str(item[subkey].get("days")) + " days"
+                        else:
+                            subkey_with_param = subkey
+
+                        result.append({
+                            "key": f"{key}-{subkey}",
+                            "validation": {
+                                "type_validation": subkey_with_param,
+                                "count_submited": count_submited,
+                                "count_validated": count_validated,
+                                "count_cost": 0,
+                            }
+                        })
+
+        result.sort(key=lambda x: priority_order.index(x["key"]) if x["key"] in priority_order else len(priority_order))
         
-        return result
+        return [{item["key"]: item["validation"]} for item in result]
 
 
     def get_datasource(self, user: dict):
