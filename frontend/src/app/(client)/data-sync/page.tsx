@@ -152,7 +152,7 @@ const DataSync = () => {
                 "How data synch works and to customise your sync settings."
               }
               linkText="Learn more"
-              linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/articles/data-sync"
+              linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
             />
           </Box>
           <Box

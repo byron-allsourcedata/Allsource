@@ -619,16 +619,15 @@ const BingAdsDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                     Connect to BingAds
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-omnisend-to-maximiz" className="main-text"
-                    target="_blank"
-                    rel="noopener referrer"
-                    sx={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        lineHeight: '20px',
-                        color: 'rgba(56, 152, 252, 1)',
-                        textDecorationColor: 'rgba(56, 152, 252, 1)'
-                    }}>Tutorial</Link>
+                <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" target="_blank" rel="noopener noreferrer"
+                        sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            lineHeight: '20px',
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
+                        }}>Tutorial</Link>
                     <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                         <CloseIcon sx={{ width: '20px', height: '20px' }} />
                     </IconButton>

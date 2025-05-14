@@ -469,7 +469,7 @@ const SuppressionRules: React.FC = () => {
                                 Suppression Rules
                             </Typography>
                             <Box sx={{ pt: 0.25 }}>
-                                <CustomTooltip title={"Set rules to exclude specific contacts or data from campaigns to improve targeting."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/articles/suppression-rules" />
+                                <CustomTooltip title={"Set rules to exclude specific contacts or data from campaigns to improve targeting."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
                             </Box>
                         </Box>
 

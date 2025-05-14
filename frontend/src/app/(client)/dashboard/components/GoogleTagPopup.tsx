@@ -386,7 +386,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                             >
                                 Install Pixel on Google Tag Manager
                             </Typography>
-                            <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-to-i-install-maximiz-pixel-on-google-tag-manager" target="_blank" rel="noopener referrer" className="main-text" sx={{
+                            <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" target="_blank" rel="noopener referrer" className="main-text" sx={{
                                 fontSize: '14px',
                                 fontWeight: '600',
                                 lineHeight: '19.6px',

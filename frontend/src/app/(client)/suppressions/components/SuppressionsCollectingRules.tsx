@@ -138,7 +138,7 @@ const CollectionRules: React.FC = () => {
               "Define rules to gather and organise data for more effective tracking and insights."
             }
             linkText="Learn more"
-            linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/articles/collection-rules"
+            linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
           />
         </Box>
 

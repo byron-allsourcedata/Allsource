@@ -545,7 +545,7 @@ export const SettingsTeams: React.FC = () => {
                         }}>
                             {memberLimit === -1 ? 'unlimited' : `${memberCount}/${memberLimit} Member limit`}
                         </Typography>
-                        <CustomTooltip title={"Invite team members for shared access and teamwork on projects."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/invite-a-team-member" />
+                        <CustomTooltip title={"Invite team members for shared access and teamwork on projects."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
                     </Box>
                     <Box sx={{ border: '1px dashed rgba(56, 152, 252, 1)', borderRadius: '4px' }}>
                         <Button onClick={handleInviteUsersPopupOpen}><Image src="/add-square.svg" alt="add-square" height={24} width={24} /></Button>

@@ -605,7 +605,7 @@ export const SettingsBilling: React.FC = () => {
                                     <Typography className="first-sub-title">
                                         Card Details
                                     </Typography>
-                                    <CustomTooltip title={"View detailed information about your card, including balance, transactions, and expiration date."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/add-the-credit-card" />
+                                    <CustomTooltip title={"View detailed information about your card, including balance, transactions, and expiration date."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
                                 </Box>
                                 <Box sx={{
                                     border: '1px dashed rgba(56, 152, 252, 1)',
@@ -903,7 +903,7 @@ export const SettingsBilling: React.FC = () => {
                                                     }}>
                                                         Overage
                                                     </Typography>
-                                                    <CustomTooltip title='How overage works.' linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/enable-overage" />
+                                                    <CustomTooltip title='How overage works.' linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
                                                 </Box>
                                                 <Typography className="second-text" sx={{
                                                     fontSize: '12px',
@@ -1345,7 +1345,7 @@ export const SettingsBilling: React.FC = () => {
                     <Typography variant="h6" className='first-sub-title' sx={{
                         lineHeight: '22px !important'
                     }}>Billing History</Typography>
-                    <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/how-to-download-the-billing-invoice" />
+                    <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
                 </Box>
                 <TableContainer sx={{
                     border: '1px solid #EBEBEB',

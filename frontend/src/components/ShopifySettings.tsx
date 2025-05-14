@@ -292,7 +292,7 @@ const ShopifySettings = ({ handleClose, open, onSave, initApiKey, initShopDomain
                     Shopify Connect
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
+                    <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                     target="_blank"
                     rel="noopener refferer"
                     sx={{

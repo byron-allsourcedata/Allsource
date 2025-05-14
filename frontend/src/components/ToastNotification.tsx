@@ -28,7 +28,7 @@ export const CustomInfoToast = ({ message }: { message: string }) => (
 export const CustomErrorToast = ({ message }: { message: string }) => {
   const formattedMessage = message.replace(
     "Support team",
-    `<a href="https://maximizai.zohodesk.eu/portal/en/newticket" 
+    `<a href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" 
         style="color: inherit" 
         target="_blank" rel="noopener noreferrer">
       Support team

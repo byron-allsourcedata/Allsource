@@ -1,7 +1,7 @@
 import React from "react";
 import TabContext from "@mui/lab/TabContext";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, Typography, Drawer, IconButton, Button, LinearProgress } from "@mui/material";
+import { Box, Typography, Drawer, IconButton, Button, Link } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import CloseIcon from '@mui/icons-material/Close';
@@ -82,10 +82,7 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
                         Connect to SalesForce
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        {/* <Link href={initApiKey ?
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-klaviyo-integration-configuration" :
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz"
-                        }
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                             target="_blank"
                             rel="noopener noreferrer"
                             sx={{
@@ -95,7 +92,7 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
                                 lineHeight: '20px',
                                 color: 'rgba(56, 152, 252, 1)',
                                 textDecorationColor: 'rgba(56, 152, 252, 1)'
-                            }}>Tutorial</Link> */}
+                            }}>Tutorial</Link>
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>

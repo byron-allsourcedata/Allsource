@@ -2,7 +2,7 @@ import React from "react";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, TextField, Tooltip, Typography, Drawer, IconButton, Button, Tab, Switch, LinearProgress } from "@mui/material";
+import { Box, TextField, Tooltip, Typography, Drawer, IconButton, Button, Tab, Switch, LinearProgress, Link } from "@mui/material";
 import Image from "next/image";
 import { AxiosError } from 'axios';
 import { useEffect, useState } from "react";
@@ -293,10 +293,8 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                         Connect to S3
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        {/* <Link
-                            href={initApiKey
-                                ? "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-sendlane-to-maximiz"
-                                : "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-sendlane-integration-configuration"}
+                        <Link
+                            href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                             target="_blank"
                             rel="noopener noreferrer"
                             sx={{
@@ -306,7 +304,7 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                                 lineHeight: '20px',
                                 color: 'rgba(56, 152, 252, 1)',
                                 textDecorationColor: 'rgba(56, 152, 252, 1)'
-                            }}>Tutorial</Link> */}
+                            }}>Tutorial</Link>
 
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />

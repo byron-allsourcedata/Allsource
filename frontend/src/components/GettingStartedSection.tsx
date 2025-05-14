@@ -92,7 +92,7 @@ const GettingStartedSection: React.FC = () => {
           <CustomTooltip
             title="Boost engagement and reduce cart abandonment with personalized messages tailored for your visitors."
             linkText="Learn more"
-            linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai"
+            linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
           />
         </Typography>
         <Typography

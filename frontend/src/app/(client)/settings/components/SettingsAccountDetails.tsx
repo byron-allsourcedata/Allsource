@@ -702,7 +702,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         <Typography variant="h6" className='first-sub-title' sx={{
                             color: '#4a4a4a !important',
                             lineHeight: '22px !important'
-                        }}>Password <CustomTooltip title="Set a new password to better protect your account." linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/change-password" /></Typography>
+                        }}>Password <CustomTooltip title="Set a new password to better protect your account." linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" /></Typography>
                         <Typography variant="body2" className='third-sub-title' sx={{
                             lineHeight: '16px !important',
                             color: 'rgba(17, 17, 19, 0.60) !important'
@@ -720,7 +720,7 @@ export const SettingsAccountDetails: React.FC<SettingsAccountDetailsProps> = ({ 
                         '@media (max-width: 600px)': {
                             display: 'none'
                         }
-                    }}>Password <CustomTooltip title="Set a new password to better protect your account." linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings/change-password" /></Typography>
+                    }}>Password <CustomTooltip title="Set a new password to better protect your account." linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" /></Typography>
                     <Box sx={{ display: 'flex', gap: 2, justifyContent: 'space-between', alignItems: 'center', maxWidth: '78%' }}>
                         <Button className='hyperlink-red' variant="contained" color="secondary" onClick={handleChangePasswordPopupOpen}
                             sx={{

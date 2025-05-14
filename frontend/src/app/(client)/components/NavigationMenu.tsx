@@ -226,7 +226,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 
   const handleSupportButton = () => {
     window.open(
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai",
+      "https://allsourceio.zohodesk.com/portal/en/kb/allsource",
       "_blank"
     );
   };

@@ -836,7 +836,7 @@ const SmartAudiences: React.FC = () => {
                                     <Typography className='first-sub-title'>
                                         Smart Audience
                                     </Typography>
-                                    <CustomToolTip title={'Discover AI-powered Smart Audiences based on your sorces and lookalikes.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                                    <CustomToolTip title={'Discover AI-powered Smart Audiences based on your sorces and lookalikes.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/allsource' />
                                 </Box>
                                 <Box sx={{
                                     display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr: 2,

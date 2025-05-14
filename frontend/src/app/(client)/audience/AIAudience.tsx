@@ -433,7 +433,7 @@ const AIAudience: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'start', width: '100%', gap: '0.5rem' }}>
                                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'start', gap: 1, width: '100%' }}>
                                         <Typography className="second-sub-title" sx={{ fontSize: '19px !important' }}> Generate AI Audience </Typography>
-                                        <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}> <CustomTooltip title={"Our Referral program rewards you for bringing new users to our platform. Share your unique referral link with friends and colleagues, and earn incentives for each successful sign-up."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" /> </Box>
+                                        <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}> <CustomTooltip title={"Our Referral program rewards you for bringing new users to our platform. Share your unique referral link with friends and colleagues, and earn incentives for each successful sign-up."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" /> </Box>
                                     </Box>
                                     <Box>
                                         <Typography className="table-data"> Leverage Maximiz AI audience to identify key traits and deliver high-intent audience lookalikes from your data. </Typography>
