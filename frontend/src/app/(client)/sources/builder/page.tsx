@@ -33,6 +33,8 @@ import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import Papa, { ParseResult } from "papaparse";
 import ProgressBar from "@/components/ProgressBar";
+import { useHints } from '@/context/HintsContext';
+import HintCard from "../components/HintCard"
 
 interface Row {
   id: number;
@@ -45,6 +47,11 @@ interface Row {
 interface EventTypeInterface {
   id: number;
   name: string;
+  title: string;
+}
+
+interface HintCardInterface {
+  description: string;
   title: string;
 }
 
@@ -80,6 +87,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 const SourcesImport: React.FC = () => {
+  const { showHints } = useHints();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
@@ -101,6 +109,8 @@ const SourcesImport: React.FC = () => {
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
+  const [activeStep, setActiveStep] = useState(0);
+  const [isOpenSelect, setIsOpenSelect] = useState(false); 
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -125,6 +135,12 @@ const SourcesImport: React.FC = () => {
     { id: 2, name: "viewed_product_count", title: "viewed_product" },
     { id: 3, name: "abandoned_cart_count", title: "abandoned_cart" },
     { id: 4, name: "converted_sales_count", title: "converted_sales" },
+  ];
+
+  const hintsCards: HintCardInterface[] = [
+    { description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", title: "Customer Conversions" },
+    { description: "This dataset contains users who engaged but didn't convert - abandoned carts, incomplete sign-ups, or declined offers. Use it to identify systemic drop-off points and exclude them from your audience list.", title: "Failed Leads" },
+    { description: "This file should contain users who recently engaged with specific topics, products, or brands (e.g., searched for car model, read related articles, etc.). ", title: "Interest" },
   ];
 
   const defaultRows: Row[] = [
@@ -722,6 +738,7 @@ const SourcesImport: React.FC = () => {
                   sx={{
                     display: "flex",
                     gap: 2,
+                    position: "relative",
                     "@media (max-width: 420px)": {
                       display: "grid",
                       gridTemplateColumns: "1fr",
@@ -732,6 +749,8 @@ const SourcesImport: React.FC = () => {
                     <Select
                       value={sourceType}
                       onChange={handleChangeSourceType}
+                      onOpen={() => setIsOpenSelect(true)}
+                      onClose={() => setIsOpenSelect(false)}
                       displayEmpty
                       MenuProps={{
                         MenuListProps: {
@@ -791,6 +810,11 @@ const SourcesImport: React.FC = () => {
                       </MenuItem>
                     </Select>
                   </FormControl>
+                  {showHints && isOpenSelect && <HintCard
+                    cards={hintsCards}
+                    activeStep={activeStep}
+                    onStepChange={setActiveStep}
+                  />}
                 </Box>
               </Box>
 
