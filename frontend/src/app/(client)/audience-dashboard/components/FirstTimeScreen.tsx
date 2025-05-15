@@ -33,6 +33,9 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
   const navigateToSourcePage = () => {
     router.push("./sources");
   };
+  const navigateToAnaliticPage = () => {
+    router.push("./dashboard");
+  };
   return (
     <Box>
       <Grid
@@ -46,7 +49,7 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
         <Grid item xs={12} md={6}>
           <Card
             variant="outlined"
-            onClick={navigateToSourcePage}
+            onClick={navigateToAnaliticPage}
             sx={{
               backgroundColor: "transparent",
               boxShadow: "none",

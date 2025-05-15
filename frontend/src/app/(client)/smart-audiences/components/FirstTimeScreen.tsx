@@ -26,7 +26,6 @@ interface ClickableCardsProps {
 
 const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps) => {
   const router = useRouter();
-  const [showNotification, setShowNotification] = useState(!hasSource);
   const [popupOpen, setPopupOpen] = useState(false);
     
     const handleOpenPopup = () => {
@@ -52,7 +51,7 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
         },
       }}
     >
-      {showNotification && (
+      { !hasSource && (
         <NotificationBanner
           ctaUrl="/sources"
           ctaLabel="Create Source"
