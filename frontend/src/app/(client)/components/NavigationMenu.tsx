@@ -46,6 +46,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import LeadsIcon from "@mui/icons-material/People";
 import LegendToggleIcon from "@mui/icons-material/LegendToggle";
 import InsightsIcon from "@mui/icons-material/Insights";
+import InsertChartOutlinedIcon from '@mui/icons-material/InsertChartOutlined';
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -430,9 +431,9 @@ const NavigationMenu: React.FC<NavigationProps> = ({
                 }}
               >
                 <ListItemIcon>
-                  <InsightsIcon />
+                  <InsertChartOutlinedIcon />
                 </ListItemIcon>
-                <ListItemText primary="Insights" />
+                <ListItemText primary="Analytics" />
               </ListItem>
               <ListItem
                 button

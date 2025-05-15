@@ -37,6 +37,7 @@ import LegendToggleIcon from "@mui/icons-material/LegendToggle";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InsightsIcon from "@mui/icons-material/Insights";
+import InsertChartOutlinedIcon from '@mui/icons-material/InsertChartOutlined';
 import { display } from "@mui/system";
 
 const sidebarStyles = {
@@ -387,9 +388,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                 }
               >
                 <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                  <InsightsIcon />
+                  <InsertChartOutlinedIcon />
                 </ListItemIcon>
-                <ListItemText primary="Insights" />
+                <ListItemText primary="Analytics" />
               </ListItem>
 
               {/* Contacts */}
