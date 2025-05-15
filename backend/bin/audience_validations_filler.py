@@ -267,13 +267,12 @@ async def complete_validation(db_session: Session, aud_smart_id: int, connection
 async def aud_email_validation(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
     try:
         message_body = json.loads(message.body)
+        logging.info('Received message: %s', message_body)
         user_id = message_body.get("user_id")
         aud_smart_id = message_body.get("aud_smart_id")
         validation_params = message_body.get("validation_params")
         recency_personal_days = 0
-        recency_business_days = 0
-        
-        logging.info(f"Processed email validation for aud_smart_id {aud_smart_id}.")    
+        recency_business_days = 0 
 
         try:
             priority_record = (
@@ -325,7 +324,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                             break
                                         
                                 enrichment_users = get_enrichment_users(db_session, validation_type, aud_smart_id, column_name)
-                                logging.info(f"column_name {column_name}")
+                                logging.info(f"validation by {column_name}")
                                 logging.info(f"count person which will processed validation {len(enrichment_users)}")
 
                                 if not enrichment_users:
