@@ -7,6 +7,7 @@ import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { updatepasswordStyles } from './updatepasswordStyles';
 import { showErrorToast, showToast } from '../../../components/ToastNotification';
+import { fetchUserData } from "@/services/meService";
 
 const ForgotPassword: React.FC = () => {
   const router = useRouter();
@@ -14,6 +15,9 @@ const ForgotPassword: React.FC = () => {
   const token = searchParams.get('token');
 
   useEffect(() => {
+    if (token) {
+      localStorage.setItem("token", token);
+    }
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = 'auto';
@@ -109,11 +113,7 @@ const ForgotPassword: React.FC = () => {
         const response = await axiosInstance.post('update-password', {
           confirm_password: formValues.confirmPassword,
             password: formValues.password,
-            
-          }, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }});
+          });
 
       if (response.status === 200) {
         const responseData = response.data;
@@ -123,6 +123,7 @@ const ForgotPassword: React.FC = () => {
             case "PASSWORD_UPDATED_SUCCESSFULLY":
               showToast("Password update successfuly!");
               router.push('/signin');
+              await fetchUserData();
               break;
 
             case "PASSWORD_DO_NOT_MATCH":
