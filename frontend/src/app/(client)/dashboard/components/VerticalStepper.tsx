@@ -68,20 +68,20 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
               sx={{
                 color:
                   step.status === "active"
-                    ? "rgba(56, 152, 252, 1)"
+                    ? "rgba(56, 152, 252, 1) !important"
                     : step.status === "completed"
-                    ? "rgba(0, 0, 0, 1)"
-                    : "rgba(82, 82, 82, 1)",
+                    ? "rgba(0, 0, 0, 1) !important"
+                    : "rgba(82, 82, 82, 1) !important",
                 "& .MuiStepLabel-label": {
                   fontFamily: "Nunito Sans",
                   fontSize: "14px",
                   fontWeight: 400,
                   color:
                     step.status === "active"
-                      ? "rgba(56, 152, 252, 1)"
+                      ? "rgba(56, 152, 252, 1) !important"
                       : step.status === "completed"
-                      ? "rgba(0, 0, 0, 1)" // Чёрный
-                      : "rgba(82, 82, 82, 1)", // Серый
+                      ? "rgba(0, 0, 0, 1) !important" // Чёрный
+                      : "rgba(82, 82, 82, 1) !important", // Серый
                 },
               }}
             >

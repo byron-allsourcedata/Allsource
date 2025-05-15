@@ -1,15 +1,15 @@
 "use client";
 import { Box, Grid, Typography, Button } from "@mui/material";
 import Image from "next/image";
-import axiosInterceptorInstance from "../../../../axios/axiosInterceptorInstance";
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios, { AxiosError } from "axios";
-import { useSlider } from "../../../../context/SliderContext";
+import { useSlider } from "@/context/SliderContext";
 import React, { useEffect, useState, useMemo } from "react";
 import ManualPopup from "../components/ManualPopup";
 import GoogleTagPopup from "../components/GoogleTagPopup";
 import CRMPopup from "./CMSPopup";
-import CustomizedProgressBar from "../../../../components/CustomizedProgressBar";
-import CustomTooltip from "../../../../components/customToolTip";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import CustomTooltip from "@/components/customToolTip";
 import { showErrorToast } from "@/components/ToastNotification";
 
 interface CmsData {
@@ -26,6 +26,8 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
   const { setShowSlider } = useSlider();
   const [isLoading, setIsLoading] = useState(false);
   const [showManualInline, setShowManualInline] = useState(false);
+  const [showGoogleInline, setShowGoogleInline] = useState(false);
+  const [showCMSInline, setShowCMSInline] = useState(false);
 
   const installManually = async () => {
     if (showManualInline) {
@@ -35,6 +37,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
     }
 
     onInstallSelected("manual");
+    setShowGoogleInline(false);
     try {
       setIsLoading(true);
       const response = await axiosInterceptorInstance.get(
@@ -64,6 +67,11 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
   };
 
   const installGoogleTag = async () => {
+    if (showGoogleInline) {
+      setShowGoogleInline(false);
+      onInstallSelected(null);
+      return;
+    }
     onInstallSelected("google");
     try {
       setShowManualInline(false);
@@ -72,6 +80,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         "/install-pixel/google-tag"
       );
       setGoogleOpen(true);
+      setShowGoogleInline(true);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
         if (error.response.data.status === "NEED_BOOK_CALL") {
@@ -238,9 +247,28 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                 sourcePlatform === "big_commerce"
               }
             >
-              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
-                <Image src={'/install_manually.svg'} alt="Install Manually" width={24} height={24} />
-                <CustomTooltip title={"Manually install to have full control over setup and configuration."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
+              <Box
+                sx={{
+                  display: "flex",
+                  width: "100%",
+                  justifyContent: "space-between",
+                  alignItems: "space-between",
+                  flexDirection: "row",
+                }}
+              >
+                <Image
+                  src={"/install_manually.svg"}
+                  alt="Install Manually"
+                  width={24}
+                  height={24}
+                />
+                <CustomTooltip
+                  title={
+                    "Manually install to have full control over setup and configuration."
+                  }
+                  linkText="Learn more"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                />
               </Box>
               <Typography className="second-sub-title" sx={typographyStyles}>
                 Install Manually
@@ -268,15 +296,34 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                 sourcePlatform === "big_commerce"
               }
             >
-              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
-                <Image src={'/install_gtm.svg'} className="icon-img" alt="Install on Google Tag Manager" width={24} height={24} />
-                <CustomTooltip title={"Quickly integrate using Google Tag Manager for seamless setup."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
+              <Box
+                sx={{
+                  display: "flex",
+                  width: "100%",
+                  justifyContent: "space-between",
+                  alignItems: "space-between",
+                  flexDirection: "row",
+                }}
+              >
+                <Image
+                  src={"/install_gtm.svg"}
+                  className="icon-img"
+                  alt="Install on Google Tag Manager"
+                  width={24}
+                  height={24}
+                />
+                <CustomTooltip
+                  title={
+                    "Quickly integrate using Google Tag Manager for seamless setup."
+                  }
+                  linkText="Learn more"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                />
               </Box>
               <Typography className="second-sub-title" sx={typographyGoogle}>
                 Install on Google Tag Manager
               </Typography>
             </Button>
-            <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
           </Grid>
           <Grid item xs={12} md={4}>
             <Button
@@ -353,12 +400,6 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                 </Typography>
               )}
             </Button>
-            <CRMPopup
-              open={opencrm}
-              handleClose={handleCRMClose}
-              pixelCode={cmsData.manual || ""}
-              pixel_client_id={cmsData.pixel_client_id || ""}
-            />
           </Grid>
         </Box>
         {showManualInline && (
@@ -368,6 +409,15 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
             pixelCode={pixelCode}
           />
         )}
+        {showGoogleInline && (
+          <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
+        )}
+        <CRMPopup
+          open={opencrm}
+          handleClose={handleCRMClose}
+          pixelCode={cmsData.manual || ""}
+          pixel_client_id={cmsData.pixel_client_id || ""}
+        />
       </Grid>
       {isLoading && (
         <Box

@@ -16,6 +16,7 @@ import DomainSelector from "@/app/(client)/dashboard/components/DomainSelector";
 
 const GettingStartedSection: React.FC = () => {
   const [selectedDomain, setSelectedDomain] = useState("");
+  const [selectedMethod, setSelectedMethod] = useState<string | null>("");
   const [stepData, setStepData] = useState<StepConfig[]>([
     {
       label: "Choose a domain",
@@ -64,34 +65,58 @@ const GettingStartedSection: React.FC = () => {
 
   const defaultStepIcons = [
     <DomainVerificationOutlinedIcon
+      key="domain-verification"
       sx={{ color: "white", fontSize: "17px" }}
     />,
-    <OpenInBrowserOutlinedIcon sx={{ color: "white", fontSize: "17px" }} />,
-    <VerifiedIcon sx={{ color: "white", fontSize: "17px" }} />,
+    <OpenInBrowserOutlinedIcon
+      key="open-in-browser"
+      sx={{ color: "white", fontSize: "17px" }}
+    />,
+    <VerifiedIcon key="verified" sx={{ color: "white", fontSize: "17px" }} />,
   ];
 
   const handleInstallSelected = (
     method: "manual" | "google" | "cms" | null
   ) => {
-    const newStepData: StepConfig[] = [
-      {
-        label: "Choose a domain",
-        status: "completed",
-        icon: defaultStepIcons[0],
-      },
-      {
-        label: "Select Installation Method",
-        status: "completed",
-        icon: defaultStepIcons[1],
-      },
-      {
-        label: "Verify integration",
-        status: method === null ? "default" : "active",
-        icon: defaultStepIcons[2],
-      },
-    ];
-
-    setStepData(newStepData);
+    if (method === null) {
+      const newStepData: StepConfig[] = [
+        {
+          label: "Choose a domain",
+          status: "completed",
+          icon: defaultStepIcons[0],
+        },
+        {
+          label: "Select Installation Method",
+          status: "active",
+          icon: defaultStepIcons[1],
+        },
+        {
+          label: "Verify integration",
+          status: "default",
+          icon: defaultStepIcons[2],
+        },
+      ];
+      setStepData(newStepData);
+    } else {
+      const newStepData: StepConfig[] = [
+        {
+          label: "Choose a domain",
+          status: "completed",
+          icon: defaultStepIcons[0],
+        },
+        {
+          label: "Select Installation Method",
+          status: "completed",
+          icon: defaultStepIcons[1],
+        },
+        {
+          label: "Verify integration",
+          status: "active",
+          icon: defaultStepIcons[2],
+        },
+      ];
+      setStepData(newStepData);
+    }
   };
 
   return (
@@ -100,14 +125,10 @@ const GettingStartedSection: React.FC = () => {
         <Typography
           variant="h4"
           component="h1"
-          className="heading-text"
+          className="first-sub-title"
           sx={dashboardStyles.title}
         >
-          Let&apos;s Get Started!
-        </Typography>
-        <Typography className="table-data" sx={dashboardStyles.description}>
-          Install our pixel on your website to start capturing anonymous visitor
-          data on your store.
+          Install Your Pixel
         </Typography>
         <VerticalStepper steps={stepData} />
         <DomainSelector
@@ -115,11 +136,14 @@ const GettingStartedSection: React.FC = () => {
             setSelectedDomain(domain.domain);
           }}
         />
-        <PixelInstallation
-          onInstallSelected={(method) => {
-            handleInstallSelected(method);
-          }}
-        />
+        {selectedDomain !== "" && (
+          <PixelInstallation
+            onInstallSelected={(method) => {
+              handleInstallSelected(method);
+            }}
+          />
+        )}
+
         <VerifyPixelIntegration domain={selectedDomain} />
         <RevenueTracking />
       </Grid>
@@ -136,7 +160,7 @@ const GettingStartedSection: React.FC = () => {
           className="first-sub-title"
           sx={dashboardStyles.title}
         >
-          Install Your Pixel {selectedDomain}
+          Install Your Pixel
           {/* <CustomTooltip
             title="Boost engagement and reduce cart abandonment with personalized messages tailored for your visitors."
             linkText="Learn more"
@@ -149,12 +173,19 @@ const GettingStartedSection: React.FC = () => {
               setSelectedDomain(domain.domain);
             }}
           />
-          <PixelInstallation
-            onInstallSelected={(method) => {
-              handleInstallSelected(method);
-            }}
-          />
-          <VerifyPixelIntegration domain={selectedDomain} />
+          {selectedDomain !== "" && (
+            <PixelInstallation
+              onInstallSelected={(method) => {
+                handleInstallSelected(method);
+                setSelectedMethod(method);
+              }}
+            />
+          )}
+          {selectedDomain !== "" &&
+            selectedMethod !== "" &&
+            selectedMethod !== null && (
+              <VerifyPixelIntegration domain={selectedDomain} />
+            )}
         </Box>
       </Grid>
 
