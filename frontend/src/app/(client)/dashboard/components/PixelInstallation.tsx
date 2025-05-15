@@ -37,8 +37,10 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
     }
 
     onInstallSelected("manual");
-    setShowGoogleInline(false);
+
     try {
+      setShowGoogleInline(false);
+      setShowCMSInline(false);
       setIsLoading(true);
       const response = await axiosInterceptorInstance.get(
         "/install-pixel/manually"
@@ -74,6 +76,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
     }
     onInstallSelected("google");
     try {
+      setShowCMSInline(false);
       setShowManualInline(false);
       setIsLoading(true);
       const response = await axiosInterceptorInstance.get(
@@ -134,13 +137,21 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
   const handleCRMClose = () => setCMSOpen(false);
 
   const installCMS = async () => {
+    if (showCMSInline) {
+      setShowCMSInline(false);
+      onInstallSelected(null);
+      return;
+    }
+
     onInstallSelected("cms");
     try {
+      setShowGoogleInline(false);
       setShowManualInline(false);
       setIsLoading(true);
       const response = await axiosInterceptorInstance.get("/install-pixel/cms");
       setCmsData(response.data);
       setCMSOpen(true);
+      setShowCMSInline(true);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         const { status, data } = error.response;
@@ -282,7 +293,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
               fullWidth
               onClick={installGoogleTag}
               sx={{
-                ...buttonGoogle,
+                ...buttonGoogle(showGoogleInline),
                 ...((sourcePlatform === "shopify" ||
                   sourcePlatform === "big_commerce") && {
                   color: "grey",
@@ -330,7 +341,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
               variant="outlined"
               fullWidth
               onClick={installCMS}
-              sx={buttonStyles(false)}
+              sx={buttonStyles(showCMSInline)}
             >
               <Box
                 sx={{
@@ -412,12 +423,14 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         {showGoogleInline && (
           <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
         )}
-        <CRMPopup
-          open={opencrm}
-          handleClose={handleCRMClose}
-          pixelCode={cmsData.manual || ""}
-          pixel_client_id={cmsData.pixel_client_id || ""}
-        />
+        {showCMSInline && (
+          <CRMPopup
+            open={opencrm}
+            handleClose={handleCRMClose}
+            pixelCode={cmsData.manual || ""}
+            pixel_client_id={cmsData.pixel_client_id || ""}
+          />
+        )}
       </Grid>
       {isLoading && (
         <Box
@@ -456,19 +469,21 @@ const buttonStyles = (showManualInline: boolean) => ({
   },
 });
 
-const buttonGoogle = {
-  backgroundColor: "#fff",
+const buttonGoogle = (showGoogleInline: boolean) => ({
+  backgroundColor: showGoogleInline ? "rgba(240, 242, 245, 1)" : "#fff",
   display: "flex",
   flexDirection: "column",
   alignItems: "self-start",
   padding: "0.875rem",
   borderColor: "rgba(228, 228, 228, 1)",
-  border: "1px solid rgba(228, 228, 228, 1)",
+  border: showGoogleInline
+    ? "1px solid rgba(56, 152, 252, 1)"
+    : "1px solid rgba(228, 228, 228, 1)",
   width: "100%",
   "@media (max-width: 1199px)": {
     maxHeight: "82px",
   },
-};
+});
 
 const typographyStyles = {
   textTransform: "none",

@@ -59,25 +59,29 @@ const typographyStyles = {
   paddingBottom: "0.75em",
 };
 
-const buttonStyles = {
-  backgroundColor: "#fff",
+const buttonStyles = (platform?: boolean) => ({
+  backgroundColor: platform ? "rgba(240, 242, 245, 1)" : "#fff",
   display: "flex",
   flexDirection: "column",
   padding: "1em",
   borderColor: "rgba(228, 228, 228, 1)",
-  border: "1px solid rgba(228, 228, 228, 1)",
+  border: platform
+    ? "1px solid rgba(56, 152, 252, 1)"
+    : "1px solid rgba(228, 228, 228, 1)",
   width: "100%",
-};
+});
 
-const buttonGoogle = {
-  backgroundColor: "#fff",
+const buttonGoogle = (platform?: boolean) => ({
+  backgroundColor: platform ? "rgba(240, 242, 245, 1)" : "#fff",
   display: "flex",
   flexDirection: "column",
   padding: "1em 2em 1.5em 1em",
   borderColor: "rgba(228, 228, 228, 1)",
-  border: "1px solid rgba(228, 228, 228, 1)",
+  border: platform
+    ? "1px solid rgba(56, 152, 252, 1)"
+    : "1px solid rgba(228, 228, 228, 1)",
   width: "100%",
-};
+});
 
 const typographyGoogle = {
   textTransform: "none",
@@ -384,7 +388,7 @@ const Popup: React.FC<PopupProps> = ({
               fullWidth
               onClick={() => handleButtonClick("Shopify")}
               sx={{
-                ...buttonGoogle,
+                ...buttonGoogle(selectedCMS === "Shopify"),
                 "@media (max-width: 600px)": {
                   width: "90%",
                   display: "flex",
@@ -426,7 +430,7 @@ const Popup: React.FC<PopupProps> = ({
                   fullWidth
                   onClick={() => handleButtonClick("WordPress")}
                   sx={{
-                    ...buttonStyles,
+                    ...buttonStyles(selectedCMS === "WordPress"),
                     "@media (max-width: 600px)": {
                       width: "90%",
                       display: "flex",
@@ -469,7 +473,7 @@ const Popup: React.FC<PopupProps> = ({
                   fullWidth
                   onClick={() => handleButtonClick("Bigcommerce")}
                   sx={{
-                    ...buttonStyles,
+                    ...buttonStyles(selectedCMS === "Bigcommerce"),
                     "@media (max-width: 600px)": {
                       width: "90%",
                       display: "flex",
@@ -507,39 +511,6 @@ const Popup: React.FC<PopupProps> = ({
                 height: "100%",
               }}
             >
-              {sourcePlatform !== "shopify" &&
-                sourcePlatform !== "big_commerce" && (
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "flex-start",
-                      gap: 1,
-                      pt: 1,
-                    }}
-                  >
-                    <Button
-                      onClick={handleBackClick}
-                      sx={{
-                        marginTop: "1em",
-                        padding: 0,
-                        minWidth: "auto",
-                        width: "auto",
-                      }}
-                    >
-                      <ArrowBackIcon
-                        sx={{ color: "rgba(56, 152, 252, 1)", padding: 0 }}
-                      />
-                    </Button>
-                    <Typography
-                      className="table-data"
-                      sx={{ ...subtext, marginTop: "0.75em" }}
-                    >
-                      Follow the instructions to install in Maximiz
-                    </Typography>
-                  </Box>
-                )}
               {selectedCMS === "Shopify" ? (
                 <>
                   <Box
@@ -754,7 +725,7 @@ const Popup: React.FC<PopupProps> = ({
                         justifyContent: "start",
                       }}
                     >
-                      <Image src="/1.svg" alt="1" width={28} height={28} />
+                      <Image src="/2.svg" alt="2" width={20} height={20} />
                       <Typography
                         className="first-sub-title"
                         sx={{
@@ -765,7 +736,7 @@ const Popup: React.FC<PopupProps> = ({
                           "@media (max-width: 600px)": { textAlign: "left" },
                         }}
                       >
-                        Add our offical Maximiz pixel plugin to your Wordpress
+                        Add our offical Allsource pixel plugin to your Wordpress
                         site.
                       </Typography>
                     </Box>
@@ -812,7 +783,7 @@ const Popup: React.FC<PopupProps> = ({
                       }}
                     >
                       <Box sx={{ paddingBottom: 11.5 }}>
-                        <Image src="/2.svg" alt="2" width={28} height={28} />
+                        <Image src="/3.svg" alt="3" width={20} height={20} />
                       </Box>
                       <Typography
                         className="first-sub-title"
@@ -882,7 +853,7 @@ const Popup: React.FC<PopupProps> = ({
                         justifyContent: "start",
                       }}
                     >
-                      <Image src="/3.svg" alt="3" width={28} height={28} />
+                      <Image src="/4.svg" alt="4" width={20} height={20} />
                       <Typography
                         className="first-sub-title"
                         sx={{
@@ -942,7 +913,7 @@ const Popup: React.FC<PopupProps> = ({
                           justifyContent: "start",
                         }}
                       >
-                        <Image src="/1.svg" alt="1" width={28} height={28} />
+                        <Image src="/2.svg" alt="2" width={20} height={20} />
                         <Typography
                           className="first-sub-title"
                           sx={{
@@ -965,7 +936,7 @@ const Popup: React.FC<PopupProps> = ({
                         width: "100%",
                         justifyContent: "center",
                         margin: 0,
-                        pl: 1,
+                        pl: 4.25,
                       }}
                     >
                       <TextField
@@ -996,7 +967,7 @@ const Popup: React.FC<PopupProps> = ({
                           justifyContent: "start",
                         }}
                       >
-                        <Image src="/2.svg" alt="2" width={28} height={28} />
+                        <Image src="/3.svg" alt="3" width={20} height={20} />
                         <Typography
                           className="first-sub-title"
                           sx={{
@@ -1021,6 +992,7 @@ const Popup: React.FC<PopupProps> = ({
                         justifyContent: "flex-end",
                         maxHeight: "100%",
                         padding: "0em 1em",
+                        pl: 4.25,
                       }}
                     >
                       {sourcePlatform === "big_commerce" &&
