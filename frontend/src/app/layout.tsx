@@ -8,6 +8,7 @@ import ToastNotificationContainer from '../components/ToastNotification';
 import 'react-toastify/dist/ReactToastify.css';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { TrialProvider } from '../context/TrialProvider';
+import { HintsProvider } from '../context/HintsContext';
 import { SSEProvider } from '../context/SSEContext';
 import { IntegrationProvider } from "@/context/IntegrationContext";
 import { usePathname } from "next/navigation";
@@ -49,11 +50,13 @@ export default function RootLayout({
         <GoogleOAuthProvider clientId={googleClientId as string}>
           <SSEProvider>
             <TrialProvider>
-              <UserProvider>
-                  <IntegrationProvider>
-                    {children}
-                  </IntegrationProvider>
-              </UserProvider>
+              <HintsProvider>
+                <UserProvider>
+                    <IntegrationProvider>
+                      {children}
+                    </IntegrationProvider>
+                </UserProvider>
+              </HintsProvider>
             </TrialProvider>
           </SSEProvider>
         </GoogleOAuthProvider>
