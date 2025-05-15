@@ -610,7 +610,7 @@ const CreateLookalikePage: React.FC = () => {
                 
                 {calculatedResults && currentStep >= 2 && (
                   <>
-                  <Box hidden={currentStep !== 2}>
+                  <Box hidden={currentStep !== 2} sx={{my: 2}}>
                     <AudienceFieldsSelector
                       personalData={personalData}
                       financialData={financialData}
@@ -628,10 +628,11 @@ const CreateLookalikePage: React.FC = () => {
                       // onRealEstateChange={setRealEstateKeys}
                       handleNextStep={handleNextStep}
                       canProcessed={canProceed}
+                      
                     />
                   </Box>
                   {/* Calculation results block rendered with flex layout */}
-                  <Box hidden={currentStep !== 3}>
+                  <Box hidden={currentStep !== 3} sx={{my: 2}}>
                     <OrderFieldsStep
                       fields={dndFields}
                       handlePrevStep={handlePrevStep}
