@@ -6,6 +6,7 @@ import { useState, useRef } from "react";
 import { smartAudiences } from "../smartAudiences";
 import SmartAudiencesContacts from "./components/SmartAudienceContacts";
 import SmartAudiencesTarget from "./components/SmartAudienceTarget";
+import CustomTooltip from "@/components/customToolTip";
 import { useFetchAudienceData } from "@/hooks/useFetchAudienceData";
 
 
@@ -28,32 +29,32 @@ const SmartAudiencesBuilder: React.FC = () => {
         const useCase = event.target.value
         setUseCaseType(useCase);
         if (["Google", "Bing", "Meta"].includes(useCase)) {
-            setTimeout( () => {
+            setTimeout(() => {
                 scrollToBlock(block2Ref)
-              }, 0)
+            }, 0)
         }
         else {
-            setTimeout( () => {
+            setTimeout(() => {
                 scrollToBlock(block5Ref)
-              }, 0)
+            }, 0)
         }
     };
 
     const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {
         if (blockRef.current) {
-          blockRef.current.scrollIntoView({ behavior: "smooth" });
+            blockRef.current.scrollIntoView({ behavior: "smooth" });
         }
-      };
+    };
 
     const { sourceData, lookalikeData, loading } = useFetchAudienceData();
 
-    if(loading){
-        return(
-            <Box sx={{display: 'flex', flexDirection: 'column', gap: 2,  mt:1, alignItems: 'center'}}>
+    if (loading) {
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, alignItems: 'center' }}>
                 <CustomizedProgressBar />
-                <Box sx={{alignItems: 'end', display:'flex', width: '73%', justifyContent: 'start'}}><Skeleton variant="text" width={'12vw'} sx={{ fontSize: '1.75rem', alignItems:'end'}} /></Box>
-            
-            <Skeleton variant="rectangular" width={'63vw'} height={'20vh'} sx={{borderRadius: '6px'}}/>
+                <Box sx={{ alignItems: 'end', display: 'flex', width: '73%', justifyContent: 'start' }}><Skeleton variant="text" width={'12vw'} sx={{ fontSize: '1.75rem', alignItems: 'end' }} /></Box>
+
+                <Skeleton variant="rectangular" width={'63vw'} height={'20vh'} sx={{ borderRadius: '6px' }} />
             </Box>
         )
     }
@@ -68,6 +69,7 @@ const SmartAudiencesBuilder: React.FC = () => {
                         <Box sx={{ display: 'flex', marginTop: 2, flexWrap: 'wrap', minWidth: '100%', gap: '15px' }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                 <Typography className='first-sub-title'>Smart Audience Builder</Typography>
+                                <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder" />
                             </Box>
                         </Box>
                         <Box ref={block1Ref} sx={{ display: "flex", minWidth: '100%', flexDirection: "column", gap: 2, flexGrow: 1, position: "relative", flexWrap: "wrap", border: "1px solid rgba(228, 228, 228, 1)", borderRadius: "6px", padding: "20px", mt: 2 }}>
@@ -77,7 +79,10 @@ const SmartAudiencesBuilder: React.FC = () => {
                                 </Box>
                             )}
                             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                                <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your Use Case</Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography sx={{ fontFamily: "Nunito Sans", fontSize: "16px", fontWeight: 500 }}>Select your Use Case</Typography>
+                                    <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder" />
+                                </Box>
                                 <Typography sx={{ fontFamily: "Roboto", fontSize: "12px", color: "rgba(95, 99, 104, 1)" }}>Choose what you would like to use it for.</Typography>
                             </Box>
                             <FormControl variant="outlined">

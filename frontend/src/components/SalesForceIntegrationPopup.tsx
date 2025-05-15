@@ -82,7 +82,7 @@ const SalesForceIntegrationPopup = ({ handleClose, open, onSave, initApiKey, box
                         Connect to SalesForce
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce"
                             target="_blank"
                             rel="noopener noreferrer"
                             sx={{

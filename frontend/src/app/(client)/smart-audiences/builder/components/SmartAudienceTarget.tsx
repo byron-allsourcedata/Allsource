@@ -32,6 +32,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import Image from "next/image";
 import ExpandableFilter from "./ValidationFilters";
+import CustomTooltip from "@/components/customToolTip";
 import { useRouter } from "next/navigation";
 import CalculationPopup from "./CalculationPopup";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -199,7 +200,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   const handleTargetAudienceChange = (value: string) => {
     setTargetAudience(value);
     setValue(0);
-    setTimeout( () => {
+    setTimeout(() => {
       scrollToBlock(block6Ref)
     }, 0)
   };
@@ -210,7 +211,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
   const handleSelectSourceType = (event: SelectChangeEvent<string>) => {
     setSourceType(event.target.value);
-    setTimeout( () => {
+    setTimeout(() => {
       scrollToBlock(block7Ref)
     }, 0)
   };
@@ -315,7 +316,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
           setAudienceSize(null);
         } else {
           setAudienceSize(response.data);
-          setTimeout( () => {
+          setTimeout(() => {
             scrollToBlock(block8Ref)
           }, 100)
         }
@@ -927,13 +928,13 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
         <ExpandableFilter
           block8Ref={block8Ref}
           targetAudience={targetAudience}
-          scrollToNewBlock={ () => {
-            setTimeout( () => {
+          scrollToNewBlock={() => {
+            setTimeout(() => {
               scrollToBlock(block9Ref)
             }, 0)
           }}
-          scrollToEveryOtherBlock={ () => {
-            setTimeout( () => {
+          scrollToEveryOtherBlock={() => {
+            setTimeout(() => {
               scrollToBlock(block10Ref)
             }, 0)
           }}
@@ -1200,7 +1201,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   </Typography>
                   <Typography>{validationCost} Credits</Typography>
                   {typeof availableCredits === "number" &&
-                  typeof validationCost === "number" ? (
+                    typeof validationCost === "number" ? (
                     availableCredits >= validationCost ? (
                       <Typography
                         className="form-input"
@@ -1489,14 +1490,18 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                     width={15}
                     height={15}
                   />
-                  <Typography
-                    sx={{
-                      ...smartAudiences.textButton,
-                      color: "rgba(255, 255, 255, 1)",
-                    }}
-                  >
-                    Generate Smart Audience
-                  </Typography>
+
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography
+                      sx={{
+                        ...smartAudiences.textButton,
+                        color: "rgba(255, 255, 255, 1)",
+                      }}
+                    >
+                      Generate Smart Audience
+                    </Typography>
+                    <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder" />
+                  </Box>
                 </Box>
               </Button>
             </Box>
@@ -1510,10 +1515,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
         onCancel={() => setOpenConfrimValidatePopup(false)}
         scrollToNewBlock={
           () => {
-            setTimeout( () => {
+            setTimeout(() => {
               scrollToBlock(block10Ref)
             }, 0)
-        }}
+          }}
         onConfirm={handleConfirmValidatePopup}
         CalculationData={{
           validationCost: validationCost ?? 0,

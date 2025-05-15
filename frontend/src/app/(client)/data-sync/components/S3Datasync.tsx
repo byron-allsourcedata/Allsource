@@ -520,13 +520,13 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({ open, onClose, data, isEdit
                         Connect to S3
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        {/* <Link href="#" className="main-text" sx={{
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
                             color: 'rgba(56, 152, 252, 1)',
                             textDecorationColor: 'rgba(56, 152, 252, 1)'
-                        }}>Tutorial</Link> */}
+                        }}>Tutorial</Link>
                         <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>

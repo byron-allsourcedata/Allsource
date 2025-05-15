@@ -149,14 +149,11 @@ class SalesForceIntegrationsService:
         return hashlib.md5(unique_value.encode('utf-8')).hexdigest()
 
     def bulk_upsert_leads(self, profiles: list[dict], instance_url: str, access_token: str) -> str:
-        try:
-            for profile in profiles:
-                profile['External_Contact_ID__c'] = profile.get('Email')
-                    
+        try:        
             job_payload = {
                 "object": "Lead",
                 "operation": "upsert",
-                "externalIdFieldName": 'External_Contact_ID__c',
+                "externalIdFieldName": "Id",
                 "contentType": "CSV"
             }
             base_url = f"{instance_url}/services/data/v59.0/jobs/ingest"
@@ -167,7 +164,6 @@ class SalesForceIntegrationsService:
             job_resp = self.__handle_request(method='POST', url=base_url, json=job_payload, headers=headers)
             job_resp.raise_for_status()
             job_id = job_resp.json()['id']
-
             csv_data = self._to_csv(profiles)
             upload_headers = {
                 'Authorization': headers['Authorization'],
@@ -314,6 +310,7 @@ class SalesForceIntegrationsService:
             return None
 
         result = {
+            'Id': str(enrichment_user.id),
             'Email': main_email,
             'FirstName': first_name,
             'LastName': last_name

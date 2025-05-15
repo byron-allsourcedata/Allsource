@@ -1151,7 +1151,7 @@ const Integrations = () => {
                   <CustomTooltip
                     title={"Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."}
                     linkText="Learn more"
-                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/integrations"
                   />
                 </Box>
               </Box>

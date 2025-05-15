@@ -21,6 +21,7 @@ import {
   Grid,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import CustomTooltip from "@/components/customToolTip";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import AudienceSizeSelector from "@/app/(client)/lookalikes/components/SizeSelector";
@@ -55,20 +56,20 @@ const CreateLookalikePage: React.FC = () => {
   const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
   const [calculatedResults, setCalculatedResults] =
     useState<CalculationResponse | null>(null);
-    
-  const [personalData,  setPersonalData]  = useState<PersonalResults>({} as PersonalResults);
-  const [financialData,  setFinancialData]  = useState<FinancialResults>({} as FinancialResults);
-  const [lifestylesData,setLifestylesData] = useState<LifestylesResults>({} as LifestylesResults);
-  const [voterData,     setVoterData]      = useState<VoterResults>({} as VoterResults);
-  const [professionalProfileData,     setProfessionalProfileData]      = useState<ProfessionalProfileResults>({} as ProfessionalProfileResults);
-  const [employmentHistoryData,     setEmploymentHistoryData]      = useState<EmploymentHistoryResults>({} as EmploymentHistoryResults);
+
+  const [personalData, setPersonalData] = useState<PersonalResults>({} as PersonalResults);
+  const [financialData, setFinancialData] = useState<FinancialResults>({} as FinancialResults);
+  const [lifestylesData, setLifestylesData] = useState<LifestylesResults>({} as LifestylesResults);
+  const [voterData, setVoterData] = useState<VoterResults>({} as VoterResults);
+  const [professionalProfileData, setProfessionalProfileData] = useState<ProfessionalProfileResults>({} as ProfessionalProfileResults);
+  const [employmentHistoryData, setEmploymentHistoryData] = useState<EmploymentHistoryResults>({} as EmploymentHistoryResults);
 
   const [personalKeys, setPersonalKeys] = useState<(keyof PersonalResults)[]>([]);
   const [financialKeys, setFinancialKeys] = useState<(keyof FinancialResults)[]>([]);
   const [lifestylesKeys, setLifestylesKeys] = useState<(keyof LifestylesResults)[]>([]);
   const [voterKeys, setVoterKeys] = useState<(keyof VoterResults)[]>([]);
-  const [professionalProfileKeys,     setProfessionalProfileKeys]      = useState<(keyof ProfessionalProfileResults)[]>([]);
-  const [employmentHistoryKeys,     setEmploymentHistoryKeys]      = useState<(keyof EmploymentHistoryResults)[]>([]);
+  const [professionalProfileKeys, setProfessionalProfileKeys] = useState<(keyof ProfessionalProfileResults)[]>([]);
+  const [employmentHistoryKeys, setEmploymentHistoryKeys] = useState<(keyof EmploymentHistoryResults)[]>([]);
 
   const [dndFields, setDndFields] = useState<Field[]>([]);
   const initialFields = useMemo<Field[]>(() => {
@@ -81,7 +82,7 @@ const CreateLookalikePage: React.FC = () => {
         name: String(k),
         value: `${src[k]}`,
       }));
-  
+
     return [
       ...toFields(personalKeys, personalData),
       ...toFields(financialKeys, financialData),
@@ -174,18 +175,18 @@ const CreateLookalikePage: React.FC = () => {
         setCalculatedResults(response.data);
         const b2c = response.data.audience_feature_importance_b2c;
         const b2b = response.data.audience_feature_importance_b2b;
-        setPersonalData(b2c.personal  as any);
-        setFinancialData(b2c.financial  as any);
+        setPersonalData(b2c.personal as any);
+        setFinancialData(b2c.financial as any);
         setLifestylesData(b2c.lifestyle as any);
-        setVoterData(b2c.voter          as any);
-        setProfessionalProfileData(b2b.professional_profile          as any);
-        setEmploymentHistoryData(b2b.employment_history          as any);
-        setPersonalKeys   (Object.keys(b2c.personal ) as (keyof PersonalResults)[]);
-        setFinancialKeys  (Object.keys(b2c.financial) as (keyof FinancialResults)[]);
-        setLifestylesKeys (Object.keys(b2c.lifestyle) as (keyof LifestylesResults)[]);
-        setVoterKeys      (Object.keys(b2c.voter    ) as (keyof VoterResults)[]);
-        setProfessionalProfileKeys (Object.keys(b2b.professional_profile ) as (keyof ProfessionalProfileResults)[]);
-        setEmploymentHistoryKeys (Object.keys(b2b.employment_history ) as (keyof EmploymentHistoryResults)[]);
+        setVoterData(b2c.voter as any);
+        setProfessionalProfileData(b2b.professional_profile as any);
+        setEmploymentHistoryData(b2b.employment_history as any);
+        setPersonalKeys(Object.keys(b2c.personal) as (keyof PersonalResults)[]);
+        setFinancialKeys(Object.keys(b2c.financial) as (keyof FinancialResults)[]);
+        setLifestylesKeys(Object.keys(b2c.lifestyle) as (keyof LifestylesResults)[]);
+        setVoterKeys(Object.keys(b2c.voter) as (keyof VoterResults)[]);
+        setProfessionalProfileKeys(Object.keys(b2b.professional_profile) as (keyof ProfessionalProfileResults)[]);
+        setEmploymentHistoryKeys(Object.keys(b2b.employment_history) as (keyof EmploymentHistoryResults)[]);
         setCurrentStep(2);
       }
     } catch {
@@ -280,14 +281,14 @@ const CreateLookalikePage: React.FC = () => {
     setCurrentStep(0);
   };
 
-  const canProceed = (personalKeys.length + financialKeys.length 
-                 + lifestylesKeys.length + voterKeys.length + professionalProfileKeys.length 
-                 + employmentHistoryKeys.length) >= 3;
-  
+  const canProceed = (personalKeys.length + financialKeys.length
+    + lifestylesKeys.length + voterKeys.length + professionalProfileKeys.length
+    + employmentHistoryKeys.length) >= 3;
+
   const handleFieldsOrderChange = (newOrder: Field[]) => {
     setDndFields(newOrder);
   };
-  
+
   return (
     <Box
       sx={{
@@ -327,20 +328,22 @@ const CreateLookalikePage: React.FC = () => {
               }}
             >
               <Box sx={{ width: "100%", pt: 1, pl: 1, color: "#202124" }}>
-                <Typography
-                  variant="h1"
-                  sx={{
-                    fontFamily: "Nunito Sans",
-                    fontWeight: 600,
-                    fontSize: "16px",
-                    lineHeight: "25.92px",
-                    letterSpacing: "0%",
-                    marginBottom: 2,
-                    textAlign: "left",
-                  }}
-                >
-                  Create Lookalike
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
+                  <Typography
+                    variant="h1"
+                    sx={{
+                      fontFamily: "Nunito Sans",
+                      fontWeight: 600,
+                      fontSize: "16px",
+                      lineHeight: "25.92px",
+                      letterSpacing: "0%",
+                      textAlign: "left",
+                    }}
+                  >
+                    Create Lookalike
+                  </Typography>
+                  <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/settings" />
+                </Box>
 
                 {/* "Choose your source" block */}
                 {!preselectedUuid && currentStep === 0 && (
@@ -553,18 +556,20 @@ const CreateLookalikePage: React.FC = () => {
                       marginTop: 2,
                     }}
                   >
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        fontWeight: 500,
-                        fontSize: "16px",
-                        lineHeight: "22.5px",
-                        marginBottom: 2,
-                      }}
-                    >
-                      Select Audience Size
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontFamily: "Nunito Sans",
+                          fontWeight: 500,
+                          fontSize: "16px",
+                          lineHeight: "22.5px",
+                        }}
+                      >
+                        Select Audience Size
+                      </Typography>
+                      <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder" />
+                    </Box>
                     <AudienceSizeSelector
                       onSelectSize={handleSelectSize}
                       selectedSize={selectedSize}
@@ -605,43 +610,43 @@ const CreateLookalikePage: React.FC = () => {
                       </Typography>
                     </Button>
                   </Box>
-                ) 
+                )
                 }
-                
+
                 {calculatedResults && currentStep >= 2 && (
                   <>
-                  <Box hidden={currentStep !== 2}>
-                    <AudienceFieldsSelector
-                      personalData={personalData}
-                      financialData={financialData}
-                      lifestylesData={lifestylesData}
-                      voterData={voterData}
-                      professionalProfileData={professionalProfileData}
-                      employmentHistoryData={employmentHistoryData}
-                      // realEstateData={realEstateData}
-                      onPersonalChange={setPersonalKeys}
-                      onFinancialChange={setFinancialKeys}
-                      onLifestylesChange={setLifestylesKeys}
-                      onVoterChange={setVoterKeys}
-                      onProfessionalProfileChange={setProfessionalProfileKeys}
-                      onEmploymentHistoryChange={setEmploymentHistoryKeys}
-                      // onRealEstateChange={setRealEstateKeys}
-                      handleNextStep={handleNextStep}
-                      canProcessed={canProceed}
-                    />
-                  </Box>
-                  {/* Calculation results block rendered with flex layout */}
-                  <Box hidden={currentStep !== 3}>
-                    <OrderFieldsStep
-                      fields={dndFields}
-                      handlePrevStep={handlePrevStep}
-                      onOrderChange={handleFieldsOrderChange}
-                    />
-                  </Box>
+                    <Box hidden={currentStep !== 2}>
+                      <AudienceFieldsSelector
+                        personalData={personalData}
+                        financialData={financialData}
+                        lifestylesData={lifestylesData}
+                        voterData={voterData}
+                        professionalProfileData={professionalProfileData}
+                        employmentHistoryData={employmentHistoryData}
+                        // realEstateData={realEstateData}
+                        onPersonalChange={setPersonalKeys}
+                        onFinancialChange={setFinancialKeys}
+                        onLifestylesChange={setLifestylesKeys}
+                        onVoterChange={setVoterKeys}
+                        onProfessionalProfileChange={setProfessionalProfileKeys}
+                        onEmploymentHistoryChange={setEmploymentHistoryKeys}
+                        // onRealEstateChange={setRealEstateKeys}
+                        handleNextStep={handleNextStep}
+                        canProcessed={canProceed}
+                      />
+                    </Box>
+                    {/* Calculation results block rendered with flex layout */}
+                    <Box hidden={currentStep !== 3}>
+                      <OrderFieldsStep
+                        fields={dndFields}
+                        handlePrevStep={handlePrevStep}
+                        onOrderChange={handleFieldsOrderChange}
+                      />
+                    </Box>
                   </>
                 )}
 
-                
+
 
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
                 {currentStep >= 3 && (

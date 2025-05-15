@@ -653,7 +653,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                         Connect to GoogleAds
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" className="main-text" sx={{
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-googleads" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',

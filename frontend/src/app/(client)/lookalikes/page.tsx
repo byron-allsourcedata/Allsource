@@ -514,7 +514,7 @@ const CreateLookalikePage: React.FC = () => {
               }}
             >
               <Typography className="first-sub-title">Lookalikes</Typography>
-              <CustomToolTip title={'Lookalikes.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/allsource' />
+              <CustomToolTip title={'Lookalikes.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes' />
             </Box>
             <Box
               sx={{

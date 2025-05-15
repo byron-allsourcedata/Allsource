@@ -22,6 +22,7 @@ import {
 import { Box } from "@mui/system";
 import { smartAudiences } from "../../smartAudiences";
 import { useEffect, useState } from "react";
+import CustomTooltip from "@/components/customToolTip";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -109,7 +110,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
 
   const handleSelectSourceType = (event: SelectChangeEvent<string>) => {
     setSourceType(event.target.value);
-    setTimeout( () => {
+    setTimeout(() => {
       scrollToBlock(block3Ref)
     }, 0)
   };
@@ -193,7 +194,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
           setAudienceSize(null);
         } else {
           setAudienceSize(response.data);
-          setTimeout( () => {
+          setTimeout(() => {
             scrollToBlock(block4Ref)
           }, 100)
         }
@@ -304,15 +305,19 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
           }}
         >
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-            <Typography
-              sx={{
-                fontFamily: "Nunito Sans",
-                fontSize: "16px",
-                fontWeight: 500,
-              }}
-            >
-              Select your Contacts
-            </Typography>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Typography
+                sx={{
+                  fontFamily: "Nunito Sans",
+                  fontSize: "16px",
+                  fontWeight: 500,
+                }}
+              >
+                Select your Contacts
+              </Typography>
+              <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder" />
+            </Box>
             <Typography
               sx={{
                 fontFamily: "Roboto",
@@ -617,7 +622,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
           )}
         </Box>
       </Box>
-      
+
       {!showForm && selectedSources.length !== 0 && !AudienceSize && (
         <Box
           sx={{

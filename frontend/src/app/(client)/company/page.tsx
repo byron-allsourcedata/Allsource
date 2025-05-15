@@ -777,7 +777,7 @@ const Leads: React.FC = () => {
                                         <Typography className='first-sub-title'>
                                             Company list {data.length === 0 ? '' : `(${count_companies})`}
                                         </Typography>
-                                        <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/allsource' />
+                                        <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
                                     </Box>
                                     <Box sx={{
                                         display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
