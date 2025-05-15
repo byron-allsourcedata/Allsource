@@ -300,7 +300,6 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
             logging.info(f"validation_params {validation_params}")
             for value in priority_values:
                 validation, validation_type = value.split('-')
-                logging.info(f"validation - {validation} ; validation_type - {validation_type}")
                 if validation in validation_params:
                     validation_params_list = validation_params.get(validation)
                     if validation_params_list and len(validation_params_list) > 0:
@@ -312,9 +311,6 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                     
                                 if processed is True:
                                     break
-                                
-                                
-                                logging.info(f"column_name {column_name}")
                                 
                                 if not column_name:
                                     continue
@@ -329,7 +325,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                             break
                                         
                                 enrichment_users = get_enrichment_users(db_session, validation_type, aud_smart_id, column_name)
-
+                                logging.info(f"column_name {column_name}")
                                 logging.info(f"count person which will processed validation {len(enrichment_users)}")
 
                                 if not enrichment_users:

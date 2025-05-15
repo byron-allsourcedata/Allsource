@@ -286,6 +286,9 @@ async def main():
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
             durable=True,
+            arguments={
+                'x-consumer-timeout': 3600000,
+            }
         )
         await queue.consume(
                 functools.partial(process_rmq_message, connection=connection, db_session=db_session)
