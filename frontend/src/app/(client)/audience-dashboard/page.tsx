@@ -399,7 +399,6 @@ const AudienceDashboard: React.FC = () => {
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
                 let formattedKey = formatKey(key);
-                console.log(key);
                 if (/^(source|lookalike|data_sync|audience)_name$/.test(key)) {
                   formattedKey = "Name";
                 }
@@ -515,7 +514,6 @@ const AudienceDashboard: React.FC = () => {
         groupedSelectedCards.smart_audience
       );
       const dataSync = buildChainedPairs(groupedSelectedCards.data_sync);
-      console.log(sources);
 
       setChainedCards({
         sources,
