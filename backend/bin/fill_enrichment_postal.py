@@ -110,7 +110,7 @@ def read_and_fill_enrichment_postal(db_session, file_path):
                 raw_url_date=clean_date(record.get('RawUrlDate')),
                 raw_last_updated=clean_date(record.get('RawLastUpdated')),
                 created_date=clean_date(record.get('CreatedDate'))
-            ).on_conflict_do_nothing(index_elements=["asid"])
+            ).on_conflict_do_nothing()
             db_session.execute(enrichment_postal)
             db_session.commit()
                 
