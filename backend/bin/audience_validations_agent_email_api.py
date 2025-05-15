@@ -4,7 +4,6 @@ import sys
 import asyncio
 import functools
 import json
-from datetime import datetime, timedelta
 from aio_pika import IncomingMessage
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
@@ -14,8 +13,6 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
-from dateutil import parser
-from typing import Optional
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.million_verifier import MillionVerifierPersistence
 from models.audience_smarts_persons import AudienceSmartPerson
