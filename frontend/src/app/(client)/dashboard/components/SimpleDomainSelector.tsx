@@ -223,9 +223,21 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
 
   const handleSave = (domain: Domain) => {
     setLocalDomains((prev) => [...prev, domain]);
-    sessionStorage.setItem("current_domain", domain.domain);
-    onChange(domain);
 
+    sessionStorage.setItem("current_domain", domain.domain);
+
+    const meRaw = sessionStorage.getItem("me");
+    const me = meRaw ? JSON.parse(meRaw) : {};
+
+    const currentDomains: Domain[] = Array.isArray(me.domains)
+      ? me.domains
+      : [];
+    const updatedDomains = [...currentDomains, domain];
+    const updatedMe = { ...me, domains: updatedDomains };
+
+    sessionStorage.setItem("me", JSON.stringify(updatedMe));
+
+    onChange(domain);
     showToast("Successfully added domain");
     setDomainPopup(false);
     handleClose();
