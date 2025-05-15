@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+from sqlalchemy.dialects.postgresql import insert
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_postals_verification import AudiencePostalVerification
@@ -142,12 +143,10 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
 
                 addresses = response_data.get('result', {}).get('addresses', [])
                 is_verified = verify_address(addresses, address, city, state_name)
-                verifications.append(
-                    AudiencePostalVerification(
-                        postal_code=postal_code,
-                        is_verified=is_verified
-                    )
-                )
+                verifications.append({
+                    "postal_code": postal_code,
+                    "is_verified": is_verified
+                })
 
             else: 
                 logging.debug("There is such a Postal in our database")
@@ -167,8 +166,14 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
         logging.info(f"success_ids len: {len(success_ids)}")
         
         if verifications:
-            db_session.bulk_save_objects(verifications)
-            db_session.flush()
+            stmt = insert(AudiencePostalVerification).values(verifications)
+            stmt = stmt.on_conflict_do_update(
+                index_elements=["postal_code"],
+                set_={"is_verified": stmt.excluded.is_verified}
+            )
+
+            db_session.execute(stmt)
+            db_session.commit()
             
         logging.info(f"failed_ids len: {len(failed_ids)}")
         
@@ -191,7 +196,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 ],
             )
             db_session.flush()
-
+            
+        db_session.commit()
         total_validated = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
@@ -221,7 +227,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                             rule[key]["count_validated"] = count_persons_before_validation - len(failed_ids)
                             rule[key]["count_submited"] = count_persons_before_validation
                 aud_smart.validations = json.dumps(validations)
-
+                db_session.commit()
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
@@ -231,7 +237,6 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                     "validation_params": validations,
                 },
             )
-        db_session.commit()
         await send_sse(
             connection,
             user_id,
