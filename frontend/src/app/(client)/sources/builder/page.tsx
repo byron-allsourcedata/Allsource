@@ -667,7 +667,7 @@ const SourcesImport: React.FC = () => {
                 <CustomToolTip
                   title={"Here you can upload new ones to expand your data."}
                   linkText="Learn more"
-                  linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                 />
               </Box>
             </Box>

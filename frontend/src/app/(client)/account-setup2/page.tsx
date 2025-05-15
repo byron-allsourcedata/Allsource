@@ -1826,7 +1826,7 @@ const AccountSetup = () => {
                           Install Manually
                         </Typography>
                       </Box>
-                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-insta"
+                      <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                         target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(56, 152, 252, 1)" }}
                         sx={{ textDecoration: "underline", cursor: "pointer" }}>
                         Tutorial
@@ -2064,7 +2064,7 @@ const AccountSetup = () => {
                           Install with Shopify
                         </Typography>
                       </Box>
-                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
+                      <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                         target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(56, 152, 252, 1)" }}
                         sx={{ textDecoration: "underline", cursor: "pointer" }}>
                         Tutorial
@@ -2220,7 +2220,7 @@ const AccountSetup = () => {
                           Install with Bigcommerce
                         </Typography>
                       </Box>
-                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-bigcommerce-to-maximiz"
+                      <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                         target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(56, 152, 252, 1)" }}
                         sx={{ textDecoration: "underline", cursor: "pointer" }}>
                         Tutorial
@@ -2317,7 +2317,7 @@ const AccountSetup = () => {
                           Google Tag Manager
                         </Typography>
                       </Box>
-                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-to-i-install-maximiz-pixel-on-google-tag-manager"
+                      <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                         target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(56, 152, 252, 1)" }}
                         sx={{ textDecoration: "underline", cursor: "pointer", '@media (max-width: 600px)': { pt: 2, pl: 2 } }}>
                         Tutorial

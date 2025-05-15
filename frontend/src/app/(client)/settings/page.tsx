@@ -80,7 +80,7 @@ const Settings: React.FC = () => {
                 },
             }}>
                 <Typography variant="h4" gutterBottom className='first-sub-title' sx={{ ...planStyles.title, gap: 1, alignItems: 'center', justifyContent: 'center', display: 'flex', flexDirection: 'row', }}>
-                    Settings <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/settings" />
+                    Settings <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
                 </Typography>
                 <Box sx={{
                     display: 'flex', gap: 4.25, overflowX: 'auto', justifyContent: 'center', width: '86%', alignItems: 'center', "@media (max-width: 900px)": {

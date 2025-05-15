@@ -34,6 +34,7 @@ import ProgressBar from '../sources/components/ProgressLoader';
 import { useSSE } from '../../../context/SSEContext';
 import FilterPopup from './components/SmartAudienceFilter';
 import DetailsPopup from './components/SmartAudienceDataSources'
+import ValidationsHistoryPopup from './components/SmartAudienceValidationHistory'
 import CalendarPopup from "@/components/CustomCalendar";
 import TableCustomCell from "../sources/components/table/TableCustomCell";
 import { useScrollShadow } from '@/hooks/useScrollShadow';
@@ -279,7 +280,9 @@ const SmartAudiences: React.FC = () => {
 
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
+    
     const [detailsPopupOpen, setDetailsPopupOpen] = useState(false);
+    const [validationHistoryPopupOpen, setValidationsHistoryPopupOpen] = useState(false);
 
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
@@ -567,8 +570,16 @@ const SmartAudiences: React.FC = () => {
         setDetailsPopupOpen(true);
     };
 
+    const handleValidationsHistoryPopupOpen = () => {
+        setValidationsHistoryPopupOpen(true);
+    };
+
     const handleDetailsPopupClose = () => {
         setDetailsPopupOpen(false);
+    };
+
+    const handleValidationsHistoryPopupClose = () => {
+        setValidationsHistoryPopupOpen(false);
     };
 
     const handleDataSyncPopupOpen = () => {
@@ -836,7 +847,7 @@ const SmartAudiences: React.FC = () => {
                                     <Typography className='first-sub-title'>
                                         Smart Audience
                                     </Typography>
-                                    <CustomToolTip title={'Discover AI-powered Smart Audiences based on your sorces and lookalikes.'} linkText='Learn more' linkUrl='https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts' />
+                                    <CustomToolTip title={'Discover AI-powered Smart Audiences based on your sorces and lookalikes.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/allsource' />
                                 </Box>
                                 <Box sx={{
                                     display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr: 2,
@@ -1370,9 +1381,16 @@ const SmartAudiences: React.FC = () => {
                                                                                         ? "N/A"
                                                                                         : row.validated_records === 0 && row.status === "validating" && !progressValidation?.total
                                                                                             ? <Box sx={{ display: "flex", justifyContent: "center" }}><ThreeDotsLoader /></Box>
-                                                                                            : progressValidation?.total > row.validated_records
+                                                                                            : <Box sx={{ cursor: "pointer", color: "rgba(56, 152, 252, 1)" }} onClick={ 
+                                                                                                () => {
+                                                                                                    setSelectedRowData(row);
+                                                                                                    handleValidationsHistoryPopupOpen();
+                                                                                                }}>
+                                                                                                {progressValidation?.total > row.validated_records
                                                                                                 ? progressValidation?.total.toLocaleString('en-US')
                                                                                                 : row.validated_records.toLocaleString('en-US')}
+                                                                                             </Box> 
+                                                                                }
                                                                             </TableCell>
                                                                             {/* Created Column */}
                                                                             <TableCell
@@ -1627,6 +1645,15 @@ const SmartAudiences: React.FC = () => {
                                         onClose={handleDetailsPopupClose}
                                         id={selectedRowData?.id}
                                         name={selectedRowData?.name}
+                                    />
+                                    <ValidationsHistoryPopup open={validationHistoryPopupOpen}
+                                        onClose={handleValidationsHistoryPopupClose}
+                                        id={selectedRowData?.id}
+                                        smartAudience={[
+                                            { title: selectedRowData?.name, value: selectedRowData?.created_at},
+                                            { title: "Total Universe", value: selectedRowData?.total_records},
+                                            { title: "Active Segment", value: selectedRowData?.active_segment_records}
+                                        ]}
                                     />
                                     <CalendarPopup
                                         anchorEl={calendarAnchorEl}

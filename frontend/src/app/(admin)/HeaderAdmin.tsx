@@ -66,10 +66,6 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification }) => {
     window.location.href = "/signin";
   };
 
-  const handleSupportButton = () => {
-    window.open('https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai', '_blank');
-  }
-
   useEffect(() => {
     setHasNotification(NewRequestNotification);
   }, [NewRequestNotification]);

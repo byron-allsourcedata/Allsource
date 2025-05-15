@@ -20,6 +20,7 @@ import {
 import React, { useState, useEffect, Suspense } from "react";
 import CustomTooltip from "@/components/customToolTip";
 import Image from "next/image";
+import CustomToolTip from '@/components/customToolTip';
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
@@ -222,7 +223,7 @@ const Insights = () => {
                 }}
               >
                 <Typography className="first-sub-title">Insights</Typography>
-                <CustomTooltip title="Insights" />
+                <CustomToolTip title={'Insights.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/allsource' />
               </Box>
             </Box>
             <Box

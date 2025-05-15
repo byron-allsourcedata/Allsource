@@ -238,28 +238,9 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                 sourcePlatform === "big_commerce"
               }
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  width: "100%",
-                  justifyContent: "space-between",
-                  alignItems: "space-between",
-                  flexDirection: "row",
-                }}
-              >
-                <Image
-                  src={"/install_manually.svg"}
-                  alt="Install Manually"
-                  width={24}
-                  height={24}
-                />
-                <CustomTooltip
-                  title={
-                    "Manually install to have full control over setup and configuration."
-                  }
-                  linkText="Learn more"
-                  linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2/how-do-i-install-maximiz-pixel-on-my-website"
-                />
+              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
+                <Image src={'/install_manually.svg'} alt="Install Manually" width={24} height={24} />
+                <CustomTooltip title={"Manually install to have full control over setup and configuration."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
               </Box>
               <Typography className="second-sub-title" sx={typographyStyles}>
                 Install Manually
@@ -287,29 +268,9 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                 sourcePlatform === "big_commerce"
               }
             >
-              <Box
-                sx={{
-                  display: "flex",
-                  width: "100%",
-                  justifyContent: "space-between",
-                  alignItems: "space-between",
-                  flexDirection: "row",
-                }}
-              >
-                <Image
-                  src={"/install_gtm.svg"}
-                  className="icon-img"
-                  alt="Install on Google Tag Manager"
-                  width={24}
-                  height={24}
-                />
-                <CustomTooltip
-                  title={
-                    "Quickly integrate using Google Tag Manager for seamless setup."
-                  }
-                  linkText="Learn more"
-                  linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2/how-do-i-install-my-pixel-on-google-tag"
-                />
+              <Box sx={{ display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'space-between', flexDirection: 'row' }}>
+                <Image src={'/install_gtm.svg'} className="icon-img" alt="Install on Google Tag Manager" width={24} height={24} />
+                <CustomTooltip title={"Quickly integrate using Google Tag Manager for seamless setup."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
               </Box>
               <Typography className="second-sub-title" sx={typographyGoogle}>
                 Install on Google Tag Manager

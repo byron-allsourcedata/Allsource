@@ -139,7 +139,7 @@ const ZapierConnectPopup = ({ open, handlePopupClose, boxShadow, invalid_api_key
                     Connect to Zapier
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-zapier-to-maximiz" target="_blank" rel="noopener noreferrer"
+                    <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" target="_blank" rel="noopener noreferrer"
                         sx={{
                             fontFamily: 'Nunito Sans',
                             fontSize: '14px',

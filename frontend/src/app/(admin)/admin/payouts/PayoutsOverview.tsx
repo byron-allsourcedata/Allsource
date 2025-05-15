@@ -271,7 +271,7 @@ const ReferralOverview: React.FC = () => {
                         <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between' }}>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                                 <Typography className="first-sub-title">Payout History</Typography>
-                                <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Our Referral program rewards you for bringing new users to our platform. Share your unique referral link with friends and colleagues, and earn incentives for each successful sign-up."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" /></Box>
+                                <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Our Referral program rewards you for bringing new users to our platform. Share your unique referral link with friends and colleagues, and earn incentives for each successful sign-up."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" /></Box>
                             </Box>
                             <Box>
                                 <Button

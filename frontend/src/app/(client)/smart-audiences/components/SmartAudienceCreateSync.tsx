@@ -356,7 +356,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
     }, [open]);
 
     useEffect(() => {
-        console.log({customFields})
     }, [customFields]);
 
     useEffect(() => {
@@ -973,7 +972,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                         Create smart audience sync {isDownloadAction ? "with CSV" : activeService ? `with ${formatServiceName(toCamelCase(activeService))}` : ""}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/data-sync" className="main-text" sx={{
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',

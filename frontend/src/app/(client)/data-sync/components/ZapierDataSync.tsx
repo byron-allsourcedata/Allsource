@@ -89,7 +89,7 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
         { id: 'unique-id-1', text: 'Go to the Zapier website and log into your account.' },
         { id: 'unique-id-2', text: 'Click on the Zap option located in your Zapier account options.' },
         { id: 'unique-id-3', text: 'Click Create New Zap' },
-        { id: 'unique-id-4', text: 'Configure the new Zap according to the instructions'},
+        { id: 'unique-id-4', text: 'Configure the new Zap according to the instructions' },
         { id: 'unique-id-5', text: 'Click Publish.' },
         { id: 'unique-id-6', text: 'Run a new zap' },
         { id: 'unique-id-7', text: 'A new Data Sync is automatically created in Maximiz' },
@@ -223,7 +223,7 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
                         Connect to Zapier
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-zapier-to-maximiz" target="_blank"rel="noopener noreferrer" 
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" target="_blank" rel="noopener noreferrer"
                             sx={{
                                 fontFamily: 'Nunito Sans',
                                 fontSize: '14px',
@@ -239,64 +239,64 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
                 </Box>
                 <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', height: '100%' }}>
                     <Box sx={{ width: '100%', padding: '16px 24px 24px 24px', position: 'relative' }}>
-                                <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
-            
-                                <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
-                                        <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
-                                        <Typography variant="subtitle1" sx={{
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '16px',
-                                            fontWeight: '600',
-                                            color: '#202124',
-                                            lineHeight: 'normal'
-                                        }}>How to sync with Zapier</Typography>
-                                    </Box>
-                                    <List dense sx={{ p: 0 }}>
-                                        {instructions.map((instruction, index) => (
-                                            <ListItem key={instruction.id} sx={{ p: 0, alignItems: 'flex-start' }}>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        display: 'inline-block',
-                                                        marginRight: '4px',
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        color: '#808080',
-                                                        lineHeight: '24px'
-                                                    }}
-                                                >
-                                                    {index + 1}.
-                                                </Typography>
-                                                <Typography
-                                                    variant="body1"
-                                                    sx={{
-                                                        display: 'inline',
-                                                        fontFamily: 'Roboto',
-                                                        fontSize: '12px',
-                                                        fontWeight: '400',
-                                                        color: '#808080',
-                                                        lineHeight: '24px'
-                                                    }}
-                                                >
-                                                    {highlightText(instruction.text, highlightConfig)}
-                                                </Typography>
-                                                
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz" target="_blank"rel="noopener noreferrer" 
-                                                    sx={{
-                                                        fontFamily: 'Nunito Sans',
-                                                        fontSize: '14px',
-                                                        fontWeight: '600',
-                                                        lineHeight: '20px',
-                                                        color: 'rgba(56, 152, 252, 1)',
-                                                        textDecorationColor: 'rgba(56, 152, 252, 1)'
-                                                    }}>Learn More</Link>
+                        <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
+
+                            <Box sx={{ background: '#f0f0f0', border: '1px solid #efefef', borderRadius: '4px', p: 2 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 2 }}>
+                                    <Image src='/info-circle.svg' alt='info-circle' height={20} width={20} />
+                                    <Typography variant="subtitle1" sx={{
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '16px',
+                                        fontWeight: '600',
+                                        color: '#202124',
+                                        lineHeight: 'normal'
+                                    }}>How to sync with Zapier</Typography>
                                 </Box>
-                                </Box>
+                                <List dense sx={{ p: 0 }}>
+                                    {instructions.map((instruction, index) => (
+                                        <ListItem key={instruction.id} sx={{ p: 0, alignItems: 'flex-start' }}>
+                                            <Typography
+                                                variant="body1"
+                                                sx={{
+                                                    display: 'inline-block',
+                                                    marginRight: '4px',
+                                                    fontFamily: 'Roboto',
+                                                    fontSize: '12px',
+                                                    fontWeight: '400',
+                                                    color: '#808080',
+                                                    lineHeight: '24px'
+                                                }}
+                                            >
+                                                {index + 1}.
+                                            </Typography>
+                                            <Typography
+                                                variant="body1"
+                                                sx={{
+                                                    display: 'inline',
+                                                    fontFamily: 'Roboto',
+                                                    fontSize: '12px',
+                                                    fontWeight: '400',
+                                                    color: '#808080',
+                                                    lineHeight: '24px'
+                                                }}
+                                            >
+                                                {highlightText(instruction.text, highlightConfig)}
+                                            </Typography>
+
+                                        </ListItem>
+                                    ))}
+                                </List>
+                                <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" target="_blank" rel="noopener noreferrer"
+                                    sx={{
+                                        fontFamily: 'Nunito Sans',
+                                        fontSize: '14px',
+                                        fontWeight: '600',
+                                        lineHeight: '20px',
+                                        color: 'rgba(56, 152, 252, 1)',
+                                        textDecorationColor: 'rgba(56, 152, 252, 1)'
+                                    }}>Learn More</Link>
+                            </Box>
+                        </Box>
 
                     </Box>
                     <Box sx={{ px: 2, py: 3.5, width: '100%', border: '1px solid #e4e4e4' }}>

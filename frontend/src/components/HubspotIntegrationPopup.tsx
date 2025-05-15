@@ -366,10 +366,7 @@ const HubspotIntegrationPopup = ({ fromAudience, handleClose, open, onSave, init
                         Connect to Hubspot
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                            {/* <Link href={initApiKey ?
-                                "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-hubspot-integration-configuration" :
-                                "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-hubspot-to-maximiz"
-                            }
+                            <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 sx={{
@@ -379,7 +376,7 @@ const HubspotIntegrationPopup = ({ fromAudience, handleClose, open, onSave, init
                                     lineHeight: '20px',
                                     color: 'rgba(56, 152, 252, 1)',
                                     textDecorationColor: 'rgba(56, 152, 252, 1)'
-                                }}>Tutorial</Link> */}
+                                }}>Tutorial</Link>
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>

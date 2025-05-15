@@ -60,7 +60,7 @@ const RevenueTracking = () => {
           marginBottom: '0.25rem'
       }
         }}>
-        3. Track Revenue <CustomTooltip title="Monitor your revenue to gain insights into sales performance and optimize strategies." linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started" />
+        3. Track Revenue <CustomTooltip title="Monitor your revenue to gain insights into sales performance and optimize strategies." linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
       </Typography>
       <Typography variant="body2" color="textSecondary" className="table-data" mb={2}
       sx={{

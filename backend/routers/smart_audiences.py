@@ -3,9 +3,9 @@ from starlette.responses import StreamingResponse
 from dependencies import get_audience_smarts_service, check_user_authorization_without_pixel, check_domain
 from services.audience_smarts import AudienceSmartsService
 from schemas.audience import SmartsAudienceObjectResponse, UpdateSmartAudienceRequest, CreateSmartAudienceRequest, \
-    DataSourcesResponse, SmartsResponse
+    DataSourcesResponse, ValidationHistory, SmartsResponse
 from schemas.integrations.integrations import SmartAudienceSyncCreate
-from typing import Optional, List
+from typing import Optional, List, Dict
 from uuid import UUID
 from enums import BaseEnum
 
@@ -61,6 +61,16 @@ def get_datasource_by_id(
             id=id,
         )
         return data_sources
+
+@router.get("/{id}/validation-history", response_model=List[Dict[str, ValidationHistory]])
+def get_validations_by_id(
+        id: UUID,
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
+):
+        validations = audience_smarts_service.get_validations_by_aud_smart_id(
+            id=id,
+        )
+        return validations
 
 
 @router.post("/builder", response_model=SmartsResponse)

@@ -1487,7 +1487,7 @@ const Integrations = () => {
                       "Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."
                     }
                     linkText="Learn more"
-                    linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/integration"
+                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                   />
                 </Box>
               </Box>

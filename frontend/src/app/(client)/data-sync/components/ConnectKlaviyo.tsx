@@ -623,7 +623,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({ open, onClose, dat
                         Connect to Klaviyo
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-the-maximiz-contact-sync-work" target="_blank" rel="noopener referrer" className="main-text" sx={{
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" target="_blank" rel="noopener referrer" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',

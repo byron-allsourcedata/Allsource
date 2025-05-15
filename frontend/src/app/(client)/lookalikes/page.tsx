@@ -10,6 +10,7 @@ import DateRangeIcon from "@mui/icons-material/DateRange";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterPopup from "./components/LookalikeFilters";
 import Link from "next/link";
+import CustomToolTip from '@/components/customToolTip';
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import LookalikeTable from "./components/LookalikeTable";
 import CustomTablePagination from "@/components/CustomTablePagination";
@@ -513,6 +514,7 @@ const CreateLookalikePage: React.FC = () => {
               }}
             >
               <Typography className="first-sub-title">Lookalikes</Typography>
+              <CustomToolTip title={'Lookalikes.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/allsource' />
             </Box>
             <Box
               sx={{

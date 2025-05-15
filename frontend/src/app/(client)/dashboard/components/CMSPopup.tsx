@@ -309,7 +309,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
           <Box sx={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2}}>
           {selectedCMS === 'Shopify' ? ( <>
                       <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/how-do-i-install-maximiz-pixel-on-shopify-store"
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                           target="_blank"
                           rel="noopener refferer"
                           sx={{
@@ -325,7 +325,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                     ) :
                     (selectedCMS === 'WordPress' ? ( <>
                               <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                      <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/install-maximiz-pixel-on-wordpress-website"
+                      <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                         target="_blank"
                         rel="noopener refferer"
                         sx={{
@@ -339,7 +339,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode, pixel_clien
                     </Box> </>
                     ) : ( selectedCMS === 'Bigcommerce' && (
                       <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/install-the-maximiz-pixel-on-bigcommerce-store"
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                           target="_blank"
                           rel="noopener refferer"
                           sx={{

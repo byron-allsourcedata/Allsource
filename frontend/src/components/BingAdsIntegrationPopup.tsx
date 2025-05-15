@@ -1,7 +1,7 @@
 import React from "react";
 import TabContext from "@mui/lab/TabContext";
 import TabPanel from "@mui/lab/TabPanel";
-import { Box, Typography, Drawer, IconButton, Button } from "@mui/material";
+import { Box, Typography, Drawer, IconButton, Button, Link } from "@mui/material";
 import Image from "next/image";
 import { useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
@@ -120,20 +120,15 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow, invalid_api_key
                         Connect to BingAds
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        {/* <Link href={initApiKey ?
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-klaviyo-integration-configuration" :
-                            "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-klaviyo-to-maximiz"
-                        }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            sx={{
-                                fontFamily: 'Nunito Sans',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                lineHeight: '20px',
-                                color: 'rgba(56, 152, 252, 1)',
-                                textDecorationColor: 'rgba(56, 152, 252, 1)'
-                            }}>Tutorial</Link> */}
+                    <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" target="_blank" rel="noopener noreferrer"
+                        sx={{
+                            fontFamily: 'Nunito Sans',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            lineHeight: '20px',
+                            color: 'rgba(56, 152, 252, 1)',
+                            textDecorationColor: 'rgba(56, 152, 252, 1)'
+                        }}>Tutorial</Link>
                         <IconButton onClick={handleClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
                         </IconButton>

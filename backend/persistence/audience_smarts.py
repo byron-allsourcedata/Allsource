@@ -223,6 +223,13 @@ class AudienceSmartsPersistence:
                 .filter(AudienceSmart.id == id)
         )
         return query.all()
+    
+
+    def get_validations_by_aud_smart_id(self, id: UUID) -> Tuple[List[Row]]: 
+        query = (
+            self.db.query(AudienceSmart.validations).filter(AudienceSmart.id == id)
+        )
+        return query.first()
 
 
     def search_audience_smart(self, start_letter: str, user_id: int):

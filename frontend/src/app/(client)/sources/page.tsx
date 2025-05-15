@@ -771,7 +771,7 @@ const Sources: React.FC = () => {
                   <CustomToolTip
                     title={"Here you can view your active sources."}
                     linkText="Learn more"
-                    linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/contacts"
+                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                   />
                 </Box>
                 <Box

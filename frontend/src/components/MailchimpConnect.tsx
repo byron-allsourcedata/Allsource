@@ -344,10 +344,7 @@ const MailchimpConnect = ({ fromAudience, handleClose, open, onSave, initApiKey,
                     Connect to Mailchimp
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href={initApiKey ?
-                        "" :
-                        "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-mailchimp-to-maximiz"
-                    }
+                    <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                     target="_blank"
                     rel="noopener refferer"
                     sx={{

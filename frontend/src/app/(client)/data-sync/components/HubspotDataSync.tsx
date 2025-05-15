@@ -556,7 +556,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                     Connect to Hubspot
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    {/* <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-hubspot-to-maximiz" className="main-text"
+                    <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" className="main-text"
                     target="_blank"
                     rel="noopener referrer"
                     sx={{
@@ -565,7 +565,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({ open, onClose, data 
                         lineHeight: '20px',
                         color: 'rgba(56, 152, 252, 1)',
                         textDecorationColor: 'rgba(56, 152, 252, 1)'
-                    }}>Tutorial</Link> */}
+                    }}>Tutorial</Link>
                     <IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
                         <CloseIcon sx={{ width: '20px', height: '20px' }} />
                     </IconButton>

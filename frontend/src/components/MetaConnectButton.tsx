@@ -222,10 +222,7 @@ const MetaConnectButton = ({ open, onClose, onSave, isEdit, boxShadow, invalid_a
                     Connect to Meta
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href={isEdit ?
-                        "https://maximizai.zohodesk.eu/portal/en/kb/articles/update-meta-integration-configuration" :
-                        "https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-meta-to-maximiz"
-                    }
+                    <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                         target="_blank"
                         rel="noopener referrer"
                         sx={{

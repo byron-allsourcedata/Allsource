@@ -190,7 +190,7 @@ const BCommerceConnect = ({open, onClose, error_message, initShopHash, boxShadow
                     Connect to Bigcommerce
                 </Typography>
                 <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="https://maximizai.zohodesk.eu/portal/en/kb/articles/integrate-bigcommerce-to-maximiz"
+                    <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                     target="_blank" 
                     rel="noopener noreferrer"
                      sx={{

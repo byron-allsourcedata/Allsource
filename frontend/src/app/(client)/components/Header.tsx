@@ -119,7 +119,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
 
 
   const handleSupportButton = () => {
-    window.open('https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai', '_blank');
+    window.open('https://allsourceio.zohodesk.com/portal/en/kb/allsource', '_blank');
   }
 
   useEffect(() => {

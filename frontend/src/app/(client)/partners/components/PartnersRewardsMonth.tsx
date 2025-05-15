@@ -342,10 +342,10 @@ const MonthDetails: React.FC<MonthDetailsProps> = ({ partner_id, isMaster, open,
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }} style={key === "reward_status" ? { justifyContent: "center" } : {}}>
                                                     <Typography variant="body2" className='table-heading'>{label}</Typography>
                                                     {tabIndex === 1 && label === 'Partner reward' && <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}>
-                                                        <CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" />
+                                                        <CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
                                                     </Box>}
                                                     {tabIndex === 1 && label === 'Payout amount' && <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}>
-                                                        <CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/referral" />
+                                                        <CustomTooltip title={"Collaborate with trusted partners to access exclusive resources and services that drive success."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
                                                     </Box>}
                                                     {sortable && (
                                                     <IconButton size="small" sx={{ ml: 1 }}>
