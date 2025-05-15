@@ -266,7 +266,7 @@ class AudienceLookalikesService:
         return b2c, b2b, other
     
     def build_normalization_config(self, audience_data: List[dict]):
-        cleaned_personal = PERSONAL - {"zip_code5"}
+        cleaned_personal = PERSONAL - {"zip_code5", "birth_day", "birth_month", "birth_year"}
         allowed: Set[str] = (
                 cleaned_personal
                 | FINANCIAL

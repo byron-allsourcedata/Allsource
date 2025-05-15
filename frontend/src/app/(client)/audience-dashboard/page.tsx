@@ -588,7 +588,6 @@ const AudienceDashboard: React.FC = () => {
     selectedCard && tabMap[selectedCard]
       ? chainedCards[tabMap[selectedCard]]
       : [];
-
   return (
     <Box>
       <Grid
@@ -601,7 +600,9 @@ const AudienceDashboard: React.FC = () => {
         }}
       >
         {loading && <CustomizedProgressBar />}
-        {hasValid ? (
+        {!loading && (
+          <>
+            {hasValid ? (
           <Box>
             <Box
               sx={{
@@ -926,6 +927,8 @@ const AudienceDashboard: React.FC = () => {
               <FirstTimeScreen cardData={cardData} />
             </Box>
           </Box>
+        )}
+          </>
         )}
       </Grid>
     </Box>
