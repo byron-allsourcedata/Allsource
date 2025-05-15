@@ -134,15 +134,16 @@ const WelcomePopup = () => {
                     variant="contained"
                     fullWidth
                     onClick={navigateToDashboardPage}
-                    sx={{ 
-                      backgroundColor: "#3898FC", 
-                      '&:hover': {
-                        backgroundColor: '#1E88E5',
+                    sx={{
+                      backgroundColor: "#3898FC",
+                      "&:hover": {
+                        backgroundColor: "#1E88E5",
                       },
-                      '&:active': {
-                        backgroundColor: '#74B7FD',
+                      "&:active": {
+                        backgroundColor: "#74B7FD",
                       },
-                      dropShadow: "#00000040" }}
+                      dropShadow: "#00000040",
+                    }}
                   >
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#fff" }}
@@ -244,11 +245,11 @@ const WelcomePopup = () => {
                     fullWidth
                     onClick={navigateToSourcePage}
                     sx={{
-                      '&:hover': {
-                        borderColor: '#1E88E5',
+                      "&:hover": {
+                        borderColor: "#1E88E5",
                       },
-                      '&:active': {
-                        borderColor: '#74B7FD',
+                      "&:active": {
+                        borderColor: "#74B7FD",
                       },
                     }}
                   >
