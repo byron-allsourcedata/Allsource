@@ -48,6 +48,8 @@ const SuppressionRules: React.FC = () => {
     const [checked, setChecked] = useState(false);
     const [checkedUrl, setCheckedUrl] = useState(false);
     const [checkedUrlParameters, setCheckedUrlParameters] = useState(false);
+    const [checkedDeleteContacts, setCheckedDeleteContacts] = useState(false);
+    const [countDeleteContacts, setCountDeleteContacts] = useState<number | null>(null);
 
     /// Days
     const [days, setDays] = useState<string>('');
@@ -151,6 +153,18 @@ const SuppressionRules: React.FC = () => {
         }
     };
 
+    const handleSwitchChangeDeleteContacts = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        setCheckedDeleteContacts(event.target.checked);
+        try {
+            setLoading(true)
+            const response = await axiosInstance.post('/suppressions/delete-contacts');
+        } catch (error) {
+            showErrorToast('Failed to switch change delete contacts')
+        } finally {
+            setLoading(false)
+        }
+    };
+
     const handleSwitchChangeURlParameters = async (event: React.ChangeEvent<HTMLInputElement>) => {
         setCheckedUrlParameters(event.target.checked);
         try {
@@ -161,7 +175,6 @@ const SuppressionRules: React.FC = () => {
             setLoading(false)
         }
     };
-
 
     /// Email Suppressions
     const [chipDataEmail, setChipDataEmail] = useState<string[]>([]);
@@ -273,6 +286,7 @@ const SuppressionRules: React.FC = () => {
                 showToast('File uploaded successfully.');
                 handleUpdateSuppressionList();
                 handleDeleteFile();
+                setCountDeleteContacts(response.data.leads_count);
             } else {
                 showErrorToast('Failed to upload file.');
             }
@@ -418,9 +432,10 @@ const SuppressionRules: React.FC = () => {
             setChecked(data.is_stop_collecting_contacts)
             setCheckedUrl(data.is_url_certain_activation)
             setCheckedUrlParameters(data.is_based_activation)
+            setCheckedDeleteContacts(data.is_delete_contacts)
             if (typeof data.actual_contect_days !== 'undefined') {
                 setDays(data.actual_contect_days === -1 ? 'Eternal' : data.actual_contect_days);
-              }              
+            }
             setChipDataEmail(EmailChip);
             setChipData(ChipData)
             setChipDataParam(ChipDataParam)
@@ -1130,7 +1145,125 @@ const SuppressionRules: React.FC = () => {
                             >
                                 2. The input must be in CSV format with a header, contain only one column labeled &apos;email&apos;, and be no larger than 100MB.
                             </Typography>
+                            <Box sx={{
+                                width: '100%',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'flex-start',
+                                mt: 2,
+                                ml: 2,
+                            }}>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-start', flexDirection: 'column' }}>
+                                    <Typography
+                                        className="main-text"
+                                        sx={suppressionsStyles.text}
+                                    >
+                                        • Delete these contacts from already existing audience lists
+                                    </Typography>
+                                    <Typography
+                                        className="second-text" sx={{ ...suppressionsStyles.subtitle, ml: 2, mt: 1 }}
+                                    >
+                                        Exclude these contacts from all previously created audiences in your account.
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', mt: 1, position: 'relative', }}>
+                                    <Switch
+                                        {...label}
+                                        checked={checkedDeleteContacts}
+                                        onChange={handleSwitchChangeDeleteContacts}
+                                        sx={{
+                                            width: 54,
+                                            height: 24,
+                                            padding: 0,
+                                            '& .MuiSwitch-switchBase': {
+                                                padding: 0,
+                                                top: '2px',
+                                                left: '3px',
+                                                '&.Mui-checked': {
+                                                    left: 0,
+                                                    transform: 'translateX(32px)',
+                                                    color: '#fff',
+                                                    '&+.MuiSwitch-track': {
+                                                        backgroundColor: checkedDeleteContacts ? '#5052b2' : '#7b7b7b',
+                                                        opacity: checkedDeleteContacts ? '1' : '1',
+                                                    }
+                                                },
+                                            },
+                                            '& .MuiSwitch-thumb': {
+                                                width: 20,
+                                                height: 20,
+                                            },
+                                            '& .MuiSwitch-track': {
+                                                borderRadius: 10,
+                                                backgroundColor: checkedDeleteContacts ? '#5052b2' : '#7b7b7b',
+                                                opacity: checkedDeleteContacts ? '1' : '1',
+                                                '& .MuiSwitch-track.Mui-checked': {
+                                                    backgroundColor: checkedDeleteContacts ? '#5052b2' : '#7b7b7b',
+                                                    opacity: checkedDeleteContacts ? '1' : '1',
+                                                }
+                                            },
+                                        }}
+                                    />
+                                    <Box sx={{
+                                        position: "absolute",
+                                        top: "20%",
+                                        display: "flex",
+                                        alignItems: 'flex-end',
+                                        justifyContent: 'flex-end',
+                                        pointerEvents: "none",
+                                        "@media (max-width:700px)": {
+                                            top: '49%',
+                                        }
+                                    }}>
+                                        {!checkedDeleteContacts && (
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    fontFamily: 'Roboto',
+                                                    fontSize: '12px',
+                                                    color: '#fff',
+                                                    fontWeight: '400',
+                                                    pr: 1,
+                                                    lineHeight: 'normal'
+                                                }}
+                                            >
+                                                No
+                                            </Typography>
+                                        )}
 
+                                        {checkedDeleteContacts && (
+                                            <Typography
+                                                variant="caption"
+                                                sx={{
+                                                    fontFamily: 'Roboto',
+                                                    fontSize: '12px',
+                                                    color: '#fff',
+                                                    fontWeight: '400',
+                                                    pr: 3.5,
+                                                    lineHeight: 'normal'
+                                                }}
+                                            >
+                                                Yes
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                </Box>
+                            </Box>
+                            {
+                                countDeleteContacts != null && (
+                                    <Typography
+                                        className="main-text"
+                                        sx={{
+                                            ...suppressionsStyles.text,
+                                            color: 'green',
+                                        }}
+                                    >
+                                        {countDeleteContacts === 0
+                                            ? '✗ No contacts were excluded from your contact list'
+                                            : `✓ ${countDeleteContacts} contact${countDeleteContacts === 1 ? '' : 's'} were successfully excluded from your contact list`}
+                                    </Typography>
+                                )
+                            }
                             <Box sx={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'start', flexDirection: 'row', mt: '1.5rem', gap: 2 }}>
 
                                 <Box onClick={handleClick}
@@ -1241,7 +1374,6 @@ const SuppressionRules: React.FC = () => {
                                 </Button>
                             </Box>
                         </Box>
-
                     </Box>
                 </Box>
             </Box>

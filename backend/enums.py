@@ -219,6 +219,8 @@ class NotificationTitles(Enum):
     PAYMENT_SUCCESS = 'payment_success'
     TEAM_MEMBER_ADDED = 'team_member_added'
     NO_CREDITS = 'no_credits'
+    TOO_MANY_REQUESTS = 'too_many_requests'
+    QUOTA_EXHAUSTED = 'quota_exhausted'
 
 
 class CreditsStatus(Enum):
@@ -258,6 +260,7 @@ class ProccessDataSyncResult(Enum):
     AUTHENTICATION_FAILED = 'authentication_failed'
     TOO_MANY_REQUESTS = 'too_many_requests'
     VERIFY_EMAIL_FAILED = 'verify_email_failed'
+    QUOTA_EXHAUSTED = 'quota_exhausted'
     
 class PlanAlias(Enum):
     PARTNERS = 'partners'

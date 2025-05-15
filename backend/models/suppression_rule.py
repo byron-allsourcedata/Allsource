@@ -11,6 +11,7 @@ class SuppressionRule(Base):
     is_url_certain_activation = Column(BOOLEAN, nullable=False, default=False)
     activate_certain_urls = Column(TEXT, nullable=True)
     is_based_activation = Column(BOOLEAN, nullable=False, default=False)
+    is_delete_contacts = Column(BOOLEAN, nullable=False, default=False)
     activate_based_urls = Column(TEXT, nullable=True)
     domain_id = Column(Integer, nullable=False)
     actual_contect_days = Column(Integer, nullable=False)
@@ -28,7 +29,8 @@ class SuppressionRule(Base):
                 "page_views_limit": self.page_views_limit,
                 "collection_timeout": self.collection_timeout,
                 "suppressions_multiple_emails": self.suppressions_multiple_emails,
-                "actual_contect_days": self.actual_contect_days
+                "actual_contect_days": self.actual_contect_days,
+                "is_delete_contacts": self.is_delete_contacts
             }
 
 event.listen(SuppressionRule, "before_insert", create_timestamps)

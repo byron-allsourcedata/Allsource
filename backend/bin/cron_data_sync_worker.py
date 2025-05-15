@@ -90,6 +90,18 @@ def update_users_integrations(session, status, integration_data_sync_id, service
             })
         session.commit()
         
+    if status == ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
+        session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
+            'sync_status': False
+            })
+        session.commit()
+        
+    if status == ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
+        session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
+            'sync_status': False
+            })
+        session.commit()
+        
     if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
         logging.info(f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}")
         if service_name == SourcePlatformEnum.WEBHOOK.value:
@@ -202,6 +214,16 @@ async def ensure_integration(message: IncomingMessage, integration_service: Inte
                     logging.debug(f"list_not_exists: {service_name}")
                     update_users_integrations(session=session, status=ProccessDataSyncResult.LIST_NOT_EXISTS.value, integration_data_sync_id=integration_data_sync.id, service_name=service_name)
                     await send_error_msg(lead_user.user_id, service_name, notification_persistence, NotificationTitles.DATA_SYNC_ERROR.value)
+                    
+                case ProccessDataSyncResult.LIST_NOT_EXISTS.value:
+                    logging.debug(f"too_many_requests: {service_name}")
+                    update_users_integrations(session=session, status=ProccessDataSyncResult.TOO_MANY_REQUESTS.value, integration_data_sync_id=integration_data_sync.id, service_name=service_name)
+                    await send_error_msg(lead_user.user_id, service_name, notification_persistence, NotificationTitles.TOO_MANY_REQUESTS.value)
+                
+                case ProccessDataSyncResult.QUOTA_EXHAUSTED.value:
+                    logging.debug(f"Quota exhausted: {service_name}")
+                    update_users_integrations(session=session, status=ProccessDataSyncResult.QUOTA_EXHAUSTED.value, integration_data_sync_id=integration_data_sync.id, service_name=service_name)
+                    await send_error_msg(lead_user.user_id, service_name, notification_persistence, NotificationTitles.QUOTA_EXHAUSTED.value)
                     
                 case ProccessDataSyncResult.AUTHENTICATION_FAILED.value:
                     logging.debug(f"authentication_failed: {service_name}")
