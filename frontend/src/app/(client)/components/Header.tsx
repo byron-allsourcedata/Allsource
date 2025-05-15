@@ -201,17 +201,24 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
           <Box sx={{ display: "flex", alignItems: "center" }}>
             <TrialStatus />
 
+            <Box sx={{marginRight: '1.5rem', display: "flex", alignItems: "center"}}>
             <Typography className="fiveth-sub-title" style={{color: "rgba(50, 54, 62, 1)"}}>Hints</Typography>
             <Switch checked={showHints} onChange={toggleHints} sx={{
               '& .MuiSwitch-switchBase': {
+                  '&+.MuiSwitch-track': {
+                    backgroundColor: "rgba(163, 176, 194, 1)",
+                    opacity: 1
+                  },
                   '&.Mui-checked': {
                       color: '#fff',
                       '&+.MuiSwitch-track': {
-                          backgroundColor: showHints ? 'rgba(163, 176, 194, 1)' : 'rgba(163, 176, 194, 1)',
+                          backgroundColor: "rgba(56, 152, 252, 1)",
+                          opacity: 1
                       }
                   },
               },
             }} />
+            </Box>
 
             <Button
               onClick={handleNotificationIconPopupOpen}
