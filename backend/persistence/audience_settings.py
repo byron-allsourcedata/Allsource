@@ -19,5 +19,11 @@ class AudienceSettingPersistence:
         ).first()
 
         return json.loads(stats.value) if stats else {}
-    
-    
+
+    def get_validation_priority(self) -> str:
+        priority = (
+            self.db.query(AudienceSetting)
+            .filter(AudienceSetting.alias == AudienceSettingAlias.VALIDATION_PRIORITY.value)
+        ).first()
+
+        return priority.value

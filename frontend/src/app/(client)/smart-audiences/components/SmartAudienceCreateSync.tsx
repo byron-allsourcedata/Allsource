@@ -356,7 +356,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
     }, [open]);
 
     useEffect(() => {
-        console.log({customFields})
     }, [customFields]);
 
     useEffect(() => {
