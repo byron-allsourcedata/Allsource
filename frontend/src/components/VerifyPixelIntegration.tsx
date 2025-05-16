@@ -86,7 +86,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
       <Box
         display="flex"
         alignItems="center"
-        justifyContent="space-between"
+        justifyContent="end"
         sx={{
           "@media (max-width: 600px)": {
             alignItems: "flex-start",
