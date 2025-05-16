@@ -601,331 +601,343 @@ const AudienceDashboard: React.FC = () => {
         {!loading && (
           <>
             {hasValid ? (
-          <Box>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "start",
-                position: "sticky",
-                top: 0,
-                pt: "12px",
-                pr: "1rem",
-                zIndex: 1,
-                backgroundColor: "#fff",
-                justifyContent: "space-between",
-                width: "100%",
-                "@media (max-width: 600px)": {
-                  flexDirection: "column",
-                  display: "flex",
-                  alignItems: "flex-start",
-                  zIndex: 1,
-                  width: "100%",
-                  pr: 1.5,
-                },
-                "@media (max-width: 440px)": {
-                  flexDirection: "column",
-                  pt: hasNotification ? "3rem" : "0.75rem",
-                  top: hasNotification ? "4.5rem" : "",
-                  zIndex: 1,
-                  justifyContent: "flex-start",
-                },
-                "@media (max-width: 400px)": {
-                  pt: hasNotification ? "4.25rem" : "",
-                  pb: "6px",
-                },
-              }}
-            >
-              <Typography
-                variant="h4"
-                component="h1"
-                className="first-sub-title"
-                sx={{
-                  ...dashboardStyles.title,
-                  pl: "4px",
-                  "@media (max-width: 600px)": {
-                    display: "none",
-                  },
-                }}
-              >
-                Dashboard{" "}
-                <CustomTooltip
-                  title={
-                    "Indicates the count of resolved identities and revenue figures for the specified time"
-                  }
-                  linkText="Learn More"
-                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main"
-                />
-              </Typography>
-              <Box
-                sx={{
-                  display: "none",
-                  width: "100%",
-                  justifyContent: "space-between",
-                  alignItems: "start",
-                  "@media (max-width: 600px)": {
+              <Box>
+                <Box
+                  sx={{
                     display: "flex",
-                  },
-                }}
-              >
-                <Typography
-                  variant="h4"
-                  component="h1"
-                  className="first-sub-title"
-                  sx={dashboardStyles.title}
+                    flexDirection: "column",
+                    alignItems: "start",
+                    position: "sticky",
+                    top: 0,
+                    pt: "12px",
+                    pr: "1rem",
+                    zIndex: 1,
+                    backgroundColor: "#fff",
+                    justifyContent: "space-between",
+                    width: "100%",
+                    "@media (max-width: 600px)": {
+                      flexDirection: "column",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      zIndex: 1,
+                      width: "100%",
+                      pr: 1.5,
+                    },
+                    "@media (max-width: 440px)": {
+                      flexDirection: "column",
+                      pt: hasNotification ? "3rem" : "0.75rem",
+                      top: hasNotification ? "4.5rem" : "",
+                      zIndex: 1,
+                      justifyContent: "flex-start",
+                    },
+                    "@media (max-width: 400px)": {
+                      pt: hasNotification ? "4.25rem" : "",
+                      pb: "6px",
+                    },
+                  }}
                 >
-                  Dashboard
-                </Typography>
-              </Box>
-              <Box
-                sx={{
-                  width: "100%",
-                  mt: 1,
-                  overflowX: "auto",
-                  whiteSpace: "nowrap",
-                  pl: 0.5,
-                  pr: 0.5,
-                  pt: 1,
-                  "@media (max-width: 900px)": { mt: 0, mb: 0 },
-                }}
-              >
-                <CustomCards
-                  values={values}
-                  onCardClick={handleCardClick}
-                  selectedCard={selectedCard}
-                  pixelCardActive={pixelCardActive}
-                />
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                overflow: "auto",
-                flexGrow: 1,
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  width: "100%",
-                  pr: 2,
-                }}
-              >
-                {selectedCard ? (
-                  <Box sx={{ overflow: "hidden" }}>
-                    <Box mb={1}>
-                      <Grid container spacing={2}>
-                        {currentTabData.map((card: any, index) => (
+                  <Typography
+                    variant="h4"
+                    component="h1"
+                    className="first-sub-title"
+                    sx={{
+                      ...dashboardStyles.title,
+                      pl: "4px",
+                      "@media (max-width: 600px)": {
+                        display: "none",
+                      },
+                    }}
+                  >
+                    Dashboard{" "}
+                    <CustomTooltip
+                      title={
+                        "Indicates the count of resolved identities and revenue figures for the specified time"
+                      }
+                      linkText="Learn More"
+                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main"
+                    />
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: "none",
+                      width: "100%",
+                      justifyContent: "space-between",
+                      alignItems: "start",
+                      "@media (max-width: 600px)": {
+                        display: "flex",
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="h4"
+                      component="h1"
+                      className="first-sub-title"
+                      sx={dashboardStyles.title}
+                    >
+                      Dashboard
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      width: "100%",
+                      mt: 1,
+                      overflowX: "auto",
+                      whiteSpace: "nowrap",
+                      pl: 0.5,
+                      pr: 0.5,
+                      pt: 1,
+                      "@media (max-width: 900px)": { mt: 0, mb: 0 },
+                    }}
+                  >
+                    <CustomCards
+                      values={values}
+                      onCardClick={handleCardClick}
+                      selectedCard={selectedCard}
+                      pixelCardActive={pixelCardActive}
+                    />
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "auto",
+                    flexGrow: 1,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      width: "100%",
+                      pr: 2,
+                    }}
+                  >
+                    {selectedCard ? (
+                      <Box sx={{ overflow: "hidden" }}>
+                        <Box mb={1}>
+                          <Grid container spacing={2}>
+                            {currentTabData.map((card: any, index) => (
+                              <Grid
+                                item
+                                xs={12}
+                                sm={6}
+                                md={6}
+                                lg={6}
+                                key={index}
+                                sx={{ height: "100%" }}
+                              >
+                                <Box sx={{ height: "100%" }}>
+                                  <InfoCard data={card} />
+                                </Box>
+                              </Grid>
+                            ))}
+                          </Grid>
+
+                          {selectedCard === "Pixel Contacts" && (
+                            <Box>
+                              <AudienceChart selectedDomain={selectedDomain} />
+                            </Box>
+                          )}
+                        </Box>
+                      </Box>
+                    ) : (
+                      <Box sx={{ width: "100%", mb: 2, pl: 0.5 }}>
+                        <Grid
+                          container
+                          spacing={2}
+                          wrap="nowrap"
+                          sx={{ flexWrap: "nowrap" }}
+                        >
                           <Grid
                             item
                             xs={12}
-                            sm={6}
-                            md={6}
-                            lg={6}
-                            key={index}
-                            sx={{ height: "100%" }}
+                            sx={{
+                              "@media (max-width: 600px)": { minWidth: 320 },
+                            }}
+                            md={2.4}
                           >
-                            <Box sx={{ height: "100%" }}>
-                              <InfoCard data={card} />
-                            </Box>
+                            {pixelContacts.map((contact, index) => (
+                              <Box key={index} mt={1}>
+                                <PixelCard
+                                  key={index}
+                                  data={{
+                                    domain: contact.domain,
+                                    date: "Last 24h",
+                                    contacts_collected: contact.total_leads,
+                                    visitor: contact.visitors,
+                                    view_product: contact.view_products,
+                                    abandoned_cart: contact.abandoned_cart,
+                                    converted_sale: contact.converted_sale,
+                                  }}
+                                  onClick={() =>
+                                    handlePixelCardClick(
+                                      "Pixel Contacts",
+                                      contact.domain
+                                    )
+                                  }
+                                />
+                              </Box>
+                            ))}
                           </Grid>
-                        ))}
-                      </Grid>
 
-                      {selectedCard === "Pixel Contacts" && (
-                        <Box>
-                          <AudienceChart selectedDomain={selectedDomain} />
-                        </Box>
-                      )}
-                    </Box>
+                          <Grid
+                            item
+                            sx={{
+                              "@media (max-width: 600px)": { minWidth: 320 },
+                            }}
+                            xs={12}
+                            md={2.4}
+                          >
+                            {eventCards.sources.map((card, index) => (
+                              <Box key={index} mt={1}>
+                                <MainSectionCard
+                                  key={card.id}
+                                  data={card}
+                                  highlighted={activeChainIds.includes(card.id)}
+                                  onClick={() => {
+                                    if (activeChainIds.includes(card.id)) {
+                                      setActiveChainIds([]);
+                                    } else {
+                                      setActiveChainIds(card.chain_ids);
+                                    }
+                                  }}
+                                />
+                              </Box>
+                            ))}
+                          </Grid>
+
+                          <Grid
+                            item
+                            xs={12}
+                            sx={{
+                              "@media (max-width: 600px)": { minWidth: 320 },
+                            }}
+                            md={2.4}
+                          >
+                            {eventCards.lookalikes.map((card, index) => (
+                              <Box key={index} mt={1}>
+                                <MainSectionCard
+                                  key={card.id}
+                                  data={card}
+                                  highlighted={activeChainIds.includes(card.id)}
+                                  onClick={() => {
+                                    if (activeChainIds.includes(card.id)) {
+                                      setActiveChainIds([]);
+                                    } else {
+                                      setActiveChainIds(card.chain_ids);
+                                    }
+                                  }}
+                                />
+                              </Box>
+                            ))}
+                          </Grid>
+                          <Grid
+                            item
+                            xs={12}
+                            sx={{
+                              "@media (max-width: 600px)": { minWidth: 320 },
+                            }}
+                            md={2.4}
+                          >
+                            {eventCards.smart_audience.map((card, index) => (
+                              <Box key={index} mt={1}>
+                                <SmartAudienceCard
+                                  key={card.id}
+                                  data={card}
+                                  highlighted={activeChainIds.includes(card.id)}
+                                  onClick={() => {
+                                    if (activeChainIds.includes(card.id)) {
+                                      setActiveChainIds([]);
+                                    } else {
+                                      setActiveChainIds(card.chain_ids);
+                                    }
+                                  }}
+                                />
+                              </Box>
+                            ))}
+                          </Grid>
+                          <Grid
+                            item
+                            xs={12}
+                            sx={{
+                              "@media (max-width: 600px)": {
+                                minWidth: 320,
+                                mr: 10,
+                                pr: 1.5,
+                              },
+                            }}
+                            md={2.4}
+                          >
+                            {eventCards.data_sync.map((card, index) => (
+                              <Box key={index} mt={1}>
+                                <MainSectionCard
+                                  key={card.id}
+                                  data={card}
+                                  highlighted={activeChainIds.includes(card.id)}
+                                  onClick={() => {
+                                    if (activeChainIds.includes(card.id)) {
+                                      setActiveChainIds([]);
+                                    } else {
+                                      setActiveChainIds(card.chain_ids);
+                                    }
+                                  }}
+                                />
+                              </Box>
+                            ))}
+                          </Grid>
+                        </Grid>
+                      </Box>
+                    )}
                   </Box>
-                ) : (
-                  <Box sx={{ width: "100%", mb: 2, pl: 0.5 }}>
-                    <Grid
-                      container
-                      spacing={2}
-                      wrap="nowrap"
-                      sx={{ flexWrap: "nowrap" }}
-                    >
-                      <Grid
-                        item
-                        xs={12}
-                        sx={{ "@media (max-width: 600px)": { minWidth: 320 } }}
-                        md={2.4}
-                      >
-                        {pixelContacts.map((contact, index) => (
-                          <Box key={index} mt={1}>
-                            <PixelCard
-                              key={index}
-                              data={{
-                                domain: contact.domain,
-                                date: "Last 24h",
-                                contacts_collected: contact.total_leads,
-                                visitor: contact.visitors,
-                                view_product: contact.view_products,
-                                abandoned_cart: contact.abandoned_cart,
-                                converted_sale: contact.converted_sale,
-                              }}
-                              onClick={() =>
-                                handlePixelCardClick(
-                                  "Pixel Contacts",
-                                  contact.domain
-                                )
-                              }
-                            />
-                          </Box>
-                        ))}
-                      </Grid>
-
-                      <Grid
-                        item
-                        sx={{ "@media (max-width: 600px)": { minWidth: 320 } }}
-                        xs={12}
-                        md={2.4}
-                      >
-                        {eventCards.sources.map((card, index) => (
-                          <Box key={index} mt={1}>
-                            <MainSectionCard
-                              key={card.id}
-                              data={card}
-                              highlighted={activeChainIds.includes(card.id)}
-                              onClick={() => {
-                                if (activeChainIds.includes(card.id)) {
-                                  setActiveChainIds([]);
-                                } else {
-                                  setActiveChainIds(card.chain_ids);
-                                }
-                              }}
-                            />
-                          </Box>
-                        ))}
-                      </Grid>
-
-                      <Grid
-                        item
-                        xs={12}
-                        sx={{ "@media (max-width: 600px)": { minWidth: 320 } }}
-                        md={2.4}
-                      >
-                        {eventCards.lookalikes.map((card, index) => (
-                          <Box key={index} mt={1}>
-                            <MainSectionCard
-                              key={card.id}
-                              data={card}
-                              highlighted={activeChainIds.includes(card.id)}
-                              onClick={() => {
-                                if (activeChainIds.includes(card.id)) {
-                                  setActiveChainIds([]);
-                                } else {
-                                  setActiveChainIds(card.chain_ids);
-                                }
-                              }}
-                            />
-                          </Box>
-                        ))}
-                      </Grid>
-                      <Grid
-                        item
-                        xs={12}
-                        sx={{ "@media (max-width: 600px)": { minWidth: 320 } }}
-                        md={2.4}
-                      >
-                        {eventCards.smart_audience.map((card, index) => (
-                          <Box key={index} mt={1}>
-                            <SmartAudienceCard
-                              key={card.id}
-                              data={card}
-                              highlighted={activeChainIds.includes(card.id)}
-                              onClick={() => {
-                                if (activeChainIds.includes(card.id)) {
-                                  setActiveChainIds([]);
-                                } else {
-                                  setActiveChainIds(card.chain_ids);
-                                }
-                              }}
-                            />
-                          </Box>
-                        ))}
-                      </Grid>
-                      <Grid
-                        item
-                        xs={12}
-                        sx={{
-                          "@media (max-width: 600px)": {
-                            minWidth: 320,
-                            mr: 10,
-                            pr: 1.5,
-                          },
-                        }}
-                        md={2.4}
-                      >
-                        {eventCards.data_sync.map((card, index) => (
-                          <Box key={index} mt={1}>
-                            <MainSectionCard
-                              key={card.id}
-                              data={card}
-                              highlighted={activeChainIds.includes(card.id)}
-                              onClick={() => {
-                                if (activeChainIds.includes(card.id)) {
-                                  setActiveChainIds([]);
-                                } else {
-                                  setActiveChainIds(card.chain_ids);
-                                }
-                              }}
-                            />
-                          </Box>
-                        ))}
-                      </Grid>
-                    </Grid>
-                  </Box>
-                )}
+                </Box>
               </Box>
-            </Box>
-          </Box>
-        ) : (
-          <Box sx={{ width: "100" }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 4, pt: 2 }}>
-              <Typography
-                variant="h5"
-                className="first-sub-title"
-                sx={{
-                  fontFamily: "Nunito Sans",
-                  fontSize: "24px !important",
-                  color: "#4a4a4a",
-                  fontWeight: "500 !important",
-                  lineHeight: "22px",
-                }}
-              >
-                Dashboard
-              </Typography>
-              <ExternalLink href="https://example.com">Learn more</ExternalLink>
-            </Box>
-            <Typography
-              variant="body1"
-              sx={{
-                mt: 1,
-                fontFamily: "Nunito Sans",
-                fontSize: "14px",
-                color: "rgba(50, 54, 62, 1)",
-                fontWeight: "400",
-                lineHeight: "22px",
-              }}
-            >
-              To begin building your audience, you&apos;ll need to provide a
-              data source
-            </Typography>
+            ) : (
+              <Box sx={{ width: "100" }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "center", gap: 4, pt: 2 }}
+                >
+                  <Typography
+                    variant="h5"
+                    className="first-sub-title"
+                    sx={{
+                      fontFamily: "Nunito Sans",
+                      fontSize: "24px !important",
+                      color: "#4a4a4a",
+                      fontWeight: "500 !important",
+                      lineHeight: "22px",
+                    }}
+                  >
+                    Dashboard
+                  </Typography>
+                  <ExternalLink href="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main">
+                    Learn more
+                  </ExternalLink>
+                </Box>
+                <Typography
+                  variant="body1"
+                  sx={{
+                    mt: 1,
+                    fontFamily: "Nunito Sans",
+                    fontSize: "14px",
+                    color: "rgba(50, 54, 62, 1)",
+                    fontWeight: "400",
+                    lineHeight: "22px",
+                  }}
+                >
+                  To begin building your audience, you&apos;ll need to provide a
+                  data source
+                </Typography>
 
-            <Box
-              sx={{
-                width: "100%",
-              }}
-            >
-              <FirstTimeScreen cardData={cardData} />
-            </Box>
-          </Box>
-        )}
+                <Box
+                  sx={{
+                    width: "100%",
+                  }}
+                >
+                  <FirstTimeScreen cardData={cardData} />
+                </Box>
+              </Box>
+            )}
           </>
         )}
       </Grid>
