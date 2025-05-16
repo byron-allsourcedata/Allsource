@@ -15,6 +15,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import LegendToggleOutlinedIcon from "@mui/icons-material/LegendToggleOutlined";
 import AllInboxOutlinedIcon from "@mui/icons-material/AllInboxOutlined";
 import { useRouter } from "next/navigation";
+import { DashboardHelpCard } from "@/components/HelpCard";
 
 type CardData = {
   title: string;
@@ -40,13 +41,12 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
     <Box>
       <Grid
         container
-        spacing={2}
         alignItems="center"
         justifyContent="center"
-        sx={{ mt: 0, pr: 2, width: "100%" }}
+        sx={{ pr: 2, gap: 2, mt: 2, width: "100%" }}
       >
         {/* Left Section */}
-        <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={5.9} padding={0}>
           <Card
             variant="outlined"
             onClick={navigateToAnaliticPage}
@@ -113,7 +113,7 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
         </Grid>
 
         {/* Right Section */}
-        <Grid item xs={12} md={5.75}>
+        <Grid item xs={12} md={5.9}>
           <Card
             variant="outlined"
             onClick={navigateToSourcePage}
@@ -156,6 +156,26 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
             </CardContent>
           </Card>
         </Grid>
+      </Grid>
+      <Grid spacing={2} sx={{ pr: 2, mt: 4 }}>
+        <DashboardHelpCard
+          headline="Stuck with Your Dashboard?"
+          description="Book a free 30-minute call and get personalized help with platform navigation, analytics, or any dashboard issues."
+          helpPoints={[
+            {
+              title: "Dashboard Walkthrough",
+              description: "Learn key features and shortcuts.",
+            },
+            {
+              title: "Data Analysis Help",
+              description: "Understand your metrics and reports.",
+            },
+            {
+              title: "Troubleshooting",
+              description: "Fix technical issues with an expert.",
+            },
+          ]}
+        />
       </Grid>
     </Box>
   );

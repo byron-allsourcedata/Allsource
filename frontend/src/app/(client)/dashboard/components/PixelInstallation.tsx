@@ -242,55 +242,6 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
             <Button
               variant="outlined"
               fullWidth
-              onClick={installManually}
-              sx={{
-                ...buttonStyles(showManualInline),
-                ...((sourcePlatform === "shopify" ||
-                  sourcePlatform === "big_commerce") && {
-                  color: "grey",
-                  borderColor: "grey",
-                  pointerEvents: "none",
-                  backgroundColor: "lightgrey",
-                }),
-              }}
-              disabled={
-                sourcePlatform === "shopify" ||
-                sourcePlatform === "big_commerce"
-              }
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  width: "100%",
-                  justifyContent: "space-between",
-                  alignItems: "space-between",
-                  flexDirection: "row",
-                }}
-              >
-                <Image
-                  src={"/install_manually.svg"}
-                  alt="Install Manually"
-                  width={24}
-                  height={24}
-                />
-                <CustomTooltip
-                  title={
-                    "Manually install to have full control over setup and configuration."
-                  }
-                  linkText="Learn more"
-                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
-                />
-              </Box>
-              <Typography className="second-sub-title" sx={typographyStyles}>
-                Install Manually
-              </Typography>
-            </Button>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Button
-              variant="outlined"
-              fullWidth
               onClick={installGoogleTag}
               sx={{
                 ...buttonGoogle(showGoogleInline),
@@ -336,6 +287,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
               </Typography>
             </Button>
           </Grid>
+
           <Grid item xs={12} md={4}>
             <Button
               variant="outlined"
@@ -412,6 +364,54 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
               )}
             </Button>
           </Grid>
+          <Grid item xs={12} md={4}>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={installManually}
+              sx={{
+                ...buttonStyles(showManualInline),
+                ...((sourcePlatform === "shopify" ||
+                  sourcePlatform === "big_commerce") && {
+                  color: "grey",
+                  borderColor: "grey",
+                  pointerEvents: "none",
+                  backgroundColor: "lightgrey",
+                }),
+              }}
+              disabled={
+                sourcePlatform === "shopify" ||
+                sourcePlatform === "big_commerce"
+              }
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  width: "100%",
+                  justifyContent: "space-between",
+                  alignItems: "space-between",
+                  flexDirection: "row",
+                }}
+              >
+                <Image
+                  src={"/install_manually.svg"}
+                  alt="Install Manually"
+                  width={24}
+                  height={24}
+                />
+                <CustomTooltip
+                  title={
+                    "Manually install to have full control over setup and configuration."
+                  }
+                  linkText="Learn more"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                />
+              </Box>
+              <Typography className="second-sub-title" sx={typographyStyles}>
+                Install Manually
+              </Typography>
+            </Button>
+          </Grid>
         </Box>
         {showManualInline && (
           <ManualPopup
@@ -464,6 +464,7 @@ const buttonStyles = (showManualInline: boolean) => ({
     ? "1px solid rgba(56, 152, 252, 1)"
     : "1px solid rgba(228, 228, 228, 1)",
   width: "100%",
+  minHeight: "100px",
   "@media (max-width: 1199px)": {
     maxHeight: "82px",
   },
@@ -473,15 +474,16 @@ const buttonGoogle = (showGoogleInline: boolean) => ({
   backgroundColor: showGoogleInline ? "rgba(240, 242, 245, 1)" : "#fff",
   display: "flex",
   flexDirection: "column",
-  alignItems: "self-start",
+  alignItems: "flex-start",
   padding: "0.875rem",
   borderColor: "rgba(228, 228, 228, 1)",
   border: showGoogleInline
     ? "1px solid rgba(56, 152, 252, 1)"
     : "1px solid rgba(228, 228, 228, 1)",
   width: "100%",
+  minHeight: "100px",
   "@media (max-width: 1199px)": {
-    maxHeight: "82px",
+    maxHeight: "unset",
   },
 });
 
@@ -512,6 +514,7 @@ const typographyGoogle = {
   color: "rgba(74, 74, 74, 1)",
   textWrap: "nowrap",
   paddingTop: "0.625rem",
+  "@media (max-width: 1400px)": { whiteSpace: "normal", textWrap: "wrap" },
   "@media (max-width: 1199px)": {
     paddingTop: "0.5rem",
   },

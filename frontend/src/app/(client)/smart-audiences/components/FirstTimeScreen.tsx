@@ -1,14 +1,15 @@
 import React from "react";
 import FirstTimeCards from "../../components/FirstTimeCards";
-import { Box, Typography, Button, Link as MuiLink, } from "@mui/material";
+import { Box, Typography, Button, Link as MuiLink, Grid } from "@mui/material";
 import { ExternalLink } from "@/components/ExternalLink";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import { useState } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import NotificationBanner from "@/components/NotificationBanner";
 import WelcomePopup from "@/components/CreatePixelSourcePopup";
 import { getInteractiveSx } from "@/components/utils";
+import { DashboardHelpCard } from "@/components/HelpCard";
 
 type CardData = {
   title: string;
@@ -20,17 +21,21 @@ type CardData = {
 
 interface ClickableCardsProps {
   cardData: CardData[];
-  hasSource: boolean
-  hasPixel: boolean
+  hasSource: boolean;
+  hasPixel: boolean;
 }
 
-const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps) => {
+const FirstTimeScreen = ({
+  cardData,
+  hasSource,
+  hasPixel,
+}: ClickableCardsProps) => {
   const router = useRouter();
   const [popupOpen, setPopupOpen] = useState(false);
-    
-    const handleOpenPopup = () => {
-      setPopupOpen(true);
-    };
+
+  const handleOpenPopup = () => {
+    setPopupOpen(true);
+  };
   return (
     <Box
       sx={{
@@ -42,7 +47,7 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
         pr: 1,
         boxSizing: "border-box",
         width: "100%",
-        textAlign: "center",
+        textAlign: "start",
         flex: 1,
         "& img": {
           width: "auto",
@@ -51,7 +56,7 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
         },
       }}
     >
-      { !hasSource && (
+      {!hasSource && (
         <NotificationBanner
           ctaUrl="/sources"
           ctaLabel="Create Source"
@@ -75,7 +80,13 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
         <MuiLink
           href="https://example.com"
           underline="hover"
-          sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            fontWeight: 300,
+            color: "#3898FC",
+          }}
         >
           Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
         </MuiLink>
@@ -91,7 +102,8 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
           lineHeight: "22px",
         }}
       >
-        Combine your existing sources and lookalikes to create a dynamic, high-performing smart audience
+        Combine your existing sources and lookalikes to create a dynamic,
+        high-performing smart audience
       </Typography>
 
       <Box
@@ -106,7 +118,7 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
           ...getInteractiveSx(!hasSource),
           "&:hover .MuiCard-root": {
             backgroundColor: "rgba(232, 239, 255, 0.4)",
-            border: "none"
+            border: "none",
           },
         }}
       >
@@ -143,18 +155,41 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
               ":disabled": {
                 backgroundColor: "rgba(56, 152, 252, 0.5)",
               },
-              "&:active": { 
-                backgroundColor: "rgba(116, 183, 253, 1)" 
+              "&:active": {
+                backgroundColor: "rgba(116, 183, 253, 1)",
               },
             }}
           >
             Begin
           </Button>
         </Box>
-        
       </Box>
+      <Grid sx={{ mt: 2, mb: 3, width: "100%" }}>
+        <DashboardHelpCard
+          headline="Need Help with Smart Audiences?"
+          description="Get a free 30-minute consultation to optimize your AI-powered audience segments."
+          helpPoints={[
+            {
+              title: "Audience Quality Check",
+              description: "Validate segment accuracy",
+            },
+            {
+              title: "Performance Tuning",
+              description: "Adjust parameters for better results",
+            },
+            {
+              title: "Expansion Strategies",
+              description: "Scale what's working",
+            },
+          ]}
+        />
+      </Grid>
       {popupOpen && !hasSource && (
-        <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} variant={hasPixel? "alternate": "welcome"}/>
+        <WelcomePopup
+          open={popupOpen}
+          onClose={() => setPopupOpen(false)}
+          variant={hasPixel ? "alternate" : "welcome"}
+        />
       )}
     </Box>
   );
