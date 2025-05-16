@@ -33,8 +33,8 @@ import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import Papa, { ParseResult } from "papaparse";
 import ProgressBar from "@/components/ProgressBar";
-import { useHints } from '@/context/HintsContext';
-import HintCard from "../../components/HintCard"
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../components/HintCard";
 
 interface Row {
   id: number;
@@ -58,7 +58,7 @@ interface StateHint {
 interface HintCardInterface {
   description: string;
   title: string;
-  linkToLoadMore: string
+  linkToLoadMore: string;
 }
 
 interface NewSource {
@@ -116,13 +116,13 @@ const SourcesImport: React.FC = () => {
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
   const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
-    {show: true, id: 1}, 
-    {show: false, id: 2},
-    {show: false, id: 3},
-    {show: false, id: 4},
-    {show: false, id: 5},
-    {show: false, id: 6},
-  ]); 
+    { show: true, id: 1 },
+    { show: false, id: 2 },
+    { show: false, id: 3 },
+    { show: false, id: 4 },
+    { show: false, id: 5 },
+    { show: false, id: 6 },
+  ]);
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -149,57 +149,74 @@ const SourcesImport: React.FC = () => {
     { id: 4, name: "converted_sales_count", title: "converted_sales" },
   ];
 
-  const hintCard1: HintCardInterface = { 
-    description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", 
+  const hintCard1: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Source Type",
-    linkToLoadMore: "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2"
-  }
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
 
-  const hintCard2: HintCardInterface = { 
-    description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", 
+  const hintCard2: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Domain",
-    linkToLoadMore: "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2"
-  }
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
 
-  const hintCard3: HintCardInterface = { 
-    description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", 
+  const hintCard3: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Data source",
-    linkToLoadMore: "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2"
-  }
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
 
-  const hintCard4: HintCardInterface = { 
-    description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", 
+  const hintCard4: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Source file",
-    linkToLoadMore: "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2"
-  }
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
 
-  const hintCard5: HintCardInterface = { 
-    description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", 
+  const hintCard5: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Data Maping",
-    linkToLoadMore: "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2"
-  }
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
 
-  const hintCard6: HintCardInterface = { 
-    description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", 
+  const hintCard6: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Target type",
-    linkToLoadMore: "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2"
-  }
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
+
+  const sourceTypeDescriptions: Record<string, string> = {
+    "Customer Conversions":
+      "Please upload a CSV file containing the list of customers who have successfully completed an order on your website.",
+    "Failed Leads":
+      "Please upload a CSV file containing leads who did not complete a purchase or dropped off during the signup process.",
+    Interest:
+      "Please upload a CSV file of users who showed interest in your product or service, such as newsletter subscribers or ebook downloaders.",
+  };
 
   const toggleDotHintClick = (id: number) => {
     setIsOpenSelect((prev) =>
-      prev.map((el) =>
-        el.id === id ? { ...el, show: !el.show } : el
-      )
+      prev.map((el) => (el.id === id ? { ...el, show: !el.show } : el))
     );
-  }
+  };
 
   const closeDotHintClick = (id: number) => {
     setIsOpenSelect((prev) =>
-      prev.map((el) =>
-        el.id === id ? { ...el, show: false } : el
-      )
+      prev.map((el) => (el.id === id ? { ...el, show: false } : el))
     );
-  }
+  };
 
   const defaultRows: Row[] = [
     { id: 1, type: "Email", value: "", canDelete: false, isHidden: false },
@@ -261,12 +278,12 @@ const SourcesImport: React.FC = () => {
   useEffect(() => {
     if (showHints && !isOpenSelect) {
       setIsOpenSelect([
-        {show: true, id: 1}, 
-        {show: false, id: 2},
-        {show: false, id: 3},
-        {show: false, id: 4},
-        {show: false, id: 5},
-        {show: false, id: 6},
+        { show: true, id: 1 },
+        { show: false, id: 2 },
+        { show: false, id: 3 },
+        { show: false, id: 4 },
+        { show: false, id: 5 },
+        { show: false, id: 6 },
       ]);
     }
   }, [showHints]);
@@ -351,17 +368,17 @@ const SourcesImport: React.FC = () => {
     handleDeleteFile();
     setTargetAudience("");
     setSourceType(event.target.value);
-    closeDotHintClick(1)
+    closeDotHintClick(1);
     if (event.target.value === "Website - Pixel") {
       setSourceMethod(2);
-      toggleDotHintClick(2)
+      toggleDotHintClick(2);
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
       fetchDomainsAndLeads();
     } else {
       setSourceMethod(1);
-      toggleDotHintClick(4)
+      toggleDotHintClick(4);
       setPixelNotInstalled(false);
       setTimeout(() => {
         scrollToBlock(block2Ref);
@@ -374,7 +391,7 @@ const SourcesImport: React.FC = () => {
     setTimeout(() => {
       scrollToBlock(block6Ref);
     }, 0);
-    closeDotHintClick(6)
+    closeDotHintClick(6);
   };
 
   // Uploading
@@ -637,7 +654,7 @@ const SourcesImport: React.FC = () => {
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
-      toggleDotHintClick(6)
+      toggleDotHintClick(6);
     } catch (error: unknown) {
       if (error instanceof Error) {
         showErrorToast(error.message);
@@ -679,8 +696,8 @@ const SourcesImport: React.FC = () => {
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
     const domainName = event.target.value;
     setSelectedDomain(domainName);
-    closeDotHintClick(2)
-    toggleDotHintClick(3)
+    closeDotHintClick(2);
+    toggleDotHintClick(3);
 
     const selectedDomainData = domains.find(
       (domain: DomainsLeads) => domain.name === domainName
@@ -885,233 +902,246 @@ const SourcesImport: React.FC = () => {
                         Interest (CSV)
                       </MenuItem>
                     </Select>
-                    {showHints && <HintCard card={hintCard1} positionLeft={340} isOpenSelect={isOpenSelect[0].show} toggleClick={() => toggleDotHintClick(1)}/>}
+                    {showHints && (
+                      <HintCard
+                        card={hintCard1}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[0].show}
+                        toggleClick={() => toggleDotHintClick(1)}
+                      />
+                    )}
                   </FormControl>
                 </Box>
               </Box>
 
               {sourceMethod === 1 && sourceType !== "" && !file && (
+                <Box
+                  ref={block2Ref}
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 2,
+                    position: "relative",
+                    flexWrap: "wrap",
+                    border: "1px solid rgba(228, 228, 228, 1)",
+                    borderRadius: "6px",
+                    padding: "20px",
+                  }}
+                >
+                  {uploadProgress !== null && (
+                    <Box
+                      sx={{
+                        width: "100%",
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        zIndex: 1200,
+                      }}
+                    >
+                      <LinearProgress
+                        variant="determinate"
+                        value={uploadProgress}
+                        sx={{
+                          borderRadius: "6px",
+                          backgroundColor: "#c6dafc",
+                          "& .MuiLinearProgress-bar": {
+                            borderRadius: 5,
+                            backgroundColor: "#4285f4",
+                          },
+                        }}
+                      />
+                    </Box>
+                  )}
                   <Box
-                    ref={block2Ref}
                     sx={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: 2,
-                      position: "relative",
-                      flexWrap: "wrap",
-                      border: "1px solid rgba(228, 228, 228, 1)",
-                      borderRadius: "6px",
-                      padding: "20px",
+                      gap: 1,
                     }}
                   >
-                    {uploadProgress !== null && (
-                      <Box
-                        sx={{
-                          width: "100%",
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          zIndex: 1200,
-                        }}
-                      >
-                        <LinearProgress
-                          variant="determinate"
-                          value={uploadProgress}
-                          sx={{
-                            borderRadius: "6px",
-                            backgroundColor: "#c6dafc",
-                            "& .MuiLinearProgress-bar": {
-                              borderRadius: 5,
-                              backgroundColor: "#4285f4",
-                            },
-                          }}
-                        />
-                      </Box>
-                    )}
-                    <Box
+                    <Typography
                       sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 1,
+                        fontFamily: "Nunito Sans",
+                        fontSize: "16px",
+                        fontWeight: 500,
                       }}
                     >
+                      Select your source file
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontFamily: "Roboto",
+                        fontSize: "12px",
+                        color: "rgba(95, 99, 104, 1)",
+                      }}
+                    >
+                      {sourceTypeDescriptions[sourceType] ?? ""}
+                    </Typography>
+                  </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "316px",
+                      border: dragActive
+                        ? "2px dashed rgba(56, 152, 252, 1)"
+                        : "1px dashed rgba(56, 152, 252, 1)",
+                      borderRadius: "4px",
+                      padding: "8px 16px",
+                      height: "80px",
+                      gap: "16px",
+                      cursor: "pointer",
+                      backgroundColor: dragActive
+                        ? "rgba(80, 82, 178, 0.1)"
+                        : "rgba(246, 248, 250, 1)",
+                      transition: "background-color 0.3s, border-color 0.3s",
+                      "@media (max-width: 390px)": {
+                        width: "calc(100vw - 74px)",
+                      },
+                    }}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() =>
+                      document.getElementById("fileInput")?.click()
+                    }
+                  >
+                    <IconButton
+                      sx={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "4px",
+                        backgroundColor: "rgba(234, 235, 255, 1)",
+                      }}
+                    >
+                      <FileUploadOutlinedIcon
+                        sx={{
+                          color: "rgba(56, 152, 252, 1)",
+                        }}
+                      />
+                    </IconButton>
+                    <Box sx={{ flexGrow: 1 }}>
                       <Typography
                         sx={{
                           fontFamily: "Nunito Sans",
                           fontSize: "16px",
-                          fontWeight: 500,
+                          fontWeight: "600",
+                          color: "rgba(56, 152, 252, 1)",
                         }}
                       >
-                        Select your source file
+                        Upload a file
                       </Typography>
                       <Typography
                         sx={{
-                          fontFamily: "Roboto",
-                          fontSize: "12px",
-                          color: "rgba(95, 99, 104, 1)",
+                          fontFamily: "Nunito Sans",
+                          fontSize: "14px",
+                          fontWeight: "500",
+                          color: "rgba(32, 33, 36, 1)",
                         }}
                       >
-                        Please upload a CSV file containing the list of customers
-                        who have successfully completed an order on your website.
+                        CSV.Max 100MB
                       </Typography>
                     </Box>
+                    <input
+                      id="fileInput"
+                      type="file"
+                      hidden
+                      accept=".csv"
+                      onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                        const file = event.target.files?.[0];
+                        if (file) {
+                          handleFileUpload(file);
+                        }
+                        event.target.value = "";
+                      }}
+                    />
+                  </Box>
+                  {sourceType !== "" && file && (
                     <Box
                       sx={{
                         display: "flex",
                         alignItems: "center",
                         width: "316px",
-                        border: dragActive
-                          ? "2px dashed rgba(56, 152, 252, 1)"
-                          : "1px dashed rgba(56, 152, 252, 1)",
+                        border: "1px solid rgba(228, 228, 228, 1)",
                         borderRadius: "4px",
                         padding: "8px 16px",
                         height: "80px",
+                        backgroundColor: "rgba(246, 248, 250, 1)",
                         gap: "16px",
-                        cursor: "pointer",
-                        backgroundColor: dragActive
-                          ? "rgba(80, 82, 178, 0.1)"
-                          : "rgba(246, 248, 250, 1)",
-                        transition: "background-color 0.3s, border-color 0.3s",
                         "@media (max-width: 390px)": {
                           width: "calc(100vw - 74px)",
                         },
                       }}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      onClick={() =>
-                        document.getElementById("fileInput")?.click()
-                      }
                     >
-                      <IconButton
-                        sx={{
-                          width: "40px",
-                          height: "40px",
-                          borderRadius: "4px",
-                          backgroundColor: "rgba(234, 235, 255, 1)",
-                        }}
-                      >
-                        <FileUploadOutlinedIcon
-                          sx={{
-                            color: "rgba(56, 152, 252, 1)",
-                          }}
-                        />
-                      </IconButton>
                       <Box sx={{ flexGrow: 1 }}>
                         <Typography
                           sx={{
                             fontFamily: "Nunito Sans",
                             fontSize: "16px",
                             fontWeight: "600",
-                            color: "rgba(56, 152, 252, 1)",
+                            color: "rgba(32, 33, 36, 1)",
+                            maxWidth: "13.75rem",
+                            overflow: "hidden",
+                            textWrap: "wrap",
+                            textOverflow: "ellipsis",
                           }}
                         >
-                          Upload a file
+                          {fileName}
                         </Typography>
                         <Typography
                           sx={{
                             fontFamily: "Nunito Sans",
-                            fontSize: "14px",
-                            fontWeight: "500",
-                            color: "rgba(32, 33, 36, 1)",
+                            fontSize: "12px",
+                            fontWeight: "600",
+                            color: "rgba(74, 74, 74, 1)",
                           }}
                         >
-                          CSV.Max 100MB
+                          {fileSizeStr}
                         </Typography>
                       </Box>
-                      <input
-                        id="fileInput"
-                        type="file"
-                        hidden
-                        accept=".csv"
-                        onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                          const file = event.target.files?.[0];
-                          if (file) {
-                            handleFileUpload(file);
-                          }
-                          event.target.value = "";
-                        }}
-                      />
+                      <IconButton onClick={handleDeleteFile}>
+                        <DeleteOutlinedIcon />
+                      </IconButton>
                     </Box>
-                    {sourceType !== "" && file && (
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            width: "316px",
-                            border: "1px solid rgba(228, 228, 228, 1)",
-                            borderRadius: "4px",
-                            padding: "8px 16px",
-                            height: "80px",
-                            backgroundColor: "rgba(246, 248, 250, 1)",
-                            gap: "16px",
-                            "@media (max-width: 390px)": {
-                              width: "calc(100vw - 74px)",
-                            },
-                          }}
-                        >
-                          <Box sx={{ flexGrow: 1 }}>
-                            <Typography
-                              sx={{
-                                fontFamily: "Nunito Sans",
-                                fontSize: "16px",
-                                fontWeight: "600",
-                                color: "rgba(32, 33, 36, 1)",
-                                maxWidth: "13.75rem",
-                                overflow: "hidden",
-                                textWrap: "wrap",
-                                textOverflow: "ellipsis",
-                              }}
-                            >
-                              {fileName}
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontFamily: "Nunito Sans",
-                                fontSize: "12px",
-                                fontWeight: "600",
-                                color: "rgba(74, 74, 74, 1)",
-                              }}
-                            >
-                              {fileSizeStr}
-                            </Typography>
-                          </Box>
-                          <IconButton onClick={handleDeleteFile}>
-                            <DeleteOutlinedIcon />
-                          </IconButton>
-                        </Box>
-                    )}
+                  )}
 
-                    {sourceType !== "" && (
+                  {sourceType !== "" && (
+                    <Typography
+                      className="main-text"
+                      component="div"
+                      sx={{
+                        ...sourcesStyles.text,
+                        gap: 0.25,
+                        pt: 1,
+                        fontSize: "12px",
+                        "@media (max-width: 700px)": { mb: 1 },
+                      }}
+                    >
+                      Sample doc:{" "}
                       <Typography
-                        className="main-text"
-                        component="div"
+                        onClick={downloadSampleFile}
+                        component="span"
                         sx={{
                           ...sourcesStyles.text,
-                          gap: 0.25,
-                          pt: 1,
-                          fontSize: "12px",
-                          "@media (max-width: 700px)": { mb: 1 },
+                          color: "rgba(56, 152, 252, 1)",
+                          cursor: "pointer",
+                          fontWeight: 400,
                         }}
                       >
-                        Sample doc:{" "}
-                        <Typography
-                          onClick={downloadSampleFile}
-                          component="span"
-                          sx={{
-                            ...sourcesStyles.text,
-                            color: "rgba(56, 152, 252, 1)",
-                            cursor: "pointer",
-                            fontWeight: 400,
-                          }}
-                        >
-                          sample recent customers-list.csv
-                        </Typography>
+                        sample recent customers-list.csv
                       </Typography>
-                    )}
+                    </Typography>
+                  )}
 
-                    {showHints && <HintCard card={hintCard4} positionLeft={340} isOpenSelect={isOpenSelect[3].show} toggleClick={() => toggleDotHintClick(4)}/>}
-                  </Box>
+                  {showHints && (
+                    <HintCard
+                      card={hintCard4}
+                      positionLeft={340}
+                      isOpenSelect={isOpenSelect[3].show}
+                      toggleClick={() => toggleDotHintClick(4)}
+                    />
+                  )}
+                </Box>
               )}
 
               {sourceMethod === 1 && (
@@ -1381,7 +1411,14 @@ const SourcesImport: React.FC = () => {
                       </Typography>
                     </Box>
                   )}
-                  {showHints && <HintCard card={hintCard5} positionLeft={340} isOpenSelect={isOpenSelect[4].show} toggleClick={() => toggleDotHintClick(5)}/>}
+                  {showHints && (
+                    <HintCard
+                      card={hintCard5}
+                      positionLeft={340}
+                      isOpenSelect={isOpenSelect[4].show}
+                      toggleClick={() => toggleDotHintClick(5)}
+                    />
+                  )}
                 </Box>
               )}
 
@@ -1530,7 +1567,14 @@ const SourcesImport: React.FC = () => {
                         </MenuItem>
                       ))}
                     </Select>
-                    {showHints && <HintCard card={hintCard2} positionLeft={340} isOpenSelect={isOpenSelect[1].show} toggleClick={() => toggleDotHintClick(2)}/>}
+                    {showHints && (
+                      <HintCard
+                        card={hintCard2}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[1].show}
+                        toggleClick={() => toggleDotHintClick(2)}
+                      />
+                    )}
                   </FormControl>
                   {selectedDomain && (
                     <Box
@@ -1598,12 +1642,10 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   </Box>
                   <Box
-                    onClick={
-                      () => {
-                        closeDotHintClick(3)
-                        toggleDotHintClick(6)
-                      }
-                    }
+                    onClick={() => {
+                      closeDotHintClick(3);
+                      toggleDotHintClick(6);
+                    }}
                     sx={{
                       display: "flex",
                       gap: 2,
@@ -1721,7 +1763,14 @@ const SourcesImport: React.FC = () => {
                     >
                       Converted Sales
                     </Button>
-                    {showHints && <HintCard card={hintCard3} positionLeft={340} isOpenSelect={isOpenSelect[2].show} toggleClick={() => toggleDotHintClick(3)}/>}
+                    {showHints && (
+                      <HintCard
+                        card={hintCard3}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[2].show}
+                        toggleClick={() => toggleDotHintClick(3)}
+                      />
+                    )}
                   </Box>
                   <Box
                     sx={{ display: "flex", flexDirection: "column", gap: 1 }}
@@ -1835,7 +1884,14 @@ const SourcesImport: React.FC = () => {
                         {option}
                       </ToggleButton>
                     ))}
-                    {showHints && <HintCard card={hintCard6} positionLeft={340} isOpenSelect={isOpenSelect[5].show} toggleClick={() => toggleDotHintClick(6)}/>}
+                    {showHints && (
+                      <HintCard
+                        card={hintCard6}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[5].show}
+                        toggleClick={() => toggleDotHintClick(6)}
+                      />
+                    )}
                   </Box>
                 </Box>
               )}
