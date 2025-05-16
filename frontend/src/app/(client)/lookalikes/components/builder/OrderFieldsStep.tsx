@@ -197,7 +197,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
 
                         <Typography
                             component="a"
-                            href="https://example.com"
+                            href="https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes"
                             sx={{
                                 fontSize: "14px",
                                 color: "rgba(56, 152, 252, 1)",

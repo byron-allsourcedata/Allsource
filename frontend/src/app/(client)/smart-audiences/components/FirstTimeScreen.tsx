@@ -78,7 +78,8 @@ const FirstTimeScreen = ({
           Generate Smart Audience
         </Typography>
         <MuiLink
-          href="https://example.com"
+          href="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder"
+          target="_blank"
           underline="hover"
           sx={{
             display: "flex",
