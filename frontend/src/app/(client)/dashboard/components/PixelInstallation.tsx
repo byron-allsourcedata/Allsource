@@ -287,7 +287,54 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
               </Typography>
             </Button>
           </Grid>
-
+          <Grid item xs={12} md={4}>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={installManually}
+              sx={{
+                ...buttonStyles(showManualInline),
+                ...((sourcePlatform === "shopify" ||
+                  sourcePlatform === "big_commerce") && {
+                  color: "grey",
+                  borderColor: "grey",
+                  pointerEvents: "none",
+                  backgroundColor: "lightgrey",
+                }),
+              }}
+              disabled={
+                sourcePlatform === "shopify" ||
+                sourcePlatform === "big_commerce"
+              }
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  width: "100%",
+                  justifyContent: "space-between",
+                  alignItems: "space-between",
+                  flexDirection: "row",
+                }}
+              >
+                <Image
+                  src={"/install_manually.svg"}
+                  alt="Install Manually"
+                  width={24}
+                  height={24}
+                />
+                <CustomTooltip
+                  title={
+                    "Manually install to have full control over setup and configuration."
+                  }
+                  linkText="Learn more"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                />
+              </Box>
+              <Typography className="second-sub-title" sx={typographyStyles}>
+                Install Manually
+              </Typography>
+            </Button>
+          </Grid>
           <Grid item xs={12} md={4}>
             <Button
               variant="outlined"
@@ -362,54 +409,6 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                   Install on CMS
                 </Typography>
               )}
-            </Button>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Button
-              variant="outlined"
-              fullWidth
-              onClick={installManually}
-              sx={{
-                ...buttonStyles(showManualInline),
-                ...((sourcePlatform === "shopify" ||
-                  sourcePlatform === "big_commerce") && {
-                  color: "grey",
-                  borderColor: "grey",
-                  pointerEvents: "none",
-                  backgroundColor: "lightgrey",
-                }),
-              }}
-              disabled={
-                sourcePlatform === "shopify" ||
-                sourcePlatform === "big_commerce"
-              }
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  width: "100%",
-                  justifyContent: "space-between",
-                  alignItems: "space-between",
-                  flexDirection: "row",
-                }}
-              >
-                <Image
-                  src={"/install_manually.svg"}
-                  alt="Install Manually"
-                  width={24}
-                  height={24}
-                />
-                <CustomTooltip
-                  title={
-                    "Manually install to have full control over setup and configuration."
-                  }
-                  linkText="Learn more"
-                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
-                />
-              </Box>
-              <Typography className="second-sub-title" sx={typographyStyles}>
-                Install Manually
-              </Typography>
             </Button>
           </Grid>
         </Box>
