@@ -2,9 +2,10 @@ import React from "react";
 import { Box, Button, Grid, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import { Field } from "@/types";
-import  DragAndDropTable  from "./DragAndDropTable";
+import DragAndDropTable from "./DragAndDropTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 import { ResetProvider, useResetContext } from "@/context/ResetContext";
+import { OpenInNewIcon } from "@/icon";
 
 interface OrderFieldsStepProps {
     fields: Field[];
@@ -26,7 +27,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
         if (step === 0) {
             handlePrevStep();
         }
-      };
+    };
 
     return (
         <Box
@@ -35,66 +36,9 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                 borderRadius: "6px",
                 bgcolor: "white",
                 p: 2,
-                mt: 2,
             }}
         >
-            <Box sx={{ display: "flex", alignItems: "center", mb: 2, ml: 1, width: "600px", justifyContent: "space-between" }}>
-            <Stepper 
-                activeStep={activeStep}
-                nonLinear
-                sx={{
-                ml: 0,
-                }}
-                >
-                {['Select fields', 'Order fields'].map((label, index) => (
-                <Step key={label} sx={{pl: 0}}>
-                    <StepButton onClick={handleStep(index)} sx={{
-                        "&:after": {
-                        content:'""',
-                        backgroundColor: "rgba(212, 212, 212, 1)",
-                        width: "80px",
-                        marginLeft: "8px",
-                        height: "1px",
-                        display: index === 0 ? "block" : "none",
-                        },
-                    
-                    '& .MuiStepLabel-label': {
-                        color: index === activeStep ? 'rgba(51, 51, 51, 1)' : 'rgba(212, 212, 212, 1)',
-                        fontWeight: 500,
-                        fontFamily: "Nunito Sans",
-                        fontSize: '14px',
-                        },
-                        '& .MuiStepIcon-root': {
-                        color: index === 1 ? 'rgba(56, 152, 252, 1)' : 'rgba(212, 212, 212, 1)',
-                        },
-                    }}>
-                    {label}
-                    </StepButton>
-                </Step>
-                ))}
-            </Stepper>
-            <Button
-                    onClick={resetAll}
-                    disabled={atDefault}
-                    sx={{
-                      border: "1px rgba(56, 152, 252, 1) solid",
-                      color: "rgba(56, 152, 252, 1)",
-                      backgroundColor: "#FFFFFF",
-                      textTransform: "none",
-                      "&:hover": {
-                        border: "1px rgba(56, 152, 252, 1) solid",
-                        backgroundColor: "#FFFFFF",
-                      },
-                    }}
-                    variant="outlined"
-                  >
-                    <Typography  fontSize="0.8rem">
-                      Set recommended
-                    </Typography>
-                  </Button>
-            </Box>
-
-            <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid container sx={{ mb: 2 }}>
                 <Grid item xs={7}>
                     <Typography
                         variant="h6"
@@ -121,21 +65,86 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                         You can configure the predictable fields that will be used for audience
                         building yourself.
                     </Typography>
+
                 </Grid>
-                <Grid item xs={5}>
-                    <Typography
-                        variant="h6"
+            </Grid>
+
+            <Grid container sx={{ mb: 2, }}>
+                <Grid container xs={12} md={4}>
+                    <Grid item sx={{ borderBottom: "1px solid rgba(233, 233, 233, 1)",}}>
+                        {/* «Recommended fields» */}
+                        <Button
+                            onClick={handleStep(0)}
+                            disableRipple
+                            sx={{
+                                minWidth: 0,
+                                textTransform: "none",
+                                fontFamily: "Nunito Sans",
+                                fontWeight: 700,
+                                fontSize: "14px",
+                                color: "rgba(112, 112, 113, 1)",
+                                mr: 0.5,
+                                // borderBottom: "1px solid rgba(212, 212, 212, 1)",
+                                backgroundColor: "rgba(246, 248, 250, 1)",
+                                "&:hover": { backgroundColor: "rgba(226, 229, 232, 0.74)" },
+                            }}
+                        >
+                            Recommended fields
+                        </Button>
+                    </Grid>
+                    <Grid item sx={{ borderRight: "1px solid rgba(233, 233, 233, 1)", borderLeft: "1px solid rgba(233, 233, 233, 1)", borderTopRightRadius: 3, borderTopLeftRadius: 3 }}>
+                        {/* «Order fields» */}
+                        <Button
+                            onClick={handleStep(1)}
+                            disableRipple
+                            sx={{
+                                minWidth: 0,
+                                textTransform: "none",
+                                fontFamily: "Nunito Sans",
+                                fontWeight: 500,
+                                fontSize: "14px",
+                                color: "rgba(56, 152, 252, 1)",
+                                borderTop: "2px solid rgba(56, 152, 252, 1)",
+                                mb: 0.5,
+                                "&:hover": { backgroundColor: "transparent" },
+                            }}
+                        >
+                            Order fields
+                        </Button>
+                    </Grid>
+                    <Grid item sx={{ flexGrow: 1, borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
+
+                    </Grid>
+                </Grid>
+                <Grid item md={2} sx={{ textAlign: "right", borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
+                    <Button
+                        onClick={resetAll}
+                        disabled={atDefault}
                         sx={{
-                            fontFamily: "Nunito Sans",
-                            fontWeight: 500,
-                            fontSize: "16px",
-                            lineHeight: "22.5px",
-                            mb: 1,
-                            ml: 1,
+                            border: "1px rgba(56, 152, 252, 1) solid",
+                            color: "rgba(56, 152, 252, 1)",
+                            backgroundColor: "#FFFFFF",
+                            textTransform: "none",
+                            "&:hover": {
+                                border: "1px rgba(56, 152, 252, 1) solid",
+                                backgroundColor: "#FFFFFF",
+                            },
+                            "&.Mui-disabled": {
+                                opacity: 1,
+                                border: "1px rgba(234, 248, 221, 1) solid",
+                                backgroundColor: "rgba(234, 248, 221, 1)",
+                                color: "rgba(43, 91, 0, 1)",
+                            },
                         }}
+                        variant="outlined"
                     >
-                        How to order your fields?
-                    </Typography>
+                        <Typography fontSize="0.8rem">
+                            {atDefault ? `Recomended` : `Set recommended`}
+                        </Typography>
+                    </Button>
+                </Grid>
+                <Grid item sx={{ flexGrow: 1, borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
+
                 </Grid>
             </Grid>
 
@@ -143,9 +152,21 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                 <Grid item xs={12} md={6}>
                     <DragAndDropTable fields={fields} onOrderChange={onOrderChange} />
                 </Grid>
-                <Grid item xs={12} md={1} />
+                <Grid item />
                 <Grid item xs={12} md={5} sx={{ borderLeft: "1px solid #E4E4E4" }}>
                     <Box sx={{ p: 0, bgcolor: "transparent" }}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontFamily: "Nunito Sans",
+                                fontWeight: 500,
+                                fontSize: "16px",
+                                lineHeight: "22.5px",
+                                mb: 2,
+                            }}
+                        >
+                            How to order your fields?
+                        </Typography>
                         <Typography
                             variant="body2"
                             sx={{
@@ -176,7 +197,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
 
                         <Typography
                             component="a"
-                            href="#"
+                            href="https://example.com"
                             sx={{
                                 fontSize: "14px",
                                 color: "rgba(56, 152, 252, 1)",
@@ -185,12 +206,13 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                                 display: "inline-block",
                             }}
                         >
-                            Learn more
+                            Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
                         </Typography>
                     </Box>
                 </Grid>
             </Grid>
         </Box>
-)};
+    )
+};
 
 export default React.memo(OrderFieldsStep);

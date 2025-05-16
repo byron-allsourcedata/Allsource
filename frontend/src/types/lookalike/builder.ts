@@ -1,3 +1,6 @@
+import { SxProps, Theme } from "@mui/material";
+import React from "react";
+
 export type FeatureObject = Record<string, number>;
 
 export interface Props<T extends FeatureObject> {
@@ -5,6 +8,8 @@ export interface Props<T extends FeatureObject> {
   title: string;
   onChangeDisplayed?: (selected: (keyof T)[]) => void;
   columnHeaders?: [string, string];
+  headerIcon?: React.ReactNode;
+  customStyles?: SxProps<Theme>;
 }
 
 export interface Field {

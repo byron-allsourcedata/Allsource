@@ -104,6 +104,10 @@ const FirstTimeScreen = ({ cardData, hasSource, hasPixel }: ClickableCardsProps)
           borderRadius: "6px",
           border: "1px solid rgba(237, 237, 237, 1)",
           ...getInteractiveSx(!hasSource),
+          "&:hover .MuiCard-root": {
+            backgroundColor: "rgba(232, 239, 255, 0.4)",
+            border: "none"
+          },
         }}
       >
         <Box

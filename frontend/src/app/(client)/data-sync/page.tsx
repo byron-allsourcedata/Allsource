@@ -44,7 +44,7 @@ const DataSync = () => {
   const router = useRouter();
   const { hasNotification } = useNotification();
   const [status, setStatus] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [filterPopup, setFilterPopup] = useState(false);
   const [filters, setFilters] = useState<any>();
   const [openCreateDataSyncPopup, setOpenCreateDataSyncPopup] = useState(false);
@@ -105,7 +105,7 @@ const DataSync = () => {
   return (
     <>
     {isLoading && <CustomizedProgressBar />}
-      {(
+      {!isLoading && (
       <Box sx={datasyncStyle.mainContent}>
         {hasDataSync &&(
           <Box

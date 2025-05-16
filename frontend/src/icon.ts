@@ -8,3 +8,8 @@ export { default as MailOutlinedIcon } from '@mui/icons-material/MailOutlined';
 export { default as DateRangeIcon } from '@mui/icons-material/DateRange';
 export { default as EditIcon } from '@mui/icons-material/Edit';
 export { default as HeadsetMicOutlinedIcon } from '@mui/icons-material/HeadsetMicOutlined';
+export {default as PaymentIcon} from '@mui/icons-material/Payment';
+export {default as HowToVoteIcon}  from '@mui/icons-material/HowToVote';
+export {default as DirectionsBikeIcon}  from '@mui/icons-material/DirectionsBike';
+export {default as AccountBoxIcon}  from '@mui/icons-material/AccountBox';
+export {default as OpenInNewIcon}  from "@mui/icons-material/OpenInNew";

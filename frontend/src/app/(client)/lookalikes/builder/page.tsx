@@ -615,34 +615,35 @@ const CreateLookalikePage: React.FC = () => {
 
                 {calculatedResults && currentStep >= 2 && (
                   <>
-                    <Box hidden={currentStep !== 2}>
-                      <AudienceFieldsSelector
-                        personalData={personalData}
-                        financialData={financialData}
-                        lifestylesData={lifestylesData}
-                        voterData={voterData}
-                        professionalProfileData={professionalProfileData}
-                        employmentHistoryData={employmentHistoryData}
-                        // realEstateData={realEstateData}
-                        onPersonalChange={setPersonalKeys}
-                        onFinancialChange={setFinancialKeys}
-                        onLifestylesChange={setLifestylesKeys}
-                        onVoterChange={setVoterKeys}
-                        onProfessionalProfileChange={setProfessionalProfileKeys}
-                        onEmploymentHistoryChange={setEmploymentHistoryKeys}
-                        // onRealEstateChange={setRealEstateKeys}
-                        handleNextStep={handleNextStep}
-                        canProcessed={canProceed}
-                      />
-                    </Box>
-                    {/* Calculation results block rendered with flex layout */}
-                    <Box hidden={currentStep !== 3}>
-                      <OrderFieldsStep
-                        fields={dndFields}
-                        handlePrevStep={handlePrevStep}
-                        onOrderChange={handleFieldsOrderChange}
-                      />
-                    </Box>
+                  <Box hidden={currentStep !== 2} sx={{my: 2}}>
+                    <AudienceFieldsSelector
+                      personalData={personalData}
+                      financialData={financialData}
+                      lifestylesData={lifestylesData}
+                      voterData={voterData}
+                      professionalProfileData={professionalProfileData}
+                      employmentHistoryData={employmentHistoryData}
+                      // realEstateData={realEstateData}
+                      onPersonalChange={setPersonalKeys}
+                      onFinancialChange={setFinancialKeys}
+                      onLifestylesChange={setLifestylesKeys}
+                      onVoterChange={setVoterKeys}
+                      onProfessionalProfileChange={setProfessionalProfileKeys}
+                      onEmploymentHistoryChange={setEmploymentHistoryKeys}
+                      // onRealEstateChange={setRealEstateKeys}
+                      handleNextStep={handleNextStep}
+                      canProcessed={canProceed}
+                      
+                    />
+                  </Box>
+                  {/* Calculation results block rendered with flex layout */}
+                  <Box hidden={currentStep !== 3} sx={{my: 2}}>
+                    <OrderFieldsStep
+                      fields={dndFields}
+                      handlePrevStep={handlePrevStep}
+                      onOrderChange={handleFieldsOrderChange}
+                    />
+                  </Box>
                   </>
                 )}
 

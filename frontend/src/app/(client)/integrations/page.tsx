@@ -1384,13 +1384,13 @@ const Integrations = () => {
     setShowFirstTime(false);
     setActiveTab("1");
   };
-  if (isLoading) {
-    return <CustomizedProgressBar />;
-  }
   return (
     <>
-      {showFirstTime && (
-        <Box sx={{ width: "98%" }}>
+      {isLoading && <CustomizedProgressBar />}
+      {!isLoading &&(
+        <>
+        {showFirstTime && (
+        <Box sx={{width: "98%"}}>
           <FirstTimeScreen onBegin={handleBegin} />
         </Box>
       )}
@@ -1587,6 +1587,8 @@ const Integrations = () => {
             </TabPanel>
           </Box>
         </TabContext>
+      )} 
+        </>
       )}
       {showSlider && <Slider />}
     </>

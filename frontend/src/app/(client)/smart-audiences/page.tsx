@@ -6,16 +6,16 @@ import {
     LinearProgress, Chip, Tooltip, TextField, TypographyProps, TooltipProps
 } from '@mui/material';
 import {
-  FilterListIcon,
-  ArrowDownwardRoundedIcon,
-  ArrowUpwardRoundedIcon,
-  SwapVertIcon,
-  MoreVert,
-  CloseIcon,
-  MailOutlinedIcon,
-  DateRangeIcon,
-  EditIcon,
-  HeadsetMicOutlinedIcon,
+    FilterListIcon,
+    ArrowDownwardRoundedIcon,
+    ArrowUpwardRoundedIcon,
+    SwapVertIcon,
+    MoreVert,
+    CloseIcon,
+    MailOutlinedIcon,
+    DateRangeIcon,
+    EditIcon,
+    HeadsetMicOutlinedIcon,
 } from "@/icon";
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -75,7 +75,7 @@ type CardData = {
     onClick?: () => void;
     isClickable?: boolean;
     isValidationField?: boolean;
-  };
+};
 
 const getStatusStyle = (status: string) => {
     switch (status) {
@@ -269,7 +269,7 @@ const SmartAudiences: React.FC = () => {
     const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
     const [selectedRowData, setSelectedRowData] = useState<Smarts>();
 
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [loaderForTable, setLoaderForTable] = useState(false);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
 
@@ -280,7 +280,7 @@ const SmartAudiences: React.FC = () => {
 
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
-    
+
     const [detailsPopupOpen, setDetailsPopupOpen] = useState(false);
     const [validationHistoryPopupOpen, setValidationsHistoryPopupOpen] = useState(false);
 
@@ -316,27 +316,27 @@ const SmartAudiences: React.FC = () => {
 
     const cardData: CardData[] = [
         {
-          title: "Step 1. Select Use Case",
-          description: "Select between digital advertising platforms and direct marketing channels.",
-          icon: "/use-case.svg",
+            title: "Step 1. Select Use Case",
+            description: "Select between digital advertising platforms and direct marketing channels.",
+            icon: "/use-case.svg",
         },
         {
-          title: "Step 2. Choose Target Type",
-          description: "Select B2B for business audiences, B2C for consumer targeting, or Both to create parallel segments.",
-          icon: "/target-type.svg",
+            title: "Step 2. Choose Target Type",
+            description: "Select B2B for business audiences, B2C for consumer targeting, or Both to create parallel segments.",
+            icon: "/target-type.svg",
         },
         {
-          title: "Step 3. Audience Refinement",
-          description: "Combine your data sources. Select which source or lookalike to include or exclude.",
-          icon: "/data-source.svg",
+            title: "Step 3. Audience Refinement",
+            description: "Combine your data sources. Select which source or lookalike to include or exclude.",
+            icon: "/data-source.svg",
         },
         {
-          title: "Step 4. Validation*",
-          description: "Before finalizing your audience, verify contact data quality through our validation system.",
-          icon: "/smart-validation.svg",
-          isValidationField: true
+            title: "Step 4. Validation*",
+            description: "Before finalizing your audience, verify contact data quality through our validation system.",
+            icon: "/smart-validation.svg",
+            isValidationField: true
         },
-      ];
+    ];
 
     const checkHasSource = async () => {
         const response = await axiosInstance.get('/audience-lookalikes/get-sources');
@@ -407,13 +407,13 @@ const SmartAudiences: React.FC = () => {
     }, [data, fetchSmartsMemoized, page, rowsPerPage]);
 
     const fetchPixelInstalledAnywhere = async () => {
-    try {
-        const { data } = await axiosInstance.get<{ pixel_installed: boolean }>("/domains/pixel-installed-anywhere");
-        setIsPixelInstalledAnywhere(data.pixel_installed);
-    } catch (err) {
-        console.error("Error fetching pixel-installed-anywhere:", err);
-        setIsPixelInstalledAnywhere(false);
-    }
+        try {
+            const { data } = await axiosInstance.get<{ pixel_installed: boolean }>("/domains/pixel-installed-anywhere");
+            setIsPixelInstalledAnywhere(data.pixel_installed);
+        } catch (err) {
+            console.error("Error fetching pixel-installed-anywhere:", err);
+            setIsPixelInstalledAnywhere(false);
+        }
     };
 
     const fetchSmarts = async ({ sortBy, sortOrder, page, rowsPerPage, appliedDates }: FetchDataParams) => {
@@ -488,7 +488,7 @@ const SmartAudiences: React.FC = () => {
             setCount(count || 0);
             if (audience_smarts_list.length === 0) {
                 await fetchPixelInstalledAnywhere();
-              }
+            }
             const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
@@ -813,319 +813,317 @@ const SmartAudiences: React.FC = () => {
     }
 
     return (
-        <>
-            {loading && (
-                <CustomizedProgressBar />
-            )}
-            <Box sx={{
-                display: 'flex', flexDirection: 'column', height: '100%',
-                '@media (max-width: 900px)': {
-                    minHeight: '100vh'
+        <Box sx={{
+            display: 'flex', flexDirection: 'column', height: '100%',
+            '@media (max-width: 900px)': {
+                minHeight: '100vh'
 
-                }
-            }}>
-                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', }}>
-                    <Box>
-                        {data.length !== 0 &&
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    marginTop: hasNotification ? '1rem' : '0.5rem',
-                                    flexWrap: 'wrap',
-                                    gap: '15px',
-                                    '@media (max-width: 900px)': {
-                                        marginTop: hasNotification ? '3rem' : '1.125rem',
-                                    },
-                                    '@media (max-width: 600px)': {
-                                        marginTop: hasNotification ? '2rem' : '0rem',
-                                    },
-                                }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                                    <Typography className='first-sub-title'>
-                                        Smart Audience
-                                    </Typography>
-                                    <CustomToolTip title={'Discover AI-powered Smart Audiences based on your sorces and lookalikes.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/allsource' />
-                                </Box>
-                                <Box sx={{
-                                    display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr: 2,
-                                    '@media (max-width: 900px)': {
-                                        gap: '8px'
-                                    }
-                                }}>
-                                    <Button
-                                        variant="outlined"
-                                        sx={{
-                                            height: '40px',
-                                            borderRadius: '4px',
-                                            textTransform: 'none',
-                                            fontSize: '14px',
-                                            lineHeight: "19.6px",
-                                            fontWeight: '500',
-                                            color: 'rgba(56, 152, 252, 1)',
-                                            borderColor: 'rgba(56, 152, 252, 1)',
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(80, 82, 178, 0.1)',
-                                                borderColor: 'rgba(56, 152, 252, 1)',
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            router.push("/smart-audiences/builder")
-                                        }}
-                                    >
-                                        Generate Smart Audience
-                                    </Button>
-                                    <Button
-                                        onClick={handleFilterPopupOpen}
-                                        disabled={data?.length === 0}
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
-                                            border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '8px',
-                                            opacity: data?.length === 0 ? '0.5' : '1',
-                                            minWidth: 'auto',
-                                            maxHeight: '40px',
-                                            maxWidth: '40px',
-                                            position: 'relative',
-                                            '@media (max-width: 900px)': {
-                                                border: 'none',
-                                                padding: 0
-                                            },
-                                            '&:hover': {
-                                                backgroundColor: 'transparent',
-                                                border: '1px solid rgba(56, 152, 252, 1)',
-                                                color: 'rgba(56, 152, 252, 1)',
-                                                '& .MuiSvgIcon-root': {
-                                                    color: 'rgba(56, 152, 252, 1)'
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
-
-                                        {selectedFilters.length > 0 && (
-                                            <Box
-                                                sx={{
-                                                    position: 'absolute',
-                                                    top: 6,
-                                                    right: 8,
-                                                    width: '10px',
-                                                    height: '10px',
-                                                    backgroundColor: 'red',
-                                                    borderRadius: '50%',
-                                                    '@media (max-width: 900px)': {
-                                                        top: -1,
-                                                        right: 1
-                                                    }
-                                                }}
-                                            />
-                                        )}
-                                    </Button>
-                                    <Button
-                                        disabled={data?.length === 0}
-                                        aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                        aria-haspopup="true"
-                                        aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                        onClick={handleCalendarClick}
-                                        sx={{
-                                            textTransform: 'none',
-                                            color: 'rgba(128, 128, 128, 1)',
-                                            border: formattedDates ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                            borderRadius: '4px',
-                                            padding: '8px',
-                                            opacity: data?.length === 0 ? '0.5' : '1',
-                                            minWidth: 'auto',
-                                            '@media (max-width: 900px)': {
-                                                border: 'none',
-                                                padding: 0
-                                            },
-                                            '&:hover': {
-                                                backgroundColor: 'transparent',
-                                                border: '1px solid rgba(56, 152, 252, 1)',
-                                                color: 'rgba(56, 152, 252, 1)',
-                                                '& .MuiSvgIcon-root': {
-                                                    color: 'rgba(56, 152, 252, 1)'
-                                                }
-                                            }
-                                        }}
-                                    >
-                                        <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)', }} />
-                                        <Typography variant="body1" sx={{
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: '14px',
-                                            fontWeight: '600',
-                                            lineHeight: '19.6px',
-                                            textAlign: 'left',
-                                            color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
-                                            "@media (max-width: 600px)": {
-                                                display: 'none'
-                                            },
-                                        }}>
-                                            {formattedDates}
+            }
+        }}>
+            {loading && <CustomizedProgressBar />}
+            {!loading && (
+                <>
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', }}>
+                        <Box>
+                            {data.length !== 0 &&
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        marginTop: hasNotification ? '1rem' : '0.5rem',
+                                        flexWrap: 'wrap',
+                                        gap: '15px',
+                                        '@media (max-width: 900px)': {
+                                            marginTop: hasNotification ? '3rem' : '1.125rem',
+                                        },
+                                        '@media (max-width: 600px)': {
+                                            marginTop: hasNotification ? '2rem' : '0rem',
+                                        },
+                                    }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                        <Typography className='first-sub-title'>
+                                            Smart Audience
                                         </Typography>
-                                    </Button>
-                                </Box>
-                            </Box> 
-                        }
-
-                        <Box sx={{
-                            flex: 1, display: 'flex', flexDirection: 'column', pr: 2, overflow: 'auto', maxWidth: '100%',
-                            '@media (max-width: 900px)': {
-                                pt: '2px',
-                                pb: '18px'
-                            }
-                        }}>
-
-                            <Box sx={{
-                                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
-                                '@media (max-width: 900px)': {
-                                    paddingRight: 0,
-                                    minHeight: '100vh'
-
-                                }
-                            }}>
-                                <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
-                                        {/* CHIPS */}
-                                        {selectedFilters.length > 0 && (
-                                            <Chip
-                                                className='second-sub-title'
-                                                label="Clear all"
-                                                onClick={handleResetFilters}
-                                                sx={{ color: 'rgba(56, 152, 252, 1) !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
-                                            />
-                                        )}
-                                        {selectedFilters.map(filter => {
-                                            let displayValue = filter.value;
-                                            return (
-                                                <Chip
-                                                    className='paragraph'
-                                                    key={filter.label}
-                                                    label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
-                                                    onDelete={() => handleDeleteFilter(filter)}
-                                                    deleteIcon={
-                                                        <CloseIcon
-                                                            sx={{
-                                                                backgroundColor: 'transparent',
-                                                                color: '#828282 !important',
-                                                                fontSize: '14px !important'
-                                                            }}
-                                                        />
-                                                    }
-                                                    sx={{
-                                                        borderRadius: '4.5px',
-                                                        backgroundColor: 'rgba(80, 82, 178, 0.10)',
-                                                        color: '#5F6368 !important',
-                                                        lineHeight: '16px !important'
-                                                    }}
-                                                />
-                                            );
-                                        })}
+                                        <CustomToolTip title={'Discover AI-powered Smart Audiences based on your sorces and lookalikes.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/allsource' />
                                     </Box>
                                     <Box sx={{
-                                        flex: 1, display: 'flex', flexGrow: 1, flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
+                                        display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px', pr: 2,
                                         '@media (max-width: 900px)': {
-                                            pt: '2px',
-                                            pb: '18px'
+                                            gap: '8px'
                                         }
                                     }}>
-                                        {data.length === 0 &&
-                                            <FirstTimeScreen cardData={cardData} hasSource={hasSource} hasPixel={isPixelInstalledAnywhere}/>
-                                        }
-                                        {data.length !== 0 &&
-                                            <Grid container spacing={1} sx={{ flex: 1 }}>
-                                                <Grid item xs={12} sx={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                                                    <TableContainer
-                                                        ref={tableContainerRef}
-                                                        component={Paper}
+                                        <Button
+                                            variant="outlined"
+                                            sx={{
+                                                height: '40px',
+                                                borderRadius: '4px',
+                                                textTransform: 'none',
+                                                fontSize: '14px',
+                                                lineHeight: "19.6px",
+                                                fontWeight: '500',
+                                                color: 'rgba(56, 152, 252, 1)',
+                                                borderColor: 'rgba(56, 152, 252, 1)',
+                                                '&:hover': {
+                                                    backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                                    borderColor: 'rgba(56, 152, 252, 1)',
+                                                },
+                                            }}
+                                            onClick={() => {
+                                                router.push("/smart-audiences/builder")
+                                            }}
+                                        >
+                                            Generate Smart Audience
+                                        </Button>
+                                        <Button
+                                            onClick={handleFilterPopupOpen}
+                                            disabled={data?.length === 0}
+                                            sx={{
+                                                textTransform: 'none',
+                                                color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                                border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                                borderRadius: '4px',
+                                                padding: '8px',
+                                                opacity: data?.length === 0 ? '0.5' : '1',
+                                                minWidth: 'auto',
+                                                maxHeight: '40px',
+                                                maxWidth: '40px',
+                                                position: 'relative',
+                                                '@media (max-width: 900px)': {
+                                                    border: 'none',
+                                                    padding: 0
+                                                },
+                                                '&:hover': {
+                                                    backgroundColor: 'transparent',
+                                                    border: '1px solid rgba(56, 152, 252, 1)',
+                                                    color: 'rgba(56, 152, 252, 1)',
+                                                    '& .MuiSvgIcon-root': {
+                                                        color: 'rgba(56, 152, 252, 1)'
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
+
+                                            {selectedFilters.length > 0 && (
+                                                <Box
+                                                    sx={{
+                                                        position: 'absolute',
+                                                        top: 6,
+                                                        right: 8,
+                                                        width: '10px',
+                                                        height: '10px',
+                                                        backgroundColor: 'red',
+                                                        borderRadius: '50%',
+                                                        '@media (max-width: 900px)': {
+                                                            top: -1,
+                                                            right: 1
+                                                        }
+                                                    }}
+                                                />
+                                            )}
+                                        </Button>
+                                        <Button
+                                            disabled={data?.length === 0}
+                                            aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
+                                            aria-haspopup="true"
+                                            aria-expanded={isCalendarOpen ? 'true' : undefined}
+                                            onClick={handleCalendarClick}
+                                            sx={{
+                                                textTransform: 'none',
+                                                color: 'rgba(128, 128, 128, 1)',
+                                                border: formattedDates ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                                borderRadius: '4px',
+                                                padding: '8px',
+                                                opacity: data?.length === 0 ? '0.5' : '1',
+                                                minWidth: 'auto',
+                                                '@media (max-width: 900px)': {
+                                                    border: 'none',
+                                                    padding: 0
+                                                },
+                                                '&:hover': {
+                                                    backgroundColor: 'transparent',
+                                                    border: '1px solid rgba(56, 152, 252, 1)',
+                                                    color: 'rgba(56, 152, 252, 1)',
+                                                    '& .MuiSvgIcon-root': {
+                                                        color: 'rgba(56, 152, 252, 1)'
+                                                    }
+                                                }
+                                            }}
+                                        >
+                                            <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)', }} />
+                                            <Typography variant="body1" sx={{
+                                                fontFamily: 'Nunito Sans',
+                                                fontSize: '14px',
+                                                fontWeight: '600',
+                                                lineHeight: '19.6px',
+                                                textAlign: 'left',
+                                                color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                                "@media (max-width: 600px)": {
+                                                    display: 'none'
+                                                },
+                                            }}>
+                                                {formattedDates}
+                                            </Typography>
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            }
+
+                            <Box sx={{
+                                flex: 1, display: 'flex', flexDirection: 'column', pr: 2, overflow: 'auto', maxWidth: '100%',
+                                '@media (max-width: 900px)': {
+                                    pt: '2px',
+                                    pb: '18px'
+                                }
+                            }}>
+
+                                <Box sx={{
+                                    display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',
+                                    '@media (max-width: 900px)': {
+                                        paddingRight: 0,
+                                        minHeight: '100vh'
+
+                                    }
+                                }}>
+                                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
+                                            {/* CHIPS */}
+                                            {selectedFilters.length > 0 && (
+                                                <Chip
+                                                    className='second-sub-title'
+                                                    label="Clear all"
+                                                    onClick={handleResetFilters}
+                                                    sx={{ color: 'rgba(56, 152, 252, 1) !important', backgroundColor: 'transparent', lineHeight: '20px !important', fontWeight: '400 !important', borderRadius: '4px' }}
+                                                />
+                                            )}
+                                            {selectedFilters.map(filter => {
+                                                let displayValue = filter.value;
+                                                return (
+                                                    <Chip
+                                                        className='paragraph'
+                                                        key={filter.label}
+                                                        label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)}`}
+                                                        onDelete={() => handleDeleteFilter(filter)}
+                                                        deleteIcon={
+                                                            <CloseIcon
+                                                                sx={{
+                                                                    backgroundColor: 'transparent',
+                                                                    color: '#828282 !important',
+                                                                    fontSize: '14px !important'
+                                                                }}
+                                                            />
+                                                        }
                                                         sx={{
-                                                            border: '1px solid rgba(235, 235, 235, 1)',
-                                                            overflowX: 'auto',
-                                                            maxHeight: selectedFilters.length > 0
-                                                                ? (hasNotification ? '63vh' : '68vh')
-                                                                : '72vh',
-                                                            overflowY: 'auto',
-                                                            "@media (max-height: 800px)": {
-                                                                maxHeight: selectedFilters.length > 0
-                                                                    ? (hasNotification ? '53vh' : '57vh')
-                                                                    : '70vh',
-                                                            },
-                                                            "@media (max-width: 400px)": {
-                                                                maxHeight: selectedFilters.length > 0
-                                                                    ? (hasNotification ? '53vh' : '60vh')
-                                                                    : '67vh',
-                                                            },
+                                                            borderRadius: '4.5px',
+                                                            backgroundColor: 'rgba(80, 82, 178, 0.10)',
+                                                            color: '#5F6368 !important',
+                                                            lineHeight: '16px !important'
                                                         }}
-                                                    >
-                                                        <Table stickyHeader aria-label="leads table">
-                                                            <TableHead sx={{ position: "relative" }}>
-                                                                <TableRow>
-                                                                    {columns.map(({
-                                                                        key,
-                                                                        label,
-                                                                        sortable = false,
-                                                                        widths,
-                                                                    }) => (
-                                                                        <TableCell
-                                                                            onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                                            key={key}
-                                                                            sx={{
-                                                                                ...smartAudiences.table_column,
-                                                                                ...(key === "name" && {
-                                                                                    position: "sticky",
-                                                                                    left: 0,
-                                                                                    zIndex: 10,
-                                                                                    top: 0,
-                                                                                    boxShadow: isScrolledX
-                                                                                        ? "3px 0px 3px #00000033"
-                                                                                        : "none",
-                                                                                }),
-                                                                            }}
-                                                                            style={{
-                                                                                cursor: sortable
-                                                                                  ? "pointer"
-                                                                                  : "default",
-                                                                              }}
-                                                                        >
-                                                                            <Box
+                                                    />
+                                                );
+                                            })}
+                                        </Box>
+                                        <Box sx={{
+                                            flex: 1, display: 'flex', flexGrow: 1, flexDirection: 'column', maxWidth: '100%', pl: 0, pr: 0, pt: '14px',
+                                            '@media (max-width: 900px)': {
+                                                pt: '2px',
+                                                pb: '18px'
+                                            }
+                                        }}>
+                                            {data.length === 0 ? (
+                                                <FirstTimeScreen cardData={cardData} hasSource={hasSource} hasPixel={isPixelInstalledAnywhere} />
+                                            ):
+                                                <Grid container spacing={1} sx={{ flex: 1 }}>
+                                                    <Grid item xs={12} sx={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                                                        <TableContainer
+                                                            ref={tableContainerRef}
+                                                            component={Paper}
+                                                            sx={{
+                                                                border: '1px solid rgba(235, 235, 235, 1)',
+                                                                overflowX: 'auto',
+                                                                maxHeight: selectedFilters.length > 0
+                                                                    ? (hasNotification ? '63vh' : '68vh')
+                                                                    : '72vh',
+                                                                overflowY: 'auto',
+                                                                "@media (max-height: 800px)": {
+                                                                    maxHeight: selectedFilters.length > 0
+                                                                        ? (hasNotification ? '53vh' : '57vh')
+                                                                        : '70vh',
+                                                                },
+                                                                "@media (max-width: 400px)": {
+                                                                    maxHeight: selectedFilters.length > 0
+                                                                        ? (hasNotification ? '53vh' : '60vh')
+                                                                        : '67vh',
+                                                                },
+                                                            }}
+                                                        >
+                                                            <Table stickyHeader aria-label="leads table">
+                                                                <TableHead sx={{ position: "relative" }}>
+                                                                    <TableRow>
+                                                                        {columns.map(({
+                                                                            key,
+                                                                            label,
+                                                                            sortable = false,
+                                                                            widths,
+                                                                        }) => (
+                                                                            <TableCell
+                                                                                onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                                                key={key}
                                                                                 sx={{
-                                                                                    display: "flex",
-                                                                                    alignItems: "center",
-                                                                                    justifyContent: "space-between",
+                                                                                    ...smartAudiences.table_column,
+                                                                                    ...(key === "name" && {
+                                                                                        position: "sticky",
+                                                                                        left: 0,
+                                                                                        zIndex: 10,
+                                                                                        top: 0,
+                                                                                        boxShadow: isScrolledX
+                                                                                            ? "3px 0px 3px #00000033"
+                                                                                            : "none",
+                                                                                    }),
+                                                                                }}
+                                                                                style={{
+                                                                                    cursor: sortable
+                                                                                        ? "pointer"
+                                                                                        : "default",
                                                                                 }}
                                                                             >
-                                                                                <Typography
-                                                                                    variant="body2"
+                                                                                <Box
                                                                                     sx={{
-                                                                                        ...smartAudiences.table_column,
-                                                                                        borderRight: "0",
+                                                                                        display: "flex",
+                                                                                        alignItems: "center",
+                                                                                        justifyContent: "space-between",
                                                                                     }}
                                                                                 >
-                                                                                    {label}
-                                                                                </Typography>
-                                                                                {sortable && (
-                                                                                    <IconButton size="small">
-                                                                                        {orderBy === key ? (
-                                                                                            order === 'asc' ? (
-                                                                                                <ArrowUpwardRoundedIcon fontSize="inherit" />
+                                                                                    <Typography
+                                                                                        variant="body2"
+                                                                                        sx={{
+                                                                                            ...smartAudiences.table_column,
+                                                                                            borderRight: "0",
+                                                                                        }}
+                                                                                    >
+                                                                                        {label}
+                                                                                    </Typography>
+                                                                                    {sortable && (
+                                                                                        <IconButton size="small">
+                                                                                            {orderBy === key ? (
+                                                                                                order === 'asc' ? (
+                                                                                                    <ArrowUpwardRoundedIcon fontSize="inherit" />
+                                                                                                ) : (
+                                                                                                    <ArrowDownwardRoundedIcon fontSize="inherit" />
+                                                                                                )
                                                                                             ) : (
-                                                                                                <ArrowDownwardRoundedIcon fontSize="inherit" />
-                                                                                            )
-                                                                                        ) : (
-                                                                                            <SwapVertIcon fontSize="inherit" />
-                                                                                        )}
-                                                                                    </IconButton>
-                                                                                )}
-                                                                            </Box>
-                                                                        </TableCell>
-                                                                    )
-                                                                    )}
-                                                                    {/* {[
+                                                                                                <SwapVertIcon fontSize="inherit" />
+                                                                                            )}
+                                                                                        </IconButton>
+                                                                                    )}
+                                                                                </Box>
+                                                                            </TableCell>
+                                                                        )
+                                                                        )}
+                                                                        {/* {[
 
                                                                     ].map(({ key, label, sortable = false }) => (
                                                                         <TableCell
@@ -1168,303 +1166,110 @@ const SmartAudiences: React.FC = () => {
                                                                             </Box>
                                                                         </TableCell>
                                                                     ))} */}
-                                                                </TableRow>
-                                                                <TableRow
-                                                                    sx={{
-                                                                        position: "sticky",
-                                                                        top: "60px",
-                                                                        zIndex: 11,
-                                                                        borderTop: "none",
-                                                                    }}
-                                                                >
-                                                                    <TableCell
-                                                                        colSpan={9}
+                                                                    </TableRow>
+                                                                    <TableRow
                                                                         sx={{
-                                                                            p: 0,
-                                                                            pb: "1.5px",
+                                                                            position: "sticky",
+                                                                            top: "60px",
+                                                                            zIndex: 11,
                                                                             borderTop: "none",
-                                                                            backgroundColor: "rgba(235, 235, 235, 1)",
-                                                                            borderColor: "rgba(235, 235, 235, 1)",
                                                                         }}
                                                                     >
-                                                                        {loaderForTable && (
-                                                                            <LinearProgress
-                                                                                variant="indeterminate"
-                                                                                sx={{
-                                                                                    width: "100%",
-                                                                                    height: "1.5px",
-                                                                                    position: "absolute",
-                                                                                }}
-                                                                            />
-                                                                        )}
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            </TableHead>
-                                                            <TableBody>
-                                                                {data.map((row: Smarts, index) => {
-                                                                    const progress = smartAudienceProgress[row.id];
-                                                                    const progressValidation = validationProgress[row.id];
-                                                                    return (
-                                                                        <TableRow
-                                                                            key={row.id}
-                                                                            selected={selectedRows.has(row.id)}
+                                                                        <TableCell
+                                                                            colSpan={9}
                                                                             sx={{
-                                                                                backgroundColor: selectedRows.has(row.id) && !loaderForTable ? 'rgba(247, 247, 247, 1)' : '#fff',
-                                                                                borderTop: index === 0 ? 0 : "default",
-                                                                                '&:hover': {
-                                                                                    backgroundColor: 'rgba(247, 247, 247, 1)',
-                                                                                    '& .sticky-cell': {
-                                                                                        backgroundColor: 'rgba(247, 247, 247, 1)',
-                                                                                    }
-                                                                                }
+                                                                                p: 0,
+                                                                                pb: "1.5px",
+                                                                                borderTop: "none",
+                                                                                backgroundColor: "rgba(235, 235, 235, 1)",
+                                                                                borderColor: "rgba(235, 235, 235, 1)",
                                                                             }}
                                                                         >
-                                                                            {/* Name Column */}
-                                                                            <TableCell className="sticky-cell"
+                                                                            {loaderForTable && (
+                                                                                <LinearProgress
+                                                                                    variant="indeterminate"
+                                                                                    sx={{
+                                                                                        width: "100%",
+                                                                                        height: "1.5px",
+                                                                                        position: "absolute",
+                                                                                    }}
+                                                                                />
+                                                                            )}
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                </TableHead>
+                                                                <TableBody>
+                                                                    {data.map((row: Smarts, index) => {
+                                                                        const progress = smartAudienceProgress[row.id];
+                                                                        const progressValidation = validationProgress[row.id];
+                                                                        return (
+                                                                            <TableRow
+                                                                                key={row.id}
+                                                                                selected={selectedRows.has(row.id)}
                                                                                 sx={{
-                                                                                    ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff', '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' },
-                                                                                    pb: 0,
-                                                                                    pt: 0,
-                                                                                    boxShadow: isScrolledX
-                                                                                        ? "3px 0px 3px #00000033"
-                                                                                        : "none",
-                                                                                    maxWidth: '200px'
-                                                                                }}>
-                                                                                <Box sx={{ display: 'flex', width: '100%', justifyContent: "space-between", alignItems: 'center', gap: 1 }}>
-                                                                                    <OverflowTooltipText
-                                                                                        text={row.name}
-                                                                                        onClick={() => {
-                                                                                            setSelectedRowData(row);
-                                                                                            handleDetailsPopupOpen();
-                                                                                        }}
-                                                                                    />
-                                                                                    <IconButton
-                                                                                        className="edit-icon"
-                                                                                        sx={{
-                                                                                            pl: 0, pr: 0, pt: 0.25, pb: 0.25,
-                                                                                            margin: 0,
-                                                                                            opacity: 0,
-                                                                                            pointerEvents: 'none',
-                                                                                            transition: 'opacity 0.2s ease-in-out',
-                                                                                            '@media (max-width: 900px)': {
-                                                                                                opacity: 1
-                                                                                            }
-                                                                                        }}
-                                                                                        onClick={(event) => handleRename(event, row.id, row.name)}
-                                                                                    >
-                                                                                        <EditIcon sx={{ maxHeight: "18px" }} />
-                                                                                    </IconButton>
-                                                                                </Box>
-                                                                            </TableCell>
-                                                                            <Popover
-                                                                                open={isEditPopoverOpen}
-                                                                                anchorEl={editPopoverAnchorEl}
-                                                                                onClose={handleCloseEditPopover}
-                                                                                anchorOrigin={{
-                                                                                    vertical: "center",
-                                                                                    horizontal: "center",
-                                                                                }}
-                                                                                transformOrigin={{
-                                                                                    vertical: "top",
-                                                                                    horizontal: "left",
-                                                                                }}
-                                                                                slotProps={{
-                                                                                    paper: {
-                                                                                        sx: {
-                                                                                            width: "15.875rem",
-                                                                                            boxShadow: 0,
-                                                                                            borderRadius: "4px",
-                                                                                            border: "0.5px solid rgba(175, 175, 175, 1)",
-
-                                                                                        },
+                                                                                    backgroundColor: selectedRows.has(row.id) && !loaderForTable ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                                    borderTop: index === 0 ? 0 : "default",
+                                                                                    '&:hover': {
+                                                                                        backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                                        '& .sticky-cell': {
+                                                                                            backgroundColor: 'rgba(247, 247, 247, 1)',
+                                                                                        }
                                                                                     }
                                                                                 }}
                                                                             >
-                                                                                <Box sx={{ p: 2 }}>
-                                                                                    <TextField
-                                                                                        value={editedName}
-                                                                                        onChange={(e) => setEditedName(e.target.value)}
-                                                                                        variant="outlined"
-                                                                                        label='Smart Audience Name'
-                                                                                        size="small"
-                                                                                        fullWidth
-                                                                                        sx={{
-                                                                                            "& label.Mui-focused": {
-                                                                                                color: "rgba(56, 152, 252, 1)",
-                                                                                            },
-                                                                                            "& .MuiOutlinedInput-root:hover fieldset": {
-                                                                                                color: "rgba(56, 152, 252, 1)",
-                                                                                            },
-                                                                                            "& .MuiOutlinedInput-root": {
-                                                                                                "&:hover fieldset": {
-                                                                                                    borderColor: "rgba(56, 152, 252, 1)",
-                                                                                                    border: "1px solid rgba(56, 152, 252, 1)",
-                                                                                                },
-                                                                                                "&.Mui-focused fieldset": {
-                                                                                                    borderColor: "rgba(56, 152, 252, 1)",
-                                                                                                    border: "1px solid rgba(56, 152, 252, 1)",
-                                                                                                },
-                                                                                            },
-                                                                                        }}
-                                                                                        InputProps={{
-                                                                                            style: {
-                                                                                                fontFamily: "Roboto",
-                                                                                                fontSize: "14px",
-                                                                                            },
-                                                                                        }}
-                                                                                        InputLabelProps={{
-                                                                                            style: {
-                                                                                                fontSize: "14px",
-                                                                                                fontFamily: "Roboto",
-                                                                                            },
-                                                                                        }}
-                                                                                    />
-                                                                                    <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-                                                                                        <Button
-                                                                                            onClick={handleCloseEditPopover}
-                                                                                            sx={{
-                                                                                                backgroundColor: "#fff",
-                                                                                                color: "rgba(56, 152, 252, 1) !important",
-                                                                                                fontSize: "14px",
-                                                                                                textTransform: "none",
-                                                                                                padding: "0.75em 1em",
-                                                                                                maxWidth: "50px",
-                                                                                                maxHeight: "30px",
-                                                                                                mr: 0.5,
-                                                                                                "&:hover": {
-                                                                                                    backgroundColor: "#fff",
-                                                                                                    boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
-                                                                                                },
-                                                                                            }}
-                                                                                        >
-                                                                                            <Typography className="second-sub-title" sx={{ color: 'rgba(56, 152, 252, 1) !important' }}>Cancel</Typography>
-                                                                                        </Button>
-                                                                                        <Button
-                                                                                            onClick={() => {
-                                                                                                handleConfirmRename();
-                                                                                                handleCloseEditPopover();
-                                                                                            }}
-                                                                                            sx={{
-                                                                                                backgroundColor: "#fff",
-                                                                                                color: "rgba(56, 152, 252, 1) !important",
-                                                                                                fontSize: "14px",
-                                                                                                textTransform: "none",
-                                                                                                padding: "0.75em 1em",
-                                                                                                maxWidth: "50px",
-                                                                                                maxHeight: "30px",
-                                                                                                "&:hover": {
-                                                                                                    backgroundColor: "#fff",
-                                                                                                    boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
-                                                                                                },
-                                                                                            }}
-                                                                                        >
-                                                                                            <Typography className="second-sub-title" sx={{ color: 'rgba(56, 152, 252, 1) !important' }}>Save</Typography>
-                                                                                        </Button>
-                                                                                    </Box>
-                                                                                </Box>
-                                                                            </Popover>
-
-                                                                            {/* Use Case Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative', textAlign: "center" }}
-                                                                            >
-                                                                                {getUseCaseStyle(row.use_case_alias)}
-                                                                            </TableCell>
-
-                                                                            {/* Validations Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative', textAlign: "center" }}
-                                                                            >
-                                                                                {row.status === "unvalidated"
-                                                                                    ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20} />
-                                                                                    : row.status === "n_a"
-                                                                                        ? "N/A"
-                                                                                        : row.validated_records === 0 && row.status === "validating" && !progressValidation?.total
-                                                                                            ? <Box sx={{ display: "flex", justifyContent: "center" }}><ThreeDotsLoader /></Box>
-                                                                                            : <Box sx={{ cursor: "pointer", color: "rgba(56, 152, 252, 1)" }} onClick={ 
-                                                                                                () => {
-                                                                                                    setSelectedRowData(row);
-                                                                                                    handleValidationsHistoryPopupOpen();
-                                                                                                }}>
-                                                                                                {progressValidation?.total > row.validated_records
-                                                                                                ? progressValidation?.total.toLocaleString('en-US')
-                                                                                                : row.validated_records.toLocaleString('en-US')}
-                                                                                             </Box> 
-                                                                                }
-                                                                            </TableCell>
-                                                                            {/* Created Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
-                                                                            >
-                                                                                <Box>{dayjs(row.created_at).format('MMM D, YYYY')}</Box>
-                                                                                <Box>{row.created_by}</Box>
-                                                                            </TableCell>
-
-                                                                            {/* Total Universe Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {row.total_records.toLocaleString('en-US')}
-                                                                            </TableCell>
-
-                                                                            {/* Active Segment Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
-                                                                            >
-                                                                                {(progress?.processed && progress?.processed === row?.active_segment_records) || (row?.processed_active_segment_records === row?.active_segment_records && (row.status === "unvalidated" || row?.processed_active_segment_records !== 0))
-                                                                                    ? row.active_segment_records.toLocaleString('en-US')
-                                                                                    : row?.processed_active_segment_records > progress?.processed
-                                                                                        ? <ProgressBar progress={{ total: row?.active_segment_records, processed: row?.processed_active_segment_records }} />
-                                                                                        : <ProgressBar progress={{ ...progress, total: row.active_segment_records }} />
-                                                                                }
-                                                                            </TableCell>
-
-                                                                            {/* Status Column */}
-                                                                            <TableCell
-                                                                                sx={{ ...smartAudiences.table_array, position: 'relative' }}
-                                                                            >
-                                                                                <Box sx={{ display: "flex", justifyContent: "center" }}>
-                                                                                    <Typography component="div" sx={{
-                                                                                        width: "100px",
-                                                                                        margin: 0,
-                                                                                        background: getStatusStyle(
-                                                                                            progressValidation?.total
-                                                                                                ? "Ready"
-                                                                                                : preRenderStatus(setStatus(row.status))
-                                                                                        ).background,
-                                                                                        padding: '3px 8px',
-                                                                                        borderRadius: '2px',
-                                                                                        fontFamily: 'Roboto',
-                                                                                        fontSize: '12px',
-                                                                                        fontWeight: '400',
-                                                                                        lineHeight: '16px',
-                                                                                        textAlign: "center",
-                                                                                        color: getStatusStyle(
-                                                                                            progressValidation?.total
-                                                                                                ? "Ready"
-                                                                                                : preRenderStatus(setStatus(row.status))
-                                                                                        ).color,
+                                                                                {/* Name Column */}
+                                                                                <TableCell className="sticky-cell"
+                                                                                    sx={{
+                                                                                        ...smartAudiences.table_array, position: 'sticky', left: '0', zIndex: 9, backgroundColor: loaderForTable ? 'transparent' : '#fff', '&:hover .edit-icon': { opacity: 1, pointerEvents: 'auto' },
+                                                                                        pb: 0,
+                                                                                        pt: 0,
+                                                                                        boxShadow: isScrolledX
+                                                                                            ? "3px 0px 3px #00000033"
+                                                                                            : "none",
+                                                                                        maxWidth: '200px'
                                                                                     }}>
-                                                                                        {progressValidation?.total
-                                                                                            ? "Ready"
-                                                                                            : preRenderStatus(setStatus(row.status))
-                                                                                        }
-                                                                                    </Typography>
-                                                                                </Box>
-                                                                            </TableCell>
-
-                                                                            <TableCell sx={{ ...smartAudiences.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
-                                                                                <IconButton onClick={(event) => handleOpenMorePopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
-                                                                                    <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
-                                                                                </IconButton>
-
+                                                                                    <Box sx={{ display: 'flex', width: '100%', justifyContent: "space-between", alignItems: 'center', gap: 1 }}>
+                                                                                        <OverflowTooltipText
+                                                                                            text={row.name}
+                                                                                            onClick={() => {
+                                                                                                setSelectedRowData(row);
+                                                                                                handleDetailsPopupOpen();
+                                                                                            }}
+                                                                                        />
+                                                                                        <IconButton
+                                                                                            className="edit-icon"
+                                                                                            sx={{
+                                                                                                pl: 0, pr: 0, pt: 0.25, pb: 0.25,
+                                                                                                margin: 0,
+                                                                                                opacity: 0,
+                                                                                                pointerEvents: 'none',
+                                                                                                transition: 'opacity 0.2s ease-in-out',
+                                                                                                '@media (max-width: 900px)': {
+                                                                                                    opacity: 1
+                                                                                                }
+                                                                                            }}
+                                                                                            onClick={(event) => handleRename(event, row.id, row.name)}
+                                                                                        >
+                                                                                            <EditIcon sx={{ maxHeight: "18px" }} />
+                                                                                        </IconButton>
+                                                                                    </Box>
+                                                                                </TableCell>
                                                                                 <Popover
-                                                                                    open={isOpeMorePopover}
-                                                                                    anchorEl={anchorEl}
-                                                                                    onClose={handleCloseMorePopover}
+                                                                                    open={isEditPopoverOpen}
+                                                                                    anchorEl={editPopoverAnchorEl}
+                                                                                    onClose={handleCloseEditPopover}
+                                                                                    anchorOrigin={{
+                                                                                        vertical: "center",
+                                                                                        horizontal: "center",
+                                                                                    }}
+                                                                                    transformOrigin={{
+                                                                                        vertical: "top",
+                                                                                        horizontal: "left",
+                                                                                    }}
                                                                                     slotProps={{
                                                                                         paper: {
                                                                                             sx: {
+                                                                                                width: "15.875rem",
                                                                                                 boxShadow: 0,
                                                                                                 borderRadius: "4px",
                                                                                                 border: "0.5px solid rgba(175, 175, 175, 1)",
@@ -1472,206 +1277,401 @@ const SmartAudiences: React.FC = () => {
                                                                                             },
                                                                                         }
                                                                                     }}
-                                                                                    anchorOrigin={{
-                                                                                        vertical: "center",
-                                                                                        horizontal: "center",
-                                                                                    }}
-                                                                                    transformOrigin={{
-                                                                                        vertical: "top",
-                                                                                        horizontal: "right",
-                                                                                    }}
-
                                                                                 >
-                                                                                    <List
-                                                                                        sx={{
-                                                                                            width: '100%', maxWidth: 360, boxShadow: 'none'
-                                                                                        }}
-                                                                                    >
-                                                                                        <ListItemButton disabled={!(selectedRowData?.status === "ready" || selectedRowData?.status === "n_a")}
-                                                                                            sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
-                                                                                            onClick={() => {
-                                                                                                handleCloseMorePopover()
-                                                                                                handleDataSyncPopupOpen()
-                                                                                            }}>
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
-                                                                                        </ListItemButton>
-                                                                                        <ListItemButton disabled={(selectedRowData?.active_segment_records !== selectedRowData?.processed_active_segment_records || selectedRowData?.status === "unvalidated" || selectedRowData?.status === "validating")}
-                                                                                            sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
-                                                                                            onClick={() => {
-                                                                                                setIsDownloadAction(true)
-                                                                                                handleCloseMorePopover()
-                                                                                                handleDataSyncPopupOpen()
-                                                                                            }}>
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Download" />
-                                                                                        </ListItemButton>
-                                                                                        <ListItemButton
-                                                                                            sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
-                                                                                            onClick={() => {
-                                                                                                handleOpenConfirmDialog();
+                                                                                    <Box sx={{ p: 2 }}>
+                                                                                        <TextField
+                                                                                            value={editedName}
+                                                                                            onChange={(e) => setEditedName(e.target.value)}
+                                                                                            variant="outlined"
+                                                                                            label='Smart Audience Name'
+                                                                                            size="small"
+                                                                                            fullWidth
+                                                                                            sx={{
+                                                                                                "& label.Mui-focused": {
+                                                                                                    color: "rgba(56, 152, 252, 1)",
+                                                                                                },
+                                                                                                "& .MuiOutlinedInput-root:hover fieldset": {
+                                                                                                    color: "rgba(56, 152, 252, 1)",
+                                                                                                },
+                                                                                                "& .MuiOutlinedInput-root": {
+                                                                                                    "&:hover fieldset": {
+                                                                                                        borderColor: "rgba(56, 152, 252, 1)",
+                                                                                                        border: "1px solid rgba(56, 152, 252, 1)",
+                                                                                                    },
+                                                                                                    "&.Mui-focused fieldset": {
+                                                                                                        borderColor: "rgba(56, 152, 252, 1)",
+                                                                                                        border: "1px solid rgba(56, 152, 252, 1)",
+                                                                                                    },
+                                                                                                },
                                                                                             }}
-                                                                                        >
-                                                                                            <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove" />
-                                                                                        </ListItemButton>
-                                                                                        <Popover
-                                                                                            open={openConfirmDialog}
-                                                                                            onClose={handleCloseConfirmDialog}
-                                                                                            anchorEl={anchorEl}
-                                                                                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                                                                                            transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-                                                                                            slotProps={{
-                                                                                                paper: {
-                                                                                                    sx: {
-                                                                                                        padding: '0.125rem',
-                                                                                                        width: '15.875rem',
-                                                                                                        boxShadow: 0,
-                                                                                                        borderRadius: '8px',
-                                                                                                        border: '0.5px solid rgba(175, 175, 175, 1)'
-                                                                                                    }
-                                                                                                }
+                                                                                            InputProps={{
+                                                                                                style: {
+                                                                                                    fontFamily: "Roboto",
+                                                                                                    fontSize: "14px",
+                                                                                                },
                                                                                             }}
-                                                                                        >
-                                                                                            <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
-                                                                                                Confirm Deletion
-                                                                                            </Typography>
-                                                                                            <DialogContent sx={{ padding: 2 }}>
-                                                                                                <DialogContentText className="table-data">
-                                                                                                    Are you sure you want to delete this smart audience?
-                                                                                                </DialogContentText>
-                                                                                            </DialogContent>
-                                                                                            <DialogActions>
-                                                                                                <Button
-                                                                                                    className="second-sub-title"
-                                                                                                    onClick={handleCloseConfirmDialog}
-                                                                                                    sx={{
-                                                                                                        backgroundColor: '#fff',
-                                                                                                        color: 'rgba(56, 152, 252, 1) !important',
-                                                                                                        fontSize: '14px',
-                                                                                                        textTransform: 'none',
-                                                                                                        padding: '0.75em 1em',
-                                                                                                        border: '1px solid rgba(56, 152, 252, 1)',
-                                                                                                        maxWidth: '50px',
-                                                                                                        maxHeight: '30px',
-                                                                                                        '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
-                                                                                                    }}
-                                                                                                >
-                                                                                                    Cancel
-                                                                                                </Button>
-                                                                                                <Button
-                                                                                                    className="second-sub-title"
-                                                                                                    onClick={handleDeleteSmartAudience}
-                                                                                                    sx={{
-                                                                                                        backgroundColor: 'rgba(56, 152, 252, 1)',
-                                                                                                        color: '#fff !important',
-                                                                                                        fontSize: '14px',
-                                                                                                        textTransform: 'none',
-                                                                                                        padding: '0.75em 1em',
-                                                                                                        border: '1px solid rgba(56, 152, 252, 1)',
-                                                                                                        maxWidth: '60px',
-                                                                                                        maxHeight: '30px',
-                                                                                                        '&:hover': { backgroundColor: 'rgba(56, 152, 252, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
-                                                                                                    }}
-                                                                                                >
-                                                                                                    Delete
-                                                                                                </Button>
-                                                                                            </DialogActions>
-                                                                                        </Popover>
-                                                                                    </List>
+                                                                                            InputLabelProps={{
+                                                                                                style: {
+                                                                                                    fontSize: "14px",
+                                                                                                    fontFamily: "Roboto",
+                                                                                                },
+                                                                                            }}
+                                                                                        />
+                                                                                        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+                                                                                            <Button
+                                                                                                onClick={handleCloseEditPopover}
+                                                                                                sx={{
+                                                                                                    backgroundColor: "#fff",
+                                                                                                    color: "rgba(56, 152, 252, 1) !important",
+                                                                                                    fontSize: "14px",
+                                                                                                    textTransform: "none",
+                                                                                                    padding: "0.75em 1em",
+                                                                                                    maxWidth: "50px",
+                                                                                                    maxHeight: "30px",
+                                                                                                    mr: 0.5,
+                                                                                                    "&:hover": {
+                                                                                                        backgroundColor: "#fff",
+                                                                                                        boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                                                                    },
+                                                                                                }}
+                                                                                            >
+                                                                                                <Typography className="second-sub-title" sx={{ color: 'rgba(56, 152, 252, 1) !important' }}>Cancel</Typography>
+                                                                                            </Button>
+                                                                                            <Button
+                                                                                                onClick={() => {
+                                                                                                    handleConfirmRename();
+                                                                                                    handleCloseEditPopover();
+                                                                                                }}
+                                                                                                sx={{
+                                                                                                    backgroundColor: "#fff",
+                                                                                                    color: "rgba(56, 152, 252, 1) !important",
+                                                                                                    fontSize: "14px",
+                                                                                                    textTransform: "none",
+                                                                                                    padding: "0.75em 1em",
+                                                                                                    maxWidth: "50px",
+                                                                                                    maxHeight: "30px",
+                                                                                                    "&:hover": {
+                                                                                                        backgroundColor: "#fff",
+                                                                                                        boxShadow: "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                                                                    },
+                                                                                                }}
+                                                                                            >
+                                                                                                <Typography className="second-sub-title" sx={{ color: 'rgba(56, 152, 252, 1) !important' }}>Save</Typography>
+                                                                                            </Button>
+                                                                                        </Box>
+                                                                                    </Box>
                                                                                 </Popover>
-                                                                            </TableCell>
 
-                                                                        </TableRow>
-                                                                    )
-                                                                })}
-                                                            </TableBody>
-                                                        </Table>
-                                                    </TableContainer>
-                                                    {count_smarts_audience && count_smarts_audience > 10
-                                                        ?
-                                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
-                                                            <CustomTablePagination
-                                                                count={count_smarts_audience ?? 0}
-                                                                page={page}
-                                                                rowsPerPage={rowsPerPage}
-                                                                onPageChange={handleChangePage}
-                                                                onRowsPerPageChange={handleChangeRowsPerPage}
-                                                                rowsPerPageOptions={rowsPerPageOptions}
-                                                            />
-                                                        </Box>
-                                                        :
-                                                        <Box
-                                                            display="flex"
-                                                            justifyContent="flex-end"
-                                                            alignItems="center"
-                                                            sx={{
-                                                                padding: '16px',
-                                                                backgroundColor: '#fff',
-                                                                borderRadius: '4px',
-                                                                "@media (max-width: 600px)": { padding: '12px' }
-                                                            }}
-                                                        >
-                                                            <Typography
+                                                                                {/* Use Case Column */}
+                                                                                <TableCell
+                                                                                    sx={{ ...smartAudiences.table_array, position: 'relative', textAlign: "center" }}
+                                                                                >
+                                                                                    {getUseCaseStyle(row.use_case_alias)}
+                                                                                </TableCell>
+
+                                                                                {/* Validations Column */}
+                                                                                <TableCell
+                                                                                    sx={{ ...smartAudiences.table_array, position: 'relative', textAlign: "center" }}
+                                                                                >
+                                                                                    {row.status === "unvalidated"
+                                                                                        ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20} />
+                                                                                        : row.status === "n_a"
+                                                                                            ? "N/A"
+                                                                                            : row.validated_records === 0 && row.status === "validating" && !progressValidation?.total
+                                                                                                ? <Box sx={{ display: "flex", justifyContent: "center" }}><ThreeDotsLoader /></Box>
+                                                                                                : <Box sx={{ cursor: "pointer", color: "rgba(56, 152, 252, 1)" }} onClick={
+                                                                                                    () => {
+                                                                                                        setSelectedRowData(row);
+                                                                                                        handleValidationsHistoryPopupOpen();
+                                                                                                    }}>
+                                                                                                    {progressValidation?.total > row.validated_records
+                                                                                                        ? progressValidation?.total.toLocaleString('en-US')
+                                                                                                        : row.validated_records.toLocaleString('en-US')}
+                                                                                                </Box>
+                                                                                    }
+                                                                                </TableCell>
+                                                                                {/* Created Column */}
+                                                                                <TableCell
+                                                                                    sx={{ ...smartAudiences.table_array, position: 'relative' }}
+                                                                                >
+                                                                                    <Box>{dayjs(row.created_at).format('MMM D, YYYY')}</Box>
+                                                                                    <Box>{row.created_by}</Box>
+                                                                                </TableCell>
+
+                                                                                {/* Total Universe Column */}
+                                                                                <TableCell
+                                                                                    sx={{ ...smartAudiences.table_array, position: 'relative' }}
+                                                                                >
+                                                                                    {row.total_records.toLocaleString('en-US')}
+                                                                                </TableCell>
+
+                                                                                {/* Active Segment Column */}
+                                                                                <TableCell
+                                                                                    sx={{ ...smartAudiences.table_array, position: 'relative' }}
+                                                                                >
+                                                                                    {(progress?.processed && progress?.processed === row?.active_segment_records) || (row?.processed_active_segment_records === row?.active_segment_records && (row.status === "unvalidated" || row?.processed_active_segment_records !== 0))
+                                                                                        ? row.active_segment_records.toLocaleString('en-US')
+                                                                                        : row?.processed_active_segment_records > progress?.processed
+                                                                                            ? <ProgressBar progress={{ total: row?.active_segment_records, processed: row?.processed_active_segment_records }} />
+                                                                                            : <ProgressBar progress={{ ...progress, total: row.active_segment_records }} />
+                                                                                    }
+                                                                                </TableCell>
+
+                                                                                {/* Status Column */}
+                                                                                <TableCell
+                                                                                    sx={{ ...smartAudiences.table_array, position: 'relative' }}
+                                                                                >
+                                                                                    <Box sx={{ display: "flex", justifyContent: "center" }}>
+                                                                                        <Typography component="div" sx={{
+                                                                                            width: "100px",
+                                                                                            margin: 0,
+                                                                                            background: getStatusStyle(
+                                                                                                progressValidation?.total
+                                                                                                    ? "Ready"
+                                                                                                    : preRenderStatus(setStatus(row.status))
+                                                                                            ).background,
+                                                                                            padding: '3px 8px',
+                                                                                            borderRadius: '2px',
+                                                                                            fontFamily: 'Roboto',
+                                                                                            fontSize: '12px',
+                                                                                            fontWeight: '400',
+                                                                                            lineHeight: '16px',
+                                                                                            textAlign: "center",
+                                                                                            color: getStatusStyle(
+                                                                                                progressValidation?.total
+                                                                                                    ? "Ready"
+                                                                                                    : preRenderStatus(setStatus(row.status))
+                                                                                            ).color,
+                                                                                        }}>
+                                                                                            {progressValidation?.total
+                                                                                                ? "Ready"
+                                                                                                : preRenderStatus(setStatus(row.status))
+                                                                                            }
+                                                                                        </Typography>
+                                                                                    </Box>
+                                                                                </TableCell>
+
+                                                                                <TableCell sx={{ ...smartAudiences.tableBodyColumn, paddingLeft: "16px", textAlign: 'center' }}>
+                                                                                    <IconButton onClick={(event) => handleOpenMorePopover(event, row)} sx={{ ':hover': { backgroundColor: 'transparent' } }} >
+                                                                                        <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
+                                                                                    </IconButton>
+
+                                                                                    <Popover
+                                                                                        open={isOpeMorePopover}
+                                                                                        anchorEl={anchorEl}
+                                                                                        onClose={handleCloseMorePopover}
+                                                                                        slotProps={{
+                                                                                            paper: {
+                                                                                                sx: {
+                                                                                                    boxShadow: 0,
+                                                                                                    borderRadius: "4px",
+                                                                                                    border: "0.5px solid rgba(175, 175, 175, 1)",
+
+                                                                                                },
+                                                                                            }
+                                                                                        }}
+                                                                                        anchorOrigin={{
+                                                                                            vertical: "center",
+                                                                                            horizontal: "center",
+                                                                                        }}
+                                                                                        transformOrigin={{
+                                                                                            vertical: "top",
+                                                                                            horizontal: "right",
+                                                                                        }}
+
+                                                                                    >
+                                                                                        <List
+                                                                                            sx={{
+                                                                                                width: '100%', maxWidth: 360, boxShadow: 'none'
+                                                                                            }}
+                                                                                        >
+                                                                                            <ListItemButton disabled={!(selectedRowData?.status === "ready" || selectedRowData?.status === "n_a")}
+                                                                                                sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
+                                                                                                onClick={() => {
+                                                                                                    handleCloseMorePopover()
+                                                                                                    handleDataSyncPopupOpen()
+                                                                                                }}>
+                                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync" />
+                                                                                            </ListItemButton>
+                                                                                            <ListItemButton disabled={(selectedRowData?.active_segment_records !== selectedRowData?.processed_active_segment_records || selectedRowData?.status === "unvalidated" || selectedRowData?.status === "validating")}
+                                                                                                sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
+                                                                                                onClick={() => {
+                                                                                                    setIsDownloadAction(true)
+                                                                                                    handleCloseMorePopover()
+                                                                                                    handleDataSyncPopupOpen()
+                                                                                                }}>
+                                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Download" />
+                                                                                            </ListItemButton>
+                                                                                            <ListItemButton
+                                                                                                sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }}
+                                                                                                onClick={() => {
+                                                                                                    handleOpenConfirmDialog();
+                                                                                                }}
+                                                                                            >
+                                                                                                <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove" />
+                                                                                            </ListItemButton>
+                                                                                            <Popover
+                                                                                                open={openConfirmDialog}
+                                                                                                onClose={handleCloseConfirmDialog}
+                                                                                                anchorEl={anchorEl}
+                                                                                                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                                                                                transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                                                                                                slotProps={{
+                                                                                                    paper: {
+                                                                                                        sx: {
+                                                                                                            padding: '0.125rem',
+                                                                                                            width: '15.875rem',
+                                                                                                            boxShadow: 0,
+                                                                                                            borderRadius: '8px',
+                                                                                                            border: '0.5px solid rgba(175, 175, 175, 1)'
+                                                                                                        }
+                                                                                                    }
+                                                                                                }}
+                                                                                            >
+                                                                                                <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
+                                                                                                    Confirm Deletion
+                                                                                                </Typography>
+                                                                                                <DialogContent sx={{ padding: 2 }}>
+                                                                                                    <DialogContentText className="table-data">
+                                                                                                        Are you sure you want to delete this smart audience?
+                                                                                                    </DialogContentText>
+                                                                                                </DialogContent>
+                                                                                                <DialogActions>
+                                                                                                    <Button
+                                                                                                        className="second-sub-title"
+                                                                                                        onClick={handleCloseConfirmDialog}
+                                                                                                        sx={{
+                                                                                                            backgroundColor: '#fff',
+                                                                                                            color: 'rgba(56, 152, 252, 1) !important',
+                                                                                                            fontSize: '14px',
+                                                                                                            textTransform: 'none',
+                                                                                                            padding: '0.75em 1em',
+                                                                                                            border: '1px solid rgba(56, 152, 252, 1)',
+                                                                                                            maxWidth: '50px',
+                                                                                                            maxHeight: '30px',
+                                                                                                            '&:hover': { backgroundColor: '#fff', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        Cancel
+                                                                                                    </Button>
+                                                                                                    <Button
+                                                                                                        className="second-sub-title"
+                                                                                                        onClick={handleDeleteSmartAudience}
+                                                                                                        sx={{
+                                                                                                            backgroundColor: 'rgba(56, 152, 252, 1)',
+                                                                                                            color: '#fff !important',
+                                                                                                            fontSize: '14px',
+                                                                                                            textTransform: 'none',
+                                                                                                            padding: '0.75em 1em',
+                                                                                                            border: '1px solid rgba(56, 152, 252, 1)',
+                                                                                                            maxWidth: '60px',
+                                                                                                            maxHeight: '30px',
+                                                                                                            '&:hover': { backgroundColor: 'rgba(56, 152, 252, 1)', boxShadow: '0 2px 2px rgba(0, 0, 0, 0.3)' },
+                                                                                                        }}
+                                                                                                    >
+                                                                                                        Delete
+                                                                                                    </Button>
+                                                                                                </DialogActions>
+                                                                                            </Popover>
+                                                                                        </List>
+                                                                                    </Popover>
+                                                                                </TableCell>
+
+                                                                            </TableRow>
+                                                                        )
+                                                                    })}
+                                                                </TableBody>
+                                                            </Table>
+                                                        </TableContainer>
+                                                        {count_smarts_audience && count_smarts_audience > 10
+                                                            ?
+                                                            <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
+                                                                <CustomTablePagination
+                                                                    count={count_smarts_audience ?? 0}
+                                                                    page={page}
+                                                                    rowsPerPage={rowsPerPage}
+                                                                    onPageChange={handleChangePage}
+                                                                    onRowsPerPageChange={handleChangeRowsPerPage}
+                                                                    rowsPerPageOptions={rowsPerPageOptions}
+                                                                />
+                                                            </Box>
+                                                            :
+                                                            <Box
+                                                                display="flex"
+                                                                justifyContent="flex-end"
+                                                                alignItems="center"
                                                                 sx={{
-                                                                    fontFamily: 'Nunito Sans',
-                                                                    fontWeight: '400',
-                                                                    fontSize: '12px',
-                                                                    lineHeight: '16px',
-                                                                    marginRight: '16px',
+                                                                    padding: '16px',
+                                                                    backgroundColor: '#fff',
+                                                                    borderRadius: '4px',
+                                                                    "@media (max-width: 600px)": { padding: '12px' }
                                                                 }}
                                                             >
-                                                                {`1 - ${count_smarts_audience} of ${count_smarts_audience}`}
-                                                            </Typography>
-                                                        </Box>
-                                                    }
+                                                                <Typography
+                                                                    sx={{
+                                                                        fontFamily: 'Nunito Sans',
+                                                                        fontWeight: '400',
+                                                                        fontSize: '12px',
+                                                                        lineHeight: '16px',
+                                                                        marginRight: '16px',
+                                                                    }}
+                                                                >
+                                                                    {`1 - ${count_smarts_audience} of ${count_smarts_audience}`}
+                                                                </Typography>
+                                                            </Box>
+                                                        }
+                                                    </Grid>
                                                 </Grid>
-                                            </Grid>
-                                        }
+                                            }
+                                        </Box>
+
+                                        <CreateSyncPopup
+                                            open={dataSyncPopupOpen}
+                                            id={selectedRowData?.id}
+                                            activeSegmentRecords={selectedRowData?.validated_records}
+                                            onClose={handleDataSyncPopupClose}
+                                            integrationsList={selectedRowData?.integrations}
+                                            isDownloadAction={isDownloadAction}
+                                            updateSmartAudStatus={updateSmartAudStatus}
+                                            setIsPageLoading={setLoading}
+                                        />
+                                        <FilterPopup open={filterPopupOpen}
+                                            onClose={handleFilterPopupClose}
+                                            onApply={handleApplyFilters}
+                                        />
+                                        <DetailsPopup open={detailsPopupOpen}
+                                            onClose={handleDetailsPopupClose}
+                                            id={selectedRowData?.id}
+                                            name={selectedRowData?.name}
+                                        />
+                                        <ValidationsHistoryPopup open={validationHistoryPopupOpen}
+                                            onClose={handleValidationsHistoryPopupClose}
+                                            id={selectedRowData?.id}
+                                            smartAudience={[
+                                                { title: selectedRowData?.name, value: selectedRowData?.created_at },
+                                                { title: "Total Universe", value: selectedRowData?.total_records },
+                                                { title: "Active Segment", value: selectedRowData?.active_segment_records }
+                                            ]}
+                                        />
+                                        <CalendarPopup
+                                            anchorEl={calendarAnchorEl}
+                                            open={isCalendarOpen}
+                                            onClose={handleCalendarClose}
+                                            onDateChange={handleDateChange}
+                                            onApply={handleApply}
+                                            onDateLabelChange={handleDateLabelChange}
+                                            selectedDates={selectedDates}
+                                        />
+
                                     </Box>
-
-                                    <CreateSyncPopup
-                                        open={dataSyncPopupOpen}
-                                        id={selectedRowData?.id}
-                                        activeSegmentRecords={selectedRowData?.validated_records}
-                                        onClose={handleDataSyncPopupClose}
-                                        integrationsList={selectedRowData?.integrations}
-                                        isDownloadAction={isDownloadAction}
-                                        updateSmartAudStatus={updateSmartAudStatus}
-                                        setIsPageLoading={setLoading}
-                                    />
-                                    <FilterPopup open={filterPopupOpen}
-                                        onClose={handleFilterPopupClose}
-                                        onApply={handleApplyFilters}
-                                    />
-                                    <DetailsPopup open={detailsPopupOpen}
-                                        onClose={handleDetailsPopupClose}
-                                        id={selectedRowData?.id}
-                                        name={selectedRowData?.name}
-                                    />
-                                    <ValidationsHistoryPopup open={validationHistoryPopupOpen}
-                                        onClose={handleValidationsHistoryPopupClose}
-                                        id={selectedRowData?.id}
-                                        smartAudience={[
-                                            { title: selectedRowData?.name, value: selectedRowData?.created_at},
-                                            { title: "Total Universe", value: selectedRowData?.total_records},
-                                            { title: "Active Segment", value: selectedRowData?.active_segment_records}
-                                        ]}
-                                    />
-                                    <CalendarPopup
-                                        anchorEl={calendarAnchorEl}
-                                        open={isCalendarOpen}
-                                        onClose={handleCalendarClose}
-                                        onDateChange={handleDateChange}
-                                        onApply={handleApply}
-                                        onDateLabelChange={handleDateLabelChange}
-                                        selectedDates={selectedDates}
-                                    />
-
                                 </Box>
                             </Box>
                         </Box>
                     </Box>
-                </Box>
-            </Box>
-        </>
+                </>
+            )}
+
+        </Box>
     );
 };
 
