@@ -1136,7 +1136,8 @@ const SourcesImport: React.FC = () => {
                   {showHints && (
                     <HintCard
                       card={hintCard4}
-                      positionLeft={340}
+                      positionLeft={360}
+                      positionTop={100}
                       isOpenSelect={isOpenSelect[3].show}
                       toggleClick={() => toggleDotHintClick(4)}
                     />
@@ -1197,228 +1198,231 @@ const SourcesImport: React.FC = () => {
                       base.
                     </Typography>
                   </Box>
-                  <Grid
-                    container
-                    alignItems="center"
-                    sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-                  >
-                    <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
-                      <Image
-                        src="/logo-icon.svg"
-                        alt="logo"
-                        height={22}
-                        width={34}
-                      />
+
+                  <Box sx={{position: "relative", display: "flex", flexDirection: "column", gap: 1}}>
+                    <Grid
+                      container
+                      alignItems="center"
+                      sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+                    >
+                      <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
+                        <Image
+                          src="/logo-icon.svg"
+                          alt="logo"
+                          height={22}
+                          width={34}
+                        />
+                      </Grid>
+                      <Grid item xs={1} sm={0.5}>
+                        &nbsp;
+                      </Grid>
+                      <Grid item xs={5} sm={3} sx={{ textAlign: "center", }}>
+                        <Image
+                          src="/csv-icon.svg"
+                          alt="scv"
+                          height={22}
+                          width={34}
+                        />
+                      </Grid>
                     </Grid>
-                    <Grid item xs={1} sm={0.5}>
-                      &nbsp;
-                    </Grid>
-                    <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
-                      <Image
-                        src="/csv-icon.svg"
-                        alt="scv"
-                        height={22}
-                        width={34}
-                      />
-                    </Grid>
-                  </Grid>
-                  {rows
-                    ?.filter((row) => !row.isHidden)
-                    .map((row, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          mt: index === 1 && emailNotSubstitution ? "10px" : 0,
-                        }}
-                      >
-                        <Grid
-                          container
-                          spacing={2}
-                          alignItems="center"
-                          sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+                    {rows
+                      ?.filter((row) => !row.isHidden)
+                      .map((row, index) => (
+                        <Box
+                          key={index}
+                          sx={{
+                            mt: index === 1 && emailNotSubstitution ? "10px" : 0,
+                          }}
                         >
-                          {/* Left Input Field */}
-                          <Grid item xs={5} sm={3}>
-                            <TextField
-                              fullWidth
-                              variant="outlined"
-                              value={row.type}
-                              disabled={true}
-                              InputLabelProps={{
-                                sx: {
-                                  fontFamily: "Nunito Sans",
-                                  fontSize: "12px",
-                                  lineHeight: "16px",
-                                  color: "rgba(17, 17, 19, 0.60)",
-                                  top: "-5px",
-                                  "&.Mui-focused": {
-                                    color: "rgba(56, 152, 252, 1)",
-                                    top: 0,
+                          <Grid
+                            container
+                            spacing={2}
+                            alignItems="center"
+                            sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+                          >
+                            {/* Left Input Field */}
+                            <Grid item xs={5} sm={3}>
+                              <TextField
+                                fullWidth
+                                variant="outlined"
+                                value={row.type}
+                                disabled={true}
+                                InputLabelProps={{
+                                  sx: {
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: "12px",
+                                    lineHeight: "16px",
+                                    color: "rgba(17, 17, 19, 0.60)",
+                                    top: "-5px",
+                                    "&.Mui-focused": {
+                                      color: "rgba(56, 152, 252, 1)",
+                                      top: 0,
+                                    },
+                                    "&.MuiInputLabel-shrink": {
+                                      top: 0,
+                                    },
                                   },
-                                  "&.MuiInputLabel-shrink": {
-                                    top: 0,
+                                }}
+                                InputProps={{
+                                  sx: {
+                                    "&.MuiOutlinedInput-root": {
+                                      height: "36px",
+                                      "& .MuiOutlinedInput-input": {
+                                        padding: "6.5px 8px",
+                                        fontFamily: "Roboto",
+                                        color: "#202124",
+                                        fontSize: "12px",
+                                        fontWeight: "400",
+                                        lineHeight: "20px",
+                                      },
+                                      "& .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: "#A3B0C2",
+                                      },
+                                      "&:hover .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "#A3B0C2",
+                                        },
+                                      "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "rgba(56, 152, 252, 1)",
+                                        },
+                                    },
+                                    "&+.MuiFormHelperText-root": {
+                                      marginLeft: "0",
+                                    },
                                   },
-                                },
-                              }}
-                              InputProps={{
-                                sx: {
-                                  "&.MuiOutlinedInput-root": {
-                                    height: "36px",
-                                    "& .MuiOutlinedInput-input": {
+                                }}
+                              />
+                            </Grid>
+
+                            {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+                            <Grid
+                              item
+                              xs={1}
+                              sm={0.5}
+                              container
+                              justifyContent="center"
+                            >
+                              <Image
+                                src="/chevron-right-purple.svg"
+                                alt="chevron-right-purple"
+                                height={18}
+                                width={18}
+                              />
+                            </Grid>
+
+                            <Grid item xs={5} sm={3}>
+                              <FormControl fullWidth sx={{ height: "36px" }}>
+                                <Select
+                                  value={row.value || ""}
+                                  onChange={(e) =>
+                                    handleMapListChange(row.id, e.target.value)
+                                  }
+                                  displayEmpty
+                                  inputProps={{
+                                    sx: {
+                                      height: "36px",
                                       padding: "6.5px 8px",
                                       fontFamily: "Roboto",
-                                      color: "#202124",
                                       fontSize: "12px",
                                       fontWeight: "400",
+                                      color: "#202124",
                                       lineHeight: "20px",
                                     },
-                                    "& .MuiOutlinedInput-notchedOutline": {
-                                      borderColor: "#A3B0C2",
-                                    },
-                                    "&:hover .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "#A3B0C2",
-                                      },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "rgba(56, 152, 252, 1)",
-                                      },
-                                  },
-                                  "&+.MuiFormHelperText-root": {
-                                    marginLeft: "0",
-                                  },
-                                },
-                              }}
-                            />
-                          </Grid>
-
-                          {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                          <Grid
-                            item
-                            xs={1}
-                            sm={0.5}
-                            container
-                            justifyContent="center"
-                          >
-                            <Image
-                              src="/chevron-right-purple.svg"
-                              alt="chevron-right-purple"
-                              height={18}
-                              width={18}
-                            />
-                          </Grid>
-
-                          <Grid item xs={5} sm={3}>
-                            <FormControl fullWidth sx={{ height: "36px" }}>
-                              <Select
-                                value={row.value || ""}
-                                onChange={(e) =>
-                                  handleMapListChange(row.id, e.target.value)
-                                }
-                                displayEmpty
-                                inputProps={{
-                                  sx: {
-                                    height: "36px",
-                                    padding: "6.5px 8px",
-                                    fontFamily: "Roboto",
-                                    fontSize: "12px",
-                                    fontWeight: "400",
-                                    color: "#202124",
-                                    lineHeight: "20px",
-                                  },
-                                }}
-                                sx={{
-                                  "&.MuiOutlinedInput-root": {
-                                    height: "36px",
-                                    "& .MuiOutlinedInput-notchedOutline": {
-                                      borderColor: "#A3B0C2",
-                                    },
-                                    "&:hover .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "#A3B0C2",
-                                      },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "rgba(56, 152, 252, 1)",
-                                      },
-                                  },
-                                }}
-                              >
-                                {headersinCSV.map(
-                                  (item: string, index: number) => (
-                                    <MenuItem key={index} value={item}>
-                                      {item}
-                                    </MenuItem>
-                                  )
-                                )}
-                              </Select>
-                              {row.type === "Email" && emailNotSubstitution && (
-                                <Typography
+                                  }}
                                   sx={{
-                                    fontFamily: "Nunito",
-                                    fontSize: "12px",
-                                    color: "rgba(224, 49, 48, 1)",
+                                    "&.MuiOutlinedInput-root": {
+                                      height: "36px",
+                                      "& .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: "#A3B0C2",
+                                      },
+                                      "&:hover .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "#A3B0C2",
+                                        },
+                                      "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "rgba(56, 152, 252, 1)",
+                                        },
+                                    },
                                   }}
                                 >
-                                  Please match email
-                                </Typography>
-                              )}
-                            </FormControl>
-                          </Grid>
+                                  {headersinCSV.map(
+                                    (item: string, index: number) => (
+                                      <MenuItem key={index} value={item}>
+                                        {item}
+                                      </MenuItem>
+                                    )
+                                  )}
+                                </Select>
+                                {row.type === "Email" && emailNotSubstitution && (
+                                  <Typography
+                                    sx={{
+                                      fontFamily: "Nunito",
+                                      fontSize: "12px",
+                                      color: "rgba(224, 49, 48, 1)",
+                                    }}
+                                  >
+                                    Please match email
+                                  </Typography>
+                                )}
+                              </FormControl>
+                            </Grid>
 
-                          {/* Delete Icon */}
-                          <Grid
-                            item
-                            xs={1}
-                            sm={0.5}
-                            container
-                            justifyContent="center"
-                          >
-                            {row.canDelete && (
-                              <>
-                                <IconButton
-                                  onClick={() => handleDelete(row.id)}
-                                >
-                                  <Image
-                                    src="/trash-icon-filled.svg"
-                                    alt="trash-icon-filled"
-                                    height={18}
-                                    width={18}
-                                  />
-                                </IconButton>
-                              </>
-                            )}
+                            {/* Delete Icon */}
+                            <Grid
+                              item
+                              xs={1}
+                              sm={0.5}
+                              container
+                              justifyContent="center"
+                            >
+                              {row.canDelete && (
+                                <>
+                                  <IconButton
+                                    onClick={() => handleDelete(row.id)}
+                                  >
+                                    <Image
+                                      src="/trash-icon-filled.svg"
+                                      alt="trash-icon-filled"
+                                      height={18}
+                                      width={18}
+                                    />
+                                  </IconButton>
+                                </>
+                              )}
+                            </Grid>
                           </Grid>
-                        </Grid>
-                      </Box>
-                    ))}
-                  {rows.some((row) => row.isHidden) && (
-                    <Box
-                      sx={{ display: "flex", justifyContent: "flex-start" }}
-                      onClick={handleAdd}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Nunito Sans",
-                          lineHeight: "22.4px",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: "rgba(56, 152, 252, 1)",
-                          cursor: "pointer",
-                        }}
+                        </Box>
+                      ))}
+                    {rows.some((row) => row.isHidden) && (
+                      <Box
+                        sx={{ display: "flex", justifyContent: "flex-start" }}
+                        onClick={handleAdd}
                       >
-                        + Add more
-                      </Typography>
-                    </Box>
-                  )}
-                  {showHints && (
-                    <HintCard
-                      card={hintCard5}
-                      positionLeft={340}
-                      isOpenSelect={isOpenSelect[4].show}
-                      toggleClick={() => toggleDotHintClick(5)}
-                    />
-                  )}
+                        <Typography
+                          sx={{
+                            fontFamily: "Nunito Sans",
+                            lineHeight: "22.4px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: "rgba(56, 152, 252, 1)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          + Add more
+                        </Typography>
+                      </Box>
+                    )}
+                    {showHints && (
+                      <HintCard
+                        card={hintCard5}
+                        positionLeft={460}
+                        isOpenSelect={isOpenSelect[4].show}
+                        toggleClick={() => toggleDotHintClick(5)}
+                      />
+                    )}
+                  </Box>
                 </Box>
               )}
 
