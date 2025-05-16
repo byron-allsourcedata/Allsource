@@ -259,7 +259,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               variant="body2"
               sx={{ fontSize: "14px", color: "text.secondary", mb: 2 }}
             >
-              When building an audience, it's important to work with the
+              When building an audience, it&aposs important to work with the
               right data. You have the flexibility to configure which
               predictable fields you want to use based on your specific
               goals. These fields might include things like age, location,
