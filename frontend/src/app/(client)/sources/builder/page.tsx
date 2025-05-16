@@ -1766,7 +1766,8 @@ const SourcesImport: React.FC = () => {
                     {showHints && (
                       <HintCard
                         card={hintCard3}
-                        positionLeft={340}
+                        positionLeft={550}
+                        positionTop={100}
                         isOpenSelect={isOpenSelect[2].show}
                         toggleClick={() => toggleDotHintClick(3)}
                       />
