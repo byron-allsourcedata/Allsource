@@ -34,7 +34,7 @@ import { useNotification } from "@/context/NotificationContext";
 import Papa, { ParseResult } from "papaparse";
 import ProgressBar from "@/components/ProgressBar";
 import { useHints } from '@/context/HintsContext';
-import HintCard from "../components/HintCard"
+import HintCard from "../../components/HintCard"
 
 interface Row {
   id: number;
@@ -817,7 +817,7 @@ const SourcesImport: React.FC = () => {
                         Interest (CSV)
                       </MenuItem>
                     </Select>
-                    {showHints && <HintCard card={hintCard} isOpenSelect={isOpenSelect} toggleClick={toggleDotHintClick}/>}
+                    {showHints && <HintCard card={hintCard} positionLeft={340} isOpenSelect={isOpenSelect} toggleClick={toggleDotHintClick}/>}
                   </FormControl>
                 </Box>
               </Box>

@@ -12,13 +12,14 @@ interface HintCardInterface {
 interface HintCardProps {
     card: HintCardInterface;
     isOpenSelect: boolean
+    positionLeft: number
     toggleClick: () => void
   }
   
-  const HintCard: React.FC<HintCardProps> = ({ card, toggleClick, isOpenSelect }) => {
+  const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, toggleClick, isOpenSelect }) => {
   
     return (
-      <Box sx={{position: "absolute", left: 340, top: 10, width: 400}}>
+      <Box sx={{position: "absolute", left: positionLeft, top: 10, width: 400}}>
         <Box
           sx={{
             visibility: isOpenSelect ? "visible" : "hidden", 
