@@ -1491,17 +1491,14 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                     height={15}
                   />
 
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography
-                      sx={{
-                        ...smartAudiences.textButton,
-                        color: "rgba(255, 255, 255, 1)",
-                      }}
-                    >
-                      Generate Smart Audience
-                    </Typography>
-                    <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder" />
-                  </Box>
+                  <Typography
+                    sx={{
+                      ...smartAudiences.textButton,
+                      color: "rgba(255, 255, 255, 1)",
+                    }}
+                  >
+                    Generate Smart Audience
+                  </Typography>
                 </Box>
               </Button>
             </Box>

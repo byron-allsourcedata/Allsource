@@ -316,6 +316,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
     const [contactSyncTab, setContactSyncTab] = useState(false)
 
     const [activeService, setActiveService] = useState<string | null>(null);
+    const [activeUrl, setActiveUrl] = useState<string>('https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-sync');
     const [activeImageService, setActiveImageService] = useState<string>("csv-icon.svg");
     const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -335,6 +336,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         setValue("1")
         setActiveImageService("csv-icon.svg")
         setActiveService(null)
+        setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-sync')
         setValueContactSync(0)
         setCustomFields([])
     }
@@ -362,6 +364,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         if (isDownloadAction) {
             setValue("2")
             setActiveService("CSV")
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-sync')
             setCustomFields(
                 [...customFieldsListCSV.map(field => ({ type: field.value, value: field.type }))
                 ])
@@ -414,6 +417,31 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
 
     const handleActive = (service: string) => {
         setActiveService(service);
+        if (service === "mailchimp") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-mailchimp')
+        }
+        if (service === "s3") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3')
+        }
+        if (service === "meta") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-meta')
+        }
+        if (service === "google_ads") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-googleads')
+        }
+        if (service === "hubspot") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-hubspot')
+        }
+
+        if (service === "CSV") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/csv')
+        }
+        if (service === "sales_force") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce')
+        }
+        if (service === "s3") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3')
+        }
         setActiveImageService(integrationsImage.filter((item) => item.service_name === service)[0].image)
     };
 
@@ -472,6 +500,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
             }
 
             if (activeService === "mailchimp") {
+                setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-mailchimp')
                 if (selectedOptionMailchimp?.id && selectedOptionMailchimp?.list_name) {
                     requestObj.list_id = String(selectedOptionMailchimp?.id),
                         requestObj.list_name = selectedOptionMailchimp?.list_name
@@ -483,6 +512,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
             }
 
             if (activeService === "s3") {
+                setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3')
                 if (selectedOptionS3) {
                     requestObj.list_name = selectedOptionS3
                 }
@@ -493,10 +523,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
             }
 
             if (activeService === "meta") {
+                setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-meta')
                 if (optionAdAccountMeta?.id && selectedOptionMeta?.list_name && selectedOptionMeta?.id) {
                     requestObj.customer_id = String(optionAdAccountMeta?.id)
                     requestObj.list_id = String(selectedOptionMeta?.id),
-                    requestObj.list_name = selectedOptionMeta?.list_name
+                        requestObj.list_name = selectedOptionMeta?.list_name
                     requestObj.campaign = {
                         campaign_id: selectedOptionCampaignMeta?.id,
                         campaign_name: formValuesMeta?.campaignName,
@@ -512,6 +543,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
             }
 
             if (activeService === "google_ads") {
+                setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-googleads')
                 if (selectedOptionGoogle?.list_id && selectedOptionGoogle?.list_name && selectedAccountIdGoogle) {
                     requestObj.customer_id = String(selectedAccountIdGoogle)
                     requestObj.list_id = String(selectedOptionGoogle?.list_id),
@@ -542,6 +574,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
 
     const actionBasedOnService = () => {
         if (activeService === "mailchimp") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-mailchimp')
             setContactSyncTab(true)
             getList()
             setRows(defaultRows)
@@ -549,6 +582,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         }
 
         if (activeService === "s3") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3')
             setContactSyncTab(true)
             getS3List()
             setRows(defaultRows)
@@ -556,32 +590,38 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         }
 
         if (activeService === "meta") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-meta')
             setContactSyncTab(true)
             fetchAdAccount()
             setRows(defaultRowsMeta)
         }
 
         if (activeService === "google_ads") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-googleads')
             setContactSyncTab(true)
             getCustomersInfo()
             setRows(defaultRowsGoogleAds)
         }
 
         if (activeService === "hubspot") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-hubspot')
             setRows(defaultRowsHubspot)
             setCustomFields(customFieldsListHubspot.map(field => ({ type: field.value, value: field.type })))
         }
 
         if (activeService === "CSV") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/csv')
             setRows(defaultRows)
             setCustomFields(customFieldsListCSV.map(field => ({ type: field.value, value: field.type })))
         }
 
         if (activeService === "sales_force") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce')
             setRows(defaultSalesForce)
             setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
         }
         if (activeService === "s3") {
+            setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3')
             setRows(defaultRows)
             setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
         }
@@ -972,7 +1012,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                         Create smart audience sync {isDownloadAction ? "with CSV" : activeService ? `with ${formatServiceName(toCamelCase(activeService))}` : ""}
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" className="main-text" sx={{
+                        <Link href={activeUrl} target="_blank" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',
@@ -1114,16 +1154,16 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
 
                                                     sx={{
                                                         color:
-                                                        valueContactSync === 0
-                                                            ? "rgba(231, 231, 231, 1)"
-                                                            : "rgba(56, 152, 252, 1)",
+                                                            valueContactSync === 0
+                                                                ? "rgba(231, 231, 231, 1)"
+                                                                : "rgba(56, 152, 252, 1)",
                                                         "& .MuiSlider-track": {
-                                                          backgroundColor: "rgba(56, 152, 252, 1)",
+                                                            backgroundColor: "rgba(56, 152, 252, 1)",
                                                         },
                                                         "& .MuiSlider-thumb": {
-                                                          backgroundColor: "rgba(56, 152, 252, 1)",
+                                                            backgroundColor: "rgba(56, 152, 252, 1)",
                                                         },
-                                                      }}
+                                                    }}
                                                 />
                                             </Box>
                                         </CardContent>
@@ -1520,15 +1560,15 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                                             }
                                                         }}
                                                     >
-                                                    {arrayWithCustomFields[activeService as keyof ArrayMapping ?? "default"]?.map((item: CustomRow) => (
-                                                        <MenuItem
-                                                            key={item.value}
-                                                            value={item.value}
-                                                            disabled={customFields.some(f => f.type === item.value)}
-                                                        >
-                                                            {item.type}
-                                                        </MenuItem>
-                                                    ))}
+                                                        {arrayWithCustomFields[activeService as keyof ArrayMapping ?? "default"]?.map((item: CustomRow) => (
+                                                            <MenuItem
+                                                                key={item.value}
+                                                                value={item.value}
+                                                                disabled={customFields.some(f => f.type === item.value)}
+                                                            >
+                                                                {item.type}
+                                                            </MenuItem>
+                                                        ))}
                                                     </TextField>
                                                 </Grid>
                                                 <Grid item xs="auto" sm={1} mb={2} container justifyContent="center">
