@@ -13,3 +13,5 @@ export {default as HowToVoteIcon}  from '@mui/icons-material/HowToVote';
 export {default as DirectionsBikeIcon}  from '@mui/icons-material/DirectionsBike';
 export {default as AccountBoxIcon}  from '@mui/icons-material/AccountBox';
 export {default as OpenInNewIcon}  from "@mui/icons-material/OpenInNew";
+export {default as AssignmentIndIcon}  from '@mui/icons-material/AssignmentInd';
+export {default as WorkHistoryOutlinedIcon}  from '@mui/icons-material/WorkHistoryOutlined';

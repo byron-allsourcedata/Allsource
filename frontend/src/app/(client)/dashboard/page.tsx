@@ -307,7 +307,7 @@ const Dashboard: React.FC = () => {
                 },
               }}
             >
-              Dashboard{" "}
+              Analytics{" "}
               <CustomTooltip
                 title={
                   "Indicates the count of resolved identities and revenue figures for the specified time"

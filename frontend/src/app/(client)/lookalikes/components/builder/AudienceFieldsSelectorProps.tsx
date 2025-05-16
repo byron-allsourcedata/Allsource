@@ -13,7 +13,7 @@ import type {
 import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 import { ResetProvider, useResetContext } from "@/context/ResetContext";
-import { PaymentIcon, HowToVoteIcon, DirectionsBikeIcon, AccountBoxIcon, OpenInNewIcon } from "@/icon"
+import { PaymentIcon, HowToVoteIcon, DirectionsBikeIcon, AccountBoxIcon, OpenInNewIcon, AssignmentIndIcon, WorkHistoryOutlinedIcon } from "@/icon"
 
 interface AudienceFieldsSelectorProps {
   personalData?: PersonalResults;
@@ -229,6 +229,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               title="Professional Profile"
               features={professionalProfileData}
               onChangeDisplayed={onProfessionalProfileChange}
+              headerIcon={<AssignmentIndIcon />}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
@@ -236,6 +237,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               title="Employment History"
               features={employmentHistoryData}
               onChangeDisplayed={onEmploymentHistoryChange}
+              headerIcon={<WorkHistoryOutlinedIcon />}
             />
           </Box>
 
