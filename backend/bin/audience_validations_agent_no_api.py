@@ -136,65 +136,63 @@ async def aud_validation_agent(
         ]
         logging.info(f"Success ids len: {len(success_ids)}")
 
-        with db_session.begin():
-            if failed_ids:
-                db_session.bulk_update_mappings(
-                    AudienceSmartPerson,
-                    [{"id": pid, "is_validation_processed": False, "is_valid": False} for pid in failed_ids]
-                )
-                db_session.flush()
-                
-            if success_ids:
-                db_session.bulk_update_mappings(
-                    AudienceSmartPerson,
-                    [{"id": pid, "is_validation_processed": False} for pid in success_ids]
-                )
-                db_session.flush()
-
-            total_validated = db_session.execute(
-                select(func.count(AudienceSmartPerson.id))
-                .where(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_valid.is_(True)
-                )
-            ).scalar_one()
+        if failed_ids:
+            db_session.bulk_update_mappings(
+                AudienceSmartPerson,
+                [{"id": pid, "is_validation_processed": False, "is_valid": False} for pid in failed_ids]
+            )
+            db_session.flush()
             
-            validation_count = db_session.execute(
-                select(func.count(AudienceSmartPerson.id))
-                .where(
-                    AudienceSmartPerson.smart_audience_id == aud_smart_id,
-                    AudienceSmartPerson.is_validation_processed.is_(False)
-                )
-            ).scalar_one()
-
-            total_count = db_session.query(AudienceSmartPerson).filter(
-                AudienceSmartPerson.smart_audience_id == aud_smart_id
-            ).count()
-
-            print("validation_count, total_count", validation_count, total_count)
+        if success_ids:
+            db_session.bulk_update_mappings(
+                AudienceSmartPerson,
+                [{"id": pid, "is_validation_processed": False} for pid in success_ids]
+            )
+            db_session.flush()
             
-            if validation_count == total_count:
-                aud_smart = db_session.get(AudienceSmart, aud_smart_id)
-                if aud_smart and aud_smart.validations:
-                    validations = json.loads(aud_smart.validations)
-                    key = COLUMN_MAPPING.get(validation_type)
-                    for category in validations.values():
-                        for rule in category:
-                            if key in rule:
-                                rule[key]["processed"] = True
-                                rule[key]["count_validated"] = count_persons_before_validation - len(failed_ids)
-                                rule[key]["count_submited"] = count_persons_before_validation
-                    aud_smart.validations = json.dumps(validations)
+        db_session.commit()
+        total_validated = db_session.execute(
+            select(func.count(AudienceSmartPerson.id))
+            .where(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                AudienceSmartPerson.is_valid.is_(True)
+            )
+        ).scalar_one()
+        
+        validation_count = db_session.execute(
+            select(func.count(AudienceSmartPerson.id))
+            .where(
+                AudienceSmartPerson.smart_audience_id == aud_smart_id,
+                AudienceSmartPerson.is_validation_processed.is_(False)
+            )
+        ).scalar_one()
 
-                await publish_rabbitmq_message(
-                    connection=connection,
-                    queue_name=AUDIENCE_VALIDATION_FILLER,
-                    message_body={
-                        'aud_smart_id': str(aud_smart_id),
-                        'user_id': user_id,
-                        'validation_params': validations
-                    }
-                )
+        total_count = db_session.query(AudienceSmartPerson).filter(
+            AudienceSmartPerson.smart_audience_id == aud_smart_id
+        ).count()
+        
+        if validation_count == total_count:
+            aud_smart = db_session.get(AudienceSmart, aud_smart_id)
+            if aud_smart and aud_smart.validations:
+                validations = json.loads(aud_smart.validations)
+                key = COLUMN_MAPPING.get(validation_type)
+                for category in validations.values():
+                    for rule in category:
+                        if key in rule:
+                            rule[key]["processed"] = True
+                            rule[key]["count_validated"] = count_persons_before_validation - len(failed_ids)
+                            rule[key]["count_submited"] = count_persons_before_validation
+                aud_smart.validations = json.dumps(validations)
+                db_session.commit()
+            await publish_rabbitmq_message(
+                connection=connection,
+                queue_name=AUDIENCE_VALIDATION_FILLER,
+                message_body={
+                    'aud_smart_id': str(aud_smart_id),
+                    'user_id': user_id,
+                    'validation_params': validations
+                }
+            )
 
         await send_sse(
             connection,

@@ -296,7 +296,6 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                 'postal_cas_verification-cas_office_address': 'cas_office_address',
             }
 
-            logging.info(f"validation_params {validation_params}")
             for value in priority_values:
                 validation, validation_type = value.split('-')
                 if validation in validation_params:

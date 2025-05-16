@@ -387,7 +387,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({ open, onClose, 
                         Connect to SalesForce
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" className="main-text"
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce" className="main-text"
                             target="_blank"
                             rel="noopener referrer"
                             sx={{

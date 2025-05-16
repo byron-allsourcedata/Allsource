@@ -486,6 +486,31 @@ class LeadsPersistence:
         
         return query.all()
     
+    def get_leads_by_emails(self, email_list: list[str], domain_id: int) -> list[int]:
+        stmt = (
+            select(LeadUser.id)
+            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+            .join(FiveXFiveUsersEmails,
+                FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
+            .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
+            .where(
+                FiveXFiveEmails.email.in_(email_list),
+                LeadUser.domain_id == domain_id
+            )
+            .distinct()
+        )
+        with Session(self.db.bind) as session:
+            result = session.execute(stmt)
+            leads_ids = [row[0] for row in result.fetchall()]
+
+        return leads_ids
+    
+    def unconfirm_leads(self, leads_ids: list[int]):
+        self.db.query(LeadUser) \
+            .filter(LeadUser.id.in_(leads_ids)) \
+            .update({LeadUser.is_confirmed: False})
+        self.db.commit()
+    
     def get_visit_stats(self, five_x_five_user_id: int):
         recurring_visits_subquery = (
             self.db.query(

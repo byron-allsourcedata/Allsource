@@ -366,7 +366,7 @@ const HubspotIntegrationPopup = ({ fromAudience, handleClose, open, onSave, init
                         Connect to Hubspot
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                            <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                            <Link href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-hubspot"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 sx={{

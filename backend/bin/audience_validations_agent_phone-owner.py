@@ -122,7 +122,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                         similarity = fuzz.ratio(full_name, caller_name)
                         is_verify = similarity > 70 and caller_name != 'Unavailable'
 
-                        logging.info(f"similarity: {full_name} - {caller_name} = {similarity}")
+                        logging.debug(f"similarity: {full_name} - {caller_name} = {similarity}")
 
 
                         verifications.append(
@@ -170,7 +170,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
         
         if len(verified_phones):
             db_session.bulk_save_objects(verified_phones)
-            db_session.commit()
+            db_session.flush()
 
         logging.info(f"Failed ids len: {len(failed_ids)}")
         
@@ -200,7 +200,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 ],
             )
             db_session.flush()
-
+            
+        db_session.commit()
         total_validated = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
@@ -231,7 +232,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                             rule[key]["count_validated"] = count_persons_before_validation - len(failed_ids)
                             rule[key]["count_submited"] = count_persons_before_validation
                 aud_smart.validations = json.dumps(validations)
-
+                db_session.commit()
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
@@ -241,7 +242,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                     "validation_params": validations,
                 },
             )
-        db_session.commit()
+            
         await send_sse(
             connection,
             user_id,

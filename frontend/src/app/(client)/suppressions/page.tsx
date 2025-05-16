@@ -140,7 +140,7 @@ const Suppressions: React.FC = () => {
                 
                         <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 }, }}>
                             <Typography className="first-sub-title">Suppressions</Typography>
-                            <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" /></Box>
+                            <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/suppressions" /></Box>
                         </Box>
                         <Box sx={{ flexGrow: 1, flexShrink: 1, display: 'flex', overflow: 'hidden', justifyContent: 'center', width: '100%', pr: '10%', alignItems: 'center', "@media (max-width: 900px)": { pr: 0 }, "@media (max-width: 600px)": { width: '100%', pr: '0' } }}>
                             {status === 'PIXEL_INSTALLATION_NEEDED' ? '' : (

@@ -399,7 +399,6 @@ const AudienceDashboard: React.FC = () => {
             Object.entries(event).forEach(([key, value]) => {
               if (!excludeKeys.includes(key)) {
                 let formattedKey = formatKey(key);
-                console.log(key);
                 if (/^(source|lookalike|data_sync|audience)_name$/.test(key)) {
                   formattedKey = "Name";
                 }
@@ -515,7 +514,6 @@ const AudienceDashboard: React.FC = () => {
         groupedSelectedCards.smart_audience
       );
       const dataSync = buildChainedPairs(groupedSelectedCards.data_sync);
-      console.log(sources);
 
       setChainedCards({
         sources,
@@ -656,7 +654,7 @@ const AudienceDashboard: React.FC = () => {
                     "Indicates the count of resolved identities and revenue figures for the specified time"
                   }
                   linkText="Learn More"
-                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main"
                 />
               </Typography>
               <Box

@@ -164,7 +164,8 @@ async def process_rmq_message(
                 ],
             )
             db_session.flush()
-
+            
+        db_session.commit()
         total_validated = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id,
@@ -194,7 +195,7 @@ async def process_rmq_message(
                             rule[key]["count_validated"] = count_persons_before_validation - len(failed_ids)
                             rule[key]["count_submited"] = count_persons_before_validation
                 aud_smart.validations = json.dumps(validations)
-
+                db_session.commit()
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
@@ -204,7 +205,7 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
-        db_session.commit()
+            
         await send_sse(
             connection,
             user_id,

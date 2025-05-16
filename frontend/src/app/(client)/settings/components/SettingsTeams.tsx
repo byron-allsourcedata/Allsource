@@ -430,7 +430,7 @@ export const SettingsTeams: React.FC = () => {
                         <Typography variant="h6" className='first-sub-title' sx={{
                             lineHeight: '22px !important'
                         }}>Pending invitations</Typography>
-                        <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://maximiz.ai" />
+                        <CustomTooltip title={"The Settings menu allows you to customise your user experience, manage your account preferences, and adjust notifications."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/settings" />
                     </Box>
 
                     <TableContainer sx={{

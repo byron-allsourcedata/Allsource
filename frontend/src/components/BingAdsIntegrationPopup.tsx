@@ -120,7 +120,7 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow, invalid_api_key
                         Connect to BingAds
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                    <Link href="https://allsourceio.zohodesk.com/portal/en/kb/allsource" target="_blank" rel="noopener noreferrer"
+                    <Link href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-bingads" target="_blank" rel="noopener noreferrer"
                         sx={{
                             fontFamily: 'Nunito Sans',
                             fontSize: '14px',

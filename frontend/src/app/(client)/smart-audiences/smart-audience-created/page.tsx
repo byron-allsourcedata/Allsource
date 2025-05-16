@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import { useNotification } from '@/context/NotificationContext';
 import { useSSE } from '../../../../context/SSEContext';
+import CustomTooltip from "@/components/customToolTip";
 import { MoreVert } from '@mui/icons-material';
 import { SliderProvider } from '../../../../context/SliderContext';
 import { showToast, showErrorToast } from '@/components/ToastNotification';
@@ -33,7 +34,7 @@ interface SmartAudienceSource {
 const SourcesList: React.FC = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const data = searchParams.get('data'); 
+    const data = searchParams.get('data');
     const createdSmartAudienceSource: SmartAudienceSource = data ? JSON.parse(data) : null;
     const { hasNotification } = useNotification();
     const [loading, setLoading] = useState(false);
@@ -57,15 +58,15 @@ const SourcesList: React.FC = () => {
 
     useEffect(() => {
         console.log("pooling");
-    
+
         if (!intervalRef.current) {
             console.log("pooling started");
             intervalRef.current = setInterval(() => {
                 const hasPending = createdData.active_segment_records !== createdData.processed_active_segment_records || createdData.status === "validating";
-                
+
                 if (hasPending) {
                     console.log("Fetching due to pending records");
-                
+
                     fetchData();
                 } else {
                     console.log("No pending records, stopping interval");
@@ -76,7 +77,7 @@ const SourcesList: React.FC = () => {
                 }
             }, 2000);
         }
-    
+
         return () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
@@ -85,7 +86,7 @@ const SourcesList: React.FC = () => {
             }
         };
     }, [createdData]);
-      
+
 
     const fetchData = async () => {
         try {
@@ -156,7 +157,7 @@ const SourcesList: React.FC = () => {
     return (
         <>
             {loading && (
-                <CustomizedProgressBar/>
+                <CustomizedProgressBar />
             )}
             <Box sx={{
                 display: 'flex', flexDirection: 'column', overflow: 'auto', pr: 2,
@@ -164,7 +165,7 @@ const SourcesList: React.FC = () => {
                     height: 'calc(100vh - 4.25rem)'
                 }
             }}>
-                <Box sx={{display: "flex", flexDirection: 'column'}}>
+                <Box sx={{ display: "flex", flexDirection: 'column' }}>
                     <Box
                         sx={{
                             display: 'flex',
@@ -181,16 +182,19 @@ const SourcesList: React.FC = () => {
                             }
                         }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                            <Typography className='first-sub-title'>
-                                Generate Smart Audience
-                            </Typography>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Typography className='first-sub-title'>
+                                    Generate Smart Audience
+                                </Typography>
+                                <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder" />
+                            </Box>
                         </Box>
                         <Box sx={{
-                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
-                                '@media (max-width: 900px)': {
-                                    gap: '8px'
-                                }
-                            }}>
+                            display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
+                            '@media (max-width: 900px)': {
+                                gap: '8px'
+                            }
+                        }}>
                         </Box>
                     </Box>
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -227,7 +231,7 @@ const SourcesList: React.FC = () => {
                                         alignItems: "start"
                                     }
                                 }}
-                                >
+                            >
                                 <Box
                                     sx={{
                                         display: "flex",
@@ -235,12 +239,12 @@ const SourcesList: React.FC = () => {
                                         width: "100%",
                                         justifyContent: "space-between",
                                         "@media (max-width: 900px)": {
-                                        flexDirection: "column",
-                                        gap: 2
+                                            flexDirection: "column",
+                                            gap: 2
                                         },
                                     }}
-                                    >
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                >
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                                         <Typography variant="body2" className="table-heading">
                                             Name
                                         </Typography>
@@ -248,7 +252,7 @@ const SourcesList: React.FC = () => {
                                             {createdData?.name}
                                         </Typography>
                                     </Box>
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1, alignItems: 'center'}}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1, alignItems: 'center' }}>
                                         <Typography
                                             variant="body2"
                                             className="table-heading"
@@ -262,7 +266,7 @@ const SourcesList: React.FC = () => {
                                         </Typography>
                                     </Box>
 
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1, alignItems: 'center'}}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1, alignItems: 'center' }}>
                                         <Typography
                                             variant="body2"
                                             className="table-heading"
@@ -271,19 +275,19 @@ const SourcesList: React.FC = () => {
                                             Validations
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                        {createdData.status === "unvalidated" 
-                                            ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20}/>
-                                            : createdData.status === "n_a"
-                                                ? "N/A"
-                                                : createdData.validated_records === 0 && createdData.status === "validating" && !progressValidation?.total
-                                                    ? <Box sx={{display: "flex", justifyContent: "center"}}><ThreeDotsLoader /></Box> 
-                                                    : progressValidation?.total > createdData.validated_records
-                                                        ? progressValidation?.total.toLocaleString('en-US')
-                                                        : createdData.validated_records.toLocaleString('en-US')}
+                                            {createdData.status === "unvalidated"
+                                                ? <Image src="./danger_yellow.svg" alt='danger' width={20} height={20} />
+                                                : createdData.status === "n_a"
+                                                    ? "N/A"
+                                                    : createdData.validated_records === 0 && createdData.status === "validating" && !progressValidation?.total
+                                                        ? <Box sx={{ display: "flex", justifyContent: "center" }}><ThreeDotsLoader /></Box>
+                                                        : progressValidation?.total > createdData.validated_records
+                                                            ? progressValidation?.total.toLocaleString('en-US')
+                                                            : createdData.validated_records.toLocaleString('en-US')}
                                         </Typography>
                                     </Box>
 
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                                         <Typography
                                             variant="body2"
                                             className="table-heading"
@@ -292,22 +296,22 @@ const SourcesList: React.FC = () => {
                                             Created
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                        {createdData?.created_by + ", " + 
-                                        (dayjs(createdData?.created_at).isValid() 
-                                        ? dayjs(createdData?.created_at).format('MMM D, YYYY') 
-                                        : '--')}
+                                            {createdData?.created_by + ", " +
+                                                (dayjs(createdData?.created_at).isValid()
+                                                    ? dayjs(createdData?.created_at).format('MMM D, YYYY')
+                                                    : '--')}
                                         </Typography>
                                     </Box>
 
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                                         <Typography variant="body2" className="table-heading">
                                             Total Universe
                                         </Typography>
                                         <Typography variant="subtitle1" className="table-data">
-                                        {createdData?.total_records.toLocaleString('en-US')}
+                                            {createdData?.total_records.toLocaleString('en-US')}
                                         </Typography>
                                     </Box>
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                                         <Typography
                                             variant="body2"
                                             className="table-heading"
@@ -315,18 +319,18 @@ const SourcesList: React.FC = () => {
                                         >
                                             Active Segment
                                         </Typography>
-                                        
+
                                         <Typography variant="subtitle1" className="table-data">
-                                        {(progress?.processed && progress?.processed === createdData?.active_segment_records) || (createdData?.processed_active_segment_records ===  createdData?.active_segment_records && (createdData.status === "unvalidated"  || createdData?.processed_active_segment_records !== 0))
-                                            ? createdData.active_segment_records.toLocaleString('en-US')
-                                            : createdData?.processed_active_segment_records > progress?.processed
-                                                ? <ProgressBar progress={{ total: createdData?.active_segment_records, processed: createdData?.processed_active_segment_records}} />
-                                                : <ProgressBar progress={{...progress, total: createdData.active_segment_records}} />
-                                        }
+                                            {(progress?.processed && progress?.processed === createdData?.active_segment_records) || (createdData?.processed_active_segment_records === createdData?.active_segment_records && (createdData.status === "unvalidated" || createdData?.processed_active_segment_records !== 0))
+                                                ? createdData.active_segment_records.toLocaleString('en-US')
+                                                : createdData?.processed_active_segment_records > progress?.processed
+                                                    ? <ProgressBar progress={{ total: createdData?.active_segment_records, processed: createdData?.processed_active_segment_records }} />
+                                                    : <ProgressBar progress={{ ...progress, total: createdData.active_segment_records }} />
+                                            }
                                         </Typography>
                                     </Box>
-                                    <Box sx={{display: "flex", flexDirection: "column", gap: 1}}>
-                                        
+                                    <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+
                                         <Typography variant="body2" className="table-heading">
                                             Status
                                         </Typography>
@@ -335,9 +339,9 @@ const SourcesList: React.FC = () => {
                                                 width: "100px",
                                                 margin: 0,
                                                 background: getStatusStyle(
-                                                    progressValidation?.total 
-                                                    ? "Ready"
-                                                    : preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))
+                                                    progressValidation?.total
+                                                        ? "Ready"
+                                                        : preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))
                                                 ).background,
                                                 padding: '3px 8px',
                                                 borderRadius: '2px',
@@ -347,32 +351,32 @@ const SourcesList: React.FC = () => {
                                                 lineHeight: '16px',
                                                 textAlign: "center",
                                                 color: getStatusStyle(
-                                                    progressValidation?.total 
-                                                    ? "Ready"
-                                                    : preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))
+                                                    progressValidation?.total
+                                                        ? "Ready"
+                                                        : preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))
                                                 ).color,
                                             }}>
-                                                {progressValidation?.total 
+                                                {progressValidation?.total
                                                     ? "Ready"
                                                     : preRenderStatus(createdData.status.charAt(0).toUpperCase() + createdData.status.slice(1))
-                                                    }
+                                                }
                                             </Typography>
-                                    )}
+                                        )}
                                     </Box>
                                     {/* need chnage < on !== */}
-                                    <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': {display: 'none'}, ':hover': { backgroundColor: 'transparent' }}} >
-                                        <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
+                                    <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': { display: 'none' }, ':hover': { backgroundColor: 'transparent' } }} >
+                                        <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
                                     </IconButton>
                                 </Box>
-                                    {/* need chnage < on !== */}
-                                <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': {display: 'block'}, ':hover': { backgroundColor: 'transparent' }}} >
-                                        <MoreVert sx={{color: "rgba(32, 33, 36, 1)"}} height={8} width={24}/>
-                                </IconButton>             
+                                {/* need chnage < on !== */}
+                                <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': { display: 'block' }, ':hover': { backgroundColor: 'transparent' } }} >
+                                    <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
+                                </IconButton>
                             </Box>
-                            <Box sx={{display: "flex", justifyContent: "end", gap: 2, mt: 2, alignItems: "center"}}>
+                            <Box sx={{ display: "flex", justifyContent: "end", gap: 2, mt: 2, alignItems: "center" }}>
                                 <Button
                                     variant="outlined"
-                                    onClick={ buttonClickAllSources }
+                                    onClick={buttonClickAllSources}
                                     sx={{
                                         height: '40px',
                                         borderRadius: '4px',
@@ -400,9 +404,11 @@ const SourcesList: React.FC = () => {
                                         padding: '10px 24px',
                                         color: '#fff !important',
                                         ":hover": {
-                                            backgroundColor: "rgba(62, 64, 142, 1)"},
+                                            backgroundColor: "rgba(62, 64, 142, 1)"
+                                        },
                                         ":active": {
-                                            backgroundColor: "rgba(56, 152, 252, 1)"},
+                                            backgroundColor: "rgba(56, 152, 252, 1)"
+                                        },
                                         ":disabled": {
                                             backgroundColor: "rgba(56, 152, 252, 1)",
                                             opacity: 0.6,
@@ -447,7 +453,7 @@ const SourcesList: React.FC = () => {
                                             backgroundColor: 'rgba(243, 243, 243, 1)',
                                             borderRadius: '4px',
                                             color: 'rgba(95, 99, 104, 1) !important',
-                                            marginBottom: index < selectedName?.split(",").length - 1 ? "4px" : 0, 
+                                            marginBottom: index < selectedName?.split(",").length - 1 ? "4px" : 0,
                                         }}
                                     >
                                         {part.trim()}
@@ -467,34 +473,36 @@ const SourcesList: React.FC = () => {
                                 vertical: 'top',
                                 horizontal: 'left',
                             }}
+                        >
+                            <List
+                                sx={{
+                                    width: '100%', maxWidth: 360
+                                }}
                             >
-                                <List
-                                    sx={{ 
-                                    width: '100%', maxWidth: 360}}
-                                    >
-                                    {/* <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                {/* <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             handleClosePopover()
                                             // router.push(`/lookalikes/${createdData?.id}/builder`)
                                         }}>
                                         <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Create Sync"/>
                                     </ListItemButton> */}
-                                    {/* <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
+                                {/* <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
                                             // handleOpenConfirmDialog()
                                         }}>
                                         <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Clone"/>
                                     </ListItemButton> */}
-                                    <ListItemButton sx={{padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)"}}} onClick={() => {
-                                            handleOpenConfirmDialog()
-                                        }}>
-                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove"/>
-                                    </ListItemButton>
-                                    <Popover
-                                        open={openConfirmDialog}
-                                        onClose={handleCloseConfirmDialog}
-                                        anchorEl={anchorEl}
-                                        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                                        transformOrigin={{ vertical: 'top', horizontal: 'center' }}
-                                        slotProps={{ paper: {
+                                <ListItemButton sx={{ padding: "4px 16px", ':hover': { backgroundColor: "rgba(80, 82, 178, 0.1)" } }} onClick={() => {
+                                    handleOpenConfirmDialog()
+                                }}>
+                                    <ListItemText primaryTypographyProps={{ fontSize: '14px' }} primary="Remove" />
+                                </ListItemButton>
+                                <Popover
+                                    open={openConfirmDialog}
+                                    onClose={handleCloseConfirmDialog}
+                                    anchorEl={anchorEl}
+                                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                                    transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+                                    slotProps={{
+                                        paper: {
                                             sx: {
                                                 padding: '0.125rem',
                                                 width: '15.875rem',
@@ -502,17 +510,18 @@ const SourcesList: React.FC = () => {
                                                 borderRadius: '8px',
                                                 border: '0.5px solid rgba(175, 175, 175, 1)'
                                             }
-                                        }}}
-                                    >
-                                        <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
-                                            Confirm Deletion
-                                        </Typography>
-                                        <DialogContent sx={{ padding: 2 }}>
-                                            <DialogContentText className="table-data">
-                                                Are you sure you want to delete this source?
-                                            </DialogContentText>
-                                        </DialogContent>
-                                        <DialogActions>
+                                        }
+                                    }}
+                                >
+                                    <Typography className="first-sub-title" sx={{ paddingLeft: 2, pt: 1, pb: 0 }}>
+                                        Confirm Deletion
+                                    </Typography>
+                                    <DialogContent sx={{ padding: 2 }}>
+                                        <DialogContentText className="table-data">
+                                            Are you sure you want to delete this source?
+                                        </DialogContentText>
+                                    </DialogContent>
+                                    <DialogActions>
                                         <Button
                                             className="second-sub-title"
                                             onClick={handleCloseConfirmDialog}
@@ -547,9 +556,9 @@ const SourcesList: React.FC = () => {
                                         >
                                             Delete
                                         </Button>
-                                        </DialogActions>
-                                    </Popover>
-                                </List>
+                                    </DialogActions>
+                                </Popover>
+                            </List>
                         </Popover>
 
                     </Box>

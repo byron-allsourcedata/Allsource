@@ -735,7 +735,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({ open, onClose
                         Connect to Mailchimp
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
-                        <Link href="#" className="main-text" sx={{
+                        <Link href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-mailchimp" className="main-text" sx={{
                             fontSize: '14px',
                             fontWeight: '600',
                             lineHeight: '20px',

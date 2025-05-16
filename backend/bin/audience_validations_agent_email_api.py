@@ -114,7 +114,7 @@ async def process_rmq_message(
         logging.info(f"Failed ids len: {len(failed_ids)}")
         if len(verified_emails):
             db_session.bulk_save_objects(verified_emails)
-            db_session.commit()
+            db_session.flush()
         
         if success_ids:
             db_session.bulk_update_mappings(
@@ -125,6 +125,8 @@ async def process_rmq_message(
                 ],
             )
             db_session.flush()
+            
+        db_session.commit()
         logging.info(f"Success ids len: {len(success_ids)}")
         total_validated = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
@@ -155,7 +157,7 @@ async def process_rmq_message(
                             rule["delivery"]["count_submited"] = count_persons_before_validation
 
                 aud_smart.validations = json.dumps(validations)
-
+            db_session.commit()
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
@@ -165,7 +167,6 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
-        db_session.commit()
         await send_sse(
             connection,
             user_id,

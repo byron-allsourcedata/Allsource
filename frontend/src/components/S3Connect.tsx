@@ -294,7 +294,7 @@ const S3Connect = ({ fromAudience, handleClose, open, onSave, initApiKey, boxSha
                     </Typography>
                     <Box sx={{ display: 'flex', gap: '32px', '@media (max-width: 600px)': { gap: '8px' } }}>
                         <Link
-                            href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                            href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3"
                             target="_blank"
                             rel="noopener noreferrer"
                             sx={{

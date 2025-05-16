@@ -223,7 +223,7 @@ const Insights = () => {
                 }}
               >
                 <Typography className="first-sub-title">Insights</Typography>
-                <CustomToolTip title={'Insights.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/allsource' />
+                <CustomToolTip title={'Insights.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/insights' />
               </Box>
             </Box>
             <Box

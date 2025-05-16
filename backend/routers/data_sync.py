@@ -61,7 +61,7 @@ async def create_sync(data: SyncCreate, service_name: str = Query(...),
         await service.create_sync(
             **data,
             domain_id=domain.id,
-            created_by=user.get('full_name'),
+            created_by=user.get('team_member').get('full_name') if user.get('team_member') else user.get('full_name'),
             user=user
         )
 
