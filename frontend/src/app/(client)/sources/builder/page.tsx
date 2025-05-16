@@ -218,6 +218,12 @@ const SourcesImport: React.FC = () => {
     );
   };
 
+  const openDotHintClick = (id: number) => {
+    setIsOpenSelect((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, show: true } : el))
+    );
+  };
+
   const defaultRows: Row[] = [
     { id: 1, type: "Email", value: "", canDelete: false, isHidden: false },
     {
@@ -1648,7 +1654,7 @@ const SourcesImport: React.FC = () => {
                   <Box
                     onClick={() => {
                       closeDotHintClick(3);
-                      toggleDotHintClick(6);
+                      openDotHintClick(6);
                     }}
                     sx={{
                       display: "flex",
