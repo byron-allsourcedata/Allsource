@@ -1849,7 +1849,7 @@ const SourcesImport: React.FC = () => {
                       </Typography>
                     </Box>
                   </Box>
-                  <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+                  <Box sx={{ display: "flex", position: "relative", flexDirection: "row", gap: 2 }}>
                     {["B2B", "B2C"].map((option) => (
                       <ToggleButton
                         key={option}
@@ -1887,7 +1887,7 @@ const SourcesImport: React.FC = () => {
                     {showHints && (
                       <HintCard
                         card={hintCard6}
-                        positionLeft={340}
+                        positionLeft={140}
                         isOpenSelect={isOpenSelect[5].show}
                         toggleClick={() => toggleDotHintClick(6)}
                       />
