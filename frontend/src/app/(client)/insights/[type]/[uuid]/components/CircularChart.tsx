@@ -217,7 +217,7 @@ export const PieChartWithLegend: React.FC<PieChartWithLegendProps> = ({
             <Stack
               key={index}
               direction="row"
-              sx={{ alignItems: "center", gap: 2, pb: 0 }}
+              sx={{ alignItems: "center", gap: 2, pb: 1 }}
             >
               <Stack sx={{ gap: 1, flexGrow: 1 }}>
                 <Stack
