@@ -33,8 +33,8 @@ import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import Papa, { ParseResult } from "papaparse";
 import ProgressBar from "@/components/ProgressBar";
-import { useHints } from '@/context/HintsContext';
-import HintCard from "../components/HintCard"
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../components/HintCard";
 
 interface Row {
   id: number;
@@ -50,9 +50,15 @@ interface EventTypeInterface {
   title: string;
 }
 
+interface StateHint {
+  id: number;
+  show: boolean;
+}
+
 interface HintCardInterface {
   description: string;
   title: string;
+  linkToLoadMore: string;
 }
 
 interface NewSource {
@@ -109,8 +115,14 @@ const SourcesImport: React.FC = () => {
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
-  const [activeStep, setActiveStep] = useState(0);
-  const [isOpenSelect, setIsOpenSelect] = useState(false); 
+  const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
+    { show: true, id: 1 },
+    { show: false, id: 2 },
+    { show: false, id: 3 },
+    { show: false, id: 4 },
+    { show: false, id: 5 },
+    { show: false, id: 6 },
+  ]);
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -137,11 +149,80 @@ const SourcesImport: React.FC = () => {
     { id: 4, name: "converted_sales_count", title: "converted_sales" },
   ];
 
-  const hintsCards: HintCardInterface[] = [
-    { description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", title: "Customer Conversions" },
-    { description: "This dataset contains users who engaged but didn't convert - abandoned carts, incomplete sign-ups, or declined offers. Use it to identify systemic drop-off points and exclude them from your audience list.", title: "Failed Leads" },
-    { description: "This file should contain users who recently engaged with specific topics, products, or brands (e.g., searched for car model, read related articles, etc.). ", title: "Interest" },
-  ];
+  const hintCard1: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    title: "Source Type",
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
+
+  const hintCard2: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    title: "Domain",
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
+
+  const hintCard3: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    title: "Data source",
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
+
+  const hintCard4: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    title: "Source file",
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
+
+  const hintCard5: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    title: "Data Maping",
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
+
+  const hintCard6: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    title: "Target type",
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
+
+  const sourceTypeDescriptions: Record<string, string> = {
+    "Customer Conversions":
+      "Please upload a CSV file containing the list of customers who have successfully completed an order on your website.",
+    "Failed Leads":
+      "Please upload a CSV file containing leads who did not complete a purchase or dropped off during the signup process.",
+    Interest:
+      "Please upload a CSV file of users who showed interest in your product or service, such as newsletter subscribers or ebook downloaders.",
+  };
+
+  const toggleDotHintClick = (id: number) => {
+    setIsOpenSelect((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, show: !el.show } : el))
+    );
+  };
+
+  const closeDotHintClick = (id: number) => {
+    setIsOpenSelect((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, show: false } : el))
+    );
+  };
+
+  const openDotHintClick = (id: number) => {
+    setIsOpenSelect((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, show: true } : el))
+    );
+  };
 
   const defaultRows: Row[] = [
     { id: 1, type: "Email", value: "", canDelete: false, isHidden: false },
@@ -199,6 +280,19 @@ const SourcesImport: React.FC = () => {
       setRows(updatedRows);
     }
   };
+
+  useEffect(() => {
+    if (showHints && !isOpenSelect) {
+      setIsOpenSelect([
+        { show: true, id: 1 },
+        { show: false, id: 2 },
+        { show: false, id: 3 },
+        { show: false, id: 4 },
+        { show: false, id: 5 },
+        { show: false, id: 6 },
+      ]);
+    }
+  }, [showHints]);
 
   useEffect(() => {
     if (typeFromSearchParams) {
@@ -280,14 +374,17 @@ const SourcesImport: React.FC = () => {
     handleDeleteFile();
     setTargetAudience("");
     setSourceType(event.target.value);
+    closeDotHintClick(1);
     if (event.target.value === "Website - Pixel") {
       setSourceMethod(2);
+      toggleDotHintClick(2);
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
       fetchDomainsAndLeads();
     } else {
       setSourceMethod(1);
+      toggleDotHintClick(4);
       setPixelNotInstalled(false);
       setTimeout(() => {
         scrollToBlock(block2Ref);
@@ -300,6 +397,7 @@ const SourcesImport: React.FC = () => {
     setTimeout(() => {
       scrollToBlock(block6Ref);
     }, 0);
+    closeDotHintClick(6);
   };
 
   // Uploading
@@ -562,6 +660,7 @@ const SourcesImport: React.FC = () => {
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
+      toggleDotHintClick(6);
     } catch (error: unknown) {
       if (error instanceof Error) {
         showErrorToast(error.message);
@@ -603,6 +702,8 @@ const SourcesImport: React.FC = () => {
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
     const domainName = event.target.value;
     setSelectedDomain(domainName);
+    closeDotHintClick(2);
+    toggleDotHintClick(3);
 
     const selectedDomainData = domains.find(
       (domain: DomainsLeads) => domain.name === domainName
@@ -738,7 +839,6 @@ const SourcesImport: React.FC = () => {
                   sx={{
                     display: "flex",
                     gap: 2,
-                    position: "relative",
                     "@media (max-width: 420px)": {
                       display: "grid",
                       gridTemplateColumns: "1fr",
@@ -749,8 +849,6 @@ const SourcesImport: React.FC = () => {
                     <Select
                       value={sourceType}
                       onChange={handleChangeSourceType}
-                      onOpen={() => setIsOpenSelect(true)}
-                      onClose={() => setIsOpenSelect(false)}
                       displayEmpty
                       MenuProps={{
                         MenuListProps: {
@@ -762,6 +860,7 @@ const SourcesImport: React.FC = () => {
                       }}
                       sx={{
                         ...sourcesStyles.text,
+                        position: "relative",
                         width: "316px",
                         borderRadius: "4px",
                         fontSize: "14px",
@@ -809,12 +908,15 @@ const SourcesImport: React.FC = () => {
                         Interest (CSV)
                       </MenuItem>
                     </Select>
+                    {showHints && (
+                      <HintCard
+                        card={hintCard1}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[0].show}
+                        toggleClick={() => toggleDotHintClick(1)}
+                      />
+                    )}
                   </FormControl>
-                  {showHints && isOpenSelect && <HintCard
-                    cards={hintsCards}
-                    activeStep={activeStep}
-                    onStepChange={setActiveStep}
-                  />}
                 </Box>
               </Box>
 
@@ -879,8 +981,7 @@ const SourcesImport: React.FC = () => {
                         color: "rgba(95, 99, 104, 1)",
                       }}
                     >
-                      Please upload a CSV file containing the list of customers
-                      who have successfully completed an order on your website.
+                      {sourceTypeDescriptions[sourceType] ?? ""}
                     </Typography>
                   </Box>
                   <Box
@@ -1037,6 +1138,16 @@ const SourcesImport: React.FC = () => {
                       </Typography>
                     </Typography>
                   )}
+
+                  {showHints && (
+                    <HintCard
+                      card={hintCard4}
+                      positionLeft={360}
+                      positionTop={100}
+                      isOpenSelect={isOpenSelect[3].show}
+                      toggleClick={() => toggleDotHintClick(4)}
+                    />
+                  )}
                 </Box>
               )}
 
@@ -1093,220 +1204,231 @@ const SourcesImport: React.FC = () => {
                       base.
                     </Typography>
                   </Box>
-                  <Grid
-                    container
-                    alignItems="center"
-                    sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-                  >
-                    <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
-                      <Image
-                        src="/logo-icon.svg"
-                        alt="logo"
-                        height={22}
-                        width={34}
-                      />
+
+                  <Box sx={{position: "relative", display: "flex", flexDirection: "column", gap: 1}}>
+                    <Grid
+                      container
+                      alignItems="center"
+                      sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+                    >
+                      <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
+                        <Image
+                          src="/logo-icon.svg"
+                          alt="logo"
+                          height={22}
+                          width={34}
+                        />
+                      </Grid>
+                      <Grid item xs={1} sm={0.5}>
+                        &nbsp;
+                      </Grid>
+                      <Grid item xs={5} sm={3} sx={{ textAlign: "center", }}>
+                        <Image
+                          src="/csv-icon.svg"
+                          alt="scv"
+                          height={22}
+                          width={34}
+                        />
+                      </Grid>
                     </Grid>
-                    <Grid item xs={1} sm={0.5}>
-                      &nbsp;
-                    </Grid>
-                    <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
-                      <Image
-                        src="/csv-icon.svg"
-                        alt="scv"
-                        height={22}
-                        width={34}
-                      />
-                    </Grid>
-                  </Grid>
-                  {rows
-                    ?.filter((row) => !row.isHidden)
-                    .map((row, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          mt: index === 1 && emailNotSubstitution ? "10px" : 0,
-                        }}
-                      >
-                        <Grid
-                          container
-                          spacing={2}
-                          alignItems="center"
-                          sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+                    {rows
+                      ?.filter((row) => !row.isHidden)
+                      .map((row, index) => (
+                        <Box
+                          key={index}
+                          sx={{
+                            mt: index === 1 && emailNotSubstitution ? "10px" : 0,
+                          }}
                         >
-                          {/* Left Input Field */}
-                          <Grid item xs={5} sm={3}>
-                            <TextField
-                              fullWidth
-                              variant="outlined"
-                              value={row.type}
-                              disabled={true}
-                              InputLabelProps={{
-                                sx: {
-                                  fontFamily: "Nunito Sans",
-                                  fontSize: "12px",
-                                  lineHeight: "16px",
-                                  color: "rgba(17, 17, 19, 0.60)",
-                                  top: "-5px",
-                                  "&.Mui-focused": {
-                                    color: "rgba(56, 152, 252, 1)",
-                                    top: 0,
+                          <Grid
+                            container
+                            spacing={2}
+                            alignItems="center"
+                            sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+                          >
+                            {/* Left Input Field */}
+                            <Grid item xs={5} sm={3}>
+                              <TextField
+                                fullWidth
+                                variant="outlined"
+                                value={row.type}
+                                disabled={true}
+                                InputLabelProps={{
+                                  sx: {
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: "12px",
+                                    lineHeight: "16px",
+                                    color: "rgba(17, 17, 19, 0.60)",
+                                    top: "-5px",
+                                    "&.Mui-focused": {
+                                      color: "rgba(56, 152, 252, 1)",
+                                      top: 0,
+                                    },
+                                    "&.MuiInputLabel-shrink": {
+                                      top: 0,
+                                    },
                                   },
-                                  "&.MuiInputLabel-shrink": {
-                                    top: 0,
+                                }}
+                                InputProps={{
+                                  sx: {
+                                    "&.MuiOutlinedInput-root": {
+                                      height: "36px",
+                                      "& .MuiOutlinedInput-input": {
+                                        padding: "6.5px 8px",
+                                        fontFamily: "Roboto",
+                                        color: "#202124",
+                                        fontSize: "12px",
+                                        fontWeight: "400",
+                                        lineHeight: "20px",
+                                      },
+                                      "& .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: "#A3B0C2",
+                                      },
+                                      "&:hover .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "#A3B0C2",
+                                        },
+                                      "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "rgba(56, 152, 252, 1)",
+                                        },
+                                    },
+                                    "&+.MuiFormHelperText-root": {
+                                      marginLeft: "0",
+                                    },
                                   },
-                                },
-                              }}
-                              InputProps={{
-                                sx: {
-                                  "&.MuiOutlinedInput-root": {
-                                    height: "36px",
-                                    "& .MuiOutlinedInput-input": {
+                                }}
+                              />
+                            </Grid>
+
+                            {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+                            <Grid
+                              item
+                              xs={1}
+                              sm={0.5}
+                              container
+                              justifyContent="center"
+                            >
+                              <Image
+                                src="/chevron-right-purple.svg"
+                                alt="chevron-right-purple"
+                                height={18}
+                                width={18}
+                              />
+                            </Grid>
+
+                            <Grid item xs={5} sm={3}>
+                              <FormControl fullWidth sx={{ height: "36px" }}>
+                                <Select
+                                  value={row.value || ""}
+                                  onChange={(e) =>
+                                    handleMapListChange(row.id, e.target.value)
+                                  }
+                                  displayEmpty
+                                  inputProps={{
+                                    sx: {
+                                      height: "36px",
                                       padding: "6.5px 8px",
                                       fontFamily: "Roboto",
-                                      color: "#202124",
                                       fontSize: "12px",
                                       fontWeight: "400",
+                                      color: "#202124",
                                       lineHeight: "20px",
                                     },
-                                    "& .MuiOutlinedInput-notchedOutline": {
-                                      borderColor: "#A3B0C2",
-                                    },
-                                    "&:hover .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "#A3B0C2",
-                                      },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "rgba(56, 152, 252, 1)",
-                                      },
-                                  },
-                                  "&+.MuiFormHelperText-root": {
-                                    marginLeft: "0",
-                                  },
-                                },
-                              }}
-                            />
-                          </Grid>
-
-                          {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                          <Grid
-                            item
-                            xs={1}
-                            sm={0.5}
-                            container
-                            justifyContent="center"
-                          >
-                            <Image
-                              src="/chevron-right-purple.svg"
-                              alt="chevron-right-purple"
-                              height={18}
-                              width={18}
-                            />
-                          </Grid>
-
-                          <Grid item xs={5} sm={3}>
-                            <FormControl fullWidth sx={{ height: "36px" }}>
-                              <Select
-                                value={row.value || ""}
-                                onChange={(e) =>
-                                  handleMapListChange(row.id, e.target.value)
-                                }
-                                displayEmpty
-                                inputProps={{
-                                  sx: {
-                                    height: "36px",
-                                    padding: "6.5px 8px",
-                                    fontFamily: "Roboto",
-                                    fontSize: "12px",
-                                    fontWeight: "400",
-                                    color: "#202124",
-                                    lineHeight: "20px",
-                                  },
-                                }}
-                                sx={{
-                                  "&.MuiOutlinedInput-root": {
-                                    height: "36px",
-                                    "& .MuiOutlinedInput-notchedOutline": {
-                                      borderColor: "#A3B0C2",
-                                    },
-                                    "&:hover .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "#A3B0C2",
-                                      },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "rgba(56, 152, 252, 1)",
-                                      },
-                                  },
-                                }}
-                              >
-                                {headersinCSV.map(
-                                  (item: string, index: number) => (
-                                    <MenuItem key={index} value={item}>
-                                      {item}
-                                    </MenuItem>
-                                  )
-                                )}
-                              </Select>
-                              {row.type === "Email" && emailNotSubstitution && (
-                                <Typography
+                                  }}
                                   sx={{
-                                    fontFamily: "Nunito",
-                                    fontSize: "12px",
-                                    color: "rgba(224, 49, 48, 1)",
+                                    "&.MuiOutlinedInput-root": {
+                                      height: "36px",
+                                      "& .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: "#A3B0C2",
+                                      },
+                                      "&:hover .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "#A3B0C2",
+                                        },
+                                      "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "rgba(56, 152, 252, 1)",
+                                        },
+                                    },
                                   }}
                                 >
-                                  Please match email
-                                </Typography>
-                              )}
-                            </FormControl>
-                          </Grid>
+                                  {headersinCSV.map(
+                                    (item: string, index: number) => (
+                                      <MenuItem key={index} value={item}>
+                                        {item}
+                                      </MenuItem>
+                                    )
+                                  )}
+                                </Select>
+                                {row.type === "Email" && emailNotSubstitution && (
+                                  <Typography
+                                    sx={{
+                                      fontFamily: "Nunito",
+                                      fontSize: "12px",
+                                      color: "rgba(224, 49, 48, 1)",
+                                    }}
+                                  >
+                                    Please match email
+                                  </Typography>
+                                )}
+                              </FormControl>
+                            </Grid>
 
-                          {/* Delete Icon */}
-                          <Grid
-                            item
-                            xs={1}
-                            sm={0.5}
-                            container
-                            justifyContent="center"
-                          >
-                            {row.canDelete && (
-                              <>
-                                <IconButton
-                                  onClick={() => handleDelete(row.id)}
-                                >
-                                  <Image
-                                    src="/trash-icon-filled.svg"
-                                    alt="trash-icon-filled"
-                                    height={18}
-                                    width={18}
-                                  />
-                                </IconButton>
-                              </>
-                            )}
+                            {/* Delete Icon */}
+                            <Grid
+                              item
+                              xs={1}
+                              sm={0.5}
+                              container
+                              justifyContent="center"
+                            >
+                              {row.canDelete && (
+                                <>
+                                  <IconButton
+                                    onClick={() => handleDelete(row.id)}
+                                  >
+                                    <Image
+                                      src="/trash-icon-filled.svg"
+                                      alt="trash-icon-filled"
+                                      height={18}
+                                      width={18}
+                                    />
+                                  </IconButton>
+                                </>
+                              )}
+                            </Grid>
                           </Grid>
-                        </Grid>
-                      </Box>
-                    ))}
-                  {rows.some((row) => row.isHidden) && (
-                    <Box
-                      sx={{ display: "flex", justifyContent: "flex-start" }}
-                      onClick={handleAdd}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Nunito Sans",
-                          lineHeight: "22.4px",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: "rgba(56, 152, 252, 1)",
-                          cursor: "pointer",
-                        }}
+                        </Box>
+                      ))}
+                    {rows.some((row) => row.isHidden) && (
+                      <Box
+                        sx={{ display: "flex", justifyContent: "flex-start" }}
+                        onClick={handleAdd}
                       >
-                        + Add more
-                      </Typography>
-                    </Box>
-                  )}
+                        <Typography
+                          sx={{
+                            fontFamily: "Nunito Sans",
+                            lineHeight: "22.4px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: "rgba(56, 152, 252, 1)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          + Add more
+                        </Typography>
+                      </Box>
+                    )}
+                    {showHints && (
+                      <HintCard
+                        card={hintCard5}
+                        positionLeft={460}
+                        isOpenSelect={isOpenSelect[4].show}
+                        toggleClick={() => toggleDotHintClick(5)}
+                      />
+                    )}
+                  </Box>
                 </Box>
               )}
 
@@ -1455,6 +1577,14 @@ const SourcesImport: React.FC = () => {
                         </MenuItem>
                       ))}
                     </Select>
+                    {showHints && (
+                      <HintCard
+                        card={hintCard2}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[1].show}
+                        toggleClick={() => toggleDotHintClick(2)}
+                      />
+                    )}
                   </FormControl>
                   {selectedDomain && (
                     <Box
@@ -1491,6 +1621,7 @@ const SourcesImport: React.FC = () => {
                   sx={{
                     display: "flex",
                     flexDirection: "column",
+                    position: "relative",
                     gap: 2,
                     flexWrap: "wrap",
                     border: "1px solid rgba(228, 228, 228, 1)",
@@ -1521,6 +1652,10 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   </Box>
                   <Box
+                    onClick={() => {
+                      closeDotHintClick(3);
+                      openDotHintClick(6);
+                    }}
                     sx={{
                       display: "flex",
                       gap: 2,
@@ -1638,6 +1773,15 @@ const SourcesImport: React.FC = () => {
                     >
                       Converted Sales
                     </Button>
+                    {showHints && (
+                      <HintCard
+                        card={hintCard3}
+                        positionLeft={550}
+                        positionTop={100}
+                        isOpenSelect={isOpenSelect[2].show}
+                        toggleClick={() => toggleDotHintClick(3)}
+                      />
+                    )}
                   </Box>
                   <Box
                     sx={{ display: "flex", flexDirection: "column", gap: 1 }}
@@ -1716,7 +1860,7 @@ const SourcesImport: React.FC = () => {
                       </Typography>
                     </Box>
                   </Box>
-                  <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+                  <Box sx={{ display: "flex", position: "relative", flexDirection: "row", gap: 2 }}>
                     {["B2B", "B2C"].map((option) => (
                       <ToggleButton
                         key={option}
@@ -1751,6 +1895,14 @@ const SourcesImport: React.FC = () => {
                         {option}
                       </ToggleButton>
                     ))}
+                    {showHints && (
+                      <HintCard
+                        card={hintCard6}
+                        positionLeft={140}
+                        isOpenSelect={isOpenSelect[5].show}
+                        toggleClick={() => toggleDotHintClick(6)}
+                      />
+                    )}
                   </Box>
                 </Box>
               )}

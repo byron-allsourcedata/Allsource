@@ -86,7 +86,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
       <Box
         display="flex"
         alignItems="center"
-        justifyContent="space-between"
+        justifyContent="end"
         sx={{
           "@media (max-width: 600px)": {
             alignItems: "flex-start",
@@ -110,6 +110,10 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
               padding: "0.625rem 1.5rem",
               marginLeft: 0,
               fontSize: "16px",
+            },
+            "&:hover": {
+              backgroundColor: "rgba(56, 152, 252, 1)",
+              boxShadow: 2,
             },
           }}
         >

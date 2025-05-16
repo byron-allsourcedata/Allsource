@@ -55,7 +55,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
 
   const navigateToExamplePage = () => {
     handleClose();
-    window.location.href = "https://example.com";
+    window.location.href = "https://allsourceio.zohodesk.com/portal/en/kb/allsource";
   };
 
   return (

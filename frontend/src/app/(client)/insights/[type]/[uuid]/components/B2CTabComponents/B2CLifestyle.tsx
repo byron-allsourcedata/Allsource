@@ -14,45 +14,27 @@ const lifestyleMap: {
   key: keyof LifestyleData;
   title: string;
   imageSrc: string;
-}[] = [
-    { key: "own_pets", title: "Own Pets", imageSrc: "/pets.svg" },
-    { key: "cooking_interest", title: "Cooking Interest", imageSrc: "/cook.svg" },
-    {
-      key: "mail_order_buyer",
-      title: "Mail-Order Buyer",
-      imageSrc: "/mail-order.svg",
-    },
-    {
-      key: "online_purchaser",
-      title: "Online Purchaser",
-      imageSrc: "/online-purchaser.svg",
-    },
-    {
-      key: "health_and_beauty_interest",
-      title: "Health And Beauty Interest",
-      imageSrc: "/health_and_beauty.svg",
-    },
-    { key: "travel_interest", title: "Travel Interest", imageSrc: "/plains.svg" },
-    {
-      key: "fitness_interest",
-      title: "Fitness Interest",
-      imageSrc: "/fitness.svg",
-    },
-    { key: "book_reader", title: "Book Reader", imageSrc: "/bookreader.svg" },
-    {
-      key: "outdoor_interest",
-      title: "Outdoor Interest",
-      imageSrc: "/outdoor.svg",
-    },
-    { key: "diy_interest", title: "Gardening Interest", imageSrc: "/garden.svg" },
-    { key: "smoker", title: "Smoker", imageSrc: "/sigarette.svg" },
-    { key: "golf_interest", title: "Golf Interest", imageSrc: "/golf.svg" },
-    {
-      key: "beauty_cosmetic_interest",
-      title: "Beauty/Cosmetic Interest",
-      imageSrc: "/cosmetics.svg",
-    },
-  ];
+  color?: string,
+  backgroundColor?: string
+}[] = 
+[
+  { key: "own_pets", title: "Own Pets", imageSrc: "/pets.svg", color: "rgba(98, 178, 253, 1)", backgroundColor: "rgba(193, 228, 255, 1)" },
+  { key: "online_purchaser", title: "Online Purchaser", imageSrc: "/online-purchaser.svg", color: "rgba(249, 217, 103, 1)", backgroundColor: "rgba(255, 243, 189, 1)" },
+  { key: "travel_interest", title: "Travel Interest", imageSrc: "/plains.svg", color: "rgba(240, 129, 140, 1)", backgroundColor: "rgba(252, 212, 215, 1)" },
+  { key: "mail_order_buyer", title: "Mail-Order Buyer", imageSrc: "/mail-order.svg", color: "rgba(249, 217, 103, 1)", backgroundColor: "rgba(255, 243, 189, 1)" },
+  { key: "outdoor_interest", title: "Outdoor Interest", imageSrc: "/outdoor.svg", color: "rgba(240, 129, 140, 1)", backgroundColor: "rgba(252, 212, 215, 1)" },
+  { key: "cooking_interest", title: "Cooking Interest", imageSrc: "/cook.svg", color: "rgba(98, 178, 253, 1)", backgroundColor: "rgba(193, 228, 255, 1)" },
+  { key: "diy_interest", title: "DIY Interest", imageSrc: "/garden.svg", color: "rgba(98, 178, 253, 1)", backgroundColor: "rgba(193, 228, 255, 1)" },
+  { key: "health_and_beauty_interest", title: "Health And Beauty Interest", imageSrc: "/health_and_beauty.svg", color: "rgba(114, 201, 157, 1)", backgroundColor: "rgba(227, 242, 227, 1)" },
+  { key: "book_reader", title: "Book Reader", imageSrc: "/bookreader.svg", color: "rgba(249, 217, 103, 1)", backgroundColor: "rgba(255, 243, 189, 1)" },
+  { key: "fitness_interest", title: "Fitness Interest", imageSrc: "/fitness.svg", color: "rgba(114, 201, 157, 1)", backgroundColor: "rgba(227, 242, 227, 1)" },
+  // { key: "tech_interest", title: "Tech Interest", imageSrc: "/tech.svg", color: "rgba(249, 217, 103, 1)", backgroundColor: "rgba(255, 243, 189, 1)" },
+  { key: "golf_interest", title: "Golf Interest", imageSrc: "/golf.svg", color: "rgba(240, 129, 140, 1)", backgroundColor: "rgba(252, 212, 215, 1)" },
+  // { key: "automotive_interest", title: "Automotive", imageSrc: "/car.svg", color: "rgba(240, 129, 140, 1)", backgroundColor: "rgba(252, 212, 215, 1)" },
+  { key: "smoker", title: "Smoker", imageSrc: "/sigarette.svg", color: "rgba(114, 201, 157, 1)", backgroundColor: "rgba(227, 242, 227, 1)" },
+  { key: "gardening_interest", title: "Gardening Interest", imageSrc: "/garden.svg", color: "rgba(98, 178, 253, 1)", backgroundColor: "rgba(193, 228, 255, 1)" },
+  { key: "beauty_cosmetic_interest", title: "Beauty/Cosmetic Interest", imageSrc: "/cosmetics.svg", color: "rgba(114, 201, 157, 1)", backgroundColor: "rgba(227, 242, 227, 1)" },
+];
 
 const B2CLifestyle = ({ data, fieldRanks }: B2CLifestyleProps) => {
   return (
@@ -67,7 +49,7 @@ const B2CLifestyle = ({ data, fieldRanks }: B2CLifestyleProps) => {
     >
       {_.chunk(lifestyleMap, 3).map((row, rowIndex) => (
         <Box key={rowIndex} sx={{ display: "flex", width: "100%", gap: 3 }}>
-          {row.map(({ key, title, imageSrc }) => {
+          {row.map(({ key, title, imageSrc, color, backgroundColor }) => {
             const item = data[key];
             const trueVal = item?.true || 0;
             const falseVal = item?.false || 0;
@@ -83,6 +65,8 @@ const B2CLifestyle = ({ data, fieldRanks }: B2CLifestyleProps) => {
                   percentage={percentage}
                   labels={["Yes", "No"]}
                   rank={fieldRanks[`${key}`]}
+                  color={color}
+                  backgroundColor={backgroundColor}
                 />
               </Box>
             );

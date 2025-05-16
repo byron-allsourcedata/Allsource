@@ -19,9 +19,10 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
+from utils import send_sse
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()
 
@@ -53,21 +54,6 @@ def setup_logging(level):
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-
-async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
-    try:
-        logging.info(f"send client throught SSE: {data, user_id}")
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=f'sse_events_{str(user_id)}',
-            message_body={
-                "status": AUDIENCE_VALIDATION_PROGRESS,
-                "data": data
-            }
-        )
-    except Exception as e:
-        logging.error(f"Error sending SSE: {e}")
-
 
 def update_stats_validations(db_session: Session, validation_type: str, count_persons_before_validation: int, count_failed_person: int):
     validation_key = VALIDATION_MAPPING.get(validation_type)
@@ -102,7 +88,7 @@ def update_stats_validations(db_session: Session, validation_type: str, count_pe
 async def aud_validation_agent(
     message: IncomingMessage,
     db_session: Session,
-    connection: RabbitMQConnection,
+    channel
 ):
     try:
         body = json.loads(message.body)
@@ -184,8 +170,8 @@ async def aud_validation_agent(
                             rule[key]["count_submited"] = count_persons_before_validation
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
                 message_body={
                     'aud_smart_id': str(aud_smart_id),
@@ -195,9 +181,9 @@ async def aud_validation_agent(
             )
 
         await send_sse(
-            connection,
-            user_id,
-            {"smart_audience_id": aud_smart_id, "total_validated": total_validated}
+            channel=channel,
+            user_id=user_id,
+            data={"smart_audience_id": aud_smart_id, "total_validated": total_validated}
         )
         logging.info("Sent SSE with total count")
 
@@ -245,15 +231,13 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_validation_agent, connection=connection, db_session=db_session)
+                functools.partial(aud_validation_agent, channel=channel, db_session=db_session)
             )
 
         await asyncio.Future()
 
     except Exception:
         logging.error('Unhandled Exception:', exc_info=True)
-
-    finally:
         if db_session:
             logging.info("Closing the database session...")
             db_session.close()
@@ -261,6 +245,7 @@ async def main():
             logging.info("Closing RabbitMQ connection...")
             await rmq_connection.close()
         logging.info("Shutting down...")
+        
 
 if __name__ == "__main__":
     asyncio.run(main())

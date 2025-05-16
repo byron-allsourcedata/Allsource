@@ -1,8 +1,9 @@
 import React from "react";
 import FirstTimeCards from "../../components/FirstTimeCards";
-import { Box, Typography, Link as MuiLink } from "@mui/material";
+import { Box, Typography, Link as MuiLink, Grid } from "@mui/material";
 import { ExternalLink } from "@/components/ExternalLink";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { DashboardHelpCard } from "@/components/HelpCard";
 
 type CardData = {
   title: string;
@@ -51,9 +52,16 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
           Import Your First Source
         </Typography>
         <MuiLink
-          href="https://example.com"
+          href="https://allsourceio.zohodesk.com/portal/en/kb/articles/sources"
           underline="hover"
-          sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
+          target="_blank"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            fontWeight: 300,
+            color: "#3898FC",
+          }}
         >
           Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
         </MuiLink>
@@ -80,6 +88,27 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
       >
         <FirstTimeCards cardData={cardData} />
       </Box>
+
+      <Grid sx={{ mt: 3, width: "100%" }}>
+        <DashboardHelpCard
+          headline="Need Help with Your Source?"
+          description="Book a free 30-minute call to optimize your source settings, troubleshoot issues, or boost performance."
+          helpPoints={[
+            {
+              title: "Source Setup Review",
+              description: "Ensure correct configuration",
+            },
+            {
+              title: "Performance Audit",
+              description: "Diagnose and improve results",
+            },
+            {
+              title: "Advanced Strategies",
+              description: "Unlock hidden potential",
+            },
+          ]}
+        />
+      </Grid>
     </Box>
   );
 };

@@ -1,22 +1,26 @@
 "use client";
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState, Suspense } from 'react';
-import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { showErrorToast, showInfoToast, showToast } from '@/components/ToastNotification';
-import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import { useUser } from '@/context/UserContext';
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
+import {
+  showErrorToast,
+  showInfoToast,
+  showToast,
+} from "@/components/ToastNotification";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { useUser } from "@/context/UserContext";
 
 const VerifyToken = () => {
   const { partner } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token');
-  const mail = searchParams.get('mail');
+  const token = searchParams.get("token");
+  const mail = searchParams.get("mail");
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, []);
 
@@ -25,58 +29,61 @@ const VerifyToken = () => {
       if (token) {
         try {
           if (mail) {
-            const response = await axiosInstance.get(`settings/account-details/change-email?token=${token}&mail=${mail}`);
-            if (typeof window !== 'undefined') {
-              if (response.data.status === 'SUCCESS') {
-                showToast('You have successfully verified your email')
+            const response = await axiosInstance.get(
+              `settings/account-details/change-email?token=${token}&mail=${mail}`
+            );
+            if (typeof window !== "undefined") {
+              if (response.data.status === "SUCCESS") {
+                localStorage.setItem("welcome_popup", "true");
+                showToast("You have successfully verified your email");
                 const newToken = response.data.token;
-                localStorage.removeItem('token');
-                localStorage.setItem('token', newToken);
-              }
-              else if (response.data.status === 'INCORRECT_TOKEN') {
-                showErrorToast('The link is incorrect or outdated')
-              }
-              else if (response.data.status === 'INCORRECT_MAIL') {
-                showErrorToast('The link is incorrect mail')
+                localStorage.removeItem("token");
+                localStorage.setItem("token", newToken);
+              } else if (response.data.status === "INCORRECT_TOKEN") {
+                showErrorToast("The link is incorrect or outdated");
+              } else if (response.data.status === "INCORRECT_MAIL") {
+                showErrorToast("The link is incorrect mail");
               }
               setTimeout(() => {
-                router.push('/settings');
+                router.push("/settings");
               }, 2500);
             }
-          }
-          else {
-            const response = await axiosInstance.get(`/authentication/verify-token?token=${token}`);
-            if (response.data.status === 'SUCCESS' || response.data.status === 'EMAIL_ALREADY_VERIFIED') {
-              if (typeof window !== 'undefined') {
-                if (response.data.status === 'EMAIL_ALREADY_VERIFIED') {
-                  showInfoToast('Email has already been verified')
-                }
-                else if (response.data.status === 'SUCCESS') {
-                  showToast('You have successfully verified your email')
+          } else {
+            const response = await axiosInstance.get(
+              `/authentication/verify-token?token=${token}`
+            );
+            if (
+              response.data.status === "SUCCESS" ||
+              response.data.status === "EMAIL_ALREADY_VERIFIED"
+            ) {
+              if (typeof window !== "undefined") {
+                if (response.data.status === "EMAIL_ALREADY_VERIFIED") {
+                  showInfoToast("Email has already been verified");
+                } else if (response.data.status === "SUCCESS") {
+                  localStorage.setItem("welcome_popup", "true");
+                  showToast("You have successfully verified your email");
                 }
                 const newToken = response.data.token;
-                localStorage.removeItem('token');
-                localStorage.setItem('token', newToken);
+                localStorage.removeItem("token");
+                localStorage.setItem("token", newToken);
 
                 setTimeout(() => {
                   // router.push('/account-setup');
-                  router.push('/dashboard');
+                  router.push("/dashboard");
                 }, 2500);
               }
-            }
-            else if (response.data.status === 'INCORRECT_TOKEN') {
-              showErrorToast('The link is incorrect or outdated')
-              const localtoken = localStorage.getItem('token')
+            } else if (response.data.status === "INCORRECT_TOKEN") {
+              showErrorToast("The link is incorrect or outdated");
+              const localtoken = localStorage.getItem("token");
               if (localtoken) {
-                router.push(partner ? '/partners' : '/dashboard')
-              }
-              else {
-                router.push('/signin')
+                router.push(partner ? "/partners" : "/dashboard");
+              } else {
+                router.push("/signin");
               }
             }
           }
         } catch (error) {
-          console.error('Error verifying token:', error);
+          console.error("Error verifying token:", error);
         }
       }
     };
@@ -84,9 +91,7 @@ const VerifyToken = () => {
     verifyToken();
   }, [token, router]);
 
-  return (
-    <div>Check token, please wait</div>
-  );
+  return <div>Check token, please wait</div>;
 };
 
 const VerifyTokenWithSuspense = () => (
@@ -97,6 +102,5 @@ const VerifyTokenWithSuspense = () => (
 
 export default VerifyTokenWithSuspense;
 function Sleep(arg0: number) {
-  throw new Error('Function not implemented.');
+  throw new Error("Function not implemented.");
 }
-

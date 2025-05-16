@@ -15,7 +15,7 @@ import type {
 import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 import { ResetProvider, useResetContext } from "@/context/ResetContext";
-import { PaymentIcon, HowToVoteIcon, DirectionsBikeIcon, AccountBoxIcon, OpenInNewIcon } from "@/icon"
+import { PaymentIcon, HowToVoteIcon, DirectionsBikeIcon, AccountBoxIcon, OpenInNewIcon, AssignmentIndIcon, WorkHistoryOutlinedIcon, WorkOutlineOutlinedIcon, HistoryOutlinedIcon } from "@/icon"
 
 interface AudienceFieldsSelectorProps {
   calculatedResults?: CalculationResponse
@@ -255,8 +255,8 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               title="Professional Profile"
               features={calculatedResults.audience_feature_importance_b2b.professional_profile}
               onChangeDisplayed={(keys) => setProfessionalSelected(keys as string[])}
-              headerIcon={<HowToVoteIcon />}
               initialFeatures={recommendedByCategory.professional_profile}
+              headerIcon={<WorkOutlineOutlinedIcon />}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
@@ -264,8 +264,8 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               title="Employment History"
               features={calculatedResults.audience_feature_importance_b2b.employment_history}
               onChangeDisplayed={(keys) => setEmploymentSelected(keys as string[])}
-              headerIcon={<HowToVoteIcon />}
               initialFeatures={recommendedByCategory.employment_history}
+              headerIcon={<HistoryOutlinedIcon />}
             />
           </Box>
 
@@ -300,7 +300,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
             </Typography>
             <Typography
               component="a"
-              href="https://example.com"
+              href="https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes"
               sx={{
                 fontSize: "14px",
                 color: "rgba(56, 152, 252, 1)",

@@ -138,16 +138,8 @@ export const VerticalGradientBarChart: React.FC<
                 display="flex"
                 flexDirection="column"
                 alignItems="center"
-                width={33}
+                width={41}
               >
-                {/* Top label (percent) */}
-                <Typography
-                  className="dashboard-card-text"
-                  sx={{ marginBottom: 0.5 }}
-                >
-                  {percent}%
-                </Typography>
-
                 {/* Bar container */}
                 <Box
                   height={240}
@@ -172,7 +164,7 @@ export const VerticalGradientBarChart: React.FC<
 
                 {/* Bottom label (param name) */}
                 <Typography
-                  className="dashboard-card-text"
+                  className="dashboard-gist-card-text"
                   sx={{
                     marginTop: 0.5,
                     textAlign: "center",
@@ -181,6 +173,13 @@ export const VerticalGradientBarChart: React.FC<
                   }}
                 >
                   {label}
+                </Typography>
+                {/* Top label (percent) */}
+                <Typography
+                  className="dashboard-gist-card-text"
+                  sx={{ marginBottom: 0.5 }}
+                >
+                  {percent}%
                 </Typography>
               </Box>
             );

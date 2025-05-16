@@ -225,7 +225,7 @@ export const SettingsSubscription: React.FC = () => {
     };
 
     const calendlyPopupUrl = () => {
-        const baseUrl = "https://calendly.com/maximiz-support/30min";
+        const baseUrl = "https://calendly.com/validateapi-allforce/30min";
         const searchParams = new URLSearchParams();
 
         if (utmParams) {

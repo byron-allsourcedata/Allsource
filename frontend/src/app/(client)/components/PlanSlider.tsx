@@ -82,7 +82,7 @@ const PlanSlider: React.FC<PopupProps> = ({
       };
     
       const calendlyPopupUrl = () => {
-        const baseUrl = "https://calendly.com/maximiz/activate-free-trial";
+        const baseUrl = "https://calendly.com/validateapi-allforce/30min";
         const searchParams = new URLSearchParams();
       
         if (utmParams) {

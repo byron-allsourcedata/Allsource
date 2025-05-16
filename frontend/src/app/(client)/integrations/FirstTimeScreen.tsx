@@ -1,46 +1,56 @@
 import React, { FC } from "react";
-import {
-  Box,
-  Typography,
-  Link as MuiLink,
-  Button,
-} from "@mui/material";
+import { Box, Typography, Link as MuiLink, Button, Grid } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Image from "next/image";
+import { DashboardHelpCard } from "@/components/HelpCard";
 
 interface FirstTimeScreenProps {
   onBegin?: () => void;
 }
 
-
 const FirstTimeScreen: FC<FirstTimeScreenProps> = ({ onBegin }) => {
   return (
-    <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 2, marginTop: 2}}>
+    <Box
+      sx={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        marginTop: 2,
+      }}
+    >
       <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
         <Typography
-            variant="h5"
-            className="first-sub-title"
-            sx={{
+          variant="h5"
+          className="first-sub-title"
+          sx={{
             fontFamily: "Nunito Sans",
             fontSize: "24px !important",
             color: "#4a4a4a",
             fontWeight: "500 !important",
             lineHeight: "22px",
-            }}
+          }}
         >
           Integrations
         </Typography>
         <MuiLink
-          href="https://example.com"
+          href="https://allsourceio.zohodesk.com/portal/en/kb/articles/integrations"
           underline="hover"
-          sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
+          target="_blank"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            fontWeight: 300,
+            color: "#3898FC",
+          }}
         >
           Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
         </MuiLink>
       </Box>
       <Typography variant="body2" sx={{ color: "text.secondary" }}>
-        Connect your favourite tools to automate tasks and ensure all your data is
-        accessible in one place
+        Connect your favourite tools to automate tasks and ensure all your data
+        is accessible in one place
       </Typography>
 
       <Box
@@ -52,11 +62,14 @@ const FirstTimeScreen: FC<FirstTimeScreenProps> = ({ onBegin }) => {
           flexDirection: "column",
           gap: 3,
           borderRadius: 1,
-          border: '1px solid #EDEDED',
-          overflow: 'hidden',
+          border: "1px solid #EDEDED",
+          overflow: "hidden",
         }}
       >
-        <Typography variant="subtitle2" sx={{ color: "#151619", fontWeight: 400 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{ color: "#151619", fontWeight: 400 }}
+        >
           Connect Your Marketing Platforms
         </Typography>
 
@@ -83,27 +96,50 @@ const FirstTimeScreen: FC<FirstTimeScreenProps> = ({ onBegin }) => {
           activate campaigns across channels.
         </Typography>
 
-        <Box sx={{ display: "flex",
-                    width: "100%",
-                    justifyContent: "end",
-                    pr: 2, }}>
-          <Button variant="contained"
-                    className="second-sub-title" onClick={onBegin} sx={{
-                      backgroundColor: "rgba(56, 152, 252, 1)",
-                      textTransform: "none",
-                      padding: "10px 24px",
-                      color: "#fff !important",
-                      ":hover": {
-                        backgroundColor: "rgba(48, 149, 250, 1)",
-                      },
-                      ":disabled": {
-                        backgroundColor: "rgba(56, 152, 252, 0.5)",
-                      },
-                    }}>
+        <Box
+          sx={{ display: "flex", width: "100%", justifyContent: "end", pr: 2 }}
+        >
+          <Button
+            variant="contained"
+            className="second-sub-title"
+            onClick={onBegin}
+            sx={{
+              backgroundColor: "rgba(56, 152, 252, 1)",
+              textTransform: "none",
+              padding: "10px 24px",
+              color: "#fff !important",
+              ":hover": {
+                backgroundColor: "rgba(48, 149, 250, 1)",
+              },
+              ":disabled": {
+                backgroundColor: "rgba(56, 152, 252, 0.5)",
+              },
+            }}
+          >
             Begin
           </Button>
         </Box>
       </Box>
+      <Grid sx={{ mt: 2, mb: 3, width: "100%" }}>
+        <DashboardHelpCard
+          headline="Struggling with Integrations?"
+          description="Get expert help connecting your platforms in a free 30-minute troubleshooting session."
+          helpPoints={[
+            {
+              title: "Connection Setup",
+              description: "Step-by-step integration guidance",
+            },
+            {
+              title: "Error Resolution",
+              description: "Fix API/auth issues",
+            },
+            {
+              title: "Data Flow Optimization",
+              description: "Ensure seamless sync",
+            },
+          ]}
+        />
+      </Grid>
     </Box>
   );
 };

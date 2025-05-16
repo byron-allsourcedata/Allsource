@@ -23,8 +23,9 @@ from enums import AudienceSettingAlias
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_postals import EnrichmentPostal
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
+from utils import send_sse
 from models.enrichment.enrichment_employment_history import EnrichmentEmploymentHistory
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()
 
@@ -42,21 +43,6 @@ def setup_logging(level):
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-
-async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
-    try:
-        logging.info(f"send client throught SSE: {data, user_id}")
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=f'sse_events_{str(user_id)}',
-            message_body={
-                "status": AUDIENCE_VALIDATION_PROGRESS,
-                "data": data
-            }
-        )
-    except Exception as e:
-        logging.error(f"Error sending SSE: {e}")
-
 
 def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id: UUID, column_name: str = None):
     if validation_type == "job_validation":
@@ -238,7 +224,7 @@ def validation_processed(db_session: Session, ids: List[int]):
     db_session.execute(stmt)
     db_session.commit()
 
-async def complete_validation(db_session: Session, aud_smart_id: int, connection: RabbitMQConnection, user_id: int):
+async def complete_validation(db_session: Session, aud_smart_id: int, channel, user_id: int):
     total_validated = db_session.query(func.count(AudienceSmartPerson.id)).filter(
                     AudienceSmartPerson.smart_audience_id == aud_smart_id,
                     AudienceSmartPerson.is_valid == True,
@@ -254,17 +240,14 @@ async def complete_validation(db_session: Session, aud_smart_id: int, connection
 
     db_session.commit()
     await send_sse(
-        connection,
-        user_id,
-        {
-            "smart_audience_id": aud_smart_id,
-            "total_validated": total_validated,
-        }
+        channel=channel,
+        user_id=user_id,
+        data={"smart_audience_id": aud_smart_id, "total_validated": total_validated}
     )
     logging.info(f"completed validation, status audience smart ready")
 
 
-async def aud_email_validation(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
+async def aud_email_validation(message: IncomingMessage, db_session: Session, channel):
     try:
         message_body = json.loads(message.body)
         logging.info('Received message: %s', message_body)
@@ -362,15 +345,15 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, co
                                             message_body["recency_business_days"] = recency_business_days
                                             message_body["recency_personal_days"] = recency_personal_days
 
-                                    await publish_rabbitmq_message(
-                                        connection=connection,
+                                    await publish_rabbitmq_message_with_channel(
+                                        channel=channel,
                                         queue_name=queue_name,
                                         message_body=message_body
                                         )
                                 await message.ack()
                                 return
                     
-            await complete_validation(db_session, aud_smart_id, connection, user_id)
+            await complete_validation(db_session, aud_smart_id, channel, user_id)
             await message.ack()
         except IntegrityError as e:
             logging.warning(f"SmartAudience with ID {aud_smart_id} might have been deleted. Skipping.")
@@ -416,15 +399,13 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_email_validation, connection=connection, db_session=db_session)
+                functools.partial(aud_email_validation, channel=channel, db_session=db_session)
             )
 
         await asyncio.Future()
 
     except Exception:
         logging.error('Unhandled Exception:', exc_info=True)
-
-    finally:
         if db_session:
             logging.info("Closing the database session...")
             db_session.close()
@@ -432,6 +413,7 @@ async def main():
             logging.info("Closing RabbitMQ connection...")
             await rmq_connection.close()
         logging.info("Shutting down...")
+    
 
 if __name__ == "__main__":
     asyncio.run(main())

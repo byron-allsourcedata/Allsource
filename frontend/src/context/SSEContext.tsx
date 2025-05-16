@@ -135,8 +135,7 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
             window.location.reload();
           }
         } else if (
-          data.status == "PIXEL_CODE_INSTALLED" &&
-          data.need_reload_page
+          data.status == "PIXEL_CODE_INSTALLED"
         ) {
           setShowPixel(true);
         } else if (data.status == "SOURCE_PROCESSING_PROGRESS") {
