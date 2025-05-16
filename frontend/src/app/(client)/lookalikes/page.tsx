@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Box, Typography, TextField, Button, Chip, Link as MuiLink } from "@mui/material";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Chip,
+  Link as MuiLink,
+  Grid,
+} from "@mui/material";
 import Image from "next/image";
 import DownloadIcon from "@mui/icons-material/Download";
 import CloseIcon from "@mui/icons-material/Close";
@@ -10,7 +18,7 @@ import DateRangeIcon from "@mui/icons-material/DateRange";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import FilterPopup from "./components/LookalikeFilters";
 import Link from "next/link";
-import CustomToolTip from '@/components/customToolTip';
+import CustomToolTip from "@/components/customToolTip";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import LookalikeTable from "./components/LookalikeTable";
 import CustomTablePagination from "@/components/CustomTablePagination";
@@ -25,6 +33,7 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import NotificationBanner from "@/components/NotificationBanner";
 import WelcomePopup from "@/components/CreatePixelSourcePopup";
 import { getInteractiveSx } from "@/components/utils";
+import { DashboardHelpCard } from "@/components/HelpCard";
 
 const cardData: CardData[] = [
   {
@@ -94,7 +103,8 @@ const CreateLookalikePage: React.FC = () => {
   const [lookalikesData, setLookalikeData] = useState<TableRowData[]>([]);
   const [sourceCount, setSourceCount] = useState<number>();
   const [showNotification, setShowNotification] = useState(true);
-  const [isPixelInstalledAnywhere, setIsPixelInstalledAnywhere] = useState<boolean>(false);
+  const [isPixelInstalledAnywhere, setIsPixelInstalledAnywhere] =
+    useState<boolean>(false);
 
   // Pagination and Sorting
   const [count_lookalikes, setCountLookalike] = useState<number | null>(null);
@@ -176,7 +186,7 @@ const CreateLookalikePage: React.FC = () => {
       setFormattedDates("");
     }
   };
-  const handleDateLabelChange = (label: string) => { };
+  const handleDateLabelChange = (label: string) => {};
 
   const handleApply = (dates: { start: Date | null; end: Date | null }) => {
     if (dates.start && dates.end) {
@@ -238,22 +248,22 @@ const CreateLookalikePage: React.FC = () => {
       label: string;
       value: string | ((f: any) => string);
     }[] = [
-        {
-          condition: filters.type && Object.values(filters.type).some(Boolean),
-          label: "Type",
-          value: () => getSelectedValues(filters.type!),
-        },
-        {
-          condition: filters.size?.length,
-          label: "Size",
-          value: () => filters.size!.join(", "),
-        },
-        {
-          condition: filters.searchQuery?.trim() !== "",
-          label: "Search",
-          value: filters.searchQuery || "",
-        },
-      ];
+      {
+        condition: filters.type && Object.values(filters.type).some(Boolean),
+        label: "Type",
+        value: () => getSelectedValues(filters.type!),
+      },
+      {
+        condition: filters.size?.length,
+        label: "Size",
+        value: () => filters.size!.join(", "),
+      },
+      {
+        condition: filters.searchQuery?.trim() !== "",
+        label: "Search",
+        value: filters.searchQuery || "",
+      },
+    ];
 
     // Iterate over the mappings to populate newSelectedFilters
     filterMappings.forEach(({ condition, label, value }) => {
@@ -282,16 +292,17 @@ const CreateLookalikePage: React.FC = () => {
       const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
       const startEpoch = appliedDates.start
         ? Math.floor(
-          new Date(appliedDates.start.toISOString()).getTime() / 1000
-        )
+            new Date(appliedDates.start.toISOString()).getTime() / 1000
+          )
         : null;
 
       const endEpoch = appliedDates.end
         ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
         : null;
 
-      let url = `/audience-lookalikes?page=${page + 1
-        }&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
+      let url = `/audience-lookalikes?page=${
+        page + 1
+      }&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
       if (startEpoch !== null && endEpoch !== null) {
         url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
       }
@@ -319,7 +330,7 @@ const CreateLookalikePage: React.FC = () => {
 
       const response = await axiosInstance.get(url);
       const { data, meta } = response.data;
-      const leadsArray = Array.isArray(data) ? data : []
+      const leadsArray = Array.isArray(data) ? data : [];
       setLookalikeData(leadsArray);
       setCountLookalike(meta.total || 0);
       setSourceCount(meta.source_count || 0);
@@ -356,7 +367,9 @@ const CreateLookalikePage: React.FC = () => {
 
   const fetchPixelInstalledAnywhere = async () => {
     try {
-      const { data } = await axiosInstance.get<{ pixel_installed: boolean }>("/domains/pixel-installed-anywhere");
+      const { data } = await axiosInstance.get<{ pixel_installed: boolean }>(
+        "/domains/pixel-installed-anywhere"
+      );
       setIsPixelInstalledAnywhere(data.pixel_installed);
     } catch (err) {
       console.error("Error fetching pixel-installed-anywhere:", err);
@@ -393,7 +406,6 @@ const CreateLookalikePage: React.FC = () => {
       setCountLookalike(count || 0);
       setSelectedDates({ start: null, end: null });
       setSelectedFilters([]);
-      
     } catch (error) {
       console.error("Error fetching leads:", error);
     } finally {
@@ -438,8 +450,8 @@ const CreateLookalikePage: React.FC = () => {
     const newFilters: FilterParams = {
       from_date: updatedFilters.find((f) => f.label === "From Date")
         ? dayjs(
-          updatedFilters.find((f) => f.label === "From Date")!.value
-        ).unix()
+            updatedFilters.find((f) => f.label === "From Date")!.value
+          ).unix()
         : null,
       to_date: updatedFilters.find((f) => f.label === "To Date")
         ? dayjs(updatedFilters.find((f) => f.label === "To Date")!.value).unix()
@@ -476,7 +488,7 @@ const CreateLookalikePage: React.FC = () => {
           end: appliedDates.end,
         },
       });
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const [popupOpen, setPopupOpen] = useState(false);
@@ -514,7 +526,11 @@ const CreateLookalikePage: React.FC = () => {
               }}
             >
               <Typography className="first-sub-title">Lookalikes</Typography>
-              <CustomToolTip title={'Lookalikes.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes' />
+              <CustomToolTip
+                title={"Lookalikes."}
+                linkText="Learn more"
+                linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes"
+              />
             </Box>
             <Box
               sx={{
@@ -713,8 +729,9 @@ const CreateLookalikePage: React.FC = () => {
               <Chip
                 className="paragraph"
                 key={filter.label}
-                label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
-                  }`}
+                label={`${filter.label}: ${
+                  displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
+                }`}
                 onDelete={() => handleDeleteFilter(filter)}
                 deleteIcon={
                   <CloseIcon
@@ -821,7 +838,7 @@ const CreateLookalikePage: React.FC = () => {
                 pr: 1,
                 boxSizing: "border-box",
                 width: "100%",
-                textAlign: "center",
+                textAlign: "start",
                 flex: 1,
                 "& img": {
                   width: "auto",
@@ -854,7 +871,13 @@ const CreateLookalikePage: React.FC = () => {
                 <MuiLink
                   href="https://example.com"
                   underline="hover"
-                  sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    fontWeight: 300,
+                    color: "#3898FC",
+                  }}
                 >
                   Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
                 </MuiLink>
@@ -902,8 +925,8 @@ const CreateLookalikePage: React.FC = () => {
                   }}
                 >
                   <Button
-                    onClick={()=> {
-                      router.push("/lookalikes/builder")
+                    onClick={() => {
+                      router.push("/lookalikes/builder");
                     }}
                     variant="contained"
                     className="second-sub-title"
@@ -925,8 +948,32 @@ const CreateLookalikePage: React.FC = () => {
                   </Button>
                 </Box>
               </Box>
+              <Grid sx={{ mt: 3, mb: 3, width: "100%" }}>
+                <DashboardHelpCard
+                  headline="Need Help with Your Lookalike Audiences?"
+                  description="Let our experts help you refine, troubleshoot or scale your lookalike audiences in a free 30-minute call."
+                  helpPoints={[
+                    {
+                      title: "Lookalike Setup Review",
+                      description: "Ensure correct configuration",
+                    },
+                    {
+                      title: "Performance Optimization",
+                      description: "Improve your lookalike results",
+                    },
+                    {
+                      title: "Advanced Scaling Strategies",
+                      description: "Grow your best audiences",
+                    },
+                  ]}
+                />
+              </Grid>
               {popupOpen && sourceCount === 0 && (
-                <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} variant={isPixelInstalledAnywhere? "alternate": "welcome" }/>
+                <WelcomePopup
+                  open={popupOpen}
+                  onClose={() => setPopupOpen(false)}
+                  variant={isPixelInstalledAnywhere ? "alternate" : "welcome"}
+                />
               )}
             </Box>
           )}

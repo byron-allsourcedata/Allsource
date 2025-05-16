@@ -13,6 +13,7 @@ import DomainVerificationOutlinedIcon from "@mui/icons-material/DomainVerificati
 import OpenInBrowserOutlinedIcon from "@mui/icons-material/OpenInBrowserOutlined";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import DomainSelector from "@/app/(client)/dashboard/components/DomainSelector";
+import { DashboardHelpCard } from "./HelpCard";
 
 const GettingStartedSection: React.FC = () => {
   const [selectedDomain, setSelectedDomain] = useState("");
@@ -196,6 +197,36 @@ const GettingStartedSection: React.FC = () => {
         sx={{ display: { xs: "none", md: "block" }, mt: 6 }}
       >
         <VerticalStepper steps={stepData} />
+      </Grid>
+
+      <Grid
+        sx={{
+          mb: 3,
+          pr: 12,
+          pl: 8,
+          width: "100%",
+          "@media (max-width: 1200px)": { pr: 0, pl: 2, mt: 2 },
+          "@media (max-width: 900px)": { pl: 0, mt: 2 },
+        }}
+      >
+        <DashboardHelpCard
+          headline="Need Help with Pixel Setup?"
+          description="Book a 30-minute call, and our expert will guide you through the platform and troubleshoot any pixel issues."
+          helpPoints={[
+            {
+              title: "Quick Setup Walkthrough",
+              description: "Step-by-step pixel installation help",
+            },
+            {
+              title: "Troubleshooting Session",
+              description: "Fix errors and verify your pixel",
+            },
+            {
+              title: "Platform Demo",
+              description: "See how everything works in action",
+            },
+          ]}
+        />
       </Grid>
 
       {/* <Grid item xs={12}>

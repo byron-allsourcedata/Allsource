@@ -1,7 +1,8 @@
 import FirstTimeCards from "./FirstTimeCards";
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Grid, Typography } from "@mui/material";
 import { ExternalLink } from "@/components/ExternalLink";
+import { DashboardHelpCard } from "@/components/HelpCard";
 
 type CardData = {
   title: string;
