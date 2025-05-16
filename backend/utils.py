@@ -5,12 +5,13 @@ import hashlib
 import json
 import regex
 from urllib.parse import urlparse, parse_qs
-
+import logging
 from enums import ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from config.rmq_connection import publish_rabbitmq_message_with_channel
 
-
+logger = logging.getLogger(__name__)
 def get_utc_aware_date():
     return datetime.now(timezone.utc).replace(microsecond=0)
 
@@ -164,3 +165,17 @@ def check_certain_urls(page, activate_certain_urls):
         if (page_path == url) or (url in page_path):
             return True
     return False
+
+async def send_sse(channel, user_id: int, data: dict):
+    try:
+        logging.info(f"send client throught SSE: {data, user_id}")
+        await publish_rabbitmq_message_with_channel(
+            channel=channel,
+            queue_name=f'sse_events_{str(user_id)}',
+            message_body={
+                "status": 'AUDIENCE_VALIDATION_PROGRESS',
+                "data": data
+            }
+        )
+    except Exception as e:
+        logging.error(f"Error sending SSE: {e}")

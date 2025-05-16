@@ -21,9 +21,10 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from sqlalchemy.dialects.postgresql import insert
 from models.audience_smarts import AudienceSmart
+from utils import send_sse
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_postals_verification import AudiencePostalVerification
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()
 
@@ -43,21 +44,6 @@ def setup_logging(level):
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-
-
-async def send_sse(connection: RabbitMQConnection, user_id: int, data: dict):
-    try:
-        logging.info(f"send client throught SSE: {data, user_id}")
-        await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=f'sse_events_{str(user_id)}',
-            message_body={
-                "status": AUDIENCE_VALIDATION_PROGRESS,
-                "data": data
-            }
-        )
-    except Exception as e:
-        logging.error(f"Error sending SSE: {e}")
 
 def tokenize_address(text: str) -> set[str]:
     tokens = re.findall(r'\w+', text.lower())
@@ -84,7 +70,7 @@ def verify_address(addresses, address, city, state_name):
 
     return is_verified
 
-async def process_rmq_message(message: IncomingMessage, db_session: Session, connection: RabbitMQConnection):
+async def process_rmq_message(message: IncomingMessage, db_session: Session, channel):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -228,8 +214,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                             rule[key]["count_submited"] = count_persons_before_validation
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
-            await publish_rabbitmq_message(
-                connection=connection,
+            await publish_rabbitmq_message_with_channel(
+                channel=channel,
                 queue_name=AUDIENCE_VALIDATION_FILLER,
                 message_body={
                     "aud_smart_id": str(aud_smart_id),
@@ -238,9 +224,9 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, con
                 },
             )
         await send_sse(
-            connection,
-            user_id,
-            {"smart_audience_id": aud_smart_id, "total_validated": total_validated},
+            channel=channel,
+            user_id=user_id,
+            data={"smart_audience_id": aud_smart_id, "total_validated": total_validated},
         )
         logging.info("sent sse with total count")
 
@@ -285,15 +271,13 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(process_rmq_message, connection=connection, db_session=db_session)
+                functools.partial(process_rmq_message, channel=channel, db_session=db_session)
             )
 
         await asyncio.Future()
 
     except Exception:
         logging.error('Unhandled Exception:', exc_info=True)
-
-    finally:
         if db_session:
             logging.info("Closing the database session...")
             db_session.close()
