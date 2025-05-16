@@ -50,6 +50,11 @@ interface EventTypeInterface {
   title: string;
 }
 
+interface StateHint {
+  id: number;
+  show: boolean;
+}
+
 interface HintCardInterface {
   description: string;
   title: string;
@@ -110,7 +115,7 @@ const SourcesImport: React.FC = () => {
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
-  const [isOpenSelect, setIsOpenSelect] = useState(true); 
+  const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([{show: true, id: 1}]); 
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -143,8 +148,12 @@ const SourcesImport: React.FC = () => {
     linkToLoadMore: "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2"
   }
 
-  const toggleDotHintClick = () => {
-    setIsOpenSelect(prev => !prev)
+  const toggleDotHintClick = (id: number) => {
+    setIsOpenSelect((prev) =>
+      prev.map((el) =>
+        el.id === id ? { ...el, show: !el.show } : el
+      )
+    );
   }
 
   const defaultRows: Row[] = [
@@ -206,7 +215,7 @@ const SourcesImport: React.FC = () => {
 
   useEffect(() => {
     if (showHints && !isOpenSelect) {
-      setIsOpenSelect(true);
+      setIsOpenSelect([{show: true, id: 1}]);
     }
   }, [showHints]);
 
@@ -817,7 +826,7 @@ const SourcesImport: React.FC = () => {
                         Interest (CSV)
                       </MenuItem>
                     </Select>
-                    {showHints && <HintCard card={hintCard} positionLeft={340} isOpenSelect={isOpenSelect} toggleClick={toggleDotHintClick}/>}
+                    {showHints && <HintCard card={hintCard} positionLeft={340} isOpenSelect={isOpenSelect[0].show} toggleClick={() => toggleDotHintClick(1)}/>}
                   </FormControl>
                 </Box>
               </Box>
