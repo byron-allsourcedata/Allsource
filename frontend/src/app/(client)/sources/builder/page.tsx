@@ -53,6 +53,7 @@ interface EventTypeInterface {
 interface HintCardInterface {
   description: string;
   title: string;
+  linkToLoadMore: string
 }
 
 interface NewSource {
@@ -109,8 +110,7 @@ const SourcesImport: React.FC = () => {
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
-  const [activeStep, setActiveStep] = useState(0);
-  const [isOpenSelect, setIsOpenSelect] = useState(false); 
+  const [isOpenSelect, setIsOpenSelect] = useState(true); 
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -137,11 +137,15 @@ const SourcesImport: React.FC = () => {
     { id: 4, name: "converted_sales_count", title: "converted_sales" },
   ];
 
-  const hintsCards: HintCardInterface[] = [
-    { description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", title: "Customer Conversions" },
-    { description: "This dataset contains users who engaged but didn't convert - abandoned carts, incomplete sign-ups, or declined offers. Use it to identify systemic drop-off points and exclude them from your audience list.", title: "Failed Leads" },
-    { description: "This file should contain users who recently engaged with specific topics, products, or brands (e.g., searched for car model, read related articles, etc.). ", title: "Interest" },
-  ];
+  const hintCard: HintCardInterface = { 
+    description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", 
+    title: "Source Type",
+    linkToLoadMore: "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2"
+  }
+
+  const toggleDotHintClick = () => {
+    setIsOpenSelect(prev => !prev)
+  }
 
   const defaultRows: Row[] = [
     { id: 1, type: "Email", value: "", canDelete: false, isHidden: false },
@@ -199,6 +203,12 @@ const SourcesImport: React.FC = () => {
       setRows(updatedRows);
     }
   };
+
+  useEffect(() => {
+    if (showHints && !isOpenSelect) {
+      setIsOpenSelect(true);
+    }
+  }, [showHints]);
 
   useEffect(() => {
     if (typeFromSearchParams) {
@@ -738,7 +748,6 @@ const SourcesImport: React.FC = () => {
                   sx={{
                     display: "flex",
                     gap: 2,
-                    position: "relative",
                     "@media (max-width: 420px)": {
                       display: "grid",
                       gridTemplateColumns: "1fr",
@@ -749,8 +758,6 @@ const SourcesImport: React.FC = () => {
                     <Select
                       value={sourceType}
                       onChange={handleChangeSourceType}
-                      onOpen={() => setIsOpenSelect(true)}
-                      onClose={() => setIsOpenSelect(false)}
                       displayEmpty
                       MenuProps={{
                         MenuListProps: {
@@ -762,6 +769,7 @@ const SourcesImport: React.FC = () => {
                       }}
                       sx={{
                         ...sourcesStyles.text,
+                        position: "relative",
                         width: "316px",
                         borderRadius: "4px",
                         fontSize: "14px",
@@ -809,12 +817,8 @@ const SourcesImport: React.FC = () => {
                         Interest (CSV)
                       </MenuItem>
                     </Select>
+                    {showHints && <HintCard card={hintCard} isOpenSelect={isOpenSelect} toggleClick={toggleDotHintClick}/>}
                   </FormControl>
-                  {showHints && isOpenSelect && <HintCard
-                    cards={hintsCards}
-                    activeStep={activeStep}
-                    onStepChange={setActiveStep}
-                  />}
                 </Box>
               </Box>
 
