@@ -307,7 +307,14 @@ const Dashboard: React.FC = () => {
                 },
               }}
             >
-              Dashboard <CustomTooltip title={"Indicates the count of resolved identities and revenue figures for the specified time"} linkText="Learn More" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main" />
+              Dashboard{" "}
+              <CustomTooltip
+                title={
+                  "Indicates the count of resolved identities and revenue figures for the specified time"
+                }
+                linkText="Learn More"
+                linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main"
+              />
             </Typography>
             <Box
               sx={{

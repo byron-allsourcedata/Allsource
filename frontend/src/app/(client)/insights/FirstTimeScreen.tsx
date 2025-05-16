@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import FirstTimeCards from "../components/FirstTimeCards";
-import { Box, Typography, Link as MuiLink } from "@mui/material";
+import { Box, Typography, Link as MuiLink, Grid } from "@mui/material";
 import WelcomePopup from "@/components/CreatePixelSourcePopup";
 import { ExternalLink } from "@/components/ExternalLink";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { DashboardHelpCard } from "@/components/HelpCard";
 
 type CardData = {
   title: string;
@@ -75,7 +76,13 @@ const FirstTimeScreen = () => {
         <MuiLink
           href="https://example.com"
           underline="hover"
-          sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            fontWeight: 300,
+            color: "#3898FC",
+          }}
         >
           Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
         </MuiLink>
@@ -102,6 +109,26 @@ const FirstTimeScreen = () => {
       >
         <FirstTimeCards cardData={cardData} />
       </Box>
+      <Grid sx={{ mt: 0, mb: 3, width: "100%" }}>
+        <DashboardHelpCard
+          headline="Feeling Overwhelmed by Analytics?"
+          description="Get a free 30-minute session to analyze your audience data and improve targeting."
+          helpPoints={[
+            {
+              title: "Audience Profile Review",
+              description: "Understand demographics & interests",
+            },
+            {
+              title: "Behavior Analysis",
+              description: " Interpret engagement patterns",
+            },
+            {
+              title: "Targeting Recommendations",
+              description: "Optimize based on your data",
+            },
+          ]}
+        />
+      </Grid>
       {popupOpen && (
         <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} />
       )}

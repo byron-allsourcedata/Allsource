@@ -1,5 +1,5 @@
 "use client";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, Grid } from "@mui/material";
 import React, { useState, useEffect, Suspense } from "react";
 import { datasyncStyle } from "./datasyncStyle";
 import CustomTooltip from "@/components/customToolTip";
@@ -35,6 +35,7 @@ import AudiencePopup from "@/components/AudienceSlider";
 import { useNotification } from "@/context/NotificationContext";
 import FirstTimeScree from "./components/FirstTimeScree";
 import NotificationBanner from "@/components/NotificationBanner";
+import { DashboardHelpCard } from "@/components/HelpCard";
 
 interface DataSyncProps {
   service_name?: string;
@@ -64,7 +65,7 @@ const DataSync = () => {
   };
 
   const onApply = (filter: any) => {
-    setFilters(filter); 
+    setFilters(filter);
   };
 
   const installPixel = () => {
@@ -77,7 +78,7 @@ const DataSync = () => {
   useEffect(() => {
     const fetchIntegrations = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(true);
         const domain = sessionStorage.getItem("current_domain") || "";
         const response = await axiosInstance.get(
           "/data-sync/has-integration-and-smart-audiences",
@@ -86,7 +87,7 @@ const DataSync = () => {
           }
         );
         setHasIntegrations(response.data.hasIntegration);
-        setHasDataSync(response.data.hasAnySync)
+        setHasDataSync(response.data.hasAnySync);
       } catch (err) {
         console.error("Error checking integrations:", err);
       } finally {
@@ -101,192 +102,212 @@ const DataSync = () => {
     return <CustomizedProgressBar />;
   }
 
-
   return (
     <>
-    {isLoading && <CustomizedProgressBar />}
+      {isLoading && <CustomizedProgressBar />}
       {!isLoading && (
-      <Box sx={datasyncStyle.mainContent}>
-        {hasDataSync &&(
-          <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
-            pr: 2,
-            "@media (max-width: 900px)": {
-              pt: hasNotification ? 5 : 0,
-            },
-            "@media (max-width: 400px)": {
-              pt: hasNotification ? 7 : 0,
-            },
-          }}
-        >
-          <Box
-            sx={{
-              flexShrink: 0,
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              pl: "0.5rem",
-              gap: 1,
-              "@media (max-width: 900px)": { mb: 2 },
-            }}
-          >
-            <Typography
-              className="first-sub-title"
+        <Box sx={datasyncStyle.mainContent}>
+          {hasDataSync && (
+            <Box
               sx={{
-                fontFamily: "Nunito Sans",
-                fontSize: "16px",
-                lineHeight: "normal",
-                fontWeight: 600,
-                color: "#202124",
-              }}
-            >
-              Data Sync
-            </Typography>
-            <CustomTooltip
-              title={
-                "How data synch works and to customise your sync settings."
-              }
-              linkText="Learn more"
-              linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync"
-            />
-          </Box>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "end",
-              mt: 2.05,
-              gap: "15px",
-              "@media (max-width: 900px)": {
-                gap: "8px",
-              },
-            }}
-          >
-            <Button
-              onClick={handleFilterPopupOpen}
-              aria-haspopup="true"
-              sx={{
-                textTransform: "none",
-                color: "rgba(128, 128, 128, 1)",
-                border:
-                  filters?.length > 0
-                    ? "1px solid rgba(56, 152, 252, 1)"
-                    : "1px solid rgba(184, 184, 184, 1)",
-                borderRadius: "4px",
-                padding: "8px",
-                minWidth: "auto",
-                position: "relative",
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+                pr: 2,
                 "@media (max-width: 900px)": {
-                  border: "none",
-                  padding: 0,
+                  pt: hasNotification ? 5 : 0,
+                },
+                "@media (max-width: 400px)": {
+                  pt: hasNotification ? 7 : 0,
                 },
               }}
             >
-              <FilterListIcon
-                fontSize="medium"
+              <Box
                 sx={{
-                  color:
-                    filters?.length > 0
-                      ? "rgba(56, 152, 252, 1)"
-                      : "rgba(128, 128, 128, 1)",
-                }}
-              />
-            </Button>
-          </Box>
-        </Box>
-        )}
-        <Box
-          sx={{
-            width: "100%",
-            pl: 0.5,
-            pt: 0,
-            pr: 1,
-            "@media (max-width: 440px)": { pt: 3 },
-          }}
-        >
-          {status === "PIXEL_INSTALLATION_NEEDED" && !isLoading ? (
-            <Box sx={centerContainerStyles}>
-              <Typography
-                variant="h5"
-                className="first-sub-title"
-                sx={{
-                  mb: 3,
-                  fontFamily: "Nunito Sans",
-                  fontSize: "20px",
-                  color: "#4a4a4a",
-                  fontWeight: "600",
-                  lineHeight: "28px",
+                  flexShrink: 0,
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  pl: "0.5rem",
+                  gap: 1,
+                  "@media (max-width: 900px)": { mb: 2 },
                 }}
               >
-                Pixel Integration isn&apos;t completed yet!
-              </Typography>
-              <Image
-                src="/pixel_installation_needed.svg"
-                alt="Need Pixel Install"
-                height={250}
-                width={300}
-              />
-              <Typography
-                variant="body1"
-                className="table-data"
+                <Typography
+                  className="first-sub-title"
+                  sx={{
+                    fontFamily: "Nunito Sans",
+                    fontSize: "16px",
+                    lineHeight: "normal",
+                    fontWeight: 600,
+                    color: "#202124",
+                  }}
+                >
+                  Data Sync
+                </Typography>
+                <CustomTooltip
+                  title={
+                    "How data synch works and to customise your sync settings."
+                  }
+                  linkText="Learn more"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync"
+                />
+              </Box>
+              <Box
                 sx={{
-                  mt: 3,
-                  fontFamily: "Nunito Sans",
-                  fontSize: "14px",
-                  color: "#808080",
-                  fontWeight: "600",
-                  lineHeight: "20px",
-                }}
-              >
-                Install the pixel to unlock and gain valuable insights! Start
-                viewing your leads now
-              </Typography>
-              <Button
-                variant="contained"
-                onClick={installPixel}
-                className="second-sub-title"
-                sx={{
-                  backgroundColor: "rgba(56, 152, 252, 1)",
-                  textTransform: "none",
-                  padding: "10px 24px",
-                  mt: 3,
-                  color: "#fff !important",
-                  ":hover": {
-                    backgroundColor: "rgba(56, 152, 252, 1)",
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "end",
+                  mt: 2.05,
+                  gap: "15px",
+                  "@media (max-width: 900px)": {
+                    gap: "8px",
                   },
                 }}
               >
-                Setup Pixel
-              </Button>
+                <Button
+                  onClick={handleFilterPopupOpen}
+                  aria-haspopup="true"
+                  sx={{
+                    textTransform: "none",
+                    color: "rgba(128, 128, 128, 1)",
+                    border:
+                      filters?.length > 0
+                        ? "1px solid rgba(56, 152, 252, 1)"
+                        : "1px solid rgba(184, 184, 184, 1)",
+                    borderRadius: "4px",
+                    padding: "8px",
+                    minWidth: "auto",
+                    position: "relative",
+                    "@media (max-width: 900px)": {
+                      border: "none",
+                      padding: 0,
+                    },
+                  }}
+                >
+                  <FilterListIcon
+                    fontSize="medium"
+                    sx={{
+                      color:
+                        filters?.length > 0
+                          ? "rgba(56, 152, 252, 1)"
+                          : "rgba(128, 128, 128, 1)",
+                    }}
+                  />
+                </Button>
+              </Box>
             </Box>
-          ) : (
-            !isLoading &&
-            filters && !hasDataSync ? (
+          )}
+          <Box
+            sx={{
+              width: "100%",
+              pl: 0.5,
+              pt: 0,
+              pr: 1,
+              "@media (max-width: 440px)": { pt: 3 },
+            }}
+          >
+            {status === "PIXEL_INSTALLATION_NEEDED" && !isLoading ? (
+              <Box sx={centerContainerStyles}>
+                <Typography
+                  variant="h5"
+                  className="first-sub-title"
+                  sx={{
+                    mb: 3,
+                    fontFamily: "Nunito Sans",
+                    fontSize: "20px",
+                    color: "#4a4a4a",
+                    fontWeight: "600",
+                    lineHeight: "28px",
+                  }}
+                >
+                  Pixel Integration isn&apos;t completed yet!
+                </Typography>
+                <Image
+                  src="/pixel_installation_needed.svg"
+                  alt="Need Pixel Install"
+                  height={250}
+                  width={300}
+                />
+                <Typography
+                  variant="body1"
+                  className="table-data"
+                  sx={{
+                    mt: 3,
+                    fontFamily: "Nunito Sans",
+                    fontSize: "14px",
+                    color: "#808080",
+                    fontWeight: "600",
+                    lineHeight: "20px",
+                  }}
+                >
+                  Install the pixel to unlock and gain valuable insights! Start
+                  viewing your leads now
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={installPixel}
+                  className="second-sub-title"
+                  sx={{
+                    backgroundColor: "rgba(56, 152, 252, 1)",
+                    textTransform: "none",
+                    padding: "10px 24px",
+                    mt: 3,
+                    color: "#fff !important",
+                    ":hover": {
+                      backgroundColor: "rgba(56, 152, 252, 1)",
+                    },
+                  }}
+                >
+                  Setup Pixel
+                </Button>
+              </Box>
+            ) : !isLoading && filters && !hasDataSync ? (
               <>
-                <Box sx={{width: "98%", mt: 2}}>
+                <Box sx={{ width: "98%", mt: 2 }}>
                   <NotificationBanner
                     ctaUrl="/integrations"
                     ctaLabel="Add Integration"
                     message="You need to create at least one integration before you can sync your audience"
                   />
-                  <FirstTimeScree onBegin={()=> {router.push("/smart-audiences")}} hasDataSync={hasDataSync}/>
-              </Box>
+                  <FirstTimeScree
+                    onBegin={() => {
+                      router.push("/smart-audiences");
+                    }}
+                    hasDataSync={hasDataSync}
+                  />
+                  <Grid sx={{ mt: 2, mb: 3, width: "100%" }}>
+                    <DashboardHelpCard
+                      headline="Need Help with Data Synchronization?"
+                      description="Book a free 30-minute session to troubleshoot, optimize, or automate your data flows."
+                      helpPoints={[
+                        {
+                          title: "Connection Setup",
+                          description: "Configure integrations correctly",
+                        },
+                        {
+                          title: "Sync Diagnostics",
+                          description: "Fix failed data transfers",
+                        },
+                        {
+                          title: "Mapping Assistance",
+                          description: "Align your data fields",
+                        },
+                      ]}
+                    />
+                  </Grid>
+                </Box>
               </>
-              
             ) : (
               <>
                 <DataSyncList filters={filters} />
               </>
-            )
-          )}
+            )}
+          </Box>
         </Box>
-      </Box>
       )}
       <FilterDatasync
         open={filterPopup}
@@ -297,7 +318,6 @@ const DataSync = () => {
         open={openCreateDataSyncPopup}
         onClose={handleAudiencePopupClose}
       />
-    
     </>
   );
 };
