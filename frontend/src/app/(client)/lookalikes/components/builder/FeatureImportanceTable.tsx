@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import type { FeatureObject, Props } from "@/types";
-import { useResetContext } from "@/context/ResetContext";
 
 const formatKey = (k: string) =>
   k
@@ -82,7 +81,6 @@ export function FeatureImportanceTable<T extends FeatureObject>({
   customStyles,
 }: Props<T>) {
   const theme = useTheme();
-  const { resetTrigger, notifyInteraction } = useResetContext();
   const allPairs = useMemo<[keyof T, number][]>(
     () =>
       Object.entries(features)
@@ -111,10 +109,6 @@ export function FeatureImportanceTable<T extends FeatureObject>({
   const [selectedKeys, setSelectedKeys] = useState<(keyof T)[]>(initialSelected);
 
   useEffect(() => {
-    setSelectedKeys(initialSelectedRef.current);
-  }, [resetTrigger]);
-
-  useEffect(() => {
     setSelectedKeys(initialSelected);
   }, [initialSelected]);
 
@@ -136,7 +130,6 @@ export function FeatureImportanceTable<T extends FeatureObject>({
         ? prev.filter(x => x !== key)
         : [...prev, key];
       const isBackToDefault = arraysEqual(newSelected, initialSelectedRef.current);
-      notifyInteraction(title, isBackToDefault);
       return newSelected;
     });
   };

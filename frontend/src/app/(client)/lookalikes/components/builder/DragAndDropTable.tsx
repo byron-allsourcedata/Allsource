@@ -52,12 +52,6 @@ function DragAndDropTable({
     });
     setRows(nextRows);
 
-    // if(isFirstInit && initDefaultStateRef.current.length >= 3) {
-    //   console.log("!!!!!!!!!!!!!!!!")
-    //   setIsFirstInit(false)
-    //   setRows(initDefaultStateRef.current);
-    // }
-
     if (rows.length === 0) {
       setRows(initDefaultStateRef.current);
       initDefaultStateRef.current = sortedInitial;
@@ -66,12 +60,6 @@ function DragAndDropTable({
       notifyInteraction("dragTable", handleComparer());
     }
   }, [fields, onOrderChange]);
-
-  // React.useEffect(() => {
-  //   if (fields.length !== rows.length){
-  //     onOrderChange?.(initDefaultStateRef.current);
-  //   }
-  // }, [fields]);
 
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);

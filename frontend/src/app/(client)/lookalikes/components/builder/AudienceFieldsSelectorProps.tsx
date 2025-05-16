@@ -1,4 +1,4 @@
-import React, { memo, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { Box, Button, FormControlLabel, Grid, styled, Switch, Typography } from "@mui/material";
 import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
 import type {
@@ -9,6 +9,8 @@ import type {
   RealEstateResults,
   ProfessionalProfileResults,
   EmploymentHistoryResults,
+  CalculationResponse,
+  RecommendedByCategory,
 } from "@/types";
 import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
@@ -16,44 +18,58 @@ import { ResetProvider, useResetContext } from "@/context/ResetContext";
 import { PaymentIcon, HowToVoteIcon, DirectionsBikeIcon, AccountBoxIcon, OpenInNewIcon } from "@/icon"
 
 interface AudienceFieldsSelectorProps {
-  personalData?: PersonalResults;
-  financialData?: FinancialResults;
-  lifestylesData?: LifestylesResults;
-  voterData?: VoterResults;
-  professionalProfileData?: ProfessionalProfileResults;
-  employmentHistoryData?: EmploymentHistoryResults;
-  // realEstateData?: RealEstateResults;
+  calculatedResults?: CalculationResponse
   handleNextStep: () => void;
-  onPersonalChange: (keys: (keyof PersonalResults)[]) => void;
-  onFinancialChange: (keys: (keyof FinancialResults)[]) => void;
-  onLifestylesChange: (keys: (keyof LifestylesResults)[]) => void;
-  onVoterChange: (keys: (keyof VoterResults)[]) => void;
-  onProfessionalProfileChange: (keys: (keyof ProfessionalProfileResults)[]) => void;
-  onEmploymentHistoryChange: (keys: (keyof EmploymentHistoryResults)[]) => void;
-  // onRealEstateChange: (keys: (keyof RealEstateResults)[]) => void;
+  recommendedByCategory: RecommendedByCategory;
+  onFieldsChange: (selected: RecommendedByCategory) => void;
   canProcessed: boolean
 }
 
 const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
-  personalData = {} as PersonalResults,
-  financialData = {} as FinancialResults,
-  lifestylesData = {} as LifestylesResults,
-  voterData = {} as VoterResults,
-  professionalProfileData = {} as ProfessionalProfileResults,
-  employmentHistoryData = {} as EmploymentHistoryResults,
-  // realEstateData = {} as RealEstateResults,
+  calculatedResults,
   handleNextStep,
-  onPersonalChange,
-  onFinancialChange,
-  onLifestylesChange,
-  onVoterChange,
-  onProfessionalProfileChange,
-  onEmploymentHistoryChange,
-  // onRealEstateChange,
+  recommendedByCategory,
+  onFieldsChange,
   canProcessed
 }) => {
-  const { atDefault, userInteracted, resetAll } = useResetContext();
   const [activeStep, setActiveStep] = React.useState(0);
+   const [personalSelected, setPersonalSelected] = useState<string[]>(
+    recommendedByCategory.personal
+  );
+  const [financialSelected, setFinancialSelected] = useState<string[]>(
+    recommendedByCategory.financial
+  );
+  const [lifestyleSelected, setLifestyleSelected] = useState<string[]>(
+    recommendedByCategory.lifestyle
+  );
+  const [voterSelected, setVoterSelected] = useState<string[]>(
+    recommendedByCategory.voter
+  );
+  const [professionalSelected, setProfessionalSelected] = useState<string[]>(
+    recommendedByCategory.professional_profile
+  );
+  const [employmentSelected, setEmploymentSelected] = useState<string[]>(
+    recommendedByCategory.employment_history
+  );
+
+  useEffect(() => {
+    onFieldsChange({
+      personal: personalSelected,
+      financial: financialSelected,
+      lifestyle: lifestyleSelected,
+      voter: voterSelected,
+      professional_profile: professionalSelected,
+      employment_history: employmentSelected,
+    });
+  }, [
+    personalSelected,
+    financialSelected,
+    lifestyleSelected,
+    voterSelected,
+    professionalSelected,
+    employmentSelected,
+  ]);
+
   const canProceed = canProcessed;
   const handleStep = (step: number) => () => {
     if (step === 1 && !canProceed) return;
@@ -160,8 +176,8 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
         </Grid>
         <Grid item md={2} sx={{ textAlign: "right", borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
           <Button
-            onClick={resetAll}
-            disabled={atDefault}
+            // onClick={resetAll}
+            // disabled={atDefault}
             sx={{
               border: "1px rgba(56, 152, 252, 1) solid",
               color: "rgba(56, 152, 252, 1)",
@@ -181,7 +197,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
             variant="outlined"
           >
             <Typography fontSize="0.8rem">
-              {atDefault ? `Recomended` : `Set recommended`}
+              {/* {atDefault ? `Recomended` : `Set recommended`} */}
             </Typography>
           </Button>
         </Grid>
@@ -192,53 +208,59 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
 
       <Grid container spacing={2}>
         <Grid item xs={12} md={6}>
-          <Box sx={{ mb: 2 }}>
-            <FeatureImportanceTable
-              title="Personal Profile"
-              features={personalData}
-              onChangeDisplayed={onPersonalChange}
-              headerIcon={<AccountBoxIcon />}
-            />
-          </Box>
-          <Box sx={{ mb: 2 }}>
+          {calculatedResults && (
+            <>
+            <Box sx={{ mb: 2 }}>
+                <FeatureImportanceTable
+                title="Personal Profile"
+                features={calculatedResults.audience_feature_importance_b2c.personal}
+                onChangeDisplayed={(keys) => setPersonalSelected(keys as string[])}
+                headerIcon={<AccountBoxIcon />}
+              />
+            </Box>
+              <Box sx={{ mb: 2 }}>
             <FeatureImportanceTable
               title="Financial"
-              features={financialData}
-              onChangeDisplayed={onFinancialChange}
+              features={calculatedResults.audience_feature_importance_b2c.financial}
+              onChangeDisplayed={(keys) => setFinancialSelected(keys as string[])}
               headerIcon={<PaymentIcon />}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
             <FeatureImportanceTable
               title="Lifestyles"
-              features={lifestylesData}
-              onChangeDisplayed={onLifestylesChange}
+              features={calculatedResults.audience_feature_importance_b2c.lifestyle}
+              onChangeDisplayed={(keys) => setLifestyleSelected(keys as string[])}
               headerIcon={<DirectionsBikeIcon />}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
             <FeatureImportanceTable
               title="Voter"
-              features={voterData}
-              onChangeDisplayed={onVoterChange}
+              features={calculatedResults.audience_feature_importance_b2c.voter}
+              onChangeDisplayed={(keys) => setVoterSelected(keys as string[])}
               headerIcon={<HowToVoteIcon />}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
             <FeatureImportanceTable
               title="Professional Profile"
-              features={professionalProfileData}
-              onChangeDisplayed={onProfessionalProfileChange}
+              features={calculatedResults.audience_feature_importance_b2b.professional_profile}
+              onChangeDisplayed={(keys) => setProfessionalSelected(keys as string[])}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
             <FeatureImportanceTable
               title="Employment History"
-              features={employmentHistoryData}
-              onChangeDisplayed={onEmploymentHistoryChange}
+              features={calculatedResults.audience_feature_importance_b2b.employment_history}
+              onChangeDisplayed={(keys) => setEmploymentSelected(keys as string[])}
             />
           </Box>
 
+            </>
+          )}
+          
+          
         </Grid>
         <Grid item sx={{}} />
         <Grid item xs={12} md={5} sx={{ flexGrow: 1 }}>
