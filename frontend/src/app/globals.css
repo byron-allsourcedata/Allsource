@@ -321,10 +321,19 @@ body {
 .dashboard-card-text {
   font-family: 'Nunito Sans';
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 140%;
   letter-spacing: 0%;
-  color: rgba(74, 74, 74, 0.8)
+  color: rgba(66, 66, 66, 1)
+}
+
+.dashboard-gist-card-text {
+  font-family: 'Nunito Sans';
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 140%;
+  letter-spacing: 0%;
+  color: rgba(140, 139, 139, 1)
 }
 
 .MuiInputLabel.MuiInputLabel-outlined {

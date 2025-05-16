@@ -15,13 +15,13 @@ export const mapGender = (gender: PercentageMap) => [
     fillColor: "rgba(249, 155, 171, 1)",
     bgColor: "rgba(255, 222, 227, 1)",
   },
-  {
-    imageSrc: "/male-female.svg",
-    label: "Other",
-    percentage: parseFloat((gender["U"] ?? 0).toString()),
-    fillColor: "rgb(15, 209, 134)",
-    bgColor: "rgb(96, 212, 166)",
-  },
+  // {
+  //   imageSrc: "/male-female.svg",
+  //   label: "Other",
+  //   percentage: parseFloat((gender["U"] ?? 0).toString()),
+  //   fillColor: "rgb(15, 209, 134)",
+  //   bgColor: "rgb(96, 212, 166)",
+  // },
 ];
 
 export const mapState = (state: PercentageMap) =>
