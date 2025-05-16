@@ -111,6 +111,10 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
               marginLeft: 0,
               fontSize: "16px",
             },
+            "&:hover": {
+              backgroundColor: "rgba(56, 152, 252, 1)",
+              boxShadow: 2,
+            },
           }}
         >
           Verify
