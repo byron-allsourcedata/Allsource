@@ -123,7 +123,7 @@ class PixelInstallationService:
         domain = self.db.query(UserDomains).filter(UserDomains.data_provider_id == pixelClientId).first()
         if domain:
             result['status'] = PixelStatus.PIXEL_MISMATCH.value
-            if domain.domain == normalize_url(url):
+            if normalize_url(domain.domain) == normalize_url(url):
                 result['status'] = PixelStatus.PIXEL_CODE_INSTALLED.value
                 domain.is_pixel_installed = True
                 self.db.commit()

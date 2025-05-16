@@ -136,7 +136,7 @@ def normalize_url(url):
     if not url:
         return url
 
-    url = url.replace('http://', '').replace('https://', '')
+    url = url.replace('http://', '').replace('https://', '').replace('www.', '').strip('/')
 
     scheme_end = url.find('://')
     if scheme_end != -1:
