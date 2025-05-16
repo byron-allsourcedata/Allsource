@@ -77,12 +77,21 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
           </IconButton>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 0, pl: 0, pr: 0 }}>
+        <DialogContent sx={{ pt: 4, pl: 0, pr: 0, textAlign: "center" }}>
+          <Image
+            src="/pixel_success.svg"
+            alt="Success"
+            width={468}
+            height={201}
+            style={{ margin: 0 }}
+          />
+
           <Typography
             sx={{
               fontSize: "16px",
               color: "#5f6368",
               mb: 4,
+              pt: 4,
               textAlign: "left",
               fontFamily: "Nunito Sans",
             }}
@@ -90,16 +99,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
             Great news — your tracking pixel is active! Now we&apos;ll start
             collecting data from your website visitors to build your audience.
           </Typography>
-
-          <Box sx={{ mb: 4, textAlign: "center" }}>
-            <Image
-              src="/pixel_success.svg"
-              alt="Success"
-              width={536}
-              height={205}
-              style={{ margin: 0 }}
-            />
-          </Box>
 
           <Button
             variant="contained"
