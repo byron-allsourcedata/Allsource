@@ -1,6 +1,9 @@
 import logging
 import os
 import hashlib
+import re
+from grpc import StatusCode
+import time
 import google.api_core.exceptions
 from google.auth.exceptions import RefreshError
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
@@ -16,6 +19,7 @@ from faker import Faker
 from google.auth.transport.requests import Request
 from google.ads.googleads.client import GoogleAdsClient
 from google.ads.googleads.errors import GoogleAdsException
+from google.api_core import exceptions as core_exceptions
 from google.oauth2.credentials import Credentials
 from schemas.integrations.google_ads import GoogleAdsProfile
 from fastapi import HTTPException
@@ -161,10 +165,11 @@ class GoogleAdsIntegrationsService:
         
         list_response = self.__add_profile_to_list(access_token=user_integration.access_token, customer_id=integration_data_sync.customer_id, user_list_id=integration_data_sync.list_id, profiles=profiles)
         
-        if not list_response:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        if list_response == ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
+            return self.__add_profile_to_list(access_token=user_integration.access_token, customer_id=integration_data_sync.customer_id, user_list_id=integration_data_sync.list_id, profiles=profiles)
             
-        return ProccessDataSyncResult.SUCCESS.value
+        return list_response
+    
     
     def get_last_offline_user_data_job(self, client, customer_id):
         google_ads_service = client.get_service("GoogleAdsService")
@@ -218,23 +223,55 @@ class GoogleAdsIntegrationsService:
                 ad_user_data_consent=ad_user_data_consent,
                 ad_personalization_consent=ad_personalization_consent,
             )
+        except core_exceptions.ResourceExhausted as ex:
+            msg = str(ex)
+            if "Too many requests" in msg or re.search(r"Retry in \d+ seconds", msg):
+                logger.warning(f"Rate limit exceeded: {msg}")
+                time.sleep(10)
+                return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
+            else:
+                logger.error(f"Quota exhausted: {msg}")
+                return ProccessDataSyncResult.QUOTA_EXHAUSTED.value
         except google.api_core.exceptions.ServiceUnavailable as ex:
             logger.error(f"Google Ads API error: {ex}")
-            return False
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         except RefreshError as ex:
             logger.error(f"Google Ads API error: {ex}")
-            return False
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         except GoogleAdsException as ex:
+            status = ex.error.code()
+            request_id = ex.request_id
+            message = str(ex.failure)
+            if status == StatusCode.RESOURCE_EXHAUSTED and "Too many requests" in message:
+                m = re.search(r"Retry in (\d+) seconds", message)
+                retry_secs = int(m.group(1)) if m else 10
+                logger.warning(
+                    f"Rate limit exceeded (request {request_id}): retry in {retry_secs}s – {message}"
+                )
+                time.sleep(retry_secs)
+                return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
+
+            if status == StatusCode.RESOURCE_EXHAUSTED and "check quota" in message:
+                logger.error(
+                    f"Quota exhausted for request {request_id}: {message}"
+                )
+                return ProccessDataSyncResult.QUOTA_EXHAUSTED.value
             logger.error(
                 f"Request with ID '{ex.request_id}' failed with status "
-                f"'{ex.error.code().name}' and includes the following errors:"
+                f"'{ex.error.code().name}' and includes errors: {ex.failure}"
             )
-            return False
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         except Exception as ex:
-            logger.error(f"GoogleAds error: {ex}")
-            return False
+            msg = str(ex)
+            if "Too many requests" in msg or re.search(r"Retry in \d+ seconds", msg):
+                logger.warning(f"Rate limit exceeded: {msg}")
+                time.sleep(10)
+                return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
+            else:
+                logger.error(f"GoogleAds error: {ex}")
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         
-        return True
+        return ProccessDataSyncResult.SUCCESS.value
                 
     def set_suppression(self, suppression: bool, domain_id: int):
             credential = self.get_credentials(domain_id)
@@ -376,8 +413,13 @@ class GoogleAdsIntegrationsService:
                         
         request = client.get_type("AddOfflineUserDataJobOperationsRequest")
         request.resource_name = offline_user_data_job_resource_name
+<<<<<<< HEAD
         request.operations.extend(self.build_offline_user_data_job_operations(client, profiles))
         request.enable_partial_failure = True
+=======
+        request.operations.extend(self.build_offline_user_data_job_operations(client, profile))
+        request.enable_partial_failure = False
+>>>>>>> 687a4e5c6833571dbeee41315e9783ffc826b1fb
 
         offline_user_data_job_service_client.add_offline_user_data_job_operations(request=request)
         logger.debug("Successfully added offline user data job operations")

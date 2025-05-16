@@ -660,8 +660,9 @@ def get_settings_service(settings_persistence: SettingsPersistence = Depends(
                            )
 
 
-def get_suppression_service(suppression_persistence: SuppressionPersistence = Depends(get_suppression_persistence)):
-    return SuppressionService(suppression_persistence=suppression_persistence)
+def get_suppression_service(suppression_persistence: SuppressionPersistence = Depends(get_suppression_persistence),
+                            leads_persistence: LeadsPersistence = Depends(get_leads_persistence)):
+    return SuppressionService(suppression_persistence=suppression_persistence, leads_persistence=leads_persistence)
 
 
 def get_plans_service(plans_persistence: PlansPersistence = Depends(get_plans_persistence),

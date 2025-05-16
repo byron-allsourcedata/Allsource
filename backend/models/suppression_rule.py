@@ -59,19 +59,20 @@ class SuppressionRule(Base):
         TEXT,
         nullable=True
     )
-
+    is_delete_contacts = Column(BOOLEAN, nullable=False, default=False)
+    
     def to_dict(self):
-        return {
-            "is_stop_collecting_contacts": self.is_stop_collecting_contacts,
-            "is_url_certain_activation": self.is_url_certain_activation,
-            "activate_certain_urls": self.activate_certain_urls,
-            "is_based_activation": self.is_based_activation,
-            "activate_based_urls": self.activate_based_urls,
-            "page_views_limit": self.page_views_limit,
-            "collection_timeout": self.collection_timeout,
-            "suppressions_multiple_emails": self.suppressions_multiple_emails,
-            "actual_contect_days": self.actual_contect_days
-        }
-
+            return {
+                "is_stop_collecting_contacts": self.is_stop_collecting_contacts,
+                "is_url_certain_activation": self.is_url_certain_activation,
+                "activate_certain_urls": self.activate_certain_urls,
+                "is_based_activation": self.is_based_activation,
+                "activate_based_urls": self.activate_based_urls,
+                "page_views_limit": self.page_views_limit,
+                "collection_timeout": self.collection_timeout,
+                "suppressions_multiple_emails": self.suppressions_multiple_emails,
+                "actual_contect_days": self.actual_contect_days,
+                "is_delete_contacts": self.is_delete_contacts
+            }
 
 event.listen(SuppressionRule, "before_insert", create_timestamps)

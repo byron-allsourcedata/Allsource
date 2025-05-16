@@ -108,6 +108,12 @@ async def process_certain_urls(suppression_request: SuppressionRequest,
                                user: User = Depends(check_user_authorization)):
     return suppression_service.process_certain_urls(suppression_request.data, domain.id)
 
+@router.post("/delete-contacts")
+async def process_delete_contacts(suppression_service: SuppressionService = Depends(get_suppression_service),
+                               domain=Depends(check_domain),
+                               user: User = Depends(check_user_authorization)):
+    return suppression_service.process_delete_contacts(domain.id)
+
 
 @router.post("/based-activation")
 async def process_based_activation(
