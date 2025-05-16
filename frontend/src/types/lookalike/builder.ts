@@ -5,6 +5,7 @@ export type FeatureObject = Record<string, number>;
 
 export interface Props<T extends FeatureObject> {
   features: Record<string, number>;
+  initialFeatures:string[],
   title: string;
   onChangeDisplayed?: (selected: (keyof T)[]) => void;
   columnHeaders?: [string, string];

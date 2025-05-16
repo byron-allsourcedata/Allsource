@@ -74,8 +74,9 @@ export function UnRecommendedBadge({ text = "No recommended fields" }: Recommend
 
 export function FeatureImportanceTable<T extends FeatureObject>({
   features,
-  title,
+  initialFeatures,
   onChangeDisplayed,
+  title,
   columnHeaders = ["Attribute name", "Predictable value"],
   headerIcon,
   customStyles,
@@ -88,62 +89,25 @@ export function FeatureImportanceTable<T extends FeatureObject>({
         .sort((a, b) => b[1] - a[1]),
     [features]
   );
-
-  const nonZeroPairs = useMemo<[keyof T, number][]>(
-    () => allPairs.filter(([, v]) => v > 0),
-    [allPairs]
-  );
-
-  const maxSelectable = useMemo<number>(
-    () => Math.min(allPairs.length, 14),
-    [nonZeroPairs.length]
-  );
-
-  const initialSelected = useMemo<(keyof T)[]>(
-    () => nonZeroPairs.slice(0, maxSelectable).map(([k]) => k),
-    [nonZeroPairs, maxSelectable]
-  );
-
-  const initialSelectedRef = useRef<(keyof T)[]>(initialSelected);
-
-  const [selectedKeys, setSelectedKeys] = useState<(keyof T)[]>(initialSelected);
-
-  useEffect(() => {
-    setSelectedKeys(initialSelected);
-  }, [initialSelected]);
+  const [selectedKeys, setSelectedKeys] = useState<(keyof T)[]>(initialFeatures);
+  const [expanded, setExpanded] = useState(false);
+  const handleAccordionChange = (_event: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpanded(isExpanded);
+  };
+  const onOptionToggle = (key: keyof T) => {
+    setSelectedKeys(prev => {
+      const newSelected = prev.includes(key)
+        ? prev.filter(x => x !== key)
+        : [...prev, key];
+      return newSelected;
+    });
+  };
 
   useEffect(() => {
     if (onChangeDisplayed) {
       onChangeDisplayed(selectedKeys);
     }
   }, [selectedKeys]);
-  const arraysEqual = (a: any[], b: any[]) => {
-    if (a.length !== b.length) return false;
-    const setB = new Set(b);
-    return a.every(x => setB.has(x));
-  };
-  
-
-  const onOptionToggle = (key: keyof T) => {
-    setSelectedKeys(prev => {
-      const newSelected = prev.includes(key)
-        ? prev.filter(x => x !== key)
-        : [...prev, key];
-      const isBackToDefault = arraysEqual(newSelected, initialSelectedRef.current);
-      return newSelected;
-    });
-  };
-
-  const headerColor =
-    selectedKeys.length > 0
-      ? "rgba(56, 152, 252, 1)"
-      : theme.palette.text.disabled;
-
-  const [expanded, setExpanded] = useState(false);
-  const handleAccordionChange = (_event: React.SyntheticEvent, isExpanded: boolean) => {
-    setExpanded(isExpanded);
-  };
-
   return (
     <Accordion
       disableGutters
@@ -175,11 +139,11 @@ export function FeatureImportanceTable<T extends FeatureObject>({
             </Box>
           </Grid>
           <Grid item xs={2} sm={4}>
-            {initialSelectedRef.current.length === 0 ? (
+            {initialFeatures.length === 0 ? (
               <UnRecommendedBadge />
             ):
             (
-              <RecommendedBadge text={`${initialSelectedRef.current.length} fields recommended`} />
+              <RecommendedBadge text={`${initialFeatures.length} fields recommended`} />
             )}
           </Grid>
           <Grid
@@ -240,7 +204,7 @@ export function FeatureImportanceTable<T extends FeatureObject>({
           {allPairs.map(([k, v]) => {
             const checked = selectedKeys.includes(k);
             const displayValue = `${(v * 100).toFixed(2)}%`;
-            const isRecommended = initialSelectedRef.current.includes(k);
+            const isRecommended = initialFeatures.includes(String(k));
             return (
               <Grid
                 container

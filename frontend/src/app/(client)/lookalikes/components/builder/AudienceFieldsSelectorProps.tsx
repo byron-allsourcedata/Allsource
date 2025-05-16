@@ -23,6 +23,8 @@ interface AudienceFieldsSelectorProps {
   recommendedByCategory: RecommendedByCategory;
   onFieldsChange: (selected: RecommendedByCategory) => void;
   canProcessed: boolean
+  onResetSelection: () => void;
+  disableResetSelection: boolean;
 }
 
 const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
@@ -30,7 +32,9 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   handleNextStep,
   recommendedByCategory,
   onFieldsChange,
-  canProcessed
+  canProcessed,
+  onResetSelection,
+  disableResetSelection
 }) => {
   const [activeStep, setActiveStep] = React.useState(0);
    const [personalSelected, setPersonalSelected] = useState<string[]>(
@@ -176,8 +180,8 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
         </Grid>
         <Grid item md={2} sx={{ textAlign: "right", borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
           <Button
-            // onClick={resetAll}
-            // disabled={atDefault}
+            onClick={onResetSelection}
+            disabled={disableResetSelection}
             sx={{
               border: "1px rgba(56, 152, 252, 1) solid",
               color: "rgba(56, 152, 252, 1)",
@@ -197,7 +201,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
             variant="outlined"
           >
             <Typography fontSize="0.8rem">
-              {/* {atDefault ? `Recomended` : `Set recommended`} */}
+              {disableResetSelection ? `Recomended` : `Set recommended`}
             </Typography>
           </Button>
         </Grid>
@@ -216,6 +220,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
                 features={calculatedResults.audience_feature_importance_b2c.personal}
                 onChangeDisplayed={(keys) => setPersonalSelected(keys as string[])}
                 headerIcon={<AccountBoxIcon />}
+                initialFeatures={recommendedByCategory.personal}
               />
             </Box>
               <Box sx={{ mb: 2 }}>
@@ -224,6 +229,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               features={calculatedResults.audience_feature_importance_b2c.financial}
               onChangeDisplayed={(keys) => setFinancialSelected(keys as string[])}
               headerIcon={<PaymentIcon />}
+              initialFeatures={recommendedByCategory.financial}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
@@ -232,6 +238,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               features={calculatedResults.audience_feature_importance_b2c.lifestyle}
               onChangeDisplayed={(keys) => setLifestyleSelected(keys as string[])}
               headerIcon={<DirectionsBikeIcon />}
+              initialFeatures={recommendedByCategory.lifestyle}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
@@ -240,6 +247,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               features={calculatedResults.audience_feature_importance_b2c.voter}
               onChangeDisplayed={(keys) => setVoterSelected(keys as string[])}
               headerIcon={<HowToVoteIcon />}
+              initialFeatures={recommendedByCategory.voter}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
@@ -247,6 +255,8 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               title="Professional Profile"
               features={calculatedResults.audience_feature_importance_b2b.professional_profile}
               onChangeDisplayed={(keys) => setProfessionalSelected(keys as string[])}
+              headerIcon={<HowToVoteIcon />}
+              initialFeatures={recommendedByCategory.professional_profile}
             />
           </Box>
           <Box sx={{ mb: 2 }}>
@@ -254,13 +264,13 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               title="Employment History"
               features={calculatedResults.audience_feature_importance_b2b.employment_history}
               onChangeDisplayed={(keys) => setEmploymentSelected(keys as string[])}
+              headerIcon={<HowToVoteIcon />}
+              initialFeatures={recommendedByCategory.employment_history}
             />
           </Box>
 
             </>
           )}
-          
-          
         </Grid>
         <Grid item sx={{}} />
         <Grid item xs={12} md={5} sx={{ flexGrow: 1 }}>

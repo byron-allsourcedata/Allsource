@@ -59,7 +59,6 @@ const CreateLookalikePage: React.FC = () => {
 
   const [dndFields, setDndFields] = useState<Field[]>([]);
 
-
   // useEffect(() => {
   //   setDndFields(initialFields);
   // }, [initialFields]);
@@ -231,10 +230,6 @@ const CreateLookalikePage: React.FC = () => {
   };
 
   const canProceed = true;
-
-  const handleFieldsOrderChange = (newOrder: Field[]) => {
-    setDndFields(newOrder);
-  };
 
   return (
     <Box
@@ -567,14 +562,10 @@ const CreateLookalikePage: React.FC = () => {
                       currentStep={currentStep}
                       handlePrevStep={handlePrevStep}
                       handleNextStep={handleNextStep}
-                      handleFieldsOrderChange={handleFieldsOrderChange}
-                      // canProcessed={canProceed}
+                      onFieldsOrderChangeUp={setDndFields}
                     />
                   </>
                 )}
-
-
-
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
                 {currentStep >= 3 && (
                   <Box

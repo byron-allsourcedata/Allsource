@@ -11,17 +11,19 @@ interface OrderFieldsStepProps {
     fields: Field[];
     handlePrevStep: () => void;
     onOrderChange: (newOrder: Field[]) => void;
+    onResetOrder: () => void;
+  disableResetOrder: boolean;
 }
 
 const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
     fields,
     handlePrevStep,
     onOrderChange,
+    onResetOrder,
+    disableResetOrder,
 }) => {
-    React.useEffect(() => {
-    }, []);
     const [activeStep, setActiveStep] = React.useState(1);
-    const { atDefault, userInteracted, resetAll } = useResetContext();
+
     const handleStep = (step: number) => () => {
         setActiveStep(step);
         if (step === 0) {
@@ -118,8 +120,8 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                 </Grid>
                 <Grid item md={2} sx={{ textAlign: "right", borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
                     <Button
-                        onClick={resetAll}
-                        disabled={atDefault}
+                         onClick={onResetOrder}
+                         disabled={disableResetOrder}
                         sx={{
                             border: "1px rgba(56, 152, 252, 1) solid",
                             color: "rgba(56, 152, 252, 1)",
@@ -139,7 +141,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                         variant="outlined"
                     >
                         <Typography fontSize="0.8rem">
-                            {atDefault ? `Recomended` : `Set recommended`}
+                            {disableResetOrder ? `Recomended` : `Set recommended`}
                         </Typography>
                     </Button>
                 </Grid>
