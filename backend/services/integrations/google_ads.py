@@ -413,13 +413,8 @@ class GoogleAdsIntegrationsService:
                         
         request = client.get_type("AddOfflineUserDataJobOperationsRequest")
         request.resource_name = offline_user_data_job_resource_name
-<<<<<<< HEAD
         request.operations.extend(self.build_offline_user_data_job_operations(client, profiles))
         request.enable_partial_failure = True
-=======
-        request.operations.extend(self.build_offline_user_data_job_operations(client, profile))
-        request.enable_partial_failure = False
->>>>>>> 687a4e5c6833571dbeee41315e9783ffc826b1fb
 
         offline_user_data_job_service_client.add_offline_user_data_job_operations(request=request)
         logger.debug("Successfully added offline user data job operations")
