@@ -83,7 +83,10 @@ const WelcomePopup = () => {
           >
             {/* Left Section */}
             <Grid item xs={12} md={5.75}>
-              <Card variant="outlined">
+              <Card variant="outlined" sx={{
+                border: "none",
+                boxShadow: "none",
+              }}>
                 <CardContent
                   sx={{ display: "flex", flexDirection: "column", gap: 2 }}
                 >
@@ -122,7 +125,7 @@ const WelcomePopup = () => {
                     sx={{
                       height: 140,
                       backgroundColor: "#f0f4ff",
-                      backgroundImage: "url(./pixel.svg)",
+                      backgroundImage: "url(pixel.svg)",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
                       borderRadius: 2,
@@ -217,7 +220,10 @@ const WelcomePopup = () => {
 
             {/* Right Section */}
             <Grid item xs={12} md={5.75}>
-              <Card variant="outlined">
+              <Card variant="outlined" sx={{
+                border: "none",
+                boxShadow: "none",
+              }}>
                 <CardContent
                   sx={{ display: "flex", flexDirection: "column", gap: 2 }}
                 >
@@ -232,7 +238,7 @@ const WelcomePopup = () => {
                     sx={{
                       height: 140,
                       backgroundColor: "#f0f4ff",
-                      backgroundImage: "url(./audience.svg)",
+                      backgroundImage: "url(audience.svg)",
                       backgroundPosition: "center",
                       backgroundRepeat: "no-repeat",
                       borderRadius: 2,

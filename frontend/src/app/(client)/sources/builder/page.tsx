@@ -33,8 +33,8 @@ import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import Papa, { ParseResult } from "papaparse";
 import ProgressBar from "@/components/ProgressBar";
-import { useHints } from '@/context/HintsContext';
-import HintCard from "../../components/HintCard"
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../components/HintCard";
 
 interface Row {
   id: number;
@@ -50,10 +50,15 @@ interface EventTypeInterface {
   title: string;
 }
 
+interface StateHint {
+  id: number;
+  show: boolean;
+}
+
 interface HintCardInterface {
   description: string;
   title: string;
-  linkToLoadMore: string
+  linkToLoadMore: string;
 }
 
 interface NewSource {
@@ -110,7 +115,9 @@ const SourcesImport: React.FC = () => {
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
-  const [isOpenSelect, setIsOpenSelect] = useState(true); 
+  const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
+    { show: true, id: 1 },
+  ]);
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -137,15 +144,19 @@ const SourcesImport: React.FC = () => {
     { id: 4, name: "converted_sales_count", title: "converted_sales" },
   ];
 
-  const hintCard: HintCardInterface = { 
-    description: "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences", 
+  const hintCard: HintCardInterface = {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Source Type",
-    linkToLoadMore: "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2"
-  }
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  };
 
-  const toggleDotHintClick = () => {
-    setIsOpenSelect(prev => !prev)
-  }
+  const toggleDotHintClick = (id: number) => {
+    setIsOpenSelect((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, show: !el.show } : el))
+    );
+  };
 
   const defaultRows: Row[] = [
     { id: 1, type: "Email", value: "", canDelete: false, isHidden: false },
@@ -206,7 +217,7 @@ const SourcesImport: React.FC = () => {
 
   useEffect(() => {
     if (showHints && !isOpenSelect) {
-      setIsOpenSelect(true);
+      setIsOpenSelect([{ show: true, id: 1 }]);
     }
   }, [showHints]);
 
@@ -652,6 +663,15 @@ const SourcesImport: React.FC = () => {
     }
   };
 
+  const sourceTypeDescriptions: Record<string, string> = {
+    "Customer Conversions":
+      "Please upload a CSV file containing the list of customers who have successfully completed an order on your website.",
+    "Failed Leads":
+      "Please upload a CSV file containing leads who did not complete a purchase or dropped off during the signup process.",
+    Interest:
+      "Please upload a CSV file of users who showed interest in your product or service, such as newsletter subscribers or ebook downloaders.",
+  };
+
   return (
     <>
       {loading && <CustomizedProgressBar />}
@@ -817,7 +837,14 @@ const SourcesImport: React.FC = () => {
                         Interest (CSV)
                       </MenuItem>
                     </Select>
-                    {showHints && <HintCard card={hintCard} positionLeft={340} isOpenSelect={isOpenSelect} toggleClick={toggleDotHintClick}/>}
+                    {showHints && (
+                      <HintCard
+                        card={hintCard}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[0].show}
+                        toggleClick={() => toggleDotHintClick(1)}
+                      />
+                    )}
                   </FormControl>
                 </Box>
               </Box>
@@ -876,6 +903,7 @@ const SourcesImport: React.FC = () => {
                     >
                       Select your source file
                     </Typography>
+
                     <Typography
                       sx={{
                         fontFamily: "Roboto",
@@ -883,8 +911,7 @@ const SourcesImport: React.FC = () => {
                         color: "rgba(95, 99, 104, 1)",
                       }}
                     >
-                      Please upload a CSV file containing the list of customers
-                      who have successfully completed an order on your website.
+                      {sourceTypeDescriptions[sourceType] ?? ""}
                     </Typography>
                   </Box>
                   <Box

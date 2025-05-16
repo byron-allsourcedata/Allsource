@@ -108,7 +108,7 @@ export const MultiIconFillIndicator = ({
           </Typography>
         </Box>
 
-        <Box display="flex" gap={4} alignItems="flex-end">
+        <Box display="flex" gap={4} alignItems="flex-end" justifyContent="center">
           {items.map(
             ({ imageSrc, label, percentage, fillColor, bgColor }, index) => {
               return (
@@ -158,7 +158,7 @@ export const MultiIconFillIndicator = ({
             <Stack
               key={index}
               direction="row"
-              sx={{ alignItems: "center", gap: 2, pb: 2 }}
+              sx={{ alignItems: "center", gap: 2, pb: 1, }}
             >
               <Stack sx={{ gap: 1, flexGrow: 1 }}>
                 <Stack

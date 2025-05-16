@@ -11,29 +11,28 @@ import {
   LinearProgress,
 } from "@mui/material";
 import Image from "next/image";
-import { styles } from "./accountStyles"
-import { styled } from '@mui/material/styles';
+import { styles } from "./accountStyles";
+import { styled } from "@mui/material/styles";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../../context/UserContext";
 import axiosInterceptorInstance from "../../../axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import PersonIcon from '@mui/icons-material/Person';
-import { fetchUserData } from '@/services/meService';
+import PersonIcon from "@mui/icons-material/Person";
+import { fetchUserData } from "@/services/meService";
 
 const AccountSetup = () => {
   const [websiteLink, setWebsiteLink] = useState("");
   const [domainLink, setDomainLink] = useState("");
-  const [stripeUrl, setStripeUrl] = useState('');
+  const [stripeUrl, setStripeUrl] = useState("");
   const [domainName, setDomainName] = useState("");
-  const [editingName, setEditingName] = useState(true)
-  const { setBackButton, backButton } = useUser()
+  const [editingName, setEditingName] = useState(true);
+  const { setBackButton, backButton } = useUser();
   const [errors, setErrors] = useState({
     websiteLink: "",
-
   });
   const router = useRouter();
-  const [visibleButton, setVisibleButton] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [visibleButton, setVisibleButton] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [fullName, setFullName] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
   const { full_name: userFullName, email: userEmail, partner } = useUser();
@@ -41,16 +40,16 @@ const AccountSetup = () => {
   useEffect(() => {
     const fetchCompanyInfo = async () => {
       try {
-        setLoading(true)
+        setLoading(true);
         const response = await axiosInterceptorInstance.get("/company-info");
         const status = response.data.status;
 
         switch (status) {
           case "SUCCESS":
-            const domain_url = response.data.domain_url
+            const domain_url = response.data.domain_url;
             if (domain_url) {
-              setDomainLink(response.data.domain_url)
-              setWebsiteLink(response.data.domain_url)
+              setDomainLink(response.data.domain_url);
+              setWebsiteLink(response.data.domain_url);
             }
             break;
           case "NEED_EMAIL_VERIFIED":
@@ -67,16 +66,16 @@ const AccountSetup = () => {
         }
       } catch (error) {
         console.error("Error fetching company info:", error);
-      }
-      finally {
-        setLoading(false)
+      } finally {
+        setLoading(false);
       }
     };
     fetchCompanyInfo();
   }, []);
 
   const getUserDataFromStorage = () => {
-    const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+    const meItem =
+      typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
     if (meItem) {
       const meData = JSON.parse(meItem);
       setFullName(userFullName || meData.full_name);
@@ -110,22 +109,20 @@ const AccountSetup = () => {
   }, []);
 
   const handleReturnToMain = async () => {
-    const parent_token = localStorage.getItem('parent_token');
-    const parent_domain = sessionStorage.getItem('parent_domain')
+    const parent_token = localStorage.getItem("parent_token");
+    const parent_domain = sessionStorage.getItem("parent_domain");
     if (parent_token) {
       await new Promise<void>((resolve) => {
-        sessionStorage.clear
-        localStorage.removeItem('parent_token');
-        localStorage.setItem('token', parent_token);
-        sessionStorage.setItem('current_domain', parent_domain || '')
-        fetchUserData()
-        setBackButton(false)
+        sessionStorage.clear;
+        localStorage.removeItem("parent_token");
+        localStorage.setItem("token", parent_token);
+        sessionStorage.setItem("current_domain", parent_domain || "");
+        fetchUserData();
+        setBackButton(false);
         setTimeout(() => {
           resolve();
         }, 0);
       });
-
-
     }
 
     router.push("/partners");
@@ -144,7 +141,6 @@ const AccountSetup = () => {
     setAnchorEl(null);
   };
 
-
   const handleSignOut = () => {
     localStorage.clear();
     sessionStorage.clear();
@@ -160,8 +156,9 @@ const AccountSetup = () => {
         const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return emailRe.test(value) ? "" : "Invalid email address";
       case "website":
-        const sanitizedValue = value?.replace(/^www\./, '');
-        const websiteRe = /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
+        const sanitizedValue = value?.replace(/^www\./, "");
+        const websiteRe =
+          /^(https?:\/\/)?([\da-z.-]+)\.([a-z]{2,20})([/\w .-]*)*\/?$/i;
         return websiteRe.test(sanitizedValue) ? "" : "Invalid website URL";
       case "organizationName":
         const orgName = value.trim();
@@ -182,23 +179,20 @@ const AccountSetup = () => {
 
   const endSetup = () => {
     if (stripeUrl) {
-      router.push(stripeUrl)
-    }
-    else {
+      router.push(stripeUrl);
+    } else {
       if (partner) {
-        router.push('/partners')
-      }
-      else{
-        router.push('/dashboard')
-        localStorage.setItem('welcome_popup', "true");
+        router.push("/partners");
+      } else {
+        router.push("/dashboard");
+        localStorage.setItem("welcome_popup", "true");
       }
     }
-  }
-
+  };
 
   const handleSubmit = async () => {
     const newErrors = {
-      websiteLink: validateField(websiteLink, "website")
+      websiteLink: validateField(websiteLink, "website"),
     };
     setErrors(newErrors);
 
@@ -213,13 +207,13 @@ const AccountSetup = () => {
 
       switch (response.data.status) {
         case "SUCCESS":
-          const domain = websiteLink.replace(/^https?:\/\//, "")
-          sessionStorage.setItem('current_domain', domain)
-          setDomainName(domain)
-          setEditingName(false)
+          const domain = websiteLink.replace(/^https?:\/\//, "");
+          sessionStorage.setItem("current_domain", domain);
+          setDomainName(domain);
+          setEditingName(false);
           await fetchUserData();
           if (response.data.stripe_payment_url) {
-            setStripeUrl(`${response.data.stripe_payment_url}`)
+            setStripeUrl(`${response.data.stripe_payment_url}`);
           }
           break;
         case "NEED_EMAIL_VERIFIED":
@@ -268,38 +262,37 @@ const AccountSetup = () => {
     const errors = {
       websiteLink: validateField(websiteLink, "website"),
     };
-    return (
-      errors.websiteLink === ""
-    );
+    return errors.websiteLink === "";
   };
-
 
   const BorderLinearProgress = styled(LinearProgress)(() => ({
     height: 4,
     borderRadius: 0,
-    backgroundColor: '#c6dafc',
-    '& .MuiLinearProgress-bar': {
+    backgroundColor: "#c6dafc",
+    "& .MuiLinearProgress-bar": {
       borderRadius: 5,
-      backgroundColor: '#4285f4',
+      backgroundColor: "#4285f4",
     },
   }));
 
   return (
-    <Box sx={{
-      ...styles.pageContainer,
-    }}>
-      {loading &&
+    <Box
+      sx={{
+        ...styles.pageContainer,
+      }}
+    >
+      {loading && (
         <Box
           sx={{
-            width: '100%',
-            position: 'fixed',
-            top: '4.4rem',
-            zIndex: 1200
+            width: "100%",
+            position: "fixed",
+            top: "4.4rem",
+            zIndex: 1200,
           }}
         >
           <BorderLinearProgress variant="indeterminate" />
         </Box>
-      }
+      )}
 
       <Box sx={{ ...styles.headers, overflow: "hidden" }}>
         <Box
@@ -313,7 +306,13 @@ const AccountSetup = () => {
           }}
         >
           <Box sx={styles.logo}>
-            <Image src="/logo.svg" priority alt="logo" height={30} width={130} />
+            <Image
+              src="/logo.svg"
+              priority
+              alt="logo"
+              height={30}
+              width={130}
+            />
           </Box>
           {(visibleButton || backButton) && (
             <Button
@@ -327,10 +326,9 @@ const AccountSetup = () => {
                 lineHeight: "19.1px",
                 textAlign: "left",
                 textDecoration: "underline",
-                textTransform: 'none',
+                textTransform: "none",
                 color: "rgba(56, 152, 252, 1)",
-                position: 'absolute',
-
+                position: "absolute",
               }}
             >
               Return to main
@@ -342,24 +340,24 @@ const AccountSetup = () => {
             aria-expanded={open ? "true" : undefined}
             onClick={handleProfileMenuClick}
             sx={{
-              display: 'none',
-              minWidth: '32px',
-              padding: '6px',
-              color: 'rgba(128, 128, 128, 1)',
-              border: '1px solid rgba(184, 184, 184, 1)',
-              borderRadius: '3.27px',
-              '&:hover': {
-                border: '1px solid rgba(56, 152, 252, 1)',
-                '& .MuiSvgIcon-root': {
-                  color: 'rgba(56, 152, 252, 1)'
-                }
+              display: "none",
+              minWidth: "32px",
+              padding: "6px",
+              color: "rgba(128, 128, 128, 1)",
+              border: "1px solid rgba(184, 184, 184, 1)",
+              borderRadius: "3.27px",
+              "&:hover": {
+                border: "1px solid rgba(56, 152, 252, 1)",
+                "& .MuiSvgIcon-root": {
+                  color: "rgba(56, 152, 252, 1)",
+                },
               },
               "@media (max-width: 600px)": {
-                display: 'flex'
+                display: "flex",
               },
             }}
           >
-            <PersonIcon sx={{ fontSize: '22px' }} />
+            <PersonIcon sx={{ fontSize: "22px" }} />
           </Button>
           <Menu
             id="profile-menu"
@@ -371,19 +369,26 @@ const AccountSetup = () => {
             }}
             sx={{
               mt: 0.5,
-              ml: -1
+              ml: -1,
             }}
           >
-            <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+            <Box
+              sx={{
+                paddingTop: 1,
+                paddingLeft: 2,
+                paddingRight: 2,
+                paddingBottom: 1,
+              }}
+            >
               <Typography
                 variant="h6"
                 sx={{
-                  fontFamily: 'Nunito Sans',
-                  fontSize: '14px',
+                  fontFamily: "Nunito Sans",
+                  fontSize: "14px",
                   fontWeight: 600,
-                  lineHeight: '19.6px',
-                  color: 'rgba(0, 0, 0, 0.89)',
-                  mb: 0.25
+                  lineHeight: "19.6px",
+                  color: "rgba(0, 0, 0, 0.89)",
+                  mb: 0.25,
                 }}
               >
                 {fullName}
@@ -392,11 +397,11 @@ const AccountSetup = () => {
                 variant="body2"
                 color="textSecondary"
                 sx={{
-                  fontFamily: 'Nunito Sans',
-                  fontSize: '14px',
+                  fontFamily: "Nunito Sans",
+                  fontSize: "14px",
                   fontWeight: 600,
-                  lineHeight: '19.6px',
-                  color: 'rgba(0, 0, 0, 0.89)',
+                  lineHeight: "19.6px",
+                  color: "rgba(0, 0, 0, 0.89)",
                 }}
               >
                 {email}
@@ -404,10 +409,10 @@ const AccountSetup = () => {
             </Box>
             <MenuItem
               sx={{
-                fontFamily: 'Nunito Sans',
-                fontSize: '14px',
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
                 fontWeight: 500,
-                lineHeight: '19.6px',
+                lineHeight: "19.6px",
               }}
               onClick={handleSignOut}
             >
@@ -422,25 +427,25 @@ const AccountSetup = () => {
           aria-expanded={open ? "true" : undefined}
           onClick={handleProfileMenuClick}
           sx={{
-            minWidth: '32px',
-            padding: '6px',
+            minWidth: "32px",
+            padding: "6px",
             // mr: '1.5rem',
-            // mb: '1.125rem',  
-            color: 'rgba(128, 128, 128, 1)',
-            border: '1px solid rgba(184, 184, 184, 1)',
-            borderRadius: '3.27px',
-            '&:hover': {
-              border: '1px solid rgba(56, 152, 252, 1)',
-              '& .MuiSvgIcon-root': {
-                color: 'rgba(56, 152, 252, 1)'
-              }
+            // mb: '1.125rem',
+            color: "rgba(128, 128, 128, 1)",
+            border: "1px solid rgba(184, 184, 184, 1)",
+            borderRadius: "3.27px",
+            "&:hover": {
+              border: "1px solid rgba(56, 152, 252, 1)",
+              "& .MuiSvgIcon-root": {
+                color: "rgba(56, 152, 252, 1)",
+              },
             },
             "@media (max-width: 600px)": {
-              display: 'none',
+              display: "none",
             },
           }}
         >
-          <PersonIcon sx={{ fontSize: '22px' }} />
+          <PersonIcon sx={{ fontSize: "22px" }} />
         </Button>
         <Menu
           id="profile-menu"
@@ -452,19 +457,26 @@ const AccountSetup = () => {
           }}
           sx={{
             mt: 0.5,
-            ml: -1
+            ml: -1,
           }}
         >
-          <Box sx={{ paddingTop: 1, paddingLeft: 2, paddingRight: 2, paddingBottom: 1 }}>
+          <Box
+            sx={{
+              paddingTop: 1,
+              paddingLeft: 2,
+              paddingRight: 2,
+              paddingBottom: 1,
+            }}
+          >
             <Typography
               variant="h6"
               sx={{
-                fontFamily: 'Nunito Sans',
-                fontSize: '14px',
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
                 fontWeight: 600,
-                lineHeight: '19.6px',
-                color: 'rgba(0, 0, 0, 0.89)',
-                mb: 0.25
+                lineHeight: "19.6px",
+                color: "rgba(0, 0, 0, 0.89)",
+                mb: 0.25,
               }}
             >
               {fullName}
@@ -473,11 +485,11 @@ const AccountSetup = () => {
               variant="body2"
               color="textSecondary"
               sx={{
-                fontFamily: 'Nunito Sans',
-                fontSize: '14px',
+                fontFamily: "Nunito Sans",
+                fontSize: "14px",
                 fontWeight: 600,
-                lineHeight: '19.6px',
-                color: 'rgba(0, 0, 0, 0.89)',
+                lineHeight: "19.6px",
+                color: "rgba(0, 0, 0, 0.89)",
               }}
             >
               {email}
@@ -485,10 +497,10 @@ const AccountSetup = () => {
           </Box>
           <MenuItem
             sx={{
-              fontFamily: 'Nunito Sans',
-              fontSize: '14px',
+              fontFamily: "Nunito Sans",
+              fontSize: "14px",
               fontWeight: 500,
-              lineHeight: '19.6px',
+              lineHeight: "19.6px",
             }}
             onClick={handleSignOut}
           >
@@ -497,29 +509,59 @@ const AccountSetup = () => {
         </Menu>
       </Box>
 
-      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%" }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "100%",
+        }}
+      >
         <Box sx={{ ...styles.formContainer, overflow: "hidden", marginTop: 0 }}>
-          <Box sx={{ ...styles.form, overflow: "auto", "&::-webkit-scrollbar": { display: "none" }, "msOverflowStyle": "none", "scrollbarWwidth": "none" }}>
+          <Box
+            sx={{
+              ...styles.form,
+              overflow: "auto",
+              "&::-webkit-scrollbar": { display: "none" },
+              msOverflowStyle: "none",
+              scrollbarWwidth: "none",
+            }}
+          >
             <Box
               sx={{
                 "@media (max-width: 600px)": {
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
-                  pb: 1
+                  pb: 1,
                 },
               }}
             >
-              <Typography variant="h5" component="h1" className="heading-text" sx={styles.title}>
-                  Transform your marketing with AI-powered data
+              <Typography
+                variant="h5"
+                component="h1"
+                className="heading-text"
+                sx={styles.title}
+              >
+                Transform your marketing with AI-powered data
               </Typography>
-              <Typography variant="body1" component="h2" className="first-sub-title" sx={styles.subtitle}>
+              <Typography
+                variant="body1"
+                component="h2"
+                className="first-sub-title"
+                sx={styles.subtitle}
+              >
                 Free trial, fast setup
               </Typography>
             </Box>
-            {(
+            {
               <>
-                <Typography variant="body1" component="h3" className="first-sub-title" sx={styles.text}>
+                <Typography
+                  variant="body1"
+                  component="h3"
+                  className="first-sub-title"
+                  sx={styles.text}
+                >
                   Share your primary company website
                 </Typography>
 
@@ -537,8 +579,8 @@ const AccountSetup = () => {
                     websiteLink
                       ? websiteLink.replace(/^https?:\/\//, "")
                       : isFocused
-                        ? websiteLink.replace(/^https?:\/\//, "")
-                        : `https://${websiteLink.replace(/^https?:\/\//, "")}`
+                      ? websiteLink.replace(/^https?:\/\//, "")
+                      : `https://${websiteLink.replace(/^https?:\/\//, "")}`
                   }
                   onChange={domainLink ? undefined : handleWebsiteLink}
                   onFocus={domainLink ? undefined : handleFocus}
@@ -554,12 +596,17 @@ const AccountSetup = () => {
                   }}
                 />
 
-                <Typography variant="body1" component="h2" className="first-sub-title" sx={styles.subtitle}>
+                <Typography
+                  variant="body1"
+                  component="h2"
+                  className="first-sub-title"
+                  sx={styles.subtitle}
+                >
                   You can add more domains later
                 </Typography>
 
                 <Button
-                  className='hyperlink-blue'
+                  className="hyperlink-blue"
                   fullWidth
                   variant="contained"
                   sx={{
@@ -571,16 +618,15 @@ const AccountSetup = () => {
                     },
                   }}
                   onClick={() => {
-                    handleSubmit()
-                    endSetup()
+                    handleSubmit();
+                    endSetup();
                   }}
                   disabled={!isFormValidFirst()}
                 >
                   Get Started
                 </Button>
               </>
-            )}
-
+            }
           </Box>
         </Box>
       </Box>
