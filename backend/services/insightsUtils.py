@@ -47,7 +47,7 @@ class InsightsUtils:
     def process_insights_for_asids(insights, asids: List[uuid.UUID], db_session: Session, audience_type: BusinessType):
         is_invalid = lambda val: (
                 val is None
-                or str(val).upper() in ('UNKNOWN', 'U', '2', "")
+                or str(val).upper() in ('UNKNOWN', 'U', '2', '', '-')
         )
         if audience_type == BusinessType.B2C or audience_type == BusinessType.ALL:
             # 3) PERSONAL
@@ -77,7 +77,7 @@ class InsightsUtils:
             for row in rows:
                 for field, val in zip(personal_fields, row):
                     if is_invalid(val):
-                        continue
+                        key = "unknown"
                     else:
                         key = str(val)
                     key = key.lower()
@@ -115,7 +115,10 @@ class InsightsUtils:
             for row in rows:
                 for field, val in zip(financial_fields, row):
                     if is_invalid(val):
-                        continue
+                        if field == "number_of_credit_lines" and str(val) == "2":
+                            key = str(val)
+                        else:
+                            key = "unknown"
                     elif field == "credit_cards":
                         raw = val.strip("[]")
                         raw = raw.replace("'", "").replace('"', "")
@@ -164,9 +167,10 @@ class InsightsUtils:
             for row in rows:
                 for field, val in zip(lifestyle_fields, row):
                     if is_invalid(val):
-                        continue
-
-                    key = str(val).lower()
+                        key = "unknown"
+                    else:
+                        key = str(val)
+                    key = key.lower()
                     life_cts[field][key] += 1
 
             for field in lifestyle_fields:
@@ -186,8 +190,10 @@ class InsightsUtils:
             for row in rows:
                 for field, val in zip(voter_fields, row):
                     if is_invalid(val):
-                        continue
-                    key = str(val).lower()
+                        key = "unknown"
+                    else:
+                        key = str(val)
+                    key = key.lower()
                     voter_cts[field][key] += 1
 
             for field in voter_fields:
@@ -219,8 +225,10 @@ class InsightsUtils:
             for row in prof_rows:
                 for field, val in zip(prof_fields, row):
                     if is_invalid(val):
-                        continue
-                    key = str(val).lower()
+                        key = "unknown"
+                    else:
+                        key = str(val)
+                    key = key.lower()
                     prof_cts[field][key] += 1
 
             for field in prof_fields:
@@ -247,8 +255,10 @@ class InsightsUtils:
             for row in emp_rows:
                 for field, val in zip(emp_fields, row):
                     if is_invalid(val):
-                        continue
-                    key = str(val).lower()
+                        key = "unknown"
+                    else:
+                        key = str(val)
+                    key = key.lower()
                     emp_cts[field][key] += 1
 
             for field in emp_fields:
