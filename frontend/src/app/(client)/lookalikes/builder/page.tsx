@@ -563,15 +563,15 @@ const CreateLookalikePage: React.FC = () => {
                 }
 
                 {calculatedResults && currentStep >= 2 && (
-                  <>
+                  <Box sx={{ mt: 2 }}>
                     <CalculatedSteps
-                      calculatedResults={calculatedResults}
-                      currentStep={currentStep}
-                      handlePrevStep={handlePrevStep}
-                      handleNextStep={handleNextStep}
-                      onFieldsOrderChangeUp={setDndFields}
-                    />
-                  </>
+                        calculatedResults={calculatedResults}
+                        currentStep={currentStep}
+                        handlePrevStep={handlePrevStep}
+                        handleNextStep={handleNextStep}
+                        onFieldsOrderChangeUp={setDndFields}
+                      />
+                  </Box>
                 )}
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
                 {currentStep >= 3 && (

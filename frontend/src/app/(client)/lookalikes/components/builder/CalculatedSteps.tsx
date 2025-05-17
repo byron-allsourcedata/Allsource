@@ -129,7 +129,7 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
                 />
             </Box>
 
-            <Box hidden={currentStep !== 3} sx={{ mt: 2 }}>
+            <Box hidden={currentStep !== 3}>
                 <OrderFieldsStep
                     fields={dndFields}
                     handlePrevStep={handlePrevStep}
