@@ -415,6 +415,10 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         backgroundColor: "rgba(247, 247, 247, 1)",
                       },
                     },
+                    "&:hover .action-icon": {
+                      opacity: 1,
+                      pointerEvents: "auto",
+                    },
                   }}
                 >
                   <TableCustomCell
@@ -469,7 +473,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           
                         </Typography>
                         <IconButton
-                          className="edit-icon"
+                          className="edit-icon action-icon"
                           sx={{
                             pl: 0,
                             pr: 0,
@@ -771,12 +775,19 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                     }}
                   >
                     <IconButton
+                      className="action-icon"
                       sx={{
                         pl: 0,
                         pr: 0,
                         pt: 0.25,
                         pb: 0.25,
                         margin: 0,
+                        opacity: 0,
+                        pointerEvents: "none",
+                        transition: "opacity 0.2s ease-in-out",
+                        "@media (max-width: 900px)": {
+                          opacity: 1,
+                        },
                       }}
                       onClick={(event) =>
                         handleOpenConfirm(event, row.id, row.name)
