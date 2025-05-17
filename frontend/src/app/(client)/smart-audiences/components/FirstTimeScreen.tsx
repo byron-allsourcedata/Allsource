@@ -110,22 +110,38 @@ const FirstTimeScreen = ({
       <Box
         onClick={handleOpenPopup}
         sx={{
+          position: 'relative',
+          zIndex: 0,
           width: "100%",
           mt: 3,
           padding: 3,
           pt: 0,
           borderRadius: "6px",
           border: "1px solid rgba(237, 237, 237, 1)",
-          ...getInteractiveSx(!hasSource),
-          "&:hover .MuiCard-root": {
-            backgroundColor: "rgba(232, 239, 255, 0.4)",
-            border: "none",
-          },
+          cursor: !hasSource ? "pointer" : "default",
+          ...(!hasSource && {
+            "&:hover::before": {
+              content: '""',
+              position: "absolute",
+              inset: 0,
+              backgroundColor: "rgba(232, 239, 255, 0.4)",
+              border: "1px solid rgba(1, 113, 248, 0.5)",
+              borderRadius: "6px",
+              pointerEvents: "none",
+              zIndex: 1,
+            },
+          }),
+          "& > *": {
+      position: "relative",
+      zIndex: 2,
+    },
         }}
       >
         <Box
           sx={{
             textAlign: "left",
+            position: "relative", 
+            zIndex: 0
           }}
         >
           <FirstTimeCards cardData={cardData} />
