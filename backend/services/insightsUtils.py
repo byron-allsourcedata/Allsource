@@ -282,6 +282,7 @@ class InsightsUtils:
                     .one()
                 )
             except NoResultFound:
+                source_row.matched_records_status = "complete"
                 return InsightsByCategory()
 
             user_ids = [
@@ -291,6 +292,7 @@ class InsightsUtils:
                 .all()
             ]
             if not user_ids:
+                source_row.matched_records_status = "complete"
                 return InsightsByCategory()
 
             asids = [
@@ -300,6 +302,7 @@ class InsightsUtils:
                 .all()
             ]
             if not asids:
+                source_row.matched_records_status = "complete"
                 return InsightsByCategory()
 
             new_insights = InsightsByCategory()
@@ -312,7 +315,6 @@ class InsightsUtils:
                 new_insights=new_insights
             )
             source_row.insights = merged
-
             source_row.matched_records_status = "complete"
         return new_insights
 

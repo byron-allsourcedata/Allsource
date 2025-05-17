@@ -1538,7 +1538,7 @@ const Sources: React.FC = () => {
                                             }}
                                           >
                                             <ListItemButton
-                                              disabled={row.matched_records === 0 || row.matched_records_status === "pending"}
+                                              disabled={selectedRowData?.matched_records === 0}
                                               sx={{
                                                 padding: "4px 16px",
                                                 ":hover": {

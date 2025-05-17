@@ -133,7 +133,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
 
       <Grid container sx={{ mb: 2, }}>
         <Grid container xs={12} md={4}>
-          <Grid item sx={{ borderRight: "1px solid rgba(233, 233, 233, 1)", borderTopRightRadius: 3 }}>
+          <Grid item sx={{ borderRight: "1px solid rgba(233, 233, 233, 1)", borderLeft:"1px solid rgba(233, 233, 233, 1)",  borderTopRightRadius: 3, borderTopLeftRadius: 3 }}>
             {/* «Recommended fields» */}
             <Button
               onClick={handleStep(0)}

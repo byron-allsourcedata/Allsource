@@ -675,20 +675,29 @@ const SourcesImport: React.FC = () => {
   const toggleEventType = (id: number) => {
     if (isAllSelected) {
       setIsAllSelected(false);
+      setMatchedLeads(0);
     }
-
+  
     const isActive = eventType.includes(id);
-    const typeCount = eventTypes.find((e) => e.id === id)!.name as keyof DomainsLeads;
-    const countChange = Number(
-      domains.find((d) => d.name === selectedDomain)?.[typeCount] || 0
-    );
-
-    setEventType((prev) =>
-      isActive ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-    setMatchedLeads((prev) =>
-      isActive ? prev - countChange : prev + countChange
-    );
+    const newEventTypes = isActive
+      ? eventType.filter(e => e !== id)
+      : [...eventType, id];
+  
+    if (newEventTypes.length === 0) {
+      setIsAllSelected(true);
+      setEventType([]);
+      setMatchedLeads(totalLeads);
+      return;
+    }
+  
+    setEventType(newEventTypes);
+  
+    const sum = newEventTypes.reduce((acc, evId) => {
+      const field = eventTypes.find(e => e.id === evId)!.name as keyof DomainsLeads;
+      const cnt = domains.find(d => d.name === selectedDomain)?.[field] || 0;
+      return acc + Number(cnt);
+    }, 0);
+    setMatchedLeads(sum);
   };
 
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
@@ -736,24 +745,12 @@ const SourcesImport: React.FC = () => {
     }
   };
 
-  const [isAllSelected, setIsAllSelected] = useState(false);
+  const [isAllSelected, setIsAllSelected] = useState(true);
   const allSelected = isAllSelected;
   const handleToggleAll = () => {
-    if (isAllSelected) {
-      setIsAllSelected(false);
-      setEventType([]);
-      setMatchedLeads(0);
-    } else {
-      setIsAllSelected(true);
-      const allIds = eventTypes.map((e) => e.id);
-      setEventType(allIds);
-      const sum = allIds.reduce((acc, id) => {
-        const field = eventTypes.find((e) => e.id === id)!.name as keyof DomainsLeads;
-        const cnt = domains.find((d) => d.name === selectedDomain)?.[field] || 0;
-        return acc + Number(cnt);
-      }, 0);
-      setMatchedLeads(sum);
-    }
+    setIsAllSelected(true);
+    setEventType([]);
+    setMatchedLeads(totalLeads);
   };
 
   return (
@@ -1678,38 +1675,6 @@ const SourcesImport: React.FC = () => {
                       },
                     }}
                   >
-                    {eventTypes.map((ev) => {
-                      const active = eventType.includes(ev.id);
-                      return (
-                        <Button
-                          key={ev.id}
-                          variant="outlined"
-                          onClick={() => toggleEventType(ev.id)}
-                          disabled={allSelected}
-                          sx={{
-                            fontFamily: "Nunito Sans",
-                            border: "1px solid rgba(208, 213, 221, 1)",
-                            borderRadius: "4px",
-                            color: "rgba(32, 33, 36, 1)",
-                            textTransform: "none",
-                            fontSize: "14px",
-                            padding: "8px 12px",
-                            backgroundColor: active
-                              ? "rgba(246, 248, 250, 1)"
-                              : "rgba(255, 255, 255, 1)",
-                            borderColor: active
-                              ? "rgba(117, 168, 218, 1)"
-                              : "rgba(208, 213, 221, 1)",
-                            ":hover": {
-                              borderColor: "rgba(208, 213, 221, 1)",
-                              backgroundColor: "rgba(236, 238, 241, 1)",
-                            },
-                          }}
-                        >
-                          {ev.title.charAt(0).toUpperCase() + ev.title.slice(1).replace("_", " ")}
-                        </Button>
-                      );
-                    })}
                     <Button
                       variant="outlined"
                       onClick={handleToggleAll}
@@ -1737,6 +1702,37 @@ const SourcesImport: React.FC = () => {
                     >
                       All
                     </Button>
+                    {eventTypes.map((ev) => {
+                      const active = !isAllSelected && eventType.includes(ev.id);
+                      return (
+                        <Button
+                          key={ev.id}
+                          variant="outlined"
+                          onClick={() => toggleEventType(ev.id)}
+                          sx={{
+                            fontFamily: "Nunito Sans",
+                            border: "1px solid rgba(208, 213, 221, 1)",
+                            borderRadius: "4px",
+                            color: "rgba(32, 33, 36, 1)",
+                            textTransform: "none",
+                            fontSize: "14px",
+                            padding: "8px 12px",
+                            backgroundColor: active
+                              ? "rgba(246, 248, 250, 1)"
+                              : "rgba(255, 255, 255, 1)",
+                            borderColor: active
+                              ? "rgba(117, 168, 218, 1)"
+                              : "rgba(208, 213, 221, 1)",
+                            ":hover": {
+                              borderColor: "rgba(208, 213, 221, 1)",
+                              backgroundColor: "rgba(236, 238, 241, 1)",
+                            },
+                          }}
+                        >
+                          {ev.title.charAt(0).toUpperCase() + ev.title.slice(1).replace("_", " ")}
+                        </Button>
+                      );
+                    })}
                     {showHints && (
                       <HintCard
                         card={hintCard3}
