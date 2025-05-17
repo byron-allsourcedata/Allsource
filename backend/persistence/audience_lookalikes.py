@@ -116,6 +116,12 @@ class AudienceLookalikesPersistence:
 
         sources, created_by = source_info
 
+        if sources.matched_records == 0 and sources.matched_records_status != "complete":
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot create lookalike: no matched records or matching not complete"
+            )
+
         audience_feature_dict = {
             k: round(v * 1000) / 1000
             for k, v in audience_feature_importance.items()

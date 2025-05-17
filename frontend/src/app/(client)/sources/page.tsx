@@ -1322,6 +1322,8 @@ const Sources: React.FC = () => {
                               <TableBody>
                                 {data.map((row: Source) => {
                                   const progress = sourceProgress[row.id];
+                                  const isDisabled = row.matched_records === 0 || row.matched_records_status === "pending";
+                                  const url = `${isDisabled ? "#": '/insights/sources/' + String(row.id)}`
                                   return (
                                     <TableRow
                                       key={row.id}
@@ -1357,7 +1359,7 @@ const Sources: React.FC = () => {
                                             ? "3px 0px 3px #00000033"
                                             : "none",
                                         }}
-                                        href={`/insights/sources/${row.id}`}
+                                        href={url}
                                       />
 
                                       {/* Target Type Column */}
@@ -1536,6 +1538,7 @@ const Sources: React.FC = () => {
                                             }}
                                           >
                                             <ListItemButton
+                                              disabled={row.matched_records === 0 || row.matched_records_status === "pending"}
                                               sx={{
                                                 padding: "4px 16px",
                                                 ":hover": {

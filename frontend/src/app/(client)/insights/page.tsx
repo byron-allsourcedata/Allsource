@@ -368,124 +368,129 @@ const Insights = () => {
                         >
                           <Table>
                             <TableBody>
-                              {dataToShow.map((row, index) => (
-                                <TableRow
-                                  key={index}
-                                  hover
-                                  sx={{
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    width: "100%",
-                                    padding: 0,
-                                    margin: 0,
-                                    flexWrap: "wrap",
-                                  }}
-                                  onClick={() => handleSelectRow(row)}
-                                >
-                                  {/* NAME & TYPE */}
-                                  <TableCell
+                              {dataToShow.map((row, index) => {
+                                const isRowDisabled = row.size === 0;
+                                return (
+                                  <TableRow
+                                    key={index}
+                                    hover={!isRowDisabled}
                                     sx={{
-                                      flex: 1,
-                                      minWidth: 280,
-                                      padding: "12px 16px",
-                                      borderBottom: "1px solid #e0e0e0",
+                                      cursor: isRowDisabled ? "not-allowed" : "pointer",
+                                      opacity: isRowDisabled ? 0.5 : 1,
+                                      pointerEvents: isRowDisabled ? "none" : "auto",
+                                      display: "flex",
+                                      justifyContent: "space-between",
+                                      width: "100%",
+                                      padding: 0,
+                                      margin: 0,
+                                      flexWrap: "wrap",
                                     }}
+                                    onClick={() => !isRowDisabled && handleSelectRow(row)}
                                   >
-                                    <Box
+                                    {/* NAME & TYPE */}
+                                    <TableCell
                                       sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "flex-start",
-                                        justifyContent: "center",
+                                        flex: 1,
+                                        minWidth: 280,
+                                        padding: "12px 16px",
+                                        borderBottom: "1px solid #e0e0e0",
                                       }}
                                     >
-                                      <Typography className="paragraph">
-                                        {row.data_source_type === "lookalikes"
-                                          ? "Lookalike"
-                                          : "Source"}
-                                      </Typography>
-
-                                      <Typography
-                                        className="black-table-header"
+                                      <Box
                                         sx={{
-                                          whiteSpace: "nowrap",
-                                          overflow: "hidden",
-                                          textOverflow: "ellipsis",
-                                          width: "100%",
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "flex-start",
+                                          justifyContent: "center",
                                         }}
                                       >
-                                        {row.name}
-                                      </Typography>
-                                    </Box>
-                                  </TableCell>
+                                        <Typography className="paragraph">
+                                          {row.data_source_type === "lookalikes"
+                                            ? "Lookalike"
+                                            : "Source"}
+                                        </Typography>
 
-                                  {/* TYPE */}
-                                  <TableCell
-                                    sx={{
-                                      flex: 1,
-                                      minWidth: 240,
-                                      padding: "12px 16px",
-                                      borderBottom: "1px solid #e0e0e0",
-                                    }}
-                                  >
-                                    <Box
+                                        <Typography
+                                          className="black-table-header"
+                                          sx={{
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            width: "100%",
+                                          }}
+                                        >
+                                          {row.name}
+                                        </Typography>
+                                      </Box>
+                                    </TableCell>
+
+                                    {/* TYPE */}
+                                    <TableCell
                                       sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "flex-start",
-                                        justifyContent: "center",
+                                        flex: 1,
+                                        minWidth: 240,
+                                        padding: "12px 16px",
+                                        borderBottom: "1px solid #e0e0e0",
                                       }}
                                     >
-                                      <Typography className="paragraph">
-                                        Type
-                                      </Typography>
-                                      <Typography
-                                        variant="body2"
-                                        className="black-table-header"
+                                      <Box
                                         sx={{
-                                          whiteSpace: "nowrap",
-                                          overflow: "hidden",
-                                          textOverflow: "ellipsis",
-                                          width: "100%",
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "flex-start",
+                                          justifyContent: "center",
                                         }}
                                       >
-                                        {toNormalText(row.type)}
-                                      </Typography>
-                                    </Box>
-                                  </TableCell>
+                                        <Typography className="paragraph">
+                                          Type
+                                        </Typography>
+                                        <Typography
+                                          variant="body2"
+                                          className="black-table-header"
+                                          sx={{
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            width: "100%",
+                                          }}
+                                        >
+                                          {toNormalText(row.type)}
+                                        </Typography>
+                                      </Box>
+                                    </TableCell>
 
-                                  {/* SIZE */}
-                                  <TableCell
-                                    sx={{
-                                      flex: 1,
-                                      minWidth: 120,
-                                      padding: "12px 16px",
-                                      borderBottom: "1px solid #e0e0e0",
-                                      textAlign: "right",
-                                      "@media (max-width: 600px)": {
-                                        textAlign: "left",
-                                      },
-                                    }}
-                                  >
-                                    <Box
+                                    {/* SIZE */}
+                                    <TableCell
                                       sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "flex-start",
-                                        justifyContent: "center",
+                                        flex: 1,
+                                        minWidth: 120,
+                                        padding: "12px 16px",
+                                        borderBottom: "1px solid #e0e0e0",
+                                        textAlign: "right",
+                                        "@media (max-width: 600px)": {
+                                          textAlign: "left",
+                                        },
                                       }}
                                     >
-                                      <Typography className="paragraph">
-                                        Size
-                                      </Typography>
-                                      <Typography className="black-table-header">
-                                        {row.size.toLocaleString("en-US")}
-                                      </Typography>
-                                    </Box>
-                                  </TableCell>
-                                </TableRow>
-                              ))}
+                                      <Box
+                                        sx={{
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          alignItems: "flex-start",
+                                          justifyContent: "center",
+                                        }}
+                                      >
+                                        <Typography className="paragraph">
+                                          Size
+                                        </Typography>
+                                        <Typography className="black-table-header">
+                                          {row.size.toLocaleString("en-US")}
+                                        </Typography>
+                                      </Box>
+                                    </TableCell>
+                                  </TableRow>
+                                )
+                              })}
                             </TableBody>
                           </Table>
                         </TableContainer>
