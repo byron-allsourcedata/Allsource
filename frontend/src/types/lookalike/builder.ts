@@ -4,7 +4,8 @@ import React from "react";
 export type FeatureObject = Record<string, number>;
 
 export interface Props<T extends FeatureObject> {
-  features: T;
+  features: Record<string, number>;
+  initialFeatures:string[],
   title: string;
   onChangeDisplayed?: (selected: (keyof T)[]) => void;
   columnHeaders?: [string, string];
@@ -173,9 +174,33 @@ export interface B2BResults {
   professional_profile: ProfessionalProfileResults;
 }
 
+// export interface CalculationResponse {
+//   count_matched_persons: number;
+//   audience_feature_importance_b2c: B2CResults;
+//   audience_feature_importance_b2b: B2BResults;
+//   other: OtherResults;
+// }
+
 export interface CalculationResponse {
   count_matched_persons: number;
-  audience_feature_importance_b2c: B2CResults;
-  audience_feature_importance_b2b: B2BResults;
-  other: OtherResults;
+  audience_feature_importance_b2c: {
+    personal: Record<string, number>;
+    financial: Record<string, number>;
+    lifestyle: Record<string, number>;
+    voter: Record<string, number>;
+  };
+  audience_feature_importance_b2b: {
+    employment_history: Record<string, number>;
+    professional_profile: Record<string, number>;
+  };
+  audience_feature_importance_other: Record<string, number>;
+}
+
+export interface RecommendedByCategory {
+  personal: string[];
+  financial: string[];
+  lifestyle: string[];
+  voter: string[];
+  employment_history: string[];
+  professional_profile: string[];
 }
