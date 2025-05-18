@@ -266,6 +266,14 @@ const defaultSalesForce: Row[] = [
     { id: 2, type: 'Firstname', value: 'firstname' },
     { id: 3, type: 'Lastname', value: 'lastname' },
     { id: 4, type: 'Company', value: 'company' },
+    { id: 5, type: 'Title', value: 'title' },
+    { id: 6, type: 'Phone', value: 'phone' },
+    { id: 7, type: 'Industry', value: 'industry' },
+    { id: 8, type: 'City', value: 'city' },
+    { id: 9, type: 'State', value: 'state' },
+    { id: 10, type: 'PostalCode', value: 'postal_code' },
+    { id: 11, type: 'Country', value: 'country' },
+
 ];
 
 const defaultRowsHubspot: Row[] = [
@@ -618,7 +626,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         if (activeService === "sales_force") {
             setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce')
             setRows(defaultSalesForce)
-            setCustomFields(customFieldsList.map(field => ({ type: field.value, value: field.type })))
         }
         if (activeService === "s3") {
             setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-s3')
