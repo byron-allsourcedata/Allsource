@@ -16,6 +16,8 @@ import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 import { ResetProvider, useResetContext } from "@/context/ResetContext";
 import { PaymentIcon, HowToVoteIcon, DirectionsBikeIcon, AccountBoxIcon, OpenInNewIcon, AssignmentIndIcon, WorkHistoryOutlinedIcon, WorkOutlineOutlinedIcon, HistoryOutlinedIcon } from "@/icon"
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../../components/HintCard"; 
 
 interface AudienceFieldsSelectorProps {
   calculatedResults?: CalculationResponse
@@ -25,6 +27,15 @@ interface AudienceFieldsSelectorProps {
   canProcessed: boolean
   onResetSelection: () => void;
   disableResetSelection: boolean;
+  hintCard: HintCardInterface
+  toggleDotHintClickBlock: () => void
+  isOpenSelect: boolean
+}
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
 }
 
 const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
@@ -34,8 +45,10 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   onFieldsChange,
   canProcessed,
   onResetSelection,
-  disableResetSelection
+  disableResetSelection,
+  hintCard, toggleDotHintClickBlock, isOpenSelect
 }) => {
+  const { showHints } = useHints();
   const [activeStep, setActiveStep] = React.useState(0);
    const [personalSelected, setPersonalSelected] = useState<string[]>(
     recommendedByCategory.personal
@@ -215,13 +228,22 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
           {calculatedResults && (
             <>
             <Box sx={{ mb: 2 }}>
-                <FeatureImportanceTable
+              <FeatureImportanceTable
                 title="Personal Profile"
                 features={calculatedResults.audience_feature_importance_b2c.personal}
                 onChangeDisplayed={(keys) => setPersonalSelected(keys as string[])}
                 headerIcon={<AccountBoxIcon />}
                 initialFeatures={recommendedByCategory.personal}
               />
+              {showHints && (
+                <HintCard
+                    card={hintCard}
+                    positionTop={140}
+                    positionLeft={330}
+                    isOpenSelect={isOpenSelect}
+                    toggleClick={toggleDotHintClickBlock}
+                />
+              )}
             </Box>
               <Box sx={{ mb: 2 }}>
             <FeatureImportanceTable

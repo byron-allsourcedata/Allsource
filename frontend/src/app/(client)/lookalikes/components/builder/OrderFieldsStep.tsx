@@ -12,7 +12,7 @@ interface OrderFieldsStepProps {
     handlePrevStep: () => void;
     onOrderChange: (newOrder: Field[]) => void;
     onResetOrder: () => void;
-  disableResetOrder: boolean;
+    disableResetOrder: boolean;
 }
 
 const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
