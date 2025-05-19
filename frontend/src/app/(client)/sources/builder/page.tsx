@@ -678,21 +678,21 @@ const SourcesImport: React.FC = () => {
       setIsAllSelected(false);
       setMatchedLeads(0);
     }
-  
+
     const isActive = eventType.includes(id);
     const newEventTypes = isActive
       ? eventType.filter(e => e !== id)
       : [...eventType, id];
-  
+
     if (newEventTypes.length === 0) {
       setIsAllSelected(true);
       setEventType([]);
       setMatchedLeads(totalLeads);
       return;
     }
-  
+
     setEventType(newEventTypes);
-  
+
     const sum = newEventTypes.reduce((acc, evId) => {
       const field = eventTypes.find(e => e.id === evId)!.name as keyof DomainsLeads;
       const cnt = domains.find(d => d.name === selectedDomain)?.[field] || 0;
@@ -753,6 +753,8 @@ const SourcesImport: React.FC = () => {
     setEventType([]);
     setMatchedLeads(totalLeads);
   };
+
+  const [showTargetStep, setShowTargetStep] = useState(false)
 
   return (
     <>
@@ -1627,155 +1629,192 @@ const SourcesImport: React.FC = () => {
               )}
 
               {sourceMethod === 2 && selectedDomainId ? (
-                <Box
-                  ref={block5Ref}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    position: "relative",
-                    gap: 2,
-                    flexWrap: "wrap",
-                    border: "1px solid rgba(228, 228, 228, 1)",
-                    borderRadius: "6px",
-                    padding: "20px",
-                  }}
-                >
+                <>
                   <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        fontSize: "16px",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Choose your data source
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: "Roboto",
-                        fontSize: "12px",
-                        color: "rgba(95, 99, 104, 1)",
-                      }}
-                    >
-                      Please select your event type.
-                    </Typography>
-                  </Box>
-                  <Box
-                    onClick={() => {
-                      closeDotHintClick(3);
-                      openDotHintClick(6);
-                    }}
+                    ref={block5Ref}
                     sx={{
                       display: "flex",
+                      flexDirection: "column",
+                      position: "relative",
                       gap: 2,
-                      "@media (max-width: 420px)": {
-                        display: "grid",
-                        gridTemplateColumns: "1fr",
-                      },
+                      flexWrap: "wrap",
+                      border: "1px solid rgba(228, 228, 228, 1)",
+                      borderRadius: "6px",
+                      padding: "20px",
                     }}
                   >
-                    <Button
-                      variant="outlined"
-                      onClick={handleToggleAll}
+                    <Box
+                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                    >
+                      <Typography
+                        sx={{
+                          fontFamily: "Nunito Sans",
+                          fontSize: "16px",
+                          fontWeight: 500,
+                        }}
+                      >
+                        Choose your data source
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontFamily: "Roboto",
+                          fontSize: "12px",
+                          color: "rgba(95, 99, 104, 1)",
+                        }}
+                      >
+                        Please select your event type.
+                      </Typography>
+                    </Box>
+                    <Box
+                      onClick={() => {
+                        closeDotHintClick(3);
+                        openDotHintClick(6);
+                      }}
                       sx={{
-                        fontFamily: "Nunito Sans",
-                        border: "1px solid rgba(208, 213, 221, 1)",
-                        borderRadius: "4px",
-                        textTransform: "none",
-                        fontSize: "14px",
-                        padding: "8px 12px",
-                        backgroundColor: allSelected
-                          ? "rgba(246, 248, 250, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                        borderColor: allSelected
-                          ? "rgba(117, 168, 218, 1)"
-                          : "rgba(208, 213, 221, 1)",
-                        color: allSelected
-                          ? "rgba(32, 33, 36, 1)"
-                          : "rgba(32, 33, 36, 1)",
-                        ":hover": {
-                          borderColor: "rgba(208, 213, 221, 1)",
-                          backgroundColor: "rgba(236, 238, 241, 1)",
+                        display: "flex",
+                        gap: 2,
+                        "@media (max-width: 420px)": {
+                          display: "grid",
+                          gridTemplateColumns: "1fr",
                         },
                       }}
                     >
-                      All
-                    </Button>
-                    {eventTypes.map((ev) => {
-                      const active = !isAllSelected && eventType.includes(ev.id);
-                      return (
-                        <Button
-                          key={ev.id}
-                          variant="outlined"
-                          onClick={() => toggleEventType(ev.id)}
+                      <Button
+                        variant="outlined"
+                        onClick={handleToggleAll}
+                        sx={{
+                          fontFamily: "Nunito Sans",
+                          border: "1px solid rgba(208, 213, 221, 1)",
+                          borderRadius: "4px",
+                          textTransform: "none",
+                          fontSize: "14px",
+                          padding: "8px 12px",
+                          backgroundColor: allSelected
+                            ? "rgba(246, 248, 250, 1)"
+                            : "rgba(255, 255, 255, 1)",
+                          borderColor: allSelected
+                            ? "rgba(117, 168, 218, 1)"
+                            : "rgba(208, 213, 221, 1)",
+                          color: allSelected
+                            ? "rgba(32, 33, 36, 1)"
+                            : "rgba(32, 33, 36, 1)",
+                          ":hover": {
+                            borderColor: "rgba(208, 213, 221, 1)",
+                            backgroundColor: "rgba(236, 238, 241, 1)",
+                          },
+                        }}
+                      >
+                        All
+                      </Button>
+                      {eventTypes.map((ev) => {
+                        const active = !isAllSelected && eventType.includes(ev.id);
+                        return (
+                          <Button
+                            key={ev.id}
+                            variant="outlined"
+                            onClick={() => toggleEventType(ev.id)}
+                            sx={{
+                              fontFamily: "Nunito Sans",
+                              border: "1px solid rgba(208, 213, 221, 1)",
+                              borderRadius: "4px",
+                              color: "rgba(32, 33, 36, 1)",
+                              textTransform: "none",
+                              fontSize: "14px",
+                              padding: "8px 12px",
+                              backgroundColor: active
+                                ? "rgba(246, 248, 250, 1)"
+                                : "rgba(255, 255, 255, 1)",
+                              borderColor: active
+                                ? "rgba(117, 168, 218, 1)"
+                                : "rgba(208, 213, 221, 1)",
+                              ":hover": {
+                                borderColor: "rgba(208, 213, 221, 1)",
+                                backgroundColor: "rgba(236, 238, 241, 1)",
+                              },
+                            }}
+                          >
+                            {ev.title.charAt(0).toUpperCase() + ev.title.slice(1).replace("_", " ")}
+                          </Button>
+                        );
+                      })}
+                      {showHints && (
+                        <HintCard
+                          card={hintCard3}
+                          positionLeft={550}
+                          positionTop={100}
+                          isOpenSelect={isOpenSelect[2].show}
+                          toggleClick={() => toggleDotHintClick(3)}
+                        />
+                      )}
+                    </Box>
+                    <Box
+                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                    >
+                      <Typography
+                        sx={{
+                          fontFamily: "Roboto",
+                          fontSize: "14px",
+                          color: "rgba(32, 33, 36, 1)",
+                        }}
+                      >
+                        Total Leads
+                      </Typography>
+                      <Typography
+                        className="second-sub-title"
+                        sx={{
+                          fontFamily: "Nunino Sans",
+                          fontWeight: 600,
+                          fontSize: "16px",
+                          color: "rgba(32, 33, 36, 1)",
+                        }}
+                      >
+                        {eventType.some((id) => [1, 2, 3, 4].includes(id))
+                          ? matchedLeads
+                          : totalLeads}
+                      </Typography>
+                    </Box>
+                  </Box>
+                  { !showTargetStep && (
+                      <Box sx={{ display: "flex", justifyContent: "right" }}>
+                      <Button
+                        variant="contained"
+                        onClick={() => setShowTargetStep(true)}
+                        sx={{
+                          backgroundColor: "rgba(56, 152, 252, 1)",
+                          width: "120px",
+                          height: "40px",
+                          ":hover": {
+                            backgroundColor: "rgba(62, 64, 142, 1)",
+                          },
+                          ":active": {
+                            backgroundColor: "rgba(56, 152, 252, 1)",
+                          },
+                          ":disabled": {
+                            backgroundColor: "rgba(56, 152, 252, 1)",
+                            opacity: 0.6,
+                          },
+                        }}
+                      >
+                        <Typography
                           sx={{
+                            textAlign: "center",
+                            color: "rgba(255, 255, 255, 1)",
                             fontFamily: "Nunito Sans",
-                            border: "1px solid rgba(208, 213, 221, 1)",
-                            borderRadius: "4px",
-                            color: "rgba(32, 33, 36, 1)",
                             textTransform: "none",
+                            fontWeight: "600",
                             fontSize: "14px",
-                            padding: "8px 12px",
-                            backgroundColor: active
-                              ? "rgba(246, 248, 250, 1)"
-                              : "rgba(255, 255, 255, 1)",
-                            borderColor: active
-                              ? "rgba(117, 168, 218, 1)"
-                              : "rgba(208, 213, 221, 1)",
-                            ":hover": {
-                              borderColor: "rgba(208, 213, 221, 1)",
-                              backgroundColor: "rgba(236, 238, 241, 1)",
-                            },
+                            lineHeight: "19.6px",
                           }}
                         >
-                          {ev.title.charAt(0).toUpperCase() + ev.title.slice(1).replace("_", " ")}
-                        </Button>
-                      );
-                    })}
-                    {showHints && (
-                      <HintCard
-                        card={hintCard3}
-                        positionLeft={550}
-                        positionTop={100}
-                        isOpenSelect={isOpenSelect[2].show}
-                        toggleClick={() => toggleDotHintClick(3)}
-                      />
-                    )}
-                  </Box>
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: "Roboto",
-                        fontSize: "14px",
-                        color: "rgba(32, 33, 36, 1)",
-                      }}
-                    >
-                      Total Leads
-                    </Typography>
-                    <Typography
-                      className="second-sub-title"
-                      sx={{
-                        fontFamily: "Nunino Sans",
-                        fontWeight: 600,
-                        fontSize: "16px",
-                        color: "rgba(32, 33, 36, 1)",
-                      }}
-                    >
-                      {eventType.some((id) => [1, 2, 3, 4].includes(id))
-                        ? matchedLeads
-                        : totalLeads}
-                    </Typography>
-                  </Box>
-                </Box>
+                          Continue
+                        </Typography>
+                      </Button>
+                    </Box>
+                  )}
+                </>
               ) : null}
 
-
-
-              {sourceMethod !== 0 && (selectedDomainId || file) && (
+              {sourceMethod !== 0 && (selectedDomainId || file) && showTargetStep && (
                 <Box
                   ref={block4Ref}
                   sx={{
