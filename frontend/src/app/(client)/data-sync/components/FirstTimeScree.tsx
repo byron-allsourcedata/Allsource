@@ -40,8 +40,9 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasDataSync
           Data Sync
         </Typography>
         <MuiLink
-          href="https://example.com"
+          href="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync"
           underline="hover"
+          target="_blank"
           sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
         >
           Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />

@@ -100,6 +100,7 @@ const SourcesImport: React.FC = () => {
     useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [firstEventTypeClick, setFirstEventTypeClick] = useState(true);
   const [sourceType, setSourceType] = useState<string>("");
   const [selectedDomain, setSelectedDomain] = useState<string>("");
   const [sourceName, setSourceName] = useState<string>("");
@@ -116,12 +117,12 @@ const SourcesImport: React.FC = () => {
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
   const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
-    { show: true, id: 1 },
+    { show: true, id: 0 },
+    { show: false, id: 1 },
     { show: false, id: 2 },
     { show: false, id: 3 },
     { show: false, id: 4 },
     { show: false, id: 5 },
-    { show: false, id: 6 },
   ]);
 
   const [eventType, setEventType] = useState<number[]>([]);
@@ -149,53 +150,50 @@ const SourcesImport: React.FC = () => {
     { id: 4, name: "converted_sales_count", title: "converted_sales" },
   ];
 
-  const hintCard1: HintCardInterface = {
+  const hintCards: HintCardInterface[] = [
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Source Type",
     linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
-
-  const hintCard2: HintCardInterface = {
+    "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+   },
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Domain",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
-
-  const hintCard3: HintCardInterface = {
+   },
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Data source",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
-
-  const hintCard4: HintCardInterface = {
+   },
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Source file",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
-
-  const hintCard5: HintCardInterface = {
+   },
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Data Maping",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
-
-  const hintCard6: HintCardInterface = {
+   },
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Target type",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
+   }
+  ]
 
   const sourceTypeDescriptions: Record<string, string> = {
     "Customer Conversions":
@@ -215,6 +213,12 @@ const SourcesImport: React.FC = () => {
   const closeDotHintClick = (id: number) => {
     setIsOpenSelect((prev) =>
       prev.map((el) => (el.id === id ? { ...el, show: false } : el))
+    );
+  };
+
+  const openDotHintClick = (id: number) => {
+    setIsOpenSelect((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, show: true } : el))
     );
   };
 
@@ -278,12 +282,12 @@ const SourcesImport: React.FC = () => {
   useEffect(() => {
     if (showHints && !isOpenSelect) {
       setIsOpenSelect([
-        { show: true, id: 1 },
+        { show: true, id: 0 },
+        { show: false, id: 1 },
         { show: false, id: 2 },
         { show: false, id: 3 },
         { show: false, id: 4 },
         { show: false, id: 5 },
-        { show: false, id: 6 },
       ]);
     }
   }, [showHints]);
@@ -367,18 +371,19 @@ const SourcesImport: React.FC = () => {
   const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
     handleDeleteFile();
     setTargetAudience("");
+    setSelectedDomainId(0)
     setSourceType(event.target.value);
-    closeDotHintClick(1);
+    closeDotHintClick(0);
     if (event.target.value === "Website - Pixel") {
       setSourceMethod(2);
-      toggleDotHintClick(2);
+      toggleDotHintClick(1);
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
       fetchDomainsAndLeads();
     } else {
       setSourceMethod(1);
-      toggleDotHintClick(4);
+      toggleDotHintClick(3);
       setPixelNotInstalled(false);
       setTimeout(() => {
         scrollToBlock(block2Ref);
@@ -391,7 +396,9 @@ const SourcesImport: React.FC = () => {
     setTimeout(() => {
       scrollToBlock(block6Ref);
     }, 0);
-    closeDotHintClick(6);
+    closeDotHintClick(2);
+    closeDotHintClick(5);
+    setFirstEventTypeClick(false)
   };
 
   // Uploading
@@ -654,7 +661,7 @@ const SourcesImport: React.FC = () => {
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
-      toggleDotHintClick(6);
+      toggleDotHintClick(5);
     } catch (error: unknown) {
       if (error instanceof Error) {
         showErrorToast(error.message);
@@ -666,38 +673,39 @@ const SourcesImport: React.FC = () => {
   };
 
   // Pixel
-
   const toggleEventType = (id: number) => {
-    const isCurrentlyActive = eventType.includes(id);
-
-    const typeCount = eventTypes.find((event) => event.id === id)
-      ?.name as keyof DomainsLeads;
-    const countChange = Number(
-      domains.find((domain) => domain.name === selectedDomain)?.[typeCount] || 0
-    );
-
-    setEventType((prev) => {
-      if (isCurrentlyActive) {
-        return prev.filter((item) => item !== id);
-      } else {
-        return [...prev, id];
-      }
-    });
-
-    setMatchedLeads((prevLeads) => {
-      if (isCurrentlyActive) {
-        return prevLeads - countChange;
-      } else {
-        return prevLeads + countChange;
-      }
-    });
+    if (isAllSelected) {
+      setIsAllSelected(false);
+      setMatchedLeads(0);
+    }
+  
+    const isActive = eventType.includes(id);
+    const newEventTypes = isActive
+      ? eventType.filter(e => e !== id)
+      : [...eventType, id];
+  
+    if (newEventTypes.length === 0) {
+      setIsAllSelected(true);
+      setEventType([]);
+      setMatchedLeads(totalLeads);
+      return;
+    }
+  
+    setEventType(newEventTypes);
+  
+    const sum = newEventTypes.reduce((acc, evId) => {
+      const field = eventTypes.find(e => e.id === evId)!.name as keyof DomainsLeads;
+      const cnt = domains.find(d => d.name === selectedDomain)?.[field] || 0;
+      return acc + Number(cnt);
+    }, 0);
+    setMatchedLeads(sum);
   };
 
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
     const domainName = event.target.value;
     setSelectedDomain(domainName);
-    closeDotHintClick(2);
-    toggleDotHintClick(3);
+    closeDotHintClick(1);
+    toggleDotHintClick(2);
 
     const selectedDomainData = domains.find(
       (domain: DomainsLeads) => domain.name === domainName
@@ -705,6 +713,7 @@ const SourcesImport: React.FC = () => {
     if (selectedDomainData) {
       setTotalLeads(selectedDomainData.total_count || 0);
       setSelectedDomainId(selectedDomainData.id);
+      setPixelNotInstalled(!selectedDomainData.pixel_installed);
       setMatchedLeads(0);
       setEventType([]);
     }
@@ -735,6 +744,14 @@ const SourcesImport: React.FC = () => {
     } finally {
       setIsDomainSearchProcessing(false);
     }
+  };
+
+  const [isAllSelected, setIsAllSelected] = useState(true);
+  const allSelected = isAllSelected;
+  const handleToggleAll = () => {
+    setIsAllSelected(true);
+    setEventType([]);
+    setMatchedLeads(totalLeads);
   };
 
   return (
@@ -904,10 +921,10 @@ const SourcesImport: React.FC = () => {
                     </Select>
                     {showHints && (
                       <HintCard
-                        card={hintCard1}
+                        card={hintCards[0]}
                         positionLeft={340}
                         isOpenSelect={isOpenSelect[0].show}
-                        toggleClick={() => toggleDotHintClick(1)}
+                        toggleClick={() => toggleDotHintClick(0)}
                       />
                     )}
                   </FormControl>
@@ -1135,10 +1152,11 @@ const SourcesImport: React.FC = () => {
 
                   {showHints && (
                     <HintCard
-                      card={hintCard4}
-                      positionLeft={340}
+                      card={hintCards[3]}
+                      positionLeft={360}
+                      positionTop={100}
                       isOpenSelect={isOpenSelect[3].show}
-                      toggleClick={() => toggleDotHintClick(4)}
+                      toggleClick={() => toggleDotHintClick(3)}
                     />
                   )}
                 </Box>
@@ -1197,228 +1215,231 @@ const SourcesImport: React.FC = () => {
                       base.
                     </Typography>
                   </Box>
-                  <Grid
-                    container
-                    alignItems="center"
-                    sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-                  >
-                    <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
-                      <Image
-                        src="/logo-icon.svg"
-                        alt="logo"
-                        height={22}
-                        width={34}
-                      />
+
+                  <Box sx={{ position: "relative", display: "flex", flexDirection: "column", gap: 1 }}>
+                    <Grid
+                      container
+                      alignItems="center"
+                      sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+                    >
+                      <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
+                        <Image
+                          src="/logo-icon.svg"
+                          alt="logo"
+                          height={22}
+                          width={34}
+                        />
+                      </Grid>
+                      <Grid item xs={1} sm={0.5}>
+                        &nbsp;
+                      </Grid>
+                      <Grid item xs={5} sm={3} sx={{ textAlign: "center", }}>
+                        <Image
+                          src="/csv-icon.svg"
+                          alt="scv"
+                          height={22}
+                          width={34}
+                        />
+                      </Grid>
                     </Grid>
-                    <Grid item xs={1} sm={0.5}>
-                      &nbsp;
-                    </Grid>
-                    <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
-                      <Image
-                        src="/csv-icon.svg"
-                        alt="scv"
-                        height={22}
-                        width={34}
-                      />
-                    </Grid>
-                  </Grid>
-                  {rows
-                    ?.filter((row) => !row.isHidden)
-                    .map((row, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          mt: index === 1 && emailNotSubstitution ? "10px" : 0,
-                        }}
-                      >
-                        <Grid
-                          container
-                          spacing={2}
-                          alignItems="center"
-                          sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+                    {rows
+                      ?.filter((row) => !row.isHidden)
+                      .map((row, index) => (
+                        <Box
+                          key={index}
+                          sx={{
+                            mt: index === 1 && emailNotSubstitution ? "10px" : 0,
+                          }}
                         >
-                          {/* Left Input Field */}
-                          <Grid item xs={5} sm={3}>
-                            <TextField
-                              fullWidth
-                              variant="outlined"
-                              value={row.type}
-                              disabled={true}
-                              InputLabelProps={{
-                                sx: {
-                                  fontFamily: "Nunito Sans",
-                                  fontSize: "12px",
-                                  lineHeight: "16px",
-                                  color: "rgba(17, 17, 19, 0.60)",
-                                  top: "-5px",
-                                  "&.Mui-focused": {
-                                    color: "rgba(56, 152, 252, 1)",
-                                    top: 0,
+                          <Grid
+                            container
+                            spacing={2}
+                            alignItems="center"
+                            sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+                          >
+                            {/* Left Input Field */}
+                            <Grid item xs={5} sm={3}>
+                              <TextField
+                                fullWidth
+                                variant="outlined"
+                                value={row.type}
+                                disabled={true}
+                                InputLabelProps={{
+                                  sx: {
+                                    fontFamily: "Nunito Sans",
+                                    fontSize: "12px",
+                                    lineHeight: "16px",
+                                    color: "rgba(17, 17, 19, 0.60)",
+                                    top: "-5px",
+                                    "&.Mui-focused": {
+                                      color: "rgba(56, 152, 252, 1)",
+                                      top: 0,
+                                    },
+                                    "&.MuiInputLabel-shrink": {
+                                      top: 0,
+                                    },
                                   },
-                                  "&.MuiInputLabel-shrink": {
-                                    top: 0,
+                                }}
+                                InputProps={{
+                                  sx: {
+                                    "&.MuiOutlinedInput-root": {
+                                      height: "36px",
+                                      "& .MuiOutlinedInput-input": {
+                                        padding: "6.5px 8px",
+                                        fontFamily: "Roboto",
+                                        color: "#202124",
+                                        fontSize: "12px",
+                                        fontWeight: "400",
+                                        lineHeight: "20px",
+                                      },
+                                      "& .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: "#A3B0C2",
+                                      },
+                                      "&:hover .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        borderColor: "#A3B0C2",
+                                      },
+                                      "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        borderColor: "rgba(56, 152, 252, 1)",
+                                      },
+                                    },
+                                    "&+.MuiFormHelperText-root": {
+                                      marginLeft: "0",
+                                    },
                                   },
-                                },
-                              }}
-                              InputProps={{
-                                sx: {
-                                  "&.MuiOutlinedInput-root": {
-                                    height: "36px",
-                                    "& .MuiOutlinedInput-input": {
+                                }}
+                              />
+                            </Grid>
+
+                            {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+                            <Grid
+                              item
+                              xs={1}
+                              sm={0.5}
+                              container
+                              justifyContent="center"
+                            >
+                              <Image
+                                src="/chevron-right-purple.svg"
+                                alt="chevron-right-purple"
+                                height={18}
+                                width={18}
+                              />
+                            </Grid>
+
+                            <Grid item xs={5} sm={3}>
+                              <FormControl fullWidth sx={{ height: "36px" }}>
+                                <Select
+                                  value={row.value || ""}
+                                  onChange={(e) =>
+                                    handleMapListChange(row.id, e.target.value)
+                                  }
+                                  displayEmpty
+                                  inputProps={{
+                                    sx: {
+                                      height: "36px",
                                       padding: "6.5px 8px",
                                       fontFamily: "Roboto",
-                                      color: "#202124",
                                       fontSize: "12px",
                                       fontWeight: "400",
+                                      color: "#202124",
                                       lineHeight: "20px",
                                     },
-                                    "& .MuiOutlinedInput-notchedOutline": {
-                                      borderColor: "#A3B0C2",
-                                    },
-                                    "&:hover .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "#A3B0C2",
-                                      },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "rgba(56, 152, 252, 1)",
-                                      },
-                                  },
-                                  "&+.MuiFormHelperText-root": {
-                                    marginLeft: "0",
-                                  },
-                                },
-                              }}
-                            />
-                          </Grid>
-
-                          {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                          <Grid
-                            item
-                            xs={1}
-                            sm={0.5}
-                            container
-                            justifyContent="center"
-                          >
-                            <Image
-                              src="/chevron-right-purple.svg"
-                              alt="chevron-right-purple"
-                              height={18}
-                              width={18}
-                            />
-                          </Grid>
-
-                          <Grid item xs={5} sm={3}>
-                            <FormControl fullWidth sx={{ height: "36px" }}>
-                              <Select
-                                value={row.value || ""}
-                                onChange={(e) =>
-                                  handleMapListChange(row.id, e.target.value)
-                                }
-                                displayEmpty
-                                inputProps={{
-                                  sx: {
-                                    height: "36px",
-                                    padding: "6.5px 8px",
-                                    fontFamily: "Roboto",
-                                    fontSize: "12px",
-                                    fontWeight: "400",
-                                    color: "#202124",
-                                    lineHeight: "20px",
-                                  },
-                                }}
-                                sx={{
-                                  "&.MuiOutlinedInput-root": {
-                                    height: "36px",
-                                    "& .MuiOutlinedInput-notchedOutline": {
-                                      borderColor: "#A3B0C2",
-                                    },
-                                    "&:hover .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "#A3B0C2",
-                                      },
-                                    "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "rgba(56, 152, 252, 1)",
-                                      },
-                                  },
-                                }}
-                              >
-                                {headersinCSV.map(
-                                  (item: string, index: number) => (
-                                    <MenuItem key={index} value={item}>
-                                      {item}
-                                    </MenuItem>
-                                  )
-                                )}
-                              </Select>
-                              {row.type === "Email" && emailNotSubstitution && (
-                                <Typography
+                                  }}
                                   sx={{
-                                    fontFamily: "Nunito",
-                                    fontSize: "12px",
-                                    color: "rgba(224, 49, 48, 1)",
+                                    "&.MuiOutlinedInput-root": {
+                                      height: "36px",
+                                      "& .MuiOutlinedInput-notchedOutline": {
+                                        borderColor: "#A3B0C2",
+                                      },
+                                      "&:hover .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        borderColor: "#A3B0C2",
+                                      },
+                                      "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                      {
+                                        borderColor: "rgba(56, 152, 252, 1)",
+                                      },
+                                    },
                                   }}
                                 >
-                                  Please match email
-                                </Typography>
-                              )}
-                            </FormControl>
-                          </Grid>
+                                  {headersinCSV.map(
+                                    (item: string, index: number) => (
+                                      <MenuItem key={index} value={item}>
+                                        {item}
+                                      </MenuItem>
+                                    )
+                                  )}
+                                </Select>
+                                {row.type === "Email" && emailNotSubstitution && (
+                                  <Typography
+                                    sx={{
+                                      fontFamily: "Nunito",
+                                      fontSize: "12px",
+                                      color: "rgba(224, 49, 48, 1)",
+                                    }}
+                                  >
+                                    Please match email
+                                  </Typography>
+                                )}
+                              </FormControl>
+                            </Grid>
 
-                          {/* Delete Icon */}
-                          <Grid
-                            item
-                            xs={1}
-                            sm={0.5}
-                            container
-                            justifyContent="center"
-                          >
-                            {row.canDelete && (
-                              <>
-                                <IconButton
-                                  onClick={() => handleDelete(row.id)}
-                                >
-                                  <Image
-                                    src="/trash-icon-filled.svg"
-                                    alt="trash-icon-filled"
-                                    height={18}
-                                    width={18}
-                                  />
-                                </IconButton>
-                              </>
-                            )}
+                            {/* Delete Icon */}
+                            <Grid
+                              item
+                              xs={1}
+                              sm={0.5}
+                              container
+                              justifyContent="center"
+                            >
+                              {row.canDelete && (
+                                <>
+                                  <IconButton
+                                    onClick={() => handleDelete(row.id)}
+                                  >
+                                    <Image
+                                      src="/trash-icon-filled.svg"
+                                      alt="trash-icon-filled"
+                                      height={18}
+                                      width={18}
+                                    />
+                                  </IconButton>
+                                </>
+                              )}
+                            </Grid>
                           </Grid>
-                        </Grid>
-                      </Box>
-                    ))}
-                  {rows.some((row) => row.isHidden) && (
-                    <Box
-                      sx={{ display: "flex", justifyContent: "flex-start" }}
-                      onClick={handleAdd}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Nunito Sans",
-                          lineHeight: "22.4px",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                          color: "rgba(56, 152, 252, 1)",
-                          cursor: "pointer",
-                        }}
+                        </Box>
+                      ))}
+                    {rows.some((row) => row.isHidden) && (
+                      <Box
+                        sx={{ display: "flex", justifyContent: "flex-start" }}
+                        onClick={handleAdd}
                       >
-                        + Add more
-                      </Typography>
-                    </Box>
-                  )}
-                  {showHints && (
-                    <HintCard
-                      card={hintCard5}
-                      positionLeft={340}
-                      isOpenSelect={isOpenSelect[4].show}
-                      toggleClick={() => toggleDotHintClick(5)}
-                    />
-                  )}
+                        <Typography
+                          sx={{
+                            fontFamily: "Nunito Sans",
+                            lineHeight: "22.4px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: "rgba(56, 152, 252, 1)",
+                            cursor: "pointer",
+                          }}
+                        >
+                          + Add more
+                        </Typography>
+                      </Box>
+                    )}
+                    {showHints && (
+                      <HintCard
+                        card={hintCards[4]}
+                        positionLeft={460}
+                        isOpenSelect={isOpenSelect[4].show}
+                        toggleClick={() => toggleDotHintClick(4)}
+                      />
+                    )}
+                  </Box>
                 </Box>
               )}
 
@@ -1569,10 +1590,10 @@ const SourcesImport: React.FC = () => {
                     </Select>
                     {showHints && (
                       <HintCard
-                        card={hintCard2}
+                        card={hintCards[1]}
                         positionLeft={340}
                         isOpenSelect={isOpenSelect[1].show}
-                        toggleClick={() => toggleDotHintClick(2)}
+                        toggleClick={() => toggleDotHintClick(1)}
                       />
                     )}
                   </FormControl>
@@ -1643,8 +1664,11 @@ const SourcesImport: React.FC = () => {
                   </Box>
                   <Box
                     onClick={() => {
-                      closeDotHintClick(3);
-                      toggleDotHintClick(6);
+                      if (firstEventTypeClick) {
+                        setFirstEventTypeClick(false)
+                        closeDotHintClick(2);
+                        openDotHintClick(5);
+                      }
                     }}
                     sx={{
                       display: "flex",
@@ -1657,118 +1681,69 @@ const SourcesImport: React.FC = () => {
                   >
                     <Button
                       variant="outlined"
+                      onClick={handleToggleAll}
                       sx={{
                         fontFamily: "Nunito Sans",
                         border: "1px solid rgba(208, 213, 221, 1)",
                         borderRadius: "4px",
-                        color: "rgba(32, 33, 36, 1)",
                         textTransform: "none",
                         fontSize: "14px",
                         padding: "8px 12px",
-                        backgroundColor: eventType.includes(1)
+                        backgroundColor: allSelected
                           ? "rgba(246, 248, 250, 1)"
                           : "rgba(255, 255, 255, 1)",
-                        borderColor: eventType.includes(1)
+                        borderColor: allSelected
                           ? "rgba(117, 168, 218, 1)"
                           : "rgba(208, 213, 221, 1)",
+                        color: allSelected
+                          ? "rgba(32, 33, 36, 1)"
+                          : "rgba(32, 33, 36, 1)",
                         ":hover": {
                           borderColor: "rgba(208, 213, 221, 1)",
                           backgroundColor: "rgba(236, 238, 241, 1)",
                         },
                       }}
-                      onClick={() => {
-                        toggleEventType(1);
-                      }}
                     >
-                      Visitor
+                      All
                     </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        border: "1px solid rgba(208, 213, 221, 1)",
-                        borderRadius: "4px",
-                        color: "rgba(32, 33, 36, 1)",
-                        textTransform: "none",
-                        fontSize: "14px",
-                        padding: "8px 12px",
-                        backgroundColor: eventType.includes(2)
-                          ? "rgba(246, 248, 250, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                        borderColor: eventType.includes(2)
-                          ? "rgba(117, 168, 218, 1)"
-                          : "rgba(208, 213, 221, 1)",
-                        ":hover": {
-                          borderColor: "rgba(208, 213, 221, 1)",
-                          backgroundColor: "rgba(236, 238, 241, 1)",
-                        },
-                      }}
-                      onClick={() => {
-                        toggleEventType(2);
-                      }}
-                    >
-                      View Product
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        border: "1px solid rgba(208, 213, 221, 1)",
-                        borderRadius: "4px",
-                        color: "rgba(32, 33, 36, 1)",
-                        textTransform: "none",
-                        fontSize: "14px",
-                        padding: "8px 12px",
-                        backgroundColor: eventType.includes(3)
-                          ? "rgba(246, 248, 250, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                        borderColor: eventType.includes(3)
-                          ? "rgba(117, 168, 218, 1)"
-                          : "rgba(208, 213, 221, 1)",
-                        ":hover": {
-                          borderColor: "rgba(208, 213, 221, 1)",
-                          backgroundColor: "rgba(236, 238, 241, 1)",
-                        },
-                      }}
-                      onClick={() => {
-                        toggleEventType(3);
-                      }}
-                    >
-                      Abandoned Cart
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        border: "1px solid rgba(208, 213, 221, 1)",
-                        borderRadius: "4px",
-                        color: "rgba(32, 33, 36, 1)",
-                        textTransform: "none",
-                        fontSize: "14px",
-                        padding: "8px 12px",
-                        backgroundColor: eventType.includes(4)
-                          ? "rgba(246, 248, 250, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                        borderColor: eventType.includes(4)
-                          ? "rgba(117, 168, 218, 1)"
-                          : "rgba(208, 213, 221, 1)",
-                        ":hover": {
-                          borderColor: "rgba(208, 213, 221, 1)",
-                          backgroundColor: "rgba(236, 238, 241, 1)",
-                        },
-                      }}
-                      onClick={() => {
-                        toggleEventType(4);
-                      }}
-                    >
-                      Converted Sales
-                    </Button>
+                    {eventTypes.map((ev) => {
+                      const active = !isAllSelected && eventType.includes(ev.id);
+                      return (
+                        <Button
+                          key={ev.id}
+                          variant="outlined"
+                          onClick={() => toggleEventType(ev.id)}
+                          sx={{
+                            fontFamily: "Nunito Sans",
+                            border: "1px solid rgba(208, 213, 221, 1)",
+                            borderRadius: "4px",
+                            color: "rgba(32, 33, 36, 1)",
+                            textTransform: "none",
+                            fontSize: "14px",
+                            padding: "8px 12px",
+                            backgroundColor: active
+                              ? "rgba(246, 248, 250, 1)"
+                              : "rgba(255, 255, 255, 1)",
+                            borderColor: active
+                              ? "rgba(117, 168, 218, 1)"
+                              : "rgba(208, 213, 221, 1)",
+                            ":hover": {
+                              borderColor: "rgba(208, 213, 221, 1)",
+                              backgroundColor: "rgba(236, 238, 241, 1)",
+                            },
+                          }}
+                        >
+                          {ev.title.charAt(0).toUpperCase() + ev.title.slice(1).replace("_", " ")}
+                        </Button>
+                      );
+                    })}
                     {showHints && (
                       <HintCard
-                        card={hintCard3}
-                        positionLeft={340}
+                        card={hintCards[2]}
+                        positionLeft={650}
+                        positionTop={100}
                         isOpenSelect={isOpenSelect[2].show}
-                        toggleClick={() => toggleDotHintClick(3)}
+                        toggleClick={() => toggleDotHintClick(2)}
                       />
                     )}
                   </Box>
@@ -1800,6 +1775,8 @@ const SourcesImport: React.FC = () => {
                   </Box>
                 </Box>
               ) : null}
+
+
 
               {sourceMethod !== 0 && (selectedDomainId || file) && (
                 <Box
@@ -1893,10 +1870,10 @@ const SourcesImport: React.FC = () => {
                     ))}
                     {showHints && (
                       <HintCard
-                        card={hintCard6}
+                        card={hintCards[5]}
                         positionLeft={140}
                         isOpenSelect={isOpenSelect[5].show}
-                        toggleClick={() => toggleDotHintClick(6)}
+                        toggleClick={() => toggleDotHintClick(5)}
                       />
                     )}
                   </Box>
@@ -1904,8 +1881,8 @@ const SourcesImport: React.FC = () => {
               )}
 
               {sourceMethod !== 0 &&
-              targetAudience !== "" &&
-              (file || selectedDomainId) ? (
+                targetAudience !== "" &&
+                (file || selectedDomainId) ? (
                 <>
                   <Box
                     ref={block6Ref}

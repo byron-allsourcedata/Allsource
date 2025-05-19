@@ -154,7 +154,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
             />
           </Box>
           <Box sx={{ display: "flex", width: "40%" }}>
-            <VerticalGradientBarChart
+            <GradientBarChart
               title="Credit score range"
               data={creditScoreRangeData}
               rank={fieldRanks["credit_score_range"]}

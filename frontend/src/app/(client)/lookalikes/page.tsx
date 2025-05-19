@@ -869,7 +869,8 @@ const CreateLookalikePage: React.FC = () => {
                   Create Your First Lookalike
                 </Typography>
                 <MuiLink
-                  href="https://example.com"
+                  href="https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes"
+                  target="_blank"
                   underline="hover"
                   sx={{
                     display: "flex",

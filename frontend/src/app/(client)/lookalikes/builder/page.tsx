@@ -34,7 +34,7 @@ import { smartAudiences } from "../../smart-audiences/smartAudiences";
 import ArrowRightAltIcon from '@mui/icons-material/ArrowRightAlt';
 import ProgressBar from "@/components/ProgressBar";
 import { TableData, LookalikeData, CalculationResponse, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject, PersonalResults, ProfessionalProfileResults, EmploymentHistoryResults } from "@/types"
-import { FeatureImportanceTable, DragAndDropTable, AudienceFieldsSelector, OrderFieldsStep } from "../components"
+import { FeatureImportanceTable, DragAndDropTable, AudienceFieldsSelector, OrderFieldsStep, CalculatedSteps } from "../components"
 import { ResetProvider } from "@/context/ResetContext";
 export const dynamic = 'force-dynamic';
 
@@ -57,50 +57,11 @@ const CreateLookalikePage: React.FC = () => {
   const [calculatedResults, setCalculatedResults] =
     useState<CalculationResponse | null>(null);
 
-  const [personalData, setPersonalData] = useState<PersonalResults>({} as PersonalResults);
-  const [financialData, setFinancialData] = useState<FinancialResults>({} as FinancialResults);
-  const [lifestylesData, setLifestylesData] = useState<LifestylesResults>({} as LifestylesResults);
-  const [voterData, setVoterData] = useState<VoterResults>({} as VoterResults);
-  const [professionalProfileData, setProfessionalProfileData] = useState<ProfessionalProfileResults>({} as ProfessionalProfileResults);
-  const [employmentHistoryData, setEmploymentHistoryData] = useState<EmploymentHistoryResults>({} as EmploymentHistoryResults);
-
-  const [personalKeys, setPersonalKeys] = useState<(keyof PersonalResults)[]>([]);
-  const [financialKeys, setFinancialKeys] = useState<(keyof FinancialResults)[]>([]);
-  const [lifestylesKeys, setLifestylesKeys] = useState<(keyof LifestylesResults)[]>([]);
-  const [voterKeys, setVoterKeys] = useState<(keyof VoterResults)[]>([]);
-  const [professionalProfileKeys, setProfessionalProfileKeys] = useState<(keyof ProfessionalProfileResults)[]>([]);
-  const [employmentHistoryKeys, setEmploymentHistoryKeys] = useState<(keyof EmploymentHistoryResults)[]>([]);
-
   const [dndFields, setDndFields] = useState<Field[]>([]);
-  const initialFields = useMemo<Field[]>(() => {
-    const toFields = <T extends FeatureObject>(
-      keys: (keyof T)[],
-      src: T
-    ): Field[] =>
-      keys.map(k => ({
-        id: String(k),
-        name: String(k),
-        value: `${src[k]}`,
-      }));
 
-    return [
-      ...toFields(personalKeys, personalData),
-      ...toFields(financialKeys, financialData),
-      ...toFields(lifestylesKeys, lifestylesData),
-      ...toFields(voterKeys, voterData),
-      ...toFields(professionalProfileKeys, professionalProfileData),
-      ...toFields(employmentHistoryKeys, employmentHistoryData),
-    ];
-  }, [
-    personalKeys, financialKeys,
-    lifestylesKeys, voterKeys, professionalProfileKeys, employmentHistoryKeys,
-    calculatedResults, financialData,
-    lifestylesData, voterData, professionalProfileData, employmentHistoryData
-  ]);
-
-  useEffect(() => {
-    setDndFields(initialFields);
-  }, [initialFields]);
+  // useEffect(() => {
+  //   setDndFields(initialFields);
+  // }, [initialFields]);
 
   const handleSelectRow = (row: any) => {
     setSelectedSourceId(row.id);
@@ -173,20 +134,7 @@ const CreateLookalikePage: React.FC = () => {
       );
       if (response.data) {
         setCalculatedResults(response.data);
-        const b2c = response.data.audience_feature_importance_b2c;
-        const b2b = response.data.audience_feature_importance_b2b;
-        setPersonalData(b2c.personal as any);
-        setFinancialData(b2c.financial as any);
-        setLifestylesData(b2c.lifestyle as any);
-        setVoterData(b2c.voter as any);
-        setProfessionalProfileData(b2b.professional_profile as any);
-        setEmploymentHistoryData(b2b.employment_history as any);
-        setPersonalKeys(Object.keys(b2c.personal) as (keyof PersonalResults)[]);
-        setFinancialKeys(Object.keys(b2c.financial) as (keyof FinancialResults)[]);
-        setLifestylesKeys(Object.keys(b2c.lifestyle) as (keyof LifestylesResults)[]);
-        setVoterKeys(Object.keys(b2c.voter) as (keyof VoterResults)[]);
-        setProfessionalProfileKeys(Object.keys(b2b.professional_profile) as (keyof ProfessionalProfileResults)[]);
-        setEmploymentHistoryKeys(Object.keys(b2b.employment_history) as (keyof EmploymentHistoryResults)[]);
+        console.log(response.data)
         setCurrentStep(2);
       }
     } catch {
@@ -281,13 +229,7 @@ const CreateLookalikePage: React.FC = () => {
     setCurrentStep(0);
   };
 
-  const canProceed = (personalKeys.length + financialKeys.length
-    + lifestylesKeys.length + voterKeys.length + professionalProfileKeys.length
-    + employmentHistoryKeys.length) >= 3;
-
-  const handleFieldsOrderChange = (newOrder: Field[]) => {
-    setDndFields(newOrder);
-  };
+  const canProceed = true;
 
   return (
     <Box
@@ -446,37 +388,44 @@ const CreateLookalikePage: React.FC = () => {
                                 </TableRow>
                               </TableHead>
                               <TableBody>
-                                {filteredData.map((row, index) => (
-                                  <TableRow
-                                    key={index}
-                                    hover
-                                    sx={{
-                                      cursor: "pointer",
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      width: "100%",
-                                    }}
-                                    onClick={() => handleSelectRow(row)}
-                                  >
-                                    <TableCell
-                                      sx={{ flex: 1, textAlign: "start" }}
+                                {filteredData.map((row, index) => {
+                                  const isDisabled =
+                                    row.matched_records === 0 ||
+                                    row.matched_records_status === "pending";
+                                  return (
+                                    <TableRow
+                                      key={index}
+                                      hover={!isDisabled}
+                                      onClick={() => !isDisabled && handleSelectRow(row)}
+                                      sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        width: "100%",
+                                        opacity: isDisabled ? 0.5 : 1,
+                                        pointerEvents: isDisabled ? "none" : "auto",
+                                        cursor: isDisabled ? "not-allowed" : "pointer",
+                                      }}
                                     >
-                                      {row.name}
-                                    </TableCell>
-                                    <TableCell
-                                      sx={{ flex: 1, textAlign: "start" }}
-                                    >
-                                      {toNormalText(row.type)}
-                                    </TableCell>
-                                    <TableCell
-                                      sx={{ flex: 1, textAlign: "right" }}
-                                    >
-                                      {row.matched_records.toLocaleString(
-                                        "en-US"
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
+                                      <TableCell
+                                        sx={{ flex: 1, textAlign: "start" }}
+                                      >
+                                        {row.name}
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{ flex: 1, textAlign: "start" }}
+                                      >
+                                        {toNormalText(row.type)}
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{ flex: 1, textAlign: "right" }}
+                                      >
+                                        {row.matched_records.toLocaleString(
+                                          "en-US"
+                                        )}
+                                      </TableCell>
+                                    </TableRow>
+                                  )
+                                })}
                               </TableBody>
                             </Table>
                           </TableContainer>
@@ -614,41 +563,16 @@ const CreateLookalikePage: React.FC = () => {
                 }
 
                 {calculatedResults && currentStep >= 2 && (
-                  <>
-                  <Box hidden={currentStep !== 2} sx={{my: 2}}>
-                    <AudienceFieldsSelector
-                      personalData={personalData}
-                      financialData={financialData}
-                      lifestylesData={lifestylesData}
-                      voterData={voterData}
-                      professionalProfileData={professionalProfileData}
-                      employmentHistoryData={employmentHistoryData}
-                      // realEstateData={realEstateData}
-                      onPersonalChange={setPersonalKeys}
-                      onFinancialChange={setFinancialKeys}
-                      onLifestylesChange={setLifestylesKeys}
-                      onVoterChange={setVoterKeys}
-                      onProfessionalProfileChange={setProfessionalProfileKeys}
-                      onEmploymentHistoryChange={setEmploymentHistoryKeys}
-                      // onRealEstateChange={setRealEstateKeys}
-                      handleNextStep={handleNextStep}
-                      canProcessed={canProceed}
-                      
-                    />
+                  <Box sx={{ mt: 2 }}>
+                    <CalculatedSteps
+                        calculatedResults={calculatedResults}
+                        currentStep={currentStep}
+                        handlePrevStep={handlePrevStep}
+                        handleNextStep={handleNextStep}
+                        onFieldsOrderChangeUp={setDndFields}
+                      />
                   </Box>
-                  {/* Calculation results block rendered with flex layout */}
-                  <Box hidden={currentStep !== 3} sx={{my: 2}}>
-                    <OrderFieldsStep
-                      fields={dndFields}
-                      handlePrevStep={handlePrevStep}
-                      onOrderChange={handleFieldsOrderChange}
-                    />
-                  </Box>
-                  </>
                 )}
-
-
-
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
                 {currentStep >= 3 && (
                   <Box

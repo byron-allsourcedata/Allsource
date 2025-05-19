@@ -52,8 +52,9 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
           Import Your First Source
         </Typography>
         <MuiLink
-          href="https://example.com"
+          href="https://allsourceio.zohodesk.com/portal/en/kb/articles/sources"
           underline="hover"
+          target="_blank"
           sx={{
             display: "flex",
             alignItems: "center",

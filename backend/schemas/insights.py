@@ -31,7 +31,8 @@ class PersonalProfiles(BaseModel):
                                    "undisclosed"}
             )
 
-        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        filtered_data = data.copy()
         total = sum(filtered_data.values())
         if total == 0:
             return {k: 0.0 for k in filtered_data}
@@ -97,7 +98,8 @@ class FinancialProfiles(BaseModel):
                                    "undisclosed"}
             )
 
-        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        filtered_data = data.copy()
         total = sum(filtered_data.values())
         if total == 0:
             return {k: 0.0 for k in filtered_data}
@@ -156,7 +158,8 @@ class LifestyleProfiles(BaseModel):
                                    "undisclosed"}
             )
 
-        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        filtered_data = data.copy()
         total = sum(filtered_data.values())
         if total == 0:
             return {k: 0.0 for k in filtered_data}
@@ -186,7 +189,8 @@ class VoterProfiles(BaseModel):
                                    "undisclosed"}
             )
 
-        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        filtered_data = data.copy()
         total = sum(filtered_data.values())
         if total == 0:
             return {k: 0.0 for k in filtered_data}
@@ -230,7 +234,8 @@ class ProfessionalProfiles(BaseModel):
                                    "undisclosed"}
             )
 
-        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        filtered_data = data.copy()
         total = sum(filtered_data.values())
         if total == 0:
             return {k: 0.0 for k in filtered_data}
@@ -262,7 +267,8 @@ class EmploymentHistory(BaseModel):
                                    "undisclosed"}
             )
 
-        filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        # filtered_data = {k: v for k, v in data.items() if not is_unknown(k)}
+        filtered_data = data.copy()
         total = sum(filtered_data.values())
         if total == 0:
             return {k: 0.0 for k in filtered_data}

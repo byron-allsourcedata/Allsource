@@ -147,6 +147,20 @@ class SalesForceIntegrationsService:
             unique_value = str(profile)
             
         return hashlib.md5(unique_value.encode('utf-8')).hexdigest()
+    
+    # def test(self, profiles, instance_url, access_token):
+    #     url = f"{instance_url}/services/data/v59.0/sobjects/Lead"
+    #     headers = {
+    #         "Authorization": f"Bearer {access_token}",
+    #         "Content-Type": "application/json"
+    #     }
+    #     response = self.__handle_request(method='POST', url=url, json=profiles[-3], headers=headers)
+    #     if response.status_code == 201:
+    #         print("Created:", response.json())
+    #     elif response.status_code == 204:
+    #         print("Updated existing record")
+    #     else:
+    #         print("Error:", response.status_code, response.json())
 
     def bulk_upsert_leads(self, profiles: list[dict], instance_url: str, access_token: str) -> str:
         try:        
@@ -195,12 +209,11 @@ class SalesForceIntegrationsService:
         response = self.__handle_request(method='POST', url="https://login.salesforce.com/services/oauth2/token", data=data, headers = {"Content-Type": "application/x-www-form-urlencoded"})
         if response.status_code == 200:
             token_data = response.json()
-            access_token = token_data.get('access_token')
             refresh_token = token_data.get('refresh_token')
             instance_url = token_data.get('instance_url')
-            integrations = self.__save_integrations(refresh_token, instance_url, None if domain is None else domain.id, user)
+            integration = self.__save_integrations(refresh_token, instance_url, None if domain is None else domain.id, user)
             return {
-                'integrations': integrations,
+                'integrations': integration,
                 'status': IntegrationsStatus.SUCCESS.value
             }
         else:
@@ -281,20 +294,6 @@ class SalesForceIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
         return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
     
-    def __map_properties(self, enrichment_user: EnrichmentUser, data_map: List[DataMap]) -> dict:
-        properties = {}
-        for mapping in data_map:
-            five_x_five_field = mapping.get("type")  
-            new_field = mapping.get("value")  
-            value_field = getattr(enrichment_user, five_x_five_field, None)
-            
-            if value_field is not None: 
-                properties[new_field] = value_field.isoformat() if isinstance(value_field, datetime) else value_field
-            else:
-                properties[new_field] = None
-            
-        return properties
-    
     def __mapped_sales_force_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict, data_map: list) -> dict:
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
@@ -308,54 +307,41 @@ class SalesForceIntegrationsService:
         
         if not main_email or not first_name or not last_name:
             return None
+        
+        professional_profiles = enrichment_user.professional_profiles
+        if not professional_profiles:
+            return None
+        
+        company = professional_profiles.current_company_name
+        if not company:
+            return None
+        
+        primary_industry = professional_profiles.primary_industry
+        current_job_title = professional_profiles.current_job_title
+        country = None
+        state = None
+        city = None
+        postal_code = None
+        if enrichment_user.postal:
+            enrichment_postal = enrichment_user.postal
+            country = enrichment_postal.home_country or enrichment_postal.business_country
+            state = enrichment_postal.home_state or enrichment_postal.business_state
+            city = enrichment_postal.home_city or enrichment_postal.business_city
+            postal_code = enrichment_postal.home_postal_code or enrichment_postal.business_postal_code
 
         result = {
-            'Id': str(enrichment_user.id),
+            # 'Id': str(enrichment_user.id),
             'Email': main_email,
             'FirstName': first_name,
-            'LastName': last_name
+            'LastName': last_name,
+            'Company': company,
+            'Title': current_job_title,
+            'Phone': main_phone,
+            "Industry": primary_industry,
+            "City": city,
+            "State": state,
+            "PostalCode": postal_code,
+            "Country": country,
         }
-        
-        required_types = {m['type'] for m in data_map}
-        context = {
-            'main_phone': main_phone,
-            'professional_profiles': enrichment_user.professional_profiles,
-            'postal': enrichment_user.postal,
-            'personal_profiles': enrichment_user.personal_profiles,
-            'business_email': business_email,
-            'personal_email': personal_email,
-            'country_code': enrichment_user.postal,
-            'gender': enrichment_user.personal_profiles,
-            'zip_code': enrichment_user.personal_profiles,
-            'state': enrichment_user.postal,
-            'city': enrichment_user.postal,
-            'company': enrichment_user.professional_profiles,
-            'business_email_last_seen_date': enrichment_contacts,
-            'personal_email_last_seen': enrichment_contacts,
-            'linkedin_url': enrichment_contacts
-        }
-        result_map = {}
-        for field_type in required_types:
-            filler = FIELD_FILLERS.get(field_type)
-            if filler:
-                filler(result_map, context)
-                    
-        salesforce_field_mapping = {
-            'business_email': 'Business_Email__c',
-            'personal_email': 'Personal_Email__c',
-            'phone': 'Phone',
-            'city': 'City__c',
-            'state': 'State__c',
-            'country_code': 'Country__c',
-            'company': 'Company',
-            'gender': 'Gender__c',
-            'business_email_last_seen_date': 'Business_email_last_seen_date__c',
-            'personal_email_last_seen': 'Personal_email_last_seen__c',
-            'linkedin_url': 'Linkedin_url__c'
-        }
-        for key, sf_key in salesforce_field_mapping.items():
-            value = result_map.get(key)
-            if value is not None:
-                result[sf_key] = value
                 
         return result

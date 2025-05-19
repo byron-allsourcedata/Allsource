@@ -20,59 +20,11 @@ function DragAndDropTable({
   fields,
   onOrderChange,
 }: LookalikeFieldsGridProps) {
-  const sortedInitial = React.useMemo(() =>
-    [...fields].sort((a, b) => parseFloat(b.value) - parseFloat(a.value)),
-    [fields]
-  );
-  const initDefaultStateRef = React.useRef<Field[]>(sortedInitial);
-  const [rows, setRows] = React.useState<Field[]>(initDefaultStateRef.current);
-  const { resetTrigger, notifyInteraction } = useResetContext();
-  const [isFirstInit, setIsFirstInit] = useState(true);
+  const [rows, setRows] = React.useState<Field[]>(fields);
   React.useEffect(() => {
-    setRows(initDefaultStateRef.current);
-    onOrderChange?.(initDefaultStateRef.current);
-  }, [resetTrigger]);
-
-  // Sync when the incoming fields change (update reference only)
-  React.useEffect(() => {
-    const kept = rows.filter(r =>
-      sortedInitial.some(f => f.id === r.id)
-    );
-    const keptIds = new Set(kept.map(r => r.id));
-    const added = sortedInitial.filter(f => !keptIds.has(f.id));
-    const nextRows = [...kept];
-    added.forEach(f => {
-      const fValue = parseFloat(f.value);
-      const insertIdx = nextRows.findIndex(r => parseFloat(r.value) <= fValue);
-      if (insertIdx === -1) {
-        nextRows.push(f);
-      } else {
-        nextRows.splice(insertIdx, 0, f);
-      }
-    });
-    setRows(nextRows);
-
-    // if(isFirstInit && initDefaultStateRef.current.length >= 3) {
-    //   console.log("!!!!!!!!!!!!!!!!")
-    //   setIsFirstInit(false)
-    //   setRows(initDefaultStateRef.current);
-    // }
-
-    if (rows.length === 0) {
-      setRows(initDefaultStateRef.current);
-      initDefaultStateRef.current = sortedInitial;
-    }
-    if (rows.length > 0) {
-      notifyInteraction("dragTable", handleComparer());
-    }
-  }, [fields, onOrderChange]);
-
-  // React.useEffect(() => {
-  //   if (fields.length !== rows.length){
-  //     onOrderChange?.(initDefaultStateRef.current);
-  //   }
-  // }, [fields]);
-
+    setRows(fields);
+    onOrderChange?.(fields);
+  }, [fields]);
   const [dragIndex, setDragIndex] = React.useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
 
@@ -108,15 +60,6 @@ function DragAndDropTable({
     event.dataTransfer.dropEffect = 'move';
   };
 
-  const handleComparer = () => {
-    const initialIds = initDefaultStateRef.current.map(f => f.id);
-    const currentIds = rows.map(f => f.id);
-    const isSame = 
-      initialIds.length === currentIds.length &&
-      initialIds.every((id, idx) => id === currentIds[idx]);
-    return isSame
-  }
-
   const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     const src = event.dataTransfer.getData('text/plain');
@@ -138,7 +81,27 @@ function DragAndDropTable({
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 600 }}>
+    <Box sx={{ width: '100%', maxWidth: 600, }}>
+      <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        p: 1.5,
+        borderBottom: '1px solid rgba(82, 82, 82, 0.2)',
+        borderColor: 'divider',
+        bgcolor: 'background.default',
+      }}
+    >
+      <Box sx={{ width: 24, mr: 1.5 }} />
+
+      <Box sx={{ flex: 1, typography: 'subtitle2', textAlign: 'left' }}>
+        Attribute name
+      </Box>
+
+      <Box sx={{ width: 150, typography: 'subtitle2', textAlign: 'left' }}>
+        Predictable value
+      </Box>
+    </Box>
       {rows.map((row, index) => (
         <Box
           key={`${row.id}-${index}`}
@@ -150,7 +113,7 @@ function DragAndDropTable({
             alignItems: 'center',
             p: 1.5,
             bgcolor: dragOverIndex === index ? 'action.hover' : 'background.paper',
-            borderBottom: '1px solid',
+            borderBottom: '1px solid rgba(82, 82, 82, 0.2)',
             borderColor: 'divider',
             textAlign: 'left',
           }}

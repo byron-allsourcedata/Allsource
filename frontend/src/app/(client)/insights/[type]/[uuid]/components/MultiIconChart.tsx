@@ -2,7 +2,7 @@ import { Box, Typography, Stack } from "@mui/material";
 import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 
 interface IconData {
-  imageSrc: string;
+  imageSrc?: string;
   label: string;
   percentage: number;
   fillColor: string;
@@ -112,43 +112,48 @@ export const MultiIconFillIndicator = ({
           {items.map(
             ({ imageSrc, label, percentage, fillColor, bgColor }, index) => {
               return (
-                <Stack key={index} alignItems="center" spacing={1}>
-                  <Box
-                    position="relative"
-                    width={iconSize}
-                    height={iconSize}
-                    sx={{
-                      WebkitMaskImage: `url(${imageSrc})`,
-                      WebkitMaskSize: "contain",
-                      WebkitMaskRepeat: "no-repeat",
-                      WebkitMaskPosition: "center",
-                      maskImage: `url(${imageSrc})`,
-                      maskSize: "contain",
-                      maskRepeat: "no-repeat",
-                      maskPosition: "center",
-                      backgroundColor: bgColor,
-                    }}
-                  >
-                    {percentage > 0 && (
+                <>
+                  {imageSrc && (
+                    <Stack key={index} alignItems="center" spacing={1}>
+
                       <Box
-                        position="absolute"
-                        bottom={0}
-                        left={0}
-                        width="100%"
-                        height={`${percentage}%`}
+                        position="relative"
+                        width={iconSize}
+                        height={iconSize}
                         sx={{
-                          backgroundColor: fillColor,
+                          WebkitMaskImage: `url(${imageSrc})`,
                           WebkitMaskSize: "contain",
                           WebkitMaskRepeat: "no-repeat",
                           WebkitMaskPosition: "center",
+                          maskImage: `url(${imageSrc})`,
                           maskSize: "contain",
                           maskRepeat: "no-repeat",
                           maskPosition: "center",
+                          backgroundColor: bgColor,
                         }}
-                      />
-                    )}
-                  </Box>
-                </Stack>
+                      >
+                        {percentage > 0 && (
+                          <Box
+                            position="absolute"
+                            bottom={0}
+                            left={0}
+                            width="100%"
+                            height={`${percentage}%`}
+                            sx={{
+                              backgroundColor: fillColor,
+                              WebkitMaskSize: "contain",
+                              WebkitMaskRepeat: "no-repeat",
+                              WebkitMaskPosition: "center",
+                              maskSize: "contain",
+                              maskRepeat: "no-repeat",
+                              maskPosition: "center",
+                            }}
+                          />
+                        )}
+                      </Box>
+                    </Stack>
+                  )}
+                </>
               );
             }
           )}

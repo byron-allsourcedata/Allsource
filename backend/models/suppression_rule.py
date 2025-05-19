@@ -59,7 +59,7 @@ class SuppressionRule(Base):
         TEXT,
         nullable=True
     )
-    is_delete_contacts = Column(BOOLEAN, nullable=False, default=False)
+    is_delete_contacts = Column(BOOLEAN, nullable=False, server_default=text('FALSE'))
     
     def to_dict(self):
             return {
