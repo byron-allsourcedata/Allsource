@@ -81,7 +81,27 @@ function DragAndDropTable({
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 600 }}>
+    <Box sx={{ width: '100%', maxWidth: 600, }}>
+      <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        p: 1.5,
+        borderBottom: '1px solid rgba(82, 82, 82, 0.2)',
+        borderColor: 'divider',
+        bgcolor: 'background.default',
+      }}
+    >
+      <Box sx={{ width: 24, mr: 1.5 }} />
+
+      <Box sx={{ flex: 1, typography: 'subtitle2', textAlign: 'left' }}>
+        Attribute name
+      </Box>
+
+      <Box sx={{ width: 150, typography: 'subtitle2', textAlign: 'left' }}>
+        Predictable value
+      </Box>
+    </Box>
       {rows.map((row, index) => (
         <Box
           key={`${row.id}-${index}`}
@@ -93,7 +113,7 @@ function DragAndDropTable({
             alignItems: 'center',
             p: 1.5,
             bgcolor: dragOverIndex === index ? 'action.hover' : 'background.paper',
-            borderBottom: '1px solid',
+            borderBottom: '1px solid rgba(82, 82, 82, 0.2)',
             borderColor: 'divider',
             textAlign: 'left',
           }}

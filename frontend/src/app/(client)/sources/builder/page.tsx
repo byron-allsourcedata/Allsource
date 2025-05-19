@@ -672,31 +672,32 @@ const SourcesImport: React.FC = () => {
   };
 
   // Pixel
-
   const toggleEventType = (id: number) => {
-    const isCurrentlyActive = eventType.includes(id);
-
-    const typeCount = eventTypes.find((event) => event.id === id)
-      ?.name as keyof DomainsLeads;
-    const countChange = Number(
-      domains.find((domain) => domain.name === selectedDomain)?.[typeCount] || 0
-    );
-
-    setEventType((prev) => {
-      if (isCurrentlyActive) {
-        return prev.filter((item) => item !== id);
-      } else {
-        return [...prev, id];
-      }
-    });
-
-    setMatchedLeads((prevLeads) => {
-      if (isCurrentlyActive) {
-        return prevLeads - countChange;
-      } else {
-        return prevLeads + countChange;
-      }
-    });
+    if (isAllSelected) {
+      setIsAllSelected(false);
+      setMatchedLeads(0);
+    }
+  
+    const isActive = eventType.includes(id);
+    const newEventTypes = isActive
+      ? eventType.filter(e => e !== id)
+      : [...eventType, id];
+  
+    if (newEventTypes.length === 0) {
+      setIsAllSelected(true);
+      setEventType([]);
+      setMatchedLeads(totalLeads);
+      return;
+    }
+  
+    setEventType(newEventTypes);
+  
+    const sum = newEventTypes.reduce((acc, evId) => {
+      const field = eventTypes.find(e => e.id === evId)!.name as keyof DomainsLeads;
+      const cnt = domains.find(d => d.name === selectedDomain)?.[field] || 0;
+      return acc + Number(cnt);
+    }, 0);
+    setMatchedLeads(sum);
   };
 
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
@@ -711,6 +712,7 @@ const SourcesImport: React.FC = () => {
     if (selectedDomainData) {
       setTotalLeads(selectedDomainData.total_count || 0);
       setSelectedDomainId(selectedDomainData.id);
+      setPixelNotInstalled(!selectedDomainData.pixel_installed);
       setMatchedLeads(0);
       setEventType([]);
     }
@@ -741,6 +743,14 @@ const SourcesImport: React.FC = () => {
     } finally {
       setIsDomainSearchProcessing(false);
     }
+  };
+
+  const [isAllSelected, setIsAllSelected] = useState(true);
+  const allSelected = isAllSelected;
+  const handleToggleAll = () => {
+    setIsAllSelected(true);
+    setEventType([]);
+    setMatchedLeads(totalLeads);
   };
 
   return (
@@ -1205,7 +1215,7 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   </Box>
 
-                  <Box sx={{position: "relative", display: "flex", flexDirection: "column", gap: 1}}>
+                  <Box sx={{ position: "relative", display: "flex", flexDirection: "column", gap: 1 }}>
                     <Grid
                       container
                       alignItems="center"
@@ -1285,13 +1295,13 @@ const SourcesImport: React.FC = () => {
                                         borderColor: "#A3B0C2",
                                       },
                                       "&:hover .MuiOutlinedInput-notchedOutline":
-                                        {
-                                          borderColor: "#A3B0C2",
-                                        },
+                                      {
+                                        borderColor: "#A3B0C2",
+                                      },
                                       "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                        {
-                                          borderColor: "rgba(56, 152, 252, 1)",
-                                        },
+                                      {
+                                        borderColor: "rgba(56, 152, 252, 1)",
+                                      },
                                     },
                                     "&+.MuiFormHelperText-root": {
                                       marginLeft: "0",
@@ -1343,13 +1353,13 @@ const SourcesImport: React.FC = () => {
                                         borderColor: "#A3B0C2",
                                       },
                                       "&:hover .MuiOutlinedInput-notchedOutline":
-                                        {
-                                          borderColor: "#A3B0C2",
-                                        },
+                                      {
+                                        borderColor: "#A3B0C2",
+                                      },
                                       "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                        {
-                                          borderColor: "rgba(56, 152, 252, 1)",
-                                        },
+                                      {
+                                        borderColor: "rgba(56, 152, 252, 1)",
+                                      },
                                     },
                                   }}
                                 >
@@ -1667,112 +1677,62 @@ const SourcesImport: React.FC = () => {
                   >
                     <Button
                       variant="outlined"
+                      onClick={handleToggleAll}
                       sx={{
                         fontFamily: "Nunito Sans",
                         border: "1px solid rgba(208, 213, 221, 1)",
                         borderRadius: "4px",
-                        color: "rgba(32, 33, 36, 1)",
                         textTransform: "none",
                         fontSize: "14px",
                         padding: "8px 12px",
-                        backgroundColor: eventType.includes(1)
+                        backgroundColor: allSelected
                           ? "rgba(246, 248, 250, 1)"
                           : "rgba(255, 255, 255, 1)",
-                        borderColor: eventType.includes(1)
+                        borderColor: allSelected
                           ? "rgba(117, 168, 218, 1)"
                           : "rgba(208, 213, 221, 1)",
+                        color: allSelected
+                          ? "rgba(32, 33, 36, 1)"
+                          : "rgba(32, 33, 36, 1)",
                         ":hover": {
                           borderColor: "rgba(208, 213, 221, 1)",
                           backgroundColor: "rgba(236, 238, 241, 1)",
                         },
                       }}
-                      onClick={() => {
-                        toggleEventType(1);
-                      }}
                     >
-                      Visitor
+                      All
                     </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        border: "1px solid rgba(208, 213, 221, 1)",
-                        borderRadius: "4px",
-                        color: "rgba(32, 33, 36, 1)",
-                        textTransform: "none",
-                        fontSize: "14px",
-                        padding: "8px 12px",
-                        backgroundColor: eventType.includes(2)
-                          ? "rgba(246, 248, 250, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                        borderColor: eventType.includes(2)
-                          ? "rgba(117, 168, 218, 1)"
-                          : "rgba(208, 213, 221, 1)",
-                        ":hover": {
-                          borderColor: "rgba(208, 213, 221, 1)",
-                          backgroundColor: "rgba(236, 238, 241, 1)",
-                        },
-                      }}
-                      onClick={() => {
-                        toggleEventType(2);
-                      }}
-                    >
-                      View Product
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        border: "1px solid rgba(208, 213, 221, 1)",
-                        borderRadius: "4px",
-                        color: "rgba(32, 33, 36, 1)",
-                        textTransform: "none",
-                        fontSize: "14px",
-                        padding: "8px 12px",
-                        backgroundColor: eventType.includes(3)
-                          ? "rgba(246, 248, 250, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                        borderColor: eventType.includes(3)
-                          ? "rgba(117, 168, 218, 1)"
-                          : "rgba(208, 213, 221, 1)",
-                        ":hover": {
-                          borderColor: "rgba(208, 213, 221, 1)",
-                          backgroundColor: "rgba(236, 238, 241, 1)",
-                        },
-                      }}
-                      onClick={() => {
-                        toggleEventType(3);
-                      }}
-                    >
-                      Abandoned Cart
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        border: "1px solid rgba(208, 213, 221, 1)",
-                        borderRadius: "4px",
-                        color: "rgba(32, 33, 36, 1)",
-                        textTransform: "none",
-                        fontSize: "14px",
-                        padding: "8px 12px",
-                        backgroundColor: eventType.includes(4)
-                          ? "rgba(246, 248, 250, 1)"
-                          : "rgba(255, 255, 255, 1)",
-                        borderColor: eventType.includes(4)
-                          ? "rgba(117, 168, 218, 1)"
-                          : "rgba(208, 213, 221, 1)",
-                        ":hover": {
-                          borderColor: "rgba(208, 213, 221, 1)",
-                          backgroundColor: "rgba(236, 238, 241, 1)",
-                        },
-                      }}
-                      onClick={() => {
-                        toggleEventType(4);
-                      }}
-                    >
-                      Converted Sales
-                    </Button>
+                    {eventTypes.map((ev) => {
+                      const active = !isAllSelected && eventType.includes(ev.id);
+                      return (
+                        <Button
+                          key={ev.id}
+                          variant="outlined"
+                          onClick={() => toggleEventType(ev.id)}
+                          sx={{
+                            fontFamily: "Nunito Sans",
+                            border: "1px solid rgba(208, 213, 221, 1)",
+                            borderRadius: "4px",
+                            color: "rgba(32, 33, 36, 1)",
+                            textTransform: "none",
+                            fontSize: "14px",
+                            padding: "8px 12px",
+                            backgroundColor: active
+                              ? "rgba(246, 248, 250, 1)"
+                              : "rgba(255, 255, 255, 1)",
+                            borderColor: active
+                              ? "rgba(117, 168, 218, 1)"
+                              : "rgba(208, 213, 221, 1)",
+                            ":hover": {
+                              borderColor: "rgba(208, 213, 221, 1)",
+                              backgroundColor: "rgba(236, 238, 241, 1)",
+                            },
+                          }}
+                        >
+                          {ev.title.charAt(0).toUpperCase() + ev.title.slice(1).replace("_", " ")}
+                        </Button>
+                      );
+                    })}
                     {showHints && (
                       <HintCard
                         card={hintCard3}
@@ -1811,6 +1771,8 @@ const SourcesImport: React.FC = () => {
                   </Box>
                 </Box>
               ) : null}
+
+
 
               {sourceMethod !== 0 && (selectedDomainId || file) && (
                 <Box
@@ -1908,8 +1870,8 @@ const SourcesImport: React.FC = () => {
               )}
 
               {sourceMethod !== 0 &&
-              targetAudience !== "" &&
-              (file || selectedDomainId) ? (
+                targetAudience !== "" &&
+                (file || selectedDomainId) ? (
                 <>
                   <Box
                     ref={block6Ref}

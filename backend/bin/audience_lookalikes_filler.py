@@ -6,7 +6,7 @@ import functools
 import json
 from collections import Counter
 
-from sqlalchemy import desc, cast, String
+from sqlalchemy import desc, cast, String, exists, select
 import statistics
 import aioboto3
 from aio_pika import IncomingMessage
@@ -395,17 +395,29 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
             logging.info(f"audience_lookalike with id {lookalike_id} not found")
             await message.ack()
             return
-        
+
         total_rows = get_max_size(audience_lookalike.lookalike_size)
         process_lookalike_pipeline(db_session=db_session, audience_lookalike=audience_lookalike, similar_audiences_scores_service=similar_audiences_scores_service, similar_audience_service=similar_audience_service)
-        
+
+        source_uid_select = (
+            select(AudienceSourcesMatchedPerson.enrichment_user_id)
+            .where(AudienceSourcesMatchedPerson.source_id == audience_lookalike.source_uuid)
+        )
+
         enrichment_lookalike_scores = (
-            db_session.query(EnrichmentLookalikeScore.score, EnrichmentLookalikeScore.enrichment_user_id)
-            .filter(EnrichmentLookalikeScore.lookalike_id == lookalike_id)
+            db_session.query(
+                EnrichmentLookalikeScore.enrichment_user_id,
+                EnrichmentLookalikeScore.score
+            )
+            .filter(
+                EnrichmentLookalikeScore.lookalike_id == lookalike_id,
+                ~EnrichmentLookalikeScore.enrichment_user_id.in_(source_uid_select)
+            )
             .order_by(desc(EnrichmentLookalikeScore.score))
             .limit(total_rows)
             .all()
         )
+
         logging.info(f"Total row in pixel file: {len(enrichment_lookalike_scores)}")
         audience_lookalike.size = len(enrichment_lookalike_scores)
         scores = [float(s.score) for s in enrichment_lookalike_scores if s.score is not None]

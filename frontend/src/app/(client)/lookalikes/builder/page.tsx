@@ -388,37 +388,44 @@ const CreateLookalikePage: React.FC = () => {
                                 </TableRow>
                               </TableHead>
                               <TableBody>
-                                {filteredData.map((row, index) => (
-                                  <TableRow
-                                    key={index}
-                                    hover
-                                    sx={{
-                                      cursor: "pointer",
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      width: "100%",
-                                    }}
-                                    onClick={() => handleSelectRow(row)}
-                                  >
-                                    <TableCell
-                                      sx={{ flex: 1, textAlign: "start" }}
+                                {filteredData.map((row, index) => {
+                                  const isDisabled =
+                                    row.matched_records === 0 ||
+                                    row.matched_records_status === "pending";
+                                  return (
+                                    <TableRow
+                                      key={index}
+                                      hover={!isDisabled}
+                                      onClick={() => !isDisabled && handleSelectRow(row)}
+                                      sx={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        width: "100%",
+                                        opacity: isDisabled ? 0.5 : 1,
+                                        pointerEvents: isDisabled ? "none" : "auto",
+                                        cursor: isDisabled ? "not-allowed" : "pointer",
+                                      }}
                                     >
-                                      {row.name}
-                                    </TableCell>
-                                    <TableCell
-                                      sx={{ flex: 1, textAlign: "start" }}
-                                    >
-                                      {toNormalText(row.type)}
-                                    </TableCell>
-                                    <TableCell
-                                      sx={{ flex: 1, textAlign: "right" }}
-                                    >
-                                      {row.matched_records.toLocaleString(
-                                        "en-US"
-                                      )}
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
+                                      <TableCell
+                                        sx={{ flex: 1, textAlign: "start" }}
+                                      >
+                                        {row.name}
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{ flex: 1, textAlign: "start" }}
+                                      >
+                                        {toNormalText(row.type)}
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{ flex: 1, textAlign: "right" }}
+                                      >
+                                        {row.matched_records.toLocaleString(
+                                          "en-US"
+                                        )}
+                                      </TableCell>
+                                    </TableRow>
+                                  )
+                                })}
                               </TableBody>
                             </Table>
                           </TableContainer>
@@ -556,15 +563,15 @@ const CreateLookalikePage: React.FC = () => {
                 }
 
                 {calculatedResults && currentStep >= 2 && (
-                  <>
+                  <Box sx={{ mt: 2 }}>
                     <CalculatedSteps
-                      calculatedResults={calculatedResults}
-                      currentStep={currentStep}
-                      handlePrevStep={handlePrevStep}
-                      handleNextStep={handleNextStep}
-                      onFieldsOrderChangeUp={setDndFields}
-                    />
-                  </>
+                        calculatedResults={calculatedResults}
+                        currentStep={currentStep}
+                        handlePrevStep={handlePrevStep}
+                        handleNextStep={handleNextStep}
+                        onFieldsOrderChangeUp={setDndFields}
+                      />
+                  </Box>
                 )}
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
                 {currentStep >= 3 && (

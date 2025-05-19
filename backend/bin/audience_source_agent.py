@@ -886,7 +886,6 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         ).fetchone()
         logging.info(f"Updated processed and matched records for source_id {source_id}.")
         if processed_records >= total_records:
-
             InsightsUtils.process_insights(source_id=source_id, db_session=db_session)
             if type == 'user_ids':
                 calculate_and_save_significant_fields(db_session=db_session, source_id=source_id,

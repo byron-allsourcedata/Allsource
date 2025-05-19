@@ -183,6 +183,11 @@ const SourcesList: React.FC = () => {
     router.push("/sources");
   };
 
+  const isCreateDisabled =
+  createdData?.processed_records === 0 ||
+  createdData?.processed_records !== createdData?.total_records ||
+  createdData?.matched_records === 0;
+
   return (
     <>
       {loading && <CustomizedProgressBar />}
@@ -595,11 +600,7 @@ const SourcesList: React.FC = () => {
                 </Button>
                 <Button
                   variant="contained" /* need chnage < on !== */
-                  disabled={
-                    createdData?.processed_records === 0 ||
-                    createdData?.processed_records !==
-                      createdData?.total_records
-                  }
+                  disabled={isCreateDisabled}
                   onClick={() =>
                     router.push(`/lookalikes/builder?source_uuid=${createdData?.id}`)
                   }
@@ -694,6 +695,7 @@ const SourcesList: React.FC = () => {
                 }}
               >
                 <ListItemButton
+                  disabled={isCreateDisabled}
                   sx={{
                     padding: "4px 16px",
                     ":hover": { backgroundColor: "rgba(80, 82, 178, 0.1)" },
