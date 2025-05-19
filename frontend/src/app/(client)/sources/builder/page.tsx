@@ -100,6 +100,7 @@ const SourcesImport: React.FC = () => {
     useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [firstEventTypeClick, setFirstEventTypeClick] = useState(true);
   const [sourceType, setSourceType] = useState<string>("");
   const [selectedDomain, setSelectedDomain] = useState<string>("");
   const [sourceName, setSourceName] = useState<string>("");
@@ -116,12 +117,12 @@ const SourcesImport: React.FC = () => {
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
   const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
-    { show: true, id: 1 },
+    { show: true, id: 0 },
+    { show: false, id: 1 },
     { show: false, id: 2 },
     { show: false, id: 3 },
     { show: false, id: 4 },
     { show: false, id: 5 },
-    { show: false, id: 6 },
   ]);
 
   const [eventType, setEventType] = useState<number[]>([]);
@@ -149,53 +150,50 @@ const SourcesImport: React.FC = () => {
     { id: 4, name: "converted_sales_count", title: "converted_sales" },
   ];
 
-  const hintCard1: HintCardInterface = {
+  const hintCards: HintCardInterface[] = [
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Source Type",
     linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
-
-  const hintCard2: HintCardInterface = {
+    "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+   },
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Domain",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
-
-  const hintCard3: HintCardInterface = {
+   },
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Data source",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
-
-  const hintCard4: HintCardInterface = {
+   },
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Source file",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
-
-  const hintCard5: HintCardInterface = {
+   },
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Data Maping",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
-
-  const hintCard6: HintCardInterface = {
+   },
+   {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Target type",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-  };
+   }
+  ]
 
   const sourceTypeDescriptions: Record<string, string> = {
     "Customer Conversions":
@@ -284,12 +282,12 @@ const SourcesImport: React.FC = () => {
   useEffect(() => {
     if (showHints && !isOpenSelect) {
       setIsOpenSelect([
-        { show: true, id: 1 },
+        { show: true, id: 0 },
+        { show: false, id: 1 },
         { show: false, id: 2 },
         { show: false, id: 3 },
         { show: false, id: 4 },
         { show: false, id: 5 },
-        { show: false, id: 6 },
       ]);
     }
   }, [showHints]);
@@ -375,17 +373,17 @@ const SourcesImport: React.FC = () => {
     setTargetAudience("");
     setSelectedDomainId(0)
     setSourceType(event.target.value);
-    closeDotHintClick(1);
+    closeDotHintClick(0);
     if (event.target.value === "Website - Pixel") {
       setSourceMethod(2);
-      toggleDotHintClick(2);
+      toggleDotHintClick(1);
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
       fetchDomainsAndLeads();
     } else {
       setSourceMethod(1);
-      toggleDotHintClick(4);
+      toggleDotHintClick(3);
       setPixelNotInstalled(false);
       setTimeout(() => {
         scrollToBlock(block2Ref);
@@ -398,7 +396,9 @@ const SourcesImport: React.FC = () => {
     setTimeout(() => {
       scrollToBlock(block6Ref);
     }, 0);
-    closeDotHintClick(6);
+    closeDotHintClick(2);
+    closeDotHintClick(5);
+    setFirstEventTypeClick(false)
   };
 
   // Uploading
@@ -661,7 +661,7 @@ const SourcesImport: React.FC = () => {
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
-      toggleDotHintClick(6);
+      toggleDotHintClick(5);
     } catch (error: unknown) {
       if (error instanceof Error) {
         showErrorToast(error.message);
@@ -704,8 +704,8 @@ const SourcesImport: React.FC = () => {
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
     const domainName = event.target.value;
     setSelectedDomain(domainName);
-    closeDotHintClick(2);
-    toggleDotHintClick(3);
+    closeDotHintClick(1);
+    toggleDotHintClick(2);
 
     const selectedDomainData = domains.find(
       (domain: DomainsLeads) => domain.name === domainName
@@ -921,10 +921,10 @@ const SourcesImport: React.FC = () => {
                     </Select>
                     {showHints && (
                       <HintCard
-                        card={hintCard1}
+                        card={hintCards[0]}
                         positionLeft={340}
                         isOpenSelect={isOpenSelect[0].show}
-                        toggleClick={() => toggleDotHintClick(1)}
+                        toggleClick={() => toggleDotHintClick(0)}
                       />
                     )}
                   </FormControl>
@@ -1152,11 +1152,11 @@ const SourcesImport: React.FC = () => {
 
                   {showHints && (
                     <HintCard
-                      card={hintCard4}
+                      card={hintCards[3]}
                       positionLeft={360}
                       positionTop={100}
                       isOpenSelect={isOpenSelect[3].show}
-                      toggleClick={() => toggleDotHintClick(4)}
+                      toggleClick={() => toggleDotHintClick(3)}
                     />
                   )}
                 </Box>
@@ -1433,10 +1433,10 @@ const SourcesImport: React.FC = () => {
                     )}
                     {showHints && (
                       <HintCard
-                        card={hintCard5}
+                        card={hintCards[4]}
                         positionLeft={460}
                         isOpenSelect={isOpenSelect[4].show}
-                        toggleClick={() => toggleDotHintClick(5)}
+                        toggleClick={() => toggleDotHintClick(4)}
                       />
                     )}
                   </Box>
@@ -1590,10 +1590,10 @@ const SourcesImport: React.FC = () => {
                     </Select>
                     {showHints && (
                       <HintCard
-                        card={hintCard2}
+                        card={hintCards[1]}
                         positionLeft={340}
                         isOpenSelect={isOpenSelect[1].show}
-                        toggleClick={() => toggleDotHintClick(2)}
+                        toggleClick={() => toggleDotHintClick(1)}
                       />
                     )}
                   </FormControl>
@@ -1664,8 +1664,11 @@ const SourcesImport: React.FC = () => {
                   </Box>
                   <Box
                     onClick={() => {
-                      closeDotHintClick(3);
-                      openDotHintClick(6);
+                      if (firstEventTypeClick) {
+                        setFirstEventTypeClick(false)
+                        closeDotHintClick(2);
+                        openDotHintClick(5);
+                      }
                     }}
                     sx={{
                       display: "flex",
@@ -1736,11 +1739,11 @@ const SourcesImport: React.FC = () => {
                     })}
                     {showHints && (
                       <HintCard
-                        card={hintCard3}
-                        positionLeft={550}
+                        card={hintCards[2]}
+                        positionLeft={650}
                         positionTop={100}
                         isOpenSelect={isOpenSelect[2].show}
-                        toggleClick={() => toggleDotHintClick(3)}
+                        toggleClick={() => toggleDotHintClick(2)}
                       />
                     )}
                   </Box>
@@ -1860,10 +1863,10 @@ const SourcesImport: React.FC = () => {
                     ))}
                     {showHints && (
                       <HintCard
-                        card={hintCard6}
+                        card={hintCards[5]}
                         positionLeft={140}
                         isOpenSelect={isOpenSelect[5].show}
-                        toggleClick={() => toggleDotHintClick(6)}
+                        toggleClick={() => toggleDotHintClick(5)}
                       />
                     )}
                   </Box>
