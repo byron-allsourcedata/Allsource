@@ -169,6 +169,7 @@ const DetailsPopup: React.FC<DetailsPopupProps> = ({ open, onClose, id, name }) 
             borderBottom: "1px solid #e4e4e4",
             position: "sticky",
             top: 0,
+            zIndex: 1200,
             backgroundColor: "#fff",
           }}
         >
