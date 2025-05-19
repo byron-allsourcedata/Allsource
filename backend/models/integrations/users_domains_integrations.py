@@ -25,11 +25,13 @@ class UserIntegration(Base):
     slack_team_id = Column(VARCHAR(32))
     created_at = Column(TIMESTAMP, default=func.now(), nullable=True)
     is_slack_first_message_sent = Column(Boolean, default=False, nullable=False)
+    limit = Column(Integer, default=100, nullable=False)
     
     __table_args__ = (
         Index('users_domains_integrations_pkey', 'id'),
         Index('users_domains_integrations_suppression_idx', 'is_with_suppression', 'domain_id'),
         Index('users_domains_integrations_slack_team_id_idx', 'slack_team_id'),
+        Index("users_domains_integrations_user", "user_id")
     )
 
 class Integration(Base):

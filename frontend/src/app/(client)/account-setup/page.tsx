@@ -852,7 +852,7 @@ const AccountSetup = () => {
     { label: "S3", src: "s3-icon.svg", setState: setS3PopupOpen },
     { label: "Slack", src: "Slack-icon.svg", setState: setSlackPopupOpen },
     { label: "GoogleAds", src: "google-ads.svg", setState: setGoogleADSPopupOpen },
-    { label: "BingAds", src: "bingads-icon.svg", setState: setBingAdsPopupOpen },
+    { label: "BingAds", src: "bing-ads.svg", setState: setBingAdsPopupOpen },
     { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen },
   ];
   const roles = [

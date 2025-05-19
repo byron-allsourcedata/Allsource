@@ -571,7 +571,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItem>
                                 )}
                                 {/* BingAds */}
-                                {/* {integrationsCredentials.some(integration => integration.service_name === 'bing_ads') && (
+                                {integrationsCredentials.some(integration => integration.service_name === 'bing_ads') && (
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
@@ -595,7 +595,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             backgroundColor: selectedIntegration === 'bing_ads' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/bingads-icon.svg" alt="bingads" height={26} width={32} />
+                                                <Image src="/bing-ads.svg" alt="bingads" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="BingAds" primaryTypographyProps={{
                                                 sx: {
@@ -608,7 +608,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             }} />
                                         </ListItemButton>
                                     </ListItem>
-                                )} */}
+                                )}
                                 {/* SalesForce */}
                                 {integrationsCredentials.some(integration => integration.service_name === 'sales_force') && (
                                     <ListItem sx={{

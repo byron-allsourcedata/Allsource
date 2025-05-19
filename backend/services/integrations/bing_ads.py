@@ -1,20 +1,25 @@
 import os
+import logging
+from bingads import ServiceClient, AuthorizationData, OAuthWebAuthCodeGrant
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.domains import UserDomainsPersistence
+from services.integrations.commonIntegration import get_valid_email, get_valid_phone, get_valid_location
+from bingads.v13.bulk.entities.audiences import BulkCampaignCustomerListAssociation
+from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters
 from schemas.integrations.integrations import *
-from schemas.integrations.sales_force import SalesForceProfile
 from fastapi import HTTPException
-from datetime import datetime, timedelta
-from utils import extract_first_email
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from faker import Faker
+import re
+# from models.enrichment_users import EnrichmentUser
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit
 import httpx
-import json
 from utils import format_phone_number
 from typing import List
-from utils import validate_and_format_phone, format_phone_number
+
+logger = logging.getLogger(__name__)
 
 
 class BingAdsIntegrationsService:
@@ -45,7 +50,6 @@ class BingAdsIntegrationsService:
     def get_credentials(self, domain_id: int, user_id: int):
         credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.BING_ADS.value)
         return credential
-        
 
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
         credential = self.get_credentials(domain_id, user.get('id'))
@@ -60,7 +64,8 @@ class BingAdsIntegrationsService:
         integration_data = {
             'access_token': api_key,
             'full_name': user.get('full_name'),
-            'service_name': SourcePlatformEnum.BING_ADS.value
+            'service_name': SourcePlatformEnum.BING_ADS.value,
+            'limit': IntegrationLimit.BING_ADS.value
         }
 
         if common_integration:
@@ -73,13 +78,7 @@ class BingAdsIntegrationsService:
         if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
         return integartion
-    
-    def get_list(self, domain_id: int, user_id: int):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user_id)
-        if not credentials:
-            return
-        return self.__get_list(credentials.access_token, credentials)
-    
+        
     def edit_sync(self, leads_type: str, list_id: str, list_name: str, integrations_users_sync_id: int, domain_id: int, user_id: int, created_by: str, data_map: List[DataMap] = []):
         credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
@@ -93,37 +92,193 @@ class BingAdsIntegrationsService:
         return sync
             
     def get_access_token(self, refresh_token):
+        client_id = os.getenv("AZURE_CLIENT_ID")
+        client_secret = os.getenv("AZURE_CLIENT_SECRET")
         data = {
-            "grant_type": "refresh_token",
-            "client_id": os.getenv("SALES_FORCE_TOKEN"),
-            "client_secret": os.getenv("SALES_FORCE_SECRET"),
-            "refresh_token": refresh_token,
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'grant_type': 'refresh_token',
+            'refresh_token': refresh_token,
+            'scope': 'https://ads.microsoft.com/.default'
         }
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
             "Accept": "application/json"
         }
-        response = self.__handle_request(method='POST', url="https://login.salesforce.com/services/oauth2/token", data=data, headers=headers)
+        response = self.__handle_request(method='POST', url="https://login.microsoftonline.com/common/oauth2/v2.0/token", data=data, headers=headers)
         return response.json()["access_token"]
     
-    def update_lead(self, instance_url: str, access_token: str, lead_id: int, data: dict):
-        url = f"{instance_url}/services/data/v59.0/sobjects/Lead/{lead_id}"
-        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        response = self.__handle_request(method='PATCH', url=url, json=data, headers=headers)
-        return response
+    def get_user_lists(self, domain_id: int, customer_id: int, user_id: int):
+        try:
+            credentials = self.get_credentials(domain_id, user_id)
+            if not credentials:
+                return
+            
+            campaign_service = self._setup_campaign_service(account_id=customer_id, refresh_token=credentials.access_token)
+            
+            # RemarketingList, Custom, InMarket, Product, SimilarRemarketingList, CombinedList, CustomerList, ImpressionBasedRemarketingList
+            response = campaign_service.GetAudiencesByIds(
+                AudienceIds=[],
+                Type='CustomerList',
+                ReturnAdditionalFields=None
+            )
 
-    def create_or_update_lead(self, instance_url: str, access_token: str, data: dict):
-        url = f"{instance_url}/services/data/v59.0/sobjects/Lead"
-        headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
-        response = self.__handle_request(method='POST', url=url, json=data, headers=headers)
-        
-        if response.status_code == 400:
-            error_data = response.json()
-            lead_id = error_data[0]["duplicateResult"]["matchResults"][0]["matchRecords"][0]["record"]["Id"]
-            return self.update_lead(instance_url=instance_url, access_token=access_token, lead_id=lead_id, data=data)
+            audiences_container = response.Audiences
+            if not audiences_container or not hasattr(audiences_container, 'Audience'):
+                return []
+            
+            audience_list = audiences_container.Audience
 
-        return response
+            if not isinstance(audience_list, list):
+                audience_list = [audience_list]
+
+            audience_list =  [{"audience_id": audience.Id, "audience_name": audience.Name} for audience in audience_list]
+            return {'status': IntegrationsStatus.SUCCESS.value, 'audience_list': audience_list}
+            
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {e}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
     
+    def _get_authorization_data(self, *, refresh_token):
+        client_id = os.getenv("AZURE_CLIENT_ID")
+        client_secret = os.getenv("AZURE_CLIENT_SECRET")
+        developer_token = os.getenv("AZURE_DEVELOPER_TOKEN")
+        auth = OAuthWebAuthCodeGrant(
+            client_id=client_id,
+            client_secret=client_secret,
+            redirection_uri=f"{os.getenv('SITE_HOST_URL')}/bing-ads-landing"
+        )
+        auth.request_oauth_tokens_by_refresh_token(refresh_token)
+        return AuthorizationData(developer_token=developer_token, authentication=auth)
+    
+    def _setup_customer_service(self, *, account_id, refresh_token):
+        auth_data = self._get_authorization_data(refresh_token=refresh_token)
+        customer_service = ServiceClient(
+            service='CustomerManagementService',
+            version=13,
+            authorization_data=auth_data
+        )
+        user = customer_service.GetUser().User
+        auth_data.customer_id = user.CustomerId
+        auth_data.account_id = account_id
+        return customer_service
+    
+    def _setup_campaign_service(self, *, account_id, refresh_token):
+        auth_data = self._get_authorization_data(refresh_token=refresh_token)
+        customer_service = ServiceClient(
+            service='CustomerManagementService',
+            version=13,
+            authorization_data=auth_data
+        )
+        user = customer_service.GetUser().User
+        auth_data.customer_id = user.CustomerId
+        auth_data.account_id = account_id
+        
+        campaign_service = ServiceClient(
+            service='CampaignManagementService',
+            version=13,
+            authorization_data=auth_data
+        )
+        return campaign_service
+    
+    def get_customer_info(self, domain_id: int, user_id: int):
+        try:
+            credentials = self.get_credentials(domain_id, user_id)
+            if not credentials:
+                return
+            
+            authorization_data = self._get_authorization_data(refresh_token=credentials.access_token)
+            customer_service = ServiceClient(
+                service='CustomerManagementService',
+                version=13,
+                authorization_data=authorization_data
+            )
+            user = customer_service.GetUser().User
+            accounts = customer_service.SearchAccounts(
+                Predicates={
+                    'Predicate': [{
+                        'Field': 'UserId',
+                        'Operator': 'Equals',
+                        'Value': user.Id
+                    }]
+                },
+                PageInfo={'Index': 0, 'Size': 100}
+            )
+
+            if not accounts or not hasattr(accounts, 'AdvertiserAccount'):
+                return []
+            
+            accounts_list =  [{"customer_id": account.Id, "customer_name": account.Name} for account in accounts.AdvertiserAccount]
+            return {'status': IntegrationsStatus.SUCCESS.value, 'customers': accounts_list}
+        
+        except Exception as e:
+            logger.error(f"Error getting customer info: {e}")
+    
+    def get_campaigns(self, domain_id: int, customer_id: int, user_id: int) -> list:
+        credentials = self.get_credentials(domain_id, user_id)
+        if not credentials:
+            return
+        
+        try:
+            campaign_svc = self._setup_campaign_service(account_id=customer_id, refresh_token=credentials.access_token)
+            resp = campaign_svc.GetCampaignsByAccountId(
+                AccountId=customer_id,
+                CampaignType='Search Shopping DynamicSearchAds Audience Hotel PerformanceMax App'
+            )
+            campaigns_list = resp.Campaign
+            if not isinstance(campaigns_list, list):
+                campaigns_list = [campaigns_list]
+                
+            audience_list =  [{"campaign_id": campaign.Id, "campaign_name": campaign.Name} for campaign in campaigns_list]
+            return {'status': IntegrationsStatus.SUCCESS.value, 'campaign_list': audience_list}
+            
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {e}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
+    def create_campaign(self, domain_id: int, user_id: int, campaign_list) -> int:
+        credentials = self.get_credentials(domain_id, user_id)
+        if not credentials:
+            return
+        
+        campaign_service = self._setup_campaign_service(account_id=campaign_list.customer_id, refresh_token=credentials.access_token)
+        bidding_scheme = campaign_service.factory.create('EnhancedCpcBiddingScheme')
+        
+        campaign = campaign_service.factory.create('Campaign')
+        
+        target_setting_detail = campaign_service.factory.create('TargetSettingDetail')
+        target_setting_detail.CriterionTypeGroup = 'Audience'
+        target_setting_detail.TargetAndBid = True
+        campaign.TargetSetting = [target_setting_detail]
+
+        campaign.Name = campaign_list.name
+        campaign.DailyBudget = campaign_list.daily_budget
+        campaign.BudgetType = 'DailyBudgetStandard'
+        campaign.Status = 'Paused'
+        campaign.BiddingScheme = bidding_scheme
+        campaign.CampaignType = campaign_list.type
+        campaign.Languages = {'string': ['All']}
+        campaigns = campaign_service.factory.create('ArrayOfCampaign')
+        campaigns.Campaign.append(campaign)
+
+        try:
+            response = campaign_service.AddCampaigns(
+                AccountId=campaign_service.authorization_data.account_id,
+                Campaigns=campaigns
+            )
+            if response and response.CampaignIds and response.CampaignIds['long']:
+                return {'status': IntegrationsStatus.SUCCESS.value, 'channel': {'campaign_id': response.CampaignIds['long'][0], 'campaign_name': campaign_list.name}}
+            else:
+                if response and response.PartialErrors and response.PartialErrors['BatchError']:
+                    for error in response.PartialErrors['BatchError']:
+                        if error.Code == 1115:
+                            return {'status': IntegrationsStatus.ALREADY_EXIST.value, 'message': "A campaign with the same name already exists. Please choose a different name."}
+                        else:
+                            raise Exception(f"Error {error.Code}: {error.Message}")
+                        
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {e}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
+        
     def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
         client_id = os.getenv("AZURE_CLIENT_ID")
         client_secret = os.getenv("AZURE_CLIENT_SECRET")
@@ -147,59 +302,135 @@ class BingAdsIntegrationsService:
             }
         else:
             raise HTTPException(status_code=400, detail="Failed to get access token")
-        
-    async def create_sync(self, leads_type: str, domain_id: int, created_by: str, user: dict,data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id, user.get('id'))
+    
+    def create_list(self, list, domain_id, user_id):
+        credentials = self.get_credentials(domain_id, user_id)
+        if not credentials:
+            return
+        try:
+            campaign_service = self._setup_campaign_service(account_id=list.customer_id, refresh_token=credentials.access_token)
+            factory = campaign_service.factory
+            customer_list = factory.create('CustomerList')
+            customer_list.Name = list.name
+            customer_list.Description = 'List of customers by Maximiz app'
+            customer_list.MembershipDuration = 300
+            customer_list.Scope = 'Account'
+            customer_list.Type = 'CustomerList'
+            customer_list.ParentId = campaign_service.authorization_data.account_id
+            audiences = factory.create('ArrayOfAudience')
+            audiences.Audience = [customer_list]
+            add_response = campaign_service.AddAudiences(Audiences=audiences)
+            audience_ids = []
+            if hasattr(add_response, 'AudienceIds') and add_response.AudienceIds is not None:
+                audience_ids = add_response.AudienceIds.long
+                
+            if not audience_ids:
+                raise Exception("AddAudiences returned an empty list of IDs. Check the request settings.")
+            
+            return {'status': IntegrationsStatus.SUCCESS.value, 'channel': {'audience_id': audience_ids[0], 'audience_name': list.name}}
+        except Exception as e:
+            logger.error(f"An unexpected error occurred: {e}")
+            return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
+    
+    def add_customer_list_to_campaign_bulk(self, access_token: str, customer_id: int, campaign_id: int, list_id: int,
+                                           list_name: str, campaign_name: str) -> None:
+      
+        campaign_service = self._setup_campaign_service(account_id=customer_id, refresh_token=access_token)
+        factory = campaign_service.factory
+        bcc = factory.create('BiddableCampaignCriterion')
+        bcc.Status = 'Paused'
+        bcc.CampaignId = campaign_id
+        bcc.Criterion = factory.create('AudienceCriterion')
+        bcc.Criterion.Type = None
+        bcc.Criterion.AudienceId = list_id
+        bcc.CriterionBid = factory.create('BidMultiplier')
+        bcc.CriterionBid.Type = None
+        bcc.CriterionBid.Multiplier = 0.0
+        assoc = BulkCampaignCustomerListAssociation(
+            biddable_campaign_criterion=bcc,
+            campaign_name=campaign_name,
+            audience_name=list_name
+        )
+        bulk_manager = BulkServiceManager(
+            authorization_data=campaign_service.authorization_data,
+            environment='production'
+        )
+        result_file_name = f"bulk_{list_name}_{campaign_name}_results.csv"
+        upload_params = EntityUploadParameters(
+            entities=[assoc],
+            result_file_directory='.',
+            result_file_name=result_file_name,
+            overwrite_result_file=True,
+            response_mode='ErrorsAndResults'
+        )
+
+        for bulk_entity in bulk_manager.upload_entities(upload_params):
+            if getattr(bulk_entity, 'has_error', False):
+                raise Exception(f"Error when adding CustomerList: {bulk_entity.error_message}")
+
+        logger.info("CustomerList has been successfully added to the campaign via the Bulk API")
+            
+    async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = [], campaign_id: str = None, campaign_name: str = None):
+        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+        if campaign_id is not None:
+            self.add_customer_list_to_campaign_bulk(access_token=credentials.access_token, customer_id=customer_id, campaign_id=campaign_id, list_id=list_id, list_name=list_name, campaign_name=campaign_name)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
+            'list_id': list_id,
+            'list_name': list_name,
             'domain_id': domain_id,
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,
+            'campaign_id': campaign_id,
+            'campaign_name': campaign_name,
+            'customer_id': customer_id
         })
-        return sync
+        return sync 
 
-    async def process_data_sync(self, five_x_five_user, user_integration, data_sync, lead_user):
-        profile = self.__create_profile(five_x_five_user=five_x_five_user, access_token=user_integration.access_token, instance_url=user_integration.instance_url)
-        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
+    # async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
+    #     profiles = []
+    #     for enrichment_user in enrichment_users:
+    #         profile = self.__mapped_bing_ads_profile(enrichment_users=enrichment_user)
+    #         profiles.append(profile)
             
-        return ProccessDataSyncResult.SUCCESS.value
-
-    def __create_profile(self, five_x_five_user: FiveXFiveUser, access_token: str, instance_url: str):
-        profile = self.__mapped_sales_force_profile(five_x_five_user)
-        if profile in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return profile
-
-        json_data = {
-            'FirstName': profile.FirstName,
-            'LastName': profile.LastName,
-            'Email': profile.Email,
-            'Phone': profile.Phone,
-            'MobilePhone': profile.MobilePhone,
-            'Company': profile.Company,
-            'Title': profile.Title,
-            'Industry': profile.Industry,
-            'LeadSource': profile.LeadSource,
-            'Street': profile.Street,
-            'City': profile.City,
-            'State': profile.State,
-            'Country': profile.Country,
-            'NumberOfEmployees': profile.NumberOfEmployees,
-            'AnnualRevenue': profile.AnnualRevenue,
-            'Description': profile.Description
-        }
-        
-        json_data = {k: v for k, v in json_data.items() if v is not None}
-        access_token = self.get_access_token(access_token)
-        response = self.create_or_update_lead(instance_url=instance_url, access_token=access_token, data=json_data)
-        
-        if response.status_code == 400:
-                return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        if response.status_code == 401:
-                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+    #     result = self.__create_profile(access_token=user_integration.access_token, profiles=profiles)
+    #     if result in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value, ProccessDataSyncResult.INCORRECT_FORMAT.value):
+    #         return profile
             
-        return ProccessDataSyncResult.SUCCESS.value
+    #     return ProccessDataSyncResult.SUCCESS.value
+
+    # def __create_profile(self, access_token: str, profile: List[dict]):
+        
+    #     json_data = {
+    #         'FirstName': profile.FirstName,
+    #         'LastName': profile.LastName,
+    #         'Email': profile.Email,
+    #         'Phone': profile.Phone,
+    #         'MobilePhone': profile.MobilePhone,
+    #         'Company': profile.Company,
+    #         'Title': profile.Title,
+    #         'Industry': profile.Industry,
+    #         'LeadSource': profile.LeadSource,
+    #         'Street': profile.Street,
+    #         'City': profile.City,
+    #         'State': profile.State,
+    #         'Country': profile.Country,
+    #         'NumberOfEmployees': profile.NumberOfEmployees,
+    #         'AnnualRevenue': profile.AnnualRevenue,
+    #         'Description': profile.Description
+    #     }
+        
+    #     json_data = {k: v for k, v in json_data.items() if v is not None}
+    #     access_token = self.get_access_token(access_token)
+    #     response = self.create_or_update_lead(instance_url=instance_url, access_token=access_token, data=json_data)
+        
+    #     if response.status_code == 400:
+    #             return ProccessDataSyncResult.INCORRECT_FORMAT.value
+    #     if response.status_code == 401:
+    #             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            
+    #     return ProccessDataSyncResult.SUCCESS.value
                 
     def set_suppression(self, suppression: bool, domain_id: int, user: dict):
             credential = self.get_credentials(domain_id, user.get('id'))
@@ -223,106 +454,50 @@ class BingAdsIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
         return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
     
-    def __mapped_sales_force_profile(self, five_x_five_user: FiveXFiveUser) -> SalesForceProfile:
-        email_fields = [
-            'business_email', 
-            'personal_emails', 
-            'additional_personal_emails',
-        ]
-        
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
-                            if five_x_five_user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
-                                return e.strip()
-                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
-                                return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+    # def __mapped_bing_ads_profile(self, enrichment_user: EnrichmentUser):
+    #     emails_list = [e.email.email for e in enrichment_user.emails_enrichment]
+    #     first_email = get_valid_email(emails_list)
+    #     fake = Faker()
 
-        first_email = get_valid_email(five_x_five_user)
-        
-        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
-            return first_email
-        
-        company_name = getattr(five_x_five_user, 'company_name', None)
-        if not company_name:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        
-        first_phone = (
-            getattr(five_x_five_user, 'mobile_phone') or 
-            getattr(five_x_five_user, 'personal_phone') or 
-            getattr(five_x_five_user, 'direct_number') or 
-            getattr(five_x_five_user, 'company_phone', None)
-        )
-        phone_number = validate_and_format_phone(first_phone)
-        mobile_phone = getattr(five_x_five_user, 'mobile_phone', None)
-        
-        location = {
-            "address1": getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address', None),
-            "city": getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
-            "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
-            "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
-        }
-        
-        description = getattr(five_x_five_user, 'company_description', None)
-        if description:
-            description = description[:9999]
+    #     first_phone = fake.phone_number()
+    #     address_parts = fake.address().split("\n")
+    #     city_state_zip = address_parts[-1]
+
+    #     match = re.match(r'^(.*?)(?:, ([A-Z]{2}) (\d{5}))?$', city_state_zip)
+
+    #     if match:
+    #         city = match.group(1).strip()
+    #         state = match.group(2) if match.group(2) else ''
+    #         zip_code = match.group(3) if match.group(3) else ''
+    #     else:
+    #         city, state, zip_code = '', '', ''
             
-        company_employee_count = getattr(five_x_five_user, 'company_employee_count', None)
-        if company_employee_count:
-            company_employee_count = str(company_employee_count).replace('+', '')
-            if 'to' in company_employee_count:
-                start, end = company_employee_count.split(' to ')
-                company_employee_count = (int(start) + int(end)) // 2
-            else:
-                company_employee_count = int(company_employee_count)
-            company_employee_count = str(company_employee_count)
+    #     gender = ''
+        
+    #     if enrichment_user.gender == 1:
+    #         gender = 'm'
+    #     elif enrichment_user.gender == 2:
+    #         gender = 'f'
             
-        company_revenue = getattr(five_x_five_user, 'company_revenue', None)
-        if company_revenue:
-            try:
-                company_revenue = str(company_revenue).replace('+', '').split(' to ')[-1]
-                if 'Billion' in company_revenue:
-                    cleaned_value = float(company_revenue.split()[0]) * 10**9
-                elif 'Million' in company_revenue:
-                    cleaned_value = float(company_revenue.split()[0]) * 10**6
-                elif company_revenue.isdigit():
-                    cleaned_value = float(company_revenue)
-                else:
-                    cleaned_value = 0
-            except:
-                cleaned_value = 0
-                
-            company_revenue = str(cleaned_value)
+    #     first_name = fake.first_name()
+    #     last_name = fake.last_name()
+        
+    #     birth_year, birth_month, birth_day = self.get_birth_date_from_age(enrichment_user.age)
             
-        return SalesForceProfile(
-            FirstName=getattr(five_x_five_user, 'first_name', None),
-            LastName=getattr(five_x_five_user, 'last_name', None),
-            Email=first_email,
-            Phone=', '.join(phone_number.split(', ')[-3:]) if phone_number else None,
-            MobilePhone=', '.join(mobile_phone.split(', ')[-3:]) if mobile_phone else None,
-            Company=company_name,
-            Title=getattr(five_x_five_user, 'job_title', None),
-            Industry=getattr(five_x_five_user, 'primary_industry', None),
-            LeadSource='Web',
-            City=location.get('city'),
-            State=location.get('region'),
-            Country='USA',
-            NumberOfEmployees=company_employee_count,
-            AnnualRevenue=company_revenue,
-            Description=description 
-        )
+    #     return {
+    #         FirstName=getattr(five_x_five_user, 'first_name', None),
+    #         LastName=getattr(five_x_five_user, 'last_name', None),
+    #         Email=first_email,
+    #         Phone=', '.join(phone_number.split(', ')[-3:]) if phone_number else None,
+    #         MobilePhone=', '.join(mobile_phone.split(', ')[-3:]) if mobile_phone else None,
+    #         Company=company_name,
+    #         Title=getattr(five_x_five_user, 'job_title', None),
+    #         Industry=getattr(five_x_five_user, 'primary_industry', None),
+    #         LeadSource='Web',
+    #         City=location.get('city'),
+    #         State=location.get('region'),
+    #         Country='USA',
+    #         NumberOfEmployees=company_employee_count,
+    #         AnnualRevenue=company_revenue,
+    #         Description=description 
+    #     }

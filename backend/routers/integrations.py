@@ -410,20 +410,44 @@ async def oauth_shopify_redact(r: Request, integrations_service: IntegrationServ
         service.shopify.oauth_shopify_redact(request_body, shopify_hmac_header)
         return GenericEcommerceResponse(message="Shopify data deleted successfully")
     
-@router.get("/google-ads/customers-info")
-def oauth_shopify_callback(user = Depends(check_user_authentication), 
-                           domain = Depends(check_domain), 
+@router.get("/customers-info")
+def customers_info(service_name: str = Query(...),
+                           user = Depends(check_user_authentication), 
+                           domain = Depends(check_domain),
                            integration_service: IntegrationService = Depends(get_integration_service)):
-    with integration_service as service:
-        return service.google_ads.get_customer_info_and_resource_name(domain.id, user.get('id'))
-
-@router.get("/google-ads/get-channels")
-def oauth_shopify_callback(customer_id: str,
+    
+     with integration_service as service:
+        service = getattr(service, service_name)
+        return service.get_customer_info(domain.id, user.get('id'))
+    
+@router.get("/get-channels")
+def get_channels(service_name: str = Query(...),
+                           customer_id: str = Query(...),
                            user = Depends(check_user_authentication), 
                            domain = Depends(check_domain), 
                            integration_service: IntegrationService = Depends(get_integration_service)):
     with integration_service as service:
-        return service.google_ads.get_user_lists(domain.id, customer_id, user.get('id'))
+        service = getattr(service, service_name)
+        return service.get_user_lists(domain.id, customer_id, user.get('id'))
+
+@router.get("/get-campaigns")
+def get_campaigns(service_name: str = Query(...),
+                           customer_id: str = Query(...),
+                           user = Depends(check_user_authentication), 
+                           domain = Depends(check_domain), 
+                           integration_service: IntegrationService = Depends(get_integration_service)):
+    with integration_service as service:
+        service = getattr(service, service_name)
+        return service.get_campaigns(domain.id, customer_id, user.get('id'))
+
+@router.post('/create-campaign', status_code=201)
+async def create_campaign(campaign_data: CreateCampaignList,
+                      service_name: str = Query(...),
+                      integrations_service: IntegrationService = Depends(get_integration_service),
+                      user=Depends(check_user_authorization), domain=Depends(check_domain)):
+    with integrations_service as service:
+        service = getattr(service, service_name)
+        return service.create_campaign(domain_id=domain.id, user_id=user.get('id'), campaign_list=campaign_data)
       
 @router.post("/kajabi")
 async def kajabi_webhook(request: Request, domain: str, persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence)):

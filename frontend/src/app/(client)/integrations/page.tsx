@@ -616,7 +616,7 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     { image: 'hubspot.svg', service_name: 'hubspot' },
     { image: 'google-ads.svg', service_name: 'google_ads' },
     { image: 'salesforce-icon.svg', service_name: 'sales_force' },
-    { image: 'bingads-icon.svg', service_name: 'bing_ads' },
+    { image: 'bing-ads.svg', service_name: 'bing_ads' },
     { image: 's3-icon.svg', service_name: 's3' }
   ];
 

@@ -343,6 +343,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         return (
           <Image src={"/salesforce-icon.svg"} alt="salesForce" width={18} height={18} />
         );
+      case "bing_ads":
+        return (
+          <Image src={"/bing-ads.svg"} alt="bingAds" width={18} height={18} />
+        );
       default:
         return null;
     }
