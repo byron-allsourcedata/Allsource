@@ -14,11 +14,16 @@ class SuppressionPersistence:
 
     def __init__(self, db: Session):
         self.db = db
+    
+    def get_all_suppression_list(self, domain_id: int):
+        suppression_lists = (
+            self.db.query(SuppressionList)
+            .filter(SuppressionList.domain_id == domain_id)
+            .all()
+        )
+        return suppression_lists
 
     def save_suppressions_list(self, email_list, list_name, domain_id: int):
-        suppression_list = self.db.query(SuppressionList).filter(SuppressionList.list_name == list_name).first()
-        if suppression_list:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={'status': 'LIST_EXISTS'})
         suppression_list = SuppressionList(
             list_name=list_name,
             created_at=datetime.now(),

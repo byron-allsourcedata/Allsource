@@ -24,8 +24,10 @@ import MailchimpConnect from './MailchimpConnect';
 import MailchimpDatasync from '../app/(client)/data-sync/components/MailchimpDatasync';
 import SlackDatasync from '../app/(client)/data-sync/components/SlackDataSync';
 import GoogleADSDatasync from '../app/(client)/data-sync/components/GoogleADSDataSync';
+import LinkedinDataSync from '../app/(client)/data-sync/components/LinkedinDataSync';
 import SendlaneConnect from './SendlaneConnect';
 import S3Connect from './S3Connect';
+import LinkedinConnectPopup from "@/components/LinkedinConnectPopup";
 import SendlaneDatasync from '../app/(client)/data-sync/components/SendlaneDatasync';
 import S3Datasync from '../app/(client)/data-sync/components/S3Datasync';
 import WebhookDatasync from '../app/(client)/data-sync/components/WebhookDatasync';
@@ -79,12 +81,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [createWebhook, setCreateWebhook] = useState<boolean>(false)
     const [createSlack, setCreateSlack] = useState<boolean>(false)
     const [createGoogleAds, setCreateGoogleAds] = useState<boolean>(false)
+    const [createLinkedin, setCreateLinkedin] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
     const [isInvalidApiKey, setIsInvalidApiKey] = useState(false);
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
     const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false)
     const [googleAdsIconPopupOpen, setOpenGoogleAdsIconPopup] = useState(false)
+    const [linkedinIconPopupOpen, setOpenLinkedinIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
     const [openS3IconPopupOpen, setOpenS3IconPopupOpen] = useState(false)
@@ -204,6 +208,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenGoogleAdsIconPopup(true)
     }
 
+    const handleLinkedinIconPopupIconOpen = () => {
+        setOpenLinkedinIconPopup(true)
+    }
+
     const handleMailchimpIconPopupIconOpen = () => {
         setOpenMailchimpIconPopup(true)
     }
@@ -218,6 +226,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setCreateGoogleAds(true)
     }
 
+    const handleCreateLinkedinOpen = () => {
+        setIsInvalidApiKey(true)
+        setCreateLinkedin(true)
+    }
+
     const handleMailchimpIconPopupIconClose = () => {
         setOpenMailchimpIconPopup(false)
         setPlusIconPopupOpen(false)
@@ -229,6 +242,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     }
     const handleGoogleAdsIconPopupIconClose = () => {
         setOpenGoogleAdsIconPopup(false)
+        setPlusIconPopupOpen(false)
+    }
+
+    const handleLinkedinIconPopupIconClose = () => {
+        setOpenLinkedinIconPopup(false)
         setPlusIconPopupOpen(false)
     }
 
@@ -393,6 +411,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleCreateGoogleAdsClose = () => {
         setCreateGoogleAds(false)
+    }
+
+    const handleCreateLinkedinClose = () => {
+        setCreateLinkedin(false)
     }
 
     const handleOpenZapierDataSync = () => {
@@ -571,7 +593,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                     </ListItem>
                                 )}
                                 {/* BingAds */}
-                                {/* {integrationsCredentials.some(integration => integration.service_name === 'bing_ads') && (
+                                {integrationsCredentials.some(integration => integration.service_name === 'bing_ads') && (
                                     <ListItem sx={{
                                         p: 0,
                                         borderRadius: '4px',
@@ -595,7 +617,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             backgroundColor: selectedIntegration === 'bing_ads' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
                                         }}>
                                             <ListItemIcon sx={{ minWidth: 'auto' }}>
-                                                <Image src="/bingads-icon.svg" alt="bingads" height={26} width={32} />
+                                                <Image src="/bing-ads.svg" alt="bingads" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="BingAds" primaryTypographyProps={{
                                                 sx: {
@@ -608,7 +630,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                             }} />
                                         </ListItemButton>
                                     </ListItem>
-                                )} */}
+                                )}
                                 {/* SalesForce */}
                                 {integrationsCredentials.some(integration => integration.service_name === 'sales_force') && (
                                     <ListItem sx={{
@@ -793,6 +815,45 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
                                                 <Image src="/google-ads.svg" alt="Slack" height={26} width={32} />
                                             </ListItemIcon>
                                             <ListItemText primary="GoogleAds" primaryTypographyProps={{
+                                                sx: {
+                                                    fontFamily: "Nunito Sans",
+                                                    fontSize: "14px",
+                                                    color: "#4a4a4a",
+                                                    fontWeight: "500",
+                                                    lineHeight: "20px",
+                                                },
+                                            }} />
+                                        </ListItemButton>
+                                    </ListItem>
+                                )}
+                                {/* Linkedin */}
+                                {integrationsCredentials.some(integration => integration.service_name === 'linkedin') && (
+                                    <ListItem sx={{
+                                        p: 0,
+                                        borderRadius: '4px',
+                                        border: selectedIntegration === 'linkedin' ? '1px solid #5052B2' : '1px solid #e4e4e4',
+                                        width: 'auto',
+                                        '@media (max-width:600px)': {
+                                            flexBasis: 'calc(50% - 8px)',
+                                        },
+                                    }}>
+                                        <ListItemButton onClick={!integrationsCredentials.find(integration => integration.service_name === 'linkedin')?.is_failed
+                                            ? handleLinkedinIconPopupIconOpen
+                                            : handleCreateLinkedinOpen
+                                        } sx={{
+                                            p: 0,
+                                            flexDirection: 'column',
+                                            px: 3,
+                                            py: 1.5,
+                                            width: '102px',
+                                            height: '72px',
+                                            justifyContent: 'center',
+                                            backgroundColor: selectedIntegration === 'linkedin' ? 'rgba(80, 82, 178, 0.10)' : 'transparent',
+                                        }}>
+                                            <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                <Image src="/linkedin-icon.svg" alt="Slack" height={26} width={32} />
+                                            </ListItemIcon>
+                                            <ListItemText primary="Linkedin" primaryTypographyProps={{
                                                 sx: {
                                                     fontFamily: "Nunito Sans",
                                                     fontSize: "14px",
@@ -1003,12 +1064,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <MailchimpDatasync open={mailchimpIconPopupOpen} onClose={handleMailchimpIconPopupIconClose} data={null} />
             <SlackDatasync open={slackIconPopupOpen} onClose={handleSlackIconPopupIconClose} data={null} isEdit={false} />
             <GoogleADSDatasync open={googleAdsIconPopupOpen} onClose={handleGoogleAdsIconPopupIconClose} data={null} isEdit={false} />
+            <LinkedinDataSync open={linkedinIconPopupOpen} onClose={handleLinkedinIconPopupIconClose} data={null} isEdit={false} />
             <ZapierDataSync open={openZapierDataSync} handleClose={handleCloseZapierDataSync} />
 
             {/* Add Integration */}
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
             <SlackConnectPopup open={createSlack} handlePopupClose={handleCreateSlackClose} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
             <GoogleADSConnectPopup open={createGoogleAds} handlePopupClose={handleCreateGoogleAdsClose} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} />
+            <LinkedinConnectPopup open={createLinkedin} handlePopupClose={handleCreateLinkedinClose} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'linkedin')?.access_token} />
             <WebhookConnectPopup open={createWebhook} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} invalid_api_key={isInvalidApiKey} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
             <ZapierConnectPopup open={openZapierConnect} handlePopupClose={handleCloseZapierConnect} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />

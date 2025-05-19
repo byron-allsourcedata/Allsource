@@ -42,6 +42,9 @@ class BingAdsCredentials(BaseModel):
     state: str
     code_verifier: str
 
+class LinkedinCredentials(BaseModel):
+    code: str
+    state: str
 
 class SalesForceCredentials(BaseModel):
     code: str
@@ -73,6 +76,7 @@ class IntegrationCredentials(BaseModel):
     hubspot: Optional[HubSpotCredentials] = None
     google_ads: Optional[GoogleAdsCredentials] = None
     bing_ads: Optional[BingAdsCredentials] = None
+    linkedin: Optional[LinkedinCredentials] = None
     s3: Optional[S3Credentials] = None
     sales_force: Optional[SalesForceCredentials] = None
     pixel_install: bool = False
@@ -124,8 +128,9 @@ class SyncCreate(BaseModel):
     integrations_users_sync_id: Optional[int] = None
     leads_type: Optional[str] = 'allContacts'
     data_map: Optional[List[DataMap]] = None
+    campaign_id: Optional[int] = None, 
+    campaign_name: Optional[str] = None,
     campaign: Optional[Campaign] = None
-
 
 class SyncRequest(BaseModel):
     list_id: str
@@ -146,6 +151,12 @@ class CreateCampaign(BaseModel):
     bid_amount: Optional[str] = None
     daily_budget: Optional[str] = None
     ad_account_id: Optional[str] = None
+    
+class CreateCampaignList(BaseModel):
+    name: str
+    daily_budget: int
+    type: str
+    customer_id: str
 
 class CreateListOrTags(BaseModel):
     name: str

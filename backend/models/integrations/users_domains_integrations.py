@@ -9,12 +9,6 @@ from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP, Index
 
 class UserIntegration(Base):
     __tablename__ = 'users_domains_integrations'
-    __table_args__ = (
-        Index('users_domains_integrations_suppression_idx', 'is_with_suppression', 'domain_id'),
-        Index('users_domains_integrations_slack_team_id_idx', 'slack_team_id'),
-        Index('users_domains_integrations_user_id_idx', 'user_id'),
-    )
-
     id = Column(
         BigInteger,
         primary_key=True,
@@ -44,6 +38,12 @@ class UserIntegration(Base):
     user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     is_slack_first_message_sent = Column(Boolean, nullable=False, server_default=text('false'))
     limit = Column(BigInteger, nullable=False, server_default=text('100'))
+    
+    __table_args__ = (
+        Index('users_domains_integrations_suppression_idx', is_with_suppression, domain_id),
+        Index('users_domains_integrations_slack_team_id_idx', slack_team_id),
+        Index("users_domains_integrations_user", user_id)
+    )
 
 
 class Integration(Base):

@@ -59,6 +59,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
+import LinkedinConnectPopup from "@/components/LinkedinConnectPopup";
 import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup";
@@ -734,19 +735,20 @@ const UserIntegrationsList = ({
   };
 
   const integrationsAvailable = [
-    { image: "klaviyo.svg", service_name: "klaviyo" },
-    { image: "meta-icon.svg", service_name: "meta" },
-    { image: "omnisend_icon_black.svg", service_name: "omnisend" },
-    { image: "mailchimp-icon.svg", service_name: "mailchimp" },
-    { image: "sendlane-icon.svg", service_name: "sendlane" },
-    { image: "zapier-icon.svg", service_name: "zapier" },
-    { image: "slack-icon.svg", service_name: "slack" },
-    { image: "webhook-icon.svg", service_name: "webhook" },
-    { image: "hubspot.svg", service_name: "hubspot" },
-    { image: "google-ads.svg", service_name: "google_ads" },
-    { image: "salesforce-icon.svg", service_name: "sales_force" },
-    { image: "bingads-icon.svg", service_name: "bing_ads" },
-    { image: "s3.svg", service_name: "s3" },
+    { image: 'klaviyo.svg', service_name: 'klaviyo' },
+    { image: 'meta-icon.svg', service_name: 'meta' },
+    { image: 'omnisend_icon_black.svg', service_name: 'omnisend' },
+    { image: 'mailchimp-icon.svg', service_name: 'mailchimp' },
+    { image: 'sendlane-icon.svg', service_name: 'sendlane' },
+    { image: 'zapier-icon.svg', service_name: 'zapier' },
+    { image: 'slack-icon.svg', service_name: 'slack' },
+    { image: 'webhook-icon.svg', service_name: 'webhook' },
+    { image: 'hubspot.svg', service_name: 'hubspot' },
+    { image: 'google-ads.svg', service_name: 'google_ads' },
+    { image: 'salesforce-icon.svg', service_name: 'sales_force' },
+    { image: 'bing-ads.svg', service_name: 'bing_ads' },
+    { image: 's3-icon.svg', service_name: 's3' },
+    { image: 'linkedin-icon.svg', service_name: 'linkedin' }
   ];
 
   const integratedServices = integrationsCredentials.map(
@@ -1095,8 +1097,16 @@ const UserIntegrationsList = ({
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
+      {openModal === 'linkedin' && (
+        <LinkedinConnectPopup
+          open={true}
+          handlePopupClose={handleClose}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'linkedin')?.is_failed === true}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
 
-      {openModal === "bing_ads" && (
+      {openModal === 'bing_ads' && (
         <BingAdsIntegrationPopup
           open={true}
           handleClose={handleClose}
