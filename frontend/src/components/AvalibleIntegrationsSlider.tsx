@@ -10,6 +10,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import ShopifySettings from "./ShopifySettings"
 import BCommerceConnect from "./Bcommerce"
+import LinkedinConnectPopup from "./LinkedinConnectPopup";
 import OmnisendConnect from "./OmnisendConnect"
 import MailchimpConnect from "./MailchimpConnect"
 import SendlaneConnect from "./SendlaneConnect"
@@ -56,6 +57,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
     const [openSlackConnect, setOpenSlackConnect] = useState(false)
     const [openHubspotConnect, setOpenHubspotConnect] = useState(false)
     const [openGoogleAdsConnect, setOpenGoogleAdsConnect] = useState(false)
+    const [openLinkedInConnect, setOpenLinkedInConnect] = useState(false)
     const [openWebhookConnect, setOpenWebhookConnect] = useState(false)
     const [searchQuery, setSearchQuery] = useState("");
     const handleClose = () => {
@@ -65,6 +67,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
         setOpenSalesForceConnect(false)
         setOpenShopifyConnect(false)
         setAttentiveConnect(false)
+        setOpenLinkedInConnect(false)
         setOpenBigcommerceConnect(false)
         setOpenOmnisendConnect(false)
         setOpenSendlaneConnect(false)
@@ -560,6 +563,26 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
                                             </ListItemButton>
                                         </ListItem>
                                     )}
+                                    {filteredIntegrations.some(integration => integration.service_name === 'linkedin') && (
+                                    !integrationsCredentials.some(integration => integration.service_name === 'linkedin')) && (
+                                        <ListItem sx={{
+                                            p: 0, borderRadius: '4px', border: '1px solid #e4e4e4', width: 'auto',
+                                            '@media (max-width:600px)': {
+                                                flexBasis: 'calc(50% - 8px)'
+                                            }
+                                        }}>
+                                            <ListItemButton onClick={() => setOpenLinkedInConnect(true)} sx={{ p: 0, flexDirection: 'column', px: 3, py: 1.5, width: '102px', height: '72px', justifyContent: 'center' }}>
+                                                <ListItemIcon sx={{ minWidth: 'auto' }}>
+                                                    <Image src="/linkedin-icon.svg" alt="linkedin" height={24} width={24} />
+                                                </ListItemIcon>
+                                                <ListItemText primary="Linkedin" primaryTypographyProps={{
+                                                    sx: {
+                                                        ...intergrations.integrate
+                                                    }
+                                                }} />
+                                            </ListItemButton>
+                                        </ListItem>
+                                    )}
                             </List>
                         </Box>
                     </Box>
@@ -583,6 +606,7 @@ const AlivbleIntagrationsSlider = ({ open, isContactSync = false, integrations, 
             <SlackConnectPopup open={openSlackConnect} handlePopupClose={() => setOpenSlackConnect(false)} onSave={saveIntegration} />
             <HubspotIntegrationPopup open={openHubspotConnect} handleClose={handleClose} onSave={saveIntegration} />
             <GoogleADSConnectPopup open={openGoogleAdsConnect} handlePopupClose={() => setOpenGoogleAdsConnect(false)} onSave={saveIntegration} />
+            <LinkedinConnectPopup open={openLinkedInConnect} handlePopupClose={() => setOpenLinkedInConnect(false)} onSave={saveIntegration} />
             <SalesForceIntegrationPopup open={openSalesForceConnect} handleClose={() => setOpenSalesForceConnect(false)} onSave={saveIntegration} />
             <WebhookConnectPopup open={openWebhookConnect} handleClose={() => setOpenWebhookConnect(false)} onSave={saveIntegration} />
         </>

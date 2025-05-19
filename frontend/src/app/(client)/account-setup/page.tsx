@@ -37,6 +37,7 @@ import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup"
 import OmnisendConnect from "@/components/OmnisendConnect";
 import MailchimpConnect from "@/components/MailchimpConnect";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
+import LinkedinConnectPopup from "@/components/LinkedinConnectPopup";
 import SendlaneConnect from "@/components/SendlaneConnect";
 import S3Connect from "@/components/S3Connect";
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
@@ -95,6 +96,7 @@ const AccountSetup = () => {
   const [attentivePopupOpen, setAttentivePopupOpen] = useState(false)
   const [slackPopupOpen, setSlackPopupOpen] = useState(false)
   const [googleADSPopupOpen, setGoogleADSPopupOpen] = useState(false)
+  const [linkedinPopupOpen, setLinkedinPopupOpen] = useState(false)
   const [bingAdsPopupOpen, setBingAdsPopupOpen] = useState(false)
   const [klaviyoPopupOpen, setKlaviyoPopupOpen] = useState(false)
   const [salesForcePopupOpen, setSalesForcePopupOpen] = useState(false)
@@ -852,6 +854,7 @@ const AccountSetup = () => {
     { label: "S3", src: "s3-icon.svg", setState: setS3PopupOpen },
     { label: "Slack", src: "Slack-icon.svg", setState: setSlackPopupOpen },
     { label: "GoogleAds", src: "google-ads.svg", setState: setGoogleADSPopupOpen },
+    { label: "Linkedin", src: "linkedin-icon.svg", setState: setLinkedinPopupOpen },
     { label: "BingAds", src: "bing-ads.svg", setState: setBingAdsPopupOpen },
     { label: "Zapier", src: "zapier-icon.svg", setState: setZapierPopupOpen },
   ];
@@ -2864,6 +2867,11 @@ const AccountSetup = () => {
                 <GoogleADSConnectPopup
                   open={googleADSPopupOpen}
                   handlePopupClose={() => setGoogleADSPopupOpen(false)}
+                  boxShadow="rgba(0, 0, 0, 0.1)"
+                />
+                <LinkedinConnectPopup
+                  open={linkedinPopupOpen}
+                  handlePopupClose={() => setLinkedinPopupOpen(false)}
                   boxShadow="rgba(0, 0, 0, 0.1)"
                 />
                 <BingAdsIntegrationPopup

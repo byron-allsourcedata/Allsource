@@ -38,12 +38,14 @@ import S3Datasync from "./S3Datasync";
 import WebhookDatasync from "./WebhookDatasync";
 import SlackDatasync from "./SlackDataSync";
 import GoogleADSDatasync from "./GoogleADSDataSync";
+import LinkedinDataSync from "./LinkedinDataSync";
 import CustomTablePagination from "@/components/CustomTablePagination";
 import AttentiveIntegrationPopup from "@/components/AttentiveIntegrationPopup";
 import BCommerceConnect from "@/components/Bcommerce";
 import KlaviyoIntegrationPopup from "@/components/KlaviyoIntegrationPopup";
 import SalesForceIntegrationPopup from "@/components/SalesForceIntegrationPopup";
 import MailchimpConnect from "@/components/MailchimpConnect";
+import LinkedinConnectPopup from "@/components/LinkedinConnectPopup";
 import OmnisendConnect from "@/components/OmnisendConnect";
 import SendlaneConnect from "@/components/SendlaneConnect";
 import S3Connect from "@/components/S3Connect";
@@ -93,6 +95,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [hubspotIconPopupOpen, setOpenHubspotIconPopup] = useState(false);
   const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false);
   const [googleADSIconPopupOpen, setOpenGoogleADSIconPopup] = useState(false);
+  const [linkedinIconPopupOpen, setOpenLinkedinIconPopup] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [isInvalidApiKey, setIsInvalidApiKey] = useState(false);
   const [integrationsCredentials, setIntegrationsCredentials] = useState<
@@ -110,6 +113,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [openSendlaneConnect, setOpenSendlaneConnect] = useState(false);
   const [openS3Connect, setOpenS3Connect] = useState(false);
   const [openGoogleADSConnect, setOpenGoogleADSConnect] = useState(false);
+  const [openLinkedinConnect, setOpenLinkedinConnect] = useState(false);
   const [openZapierConnect, setOPenZapierComnect] = useState(false);
   const [openSlackConnect, setOpenSlackConnect] = useState(false);
   const [openWebhookConnect, setOpenWebhookConnect] = useState(false);
@@ -535,6 +539,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         setOpenSlackIconPopup(true);
       } else if (dataSyncPlatform === "google_ads") {
         setOpenGoogleADSIconPopup(true);
+      }else if (dataSyncPlatform === "linkedin") {
+        setOpenLinkedinIconPopup(true);
       } else if (dataSyncPlatform === "webhook") {
         setOpenWebhookIconPopup(true);
       } else if (dataSyncPlatform === "hubspot") {
@@ -570,6 +576,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   const handleGoogleADSIconPopupClose = () => {
     setOpenGoogleADSIconPopup(false);
+  };
+
+  const handleLinkedinIconPopupClose = () => {
+    setOpenLinkedinIconPopup(false);
   };
 
   const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -645,6 +655,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             setOpenS3Connect(true)
           } else if (dataSyncPlatform === "google_ads") {
             setOpenGoogleADSConnect(true);
+          } else if (dataSyncPlatform === "linkedin") {
+            setOpenLinkedinConnect(true);
           } else if (dataSyncPlatform === "webhook") {
             setOpenWebhookConnect(true);
           } else if (dataSyncPlatform === "hubspot") {
@@ -1306,14 +1318,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
             />
           </>
         )}
-        {/*
-        <AttentiveIntegrationPopup open={openAttentiveConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration}/>
-        <ShopifySettings open={openShopifuConnect} handleClose={() => setOpenShopifyConnect(false)} onSave={saveIntegration} />
-        <BCommerceConnect 
-                    open={openBigcommrceConnect} 
-                    onClose={() => setOpenBigcommerceConnect(false)}
-                />
-         */}
+        {linkedinIconPopupOpen && isEdit && (
+          <>
+            <LinkedinDataSync
+              open={linkedinIconPopupOpen}
+              isEdit={isEdit}
+              onClose={handleLinkedinIconPopupClose}
+              data={data.find((item) => item.id === selectedId)}
+            />
+          </>
+        )}
         <MailchimpConnect open={openMailchimpConnect} handleClose={() => { setOpenMailchimpConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'mailchimp')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />
         <KlaviyoIntegrationPopup open={openKlaviyoConnect} handleClose={() => { setOpenKlaviyoConnect(false), setIsInvalidApiKey(false) }}
@@ -1341,6 +1355,11 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           open={openGoogleADSConnect}
           handlePopupClose={() => { setOpenGoogleADSConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
+        />
+        <LinkedinConnectPopup
+          open={openLinkedinConnect}
+          handlePopupClose={() => { setOpenLinkedinConnect(false), setIsInvalidApiKey(false) }}
+          initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'linkedin')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)"
         />
         <WebhookConnectPopup open={openWebhookConnect} handleClose={() => { setOpenWebhookConnect(false), setIsInvalidApiKey(false) }}
           initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} invalid_api_key={isInvalidApiKey} boxShadow="rgba(0, 0, 0, 0.01)" />

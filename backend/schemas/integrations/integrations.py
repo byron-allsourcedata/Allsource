@@ -34,6 +34,10 @@ class BingAdsCredentials(BaseModel):
     state: str
     code_verifier: str
 
+class LinkedinCredentials(BaseModel):
+    code: str
+    state: str
+
 class SalesForceCredentials(BaseModel):
     code: str
 
@@ -60,6 +64,7 @@ class IntegrationCredentials(BaseModel):
     hubspot: Optional[HubSpotCredentials] = None
     google_ads: Optional[GoogleAdsCredentials] = None
     bing_ads: Optional[BingAdsCredentials] = None
+    linkedin: Optional[LinkedinCredentials] = None
     s3: Optional[S3Credentials] = None
     sales_force: Optional[SalesForceCredentials] = None
     pixel_install: bool = False

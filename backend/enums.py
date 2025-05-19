@@ -39,6 +39,7 @@ class SourcePlatformEnum(Enum):
     SALES_FORCE = 'sales_force'
     BING_ADS = 'bing_ads'
     S3 = 's3'
+    LINKEDIN = 'linkedin'
 
 class IntegrationLimit(Enum):
     MAILCHIMP = 10000
@@ -48,6 +49,7 @@ class IntegrationLimit(Enum):
     META = 5000
     HUBSPOT = 100
     S3 = 10000
+    LINKEDIN = 100
 
 class UserPaymentStatusEnum(Enum):
     COMPLETE = 'COMPLETE'

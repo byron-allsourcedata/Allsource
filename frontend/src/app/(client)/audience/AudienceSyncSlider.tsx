@@ -15,6 +15,7 @@ import GoogleADSConnectPopup from '@/components//GoogleADSConnectPopup';
 import MetaConnectButton from '@/components//MetaConnectButton';
 import AlivbleIntagrationsSlider from '@/components//AvalibleIntegrationsSlider';
 import WebhookConnectPopup from '@/components//WebhookConnectPopup';
+import LinkedinConnectPopup from "@/components/LinkedinConnectPopup";
 import OmnisendConnect from '@/components//OmnisendConnect';
 import OnmisendDataSync from '@/app/(client)/data-sync/components/OmnisendDataSync';
 import MailchimpConnect from '@/components/MailchimpConnect';
@@ -22,6 +23,7 @@ import MailchimpDatasync from '@/app/(client)/data-sync/components/MailchimpData
 import WebhookDatasync from '@/app/(client)/data-sync/components/WebhookDatasync';
 import SlackDatasync from '@/app/(client)/data-sync/components/SlackDataSync';
 import GoogleADSDatasync from '@/app/(client)/data-sync/components/GoogleADSDataSync';
+import LinkedinDataSync from '@/app/(client)/data-sync/components/LinkedinDataSync';
 import SendlaneConnect from '@/components/SendlaneConnect';
 import S3Connect from '@/components/S3Connect';
 import SendlaneDatasync from '@/app/(client)/data-sync/components/SendlaneDatasync';
@@ -72,6 +74,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [createBingAds, setCreateBingAds] = useState<boolean>(false)
     const [createSlack, setCreateSlack] = useState<boolean>(false)
     const [createGoogleADS, setCreateGoogleADS] = useState<boolean>(false)
+    const [createLinkedin, setCreateLinkedin] = useState<boolean>(false)
     const [createWebhook, setCreateWebhook] = useState<boolean>(false)
     const [integrations, setIntegrations] = useState<Integrations[]>([])
     const [metaConnectApp, setMetaConnectApp] = useState(false)
@@ -82,6 +85,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
     const [webhookIconPopupOpen, setOpenWebhookIconPopup] = useState(false)
     const [slackIconPopupOpen, setOpenSlackIconPopup] = useState(false)
     const [googleADSIconPopupOpen, setOpenGoogleADSIconPopup] = useState(false)
+    const [linkedinIconPopupOpen, setOpenLinkedinIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
     const [openSendlaneIconPopupOpen, setOpenSendlaneIconPopupOpen] = useState(false)
     const [openS3IconPopupOpen, setOpenS3IconPopupOpen] = useState(false)
@@ -179,6 +183,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
         setOpenGoogleADSIconPopup(true)
     }
 
+    const handleLinkedinIconPopupIconOpen = () => {
+        setOpenLinkedinIconPopup(true)
+    }
+
     const handleWebhookIconPopupIconOpen = () => {
         setOpenWebhookIconPopup(true)
     }
@@ -208,6 +216,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleGoogleADSIconPopupIconClose = () => {
         setOpenGoogleADSIconPopup(false)
+        setPlusIconPopupOpen(false)
+    }
+
+    const handleLinkedinIconPopupIconClose = () => {
+        setOpenLinkedinIconPopup(false)
         setPlusIconPopupOpen(false)
     }
 
@@ -260,6 +273,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             case 'GoogleAds':
                 handleGoogleAdsIconPopupIconOpen()
                 break
+            case 'Linedin':
+                handleLinkedinIconPopupIconOpen()
+                break
             case 'Webhook':
                 handleWebhookIconPopupIconOpen()
                 break
@@ -311,6 +327,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
 
     const handleCreateADSClose = () => {
         setCreateGoogleADS(false)
+    }
+
+    const handleLinkedinClose = () => {
+        setCreateLinkedin(false)
     }
 
     const handleCreateWebhookClose = () => {
@@ -436,12 +456,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             <WebhookDatasync open={webhookIconPopupOpen} onClose={handleWebhookIconPopupIconClose} data={null} isEdit={false} />
             <SlackDatasync open={slackIconPopupOpen} onClose={handleSlackIconPopupIconClose} data={null} isEdit={false} />
             <GoogleADSDatasync open={googleADSIconPopupOpen} onClose={handleGoogleADSIconPopupIconClose} data={null} isEdit={false} />
+            <LinkedinDataSync open={linkedinIconPopupOpen} onClose={handleLinkedinIconPopupIconClose} data={null} isEdit={false} />
             <ZapierDataSync open={openZapierDataSync} handleClose={handleCloseZapierDataSync} />
 
             {/* Add Integration */}
             <AlivbleIntagrationsSlider open={plusIconPopupOpen} onClose={handlePlusIconPopupClose} isContactSync={true} integrations={integrations} integrationsCredentials={integrationsCredentials} handleSaveSettings={handleSaveSettings} />
             <WebhookConnectPopup open={createWebhook} handleClose={handleCreateWebhookClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'webhook')?.access_token} />
             <SlackConnectPopup open={createSlack} handlePopupClose={handleCreateSlackClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'slack')?.access_token} />
+            <LinkedinConnectPopup open={createLinkedin} handlePopupClose={handleLinkedinClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'linkedin')?.access_token} />
             <GoogleADSConnectPopup open={createGoogleADS} handlePopupClose={handleCreateADSClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'google_ads')?.access_token} />
             <KlaviyoIntegrationPopup open={createKlaviyo} invalid_api_key={false} handleClose={handleCreateKlaviyoClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'klaviyo')?.access_token} />
             <SalesForceIntegrationPopup open={createSalesForce} handleClose={handleCreateSalesForceClose} onSave={handleSaveSettings} initApiKey={integrationsCredentials.find(integartion => integartion.service_name === 'sales_force')?.access_token} />

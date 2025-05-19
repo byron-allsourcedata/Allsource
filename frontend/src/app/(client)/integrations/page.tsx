@@ -40,6 +40,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import ZapierConnectPopup from "@/components/ZapierConnectPopup";
 import SlackConnectPopup from "@/components/SlackConnectPopup";
+import LinkedinConnectPopup from "@/components/LinkedinConnectPopup";
 import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import HubspotIntegrationPopup from "@/components/HubspotIntegrationPopup"
@@ -617,7 +618,8 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
     { image: 'google-ads.svg', service_name: 'google_ads' },
     { image: 'salesforce-icon.svg', service_name: 'sales_force' },
     { image: 'bing-ads.svg', service_name: 'bing_ads' },
-    { image: 's3-icon.svg', service_name: 's3' }
+    { image: 's3-icon.svg', service_name: 's3' },
+    { image: 'linkedin-icon.svg', service_name: 'linkedin' }
   ];
 
   const integratedServices = integrationsCredentials.map(cred => cred.service_name);
@@ -839,6 +841,15 @@ const UserIntegrationsList = ({ integrationsCredentials, integrations, handleSav
           open={true}
           handlePopupClose={handleClose}
           invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'google_ads')?.is_failed === true}
+          boxShadow="rgba(0, 0, 0, 0.1)"
+        />
+      )}
+
+      {openModal === 'linkedin' && (
+        <LinkedinConnectPopup
+          open={true}
+          handlePopupClose={handleClose}
+          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'linkedin')?.is_failed === true}
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
