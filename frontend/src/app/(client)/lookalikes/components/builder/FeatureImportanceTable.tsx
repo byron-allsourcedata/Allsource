@@ -75,6 +75,7 @@ export function UnRecommendedBadge({ text = "No recommended fields" }: Recommend
 export function FeatureImportanceTable<T extends FeatureObject>({
   features,
   initialFeatures,
+  currentFeatures,
   onChangeDisplayed,
   title,
   columnHeaders = ["Attribute name", "Predictable value"],
@@ -89,7 +90,7 @@ export function FeatureImportanceTable<T extends FeatureObject>({
         .sort((a, b) => b[1] - a[1]),
     [features]
   );
-  const [selectedKeys, setSelectedKeys] = useState<(keyof T)[]>(initialFeatures);
+  const [selectedKeys, setSelectedKeys] = useState<(keyof T)[]>(currentFeatures);
   const [expanded, setExpanded] = useState(false);
   const handleAccordionChange = (_event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded(isExpanded);
@@ -102,6 +103,12 @@ export function FeatureImportanceTable<T extends FeatureObject>({
       return newSelected;
     });
   };
+
+  useEffect(() => {
+    console.log("currentFeatures")
+    console.log(currentFeatures)
+    setSelectedKeys(currentFeatures as (keyof T)[]);
+  }, [currentFeatures]);
 
   useEffect(() => {
     if (onChangeDisplayed) {

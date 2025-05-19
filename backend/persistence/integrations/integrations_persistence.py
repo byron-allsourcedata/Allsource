@@ -54,6 +54,7 @@ class IntegrationsPresistence:
             )
             .first()
         )
+        print(row)
         return row is not None
 
     def has_any_sync(self, user_id: int) -> bool:
