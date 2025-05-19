@@ -1,14 +1,15 @@
 'use client'
+
 import React, { Suspense, useEffect } from 'react';
 import Image from "next/image";
 import { Typography, Box, Link } from "@mui/material";
 import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
-import { shopifyLandingStyle } from "./linkedin-landing";
+import { linkedinLandingStyle } from "./linkedin-landing";
 import { showErrorToast, showToast } from '../../../components/ToastNotification';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
-const LinkedinLanding = () => {
+const LinkedinLandingInner = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get('code');
@@ -23,32 +24,34 @@ const LinkedinLanding = () => {
         const response = await axiosInstance.post(
           '/integrations/',
           {
-            linkedin: {
-              code: code,
-              state: state
-            },
+            linkedin: { code, state },
           },
           {
-            params: {
-              service_name: 'linkedin',
-            },
+            params: { service_name: 'linkedin' },
           }
         );
 
-        if (response.data.status == 'SUCCESS') {
-          showToast('Connect to Linkedin success!')
+        if (response.data.status === 'SUCCESS') {
+          showToast('Connect to Linkedin success!');
           router.push(`/integrations`);
-        } 
+        }
       } catch (error) {
-        showErrorToast(`Error connect to Linkedin ${error}`);
+        showErrorToast(`Error connect to Linkedin: ${error}`);
         router.push(`/integrations`);
       }
     };
-    if (error){
+
+    if (error) {
       showErrorToast(`Error connect to Linkedin: ${error}`);
-      return
+      return;
     }
-    fetchLinkedinLandingData();
+
+    if (code && state) {
+      fetchLinkedinLandingData();
+    }else{
+      showErrorToast(`Error connect to Linkedin: ${error}`);
+      router.push(`/integrations`);
+    }
 
     return () => {
       document.body.style.overflow = 'auto';
@@ -56,7 +59,7 @@ const LinkedinLanding = () => {
   }, [router, searchParams]);
 
   return (
-    <Box sx={shopifyLandingStyle.mainContent}>
+    <Box sx={linkedinLandingStyle.mainContent}>
       <Link display={'flex'} sx={{ alignItems: 'center', textDecoration: 'none' }} href='https://maximiz.ai'>
         <Image src={'/logo.svg'} width={61} height={39} alt="Maximiz" />
         <Typography variant="h1" color={'#F8464B'} fontSize={'51.21px'} fontWeight={400}>Maximiz</Typography>
@@ -72,9 +75,9 @@ const LinkedinLanding = () => {
 const LinkedinLandingPage: React.FC = () => {
   return (
     <Suspense fallback={<CustomizedProgressBar />}>
-      <LinkedinLandingPage />
+      <LinkedinLandingInner />
     </Suspense>
   );
 };
 
-export default LinkedinLanding;
+export default LinkedinLandingPage;

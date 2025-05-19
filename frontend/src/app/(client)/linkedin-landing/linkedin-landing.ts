@@ -1,7 +1,6 @@
-import { red } from '@mui/material/colors';
 import { SxProps, Theme } from '@mui/system';
 
-export const shopifyLandingStyle: Record<string, SxProps<Theme>> = {
+export const linkedinLandingStyle: Record<string, SxProps<Theme>> = {
   mainContent: {
     display: 'flex',
     flexDirection: 'column',
