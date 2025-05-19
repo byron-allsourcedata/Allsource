@@ -15,21 +15,24 @@ import {
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { PopupButton, useCalendlyEventListener } from "react-calendly";
-import { showToast } from '@/components/ToastNotification';
+import { showToast } from "@/components/ToastNotification";
 
 interface PopupProps {
-    endSetup: () => void;
-  }
+  endSetup: () => void;
+}
 
 const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
   const [open, setOpen] = useState(true);
-  const initialPrefill = { email: '', name: ''}
-  const [prefillData, setPrefillData] = useState<{ email: string, name: string}>(initialPrefill);
+  const initialPrefill = { email: "", name: "" };
+  const [prefillData, setPrefillData] = useState<{
+    email: string;
+    name: string;
+  }>(initialPrefill);
   const [isPrefillLoaded, setIsPrefillLoaded] = useState(false);
 
   const handleClose = () => {
     setOpen(false);
-    endSetup()
+    endSetup();
   };
 
   const calendlyPopupRef = useRef<HTMLDivElement | null>(null);
@@ -43,17 +46,17 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
   }, []);
 
   useEffect(() => {
-    const meItem = typeof window !== 'undefined' ? sessionStorage.getItem('me') : null;
+    const meItem =
+      typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
     if (meItem) {
       const meData = JSON.parse(meItem);
-      setPrefillData({email: meData.email, name: meData.full_name})
+      setPrefillData({ email: meData.email, name: meData.full_name });
     }
-  }, []); 
+  }, []);
 
   const [utmParams, setUtmParams] = useState<string | null>(null);
 
-
-useCalendlyEventListener({
+  useCalendlyEventListener({
     onEventScheduled: async (e) => {
       const eventUri = e.data.payload.event.uri;
       const inviteeUri = e.data.payload.invitee.uri;
@@ -64,30 +67,29 @@ useCalendlyEventListener({
 
       if (eventUUID && inviteesUUID) {
         try {
-          const response = await axiosInstance.post('/calendly', {
+          const response = await axiosInstance.post("/calendly", {
             uuid: eventUUID,
-            invitees: inviteesUUID
+            invitees: inviteesUUID,
           });
           response;
-        } catch (error) {
-        }
+        } catch (error) {}
         handleClose();
-        showToast('You have successfully signed up for a call');
+        showToast("You have successfully signed up for a call");
       }
     },
   });
 
-const fetchPrefillData = async () => {
+  const fetchPrefillData = async () => {
     try {
-      const response = await axiosInstance.get('/calendly');
+      const response = await axiosInstance.get("/calendly");
       const user = response.data.user;
 
       if (user) {
         const { full_name, email, utm_params } = user;
-        setUtmParams(utm_params)
+        setUtmParams(utm_params);
         setPrefillData({
-          email: email || '',
-          name: full_name || '',
+          email: email || "",
+          name: full_name || "",
         });
       } else {
         setPrefillData(initialPrefill);
@@ -105,9 +107,10 @@ const fetchPrefillData = async () => {
 
     if (utmParams) {
       try {
-        const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
+        const parsedUtmParams =
+          typeof utmParams === "string" ? JSON.parse(utmParams) : utmParams;
 
-        if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
+        if (typeof parsedUtmParams === "object" && parsedUtmParams !== null) {
           Object.entries(parsedUtmParams).forEach(([key, value]) => {
             if (value !== null && value !== undefined) {
               searchParams.append(key, value as string);
@@ -119,81 +122,95 @@ const fetchPrefillData = async () => {
       }
     }
 
-    const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+    const finalUrl = `${baseUrl}${
+      searchParams.toString() ? `?${searchParams.toString()}` : ""
+    }`;
     return finalUrl;
   };
 
   return (
     <>
-        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>
-            <Typography sx={{
-                fontFamily: "Nunito Sans",
-                fontSize: "22px",
-                fontWeight: 600,
-                lineHeight: "30.01px",
-                color: "rgba(32, 33, 36, 1)"
-                }}>
+          <Typography
+            sx={{
+              fontFamily: "Nunito Sans",
+              fontSize: "22px",
+              fontWeight: 600,
+              lineHeight: "30.01px",
+              color: "rgba(32, 33, 36, 1)",
+            }}
+          >
             Book your 30-minute demo with experts.
-            </Typography>
+          </Typography>
         </DialogTitle>
         <DialogContent dividers>
-            <Typography variant="subtitle1" gutterBottom>
+          <Typography variant="subtitle1" gutterBottom>
             WHAT TO EXPECT:
-            </Typography>
-            <List>
+          </Typography>
+          <List>
             {[
-                "Get a personalised demo of Maximiz.",
-                "Experience the AI powered Influencer search tool.",
-                "Let Our Expert Walk You Through Every Functionality of Our Platform.",
-                "Get the answers you have been waiting for..!",
+              "Get a personalised demo of Allsource.",
+              "Experience the AI powered Influencer search tool.",
+              "Let Our Expert Walk You Through Every Functionality of Our Platform.",
+              "Get the answers you have been waiting for..!",
             ].map((text, index) => (
-                <ListItem key={index}>
-                <ListItemIcon sx={{minWidth: "40px"}}>
-                    <CheckCircleIcon color="success" />
+              <ListItem key={index}>
+                <ListItemIcon sx={{ minWidth: "40px" }}>
+                  <CheckCircleIcon color="success" />
                 </ListItemIcon>
-                <ListItemText primary={text} sx={{
+                <ListItemText
+                  primary={text}
+                  sx={{
                     fontFamily: "Nunito Sans",
                     fontSize: "16px",
-                    lineHeight: "21.82px"
-                }} />
-                </ListItem>
+                    lineHeight: "21.82px",
+                  }}
+                />
+              </ListItem>
             ))}
-            </List>
+          </List>
         </DialogContent>
         <DialogActions sx={{ flexDirection: "column", gap: 1 }}>
-        <PopupButton
+          <PopupButton
             className="book-call-button"
             styles={{
-                width: '100%',
-                textWrap: 'nowrap',
-                color: '#fff',
-                padding: '1em',
-                fontFamily: 'Nunito Sans',
-                fontWeight: '600',
-                fontSize: '14px',
-                textAlign: 'center',
-                borderRadius: '4px',
-                border: 'none',
-                lineHeight: '22.4px',
-                backgroundColor: 'rgba(56, 152, 252, 1)',
-                textTransform: 'none',
-                cursor: 'pointer',
+              width: "100%",
+              textWrap: "nowrap",
+              color: "#fff",
+              padding: "1em",
+              fontFamily: "Nunito Sans",
+              fontWeight: "600",
+              fontSize: "14px",
+              textAlign: "center",
+              borderRadius: "4px",
+              border: "none",
+              lineHeight: "22.4px",
+              backgroundColor: "rgba(56, 152, 252, 1)",
+              textTransform: "none",
+              cursor: "pointer",
             }}
             prefill={prefillData}
             url={calendlyPopupUrl()}
             rootElement={document.getElementById("calendly-popup-wrapper")!}
             text="Book a Demo"
-            />
-            <Button
+          />
+          <Button
             variant="text"
             onClick={handleClose}
-            sx={{ textTransform: "none", color: "rgba(244, 87, 69, 1)", fontFamily: "Nunito Sans", fontSize: "14px", fontWeight: 600, lineHeight: "19.6px"}}
-            >
+            sx={{
+              textTransform: "none",
+              color: "rgba(244, 87, 69, 1)",
+              fontFamily: "Nunito Sans",
+              fontSize: "14px",
+              fontWeight: 600,
+              lineHeight: "19.6px",
+            }}
+          >
             Skip
-            </Button>
+          </Button>
         </DialogActions>
-        </Dialog>
+      </Dialog>
     </>
   );
 };

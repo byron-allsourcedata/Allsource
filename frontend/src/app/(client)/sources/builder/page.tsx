@@ -824,7 +824,7 @@ const SourcesImport: React.FC = () => {
                       color: "rgba(95, 99, 104, 1)",
                     }}
                   >
-                    Choose your data source, and let Maximia AI Audience
+                    Choose your data source, and let Allsource AI Audience
                     Algorithm identify high-intent leads and create lookalike
                     audiences to slash your acquisition costs.
                   </Typography>
@@ -1849,7 +1849,14 @@ const SourcesImport: React.FC = () => {
                       </Typography>
                     </Box>
                   </Box>
-                  <Box sx={{ display: "flex", position: "relative", flexDirection: "row", gap: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      position: "relative",
+                      flexDirection: "row",
+                      gap: 2,
+                    }}
+                  >
                     {["B2B", "B2C"].map((option) => (
                       <ToggleButton
                         key={option}
