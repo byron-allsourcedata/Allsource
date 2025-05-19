@@ -755,7 +755,7 @@ const SuppressionRules: React.FC = () => {
                                     checked={checkedUrl}
                                     onChange={handleSwitchChangeURl}
                                     sx={{
-                                        width: 54, // Increase width to fit "Yes" and "No"
+                                        width: 54,
                                         height: 24,
                                         padding: 0,
                                         '& .MuiSwitch-switchBase': {
@@ -764,7 +764,7 @@ const SuppressionRules: React.FC = () => {
                                             left: '3px',
                                             '&.Mui-checked': {
                                                 left: 0,
-                                                transform: 'translateX(32px)', // Adjust for larger width
+                                                transform: 'translateX(32px)',
                                                 color: '#fff',
                                                 '&+.MuiSwitch-track': {
                                                     backgroundColor: checkedUrl ? '#5052b2' : '#7b7b7b',
@@ -777,7 +777,7 @@ const SuppressionRules: React.FC = () => {
                                             height: 20,
                                         },
                                         '& .MuiSwitch-track': {
-                                            borderRadius: 20 / 2,
+                                            borderRadius: 10,
                                             backgroundColor: checkedUrl ? '#5052b2' : '#7b7b7b',
                                             opacity: checkedUrl ? '1' : '1',
                                             '& .MuiSwitch-track.Mui-checked': {
@@ -943,7 +943,7 @@ const SuppressionRules: React.FC = () => {
                                             height: 20,
                                         },
                                         '& .MuiSwitch-track': {
-                                            borderRadius: 20 / 2,
+                                            borderRadius: 10,
                                             backgroundColor: checkedUrlParameters ? '#5052b2' : '#7b7b7b',
                                             opacity: checkedUrlParameters ? '1' : '1',
                                             '& .MuiSwitch-track.Mui-checked': {
@@ -1166,7 +1166,7 @@ const SuppressionRules: React.FC = () => {
                                         Exclude these contacts from all previously created audiences in your account.
                                     </Typography>
                                 </Box>
-                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', mt: 1, position: 'relative', }}>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', mt: 1, position: 'relative', mr: 2 }}>
                                     <Switch
                                         {...label}
                                         checked={checkedDeleteContacts}
@@ -1185,7 +1185,7 @@ const SuppressionRules: React.FC = () => {
                                                     color: '#fff',
                                                     '&+.MuiSwitch-track': {
                                                         backgroundColor: checkedDeleteContacts ? '#5052b2' : '#7b7b7b',
-                                                        opacity: checkedDeleteContacts ? '1' : '1',
+                                                        opacity: 1,
                                                     }
                                                 },
                                             },
@@ -1196,10 +1196,10 @@ const SuppressionRules: React.FC = () => {
                                             '& .MuiSwitch-track': {
                                                 borderRadius: 10,
                                                 backgroundColor: checkedDeleteContacts ? '#5052b2' : '#7b7b7b',
-                                                opacity: checkedDeleteContacts ? '1' : '1',
+                                                opacity: 1,
                                                 '& .MuiSwitch-track.Mui-checked': {
                                                     backgroundColor: checkedDeleteContacts ? '#5052b2' : '#7b7b7b',
-                                                    opacity: checkedDeleteContacts ? '1' : '1',
+                                                    opacity: 1,
                                                 }
                                             },
                                         }}
