@@ -32,6 +32,9 @@ import { useRouter } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast, showErrorToast } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../../components/HintCard";
+
 
 interface SelectedData {
   includeExclude: string;
@@ -39,6 +42,17 @@ interface SelectedData {
   selectedSource: string;
   selectedSourceId: string;
   useCase: string;
+}
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
+
+interface StateHint {
+  id: number;
+  show: boolean;
 }
 
 interface DataItem {
@@ -50,6 +64,10 @@ interface DataItem {
 
 interface SmartAudienceContactsProps {
   scrollToBlock: (block: React.RefObject<HTMLDivElement>) => void
+  toggleDotHintClick: (id: number) => void
+  closeDotHintClick: (id: number) => void
+  hintCards: HintCardInterface[];
+  isOpenSelect: StateHint[];
   block2Ref: React.RefObject<HTMLDivElement>
   block3Ref: React.RefObject<HTMLDivElement>
   block4Ref: React.RefObject<HTMLDivElement>
@@ -82,11 +100,16 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
   block2Ref,
   block3Ref,
   block4Ref,
+  toggleDotHintClick,
+  closeDotHintClick,
+  hintCards,
+  isOpenSelect,
   useCaseType,
   sourceData,
   lookalikeData,
 }) => {
   const router = useRouter();
+  const { showHints } = useHints();
   const [loading, setLoading] = useState(false);
   const [audienceName, setAudienceName] = useState<string>("");
   const [option, setOption] = useState<string>("");
@@ -113,6 +136,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
     setTimeout(() => {
       scrollToBlock(block3Ref)
     }, 0)
+    closeDotHintClick(1)
   };
 
   const handleSelectOption = (event: SelectChangeEvent<string>) => {
@@ -483,6 +507,14 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                     Exclude
                   </MenuItem>
                 </Select>
+                {showHints && !option && (
+                    <HintCard
+                        card={hintCards[1]}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[1].show}
+                        toggleClick={() => toggleDotHintClick(1)}
+                    />
+                  )} 
               </FormControl>
 
               {option && (
@@ -508,8 +540,17 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                       Lookalike
                     </MenuItem>
                   </Select>
+                  {showHints && option && (
+                    <HintCard
+                        card={hintCards[1]}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[1].show}
+                        toggleClick={() => toggleDotHintClick(1)}
+                    />
+                  )} 
                 </FormControl>
               )}
+                
             </Box>
           )}
 

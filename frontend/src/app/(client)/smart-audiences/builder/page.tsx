@@ -2,17 +2,40 @@
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { Typography, LinearProgress, FormControl, Select, MenuItem, SelectChangeEvent, Skeleton } from "@mui/material";
 import { Box } from "@mui/system";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { smartAudiences } from "../smartAudiences";
 import SmartAudiencesContacts from "./components/SmartAudienceContacts";
 import SmartAudiencesTarget from "./components/SmartAudienceTarget";
 import CustomTooltip from "@/components/customToolTip";
 import { useFetchAudienceData } from "@/hooks/useFetchAudienceData";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../components/HintCard";
+
+interface HintCardInterface {
+    description: string;
+    title: string;
+    linkToLoadMore: string;
+}
+
+interface StateHint {
+    id: number;
+    show: boolean;
+}
 
 
 const SmartAudiencesBuilder: React.FC = () => {
+    const { showHints } = useHints();
     const [useCaseType, setUseCaseType] = useState<string>("");
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+
+    const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
+        { show: true, id: 0 },
+        { show: false, id: 1 },
+        { show: false, id: 2 },
+        { show: false, id: 3 },
+        { show: false, id: 4 },
+        { show: false, id: 5 },
+    ]);
 
     const block1Ref = useRef<HTMLDivElement | null>(null);
     const block2Ref = useRef<HTMLDivElement | null>(null);
@@ -32,13 +55,47 @@ const SmartAudiencesBuilder: React.FC = () => {
             setTimeout(() => {
                 scrollToBlock(block2Ref)
             }, 0)
+            toggleDotHintClick(1)
         }
         else {
             setTimeout(() => {
                 scrollToBlock(block5Ref)
             }, 0)
+            toggleDotHintClick(2)
         }
+        closeDotHintClick(0)
     };
+
+    useEffect(() => {
+        if (showHints && !isOpenSelect) {
+          setIsOpenSelect([
+            { show: true, id: 0 },
+            { show: false, id: 1 },
+            { show: false, id: 2 },
+            { show: false, id: 3 },
+            { show: false, id: 4 },
+            { show: false, id: 5 },
+          ]);
+        }
+      }, [showHints]);
+
+    const toggleDotHintClick = (id: number) => {
+        setIsOpenSelect((prev) =>
+          prev.map((el) => (el.id === id ? { ...el, show: !el.show } : el))
+        );
+      };
+    
+      const closeDotHintClick = (id: number) => {
+        setIsOpenSelect((prev) =>
+          prev.map((el) => (el.id === id ? { ...el, show: false } : el))
+        );
+      };
+    
+      const openDotHintClick = (id: number) => {
+        setIsOpenSelect((prev) =>
+          prev.map((el) => (el.id === id ? { ...el, show: true } : el))
+        );
+      };
 
     const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {
         if (blockRef.current) {
@@ -59,11 +116,56 @@ const SmartAudiencesBuilder: React.FC = () => {
         )
     }
 
+    const hintCards: HintCardInterface[] = [
+        {
+         description:
+         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+         title: "Use case",
+         linkToLoadMore:
+         "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        },
+        {
+         description:
+         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+         title: "Select your Contacts1",
+         linkToLoadMore:
+           "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        },
+        {
+         description:
+         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+         title: "Target Type",
+         linkToLoadMore:
+           "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        },
+        {
+         description:
+         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+         title: "Select your Contacts2",
+         linkToLoadMore:
+           "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        },
+        {
+         description:
+         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+         title: "Validation",
+         linkToLoadMore:
+           "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        },
+        {
+         description:
+         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+         title: "Generate Active Segments",
+         linkToLoadMore:
+           "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        }
+    ]
+
 
     return (
         <>
             {loading && <CustomizedProgressBar />}
-            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', overflow: 'auto', pr: 2, alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%', height: "calc(100vh - 4.25rem)",overflow: 'auto', pr: 2, alignItems: 'center' }}>
                 <Box sx={{ display: "flex", flexDirection: 'column', width: '74%' }}>
                     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', width: '100%', }}>
                         <Box sx={{ display: 'flex', marginTop: 2, flexWrap: 'wrap', minWidth: '100%', gap: '15px' }}>
@@ -96,6 +198,14 @@ const SmartAudiencesBuilder: React.FC = () => {
                                     <MenuItem className="second-sub-title" value={"Postal"}>Postal</MenuItem>
                                     <MenuItem className="second-sub-title" value={"LinkedIn"}>LinkedIn</MenuItem>
                                 </Select>
+                                {showHints && (
+                                    <HintCard
+                                        card={hintCards[0]}
+                                        positionLeft={340}
+                                        isOpenSelect={isOpenSelect[0].show}
+                                        toggleClick={() => toggleDotHintClick(0)}
+                                    />
+                                )}
                             </FormControl>
                         </Box>
 
@@ -104,7 +214,11 @@ const SmartAudiencesBuilder: React.FC = () => {
                                 block2Ref={block2Ref}
                                 block3Ref={block3Ref}
                                 block4Ref={block4Ref}
+                                hintCards={hintCards}
+                                toggleDotHintClick={toggleDotHintClick}
+                                closeDotHintClick={closeDotHintClick}
                                 scrollToBlock={scrollToBlock}
+                                isOpenSelect={isOpenSelect}
                                 useCaseType={useCaseType}
                                 sourceData={sourceData}
                                 lookalikeData={lookalikeData}
@@ -118,7 +232,12 @@ const SmartAudiencesBuilder: React.FC = () => {
                                     block8Ref={block8Ref}
                                     block9Ref={block9Ref}
                                     block10Ref={block10Ref}
+                                    hintCards={hintCards}
+                                    toggleDotHintClick={toggleDotHintClick}
+                                    closeDotHintClick={closeDotHintClick}
+                                    openDotHintClick={openDotHintClick}
                                     scrollToBlock={scrollToBlock}
+                                    isOpenSelect={isOpenSelect}
                                     useCaseType={useCaseType}
                                     sourceData={sourceData}
                                     lookalikeData={lookalikeData}

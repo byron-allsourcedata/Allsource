@@ -38,6 +38,19 @@ import CalculationPopup from "./CalculationPopup";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../../components/HintCard";
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
+
+interface StateHint {
+  id: number;
+  show: boolean;
+}
 
 interface Recency {
   days: number;
@@ -81,6 +94,11 @@ interface SelectedData {
 
 interface SmartAudienceTargetProps {
   scrollToBlock: (block: React.RefObject<HTMLDivElement>) => void
+  toggleDotHintClick: (id: number) => void
+  closeDotHintClick: (id: number) => void
+  openDotHintClick: (id: number) => void
+  hintCards: HintCardInterface[];
+  isOpenSelect: StateHint[];
   block5Ref: React.RefObject<HTMLDivElement>
   block6Ref: React.RefObject<HTMLDivElement>
   block7Ref: React.RefObject<HTMLDivElement>
@@ -116,6 +134,11 @@ const toSnakeCase = (str: string) => {
 
 const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   scrollToBlock,
+  toggleDotHintClick,
+  closeDotHintClick,
+  openDotHintClick,
+  isOpenSelect,
+  hintCards,
   block5Ref,
   block6Ref,
   block7Ref,
@@ -127,6 +150,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   lookalikeData,
 }) => {
   const router = useRouter();
+  const { showHints } = useHints();
   const [loading, setLoading] = useState(false);
   const [audienceName, setAudienceName] = useState<string>("");
   const [option, setOption] = useState<string>("");
@@ -195,6 +219,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
         }
       }
     }
+    closeDotHintClick(5)
   };
 
   const handleTargetAudienceChange = (value: string) => {
@@ -203,6 +228,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
     setTimeout(() => {
       scrollToBlock(block6Ref)
     }, 0)
+    closeDotHintClick(2)
+    openDotHintClick(3)
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,6 +241,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
     setTimeout(() => {
       scrollToBlock(block7Ref)
     }, 0)
+    closeDotHintClick(3)
   };
 
   const handleSelectOption = (event: SelectChangeEvent<string>) => {
@@ -319,6 +347,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
           setTimeout(() => {
             scrollToBlock(block8Ref)
           }, 100)
+          toggleDotHintClick(4)
         }
       }
     } catch {
@@ -334,6 +363,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
   const handleSliderChange = (_: Event, newValue: number | number[]) => {
     setValue(newValue as number);
+    closeDotHintClick(5)
   };
 
   const handleGenerateSmartAudience = async () => {
@@ -455,7 +485,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
             </Typography>
           </Box>
         </Box>
-        <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "row", position: "relative", gap: 2 }}>
           {["B2B", "B2C", "Both"].map((option) => (
             <ToggleButton
               key={option}
@@ -484,6 +514,14 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
               {option}
             </ToggleButton>
           ))}
+          {showHints && (
+              <HintCard
+                  card={hintCards[2]}
+                  positionLeft={215}
+                  isOpenSelect={isOpenSelect[2].show}
+                  toggleClick={() => toggleDotHintClick(2)}
+              />
+            )} 
         </Box>
       </Box>
 
@@ -718,6 +756,14 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                       Exclude
                     </MenuItem>
                   </Select>
+                  {showHints && !option && (
+                    <HintCard
+                        card={hintCards[3]}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[3].show}
+                        toggleClick={() => toggleDotHintClick(3)}
+                    />
+                  )} 
                 </FormControl>
 
                 {option && (
@@ -750,6 +796,14 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                         Lookalike
                       </MenuItem>
                     </Select>
+                    {showHints && option && (
+                    <HintCard
+                        card={hintCards[3]}
+                        positionLeft={340}
+                        isOpenSelect={isOpenSelect[3].show}
+                        toggleClick={() => toggleDotHintClick(3)}
+                    />
+                  )} 
                   </FormControl>
                 )}
               </Box>
@@ -865,6 +919,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                 </Button>
               </Box>
             )}
+
           </Box>
         </Box>
       )}
@@ -927,6 +982,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
       {AudienceSize && (
         <ExpandableFilter
           block8Ref={block8Ref}
+          hintCard={hintCards[4]}
+          toggleDotHintClickBlock4={() => toggleDotHintClick(4)}
+          toggleDotHintClickBlock5={() => toggleDotHintClick(5)}
+          isOpenSelect={isOpenSelect[4].show}
           targetAudience={targetAudience}
           scrollToNewBlock={() => {
             setTimeout(() => {
@@ -1058,7 +1117,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
               </Typography>
 
               <Box sx={{ display: "flex", flexDirection: "column" }}>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                <Box sx={{ display: "flex", flexDirection: "column", position: "relative", gap: 2 }}>
                   <TextField
                     value={value}
                     type="number"
@@ -1090,6 +1149,16 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                       },
                     }}
                   />
+
+                  {showHints && (
+                    <HintCard
+                        card={hintCards[5]}
+                        positionLeft={320}
+                        positionTop={20}
+                        isOpenSelect={isOpenSelect[5].show}
+                        toggleClick={() => toggleDotHintClick(5)}
+                    />
+                  )} 
                 </Box>
               </Box>
             </Box>

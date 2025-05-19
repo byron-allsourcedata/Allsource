@@ -23,6 +23,14 @@ import { smartAudiences } from "../../smartAudiences";
 import ValidationPopup from "./SkipValidationPopup";
 import { useRouter } from "next/navigation";
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../../components/HintCard";
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
 
 interface ExpandableFilterProps {
   block8Ref: React.RefObject<HTMLDivElement>;
@@ -34,6 +42,10 @@ interface ExpandableFilterProps {
   onValidate: (data: FilterData) => void;
   onEdit: () => void;
   setPersentsData: (value: number) => void;
+  toggleDotHintClickBlock4: () => void;
+  toggleDotHintClickBlock5: () => void;
+  hintCard: HintCardInterface
+  isOpenSelect: boolean
 }
 
 interface Recency {
@@ -77,9 +89,14 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
   onSkip,
   onValidate,
   onEdit,
-  setPersentsData
+  setPersentsData,
+  toggleDotHintClickBlock4,
+  toggleDotHintClickBlock5,
+  hintCard,
+  isOpenSelect
 }) => {
   const router = useRouter();
+  const { showHints } = useHints();
   const [isOpenPersonalEmail, setIsOpenPersonalEmail] = useState(false);
   const [isOpenBusinessEmail, setIsOpenBusinessEmail] = useState(false);
   const [isOpenPhone, setIsOpenPhone] = useState(false);
@@ -442,6 +459,15 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
           >
             Choose parameters that you want to validate.
           </Typography>
+          {showHints && (
+                    <HintCard
+                        card={hintCard}
+                        positionLeft={320}
+                        positionTop={20}
+                        isOpenSelect={isOpenSelect}
+                        toggleClick={toggleDotHintClickBlock4}
+                    />
+                  )} 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {/* Personal Email Filter */}
             <Box sx={ValidationStyle.main_filter_form}>
@@ -1591,6 +1617,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
               onClick={() => {
                 handleValidate()
                 scrollToNewBlock()
+                toggleDotHintClickBlock4()
+                toggleDotHintClickBlock5()
               }}
               sx={{
                 ...smartAudiences.buttonform,
