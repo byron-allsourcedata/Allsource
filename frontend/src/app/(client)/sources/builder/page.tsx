@@ -373,6 +373,7 @@ const SourcesImport: React.FC = () => {
   const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
     handleDeleteFile();
     setTargetAudience("");
+    setSelectedDomainId(0)
     setSourceType(event.target.value);
     closeDotHintClick(1);
     if (event.target.value === "Website - Pixel") {
