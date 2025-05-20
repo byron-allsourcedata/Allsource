@@ -130,6 +130,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
     donorPercent: extractSemiCirclePercent(data.donor, "2"),
     investorPercent: extractSemiCirclePercent(data.investor, "2"),
   };
+
   return (
     <Box>
       <Box
@@ -158,6 +159,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
               title="Credit score range"
               data={creditScoreRangeData}
               rank={fieldRanks["credit_score_range"]}
+              gradientColor="249, 155, 171"
             />
           </Box>
 
@@ -166,6 +168,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
               title="Credit Cards"
               data={creditCardsData}
               rank={fieldRanks["credit_cards"]}
+              gradientColor="152, 223, 192"
             />
           </Box>
         </Box>
@@ -179,6 +182,7 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
               data={netWorthRangeData}
               sortByPercent={false}
               rank={fieldRanks["net_worth_range"]}
+              gradientColor="249, 155, 171"
             />
           </Box>
 
@@ -196,8 +200,8 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
               labelLeft="Have"
               labelRight="Don't have"
               colorStops={[
-                { offset: "11.88%", color: "#62B2FD" },
-                { offset: "86.9%", color: "#C1E4FF" },
+                { offset: "11.88%", color: "rgba(249, 233, 156, 1)" },
+                { offset: "86.9%", color: "rgba(253, 246, 215, 1)" },
               ]}
               rank={fieldRanks["bank_card"]}
             />
@@ -227,8 +231,8 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
               labelLeft="Yes"
               labelRight="No"
               colorStops={[
-                { offset: "21.13%", color: "#9BDFC4" },
-                { offset: "78.02%", color: "#D7F2E7" },
+                { offset: "21.13%", color: "#9F97F7" },
+                { offset: "78.02%", color: "#D4D3F4" },
               ]}
               rank={fieldRanks["mail_order_donor"]}
             />
@@ -263,8 +267,8 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
               labelLeft="Yes"
               labelRight="No"
               colorStops={[
-                { offset: "11.88%", color: "#62B2FD" },
-                { offset: "86.9%", color: "#C1E4FF" },
+                { offset: "11.88%", color: "#9F97F7" },
+                { offset: "86.9%", color: "#D4D3F4" },
               ]}
               rank={fieldRanks["credit_card_new_issue"]}
             />
@@ -281,17 +285,18 @@ const B2CFinancial: React.FC<B2CPersonalProps> = ({ data, fieldRanks }) => {
             />
           </Box>
           <Box sx={{ display: "flex", width: "40%" }}>
-            <VerticalGradientBarChart
-              title="Number of credit lines"
-              data={numberOfCreditLinesData}
-              rank={fieldRanks["number_of_credit_lines"]}
-            />
-          </Box>
-          <Box sx={{ display: "flex", width: "34%" }}>
             <GradientBarChart
               title="Credit Range Of New Credit"
               data={mapGenericPercentage(data.credit_range_of_new_credit)}
               rank={fieldRanks["credit_range_of_new_credit"]}
+            />
+          </Box>
+          <Box sx={{ display: "flex", width: "34%" }}>
+            <VerticalGradientBarChart
+              title="Number of credit lines"
+              data={numberOfCreditLinesData}
+              rank={fieldRanks["number_of_credit_lines"]}
+              gradientColor="249, 233, 156"
             />
           </Box>
         </Box>
