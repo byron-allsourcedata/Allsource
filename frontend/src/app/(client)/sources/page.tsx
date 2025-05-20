@@ -148,7 +148,7 @@ const Sources: React.FC = () => {
   const isDebug = searchParams.get("is_debug") === "true";
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
-  const { showHints, toggleSourceTableHintState, sourcesBuilderHints,} = useHints();
+  const { showHints, toggleSourceTableHintState, sourcesTableHints } = useHints();
 
   const hintCards: HintCardInterface[] = [
     {
@@ -769,7 +769,8 @@ const Sources: React.FC = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          height: "100%",
+          height: "calc(100vh - 4.25rem)",
+          overflow: "auto",
           "@media (max-width: 900px)": {
             minHeight: "100vh",
           },
@@ -913,11 +914,13 @@ const Sources: React.FC = () => {
                     )}
                   </Button>
 
-                  {showHints && sourcesBuilderHints[1].show && (
+                  {showHints && !sourcesTableHints[0].show && (
                     <HintCard
-                      card={hintCards[0]}
-                      positionLeft={10}
-                      toggleClick={() => toggleDotHintClick(0)}
+                      card={hintCards[1]}
+                      positionLeft={-350}
+                      positionTop={20}
+                      rightSide={true}
+                      toggleClick={() => toggleDotHintClick(1)}
                     />
                   )}
                 </Box>
@@ -1303,6 +1306,7 @@ const Sources: React.FC = () => {
                                           sx={{
                                             display: "flex",
                                             alignItems: "center",
+                                            position: "relative",
                                             justifyContent: "space-between",
                                           }}
                                         >
@@ -1329,6 +1333,15 @@ const Sources: React.FC = () => {
                                             </IconButton>
                                           )}
                                         </Box>
+                                        {showHints && label === "Actions" && sourcesTableHints[0].show && (
+                                              <HintCard
+                                                card={hintCards[0]}
+                                                positionLeft={-380}
+                                                positionTop={180}
+                                                rightSide={true}
+                                                toggleClick={() => toggleDotHintClick(0)}
+                                              />
+                                            )}
                                       </TableCell>
                                     )
                                   )}
@@ -1557,14 +1570,6 @@ const Sources: React.FC = () => {
                                             width={24}
                                           />
                                         </IconButton>
-
-                                        {showHints && sourcesBuilderHints[1].show && (
-                                            <HintCard
-                                              card={hintCards[0]}
-                                              positionLeft={10}
-                                              toggleClick={() => toggleDotHintClick(0)}
-                                            />
-                                          )}
 
                                         <Popover
                                           open={isOpen}

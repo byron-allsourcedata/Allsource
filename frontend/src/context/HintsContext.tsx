@@ -85,11 +85,16 @@ export const HintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
   };
 
   const toggleSourceTableHintState = (id: number, state?: boolean) => {
+    console.log({state})
     setSourcesTableHints((prev) =>
-      prev.map((el) =>
-        el.id === id
+      prev.map((el) => {
+        console.log(el.id === id
+          ? { ...el, show: state !== undefined ? state : !el.show }
+          : el)
+        return el.id === id
           ? { ...el, show: state !== undefined ? state : !el.show }
           : el
+        }
       )
     );
   };
