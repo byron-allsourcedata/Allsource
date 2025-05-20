@@ -56,6 +56,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import TableCustomCell from "./components/table/TableCustomCell";
 import FirstTimeScreen from "./components/FirstTimeScreen"
 import { useScrollShadow } from "@/hooks/useScrollShadow";
+import HintCard from "../components/HintCard";
+import { useHints } from "@/context/HintsContext";
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
 
 interface Source {
   id: string;
@@ -140,6 +148,24 @@ const Sources: React.FC = () => {
   const isDebug = searchParams.get("is_debug") === "true";
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
+  const { showHints, toggleSourceTableHintState, sourcesBuilderHints,} = useHints();
+
+  const hintCards: HintCardInterface[] = [
+    {
+     description:
+     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+     title: "Actions",
+     linkToLoadMore:
+     "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+    {
+     description:
+     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+     title: "Builder",
+     linkToLoadMore:
+       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+  ]
 
   const cardData: CardData[] = [
     {
@@ -184,7 +210,7 @@ const Sources: React.FC = () => {
     {
       key: "name",
       label: "Name",
-      widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
+      widths: { width: "15vw", minWidth: "15vw", maxWidth: "15vw" },
     },
     {
       key: "target_schema",
@@ -599,6 +625,18 @@ const Sources: React.FC = () => {
     handleApplyFilters(filters);
   };
 
+  const toggleDotHintClick = (id: number) => {
+    toggleSourceTableHintState(id)
+  };
+
+  const closeDotHintClick = (id: number) => {
+    toggleSourceTableHintState(id, false)
+  };
+
+  const openDotHintClick = (id: number) => {
+    toggleSourceTableHintState(id, true)
+  };
+
   const handleDeleteFilter = (filterToDelete: {
     label: string;
     value: string;
@@ -777,7 +815,8 @@ const Sources: React.FC = () => {
                   sx={{
                     display: "flex",
                     flexDirection: "row",
-                    alignItems: "center",
+                    alignItems: "center", 
+                    position: "relative",
                     gap: "15px",
                     pt: "4px",
                     pr: 2,
@@ -873,6 +912,14 @@ const Sources: React.FC = () => {
                       />
                     )}
                   </Button>
+
+                  {showHints && sourcesBuilderHints[1].show && (
+                    <HintCard
+                      card={hintCards[0]}
+                      positionLeft={10}
+                      toggleClick={() => toggleDotHintClick(0)}
+                    />
+                  )}
                 </Box>
               </Box>
             }
@@ -1510,6 +1557,14 @@ const Sources: React.FC = () => {
                                             width={24}
                                           />
                                         </IconButton>
+
+                                        {showHints && sourcesBuilderHints[1].show && (
+                                            <HintCard
+                                              card={hintCards[0]}
+                                              positionLeft={10}
+                                              toggleClick={() => toggleDotHintClick(0)}
+                                            />
+                                          )}
 
                                         <Popover
                                           open={isOpen}

@@ -193,6 +193,13 @@ const SourcesImport: React.FC = () => {
     title: "Target type",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+   },
+   {
+    description:
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    title: "Create",
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
    }
   ]
 
@@ -406,6 +413,7 @@ const SourcesImport: React.FC = () => {
     }, 0);
     closeDotHintClick(2);
     closeDotHintClick(5);
+    openDotHintClick(6);
     setFirstEventTypeClick(false)
   };
 
@@ -1939,6 +1947,7 @@ const SourcesImport: React.FC = () => {
                       sx={{
                         display: "flex",
                         alignItems: "center",
+                        position: "relative",
                         gap: 2,
                         "@media (max-width: 400px)": {
                           justifyContent: "space-between",
@@ -1993,6 +2002,13 @@ const SourcesImport: React.FC = () => {
                           }
                         }}
                       />
+                      {showHints && sourcesBuilderHints[6].show && (
+                      <HintCard
+                        card={hintCards[6]}
+                        positionLeft={380}
+                        toggleClick={() => toggleDotHintClick(6)}
+                      />
+                    )}
                     </Box>
                   </Box>
                   <Box
