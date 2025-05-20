@@ -149,9 +149,9 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
                     canProcessed={canProceed}
                     onResetSelection={handleResetAllState}
                     disableResetSelection={isDefaultSelection && isDefaultOrder}
-                    hintCard={hintCard3}
-                    toggleDotHintClickBlock={toggleDotHintClickBlock3}
-                    isOpenSelect={isOpenSelect3}
+                    hintCard={hintCard2}
+                    toggleDotHintClickBlock={toggleDotHintClickBlock2}
+                    isOpenSelect={isOpenSelect2}
                 />
             </Box>
 
@@ -165,15 +165,15 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
                 />
             </Box>
 
-            {showHints && !isOpenSelect3 && (
-                    <HintCard
-                        card={hintCard2}
-                        positionTop={210}
-                        positionLeft={835}
-                        isOpenSelect={isOpenSelect2}
-                        toggleClick={toggleDotHintClickBlock2}
-                    />
-                )}
+            {/* {showHints && (
+                <HintCard
+                    card={hintCard3}
+                    positionLeft={135}
+                    positionTop={535}
+                    isOpenSelect={isOpenSelect3}
+                    toggleClick={toggleDotHintClickBlock3}
+                />
+            )} */}
 
         </Box>
     );
