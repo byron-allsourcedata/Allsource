@@ -13,10 +13,11 @@ interface HintCardProps {
     card: HintCardInterface;
     positionLeft: number
     positionTop?: number
+    rightSide?: boolean
     toggleClick: () => void
   }
   
-  const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, toggleClick }) => {
+  const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, toggleClick, rightSide }) => {
   
     return (
       <Box sx={{position: "absolute", left: positionLeft, top: positionTop ?? 10, width: 400}}>
@@ -59,7 +60,7 @@ interface HintCardProps {
           </Box>
           
         </Box>
-        <PulsingDotComponent toggleClick={toggleClick}/>
+        <PulsingDotComponent toggleClick={toggleClick} rightSide={rightSide}/>
       </Box>
     );
   };
