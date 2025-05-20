@@ -42,7 +42,7 @@ from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 from services.lookalikes import AudienceLookalikesService
-from persistence.audience_lookalikes import AudienceLookalikesPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence
 
 load_dotenv()
 
@@ -948,7 +948,7 @@ async def main():
             durable=True,
         )
         similar_audience_service = SimilarAudienceService(audience_data_normalization_service=AudienceDataNormalizationService())
-        lookalikes_persistence_service = AudienceLookalikesPersistence(db_session)
+        lookalikes_persistence_service = AudienceLookalikesPostgresPersistence(db_session)
         audience_lookalikes_service = AudienceLookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)
         await queue.consume(
             functools.partial(aud_sources_matching, connection=connection, db_session=db_session, similar_audience_service=similar_audience_service, audience_lookalikes_service=audience_lookalikes_service)

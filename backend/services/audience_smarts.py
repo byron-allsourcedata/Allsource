@@ -4,7 +4,7 @@ import json
 import io
 import csv
 
-from persistence.audience_lookalikes import AudienceLookalikesPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_settings import AudienceSettingPersistence
 from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse, ValidationHistory
@@ -23,7 +23,7 @@ class AudienceSmartsService:
     GENDER_MAPPDING = {0: "male", 1: "female", 2: "unknown"}
 
     def __init__(self, audience_smarts_persistence: AudienceSmartsPersistence,
-                 lookalikes_persistence_service: AudienceLookalikesPersistence,
+                 lookalikes_persistence_service: AudienceLookalikesPostgresPersistence,
                  audience_sources_persistence: AudienceSourcesPersistence,
                  audience_settings_persistence: AudienceSettingPersistence,
                  ):

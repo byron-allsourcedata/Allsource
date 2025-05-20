@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic.v1 import UUID4
 
-from persistence.audience_lookalikes import AudienceLookalikesPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence
 from enums import BaseEnum, BusinessType
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
@@ -57,7 +57,7 @@ PROFESSIONAL_PROFILE = {
 }
 
 class AudienceLookalikesService:
-    def __init__(self, lookalikes_persistence_service: AudienceLookalikesPersistence):
+    def __init__(self, lookalikes_persistence_service: AudienceLookalikesPostgresPersistence):
         self.lookalikes_persistence_service = lookalikes_persistence_service
 
     def get_lookalikes(self, user, page, per_page, from_date, to_date,

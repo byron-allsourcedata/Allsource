@@ -1,50 +1,59 @@
+import math
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional, List, Dict, Any, Tuple
+from urllib.parse import unquote
 from uuid import UUID
 
 import pytz
-from psycopg2.extras import NumericRange
-from pydantic.v1 import UUID4
-from sqlalchemy.dialects.postgresql import INT4RANGE
-
-from enums import LookalikeSize, BusinessType
-from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
-    EnrichmentVoterRecord, EnrichmentProfessionalProfile, EnrichmentEmploymentHistory
-from models.audience_sources import AudienceSource
-from models.audience_lookalikes import AudienceLookalikes
-from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from models.enrichment.enrichment_users import EnrichmentUser
-from models.users_domains import UserDomains
-from sqlalchemy.orm import Session
-from typing import Optional, List, Dict, Any
-import math
+from fastapi import HTTPException
 from sqlalchemy import asc, desc, or_, func
 from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException
-from urllib.parse import unquote
-from models.enrichment.enrichment_lookalike_scores import EnrichmentLookalikeScore
-from uuid import UUID
+from sqlalchemy.orm import Session
 
+from enums import LookalikeSize, BusinessType
+from models.audience_lookalikes import AudienceLookalikes
+from models.audience_sources import AudienceSource
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from models.enrichment import EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
+    EnrichmentVoterRecord, EnrichmentProfessionalProfile, EnrichmentEmploymentHistory
+from models.enrichment.enrichment_users import EnrichmentUser
 from models.users import Users
-from schemas.similar_audiences import AudienceData, AudienceFeatureImportance
+from models.users_domains import UserDomains
+from persistence.audience_lookalikes.interface import AudienceLookalikesPersistenceInterface
+from schemas.similar_audiences import AudienceFeatureImportance
 
 
-class AudienceLookalikesPersistence:
+class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterface):
     def __init__(self, db: Session):
         self.db = db
 
     def get_source_info(self, uuid_of_source, user_id):
-        source = self.db.query(AudienceSource, Users.full_name).join(Users, Users.id == AudienceSource.created_by_user_id) \
-            .filter(AudienceSource.id == uuid_of_source, AudienceSource.user_id == user_id).first()
+        source = (
+            self.db
+            .query(AudienceSource, Users.full_name)
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .filter(
+                AudienceSource.id == uuid_of_source,
+                AudienceSource.user_id == user_id
+            ).first()
+        )
 
         return source
-    
-    def get_lookalikes(self, user_id: int, page: Optional[int] = None, per_page: Optional[int] = None,
-                       from_date: Optional[int] = None, to_date: Optional[int] = None,
-                       sort_by: Optional[str] = None, sort_order: Optional[str] = None,
-                       lookalike_size: Optional[str] = None, lookalike_type: Optional[str] = None,
-                       search_query: Optional[str] = None):
-        
+
+    def get_lookalikes(
+            self,
+            user_id: int,
+            page: Optional[int] = None,
+            per_page: Optional[int] = None,
+            from_date: Optional[int] = None,
+            to_date: Optional[int] = None,
+            sort_by: Optional[str] = None,
+            sort_order: Optional[str] = None,
+            lookalike_size: Optional[str] = None,
+            lookalike_type: Optional[str] = None,
+            search_query: Optional[str] = None
+    ) -> Tuple[List[Any], int, int, int]:
         query = self.db.query(
             AudienceLookalikes,
             AudienceSource.name,
@@ -52,8 +61,8 @@ class AudienceLookalikesPersistence:
             Users.full_name,
             AudienceSource.source_origin,
             UserDomains.domain,
-            AudienceSource.target_schema)\
-            .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)\
+            AudienceSource.target_schema) \
+            .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id) \
             .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id) \
             .join(Users, Users.id == AudienceSource.created_by_user_id) \
             .filter(AudienceLookalikes.user_id == user_id)
@@ -222,7 +231,7 @@ class AudienceLookalikesPersistence:
             .filter(AudienceSource.user_id == user_id).order_by(AudienceSource.created_at.desc()).all()
 
         return source
-    
+
     def get_processing_lookalike(self, id: UUID):
         query = (
             self.db.query(
@@ -239,15 +248,15 @@ class AudienceLookalikesPersistence:
                 AudienceSource.source_origin,
                 AudienceSource.target_schema
             )
-                .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)
-                .join(Users, Users.id == AudienceSource.created_by_user_id)
-                .filter(AudienceLookalikes.id == id)
+            .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .filter(AudienceLookalikes.id == id)
         ).first()
 
         return dict(query._asdict()) if query else None
 
     def retrieve_source_insights(self, source_uuid: UUID, audience_type: BusinessType,
-                              limit: Optional[int] = None, ) -> List[Dict]:
+                                 limit: Optional[int] = None, ) -> List[Dict]:
         def all_columns_except(model, *skip: str):
             return tuple(
                 c for c in model.__table__.c
@@ -332,6 +341,7 @@ class AudienceLookalikesPersistence:
         total_matched = self.db.query(func.count(AudienceSourcesMatchedPerson.id)).filter(
             AudienceSourcesMatchedPerson.source_id == str(source_uuid)
         ).scalar()
+
         def get_number_users(lookalike_size: str, size: int) -> int:
             if lookalike_size == LookalikeSize.ALMOST.value:
                 number = size * 0.2
@@ -355,5 +365,3 @@ class AudienceLookalikesPersistence:
         result = self.retrieve_source_insights(source_uuid=source_uuid, audience_type=atype, limit=number_required)
 
         return result
-
-

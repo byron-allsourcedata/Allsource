@@ -2,6 +2,7 @@ import logging
 
 from h11._abnf import status_code
 
+from config import ClickhouseConfig
 from config.base import Base
 from config.sentry import SentryConfig
 from routers import main_router

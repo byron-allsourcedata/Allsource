@@ -4,6 +4,8 @@ import os
 import time
 import math
 from hashlib import sha256
+
+import clickhouse_connect.driver
 from slack_sdk.signature import SignatureVerifier
 from datetime import datetime
 from typing import Optional
@@ -13,6 +15,8 @@ from sqlalchemy.orm import Session
 from typing_extensions import Annotated
 from starlette.requests import Request
 from starlette.exceptions import HTTPException
+
+from config import ClickhouseConfig
 from config.auth import AuthConfig
 from config.aws import get_s3_client
 from config.database import SessionLocal
@@ -25,7 +29,7 @@ from persistence.audience_insights import AudienceInsightsPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_smarts import AudienceSmartsPersistence
 from persistence.company_persistence import CompanyPersistence
-from persistence.audience_lookalikes import AudienceLookalikesPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence, AudienceLookalikesPersistence
 from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
@@ -97,6 +101,15 @@ def get_db():
         db.close()
 
 Db = Annotated[Session, Depends(get_db)]
+
+def get_clickhouse_db():
+    ch = ClickhouseConfig.get_client()
+    try:
+        yield ch
+    finally:
+        ch.close()
+
+Clickhouse = Annotated[clickhouse_connect.driver.Client, Depends(get_clickhouse_db)]
 
 async def verify_signature(request: Request):
     logger.debug("Starting verification")
@@ -246,7 +259,7 @@ def get_audience_sources_service(
 
 def get_audience_smarts_service(
         audience_smarts_persistence: AudienceSmartsPersistence = Depends(get_audience_smarts_persistence),
-        lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(get_lookalikes_persistence),
+        lookalikes_persistence_service: AudienceLookalikesPostgresPersistence = Depends(get_lookalikes_persistence),
         audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence),
         audience_settings_persistence: AudienceSettingPersistence = Depends(get_audience_setting_persistence)
 ):
@@ -724,7 +737,7 @@ def check_api_key(maximiz_api_key=Header(None),
 
 
 def get_lookalikes_service(
-        lookalikes_persistence_service: AudienceLookalikesPersistence = Depends(get_lookalikes_persistence)):
+        lookalikes_persistence_service: AudienceLookalikesPostgresPersistence = Depends(get_lookalikes_persistence)):
     return AudienceLookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)
 
 def get_audience_data_normalization():
