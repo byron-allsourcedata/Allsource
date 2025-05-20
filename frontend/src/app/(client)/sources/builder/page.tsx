@@ -130,6 +130,7 @@ const SourcesImport: React.FC = () => {
   const [domainsWithoutPixel, setDomainsWithoutPixel] = useState<
     DomainsLeads[]
   >([]);
+  const [showTargetStep, setShowTargetStep] = useState(false)
   const [totalLeads, setTotalLeads] = useState(0);
   const [matchedLeads, setMatchedLeads] = useState(0);
 
@@ -375,6 +376,7 @@ const SourcesImport: React.FC = () => {
     setSourceType(event.target.value);
     closeDotHintClick(0);
     if (event.target.value === "Website - Pixel") {
+      setShowTargetStep(false)
       setSourceMethod(2);
       toggleDotHintClick(1);
       setTimeout(() => {
@@ -382,6 +384,7 @@ const SourcesImport: React.FC = () => {
       }, 0);
       fetchDomainsAndLeads();
     } else {
+      setShowTargetStep(true)
       setSourceMethod(1);
       toggleDotHintClick(3);
       setPixelNotInstalled(false);
@@ -753,8 +756,6 @@ const SourcesImport: React.FC = () => {
     setEventType([]);
     setMatchedLeads(totalLeads);
   };
-
-  const [showTargetStep, setShowTargetStep] = useState(false)
 
   return (
     <>
