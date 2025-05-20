@@ -87,6 +87,7 @@ const DataSync = () => {
           }
         );
         setHasIntegrations(response.data.hasIntegration);
+        console.log(response.data.hasIntegration)
         setHasDataSync(response.data.hasAnySync);
       } catch (err) {
         console.error("Error checking integrations:", err);
@@ -268,11 +269,14 @@ const DataSync = () => {
             ) : !isLoading && filters && !hasDataSync ? (
               <>
                 <Box sx={{ width: "98%", mt: 2 }}>
-                  <NotificationBanner
-                    ctaUrl="/integrations"
-                    ctaLabel="Add Integration"
-                    message="You need to create at least one integration before you can sync your audience"
-                  />
+                  {!hasIntegrations && (
+                    <NotificationBanner
+                      ctaUrl="/integrations"
+                      ctaLabel="Add Integration"
+                      message="You need to create at least one integration before you can sync your audience"
+                    />
+                  )}
+
                   <FirstTimeScree
                     onBegin={() => {
                       router.push("/smart-audiences");

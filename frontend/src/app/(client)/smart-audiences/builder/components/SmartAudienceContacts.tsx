@@ -610,27 +610,36 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {(sourceType === "Source"
-                          ? filteredSourceData
-                          : filteredLookalikeData
-                        ).map((row) => (
-                          <TableRow
-                            key={row.id}
-                            hover
-                            sx={{ cursor: "pointer" }}
-                            onClick={() => handleSelectRow(row)}
-                          >
-                            <TableCell className="black-table-header">
-                              {row.name}
-                            </TableCell>
-                            <TableCell className="black-table-header">
-                              {row.type}
-                            </TableCell>
-                            <TableCell className="black-table-header">
-                              {row.size}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {(sourceType === "Source" ? filteredSourceData : filteredLookalikeData).map((row) => {
+                          console.log(row.size)
+                          const isRowDisabled = Number(row.size.replace(/,/g, "")) === 0;
+                          return (
+                            <TableRow
+                              key={row.id}
+                              hover={!isRowDisabled}
+                              sx={{
+                                cursor: isRowDisabled ? "not-allowed" : "pointer",
+                                pointerEvents: isRowDisabled ? "none" : "auto",
+                                opacity: isRowDisabled ? 0.5 : 1,
+                              }}
+                              onClick={() => {
+                                if (!isRowDisabled) {
+                                  handleSelectRow(row);
+                                }
+                              }}
+                            >
+                              <TableCell className="black-table-header">
+                                {row.name}
+                              </TableCell>
+                              <TableCell className="black-table-header">
+                                {row.type}
+                              </TableCell>
+                              <TableCell className="black-table-header">
+                                {row.size}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
                       </TableBody>
                     </Table>
                   </TableContainer>

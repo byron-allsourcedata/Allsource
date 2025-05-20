@@ -678,21 +678,21 @@ const SourcesImport: React.FC = () => {
       setIsAllSelected(false);
       setMatchedLeads(0);
     }
-  
+
     const isActive = eventType.includes(id);
     const newEventTypes = isActive
       ? eventType.filter(e => e !== id)
       : [...eventType, id];
-  
+
     if (newEventTypes.length === 0) {
       setIsAllSelected(true);
       setEventType([]);
       setMatchedLeads(totalLeads);
       return;
     }
-  
+
     setEventType(newEventTypes);
-  
+
     const sum = newEventTypes.reduce((acc, evId) => {
       const field = eventTypes.find(e => e.id === evId)!.name as keyof DomainsLeads;
       const cnt = domains.find(d => d.name === selectedDomain)?.[field] || 0;
@@ -753,6 +753,8 @@ const SourcesImport: React.FC = () => {
     setEventType([]);
     setMatchedLeads(totalLeads);
   };
+
+  const [showTargetStep, setShowTargetStep] = useState(false)
 
   return (
     <>
@@ -1627,6 +1629,7 @@ const SourcesImport: React.FC = () => {
               )}
 
               {sourceMethod === 2 && selectedDomainId ? (
+                <>
                 <Box
                   ref={block5Ref}
                   sx={{
@@ -1663,7 +1666,7 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   </Box>
                   <Box
-                    onClick={() => {
+                     onClick={() => {
                       if (firstEventTypeClick) {
                         setFirstEventTypeClick(false)
                         closeDotHintClick(2);
@@ -1739,12 +1742,12 @@ const SourcesImport: React.FC = () => {
                     })}
                     {showHints && (
                       <HintCard
-                        card={hintCards[2]}
-                        positionLeft={650}
-                        positionTop={100}
-                        isOpenSelect={isOpenSelect[2].show}
-                        toggleClick={() => toggleDotHintClick(2)}
-                      />
+                      card={hintCards[2]}
+                      positionLeft={650}
+                      positionTop={100}
+                      isOpenSelect={isOpenSelect[2].show}
+                      toggleClick={() => toggleDotHintClick(2)}
+                    />
                     )}
                   </Box>
                   <Box
@@ -1774,11 +1777,47 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   </Box>
                 </Box>
+                { !showTargetStep && (
+                    <Box sx={{ display: "flex", justifyContent: "right" }}>
+                    <Button
+                      variant="contained"
+                      onClick={() => setShowTargetStep(true)}
+                      sx={{
+                        backgroundColor: "rgba(56, 152, 252, 1)",
+                        width: "120px",
+                        height: "40px",
+                        ":hover": {
+                          backgroundColor: "rgba(62, 64, 142, 1)",
+                        },
+                        ":active": {
+                          backgroundColor: "rgba(56, 152, 252, 1)",
+                        },
+                        ":disabled": {
+                          backgroundColor: "rgba(56, 152, 252, 1)",
+                          opacity: 0.6,
+                        },
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          textAlign: "center",
+                          color: "rgba(255, 255, 255, 1)",
+                          fontFamily: "Nunito Sans",
+                          textTransform: "none",
+                          fontWeight: "600",
+                          fontSize: "14px",
+                          lineHeight: "19.6px",
+                        }}
+                      >
+                        Continue
+                      </Typography>
+                    </Button>
+                  </Box>
+                )}
+              </>
               ) : null}
 
-
-
-              {sourceMethod !== 0 && (selectedDomainId || file) && (
+              {sourceMethod !== 0 && (selectedDomainId || file) && showTargetStep && (
                 <Box
                   ref={block4Ref}
                   sx={{

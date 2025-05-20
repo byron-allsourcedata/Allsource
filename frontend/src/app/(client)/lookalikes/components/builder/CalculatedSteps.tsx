@@ -128,13 +128,13 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
         onFieldsOrderChangeUp(newOrder);
     };
 
-    const handleResetSelection = () => {
+
+    const handleResetAllState = () => {
+        setDndFields(initialOrderRef.current);
+        calculatedResults
         setSelectedByCategory(initialRecommendedByCategory);
     };
 
-    const handleResetOrder = () => {
-        setDndFields(initialOrderRef.current);
-    };
     const canProceed = Object.values(selectedByCategory).flat().length >= 3;
 
     return (
@@ -143,11 +143,12 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
                 <AudienceFieldsSelector
                     calculatedResults={calculatedResults}
                     recommendedByCategory={initialRecommendedByCategory}
+                    currentSelection={selectedByCategory}
                     onFieldsChange={handleFieldsChange}
                     handleNextStep={handleNextStep}
                     canProcessed={canProceed}
-                    onResetSelection={handleResetSelection}
-                    disableResetSelection={isDefaultSelection}
+                    onResetSelection={handleResetAllState}
+                    disableResetSelection={isDefaultSelection && isDefaultOrder}
                     hintCard={hintCard3}
                     toggleDotHintClickBlock={toggleDotHintClickBlock3}
                     isOpenSelect={isOpenSelect3}
@@ -159,8 +160,8 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
                     fields={dndFields}
                     handlePrevStep={handlePrevStep}
                     onOrderChange={handleFieldsOrderChange}
-                    onResetOrder={handleResetOrder}
-                    disableResetOrder={isDefaultOrder}
+                    onResetOrder={handleResetAllState}
+                    disableResetOrder={isDefaultSelection && isDefaultOrder}
                 />
             </Box>
 

@@ -179,7 +179,7 @@ const Sources: React.FC = () => {
       isClickable: true
     },
   ];
-  
+
   const columns = [
     {
       key: "name",
@@ -299,7 +299,7 @@ const Sources: React.FC = () => {
         ? isFirstLoad
           ? setLoading(true)
           : setLoaderForTable(true)
-        : () => {};
+        : () => { };
       const accessToken = localStorage.getItem("token");
       if (!accessToken) {
         router.push("/signin");
@@ -313,9 +313,8 @@ const Sources: React.FC = () => {
       let url = `/audience-sources?&page=${page + 1}&per_page=${rowsPerPage}`;
 
       if (filters.from_date || filters.to_date) {
-        url += `&created_date_start=${
-          filters.from_date || ""
-        }&created_date_end=${filters.to_date || ""}`;
+        url += `&created_date_start=${filters.from_date || ""
+          }&created_date_end=${filters.to_date || ""}`;
       }
       if (filters.selectedSource?.length > 0) {
         url += `&source_origin=${filters.selectedSource
@@ -516,53 +515,53 @@ const Sources: React.FC = () => {
       label: string;
       value: string | ((f: any) => string);
     }[] = [
-      {
-        condition: filters.from_date,
-        label: "From Date",
-        value: () => dayjs.unix(filters.from_date!).format(dateFormat),
-      },
-      {
-        condition: filters.to_date,
-        label: "To Date",
-        value: () => dayjs.unix(filters.to_date!).format(dateFormat),
-      },
-      {
-        condition: filters.searchQuery,
-        label: "Search",
-        value: filters.searchQuery!,
-      },
-      {
-        condition: filters.selectedSource?.length > 0,
-        label: "Source",
-        value: () => filters.selectedSource.join(", "),
-      },
-      {
-        condition: filters.selectedTypes?.length > 0,
-        label: "Types",
-        value: () => filters.selectedTypes.join(", "),
-      },
-      {
-        condition: filters.selectedDomains?.length > 0,
-        label: "Domains",
-        value: () => filters.selectedDomains.join(", "),
-      },
-      {
-        condition: filters.createdDate?.length > 0,
-        label: "Created Date",
-        value: () => filters.createdDate.join(", "),
-      },
-      {
-        condition: filters.dateRange?.fromDate || filters.dateRange?.toDate,
-        label: "Date Range",
-        value: () => {
-          const from = dayjs
-            .unix(filters.dateRange.fromDate!)
-            .format(dateFormat);
-          const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
-          return `${from} to ${to}`;
+        {
+          condition: filters.from_date,
+          label: "From Date",
+          value: () => dayjs.unix(filters.from_date!).format(dateFormat),
         },
-      },
-    ];
+        {
+          condition: filters.to_date,
+          label: "To Date",
+          value: () => dayjs.unix(filters.to_date!).format(dateFormat),
+        },
+        {
+          condition: filters.searchQuery,
+          label: "Search",
+          value: filters.searchQuery!,
+        },
+        {
+          condition: filters.selectedSource?.length > 0,
+          label: "Source",
+          value: () => filters.selectedSource.join(", "),
+        },
+        {
+          condition: filters.selectedTypes?.length > 0,
+          label: "Types",
+          value: () => filters.selectedTypes.join(", "),
+        },
+        {
+          condition: filters.selectedDomains?.length > 0,
+          label: "Domains",
+          value: () => filters.selectedDomains.join(", "),
+        },
+        {
+          condition: filters.createdDate?.length > 0,
+          label: "Created Date",
+          value: () => filters.createdDate.join(", "),
+        },
+        {
+          condition: filters.dateRange?.fromDate || filters.dateRange?.toDate,
+          label: "Date Range",
+          value: () => {
+            const from = dayjs
+              .unix(filters.dateRange.fromDate!)
+              .format(dateFormat);
+            const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
+            return `${from} to ${to}`;
+          },
+        },
+      ];
 
     filterMappings.forEach(({ condition, label, value }) => {
       if (condition) {
@@ -665,8 +664,8 @@ const Sources: React.FC = () => {
     const newFilters: FilterParams = {
       from_date: updatedFilters.find((f) => f.label === "From Date")
         ? dayjs(
-            updatedFilters.find((f) => f.label === "From Date")!.value
-          ).unix()
+          updatedFilters.find((f) => f.label === "From Date")!.value
+        ).unix()
         : null,
       to_date: updatedFilters.find((f) => f.label === "To Date")
         ? dayjs(updatedFilters.find((f) => f.label === "To Date")!.value).unix()
@@ -685,23 +684,23 @@ const Sources: React.FC = () => {
         : [],
       createdDate: updatedFilters.find((f) => f.label === "Created Date")
         ? updatedFilters
-            .find((f) => f.label === "Created Date")!
-            .value.split(", ")
+          .find((f) => f.label === "Created Date")!
+          .value.split(", ")
         : [],
       dateRange: {
         fromDate: updatedFilters.find((f) => f.label === "Date Range")
           ? dayjs(
-              updatedFilters
-                .find((f) => f.label === "Date Range")!
-                .value.split(", ")[0]
-            ).unix()
+            updatedFilters
+              .find((f) => f.label === "Date Range")!
+              .value.split(", ")[0]
+          ).unix()
           : null,
         toDate: updatedFilters.find((f) => f.label === "Date Range")
           ? dayjs(
-              updatedFilters
-                .find((f) => f.label === "Date Range")!
-                .value.split(", ")[1]
-            ).unix()
+            updatedFilters
+              .find((f) => f.label === "Date Range")!
+              .value.split(", ")[1]
+          ).unix()
           : null,
       },
     };
@@ -740,7 +739,7 @@ const Sources: React.FC = () => {
       >
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Box>
-            {(data.length !== 0 || selectedFilters.length > 0) && 
+            {(data.length !== 0 || selectedFilters.length > 0) &&
               <Box
                 sx={{
                   display: "flex",
@@ -950,10 +949,9 @@ const Sources: React.FC = () => {
                         <Chip
                           className="paragraph"
                           key={filter.label}
-                          label={`${filter.label}: ${
-                            displayValue.charAt(0).toUpperCase() +
+                          label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() +
                             displayValue.slice(1)
-                          }`}
+                            }`}
                           onDelete={() => handleDeleteFilter(filter)}
                           deleteIcon={
                             <CloseIcon
@@ -993,9 +991,9 @@ const Sources: React.FC = () => {
                     {data.length === 0 &&
                       isMakeRequest &&
                       !(selectedFilters.length > 0) && (
-                        <FirstTimeScreen cardData={cardData}/>
+                        <FirstTimeScreen cardData={cardData} />
                       )
-                      }
+                    }
                     {data.length === 0 &&
                       selectedFilters.length > 0 &&
                       !loaderForTable && (
@@ -1323,7 +1321,7 @@ const Sources: React.FC = () => {
                                 {data.map((row: Source) => {
                                   const progress = sourceProgress[row.id];
                                   const isDisabled = row.matched_records === 0 || row.matched_records_status === "pending";
-                                  const url = `${isDisabled ? "#": '/insights/sources/' + String(row.id)}`
+                                  const url = `${isDisabled ? "#" : '/insights/sources/' + String(row.id)}`
                                   return (
                                     <TableRow
                                       key={row.id}
@@ -1331,7 +1329,7 @@ const Sources: React.FC = () => {
                                       sx={{
                                         backgroundColor:
                                           selectedRows.has(row.id) &&
-                                          !loaderForTable
+                                            !loaderForTable
                                             ? "rgba(247, 247, 247, 1)"
                                             : "#fff",
                                         "&:hover": {
@@ -1408,8 +1406,8 @@ const Sources: React.FC = () => {
                                         rowExample={
                                           dayjs(row.created_at).isValid()
                                             ? dayjs(row.created_at).format(
-                                                "MMM D, YYYY"
-                                              )
+                                              "MMM D, YYYY"
+                                            )
                                             : "--"
                                         }
                                         loaderForTable={loaderForTable}
@@ -1428,21 +1426,24 @@ const Sources: React.FC = () => {
                                           position: "relative",
                                         }}
                                       >
-                                        {(progress?.total &&
-                                          progress?.total > 0) ||
-                                        row?.total_records > 0 ? (
-                                          progress?.total > 0 ? (
-                                            progress?.total.toLocaleString(
-                                              "en-US"
+                                        {row.matched_records_status === "complete" && row?.total_records === 0 ?
+                                          (
+                                            "0"
+                                          ) : (progress?.total &&
+                                            progress?.total > 0) ||
+                                            row?.total_records > 0 ? (
+                                            progress?.total > 0 ? (
+                                              progress?.total.toLocaleString(
+                                                "en-US"
+                                              )
+                                            ) : (
+                                              row?.total_records?.toLocaleString(
+                                                "en-US"
+                                              )
                                             )
                                           ) : (
-                                            row?.total_records?.toLocaleString(
-                                              "en-US"
-                                            )
-                                          )
-                                        ) : (
-                                          <ThreeDotsLoader />
-                                        )}
+                                            <ThreeDotsLoader />
+                                          )}
                                       </TableCell>
 
                                       {/* Matched Records  Column */}
@@ -1452,33 +1453,36 @@ const Sources: React.FC = () => {
                                           position: "relative",
                                         }}
                                       >
-                                        {(progress?.processed &&
-                                          progress?.processed ==
+                                        {row.matched_records_status === "complete" && row?.total_records === 0 ?
+                                          (
+                                            "0"
+                                          ) : (progress?.processed &&
+                                            progress?.processed ==
                                             progress?.total) ||
-                                        (row?.processed_records ==
-                                          row?.total_records &&
-                                          row?.processed_records !== 0) ? (
-                                          progress?.matched >
-                                          row?.matched_records ? (
-                                            progress?.matched.toLocaleString(
-                                              "en-US"
+                                            (row?.processed_records ==
+                                              row?.total_records &&
+                                              row?.processed_records !== 0) ? (
+                                            progress?.matched >
+                                              row?.matched_records ? (
+                                              progress?.matched.toLocaleString(
+                                                "en-US"
+                                              )
+                                            ) : (
+                                              row.matched_records.toLocaleString(
+                                                "en-US"
+                                              )
                                             )
+                                          ) : row?.processed_records !== 0 ? (
+                                            <ProgressBar
+                                              progress={{
+                                                total: row?.total_records,
+                                                processed: row?.processed_records,
+                                                matched: row?.matched_records,
+                                              }}
+                                            />
                                           ) : (
-                                            row.matched_records.toLocaleString(
-                                              "en-US"
-                                            )
-                                          )
-                                        ) : row?.processed_records !== 0 ? (
-                                          <ProgressBar
-                                            progress={{
-                                              total: row?.total_records,
-                                              processed: row?.processed_records,
-                                              matched: row?.matched_records,
-                                            }}
-                                          />
-                                        ) : (
-                                          <ProgressBar progress={progress} />
-                                        )}
+                                            <ProgressBar progress={progress} />
+                                          )}
                                       </TableCell>
 
                                       <TableCell
