@@ -521,6 +521,7 @@ class SubscriptionService:
                 created_at=datetime.now(timezone.utc).replace(tzinfo=None),
                 user_id=user.id,
                 contact_credit_plan_id=plan.contact_credit_plan_id,
+                leads_credits=plan.leads_credits,
                 is_trial=False
             )
 
@@ -657,13 +658,14 @@ class SubscriptionService:
                     price_id=price_id,
                     platform_subscription_id=platform_subscription_id,
                     contact_credit_plan_id=contact_credit_plan_id,
+                    leads_credits=leads_credits,
                     is_trial=True if stripe_status == 'trialing' else False
                 )
                 self.db.add(user_subscription)
                 self.db.flush()
                 self.update_users_domains(user_id, domains_limit)
                 self.update_team_members(user.id, members_limit)
-                user.leads_credits = leads_credits if user.leads_credits >= 0 else leads_credits - user.leads_credits
+                user.leads_credits = leads_credits
                 user.prospect_credits = prospect_credits
                 user.current_subscription_id = user_subscription.id
                 user.is_leads_auto_charging = True
