@@ -93,7 +93,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 const SourcesImport: React.FC = () => {
-  const { showHints } = useHints();
+  const { showHints, toggleSourceBuilderHintState, sourcesBuilderHints,} = useHints();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
@@ -116,14 +116,14 @@ const SourcesImport: React.FC = () => {
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
-  const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
-    { show: true, id: 0 },
-    { show: false, id: 1 },
-    { show: false, id: 2 },
-    { show: false, id: 3 },
-    { show: false, id: 4 },
-    { show: false, id: 5 },
-  ]);
+  // const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
+  //   { show: true, id: 0 },
+  //   { show: false, id: 1 },
+  //   { show: false, id: 2 },
+  //   { show: false, id: 3 },
+  //   { show: false, id: 4 },
+  //   { show: false, id: 5 },
+  // ]);
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -206,21 +206,15 @@ const SourcesImport: React.FC = () => {
   };
 
   const toggleDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: !el.show } : el))
-    );
+    toggleSourceBuilderHintState(id)
   };
 
   const closeDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: false } : el))
-    );
+    toggleSourceBuilderHintState(id, false)
   };
 
   const openDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: true } : el))
-    );
+    toggleSourceBuilderHintState(id, true)
   };
 
   const defaultRows: Row[] = [
@@ -280,18 +274,28 @@ const SourcesImport: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (showHints && !isOpenSelect) {
-      setIsOpenSelect([
-        { show: true, id: 0 },
-        { show: false, id: 1 },
-        { show: false, id: 2 },
-        { show: false, id: 3 },
-        { show: false, id: 4 },
-        { show: false, id: 5 },
-      ]);
-    }
-  }, [showHints]);
+  // useEffect(() => {
+  //   if (showHints && !isOpenSelect) {
+  //     setIsOpenSelect([
+  //       { show: true, id: 0 },
+  //       { show: false, id: 1 },
+  //       { show: false, id: 2 },
+  //       { show: false, id: 3 },
+  //       { show: false, id: 4 },
+  //       { show: false, id: 5 },
+  //     ]);
+  //   }
+  // }, [showHints]);
+
+  // useEffect(() => {
+  //   if (showHints) {
+  //     setSourcesBuilderHints((prev: any) => 
+  //       prev?.length 
+  //         ? prev.map((el: any) => ({ ...el, show: el.id === 0 }))
+  //         : [{ id: 0, show: true }]
+  //     );
+  //   }
+  // }, [showHints]);
 
   useEffect(() => {
     if (typeFromSearchParams) {
@@ -373,6 +377,7 @@ const SourcesImport: React.FC = () => {
     handleDeleteFile();
     setTargetAudience("");
     setSelectedDomainId(0)
+    setSelectedDomain("")
     setSourceType(event.target.value);
     closeDotHintClick(0);
     if (event.target.value === "Website - Pixel") {
@@ -922,11 +927,10 @@ const SourcesImport: React.FC = () => {
                         Interest (CSV)
                       </MenuItem>
                     </Select>
-                    {showHints && (
+                    {showHints && sourcesBuilderHints[0].show && (
                       <HintCard
                         card={hintCards[0]}
                         positionLeft={340}
-                        isOpenSelect={isOpenSelect[0].show}
                         toggleClick={() => toggleDotHintClick(0)}
                       />
                     )}
@@ -1153,12 +1157,11 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   )}
 
-                  {showHints && (
+                  {showHints && sourcesBuilderHints[3].show && (
                     <HintCard
                       card={hintCards[3]}
                       positionLeft={360}
                       positionTop={100}
-                      isOpenSelect={isOpenSelect[3].show}
                       toggleClick={() => toggleDotHintClick(3)}
                     />
                   )}
@@ -1434,11 +1437,10 @@ const SourcesImport: React.FC = () => {
                         </Typography>
                       </Box>
                     )}
-                    {showHints && (
+                    {showHints && sourcesBuilderHints[4].show && (
                       <HintCard
                         card={hintCards[4]}
                         positionLeft={460}
-                        isOpenSelect={isOpenSelect[4].show}
                         toggleClick={() => toggleDotHintClick(4)}
                       />
                     )}
@@ -1591,11 +1593,10 @@ const SourcesImport: React.FC = () => {
                         </MenuItem>
                       ))}
                     </Select>
-                    {showHints && (
+                    {showHints && sourcesBuilderHints[1].show && (
                       <HintCard
                         card={hintCards[1]}
                         positionLeft={340}
-                        isOpenSelect={isOpenSelect[1].show}
                         toggleClick={() => toggleDotHintClick(1)}
                       />
                     )}
@@ -1741,12 +1742,11 @@ const SourcesImport: React.FC = () => {
                         </Button>
                       );
                     })}
-                    {showHints && (
+                    {showHints && sourcesBuilderHints[2].show && (
                       <HintCard
                       card={hintCards[2]}
                       positionLeft={650}
                       positionTop={100}
-                      isOpenSelect={isOpenSelect[2].show}
                       toggleClick={() => toggleDotHintClick(2)}
                     />
                     )}
@@ -1908,11 +1908,10 @@ const SourcesImport: React.FC = () => {
                         {option}
                       </ToggleButton>
                     ))}
-                    {showHints && (
+                    {showHints && sourcesBuilderHints[5].show && (
                       <HintCard
                         card={hintCards[5]}
                         positionLeft={140}
-                        isOpenSelect={isOpenSelect[5].show}
                         toggleClick={() => toggleDotHintClick(5)}
                       />
                     )}

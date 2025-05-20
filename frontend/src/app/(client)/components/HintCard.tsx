@@ -11,19 +11,18 @@ interface HintCardInterface {
 
 interface HintCardProps {
     card: HintCardInterface;
-    isOpenSelect: boolean
     positionLeft: number
     positionTop?: number
     toggleClick: () => void
   }
   
-  const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, toggleClick, isOpenSelect }) => {
+  const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, toggleClick }) => {
   
     return (
       <Box sx={{position: "absolute", left: positionLeft, top: positionTop ?? 10, width: 400}}>
         <Box
           sx={{
-            visibility: isOpenSelect ? "visible" : "hidden", 
+            // visibility: isOpenSelect ? "visible" : "hidden", 
             position: "relative",
             right: 0,
             maxWidth: 400,
