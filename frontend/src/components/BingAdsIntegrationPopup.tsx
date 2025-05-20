@@ -140,7 +140,7 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow, invalid_api_key
                             <TabPanel value="1" sx={{ p: 0 }}>
                                 <Box sx={{ p: 2, border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)' }}>
                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }} mt={2} mb={2}>
-                                        <Image src='/bingads-icon.svg' alt='bingads' height={24} width={24} />
+                                        <Image src='/bing-ads.svg' alt='bingads' height={24} width={24} />
                                         <Typography variant="h6" sx={{
                                             fontFamily: 'Nunito Sans',
                                             fontSize: '16px',
@@ -156,7 +156,7 @@ const BingAdsIntegrationPopup = ({ handleClose, open, boxShadow, invalid_api_key
                                             fullWidth
                                             onClick={handleLogin}
                                             variant="contained"
-                                            startIcon={<Image src='/bingads-icon.svg' alt='bingads' height={24} width={24} />}
+                                            startIcon={<Image src='/bing-ads.svg' alt='bingads' height={24} width={24} />}
                                             sx={{
                                                 backgroundColor: '#040404;',
                                                 fontFamily: "Nunito Sans",

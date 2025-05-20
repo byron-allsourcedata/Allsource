@@ -16,6 +16,8 @@ import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 import { ResetProvider, useResetContext } from "@/context/ResetContext";
 import { PaymentIcon, HowToVoteIcon, DirectionsBikeIcon, AccountBoxIcon, OpenInNewIcon, AssignmentIndIcon, WorkHistoryOutlinedIcon, WorkOutlineOutlinedIcon, HistoryOutlinedIcon } from "@/icon"
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../../components/HintCard";
 
 interface AudienceFieldsSelectorProps {
   calculatedResults?: CalculationResponse
@@ -26,6 +28,15 @@ interface AudienceFieldsSelectorProps {
   canProcessed: boolean
   onResetSelection: () => void;
   disableResetSelection: boolean;
+  hintCard: HintCardInterface
+  toggleDotHintClickBlock: () => void
+  isOpenSelect: boolean
+}
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
 }
 
 const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
@@ -36,8 +47,10 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   canProcessed,
   onResetSelection,
   currentSelection,
-  disableResetSelection
+  disableResetSelection,
+  hintCard, toggleDotHintClickBlock, isOpenSelect
 }) => {
+  const { showHints } = useHints();
   const [activeStep, setActiveStep] = React.useState(0);
   const { personal, financial, lifestyle, voter, professional_profile, employment_history } = currentSelection;
   const handleResetToRecommended = () => {
@@ -219,6 +232,15 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
                   headerIcon={<AccountBoxIcon />}
                   initialFeatures={recommendedByCategory.personal}
                 />
+                {showHints && (
+                  <HintCard
+                    card={hintCard}
+                    positionTop={140}
+                    positionLeft={330}
+                    isOpenSelect={isOpenSelect}
+                    toggleClick={toggleDotHintClickBlock}
+                  />
+                )}
               </Box>
               <Box sx={{ mb: 2 }}>
                 <FeatureImportanceTable

@@ -2,6 +2,14 @@ import React, { useMemo, useState, useEffect, useRef } from "react";
 import { Box } from "@mui/material";
 import { AudienceFieldsSelector, OrderFieldsStep } from "../";
 import type { Field, CalculationResponse, RecommendedByCategory } from "@/types";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../../components/HintCard"; 
+
+interface HintCardInterface {
+    description: string;
+    title: string;
+    linkToLoadMore: string;
+}
 
 interface CalculatedStepsProps {
     calculatedResults: CalculationResponse;
@@ -9,6 +17,12 @@ interface CalculatedStepsProps {
     handlePrevStep: () => void;
     handleNextStep: () => void;
     onFieldsOrderChangeUp: (newOrder: Field[]) => void;
+    hintCard2: HintCardInterface
+    hintCard3: HintCardInterface
+    toggleDotHintClickBlock2: () => void
+    toggleDotHintClickBlock3: () => void
+    isOpenSelect2: boolean
+    isOpenSelect3: boolean
 }
 
 export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
@@ -16,9 +30,17 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
     currentStep,
     handlePrevStep,
     handleNextStep,
-    onFieldsOrderChangeUp
+    onFieldsOrderChangeUp,
+    hintCard2,
+    hintCard3,
+    toggleDotHintClickBlock2,
+    toggleDotHintClickBlock3,
+    isOpenSelect2,
+    isOpenSelect3,
 }) => {
     // Initial recommended by category
+
+    const { showHints } = useHints();
     const initialRecommendedByCategory = useMemo<RecommendedByCategory>(() => {
         const { audience_feature_importance_b2c: b2c, audience_feature_importance_b2b: b2b } = calculatedResults;
         const takeTop = (obj: Record<string, number>) =>
@@ -116,7 +138,7 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
     const canProceed = Object.values(selectedByCategory).flat().length >= 3;
 
     return (
-        <>
+        <Box>
             <Box hidden={currentStep !== 2}>
                 <AudienceFieldsSelector
                     calculatedResults={calculatedResults}
@@ -127,10 +149,13 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
                     canProcessed={canProceed}
                     onResetSelection={handleResetAllState}
                     disableResetSelection={isDefaultSelection && isDefaultOrder}
+                    hintCard={hintCard3}
+                    toggleDotHintClickBlock={toggleDotHintClickBlock3}
+                    isOpenSelect={isOpenSelect3}
                 />
             </Box>
 
-            <Box hidden={currentStep !== 3}>
+            <Box hidden={currentStep !== 3} sx={{position: "relative"}}>
                 <OrderFieldsStep
                     fields={dndFields}
                     handlePrevStep={handlePrevStep}
@@ -139,6 +164,17 @@ export const CalculatedSteps: React.FC<CalculatedStepsProps> = ({
                     disableResetOrder={isDefaultSelection && isDefaultOrder}
                 />
             </Box>
-        </>
+
+            {showHints && !isOpenSelect3 && (
+                    <HintCard
+                        card={hintCard2}
+                        positionTop={210}
+                        positionLeft={835}
+                        isOpenSelect={isOpenSelect2}
+                        toggleClick={toggleDotHintClickBlock2}
+                    />
+                )}
+
+        </Box>
     );
 };

@@ -863,7 +863,7 @@ const Popup: React.FC<PopupProps> = ({
                           fontWeight: "500",
                         }}
                       >
-                        Verify if Maximiz is receiving data from your site
+                        Verify if Allsource is receiving data from your site
                       </Typography>
                     </Box>
                     <Button
