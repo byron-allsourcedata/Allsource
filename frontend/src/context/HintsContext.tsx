@@ -1,8 +1,8 @@
 import React, { createContext, useState, ReactNode, useContext } from 'react';
 
 interface HintsContextType {
-    showHints: any
-    toggleHints: any
+    showHints: boolean
+    toggleHints: () => void
   }
 
 interface HintsProviderProps {
