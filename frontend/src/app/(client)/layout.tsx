@@ -12,6 +12,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import CustomNotification from "@/components/CustomNotification";
 import { useSSE } from "@/context/SSEContext";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { HintsProvider } from '@/context/HintsContext';
 
 interface ClientLayoutProps {
   children: ReactNode;
