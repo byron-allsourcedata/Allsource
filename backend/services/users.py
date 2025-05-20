@@ -50,7 +50,6 @@ class UsersService:
                 "is_artificial_status": result['is_artificial_status'],
                 "is_trial": result['subscription'].is_trial,
                 "plan_end": result['subscription'].plan_end,
-                "domain_limit": result['subscription'].domains_limit,
                 "lead_credits": result['subscription'].lead_credits
             }
         return {

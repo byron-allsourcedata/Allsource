@@ -11,7 +11,6 @@ const FreeTrialLabel: React.FC = () => {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [domainCount, setDomainCount] = useState<number>(0);
     const [creditsCount, setCreditsCount] = useState<number>(0);
-    const [domainLimitCount, setDomainLimitCount] = useState<number>(0);
     const [creditsLimitCount, setCreditsLimitCount] = useState<number>(0);
     const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
 
@@ -43,7 +42,6 @@ const FreeTrialLabel: React.FC = () => {
             if (user_info && user_plan) {
                 setCreditsCount(user_info.leads_credits);
                 setDomainCount(user_domains.length);
-                setDomainLimitCount(user_plan.domain_limit);
                 setCreditsLimitCount(user_plan.lead_credits)
             }
         }
@@ -122,7 +120,7 @@ const FreeTrialLabel: React.FC = () => {
                                 <DomainVerificationIcon fontSize="small" sx={{ color: '#3898FC' }} />
                                 <Typography variant="body2" sx={{ fontSize: '13px' }}>
                                     <Box component="span" sx={{ color: 'rgba(0, 0, 0, 0.5)' }}>{domainCount}</Box>
-                                    /{domainLimitCount === -1 ? 'unlimited' : domainLimitCount}
+                                    /1
                                 </Typography>
                             </Box>
 
@@ -130,9 +128,9 @@ const FreeTrialLabel: React.FC = () => {
                                 <AllInboxIcon fontSize="small" sx={{ color: '#3898FC' }} />
                                 <Typography variant="body2" sx={{ fontSize: '13px' }}>
                                     <Box component="span" sx={{ color: 'rgba(0, 0, 0, 0.5)' }}>
-                                        {creditsCount === -1 ? '0' : creditsCount.toLocaleString()}
+                                        {(creditsLimitCount - creditsCount).toLocaleString()}
                                     </Box>
-                                    /{creditsLimitCount === -1 ? '0' : creditsLimitCount} Credits
+                                    /{creditsLimitCount.toLocaleString()} Credits
                                 </Typography>
                             </Box>
 
@@ -164,7 +162,7 @@ const FreeTrialLabel: React.FC = () => {
                     </Box>
 
                     <Box sx={{ width: '100%', mb: '8px' }}>
-                        <ProgressBar progress={{ total: 100, processed: 50 }} />
+                        <ProgressBar progress={{ total: creditsLimitCount, processed: creditsCount }} />
                     </Box>
                 </Box>
 
