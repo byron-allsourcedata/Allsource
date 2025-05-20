@@ -232,12 +232,11 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
                   headerIcon={<AccountBoxIcon />}
                   initialFeatures={recommendedByCategory.personal}
                 />
-              {showHints && (
+              {showHints && isOpenSelect && (
                 <HintCard
                     card={hintCard}
                     positionTop={20}
                     positionLeft={800}
-                    isOpenSelect={isOpenSelect}
                     toggleClick={toggleDotHintClickBlock}
                   />
                 )}

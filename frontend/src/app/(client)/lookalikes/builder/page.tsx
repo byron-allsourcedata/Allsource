@@ -46,14 +46,9 @@ interface HintCardInterface {
   linkToLoadMore: string;
 }
 
-interface StateHint {
-  id: number;
-  show: boolean;
-}
-
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
-  const { showHints } = useHints();
+  const { showHints, lookalikesBuilderHints, toggleLookalikesBuilderHintState } = useHints();
   const searchParams = useSearchParams();
   const preselectedUuid = searchParams.get("source_uuid");
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
@@ -72,15 +67,6 @@ const CreateLookalikePage: React.FC = () => {
     useState<CalculationResponse | null>(null);
 
   const [dndFields, setDndFields] = useState<Field[]>([]);
-
-  const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
-    { show: true, id: 0 },
-    { show: false, id: 1 },
-    { show: false, id: 2 },
-    { show: false, id: 3 },
-    { show: false, id: 4 },
-    { show: false, id: 5 },
-  ]);
 
   const hintCards: HintCardInterface[] = [
     {
@@ -126,21 +112,15 @@ const CreateLookalikePage: React.FC = () => {
   };
 
   const toggleDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: !el.show } : el))
-    );
+    toggleLookalikesBuilderHintState(id)
   };
 
   const closeDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: false } : el))
-    );
+    toggleLookalikesBuilderHintState(id, false)
   };
 
   const openDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: true } : el))
-    );
+    toggleLookalikesBuilderHintState(id, true)
   };
 
   const getFilteredData = (data: any[]) =>
@@ -434,12 +414,11 @@ const CreateLookalikePage: React.FC = () => {
                             },
                           }}
                         />
-                        {showHints && (
+                        {showHints && lookalikesBuilderHints[0].show && (
                           <HintCard
                               card={hintCards[0]}
                               positionTop={90}
                               positionLeft={230}
-                              isOpenSelect={isOpenSelect[0].show}
                               toggleClick={() => toggleDotHintClick(0)}
                           />
                         )}
@@ -609,7 +588,7 @@ const CreateLookalikePage: React.FC = () => {
                       selectedSize={selectedSize}
                       hintCard={hintCards[1]}
                       toggleDotHintClickBlock1={() => toggleDotHintClick(1)}
-                      isOpenSelect={isOpenSelect[1].show}
+                      isOpenSelect={lookalikesBuilderHints[1].show}
                     />
                   </Box>
                 )}
@@ -661,8 +640,8 @@ const CreateLookalikePage: React.FC = () => {
                         hintCard3={hintCards[3]}
                         toggleDotHintClickBlock2={() => toggleDotHintClick(2)}
                         toggleDotHintClickBlock3={() => toggleDotHintClick(3)}
-                        isOpenSelect2={isOpenSelect[2].show}
-                        isOpenSelect3={isOpenSelect[3].show}
+                        isOpenSelect2={lookalikesBuilderHints[2].show}
+                        isOpenSelect3={lookalikesBuilderHints[3].show}
                         onFieldsOrderChangeUp={setDndFields}
                       />
                   </Box>
