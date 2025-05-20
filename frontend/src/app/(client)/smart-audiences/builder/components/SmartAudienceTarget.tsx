@@ -98,7 +98,6 @@ interface SmartAudienceTargetProps {
   closeDotHintClick: (id: number) => void
   openDotHintClick: (id: number) => void
   hintCards: HintCardInterface[];
-  isOpenSelect: StateHint[];
   block5Ref: React.RefObject<HTMLDivElement>
   block6Ref: React.RefObject<HTMLDivElement>
   block7Ref: React.RefObject<HTMLDivElement>
@@ -137,7 +136,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   toggleDotHintClick,
   closeDotHintClick,
   openDotHintClick,
-  isOpenSelect,
   hintCards,
   block5Ref,
   block6Ref,
@@ -150,7 +148,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   lookalikeData,
 }) => {
   const router = useRouter();
-  const { showHints } = useHints();
+  const { showHints, smartsBuilderHints } = useHints();
   const [loading, setLoading] = useState(false);
   const [audienceName, setAudienceName] = useState<string>("");
   const [option, setOption] = useState<string>("");
@@ -514,11 +512,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
               {option}
             </ToggleButton>
           ))}
-          {showHints && (
+          {showHints && smartsBuilderHints[2].show && (
               <HintCard
                   card={hintCards[2]}
                   positionLeft={215}
-                  isOpenSelect={isOpenSelect[2].show}
                   toggleClick={() => toggleDotHintClick(2)}
               />
             )} 
@@ -756,11 +753,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                       Exclude
                     </MenuItem>
                   </Select>
-                  {showHints && !option && (
+                  {showHints && smartsBuilderHints[3].show && !option && (
                     <HintCard
                         card={hintCards[3]}
                         positionLeft={340}
-                        isOpenSelect={isOpenSelect[3].show}
                         toggleClick={() => toggleDotHintClick(3)}
                     />
                   )} 
@@ -796,11 +792,10 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                         Lookalike
                       </MenuItem>
                     </Select>
-                    {showHints && option && (
+                    {showHints && smartsBuilderHints[3].show && option && (
                     <HintCard
                         card={hintCards[3]}
                         positionLeft={340}
-                        isOpenSelect={isOpenSelect[3].show}
                         toggleClick={() => toggleDotHintClick(3)}
                     />
                   )} 
@@ -985,7 +980,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
           hintCard={hintCards[4]}
           toggleDotHintClickBlock4={() => toggleDotHintClick(4)}
           toggleDotHintClickBlock5={() => toggleDotHintClick(5)}
-          isOpenSelect={isOpenSelect[4].show}
+          isOpenSelect={smartsBuilderHints[4].show} 
           targetAudience={targetAudience}
           scrollToNewBlock={() => {
             setTimeout(() => {
@@ -1150,12 +1145,11 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                     }}
                   />
 
-                  {showHints && (
+                  {showHints && smartsBuilderHints[5].show &&  (
                     <HintCard
                         card={hintCards[5]}
                         positionLeft={320}
                         positionTop={20}
-                        isOpenSelect={isOpenSelect[5].show}
                         toggleClick={() => toggleDotHintClick(5)}
                     />
                   )} 
