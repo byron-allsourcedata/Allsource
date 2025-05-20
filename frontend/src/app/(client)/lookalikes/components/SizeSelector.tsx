@@ -198,12 +198,11 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                     })}
                 </Box>
 
-                {showHints && (
+                {showHints && isOpenSelect && (
                     <HintCard
                         card={hintCard}
                         positionTop={100}
                         positionLeft={1070}
-                        isOpenSelect={isOpenSelect}
                         toggleClick={toggleDotHintClickBlock1}
                     />
                 )}
