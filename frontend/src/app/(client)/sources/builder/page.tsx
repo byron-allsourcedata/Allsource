@@ -306,16 +306,16 @@ const SourcesImport: React.FC = () => {
     let updatedRows = defaultRows.map((row) => {
       if (row.type === "Transaction Date") {
         let newType = row.type;
-        if (sourceType === "Customer Conversions (CSV)")
+        if (sourceType === "Customer Conversions")
           newType = "Transaction Date";
-        if (sourceType === "Failed Leads (CSV)") newType = "Lead Date";
-        if (sourceType === "Interest (CSV)") newType = "Interest Date";
+        if (sourceType === "Failed Leads") newType = "Lead Date";
+        if (sourceType === "Interest") newType = "Interest Date";
 
         return { ...row, type: newType };
       }
       return row;
     });
-    if (sourceType === "Customer Conversions (CSV)") {
+    if (sourceType === "Customer Conversions") {
       updatedRows = [
         ...updatedRows,
         {
