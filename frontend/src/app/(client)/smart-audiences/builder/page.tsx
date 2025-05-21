@@ -24,18 +24,18 @@ interface StateHint {
 
 
 const SmartAudiencesBuilder: React.FC = () => {
-    const { showHints } = useHints();
+    const { showHints, smartsBuilderHints, toggleSmartsBuilderHintState } = useHints();
     const [useCaseType, setUseCaseType] = useState<string>("");
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
-    const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
-        { show: true, id: 0 },
-        { show: false, id: 1 },
-        { show: false, id: 2 },
-        { show: false, id: 3 },
-        { show: false, id: 4 },
-        { show: false, id: 5 },
-    ]);
+    // const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
+    //     { show: true, id: 0 },
+    //     { show: false, id: 1 },
+    //     { show: false, id: 2 },
+    //     { show: false, id: 3 },
+    //     { show: false, id: 4 },
+    //     { show: false, id: 5 },
+    // ]);
 
     const block1Ref = useRef<HTMLDivElement | null>(null);
     const block2Ref = useRef<HTMLDivElement | null>(null);
@@ -66,36 +66,30 @@ const SmartAudiencesBuilder: React.FC = () => {
         closeDotHintClick(0)
     };
 
-    useEffect(() => {
-        if (showHints && !isOpenSelect) {
-          setIsOpenSelect([
-            { show: true, id: 0 },
-            { show: false, id: 1 },
-            { show: false, id: 2 },
-            { show: false, id: 3 },
-            { show: false, id: 4 },
-            { show: false, id: 5 },
-          ]);
-        }
-      }, [showHints]);
+    // useEffect(() => {
+    //     if (showHints && !isOpenSelect) {
+    //       setIsOpenSelect([
+    //         { show: true, id: 0 },
+    //         { show: false, id: 1 },
+    //         { show: false, id: 2 },
+    //         { show: false, id: 3 },
+    //         { show: false, id: 4 },
+    //         { show: false, id: 5 },
+    //       ]);
+    //     }
+    //   }, [showHints]);
 
     const toggleDotHintClick = (id: number) => {
-        setIsOpenSelect((prev) =>
-          prev.map((el) => (el.id === id ? { ...el, show: !el.show } : el))
-        );
-      };
-    
-      const closeDotHintClick = (id: number) => {
-        setIsOpenSelect((prev) =>
-          prev.map((el) => (el.id === id ? { ...el, show: false } : el))
-        );
-      };
-    
-      const openDotHintClick = (id: number) => {
-        setIsOpenSelect((prev) =>
-          prev.map((el) => (el.id === id ? { ...el, show: true } : el))
-        );
-      };
+        toggleSmartsBuilderHintState(id)
+    };
+
+    const closeDotHintClick = (id: number) => {
+        toggleSmartsBuilderHintState(id, false)
+    };
+
+    const openDotHintClick = (id: number) => {
+        toggleSmartsBuilderHintState(id, true)
+    };
 
     const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {
         if (blockRef.current) {
@@ -198,11 +192,10 @@ const SmartAudiencesBuilder: React.FC = () => {
                                     <MenuItem className="second-sub-title" value={"Postal"}>Postal</MenuItem>
                                     <MenuItem className="second-sub-title" value={"LinkedIn"}>LinkedIn</MenuItem>
                                 </Select>
-                                {showHints && (
+                                {showHints && smartsBuilderHints[0].show &&  (
                                     <HintCard
                                         card={hintCards[0]}
                                         positionLeft={340}
-                                        isOpenSelect={isOpenSelect[0].show}
                                         toggleClick={() => toggleDotHintClick(0)}
                                     />
                                 )}
@@ -218,7 +211,6 @@ const SmartAudiencesBuilder: React.FC = () => {
                                 toggleDotHintClick={toggleDotHintClick}
                                 closeDotHintClick={closeDotHintClick}
                                 scrollToBlock={scrollToBlock}
-                                isOpenSelect={isOpenSelect}
                                 useCaseType={useCaseType}
                                 sourceData={sourceData}
                                 lookalikeData={lookalikeData}
@@ -237,7 +229,6 @@ const SmartAudiencesBuilder: React.FC = () => {
                                     closeDotHintClick={closeDotHintClick}
                                     openDotHintClick={openDotHintClick}
                                     scrollToBlock={scrollToBlock}
-                                    isOpenSelect={isOpenSelect}
                                     useCaseType={useCaseType}
                                     sourceData={sourceData}
                                     lookalikeData={lookalikeData}

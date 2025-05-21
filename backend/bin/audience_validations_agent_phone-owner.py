@@ -204,7 +204,6 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         total_count = db_session.query(AudienceSmartPerson).filter(
                 AudienceSmartPerson.smart_audience_id == aud_smart_id
             ).count()
-
         if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
@@ -215,7 +214,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                     for rule in cat:
                         if key in rule:
                             rule[key]["processed"] = True
-                            rule[key]["count_validated"] = count_persons_before_validation - len(failed_ids)
+                            rule[key]["count_validated"] = total_validated
                             rule[key]["count_submited"] = count_persons_before_validation
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()

@@ -184,9 +184,9 @@ const SourcesList: React.FC = () => {
   };
 
   const isCreateDisabled =
-  createdData?.processed_records === 0 ||
-  createdData?.processed_records !== createdData?.total_records ||
-  createdData?.matched_records === 0;
+    createdData?.processed_records === 0 ||
+    createdData?.processed_records !== createdData?.total_records ||
+    createdData?.matched_records === 0;
 
   return (
     <>
@@ -385,9 +385,9 @@ const SourcesList: React.FC = () => {
                       onClick={(e) =>
                         createdData?.source_type
                           ? handleOpenPopoverFullName(
-                              e,
-                              setSourceType(createdData?.source_type)
-                            )
+                            e,
+                            setSourceType(createdData?.source_type)
+                          )
                           : {}
                       }
                     >
@@ -482,19 +482,23 @@ const SourcesList: React.FC = () => {
                       Number of Customers
                     </Typography>
                     <Typography variant="subtitle1" className="table-data">
-                      {(sourceProgress[createdData.id]?.total &&
-                        sourceProgress[createdData.id]?.total > 0) ||
-                      createdData?.total_records > 0 ? (
-                        sourceProgress[createdData.id]?.total > 0 ? (
-                          sourceProgress[createdData.id]?.total.toLocaleString(
-                            "en-US"
+                      {createdData.matched_records_status === "complete" && createdData?.total_records === 0 ?
+                        (
+                          "0"
+                        ) :
+                        (sourceProgress[createdData.id]?.total &&
+                          sourceProgress[createdData.id]?.total > 0) ||
+                          createdData?.total_records > 0 ? (
+                          sourceProgress[createdData.id]?.total > 0 ? (
+                            sourceProgress[createdData.id]?.total.toLocaleString(
+                              "en-US"
+                            )
+                          ) : (
+                            createdData?.total_records?.toLocaleString("en-US")
                           )
                         ) : (
-                          createdData?.total_records?.toLocaleString("en-US")
-                        )
-                      ) : (
-                        <ThreeDotsLoader />
-                      )}
+                          <ThreeDotsLoader />
+                        )}
                     </Typography>
                   </Box>
                   <Box
@@ -508,34 +512,38 @@ const SourcesList: React.FC = () => {
                       Matched Records
                     </Typography>
                     <Typography variant="subtitle1" className="table-data">
-                      {(createdData?.id &&
-                        sourceProgress[createdData.id]?.processed &&
-                        sourceProgress[createdData.id]?.processed ==
-                          sourceProgress[createdData.id]?.total) ||
-                      (createdData?.processed_records ==
-                        createdData?.total_records &&
-                        createdData?.processed_records !== 0) ? (
-                        sourceProgress[createdData.id]?.matched >
-                        createdData?.matched_records ? (
-                          sourceProgress[
-                            createdData.id
-                          ]?.matched.toLocaleString("en-US")
+                      {createdData.matched_records_status === "complete" && createdData?.total_records === 0 ?
+                        (
+                          "0"
                         ) : (
-                          createdData.matched_records.toLocaleString("en-US")
-                        )
-                      ) : createdData?.processed_records !== 0 ? (
-                        <ProgressBar
-                          progress={{
-                            total: createdData?.total_records,
-                            processed: createdData?.processed_records,
-                            matched: createdData?.matched_records,
-                          }}
-                        />
-                      ) : (
-                        <ProgressBar
-                          progress={sourceProgress[createdData.id]}
-                        />
-                      )}
+                          createdData?.id &&
+                          sourceProgress[createdData.id]?.processed &&
+                          sourceProgress[createdData.id]?.processed ==
+                          sourceProgress[createdData.id]?.total) ||
+                          (createdData?.processed_records ==
+                            createdData?.total_records &&
+                            createdData?.processed_records !== 0) ? (
+                          sourceProgress[createdData.id]?.matched >
+                            createdData?.matched_records ? (
+                            sourceProgress[
+                              createdData.id
+                            ]?.matched.toLocaleString("en-US")
+                          ) : (
+                            createdData.matched_records.toLocaleString("en-US")
+                          )
+                        ) : createdData?.processed_records !== 0 ? (
+                          <ProgressBar
+                            progress={{
+                              total: createdData?.total_records,
+                              processed: createdData?.processed_records,
+                              matched: createdData?.matched_records,
+                            }}
+                          />
+                        ) : (
+                          <ProgressBar
+                            progress={sourceProgress[createdData.id]}
+                          />
+                        )}
                     </Typography>
                   </Box>
                   {/* need chnage < on !== */}

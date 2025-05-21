@@ -56,6 +56,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import TableCustomCell from "./components/table/TableCustomCell";
 import FirstTimeScreen from "./components/FirstTimeScreen"
 import { useScrollShadow } from "@/hooks/useScrollShadow";
+import HintCard from "../components/HintCard";
+import { useHints } from "@/context/HintsContext";
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
 
 interface Source {
   id: string;
@@ -140,6 +148,24 @@ const Sources: React.FC = () => {
   const isDebug = searchParams.get("is_debug") === "true";
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
+  const { showHints, toggleSourceTableHintState, sourcesTableHints } = useHints();
+
+  const hintCards: HintCardInterface[] = [
+    {
+     description:
+     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+     title: "Actions",
+     linkToLoadMore:
+     "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+    {
+     description:
+     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+     title: "Builder",
+     linkToLoadMore:
+       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+  ]
 
   const cardData: CardData[] = [
     {
@@ -179,12 +205,12 @@ const Sources: React.FC = () => {
       isClickable: true
     },
   ];
-  
+
   const columns = [
     {
       key: "name",
       label: "Name",
-      widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
+      widths: { width: "15vw", minWidth: "15vw", maxWidth: "15vw" },
     },
     {
       key: "target_schema",
@@ -299,7 +325,7 @@ const Sources: React.FC = () => {
         ? isFirstLoad
           ? setLoading(true)
           : setLoaderForTable(true)
-        : () => {};
+        : () => { };
       const accessToken = localStorage.getItem("token");
       if (!accessToken) {
         router.push("/signin");
@@ -313,9 +339,8 @@ const Sources: React.FC = () => {
       let url = `/audience-sources?&page=${page + 1}&per_page=${rowsPerPage}`;
 
       if (filters.from_date || filters.to_date) {
-        url += `&created_date_start=${
-          filters.from_date || ""
-        }&created_date_end=${filters.to_date || ""}`;
+        url += `&created_date_start=${filters.from_date || ""
+          }&created_date_end=${filters.to_date || ""}`;
       }
       if (filters.selectedSource?.length > 0) {
         url += `&source_origin=${filters.selectedSource
@@ -516,53 +541,53 @@ const Sources: React.FC = () => {
       label: string;
       value: string | ((f: any) => string);
     }[] = [
-      {
-        condition: filters.from_date,
-        label: "From Date",
-        value: () => dayjs.unix(filters.from_date!).format(dateFormat),
-      },
-      {
-        condition: filters.to_date,
-        label: "To Date",
-        value: () => dayjs.unix(filters.to_date!).format(dateFormat),
-      },
-      {
-        condition: filters.searchQuery,
-        label: "Search",
-        value: filters.searchQuery!,
-      },
-      {
-        condition: filters.selectedSource?.length > 0,
-        label: "Source",
-        value: () => filters.selectedSource.join(", "),
-      },
-      {
-        condition: filters.selectedTypes?.length > 0,
-        label: "Types",
-        value: () => filters.selectedTypes.join(", "),
-      },
-      {
-        condition: filters.selectedDomains?.length > 0,
-        label: "Domains",
-        value: () => filters.selectedDomains.join(", "),
-      },
-      {
-        condition: filters.createdDate?.length > 0,
-        label: "Created Date",
-        value: () => filters.createdDate.join(", "),
-      },
-      {
-        condition: filters.dateRange?.fromDate || filters.dateRange?.toDate,
-        label: "Date Range",
-        value: () => {
-          const from = dayjs
-            .unix(filters.dateRange.fromDate!)
-            .format(dateFormat);
-          const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
-          return `${from} to ${to}`;
+        {
+          condition: filters.from_date,
+          label: "From Date",
+          value: () => dayjs.unix(filters.from_date!).format(dateFormat),
         },
-      },
-    ];
+        {
+          condition: filters.to_date,
+          label: "To Date",
+          value: () => dayjs.unix(filters.to_date!).format(dateFormat),
+        },
+        {
+          condition: filters.searchQuery,
+          label: "Search",
+          value: filters.searchQuery!,
+        },
+        {
+          condition: filters.selectedSource?.length > 0,
+          label: "Source",
+          value: () => filters.selectedSource.join(", "),
+        },
+        {
+          condition: filters.selectedTypes?.length > 0,
+          label: "Types",
+          value: () => filters.selectedTypes.join(", "),
+        },
+        {
+          condition: filters.selectedDomains?.length > 0,
+          label: "Domains",
+          value: () => filters.selectedDomains.join(", "),
+        },
+        {
+          condition: filters.createdDate?.length > 0,
+          label: "Created Date",
+          value: () => filters.createdDate.join(", "),
+        },
+        {
+          condition: filters.dateRange?.fromDate || filters.dateRange?.toDate,
+          label: "Date Range",
+          value: () => {
+            const from = dayjs
+              .unix(filters.dateRange.fromDate!)
+              .format(dateFormat);
+            const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
+            return `${from} to ${to}`;
+          },
+        },
+      ];
 
     filterMappings.forEach(({ condition, label, value }) => {
       if (condition) {
@@ -598,6 +623,18 @@ const Sources: React.FC = () => {
 
     sessionStorage.setItem("filtersBySource", JSON.stringify(filters));
     handleApplyFilters(filters);
+  };
+
+  const toggleDotHintClick = (id: number) => {
+    toggleSourceTableHintState(id)
+  };
+
+  const closeDotHintClick = (id: number) => {
+    toggleSourceTableHintState(id, false)
+  };
+
+  const openDotHintClick = (id: number) => {
+    toggleSourceTableHintState(id, true)
   };
 
   const handleDeleteFilter = (filterToDelete: {
@@ -665,8 +702,8 @@ const Sources: React.FC = () => {
     const newFilters: FilterParams = {
       from_date: updatedFilters.find((f) => f.label === "From Date")
         ? dayjs(
-            updatedFilters.find((f) => f.label === "From Date")!.value
-          ).unix()
+          updatedFilters.find((f) => f.label === "From Date")!.value
+        ).unix()
         : null,
       to_date: updatedFilters.find((f) => f.label === "To Date")
         ? dayjs(updatedFilters.find((f) => f.label === "To Date")!.value).unix()
@@ -685,23 +722,23 @@ const Sources: React.FC = () => {
         : [],
       createdDate: updatedFilters.find((f) => f.label === "Created Date")
         ? updatedFilters
-            .find((f) => f.label === "Created Date")!
-            .value.split(", ")
+          .find((f) => f.label === "Created Date")!
+          .value.split(", ")
         : [],
       dateRange: {
         fromDate: updatedFilters.find((f) => f.label === "Date Range")
           ? dayjs(
-              updatedFilters
-                .find((f) => f.label === "Date Range")!
-                .value.split(", ")[0]
-            ).unix()
+            updatedFilters
+              .find((f) => f.label === "Date Range")!
+              .value.split(", ")[0]
+          ).unix()
           : null,
         toDate: updatedFilters.find((f) => f.label === "Date Range")
           ? dayjs(
-              updatedFilters
-                .find((f) => f.label === "Date Range")!
-                .value.split(", ")[1]
-            ).unix()
+            updatedFilters
+              .find((f) => f.label === "Date Range")!
+              .value.split(", ")[1]
+          ).unix()
           : null,
       },
     };
@@ -732,7 +769,8 @@ const Sources: React.FC = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          height: "100%",
+          height: "calc(100vh - 4.25rem)",
+          // overflow: "auto",
           "@media (max-width: 900px)": {
             minHeight: "100vh",
           },
@@ -740,7 +778,7 @@ const Sources: React.FC = () => {
       >
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Box>
-            {(data.length !== 0 || selectedFilters.length > 0) && 
+            {(data.length !== 0 || selectedFilters.length > 0) &&
               <Box
                 sx={{
                   display: "flex",
@@ -778,7 +816,8 @@ const Sources: React.FC = () => {
                   sx={{
                     display: "flex",
                     flexDirection: "row",
-                    alignItems: "center",
+                    alignItems: "center", 
+                    position: "relative",
                     gap: "15px",
                     pt: "4px",
                     pr: 2,
@@ -874,6 +913,16 @@ const Sources: React.FC = () => {
                       />
                     )}
                   </Button>
+
+                  {showHints && sourcesTableHints[1].show && !sourcesTableHints[0].show && (
+                    <HintCard
+                      card={hintCards[1]}
+                      positionLeft={-350}
+                      positionTop={20}
+                      rightSide={true}
+                      toggleClick={() => toggleDotHintClick(1)}
+                    />
+                  )}
                 </Box>
               </Box>
             }
@@ -884,7 +933,7 @@ const Sources: React.FC = () => {
                 display: "flex",
                 flexDirection: "column",
                 pr: 2,
-                overflow: "auto",
+                // overflow: "auto",
                 maxWidth: "100%",
                 "@media (max-width: 900px)": {
                   pt: "2px",
@@ -896,7 +945,7 @@ const Sources: React.FC = () => {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  overflow: "hidden",
+                  // overflow: "hidden",
                   height: "100%",
                   "@media (max-width: 900px)": {
                     paddingRight: 0,
@@ -909,7 +958,7 @@ const Sources: React.FC = () => {
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "hidden",
+                    // overflow: "hidden",
                   }}
                 >
                   <Box
@@ -950,10 +999,9 @@ const Sources: React.FC = () => {
                         <Chip
                           className="paragraph"
                           key={filter.label}
-                          label={`${filter.label}: ${
-                            displayValue.charAt(0).toUpperCase() +
+                          label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() +
                             displayValue.slice(1)
-                          }`}
+                            }`}
                           onDelete={() => handleDeleteFilter(filter)}
                           deleteIcon={
                             <CloseIcon
@@ -993,9 +1041,9 @@ const Sources: React.FC = () => {
                     {data.length === 0 &&
                       isMakeRequest &&
                       !(selectedFilters.length > 0) && (
-                        <FirstTimeScreen cardData={cardData}/>
+                        <FirstTimeScreen cardData={cardData} />
                       )
-                      }
+                    }
                     {data.length === 0 &&
                       selectedFilters.length > 0 &&
                       !loaderForTable && (
@@ -1177,14 +1225,14 @@ const Sources: React.FC = () => {
                             component={Paper}
                             sx={{
                               border: "1px solid rgba(235, 235, 235, 1)",
-                              overflowX: "auto",
+                              overflowX: "visible",
                               maxHeight:
                                 selectedFilters.length > 0
                                   ? hasNotification
                                     ? "63vh"
                                     : "68vh"
                                   : "72vh",
-                              overflowY: "auto",
+                              overflowY: "visible",
                               "@media (max-height: 800px)": {
                                 maxHeight:
                                   selectedFilters.length > 0
@@ -1258,6 +1306,7 @@ const Sources: React.FC = () => {
                                           sx={{
                                             display: "flex",
                                             alignItems: "center",
+                                            position: "relative",
                                             justifyContent: "space-between",
                                           }}
                                         >
@@ -1284,6 +1333,18 @@ const Sources: React.FC = () => {
                                             </IconButton>
                                           )}
                                         </Box>
+                                        {showHints && label === "Actions" && sourcesTableHints[0].show && (
+                                              <HintCard
+                                                card={hintCards[0]}
+                                                positionLeft={-380}
+                                                positionTop={180}
+                                                rightSide={true}
+                                                toggleClick={() => {
+                                                  toggleDotHintClick(0)
+                                                  toggleDotHintClick(1)
+                                                }}
+                                              />
+                                            )}
                                       </TableCell>
                                     )
                                   )}
@@ -1323,7 +1384,7 @@ const Sources: React.FC = () => {
                                 {data.map((row: Source) => {
                                   const progress = sourceProgress[row.id];
                                   const isDisabled = row.matched_records === 0 || row.matched_records_status === "pending";
-                                  const url = `${isDisabled ? "#": '/insights/sources/' + String(row.id)}`
+                                  const url = `${isDisabled ? "#" : '/insights/sources/' + String(row.id)}`
                                   return (
                                     <TableRow
                                       key={row.id}
@@ -1331,7 +1392,7 @@ const Sources: React.FC = () => {
                                       sx={{
                                         backgroundColor:
                                           selectedRows.has(row.id) &&
-                                          !loaderForTable
+                                            !loaderForTable
                                             ? "rgba(247, 247, 247, 1)"
                                             : "#fff",
                                         "&:hover": {
@@ -1408,8 +1469,8 @@ const Sources: React.FC = () => {
                                         rowExample={
                                           dayjs(row.created_at).isValid()
                                             ? dayjs(row.created_at).format(
-                                                "MMM D, YYYY"
-                                              )
+                                              "MMM D, YYYY"
+                                            )
                                             : "--"
                                         }
                                         loaderForTable={loaderForTable}
@@ -1428,21 +1489,24 @@ const Sources: React.FC = () => {
                                           position: "relative",
                                         }}
                                       >
-                                        {(progress?.total &&
-                                          progress?.total > 0) ||
-                                        row?.total_records > 0 ? (
-                                          progress?.total > 0 ? (
-                                            progress?.total.toLocaleString(
-                                              "en-US"
+                                        {row.matched_records_status === "complete" && row?.total_records === 0 ?
+                                          (
+                                            "0"
+                                          ) : (progress?.total &&
+                                            progress?.total > 0) ||
+                                            row?.total_records > 0 ? (
+                                            progress?.total > 0 ? (
+                                              progress?.total.toLocaleString(
+                                                "en-US"
+                                              )
+                                            ) : (
+                                              row?.total_records?.toLocaleString(
+                                                "en-US"
+                                              )
                                             )
                                           ) : (
-                                            row?.total_records?.toLocaleString(
-                                              "en-US"
-                                            )
-                                          )
-                                        ) : (
-                                          <ThreeDotsLoader />
-                                        )}
+                                            <ThreeDotsLoader />
+                                          )}
                                       </TableCell>
 
                                       {/* Matched Records  Column */}
@@ -1452,33 +1516,36 @@ const Sources: React.FC = () => {
                                           position: "relative",
                                         }}
                                       >
-                                        {(progress?.processed &&
-                                          progress?.processed ==
+                                        {row.matched_records_status === "complete" && row?.total_records === 0 ?
+                                          (
+                                            "0"
+                                          ) : (progress?.processed &&
+                                            progress?.processed ==
                                             progress?.total) ||
-                                        (row?.processed_records ==
-                                          row?.total_records &&
-                                          row?.processed_records !== 0) ? (
-                                          progress?.matched >
-                                          row?.matched_records ? (
-                                            progress?.matched.toLocaleString(
-                                              "en-US"
+                                            (row?.processed_records ==
+                                              row?.total_records &&
+                                              row?.processed_records !== 0) ? (
+                                            progress?.matched >
+                                              row?.matched_records ? (
+                                              progress?.matched.toLocaleString(
+                                                "en-US"
+                                              )
+                                            ) : (
+                                              row.matched_records.toLocaleString(
+                                                "en-US"
+                                              )
                                             )
+                                          ) : row?.processed_records !== 0 ? (
+                                            <ProgressBar
+                                              progress={{
+                                                total: row?.total_records,
+                                                processed: row?.processed_records,
+                                                matched: row?.matched_records,
+                                              }}
+                                            />
                                           ) : (
-                                            row.matched_records.toLocaleString(
-                                              "en-US"
-                                            )
-                                          )
-                                        ) : row?.processed_records !== 0 ? (
-                                          <ProgressBar
-                                            progress={{
-                                              total: row?.total_records,
-                                              processed: row?.processed_records,
-                                              matched: row?.matched_records,
-                                            }}
-                                          />
-                                        ) : (
-                                          <ProgressBar progress={progress} />
-                                        )}
+                                            <ProgressBar progress={progress} />
+                                          )}
                                       </TableCell>
 
                                       <TableCell
@@ -1781,7 +1848,7 @@ const Sources: React.FC = () => {
                       <Box
                         sx={{
                           maxHeight: "92px",
-                          overflowY: "auto",
+                          // overflowY: "auto",
                           backgroundColor: "rgba(255, 255, 255, 1)",
                         }}
                       >

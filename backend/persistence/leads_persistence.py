@@ -486,7 +486,7 @@ class LeadsPersistence:
         
         return query.all()
     
-    def get_leads_by_emails(self, email_list: list[str], domain_id: int) -> list[int]:
+    def get_confirm_leads_by_emails(self, email_list: list[str], domain_id: int) -> list[int]:
         stmt = (
             select(LeadUser.id)
             .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
@@ -495,7 +495,8 @@ class LeadsPersistence:
             .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
             .where(
                 FiveXFiveEmails.email.in_(email_list),
-                LeadUser.domain_id == domain_id
+                LeadUser.domain_id == domain_id,
+                LeadUser.is_confirmed == True
             )
             .distinct()
         )

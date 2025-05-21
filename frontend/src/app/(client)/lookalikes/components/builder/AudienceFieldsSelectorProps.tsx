@@ -16,15 +16,27 @@ import { FeatureImportanceTable } from "./FeatureImportanceTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 import { ResetProvider, useResetContext } from "@/context/ResetContext";
 import { PaymentIcon, HowToVoteIcon, DirectionsBikeIcon, AccountBoxIcon, OpenInNewIcon, AssignmentIndIcon, WorkHistoryOutlinedIcon, WorkOutlineOutlinedIcon, HistoryOutlinedIcon } from "@/icon"
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../../components/HintCard";
 
 interface AudienceFieldsSelectorProps {
   calculatedResults?: CalculationResponse
   handleNextStep: () => void;
+  currentSelection: RecommendedByCategory;
   recommendedByCategory: RecommendedByCategory;
   onFieldsChange: (selected: RecommendedByCategory) => void;
   canProcessed: boolean
   onResetSelection: () => void;
   disableResetSelection: boolean;
+  hintCard: HintCardInterface
+  toggleDotHintClickBlock: () => void
+  isOpenSelect: boolean
+}
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
 }
 
 const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
@@ -34,45 +46,42 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   onFieldsChange,
   canProcessed,
   onResetSelection,
-  disableResetSelection
+  currentSelection,
+  disableResetSelection,
+  hintCard, toggleDotHintClickBlock, isOpenSelect
 }) => {
+  const { showHints } = useHints();
   const [activeStep, setActiveStep] = React.useState(0);
-   const [personalSelected, setPersonalSelected] = useState<string[]>(
-    recommendedByCategory.personal
-  );
-  const [financialSelected, setFinancialSelected] = useState<string[]>(
-    recommendedByCategory.financial
-  );
-  const [lifestyleSelected, setLifestyleSelected] = useState<string[]>(
-    recommendedByCategory.lifestyle
-  );
-  const [voterSelected, setVoterSelected] = useState<string[]>(
-    recommendedByCategory.voter
-  );
-  const [professionalSelected, setProfessionalSelected] = useState<string[]>(
-    recommendedByCategory.professional_profile
-  );
-  const [employmentSelected, setEmploymentSelected] = useState<string[]>(
-    recommendedByCategory.employment_history
-  );
+  const { personal, financial, lifestyle, voter, professional_profile, employment_history } = currentSelection;
+  const handleResetToRecommended = () => {
+    onFieldsChange(recommendedByCategory);
+    onResetSelection();
+  };
 
   useEffect(() => {
-    onFieldsChange({
-      personal: personalSelected,
-      financial: financialSelected,
-      lifestyle: lifestyleSelected,
-      voter: voterSelected,
-      professional_profile: professionalSelected,
-      employment_history: employmentSelected,
-    });
+    onFieldsChange(recommendedByCategory);
   }, [
-    personalSelected,
-    financialSelected,
-    lifestyleSelected,
-    voterSelected,
-    professionalSelected,
-    employmentSelected,
+    recommendedByCategory
   ]);
+
+  const handlePersonalChange = (keys: string[]) => {
+    onFieldsChange({ ...currentSelection, personal: keys });
+  };
+  const handleFinancialChange = (keys: string[]) => {
+    onFieldsChange({ ...currentSelection, financial: keys });
+  };
+  const handleLifestyleChange = (keys: string[]) => {
+    onFieldsChange({ ...currentSelection, lifestyle: keys });
+  };
+  const handleVoterChange = (keys: string[]) => {
+    onFieldsChange({ ...currentSelection, voter: keys });
+  };
+  const handleProfessionalChange = (keys: string[]) => {
+    onFieldsChange({ ...currentSelection, professional_profile: keys });
+  };
+  const handleEmploymentChange = (keys: string[]) => {
+    onFieldsChange({ ...currentSelection, employment_history: keys });
+  };
 
   const canProceed = canProcessed;
   const handleStep = (step: number) => () => {
@@ -133,7 +142,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
 
       <Grid container sx={{ mb: 2, }}>
         <Grid container xs={12} md={4}>
-          <Grid item sx={{ borderRight: "1px solid rgba(233, 233, 233, 1)", borderLeft:"1px solid rgba(233, 233, 233, 1)",  borderTopRightRadius: 3, borderTopLeftRadius: 3 }}>
+          <Grid item sx={{ borderRight: "1px solid rgba(233, 233, 233, 1)", borderLeft: "1px solid rgba(233, 233, 233, 1)", borderTopRightRadius: 3, borderTopLeftRadius: 3 }}>
             {/* «Recommended fields» */}
             <Button
               onClick={handleStep(0)}
@@ -180,7 +189,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
         </Grid>
         <Grid item md={2} sx={{ textAlign: "right", borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
           <Button
-            onClick={onResetSelection}
+            onClick={handleResetToRecommended}
             disabled={disableResetSelection}
             sx={{
               border: "1px rgba(56, 152, 252, 1) solid",
@@ -214,60 +223,74 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
         <Grid item xs={12} md={6}>
           {calculatedResults && (
             <>
-            <Box sx={{ mb: 2 }}>
+              <Box sx={{ mb: 2, position: "relative" }}>
                 <FeatureImportanceTable
-                title="Personal Profile"
-                features={calculatedResults.audience_feature_importance_b2c.personal}
-                onChangeDisplayed={(keys) => setPersonalSelected(keys as string[])}
-                headerIcon={<AccountBoxIcon />}
-                initialFeatures={recommendedByCategory.personal}
-              />
-            </Box>
+                  title="Personal Profile"
+                  currentFeatures={personal}
+                  features={calculatedResults.audience_feature_importance_b2c.personal}
+                  onChangeDisplayed={handlePersonalChange}
+                  headerIcon={<AccountBoxIcon />}
+                  initialFeatures={recommendedByCategory.personal}
+                />
+              {showHints && isOpenSelect && (
+                <HintCard
+                    card={hintCard}
+                    positionTop={20}
+                    positionLeft={800}
+                    toggleClick={toggleDotHintClickBlock}
+                  />
+                )}
+              </Box>
               <Box sx={{ mb: 2 }}>
-            <FeatureImportanceTable
-              title="Financial"
-              features={calculatedResults.audience_feature_importance_b2c.financial}
-              onChangeDisplayed={(keys) => setFinancialSelected(keys as string[])}
-              headerIcon={<PaymentIcon />}
-              initialFeatures={recommendedByCategory.financial}
-            />
-          </Box>
-          <Box sx={{ mb: 2 }}>
-            <FeatureImportanceTable
-              title="Lifestyles"
-              features={calculatedResults.audience_feature_importance_b2c.lifestyle}
-              onChangeDisplayed={(keys) => setLifestyleSelected(keys as string[])}
-              headerIcon={<DirectionsBikeIcon />}
-              initialFeatures={recommendedByCategory.lifestyle}
-            />
-          </Box>
-          <Box sx={{ mb: 2 }}>
-            <FeatureImportanceTable
-              title="Voter"
-              features={calculatedResults.audience_feature_importance_b2c.voter}
-              onChangeDisplayed={(keys) => setVoterSelected(keys as string[])}
-              headerIcon={<HowToVoteIcon />}
-              initialFeatures={recommendedByCategory.voter}
-            />
-          </Box>
-          <Box sx={{ mb: 2 }}>
-            <FeatureImportanceTable
-              title="Professional Profile"
-              features={calculatedResults.audience_feature_importance_b2b.professional_profile}
-              onChangeDisplayed={(keys) => setProfessionalSelected(keys as string[])}
-              initialFeatures={recommendedByCategory.professional_profile}
-              headerIcon={<WorkOutlineOutlinedIcon />}
-            />
-          </Box>
-          <Box sx={{ mb: 2 }}>
-            <FeatureImportanceTable
-              title="Employment History"
-              features={calculatedResults.audience_feature_importance_b2b.employment_history}
-              onChangeDisplayed={(keys) => setEmploymentSelected(keys as string[])}
-              initialFeatures={recommendedByCategory.employment_history}
-              headerIcon={<HistoryOutlinedIcon />}
-            />
-          </Box>
+                <FeatureImportanceTable
+                  title="Financial"
+                  features={calculatedResults.audience_feature_importance_b2c.financial}
+                  initialFeatures={recommendedByCategory.financial}
+                  currentFeatures={financial}
+                  onChangeDisplayed={handleFinancialChange}
+                  headerIcon={<PaymentIcon />}
+                />
+              </Box>
+              <Box sx={{ mb: 2 }}>
+                <FeatureImportanceTable
+                  title="Lifestyles"
+                  features={calculatedResults.audience_feature_importance_b2c.lifestyle}
+                  initialFeatures={recommendedByCategory.lifestyle}
+                  currentFeatures={lifestyle}
+                  onChangeDisplayed={handleLifestyleChange}
+                  headerIcon={<DirectionsBikeIcon />}
+                />
+              </Box>
+              <Box sx={{ mb: 2 }}>
+                <FeatureImportanceTable
+                  title="Voter"
+                  features={calculatedResults.audience_feature_importance_b2c.voter}
+                  initialFeatures={recommendedByCategory.voter}
+                  currentFeatures={voter}
+                  onChangeDisplayed={handleVoterChange}
+                  headerIcon={<HowToVoteIcon />}
+                />
+              </Box>
+              <Box sx={{ mb: 2 }}>
+                <FeatureImportanceTable
+                  title="Professional Profile"
+                  features={calculatedResults.audience_feature_importance_b2b.professional_profile}
+                  initialFeatures={recommendedByCategory.professional_profile}
+                  currentFeatures={professional_profile}
+                  onChangeDisplayed={handleProfessionalChange}
+                  headerIcon={<WorkOutlineOutlinedIcon />}
+                />
+              </Box>
+              <Box sx={{ mb: 2 }}>
+                <FeatureImportanceTable
+                  title="Employment History"
+                  features={calculatedResults.audience_feature_importance_b2b.employment_history}
+                  initialFeatures={recommendedByCategory.employment_history}
+                  currentFeatures={employment_history}
+                  onChangeDisplayed={handleEmploymentChange}
+                  headerIcon={<HistoryOutlinedIcon />}
+                />
+              </Box>
 
             </>
           )}

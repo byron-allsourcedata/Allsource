@@ -4,6 +4,7 @@ import { keyframes, styled } from "@mui/system";
 
 interface PulsingDotComponentProps {
     toggleClick: () => void
+    rightSide?: boolean
   }
 
 const ripple = keyframes`
@@ -26,7 +27,7 @@ const PulsingDot = styled(Box)(() => ({
 }));
 
 
-const PulsingDotComponent: React.FC<PulsingDotComponentProps> = ({ toggleClick }) => {
+const PulsingDotComponent: React.FC<PulsingDotComponentProps> = ({ toggleClick, rightSide }) => {
   return (
     <Box
       display="flex"
@@ -35,7 +36,8 @@ const PulsingDotComponent: React.FC<PulsingDotComponentProps> = ({ toggleClick }
       sx={{
         cursor: "pointer",  
         position: "absolute",
-        left: -7,
+        left: !rightSide ? -7 : "auto",
+        right: rightSide ? -7 : "auto",
         top: -5,
         zIndex: 9999
       }}

@@ -146,6 +146,11 @@ async def parse_csv_file(*, data: Dict, source_id: str, db_session: Session, s3_
 
     logging.info(f"Total row in CSV file: {total_rows}")
     source.total_records = total_rows
+
+    if total_rows == 0:
+        source.matched_records = 0
+        source.matched_records_status = "complete"
+
     db_session.add(source)
     db_session.commit()
     await send_sse(connection, user_id, {"source_id": source_id, "total": total_rows, "processed": processed_rows})
@@ -289,6 +294,11 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
     processed_rows = 0
     logging.info(f"Total row in pixel file: {total_rows}")
     source.total_records = total_rows
+
+    if total_rows == 0:
+        source.matched_records = 0
+        source.matched_records_status = "complete"
+
     db_session.add(source)
     db_session.commit()
 

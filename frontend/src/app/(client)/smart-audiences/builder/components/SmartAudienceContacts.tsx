@@ -67,7 +67,6 @@ interface SmartAudienceContactsProps {
   toggleDotHintClick: (id: number) => void
   closeDotHintClick: (id: number) => void
   hintCards: HintCardInterface[];
-  isOpenSelect: StateHint[];
   block2Ref: React.RefObject<HTMLDivElement>
   block3Ref: React.RefObject<HTMLDivElement>
   block4Ref: React.RefObject<HTMLDivElement>
@@ -103,13 +102,12 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
   toggleDotHintClick,
   closeDotHintClick,
   hintCards,
-  isOpenSelect,
   useCaseType,
   sourceData,
   lookalikeData,
 }) => {
   const router = useRouter();
-  const { showHints } = useHints();
+  const { showHints, smartsBuilderHints } = useHints();
   const [loading, setLoading] = useState(false);
   const [audienceName, setAudienceName] = useState<string>("");
   const [option, setOption] = useState<string>("");
@@ -507,11 +505,10 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                     Exclude
                   </MenuItem>
                 </Select>
-                {showHints && !option && (
+                {showHints && smartsBuilderHints[1].show && !option && (
                     <HintCard
                         card={hintCards[1]}
                         positionLeft={340}
-                        isOpenSelect={isOpenSelect[1].show}
                         toggleClick={() => toggleDotHintClick(1)}
                     />
                   )} 
@@ -540,11 +537,10 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                       Lookalike
                     </MenuItem>
                   </Select>
-                  {showHints && option && (
+                  {showHints && smartsBuilderHints[1].show && option && (
                     <HintCard
                         card={hintCards[1]}
                         positionLeft={340}
-                        isOpenSelect={isOpenSelect[1].show}
                         toggleClick={() => toggleDotHintClick(1)}
                     />
                   )} 
@@ -610,27 +606,36 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {(sourceType === "Source"
-                          ? filteredSourceData
-                          : filteredLookalikeData
-                        ).map((row) => (
-                          <TableRow
-                            key={row.id}
-                            hover
-                            sx={{ cursor: "pointer" }}
-                            onClick={() => handleSelectRow(row)}
-                          >
-                            <TableCell className="black-table-header">
-                              {row.name}
-                            </TableCell>
-                            <TableCell className="black-table-header">
-                              {row.type}
-                            </TableCell>
-                            <TableCell className="black-table-header">
-                              {row.size}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {(sourceType === "Source" ? filteredSourceData : filteredLookalikeData).map((row) => {
+                          console.log(row.size)
+                          const isRowDisabled = Number(row.size.replace(/,/g, "")) === 0;
+                          return (
+                            <TableRow
+                              key={row.id}
+                              hover={!isRowDisabled}
+                              sx={{
+                                cursor: isRowDisabled ? "not-allowed" : "pointer",
+                                pointerEvents: isRowDisabled ? "none" : "auto",
+                                opacity: isRowDisabled ? 0.5 : 1,
+                              }}
+                              onClick={() => {
+                                if (!isRowDisabled) {
+                                  handleSelectRow(row);
+                                }
+                              }}
+                            >
+                              <TableCell className="black-table-header">
+                                {row.name}
+                              </TableCell>
+                              <TableCell className="black-table-header">
+                                {row.type}
+                              </TableCell>
+                              <TableCell className="black-table-header">
+                                {row.size}
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })}
                       </TableBody>
                     </Table>
                   </TableContainer>

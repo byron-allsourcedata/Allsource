@@ -36,10 +36,19 @@ import ProgressBar from "@/components/ProgressBar";
 import { TableData, LookalikeData, CalculationResponse, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject, PersonalResults, ProfessionalProfileResults, EmploymentHistoryResults } from "@/types"
 import { FeatureImportanceTable, DragAndDropTable, AudienceFieldsSelector, OrderFieldsStep, CalculatedSteps } from "../components"
 import { ResetProvider } from "@/context/ResetContext";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "../../components/HintCard"; 
 export const dynamic = 'force-dynamic';
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
 
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
+  const { showHints, lookalikesBuilderHints, toggleLookalikesBuilderHintState } = useHints();
   const searchParams = useSearchParams();
   const preselectedUuid = searchParams.get("source_uuid");
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
@@ -59,6 +68,37 @@ const CreateLookalikePage: React.FC = () => {
 
   const [dndFields, setDndFields] = useState<Field[]>([]);
 
+  const hintCards: HintCardInterface[] = [
+    {
+     description:
+     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+     title: "Source",
+     linkToLoadMore:
+     "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+    {
+     description:
+     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+     title: "Lookalike Size",
+     linkToLoadMore:
+       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+    {
+     description:
+     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+     title: "Predictable value",
+     linkToLoadMore:
+       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+    {
+     description:
+     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+     title: "Order vields",
+     linkToLoadMore:
+       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+]
+
   // useEffect(() => {
   //   setDndFields(initialFields);
   // }, [initialFields]);
@@ -67,6 +107,20 @@ const CreateLookalikePage: React.FC = () => {
     setSelectedSourceId(row.id);
     setSelectSourceData([row]);
     setCurrentStep(1);
+    closeDotHintClick(0)
+    openDotHintClick(1)
+  };
+
+  const toggleDotHintClick = (id: number) => {
+    toggleLookalikesBuilderHintState(id)
+  };
+
+  const closeDotHintClick = (id: number) => {
+    toggleLookalikesBuilderHintState(id, false)
+  };
+
+  const openDotHintClick = (id: number) => {
+    toggleLookalikesBuilderHintState(id, true)
   };
 
   const getFilteredData = (data: any[]) =>
@@ -134,8 +188,9 @@ const CreateLookalikePage: React.FC = () => {
       );
       if (response.data) {
         setCalculatedResults(response.data);
-        console.log(response.data)
         setCurrentStep(2);
+        closeDotHintClick(1)
+        openDotHintClick(2)
       }
     } catch {
       showErrorToast(
@@ -236,6 +291,7 @@ const CreateLookalikePage: React.FC = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
+        // alignItems: 'center',
         height: "calc(100vh - 4.25rem)",
         width: "100%",
         overflow: "auto",
@@ -358,6 +414,14 @@ const CreateLookalikePage: React.FC = () => {
                             },
                           }}
                         />
+                        {showHints && lookalikesBuilderHints[0].show && (
+                          <HintCard
+                              card={hintCards[0]}
+                              positionTop={90}
+                              positionLeft={230}
+                              toggleClick={() => toggleDotHintClick(0)}
+                          />
+                        )}
                         {isTableVisible && (
                           <TableContainer
                             component={Paper}
@@ -373,7 +437,7 @@ const CreateLookalikePage: React.FC = () => {
                                   }}
                                 >
                                   <TableCell
-                                    sx={{ flex: 1, textAlign: "start" }}
+                                    sx={{ flex: 1.2, textAlign: "start" }}
                                   >
                                     Name
                                   </TableCell>
@@ -407,7 +471,7 @@ const CreateLookalikePage: React.FC = () => {
                                       }}
                                     >
                                       <TableCell
-                                        sx={{ flex: 1, textAlign: "start" }}
+                                        sx={{ flex: 1.2, textAlign: "start" }}
                                       >
                                         {row.name}
                                       </TableCell>
@@ -522,6 +586,9 @@ const CreateLookalikePage: React.FC = () => {
                     <AudienceSizeSelector
                       onSelectSize={handleSelectSize}
                       selectedSize={selectedSize}
+                      hintCard={hintCards[1]}
+                      toggleDotHintClickBlock1={() => toggleDotHintClick(1)}
+                      isOpenSelect={lookalikesBuilderHints[1].show}
                     />
                   </Box>
                 )}
@@ -569,6 +636,12 @@ const CreateLookalikePage: React.FC = () => {
                         currentStep={currentStep}
                         handlePrevStep={handlePrevStep}
                         handleNextStep={handleNextStep}
+                        hintCard2={hintCards[2]}
+                        hintCard3={hintCards[3]}
+                        toggleDotHintClickBlock2={() => toggleDotHintClick(2)}
+                        toggleDotHintClickBlock3={() => toggleDotHintClick(3)}
+                        isOpenSelect2={lookalikesBuilderHints[2].show}
+                        isOpenSelect3={lookalikesBuilderHints[3].show}
                         onFieldsOrderChangeUp={setDndFields}
                       />
                   </Box>

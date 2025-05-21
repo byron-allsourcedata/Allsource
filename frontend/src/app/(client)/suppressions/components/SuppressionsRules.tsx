@@ -50,6 +50,7 @@ const SuppressionRules: React.FC = () => {
     const [checkedUrlParameters, setCheckedUrlParameters] = useState(false);
     const [checkedDeleteContacts, setCheckedDeleteContacts] = useState(false);
     const [countDeleteContacts, setCountDeleteContacts] = useState<number | null>(null);
+    const [countAddedContacts, setCountAddedContacts] = useState<number | null>(null);
 
     /// Days
     const [days, setDays] = useState<string>('');
@@ -202,25 +203,10 @@ const SuppressionRules: React.FC = () => {
     // file CSV
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-    const [isFileNameDuplicate, setIsFileNameDuplicate] = useState<boolean>(false);
 
     const handleFileUpload = (event: any) => {
         const file = event.target.files[0];
-
-        const fileName = file.name.endsWith('.csv')
-            ? file.name.slice(0, -4)
-            : file.name;
-
-        const isDuplicate = suppressionList.some(suppressionFile => suppressionFile.list_name === fileName);
-
-        if (isDuplicate) {
-            setIsFileNameDuplicate(true);
-        } else {
-            setIsFileNameDuplicate(false);
-        }
-
         setUploadedFile(file);
-
     };
 
     const handleDeleteFile = () => {
@@ -264,13 +250,6 @@ const SuppressionRules: React.FC = () => {
             ? uploadedFile.name.slice(0, -4)
             : uploadedFile.name;
 
-        const isFileNameDuplicate = suppressionList.some(file => file.list_name === fileName);
-
-        if (isFileNameDuplicate) {
-            showErrorToast('File name must be unique.');
-            return;
-        }
-
         const formData = new FormData();
         formData.append('file', uploadedFile);
 
@@ -286,7 +265,8 @@ const SuppressionRules: React.FC = () => {
                 showToast('File uploaded successfully.');
                 handleUpdateSuppressionList();
                 handleDeleteFile();
-                setCountDeleteContacts(response.data.leads_count);
+                setCountDeleteContacts(response.data.delete_leads_count);
+                setCountAddedContacts(response.data.new_leads_count);
             } else {
                 showErrorToast('Failed to upload file.');
             }
@@ -755,7 +735,7 @@ const SuppressionRules: React.FC = () => {
                                     checked={checkedUrl}
                                     onChange={handleSwitchChangeURl}
                                     sx={{
-                                        width: 54, // Increase width to fit "Yes" and "No"
+                                        width: 54,
                                         height: 24,
                                         padding: 0,
                                         '& .MuiSwitch-switchBase': {
@@ -764,7 +744,7 @@ const SuppressionRules: React.FC = () => {
                                             left: '3px',
                                             '&.Mui-checked': {
                                                 left: 0,
-                                                transform: 'translateX(32px)', // Adjust for larger width
+                                                transform: 'translateX(32px)',
                                                 color: '#fff',
                                                 '&+.MuiSwitch-track': {
                                                     backgroundColor: checkedUrl ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
@@ -777,8 +757,8 @@ const SuppressionRules: React.FC = () => {
                                             height: 20,
                                         },
                                         '& .MuiSwitch-track': {
-                                            borderRadius: 20 / 2,
-                                            backgroundColor: checkedUrl ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
+                                            borderRadius: 10,
+                                            backgroundColor: checkedUrl ? '#5052b2' : '#7b7b7b',
                                             opacity: checkedUrl ? '1' : '1',
                                             '& .MuiSwitch-track.Mui-checked': {
                                                 backgroundColor: checkedUrl ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
@@ -943,8 +923,8 @@ const SuppressionRules: React.FC = () => {
                                             height: 20,
                                         },
                                         '& .MuiSwitch-track': {
-                                            borderRadius: 20 / 2,
-                                            backgroundColor: checkedUrlParameters ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
+                                            borderRadius: 10,
+                                            backgroundColor: checkedUrlParameters ? '#5052b2' : '#7b7b7b',
                                             opacity: checkedUrlParameters ? '1' : '1',
                                             '& .MuiSwitch-track.Mui-checked': {
                                                 backgroundColor: checkedUrlParameters ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
@@ -1166,7 +1146,7 @@ const SuppressionRules: React.FC = () => {
                                         Exclude these contacts from all previously created audiences in your account.
                                     </Typography>
                                 </Box>
-                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', mt: 1, position: 'relative', }}>
+                                <Box sx={{ width: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', mt: 1, position: 'relative', mr: 2 }}>
                                     <Switch
                                         {...label}
                                         checked={checkedDeleteContacts}
@@ -1185,7 +1165,7 @@ const SuppressionRules: React.FC = () => {
                                                     color: '#fff',
                                                     '&+.MuiSwitch-track': {
                                                         backgroundColor: checkedDeleteContacts ? '#5052b2' : '#7b7b7b',
-                                                        opacity: checkedDeleteContacts ? '1' : '1',
+                                                        opacity: 1,
                                                     }
                                                 },
                                             },
@@ -1196,10 +1176,10 @@ const SuppressionRules: React.FC = () => {
                                             '& .MuiSwitch-track': {
                                                 borderRadius: 10,
                                                 backgroundColor: checkedDeleteContacts ? '#5052b2' : '#7b7b7b',
-                                                opacity: checkedDeleteContacts ? '1' : '1',
+                                                opacity: 1,
                                                 '& .MuiSwitch-track.Mui-checked': {
                                                     backgroundColor: checkedDeleteContacts ? '#5052b2' : '#7b7b7b',
-                                                    opacity: checkedDeleteContacts ? '1' : '1',
+                                                    opacity: 1,
                                                 }
                                             },
                                         }}
@@ -1250,7 +1230,7 @@ const SuppressionRules: React.FC = () => {
                                 </Box>
                             </Box>
                             {
-                                countDeleteContacts != null && (
+                                (checkedDeleteContacts && countDeleteContacts != null) && (
                                     <Typography
                                         className="main-text"
                                         sx={{
@@ -1261,6 +1241,19 @@ const SuppressionRules: React.FC = () => {
                                         {countDeleteContacts === 0
                                             ? '✗ No contacts were excluded from your contact list'
                                             : `✓ ${countDeleteContacts} contact${countDeleteContacts === 1 ? '' : 's'} were successfully excluded from your contact list`}
+                                    </Typography>
+                                )
+                            }
+                            {
+                                (countAddedContacts != null) && (
+                                    <Typography
+                                        className="main-text"
+                                        sx={{
+                                            ...suppressionsStyles.text,
+                                            color: 'green',
+                                        }}
+                                    >
+                                        ✓ {countAddedContacts} unique contact{countAddedContacts === 1 ? '' : 's'} were successfully added to your contact list
                                     </Typography>
                                 )
                             }
@@ -1327,13 +1320,7 @@ const SuppressionRules: React.FC = () => {
                                         <Box sx={{ display: 'flex', flexDirection: 'column', flexGrow: 1, gap: 1 }}>
                                             <Typography className="first-sub-title" sx={{ color: 'rgba(32, 33, 36, 1)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 1 }}>
                                                 {uploadedFile.name}
-                                                {isFileNameDuplicate ? (
-                                                    <Tooltip title={"File name must be unique."}>
-                                                        <CancelIcon sx={{ color: 'red', fontSize: '17px' }} />
-                                                    </Tooltip>
-                                                ) : (
-                                                    <CheckCircleIcon sx={{ color: 'green', fontSize: '17px' }} />
-                                                )}
+                                                <CheckCircleIcon sx={{ color: 'green', fontSize: '17px' }} />
                                             </Typography>
 
                                             <Typography className="table-heading" sx={{ color: 'rgba(114, 114, 114, 1)' }}>

@@ -93,7 +93,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 const SourcesImport: React.FC = () => {
-  const { showHints } = useHints();
+  const { showHints, toggleSourceBuilderHintState, sourcesBuilderHints,} = useHints();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
@@ -116,20 +116,21 @@ const SourcesImport: React.FC = () => {
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
-  const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
-    { show: true, id: 0 },
-    { show: false, id: 1 },
-    { show: false, id: 2 },
-    { show: false, id: 3 },
-    { show: false, id: 4 },
-    { show: false, id: 5 },
-  ]);
+  // const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
+  //   { show: true, id: 0 },
+  //   { show: false, id: 1 },
+  //   { show: false, id: 2 },
+  //   { show: false, id: 3 },
+  //   { show: false, id: 4 },
+  //   { show: false, id: 5 },
+  // ]);
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
   const [domainsWithoutPixel, setDomainsWithoutPixel] = useState<
     DomainsLeads[]
   >([]);
+  const [showTargetStep, setShowTargetStep] = useState(false)
   const [totalLeads, setTotalLeads] = useState(0);
   const [matchedLeads, setMatchedLeads] = useState(0);
 
@@ -192,6 +193,13 @@ const SourcesImport: React.FC = () => {
     title: "Target type",
     linkToLoadMore:
       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+   },
+   {
+    description:
+    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    title: "Create",
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
    }
   ]
 
@@ -205,21 +213,15 @@ const SourcesImport: React.FC = () => {
   };
 
   const toggleDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: !el.show } : el))
-    );
+    toggleSourceBuilderHintState(id)
   };
 
   const closeDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: false } : el))
-    );
+    toggleSourceBuilderHintState(id, false)
   };
 
   const openDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: true } : el))
-    );
+    toggleSourceBuilderHintState(id, true)
   };
 
   const defaultRows: Row[] = [
@@ -279,18 +281,28 @@ const SourcesImport: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (showHints && !isOpenSelect) {
-      setIsOpenSelect([
-        { show: true, id: 0 },
-        { show: false, id: 1 },
-        { show: false, id: 2 },
-        { show: false, id: 3 },
-        { show: false, id: 4 },
-        { show: false, id: 5 },
-      ]);
-    }
-  }, [showHints]);
+  // useEffect(() => {
+  //   if (showHints && !isOpenSelect) {
+  //     setIsOpenSelect([
+  //       { show: true, id: 0 },
+  //       { show: false, id: 1 },
+  //       { show: false, id: 2 },
+  //       { show: false, id: 3 },
+  //       { show: false, id: 4 },
+  //       { show: false, id: 5 },
+  //     ]);
+  //   }
+  // }, [showHints]);
+
+  // useEffect(() => {
+  //   if (showHints) {
+  //     setSourcesBuilderHints((prev: any) => 
+  //       prev?.length 
+  //         ? prev.map((el: any) => ({ ...el, show: el.id === 0 }))
+  //         : [{ id: 0, show: true }]
+  //     );
+  //   }
+  // }, [showHints]);
 
   useEffect(() => {
     if (typeFromSearchParams) {
@@ -372,9 +384,11 @@ const SourcesImport: React.FC = () => {
     handleDeleteFile();
     setTargetAudience("");
     setSelectedDomainId(0)
+    setSelectedDomain("")
     setSourceType(event.target.value);
     closeDotHintClick(0);
     if (event.target.value === "Website - Pixel") {
+      setShowTargetStep(false)
       setSourceMethod(2);
       toggleDotHintClick(1);
       setTimeout(() => {
@@ -382,6 +396,7 @@ const SourcesImport: React.FC = () => {
       }, 0);
       fetchDomainsAndLeads();
     } else {
+      setShowTargetStep(true)
       setSourceMethod(1);
       toggleDotHintClick(3);
       setPixelNotInstalled(false);
@@ -398,6 +413,7 @@ const SourcesImport: React.FC = () => {
     }, 0);
     closeDotHintClick(2);
     closeDotHintClick(5);
+    openDotHintClick(6);
     setFirstEventTypeClick(false)
   };
 
@@ -678,21 +694,21 @@ const SourcesImport: React.FC = () => {
       setIsAllSelected(false);
       setMatchedLeads(0);
     }
-  
+
     const isActive = eventType.includes(id);
     const newEventTypes = isActive
       ? eventType.filter(e => e !== id)
       : [...eventType, id];
-  
+
     if (newEventTypes.length === 0) {
       setIsAllSelected(true);
       setEventType([]);
       setMatchedLeads(totalLeads);
       return;
     }
-  
+
     setEventType(newEventTypes);
-  
+
     const sum = newEventTypes.reduce((acc, evId) => {
       const field = eventTypes.find(e => e.id === evId)!.name as keyof DomainsLeads;
       const cnt = domains.find(d => d.name === selectedDomain)?.[field] || 0;
@@ -919,11 +935,10 @@ const SourcesImport: React.FC = () => {
                         Interest (CSV)
                       </MenuItem>
                     </Select>
-                    {showHints && (
+                    {showHints && sourcesBuilderHints[0].show && (
                       <HintCard
                         card={hintCards[0]}
                         positionLeft={340}
-                        isOpenSelect={isOpenSelect[0].show}
                         toggleClick={() => toggleDotHintClick(0)}
                       />
                     )}
@@ -1150,12 +1165,11 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   )}
 
-                  {showHints && (
+                  {showHints && sourcesBuilderHints[3].show && (
                     <HintCard
                       card={hintCards[3]}
                       positionLeft={360}
                       positionTop={100}
-                      isOpenSelect={isOpenSelect[3].show}
                       toggleClick={() => toggleDotHintClick(3)}
                     />
                   )}
@@ -1431,11 +1445,10 @@ const SourcesImport: React.FC = () => {
                         </Typography>
                       </Box>
                     )}
-                    {showHints && (
+                    {showHints && sourcesBuilderHints[4].show && (
                       <HintCard
                         card={hintCards[4]}
                         positionLeft={460}
-                        isOpenSelect={isOpenSelect[4].show}
                         toggleClick={() => toggleDotHintClick(4)}
                       />
                     )}
@@ -1588,11 +1601,10 @@ const SourcesImport: React.FC = () => {
                         </MenuItem>
                       ))}
                     </Select>
-                    {showHints && (
+                    {showHints && sourcesBuilderHints[1].show && (
                       <HintCard
                         card={hintCards[1]}
                         positionLeft={340}
-                        isOpenSelect={isOpenSelect[1].show}
                         toggleClick={() => toggleDotHintClick(1)}
                       />
                     )}
@@ -1627,6 +1639,7 @@ const SourcesImport: React.FC = () => {
               )}
 
               {sourceMethod === 2 && selectedDomainId ? (
+                <>
                 <Box
                   ref={block5Ref}
                   sx={{
@@ -1663,7 +1676,7 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   </Box>
                   <Box
-                    onClick={() => {
+                     onClick={() => {
                       if (firstEventTypeClick) {
                         setFirstEventTypeClick(false)
                         closeDotHintClick(2);
@@ -1737,14 +1750,13 @@ const SourcesImport: React.FC = () => {
                         </Button>
                       );
                     })}
-                    {showHints && (
+                    {showHints && sourcesBuilderHints[2].show && (
                       <HintCard
-                        card={hintCards[2]}
-                        positionLeft={650}
-                        positionTop={100}
-                        isOpenSelect={isOpenSelect[2].show}
-                        toggleClick={() => toggleDotHintClick(2)}
-                      />
+                      card={hintCards[2]}
+                      positionLeft={650}
+                      positionTop={100}
+                      toggleClick={() => toggleDotHintClick(2)}
+                    />
                     )}
                   </Box>
                   <Box
@@ -1774,11 +1786,47 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   </Box>
                 </Box>
+                { !showTargetStep && (
+                    <Box sx={{ display: "flex", justifyContent: "right" }}>
+                    <Button
+                      variant="contained"
+                      onClick={() => setShowTargetStep(true)}
+                      sx={{
+                        backgroundColor: "rgba(56, 152, 252, 1)",
+                        width: "120px",
+                        height: "40px",
+                        ":hover": {
+                          backgroundColor: "rgba(62, 64, 142, 1)",
+                        },
+                        ":active": {
+                          backgroundColor: "rgba(56, 152, 252, 1)",
+                        },
+                        ":disabled": {
+                          backgroundColor: "rgba(56, 152, 252, 1)",
+                          opacity: 0.6,
+                        },
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          textAlign: "center",
+                          color: "rgba(255, 255, 255, 1)",
+                          fontFamily: "Nunito Sans",
+                          textTransform: "none",
+                          fontWeight: "600",
+                          fontSize: "14px",
+                          lineHeight: "19.6px",
+                        }}
+                      >
+                        Continue
+                      </Typography>
+                    </Button>
+                  </Box>
+                )}
+              </>
               ) : null}
 
-
-
-              {sourceMethod !== 0 && (selectedDomainId || file) && (
+              {sourceMethod !== 0 && (selectedDomainId || file) && showTargetStep && (
                 <Box
                   ref={block4Ref}
                   sx={{
@@ -1868,11 +1916,10 @@ const SourcesImport: React.FC = () => {
                         {option}
                       </ToggleButton>
                     ))}
-                    {showHints && (
+                    {showHints && sourcesBuilderHints[5].show && (
                       <HintCard
                         card={hintCards[5]}
                         positionLeft={140}
-                        isOpenSelect={isOpenSelect[5].show}
                         toggleClick={() => toggleDotHintClick(5)}
                       />
                     )}
@@ -1900,6 +1947,7 @@ const SourcesImport: React.FC = () => {
                       sx={{
                         display: "flex",
                         alignItems: "center",
+                        position: "relative",
                         gap: 2,
                         "@media (max-width: 400px)": {
                           justifyContent: "space-between",
@@ -1954,6 +2002,13 @@ const SourcesImport: React.FC = () => {
                           }
                         }}
                       />
+                      {showHints && sourcesBuilderHints[6].show && (
+                      <HintCard
+                        card={hintCards[6]}
+                        positionLeft={380}
+                        toggleClick={() => toggleDotHintClick(6)}
+                      />
+                    )}
                     </Box>
                   </Box>
                   <Box

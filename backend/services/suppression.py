@@ -47,21 +47,28 @@ class SuppressionService:
             return {"status": SuppressionStatus.NO_EMAILS_FOUND, "leads_count": 0}
 
         list_name = file.filename.rsplit(".", 1)[0]
+        email_list = set(email_list)
+        suppression_lists = self.suppression_persistence.get_all_suppression_list(domain_id=domain_id)
+        emails_list = [suppression_list.total_emails for suppression_list in suppression_lists]
+        all_emails = []
+        for email_str in emails_list:
+            all_emails.extend([email.strip() for email in email_str.split(',') if email.strip()])
+            
+        new_leads_count = len(email_list - set(all_emails))
         self.suppression_persistence.save_suppressions_list(
             email_list=email_list, list_name=list_name, domain_id=domain_id
         )
-
         rules = self.suppression_persistence.get_rules(domain_id=domain_id)
         delete_flag = getattr(rules, "is_delete_contacts", False)
         if delete_flag:
-            leads_ids = self.leads_persistence.get_leads_by_emails(
+            leads_ids = self.leads_persistence.get_confirm_leads_by_emails(
                 email_list=email_list, domain_id=domain_id
             )
             if leads_ids:
                 self.leads_persistence.unconfirm_leads(leads_ids=leads_ids)
-            return {"status": SuppressionStatus.SUCCESS, "leads_count": len(leads_ids)}
+            return {"status": SuppressionStatus.SUCCESS, "delete_leads_count": len(leads_ids), "new_leads_count": new_leads_count}
 
-        return {"status": SuppressionStatus.SUCCESS, "leads_count": 0}
+        return {"status": SuppressionStatus.SUCCESS, "delete_leads_count": 0, "new_leads_count": new_leads_count}
     
     def get_suppression_list(self, page, per_page, domain_id):
         suppression_list, total_count, max_page = self.suppression_persistence.get_suppression_list(page=page, per_page=per_page, domain_id=domain_id)
