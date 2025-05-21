@@ -93,7 +93,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 const SourcesImport: React.FC = () => {
-  const { showHints, toggleSourceBuilderHintState, sourcesBuilderHints,} = useHints();
+  const { showHints, toggleSourceBuilderHintState, sourcesBuilderHints } = useHints();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =

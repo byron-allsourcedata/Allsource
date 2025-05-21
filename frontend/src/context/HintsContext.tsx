@@ -3,9 +3,11 @@ import React, { createContext, useState, ReactNode, useContext } from 'react';
 interface HintsContextType {
   showHints: boolean
   toggleHints: () => void
+  changeSourcesBuilderHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
+  changeSourcesTableHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
   sourcesBuilderHints: StateHint[]
-  toggleSourceBuilderHintState: (id: number, action?: boolean) => void
   toggleCardDotHintClick: (id: number, action?: boolean) => void
+  toggleSourceBuilderHintState: (id: number, action?: boolean) => void
   sourcesTableHints: StateHint[]
   toggleSourceTableHintState: (id: number, action?: boolean) => void
   smartsBuilderHints: StateHint[]
@@ -75,6 +77,28 @@ export const HintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
     { show: true, id: 0 },
     { show: false, id: 1 },
   ]);
+
+  const actionMap = {
+    toggle: (currentState: boolean) => !currentState,
+    open: () => true,
+    close: () => false
+  };
+
+  const changeHintState = (
+    id: number,
+    key: "show" | "showBody",
+    action: "toggle" | "close" | "open",
+    setStateFunction: React.Dispatch<React.SetStateAction<StateHint[]>>
+  ) => {
+    setStateFunction((prev) =>
+      prev.map((hint) => {
+        return hint.id === id
+          ? { ...hint, [key]: actionMap[action](hint[key] as boolean) }
+          : hint
+        }
+      )
+    );
+  };
 
   const toggleSourceBuilderHintState = (id: number, state?: boolean) => {
     setSourcesBuilderHints((prev) =>
@@ -153,9 +177,13 @@ export const HintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
     <HintsContext.Provider value={{ 
       showHints, 
       toggleHints: () => setShowHints((prev) => !prev),
+      changeSourcesBuilderHint: (id, key, action) =>
+        changeHintState(id, key, action, setSourcesBuilderHints),
       sourcesBuilderHints,
-      toggleSourceBuilderHintState,
+      changeSourcesTableHint: (id, key, action) =>
+        changeHintState(id, key, action, setSourcesTableHints),
       toggleCardDotHintClick,
+      toggleSourceBuilderHintState,
       sourcesTableHints,
       toggleSourceTableHintState,
       smartsBuilderHints,
