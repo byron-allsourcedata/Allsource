@@ -743,7 +743,7 @@ const Popup: React.FC<PopupProps> = ({
                     <Box>
                       <Button
                         component={Link}
-                        href="https://wordpress.org/plugins/maximiz/"
+                        href="https://wordpress.org/plugins/allsource"
                         target="_blank"
                         variant="outlined"
                         sx={{

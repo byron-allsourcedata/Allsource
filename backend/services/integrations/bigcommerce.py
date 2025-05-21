@@ -1,5 +1,6 @@
 import hashlib
 import os
+import logging
 import httpx
 from urllib.parse import urlencode
 from jose import JWTError
@@ -19,6 +20,9 @@ from fastapi import HTTPException, status
 from datetime import datetime
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class BigcommerceIntegrationsService:
 
@@ -41,23 +45,30 @@ class BigcommerceIntegrationsService:
         return integration
 
     def __handle_request(self, url: str, method: str = 'GET', headers: dict = None, json: dict = None, data: dict = None, params: dict = None, access_token: str = None):
-        if self.client.is_closed:
-            self.client = httpx.Client()
-        if not headers:
-            headers = {
-                'X-Auth-Token': access_token,
-                'accept': 'application/json', 
-                'content-type': 'application/json'
-            }
-        url = f'https://api.bigcommerce.com/stores/{url}'
-        response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
-        if response.is_redirect:
-            redirect_url = response.headers.get('Location')
-            if redirect_url:
-                response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
+        try:
+            if self.client.is_closed:
+                self.client = httpx.Client()
+            if not headers:
+                headers = {
+                    'X-Auth-Token': access_token,
+                    'accept': 'application/json', 
+                    'content-type': 'application/json'
+                }
+            url = f'https://api.bigcommerce.com/stores/{url}'
+            response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
+            if response.is_redirect:
+                redirect_url = response.headers.get('Location')
+                if redirect_url:
+                    response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
 
-        return response
-
+            return response
+        except httpx.ConnectError as e:
+            logger.error(f"Connection error: {e}")
+            return None
+        except httpx.RequestError as e:
+            logger.error(f"Request error: {e}")
+            return None
+        
     def __get_store_info(self, store_hash: str, access_token: str):
         url = f'{store_hash}/v2/store'
         info = self.__handle_request(url, access_token=access_token)
