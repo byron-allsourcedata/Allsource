@@ -375,7 +375,7 @@ const CreateLookalikePage: React.FC = () => {
                         gap: 2,
                       }}
                     >
-                      <Box sx={{ width: "100%" }}>
+                      <Box sx={{ width: "100%", position: "relative" }}>
                         <TextField
                           fullWidth
                           variant="outlined"
@@ -417,8 +417,8 @@ const CreateLookalikePage: React.FC = () => {
                         {showHints && lookalikesBuilderHints[0].show && (
                           <HintCard
                               card={hintCards[0]}
-                              positionTop={90}
-                              positionLeft={230}
+                              positionTop={20}
+                              positionLeft={200}
                               toggleClick={() => toggleDotHintClick(0)}
                           />
                         )}

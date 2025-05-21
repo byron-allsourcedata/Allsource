@@ -5,6 +5,7 @@ interface HintsContextType {
   toggleHints: () => void
   sourcesBuilderHints: StateHint[]
   toggleSourceBuilderHintState: (id: number, action?: boolean) => void
+  toggleCardDotHintClick: (id: number, action?: boolean) => void
   sourcesTableHints: StateHint[]
   toggleSourceTableHintState: (id: number, action?: boolean) => void
   smartsBuilderHints: StateHint[]
@@ -20,6 +21,7 @@ interface HintsContextType {
 interface StateHint {
   id: number;
   show: boolean;
+  showBody?: boolean;
 }
 
 interface HintsProviderProps {
@@ -42,8 +44,8 @@ export const HintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
   ]);
 
   const [sourcesTableHints, setSourcesTableHints] = useState<StateHint[]>([
-    { show: true, id: 0 },
-    { show: false, id: 1 },
+    { show: true, showBody: true, id: 0 },
+    { show: true, showBody: false, id: 1 },
   ]);
 
   const [smartsBuilderHints, setSmartsBuilderHints] = useState<StateHint[]>([
@@ -85,16 +87,23 @@ export const HintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
   };
 
   const toggleSourceTableHintState = (id: number, state?: boolean) => {
-    console.log({state})
     setSourcesTableHints((prev) =>
-      prev.map((el) => {
-        console.log(el.id === id
-          ? { ...el, show: state !== undefined ? state : !el.show }
-          : el)
-        return el.id === id
+      prev.map((el) => (
+        el.id === id
           ? { ...el, show: state !== undefined ? state : !el.show }
           : el
-        }
+        )
+      )
+    );
+  };
+
+  const toggleCardDotHintClick = (id: number, state?: boolean) => {
+    setSourcesTableHints((prev) =>
+      prev.map((el) => (
+        el.id === id
+          ? { ...el, showBody: state !== undefined ? state : !el.showBody }
+          : el
+        )
       )
     );
   };
@@ -146,6 +155,7 @@ export const HintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
       toggleHints: () => setShowHints((prev) => !prev),
       sourcesBuilderHints,
       toggleSourceBuilderHintState,
+      toggleCardDotHintClick,
       sourcesTableHints,
       toggleSourceTableHintState,
       smartsBuilderHints,

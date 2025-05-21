@@ -148,7 +148,7 @@ const Sources: React.FC = () => {
   const isDebug = searchParams.get("is_debug") === "true";
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
-  const { showHints, toggleSourceTableHintState, sourcesTableHints } = useHints();
+  const { showHints, toggleSourceTableHintState, toggleCardDotHintClick, sourcesTableHints } = useHints();
 
   const hintCards: HintCardInterface[] = [
     {
@@ -914,13 +914,21 @@ const Sources: React.FC = () => {
                     )}
                   </Button>
 
-                  {showHints && sourcesTableHints[1].show && !sourcesTableHints[0].show && (
+                  {showHints && (
                     <HintCard
                       card={hintCards[1]}
                       positionLeft={-350}
                       positionTop={20}
                       rightSide={true}
-                      toggleClick={() => toggleDotHintClick(1)}
+                      isOpenBody={sourcesTableHints[1].showBody}
+                      toggleClick={() => {
+                        // toggleDotHintClick(1)
+                        // toggleCardDotHintClick(0)
+                        toggleCardDotHintClick(1)
+                      }}
+                      closeClick={() => {
+                        toggleCardDotHintClick(1, false)
+                      }}
                     />
                   )}
                 </Box>
@@ -1333,15 +1341,20 @@ const Sources: React.FC = () => {
                                             </IconButton>
                                           )}
                                         </Box>
-                                        {showHints && label === "Actions" && sourcesTableHints[0].show && (
+                                        {showHints && label === "Actions" && (
                                               <HintCard
                                                 card={hintCards[0]}
                                                 positionLeft={-380}
-                                                positionTop={180}
+                                                positionTop={100}
                                                 rightSide={true}
+                                                isOpenBody={sourcesTableHints[0].showBody}
                                                 toggleClick={() => {
-                                                  toggleDotHintClick(0)
-                                                  toggleDotHintClick(1)
+                                                  // toggleDotHintClick(0)
+                                                  toggleCardDotHintClick(0) 
+                                                  // toggleCardDotHintClick(1)
+                                                }}
+                                                closeClick={() => {
+                                                  toggleCardDotHintClick(0, false)
                                                 }}
                                               />
                                             )}

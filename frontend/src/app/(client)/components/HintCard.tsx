@@ -14,14 +14,16 @@ interface HintCardProps {
     positionLeft: number
     positionTop?: number
     rightSide?: boolean
+    isOpenBody?: boolean
     toggleClick: () => void
+    closeClick?: () => void
   }
   
-  const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, toggleClick, rightSide }) => {
+  const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, toggleClick, closeClick, isOpenBody, rightSide }) => {
     const [showHint, setShowHint] = useState(false);
 
-    useEffect(() => {
-      const timer = setTimeout(() => setShowHint(true), 2000);
+    useEffect(() => { 
+      const timer = setTimeout(() => setShowHint(true), 0);
       return () => clearTimeout(timer);
     }, []);
   
@@ -30,7 +32,7 @@ interface HintCardProps {
         {showHint &&  
           <Box
             sx={{
-              // visibility: isOpenSelect ? "visible" : "hidden", 
+              visibility: isOpenBody ? "visible" : "hidden", 
               position: "relative",
               right: 0,
               maxWidth: 400,
@@ -46,7 +48,7 @@ interface HintCardProps {
               <Typography className="first-sub-title" mb={1}>
                 {card.title}
               </Typography>
-              <IconButton size="small" onClick={toggleClick}>
+              <IconButton size="small" onClick={closeClick ?? toggleClick}>
                 <CloseIcon/>
               </IconButton>
             </Box>
