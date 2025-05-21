@@ -93,7 +93,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 const SourcesImport: React.FC = () => {
-  const { showHints, toggleSourceBuilderHintState, sourcesBuilderHints } = useHints();
+  const { showHints, changeSourcesBuilderHint, sourcesBuilderHints } = useHints();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
@@ -213,15 +213,15 @@ const SourcesImport: React.FC = () => {
   };
 
   const toggleDotHintClick = (id: number) => {
-    toggleSourceBuilderHintState(id)
+    changeSourcesBuilderHint(id, "show", "toggle")
   };
 
   const closeDotHintClick = (id: number) => {
-    toggleSourceBuilderHintState(id, false)
+    changeSourcesBuilderHint(id, "show", "close")
   };
 
   const openDotHintClick = (id: number) => {
-    toggleSourceBuilderHintState(id, true)
+    changeSourcesBuilderHint(id, "show", "open")
   };
 
   const defaultRows: Row[] = [

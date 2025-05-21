@@ -24,7 +24,7 @@ interface StateHint {
 
 
 const SmartAudiencesBuilder: React.FC = () => {
-    const { showHints, smartsBuilderHints, toggleSmartsBuilderHintState } = useHints();
+    const { showHints, smartsBuilderHints, changeSmartsBuilderHint } = useHints();
     const [useCaseType, setUseCaseType] = useState<string>("");
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
@@ -80,15 +80,15 @@ const SmartAudiencesBuilder: React.FC = () => {
     //   }, [showHints]);
 
     const toggleDotHintClick = (id: number) => {
-        toggleSmartsBuilderHintState(id)
+        changeSmartsBuilderHint(id, "show", "toggle")
     };
 
     const closeDotHintClick = (id: number) => {
-        toggleSmartsBuilderHintState(id, false)
+        changeSmartsBuilderHint(id, "show", "close")
     };
 
     const openDotHintClick = (id: number) => {
-        toggleSmartsBuilderHintState(id, true)
+        changeSmartsBuilderHint(id, "show", "open")
     };
 
     const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {

@@ -6,18 +6,15 @@ interface HintsContextType {
   changeSourcesBuilderHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
   changeSourcesTableHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
   sourcesBuilderHints: StateHint[]
-  toggleCardDotHintClick: (id: number, action?: boolean) => void
-  toggleSourceBuilderHintState: (id: number, action?: boolean) => void
   sourcesTableHints: StateHint[]
-  toggleSourceTableHintState: (id: number, action?: boolean) => void
   smartsBuilderHints: StateHint[]
-  toggleSmartsBuilderHintState: (id: number, action?: boolean) => void
+  changeSmartsBuilderHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
+  changeSmartsTableHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
   smartsTableHints: StateHint[]
-  toggleLookalikesTableHintState: (id: number, action?: boolean) => void
+  changeLookalikesTableHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
   lookalikesBuilderHints: StateHint[]
-  toggleLookalikesBuilderHintState: (id: number, action?: boolean) => void
+  changeLookalikesBuilderHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
   lookalikesTableHints: StateHint[]
-  toggleSmartsTableHintState: (id: number, action?: boolean) => void
 }
 
 interface StateHint {
@@ -100,79 +97,6 @@ export const HintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
     );
   };
 
-  const toggleSourceBuilderHintState = (id: number, state?: boolean) => {
-    setSourcesBuilderHints((prev) =>
-      prev.map((el) =>
-        el.id === id
-          ? { ...el, show: state !== undefined ? state : !el.show }
-          : el
-      )
-    );
-  };
-
-  const toggleSourceTableHintState = (id: number, state?: boolean) => {
-    setSourcesTableHints((prev) =>
-      prev.map((el) => (
-        el.id === id
-          ? { ...el, show: state !== undefined ? state : !el.show }
-          : el
-        )
-      )
-    );
-  };
-
-  const toggleCardDotHintClick = (id: number, state?: boolean) => {
-    setSourcesTableHints((prev) =>
-      prev.map((el) => (
-        el.id === id
-          ? { ...el, showBody: state !== undefined ? state : !el.showBody }
-          : el
-        )
-      )
-    );
-  };
-
-  const toggleSmartsBuilderHintState = (id: number, state?: boolean) => {
-    setSmartsBuilderHints((prev) =>
-      prev.map((el) =>
-        el.id === id
-          ? { ...el, show: state !== undefined ? state : !el.show }
-          : el
-      )
-    );
-  };
-
-  const toggleSmartsTableHintState = (id: number, state?: boolean) => {
-    setSmartsTableHints((prev) =>
-      prev.map((el) =>
-        el.id === id
-          ? { ...el, show: state !== undefined ? state : !el.show }
-          : el
-      )
-    );
-  };
-
-  const toggleLookalikesBuilderHintState = (id: number, state?: boolean) => {
-    setLookalikesBuilderHints((prev) =>
-      prev.map((el) =>
-        el.id === id
-          ? { ...el, show: state !== undefined ? state : !el.show }
-          : el
-      )
-    );
-  };
-
-  const toggleLookalikesTableHintState = (id: number, state?: boolean) => {
-    setLookalikeTableHints((prev) =>
-      prev.map((el) =>
-        el.id === id
-          ? { ...el, show: state !== undefined ? state : !el.show }
-          : el
-      )
-    );
-  };
-
-
   return (
     <HintsContext.Provider value={{ 
       showHints, 
@@ -182,18 +106,19 @@ export const HintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
       sourcesBuilderHints,
       changeSourcesTableHint: (id, key, action) =>
         changeHintState(id, key, action, setSourcesTableHints),
-      toggleCardDotHintClick,
-      toggleSourceBuilderHintState,
       sourcesTableHints,
-      toggleSourceTableHintState,
+      changeSmartsBuilderHint: (id, key, action) =>
+        changeHintState(id, key, action, setSmartsBuilderHints),
       smartsBuilderHints,
-      toggleSmartsBuilderHintState,
+      changeSmartsTableHint: (id, key, action) =>
+        changeHintState(id, key, action, setSmartsTableHints),
       smartsTableHints,
-      toggleSmartsTableHintState,
-      lookalikesBuilderHints,
-      toggleLookalikesBuilderHintState,
+      changeLookalikesTableHint: (id, key, action) =>
+        changeHintState(id, key, action, setSmartsTableHints),
       lookalikesTableHints,
-      toggleLookalikesTableHintState,
+      changeLookalikesBuilderHint: (id, key, action) =>
+        changeHintState(id, key, action, setSmartsBuilderHints),
+      lookalikesBuilderHints,
       }}>
       {children}
     </HintsContext.Provider>
