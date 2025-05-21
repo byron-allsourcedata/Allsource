@@ -116,14 +116,6 @@ const SourcesImport: React.FC = () => {
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
-  // const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
-  //   { show: true, id: 0 },
-  //   { show: false, id: 1 },
-  //   { show: false, id: 2 },
-  //   { show: false, id: 3 },
-  //   { show: false, id: 4 },
-  //   { show: false, id: 5 },
-  // ]);
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -920,6 +912,7 @@ const SourcesImport: React.FC = () => {
                       <HintCard
                         card={hintCards[0]}
                         positionLeft={340}
+                        isOpenBody={sourcesBuilderHints[0].show}
                         toggleClick={() => toggleDotHintClick(0)}
                       />
                     )}
@@ -1151,6 +1144,7 @@ const SourcesImport: React.FC = () => {
                       card={hintCards[3]}
                       positionLeft={360}
                       positionTop={100}
+                      isOpenBody={sourcesBuilderHints[3].show}
                       toggleClick={() => toggleDotHintClick(3)}
                     />
                   )}
@@ -1430,6 +1424,7 @@ const SourcesImport: React.FC = () => {
                       <HintCard
                         card={hintCards[4]}
                         positionLeft={460}
+                        isOpenBody={sourcesBuilderHints[4].show}
                         toggleClick={() => toggleDotHintClick(4)}
                       />
                     )}
@@ -1586,6 +1581,7 @@ const SourcesImport: React.FC = () => {
                       <HintCard
                         card={hintCards[1]}
                         positionLeft={340}
+                        isOpenBody={sourcesBuilderHints[1].show}
                         toggleClick={() => toggleDotHintClick(1)}
                       />
                     )}
@@ -1736,6 +1732,7 @@ const SourcesImport: React.FC = () => {
                       card={hintCards[2]}
                       positionLeft={650}
                       positionTop={100}
+                      isOpenBody={sourcesBuilderHints[2].show}
                       toggleClick={() => toggleDotHintClick(2)}
                     />
                     )}
@@ -1901,6 +1898,7 @@ const SourcesImport: React.FC = () => {
                       <HintCard
                         card={hintCards[5]}
                         positionLeft={140}
+                        isOpenBody={sourcesBuilderHints[5].show}
                         toggleClick={() => toggleDotHintClick(5)}
                       />
                     )}
@@ -1987,6 +1985,7 @@ const SourcesImport: React.FC = () => {
                       <HintCard
                         card={hintCards[6]}
                         positionLeft={380}
+                        isOpenBody={sourcesBuilderHints[6].show}
                         toggleClick={() => toggleDotHintClick(6)}
                       />
                     )}
