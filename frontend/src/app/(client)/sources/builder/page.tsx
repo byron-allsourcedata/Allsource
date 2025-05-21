@@ -93,7 +93,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 const SourcesImport: React.FC = () => {
-  const { showHints, changeSourcesBuilderHint, sourcesBuilderHints } = useHints();
+  const { showHints, changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useHints();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
@@ -281,28 +281,9 @@ const SourcesImport: React.FC = () => {
     }
   };
 
-  // useEffect(() => {
-  //   if (showHints && !isOpenSelect) {
-  //     setIsOpenSelect([
-  //       { show: true, id: 0 },
-  //       { show: false, id: 1 },
-  //       { show: false, id: 2 },
-  //       { show: false, id: 3 },
-  //       { show: false, id: 4 },
-  //       { show: false, id: 5 },
-  //     ]);
-  //   }
-  // }, [showHints]);
-
-  // useEffect(() => {
-  //   if (showHints) {
-  //     setSourcesBuilderHints((prev: any) => 
-  //       prev?.length 
-  //         ? prev.map((el: any) => ({ ...el, show: el.id === 0 }))
-  //         : [{ id: 0, show: true }]
-  //     );
-  //   }
-  // }, [showHints]);
+  useEffect(() => {
+    resetSourcesBuilderHints()
+  }, []);
 
   useEffect(() => {
     if (typeFromSearchParams) {
