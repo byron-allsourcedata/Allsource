@@ -770,7 +770,7 @@ const Sources: React.FC = () => {
           display: "flex",
           flexDirection: "column",
           height: "calc(100vh - 4.25rem)",
-          overflow: "auto",
+          // overflow: "auto",
           "@media (max-width: 900px)": {
             minHeight: "100vh",
           },
@@ -914,7 +914,7 @@ const Sources: React.FC = () => {
                     )}
                   </Button>
 
-                  {showHints && !sourcesTableHints[0].show && (
+                  {showHints && sourcesTableHints[1].show && !sourcesTableHints[0].show && (
                     <HintCard
                       card={hintCards[1]}
                       positionLeft={-350}
@@ -933,7 +933,7 @@ const Sources: React.FC = () => {
                 display: "flex",
                 flexDirection: "column",
                 pr: 2,
-                overflow: "auto",
+                // overflow: "auto",
                 maxWidth: "100%",
                 "@media (max-width: 900px)": {
                   pt: "2px",
@@ -945,7 +945,7 @@ const Sources: React.FC = () => {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  overflow: "hidden",
+                  // overflow: "hidden",
                   height: "100%",
                   "@media (max-width: 900px)": {
                     paddingRight: 0,
@@ -958,7 +958,7 @@ const Sources: React.FC = () => {
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "hidden",
+                    // overflow: "hidden",
                   }}
                 >
                   <Box
@@ -1225,14 +1225,14 @@ const Sources: React.FC = () => {
                             component={Paper}
                             sx={{
                               border: "1px solid rgba(235, 235, 235, 1)",
-                              overflowX: "auto",
+                              overflowX: "visible",
                               maxHeight:
                                 selectedFilters.length > 0
                                   ? hasNotification
                                     ? "63vh"
                                     : "68vh"
                                   : "72vh",
-                              overflowY: "auto",
+                              overflowY: "visible",
                               "@media (max-height: 800px)": {
                                 maxHeight:
                                   selectedFilters.length > 0
@@ -1339,7 +1339,10 @@ const Sources: React.FC = () => {
                                                 positionLeft={-380}
                                                 positionTop={180}
                                                 rightSide={true}
-                                                toggleClick={() => toggleDotHintClick(0)}
+                                                toggleClick={() => {
+                                                  toggleDotHintClick(0)
+                                                  toggleDotHintClick(1)
+                                                }}
                                               />
                                             )}
                                       </TableCell>
@@ -1845,7 +1848,7 @@ const Sources: React.FC = () => {
                       <Box
                         sx={{
                           maxHeight: "92px",
-                          overflowY: "auto",
+                          // overflowY: "auto",
                           backgroundColor: "rgba(255, 255, 255, 1)",
                         }}
                       >
