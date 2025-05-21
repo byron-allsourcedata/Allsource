@@ -148,7 +148,7 @@ const Sources: React.FC = () => {
   const isDebug = searchParams.get("is_debug") === "true";
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
-  const { showHints, toggleSourceTableHintState, toggleCardDotHintClick, sourcesTableHints } = useHints();
+  const { showHints, changeSourcesTableHint, sourcesTableHints } = useHints();
 
   const hintCards: HintCardInterface[] = [
     {
@@ -625,17 +625,17 @@ const Sources: React.FC = () => {
     handleApplyFilters(filters);
   };
 
-  const toggleDotHintClick = (id: number) => {
-    toggleSourceTableHintState(id)
-  };
+  // const toggleDotHintClick = (id: number) => {
+  //   toggleSourceTableHintState(id)
+  // };
 
-  const closeDotHintClick = (id: number) => {
-    toggleSourceTableHintState(id, false)
-  };
+  // const closeDotHintClick = (id: number) => {
+  //   toggleSourceTableHintState(id, false)
+  // };
 
-  const openDotHintClick = (id: number) => {
-    toggleSourceTableHintState(id, true)
-  };
+  // const openDotHintClick = (id: number) => {
+  //   toggleSourceTableHintState(id, true)
+  // };
 
   const handleDeleteFilter = (filterToDelete: {
     label: string;
@@ -924,10 +924,12 @@ const Sources: React.FC = () => {
                       toggleClick={() => {
                         // toggleDotHintClick(1)
                         // toggleCardDotHintClick(0)
-                        toggleCardDotHintClick(1)
+                        // toggleCardDotHintClick(1)
+                        changeSourcesTableHint(1, "showBody", "toggle")
                       }}
                       closeClick={() => {
-                        toggleCardDotHintClick(1, false)
+                        // toggleCardDotHintClick(1, false)
+                        changeSourcesTableHint(1, "showBody", "close")
                       }}
                     />
                   )}
@@ -1350,11 +1352,13 @@ const Sources: React.FC = () => {
                                                 isOpenBody={sourcesTableHints[0].showBody}
                                                 toggleClick={() => {
                                                   // toggleDotHintClick(0)
-                                                  toggleCardDotHintClick(0) 
+                                                  // toggleCardDotHintClick(0) 
+                                                  changeSourcesTableHint(0, "showBody", "toggle")
                                                   // toggleCardDotHintClick(1)
                                                 }}
                                                 closeClick={() => {
-                                                  toggleCardDotHintClick(0, false)
+                                                  // toggleCardDotHintClick(0, false)
+                                                  changeSourcesTableHint(0, "showBody", "close")
                                                 }}
                                               />
                                             )}
