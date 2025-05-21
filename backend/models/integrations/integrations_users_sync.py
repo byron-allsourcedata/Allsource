@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index, BigInteger, func, text, \
-    String, DateTime
+from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index, BigInteger, func, \
+    text, \
+    String, DateTime, Sequence
 
 from sqlalchemy.dialects.postgresql import ENUM
 from datetime import datetime, timezone
@@ -20,9 +21,9 @@ class IntegrationUserSync(Base):
 
     id = Column(
         BigInteger,
+        Sequence('integrations_users_sync_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('integrations_users_sync_id_seq'::regclass)")
     )
     integration_id = Column(
         BigInteger,

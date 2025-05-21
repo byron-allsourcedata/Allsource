@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, Boolean, text, BigInteger
+from sqlalchemy import Column, Integer, VARCHAR, Boolean, text, BigInteger, Sequence
 from .base import Base
 
 
@@ -7,9 +7,9 @@ class ReferralDiscountCode(Base):
 
     id = Column(
         BigInteger,
+        Sequence('referral_discount_code_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('referral_discount_code_id_seq'::regclass)")
     )
     name = Column(
         VARCHAR(128),

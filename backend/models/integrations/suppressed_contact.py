@@ -1,5 +1,5 @@
 from models.base import Base
-from sqlalchemy import Integer, Column, TIMESTAMP, ForeignKey, Index, VARCHAR, BigInteger, text
+from sqlalchemy import Integer, Column, TIMESTAMP, ForeignKey, Index, VARCHAR, BigInteger, text, Sequence
 from datetime import datetime
 
 
@@ -11,9 +11,9 @@ class SuppressedContact(Base):
 
     id = Column(
         BigInteger,
+        Sequence('leads_suppression_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('leads_suppression_id_seq'::regclass)")
     )
     five_x_five_user_id = Column(
         BigInteger,

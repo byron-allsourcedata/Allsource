@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, Index, TIMESTAMP, BigInteger, text, ForeignKey
+from sqlalchemy import Column, Integer, VARCHAR, Index, TIMESTAMP, BigInteger, text, ForeignKey, Sequence
 from .base import Base
 
 
@@ -10,9 +10,9 @@ class ReferralUser(Base):
 
     id = Column(
         BigInteger,
+        Sequence('referral_users_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('referral_users_id_seq'::regclass)")
     )
     user_id = Column(
         BigInteger,

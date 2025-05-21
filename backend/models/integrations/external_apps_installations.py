@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, ARRAY, JSON, Index, BigInteger, text
+from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, ARRAY, JSON, Index, BigInteger, text, Sequence
 from datetime import datetime
 from models.base import Base
 
@@ -12,9 +12,9 @@ class ExternalAppsInstall(Base):
 
     id = Column(
         BigInteger,
+        Sequence('external_apps_install_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('external_apps_install_id_seq'::regclass)")
     )
     platform = Column(VARCHAR, nullable=False)
     store_hash = Column(VARCHAR, nullable=True)

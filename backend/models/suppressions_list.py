@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, TEXT, BigInteger, text
+from sqlalchemy import Column, event, Integer, TEXT, BigInteger, text, Sequence
 from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR
 from .base import Base, create_timestamps
 
@@ -8,9 +8,9 @@ class SuppressionList(Base):
 
     id = Column(
         BigInteger,
+        Sequence('suppressions_list_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('suppressions_list_id_seq'::regclass)")
     )
     list_name = Column(
         VARCHAR(256),

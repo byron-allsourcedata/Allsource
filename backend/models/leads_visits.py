@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, DATE, TIME, VARCHAR, ForeignKey, Index, BigInteger, text, Date, Time
+from sqlalchemy import Column, Integer, DATE, TIME, VARCHAR, ForeignKey, Index, BigInteger, text, Date, Time, Sequence
 
 from .base import Base
 from .five_x_five_users import FiveXFiveUser
@@ -14,9 +14,9 @@ class LeadsVisits(Base):
 
     id = Column(
         BigInteger,
+        Sequence('leads_visits_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('leads_visits_id_seq'::regclass)")
     )
     start_date = Column(Date, nullable=True)
     start_time = Column(Time, nullable=True)

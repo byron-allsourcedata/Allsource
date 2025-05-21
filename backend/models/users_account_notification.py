@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, BOOLEAN, TEXT, DateTime, Index, BigInteger, text, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, BOOLEAN, TEXT, DateTime, Index, BigInteger, text, ForeignKey, Boolean, Sequence
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from sqlalchemy.sql import func
 from .base import Base
@@ -14,9 +14,9 @@ class UserAccountNotification(Base):
 
     id = Column(
         BigInteger,
+        Sequence('users_account_notifications_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('users_account_notifications_id_seq'::regclass)")
     )
     user_id = Column(
         BigInteger,

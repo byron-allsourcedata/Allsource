@@ -1,4 +1,5 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR, Index, text, ForeignKey, Boolean, inspect
+from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR, Index, text, ForeignKey, Boolean, inspect, \
+    Sequence
 from sqlalchemy.orm import relationship
 
 from .base import Base, create_timestamps, update_timestamps
@@ -16,9 +17,9 @@ class Partner(Base):
 
     id = Column(
         Integer,
+        Sequence('partners_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('partners_id_seq'::regclass)")
     )
     user_id = Column(
         Integer,
