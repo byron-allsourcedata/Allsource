@@ -16,13 +16,11 @@ class ClickhouseConfig:
             host=cls.host,
             port=cls.port,
             user=cls.user,
-            password=cls.password
+            password=cls.password,
+            database=cls.database
         )
 
 
     @classmethod
-    def test(cls):
-        client = cls.get_client()
-
-        result = client.query(f"SELECT COUNT(*) FROM {cls.database}.enrichment_users")
-        print(result.result_rows)
+    def users_table(cls):
+        return f"{cls.database}.enrichment_users"

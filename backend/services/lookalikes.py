@@ -3,11 +3,12 @@ from uuid import UUID
 
 from pydantic.v1 import UUID4
 
-from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence, AudienceLookalikesPersistence
 from enums import BaseEnum, BusinessType
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
+from resolver import injectable
 from schemas.lookalikes import CalculateRequest, B2CInsights, B2BInsights
 from schemas.similar_audiences import AudienceFeatureImportance, NormalizationConfig
 from services.similar_audiences import SimilarAudienceService
@@ -56,8 +57,9 @@ PROFESSIONAL_PROFILE = {
     "annual_sales",
 }
 
+
 class AudienceLookalikesService:
-    def __init__(self, lookalikes_persistence_service: AudienceLookalikesPostgresPersistence):
+    def __init__(self, lookalikes_persistence_service: AudienceLookalikesPersistence):
         self.lookalikes_persistence_service = lookalikes_persistence_service
 
     def get_lookalikes(self, user, page, per_page, from_date, to_date,
@@ -79,15 +81,8 @@ class AudienceLookalikesService:
         )
 
         result = []
-        for (
-            lookalike,
-            source_name,
-            source_type,
-            created_by,
-            source_origin,
-            domain,
-            target_schema
-        ) in result_query:
+        for lookalike_info in result_query:
+            lookalike = lookalike_info.lookalike
             significant_fields = getattr(lookalike, 'significant_fields', None)
             if significant_fields and isinstance(significant_fields, dict):
                 processed_fields = {}
@@ -109,13 +104,13 @@ class AudienceLookalikesService:
                 lookalike.similarity_score = similarity_scores
                 
             result.append({
-                **lookalike.__dict__,
-                "source": source_name,
-                "source_type": source_type,
-                "created_by": created_by,
-                "source_origin": source_origin,
-                "domain": domain,
-                "target_schema": target_schema
+                **lookalike_info.lookalike.__dict__,
+                "source": lookalike_info.source_name,
+                "source_type": lookalike_info.source_type,
+                "created_by": lookalike_info.created_by,
+                "source_origin": lookalike_info.source_origin,
+                "domain": lookalike_info.domain,
+                "target_schema": lookalike_info.target_schema
             })
 
         return {
@@ -127,21 +122,22 @@ class AudienceLookalikesService:
             }
         }
 
-    def get_source_info(self, uuid_of_source, user):
+    def get_source_info(self, uuid_of_source, user) -> dict:
         source_info = self.lookalikes_persistence_service.get_source_info(uuid_of_source, user.get('id'))
-        if source_info:
-            sources, created_by = source_info
-            return {
-                'name': sources.name,
-                'target_schema': sources.target_schema,
-                'source': sources.source_origin,
-                'type': sources.source_type,
-                'created_date': sources.created_at,
-                'created_by': created_by,
-                'number_of_customers': sources.total_records,
-                'matched_records': sources.matched_records,
-            }
-        return {}
+        if not source_info:
+            return {}
+
+        return {
+            'name': source_info.name,
+            'target_schema': source_info.target_schema,
+            'source': source_info.source_origin,
+            'type': source_info.source_type,
+            'created_date': source_info.created_at,
+            'created_by': source_info.created_by,
+            'number_of_customers': source_info.total_records,
+            'matched_records': source_info.matched_records,
+        }
+
 
     def get_all_sources(self, user):
         sources = self.lookalikes_persistence_service.get_all_sources(user.get('id'))

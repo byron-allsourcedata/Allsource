@@ -2,15 +2,17 @@ import asyncio
 import logging
 import os
 import sys
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from sqlalchemy import create_engine, select
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, timezone
-from enums import DataSyncImportedStatus, ProccessDataSyncResult, AudienceSmartStatuses
+from enums import DataSyncImportedStatus, AudienceSmartStatuses
 from utils import get_utc_aware_date
 from models.enrichment.enrichment_users import EnrichmentUser
 from typing import Optional
@@ -22,7 +24,7 @@ from services.subscriptions import SubscriptionService
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
-from dependencies import (PlansPersistence)
+from dependencies import (PlansPersistence, Db)
 
 load_dotenv()
 
@@ -99,7 +101,7 @@ def fetch_enrichment_users_by_data_sync(
         .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id)
         .filter(IntegrationUserSync.id == data_sync_id, AudienceSmartPerson.is_valid == True)
     )
-    
+
     if last_sent_enrichment_id is not None:
         query = query.filter(EnrichmentUser.id > last_sent_enrichment_id)
 

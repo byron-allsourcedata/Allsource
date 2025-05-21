@@ -7,6 +7,10 @@ import logging
 
 from pydantic import BaseModel
 
+from config.util import (
+    getenv,
+    get_int_env
+)
 from schemas.scripts.audience_source import MessageBody
 
 logger = logging.getLogger(__name__)
@@ -21,11 +25,11 @@ class RabbitMQConnection:
 
     async def connect(self):
         self._connection = await connect(
-            host=os.getenv('RABBITMQ_HOST'),
-            port=int(os.getenv('RABBITMQ_PORT')),
-            virtualhost=os.getenv('RABBITMQ_VIRTUALHOST'),
-            login=os.getenv('RABBITMQ_LOGIN'),
-            password=os.getenv('RABBITMQ_PASSWORD'),
+            host=getenv('RABBITMQ_HOST'),
+            port=get_int_env('RABBITMQ_PORT'),
+            virtualhost=getenv('RABBITMQ_VIRTUALHOST'),
+            login=getenv('RABBITMQ_LOGIN'),
+            password=getenv('RABBITMQ_PASSWORD'),
             timeout=5000,
         )
         return self._connection

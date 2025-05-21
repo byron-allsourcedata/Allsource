@@ -1,22 +1,21 @@
 from datetime import datetime, timezone, timedelta
-from collections import defaultdict
-from sqlalchemy.sql import func, select, union_all, literal_column, extract, case, literal
+from typing import Optional, List
+
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import aliased
-from enums import AudienceSmartStatuses
+from sqlalchemy.sql import func, select, case
+
 from models import Users
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
-from sqlalchemy import and_, or_, String
-from collections import OrderedDict
-from models.audience_sources import AudienceSource
-from models.users_domains import UserDomains
 from models.audience_smarts_use_cases import AudienceSmartsUseCase
-from models.leads_visits import LeadsVisits
+from models.audience_sources import AudienceSource
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.leads_users import LeadUser
-from typing import Optional, List, Dict
+from models.leads_visits import LeadsVisits
+from models.users_domains import UserDomains
 
 
 class DashboardAudiencePersistence:

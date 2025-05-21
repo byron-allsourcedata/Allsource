@@ -5,6 +5,7 @@ import io
 import csv
 
 from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence
+from persistence.audience_lookalikes.dto import LookalikeInfo
 from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_settings import AudienceSettingPersistence
 from schemas.audience import SmartsAudienceObjectResponse, DataSourcesFormat, DataSourcesResponse, SmartsResponse, ValidationHistory
@@ -286,7 +287,7 @@ class AudienceSmartsService:
         return [{item["key"]: item["validation"]} for item in result]
 
 
-    def get_datasource(self, user: dict):
+    def get_datasource(self, user: dict) -> dict:
         lookalikes, count, max_page, _ = self.lookalikes_persistence_service.get_lookalikes(
             user_id=user.get('id'), page=1, per_page=50
         )
@@ -294,25 +295,18 @@ class AudienceSmartsService:
         sources, count = self.audience_sources_persistence.get_sources(
             user_id=user.get("id"), page=1, per_page=50
         )
-        
+
         lookalike_list = []
-        for (
-            lookalike,
-            source_name,
-            source_type,
-            created_by,
-            source_origin,
-            domain,
-            target_schema
-        ) in lookalikes:
+        for lookalike_info in lookalikes:
+            # TODO: check which data is required by frontend
             lookalike_list.append({
-                **lookalike.__dict__,
-                "source": source_name,
-                "source_type": source_type,
-                "created_by": created_by,
-                "source_origin": source_origin,
-                "domain": domain,
-                "target_schema": target_schema
+                **lookalike_info.lookalike.__dict__,
+                "source": lookalike_info.name,
+                "source_type": lookalike_info.source_type,
+                "created_by": lookalike_info.full_name,
+                "source_origin": lookalike_info.source_origin,
+                "domain": lookalike_info.domain,
+                "target_schema": lookalike_info.target_schema
             })
 
         source_list = [

@@ -1,14 +1,14 @@
 import abc
 from typing import Tuple, Optional, List, Any
 
-from models import AudienceSource, Users
+from .dto import SourceInfo, LookalikeInfo
 
 
 class AudienceLookalikesPersistenceInterface(abc.ABC):
 
 
     @abc.abstractmethod
-    def get_source_info(self, uuid_of_source, user_id) -> Optional[Tuple[AudienceSource, str]]:
+    def get_source_info(self, uuid_of_source, user_id) -> Optional[SourceInfo]:
         pass
 
     @abc.abstractmethod
@@ -24,6 +24,7 @@ class AudienceLookalikesPersistenceInterface(abc.ABC):
             lookalike_size: Optional[str] = None,
             lookalike_type: Optional[str] = None,
             search_query: Optional[str] = None
-    ) -> Tuple[List[Any], int, int, int]:
+    ) -> Tuple[List[LookalikeInfo], int, int, int]:
         pass
+
 

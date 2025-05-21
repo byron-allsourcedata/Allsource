@@ -35,6 +35,10 @@ class EnrichmentLookalikeScoresPersistence:
             ) for user_id, score in scores
         ])
 
+    def commit(self):
+        self.db.flush()
+        self.db.commit()
+
 
 def get_persistence_repository(db: Db) -> EnrichmentLookalikeScoresPersistence:
     return EnrichmentLookalikeScoresPersistence(db)
