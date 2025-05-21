@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, TEXT, text, BigInteger, ForeignKey
+from sqlalchemy import Column, Integer, TIMESTAMP, TEXT, text, BigInteger, ForeignKey, Sequence
 from sqlalchemy.dialects.postgresql import NUMERIC, VARCHAR
 from enums import PayoutsStatus, ConfirmationStatus
 from .base import Base
@@ -9,9 +9,9 @@ class ReferralPayouts(Base):
 
     id = Column(
         BigInteger,
+        Sequence('referral_payouts_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('referral_payouts_id_seq'::regclass)")
     )
     parent_id = Column(
         BigInteger,

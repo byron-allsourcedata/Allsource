@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, TEXT, VARCHAR, text
+from sqlalchemy import Column, event, Integer, TIMESTAMP, TEXT, VARCHAR, text, Sequence
 from .base import Base, create_timestamps, update_timestamps
 
 
@@ -7,9 +7,9 @@ class PartnersAsset(Base):
 
     id = Column(
         Integer,
+        Sequence('partners_assets_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('partners_assets_id_seq'::regclass)")
     )
     title = Column(
         VARCHAR(32),

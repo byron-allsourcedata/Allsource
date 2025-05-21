@@ -4,16 +4,16 @@ from models.base import Base
 from models.users import Users
 from models.users_domains import UserDomains
 from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP, Index, func, ForeignKey, text, String, Text, \
-    BigInteger
+    BigInteger, Sequence
 
 
 class UserIntegration(Base):
     __tablename__ = 'users_domains_integrations'
     id = Column(
         BigInteger,
+        Sequence('users_integrations_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('users_integrations_id_seq'::regclass)")
     )
     access_token = Column(VARCHAR, nullable=True)
     shop_domain = Column(VARCHAR(64), nullable=True)
@@ -54,9 +54,9 @@ class Integration(Base):
 
     id = Column(
         Integer,
+        Sequence('integrations_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('integrations_id_seq'::regclass)")
     )
     service_name = Column(
         String(255),

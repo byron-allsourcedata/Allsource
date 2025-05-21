@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, DECIMAL, TIMESTAMP, BigInteger, text, ForeignKey, Numeric
+from sqlalchemy import Column, Integer, VARCHAR, DECIMAL, TIMESTAMP, BigInteger, text, ForeignKey, Numeric, Sequence
 from datetime import datetime, timezone
 from .base import Base
 
@@ -8,9 +8,9 @@ class LeadOrders(Base):
 
     id = Column(
         BigInteger,
+        Sequence('leads_orders_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('leads_orders_id_seq'::regclass)")
     )
     platform_user_id = Column(BigInteger, nullable=True)
     lead_user_id = Column(

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, text
+from sqlalchemy import Column, event, text, Sequence
 from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
 
 from .base import Base, create_timestamps, update_timestamps
@@ -9,9 +9,9 @@ class SendgridTemplate(Base):
 
     id = Column(
         BIGINT,
+        Sequence('send_grid_templates_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('send_grid_templates_id_seq'::regclass)")
     )
     alias = Column(
         VARCHAR,

@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, VARCHAR, event, TIMESTAMP, ForeignKey, Boolean, Index, text, BigInteger
+from sqlalchemy import Column, Integer, VARCHAR, event, TIMESTAMP, ForeignKey, Boolean, Index, text, BigInteger, \
+    Sequence
 from .base import Base, create_timestamps
 from .lead_company import LeadCompany
 from .leads_visits import LeadsVisits
@@ -31,9 +32,9 @@ class LeadUser(Base):
 
     id = Column(
         BigInteger,
+        Sequence('leads_users_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('leads_users_id_seq'::regclass)")
     )
     user_id = Column(
         BigInteger,

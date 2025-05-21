@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import Column, Integer, VARCHAR, Index, UUID, ForeignKey, text, String, BigInteger
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 from models.integrations.integrations_users_sync import IntegrationUserSync
@@ -12,7 +14,7 @@ class AudienceDataSyncImportedPersons(Base):
         UUID(as_uuid=True),
         primary_key=True,
         nullable=False,
-        server_default=text('uuid_generate_v1()')
+        default=uuid.uuid1,
     )
     status = Column(String(64), nullable=False)
     service_name = Column(String(128), nullable=False)

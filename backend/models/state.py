@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Index, BigInteger, text
+from sqlalchemy import Column, Integer, Index, BigInteger, text, Sequence
 from sqlalchemy.dialects.postgresql import VARCHAR
 
 from .base import Base
@@ -13,9 +13,9 @@ class States(Base):
 
     id = Column(
         BigInteger,
+        Sequence('state_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('state_id_seq'::regclass)")
     )
     state_code = Column(
         VARCHAR(16),
