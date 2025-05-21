@@ -48,7 +48,7 @@ interface HintCardInterface {
 
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
-  const { showHints, lookalikesBuilderHints, toggleLookalikesBuilderHintState } = useHints();
+  const { showHints, lookalikesBuilderHints, changeLookalikesBuilderHint } = useHints();
   const searchParams = useSearchParams();
   const preselectedUuid = searchParams.get("source_uuid");
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
@@ -112,15 +112,15 @@ const CreateLookalikePage: React.FC = () => {
   };
 
   const toggleDotHintClick = (id: number) => {
-    toggleLookalikesBuilderHintState(id)
+    changeLookalikesBuilderHint(id, "show", "toggle")
   };
 
   const closeDotHintClick = (id: number) => {
-    toggleLookalikesBuilderHintState(id, false)
+    changeLookalikesBuilderHint(id, "show", "close")
   };
 
   const openDotHintClick = (id: number) => {
-    toggleLookalikesBuilderHintState(id, true)
+    changeLookalikesBuilderHint(id, "show", "open")
   };
 
   const getFilteredData = (data: any[]) =>
