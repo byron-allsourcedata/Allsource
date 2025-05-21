@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR, Index, BigInteger, text, Boolean
+from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR, Index, BigInteger, text, Boolean, Sequence
 from .base import Base
 
 
@@ -10,9 +10,9 @@ class LeadEmailsVerification(Base):
 
     id = Column(
         BigInteger,
+        Sequence('million_verifier_email_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('million_verifier_email_id_seq'::regclass)")
     )
     email = Column(VARCHAR(128), nullable=False)
     is_verify = Column(Boolean, nullable=False)

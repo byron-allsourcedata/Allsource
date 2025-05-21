@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import Column, Integer, BOOLEAN, VARCHAR, TIMESTAMP, Index, Boolean, ForeignKey, BigInteger, \
-    UniqueConstraint, text, func
+    UniqueConstraint, text, func, Sequence
 
 from .base import Base
 
@@ -14,8 +14,12 @@ class UserDomains(Base):
         UniqueConstraint('api_key', name='users_domains_unique'),
     )
 
-    id = Column(BigInteger, primary_key=True, nullable=False,
-                server_default=text("nextval('users_domains_id_seq'::regclass)"))
+    id = Column(
+        BigInteger,
+        Sequence('users_domains_id_seq', metadata=Base.metadata),
+        primary_key=True,
+        nullable=False,
+    )
     user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     domain = Column(VARCHAR, nullable=False)
     data_provider_id = Column(VARCHAR(64), nullable=True)

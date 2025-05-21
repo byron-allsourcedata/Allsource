@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR, Index, DECIMAL, BigInteger, text
+from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR, Index, DECIMAL, BigInteger, text, Sequence
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
 from .base import Base, create_timestamps
@@ -14,9 +14,9 @@ class UsersUnlockedFiveXFiveUser(Base):
 
     id = Column(
         BigInteger,
+        Sequence('users_payments_transactions_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('users_payments_transactions_id_seq'::regclass)")
     )
     user_id = Column(
         BigInteger,

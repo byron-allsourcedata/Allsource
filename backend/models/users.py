@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, event, Integer, Boolean, text, ForeignKey, BigInteger, Index
+from sqlalchemy import Column, DateTime, event, Integer, Boolean, text, ForeignKey, BigInteger, Index, Sequence
 from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR, ARRAY, JSON
 
 from .base import Base, create_timestamps, update_timestamps
@@ -13,9 +13,9 @@ class Users(Base):
 
     id = Column(
         BigInteger,
+        Sequence('users_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('users_id_seq'::regclass)")
     )
     email = Column(VARCHAR, nullable=True)
     is_email_confirmed = Column(Boolean, nullable=True, server_default=text('false'))

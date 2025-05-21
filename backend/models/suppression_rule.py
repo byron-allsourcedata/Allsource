@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, BOOLEAN, TIMESTAMP, TEXT, ForeignKey, Boolean, text, Index
+from sqlalchemy import Column, event, Integer, BOOLEAN, TIMESTAMP, TEXT, ForeignKey, Boolean, text, Index, Sequence
 from .base import Base, create_timestamps
 
 
@@ -10,9 +10,9 @@ class SuppressionRule(Base):
 
     id = Column(
         Integer,
+        Sequence('suppressions_rules_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('suppressions_rules_id_seq'::regclass)")
     )
     created_at = Column(
         TIMESTAMP,

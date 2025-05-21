@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, JSON, BigInteger, text
+from sqlalchemy import Column, Integer, JSON, BigInteger, text, Sequence
 
 from .base import Base
 
@@ -8,9 +8,9 @@ class Kajabi(Base):
 
     id = Column(
         BigInteger,
+        Sequence('kajabi_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('kajabi_id_seq'::regclass)")
     )
     text = Column(
         JSON,
