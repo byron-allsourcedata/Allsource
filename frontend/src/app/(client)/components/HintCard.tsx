@@ -60,7 +60,7 @@ interface HintCardProps {
                 href={card.linkToLoadMore}
                 underline="hover"
                 className="second-sub-title"
-                style={{color: "rgba(56, 152, 252, 1)" }}
+                style={{color: "#3898FC" }}
                 target="_blank"
                 rel="noopener noreferrer"
               >
