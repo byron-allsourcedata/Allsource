@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, String, Boolean, Integer, Text, TIMESTAMP, text
+from sqlalchemy import Column, BigInteger, String, Boolean, Integer, Text, TIMESTAMP, text, Sequence
 from models.base import Base
 from datetime import datetime
 
@@ -8,9 +8,9 @@ class BigCommerceUser(Base):
 
     id = Column(
         BigInteger,
+        Sequence('bigcommerce_users_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('bigcommerce_users_id_seq'::regclass)")
     )
     authentication_force_password_reset = Column(
         Boolean,

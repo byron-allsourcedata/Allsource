@@ -46,14 +46,9 @@ interface HintCardInterface {
   linkToLoadMore: string;
 }
 
-interface StateHint {
-  id: number;
-  show: boolean;
-}
-
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
-  const { showHints } = useHints();
+  const { showHints, lookalikesBuilderHints, changeLookalikesBuilderHint } = useHints();
   const searchParams = useSearchParams();
   const preselectedUuid = searchParams.get("source_uuid");
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
@@ -72,15 +67,6 @@ const CreateLookalikePage: React.FC = () => {
     useState<CalculationResponse | null>(null);
 
   const [dndFields, setDndFields] = useState<Field[]>([]);
-
-  const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
-    { show: true, id: 0 },
-    { show: false, id: 1 },
-    { show: false, id: 2 },
-    { show: false, id: 3 },
-    { show: false, id: 4 },
-    { show: false, id: 5 },
-  ]);
 
   const hintCards: HintCardInterface[] = [
     {
@@ -126,21 +112,15 @@ const CreateLookalikePage: React.FC = () => {
   };
 
   const toggleDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: !el.show } : el))
-    );
+    changeLookalikesBuilderHint(id, "show", "toggle")
   };
 
   const closeDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: false } : el))
-    );
+    changeLookalikesBuilderHint(id, "show", "close")
   };
 
   const openDotHintClick = (id: number) => {
-    setIsOpenSelect((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, show: true } : el))
-    );
+    changeLookalikesBuilderHint(id, "show", "open")
   };
 
   const getFilteredData = (data: any[]) =>
@@ -311,6 +291,7 @@ const CreateLookalikePage: React.FC = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
+        // alignItems: 'center',
         height: "calc(100vh - 4.25rem)",
         width: "100%",
         overflow: "auto",
@@ -394,7 +375,7 @@ const CreateLookalikePage: React.FC = () => {
                         gap: 2,
                       }}
                     >
-                      <Box sx={{ width: "100%" }}>
+                      <Box sx={{ width: "100%", position: "relative" }}>
                         <TextField
                           fullWidth
                           variant="outlined"
@@ -433,12 +414,11 @@ const CreateLookalikePage: React.FC = () => {
                             },
                           }}
                         />
-                        {showHints && (
+                        {showHints && lookalikesBuilderHints[0].show && (
                           <HintCard
                               card={hintCards[0]}
-                              positionTop={90}
-                              positionLeft={230}
-                              isOpenSelect={isOpenSelect[0].show}
+                              positionTop={20}
+                              positionLeft={200}
                               toggleClick={() => toggleDotHintClick(0)}
                           />
                         )}
@@ -608,7 +588,7 @@ const CreateLookalikePage: React.FC = () => {
                       selectedSize={selectedSize}
                       hintCard={hintCards[1]}
                       toggleDotHintClickBlock1={() => toggleDotHintClick(1)}
-                      isOpenSelect={isOpenSelect[1].show}
+                      isOpenSelect={lookalikesBuilderHints[1].show}
                     />
                   </Box>
                 )}
@@ -660,8 +640,8 @@ const CreateLookalikePage: React.FC = () => {
                         hintCard3={hintCards[3]}
                         toggleDotHintClickBlock2={() => toggleDotHintClick(2)}
                         toggleDotHintClickBlock3={() => toggleDotHintClick(3)}
-                        isOpenSelect2={isOpenSelect[2].show}
-                        isOpenSelect3={isOpenSelect[3].show}
+                        isOpenSelect2={lookalikesBuilderHints[2].show}
+                        isOpenSelect3={lookalikesBuilderHints[3].show}
                         onFieldsOrderChangeUp={setDndFields}
                       />
                   </Box>

@@ -223,7 +223,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
         <Grid item xs={12} md={6}>
           {calculatedResults && (
             <>
-              <Box sx={{ mb: 2 }}>
+              <Box sx={{ mb: 2, position: "relative" }}>
                 <FeatureImportanceTable
                   title="Personal Profile"
                   currentFeatures={personal}
@@ -232,12 +232,11 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
                   headerIcon={<AccountBoxIcon />}
                   initialFeatures={recommendedByCategory.personal}
                 />
-                {showHints && (
-                  <HintCard
+              {showHints && isOpenSelect && (
+                <HintCard
                     card={hintCard}
-                    positionTop={140}
-                    positionLeft={330}
-                    isOpenSelect={isOpenSelect}
+                    positionTop={20}
+                    positionLeft={800}
                     toggleClick={toggleDotHintClickBlock}
                   />
                 )}

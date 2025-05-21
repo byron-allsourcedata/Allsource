@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, Index, TIMESTAMP, TEXT, ForeignKey, BigInteger, text
+from sqlalchemy import Column, Integer, VARCHAR, Index, TIMESTAMP, TEXT, ForeignKey, BigInteger, text, Sequence
 from .base import Base
 
 
@@ -11,9 +11,9 @@ class LeadCompany(Base):
 
     id = Column(
         BigInteger,
+        Sequence('leads_companies_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('leads_companies_id_seq'::regclass)")
     )
     name = Column(
         VARCHAR(256),

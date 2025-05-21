@@ -459,12 +459,11 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
           >
             Choose parameters that you want to validate.
           </Typography>
-          {showHints && (
+          {showHints && isOpenSelect && (
                     <HintCard
                         card={hintCard}
                         positionLeft={320}
                         positionTop={20}
-                        isOpenSelect={isOpenSelect}
                         toggleClick={toggleDotHintClickBlock4}
                     />
                   )} 

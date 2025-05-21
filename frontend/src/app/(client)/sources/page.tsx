@@ -56,6 +56,14 @@ import CloseIcon from "@mui/icons-material/Close";
 import TableCustomCell from "./components/table/TableCustomCell";
 import FirstTimeScreen from "./components/FirstTimeScreen"
 import { useScrollShadow } from "@/hooks/useScrollShadow";
+import HintCard from "../components/HintCard";
+import { useHints } from "@/context/HintsContext";
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
 
 interface Source {
   id: string;
@@ -140,6 +148,24 @@ const Sources: React.FC = () => {
   const isDebug = searchParams.get("is_debug") === "true";
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
+  const { showHints, changeSourcesTableHint, sourcesTableHints, resetSourcesTableHints } = useHints();
+
+  const hintCards: HintCardInterface[] = [
+    {
+     description:
+     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+     title: "Actions",
+     linkToLoadMore:
+     "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+    {
+     description:
+     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+     title: "Builder",
+     linkToLoadMore:
+       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+  ]
 
   const cardData: CardData[] = [
     {
@@ -184,7 +210,7 @@ const Sources: React.FC = () => {
     {
       key: "name",
       label: "Name",
-      widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
+      widths: { width: "15vw", minWidth: "15vw", maxWidth: "15vw" },
     },
     {
       key: "target_schema",
@@ -235,6 +261,10 @@ const Sources: React.FC = () => {
       widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
     },
   ];
+
+  useEffect(() => {
+    resetSourcesTableHints()
+  }, []);
 
   useEffect(() => {
     fetchSources({
@@ -599,6 +629,18 @@ const Sources: React.FC = () => {
     handleApplyFilters(filters);
   };
 
+  // const toggleDotHintClick = (id: number) => {
+  //   toggleSourceTableHintState(id)
+  // };
+
+  // const closeDotHintClick = (id: number) => {
+  //   toggleSourceTableHintState(id, false)
+  // };
+
+  // const openDotHintClick = (id: number) => {
+  //   toggleSourceTableHintState(id, true)
+  // };
+
   const handleDeleteFilter = (filterToDelete: {
     label: string;
     value: string;
@@ -731,7 +773,8 @@ const Sources: React.FC = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          height: "100%",
+          height: "calc(100vh - 4.25rem)",
+          // overflow: "auto",
           "@media (max-width: 900px)": {
             minHeight: "100vh",
           },
@@ -777,7 +820,8 @@ const Sources: React.FC = () => {
                   sx={{
                     display: "flex",
                     flexDirection: "row",
-                    alignItems: "center",
+                    alignItems: "center", 
+                    position: "relative",
                     gap: "15px",
                     pt: "4px",
                     pr: 2,
@@ -873,6 +917,26 @@ const Sources: React.FC = () => {
                       />
                     )}
                   </Button>
+
+                  {showHints && (
+                    <HintCard
+                      card={hintCards[1]}
+                      positionLeft={-350}
+                      positionTop={20}
+                      rightSide={true}
+                      isOpenBody={sourcesTableHints[1].showBody}
+                      toggleClick={() => {
+                        console.log('f', sourcesTableHints[0].showBody)
+                        if (sourcesTableHints[0].showBody) {
+                          changeSourcesTableHint(0, "showBody", "close")
+                        }
+                        changeSourcesTableHint(1, "showBody", "toggle")
+                      }}
+                      closeClick={() => {
+                        changeSourcesTableHint(1, "showBody", "close")
+                      }}
+                    />
+                  )}
                 </Box>
               </Box>
             }
@@ -883,7 +947,7 @@ const Sources: React.FC = () => {
                 display: "flex",
                 flexDirection: "column",
                 pr: 2,
-                overflow: "auto",
+                // overflow: "auto",
                 maxWidth: "100%",
                 "@media (max-width: 900px)": {
                   pt: "2px",
@@ -895,7 +959,7 @@ const Sources: React.FC = () => {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  overflow: "hidden",
+                  // overflow: "hidden",
                   height: "100%",
                   "@media (max-width: 900px)": {
                     paddingRight: 0,
@@ -908,7 +972,7 @@ const Sources: React.FC = () => {
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "hidden",
+                    // overflow: "hidden",
                   }}
                 >
                   <Box
@@ -1175,14 +1239,14 @@ const Sources: React.FC = () => {
                             component={Paper}
                             sx={{
                               border: "1px solid rgba(235, 235, 235, 1)",
-                              overflowX: "auto",
+                              overflowX: "visible",
                               maxHeight:
                                 selectedFilters.length > 0
                                   ? hasNotification
                                     ? "63vh"
                                     : "68vh"
                                   : "72vh",
-                              overflowY: "auto",
+                              overflowY: "visible",
                               "@media (max-height: 800px)": {
                                 maxHeight:
                                   selectedFilters.length > 0
@@ -1256,6 +1320,7 @@ const Sources: React.FC = () => {
                                           sx={{
                                             display: "flex",
                                             alignItems: "center",
+                                            position: "relative",
                                             justifyContent: "space-between",
                                           }}
                                         >
@@ -1282,6 +1347,26 @@ const Sources: React.FC = () => {
                                             </IconButton>
                                           )}
                                         </Box>
+                                        {showHints && label === "Actions" && (
+                                              <HintCard
+                                                card={hintCards[0]}
+                                                positionLeft={-380}
+                                                positionTop={100}
+                                                rightSide={true}
+                                                isOpenBody={sourcesTableHints[0].showBody}
+                                                toggleClick={() => {
+                                                  if (sourcesTableHints[1].showBody) {
+                                                    changeSourcesTableHint(1, "showBody", "close")
+                                                  }
+                                                  
+                                                  changeSourcesTableHint(0, "showBody", "toggle")
+                                                  
+                                                }}
+                                                closeClick={() => {
+                                                  changeSourcesTableHint(0, "showBody", "close")
+                                                }}
+                                              />
+                                            )}
                                       </TableCell>
                                     )
                                   )}
@@ -1785,7 +1870,7 @@ const Sources: React.FC = () => {
                       <Box
                         sx={{
                           maxHeight: "92px",
-                          overflowY: "auto",
+                          // overflowY: "auto",
                           backgroundColor: "rgba(255, 255, 255, 1)",
                         }}
                       >

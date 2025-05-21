@@ -1,3 +1,5 @@
+import uuid
+
 from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, Boolean, text, Index, Text
 from models.audience_smarts import AudienceSmart
 from models.enrichment.enrichment_users import EnrichmentUser
@@ -20,7 +22,7 @@ class AudienceSmartPerson(Base):
         primary_key=True,
         unique=True,
         nullable=False,
-        server_default=text('uuid_generate_v1()')
+        default=uuid.uuid1
     )
     smart_audience_id = Column(
         UUID(as_uuid=True),

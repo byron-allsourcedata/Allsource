@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, ForeignKey, BigInteger, text, Index
+from sqlalchemy import Column, event, Integer, ForeignKey, BigInteger, text, Index, Sequence
 from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
 
 from .base import Base, create_timestamps
@@ -13,9 +13,9 @@ class TeamInvitation(Base):
 
     id = Column(
         BigInteger,
+        Sequence('team_members_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('team_members_id_seq'::regclass)")
     )
     mail = Column(
         VARCHAR(64),

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, BOOLEAN, TEXT, event, Index, BigInteger, text, Boolean
+from sqlalchemy import Column, ForeignKey, Integer, BOOLEAN, TEXT, event, Index, BigInteger, text, Boolean, Sequence
 from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
 from .base import Base, create_timestamps, update_timestamps
 
@@ -13,9 +13,9 @@ class UserSubscriptions(Base):
 
     id = Column(
         BigInteger,
+        Sequence('user_subscriptions_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('user_subscriptions_id_seq'::regclass)")
     )
     updated_at = Column(
         TIMESTAMP(precision=7),

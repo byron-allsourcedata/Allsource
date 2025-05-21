@@ -1,4 +1,4 @@
-from sqlalchemy import Column, event, Integer, ForeignKey, Index, BigInteger, text, Text, Numeric, Boolean
+from sqlalchemy import Column, event, Integer, ForeignKey, Index, BigInteger, text, Text, Numeric, Boolean, Sequence
 from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, VARCHAR, JSONB
 
 from .base import Base, create_timestamps, update_timestamps
@@ -17,9 +17,9 @@ class SubscriptionPlan(Base):
 
     id = Column(
         BigInteger,
+        Sequence('subscription_plans_id_seq', metadata=Base.metadata),
         primary_key=True,
         nullable=False,
-        server_default=text("nextval('subscription_plans_id_seq'::regclass)")
     )
     title = Column(VARCHAR(64), nullable=True)
     description = Column(Text, nullable=True)

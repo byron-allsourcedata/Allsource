@@ -1,4 +1,8 @@
-import { mapGenericPercentage, extractSemiCirclePercent, mapPieChart } from "./mappingUtils";
+import {
+  mapGenericPercentage,
+  extractSemiCirclePercent,
+  mapPieChart,
+} from "./mappingUtils";
 import { Box } from "@mui/material";
 import { GradientBarChart } from "../GradientHorizontalBarChart";
 import { SemiCircularGradientChart } from "../SemiCircularGradientChart";
@@ -9,7 +13,6 @@ interface B2CVoterProps {
   data: VoterInfo;
   fieldRanks: FieldRankMap;
 }
-
 
 const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
   const congressionalData = mapGenericPercentage(data.congressional_district)
@@ -39,7 +42,7 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
       <Box
         sx={{
           padding: "1.5rem",
-          pr: '3rem',
+          pr: "3rem",
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -54,6 +57,7 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
               title="Congressional District"
               data={congressionalData}
               rank={fieldRanks["congressional_district"]}
+              gradientColor="249, 155, 171"
             />
           </Box>
 
@@ -68,7 +72,7 @@ const B2CVoter: React.FC<B2CVoterProps> = ({ data, fieldRanks }) => {
           <Box
             sx={{
               display: "flex",
-              width: '32%'
+              width: "32%",
             }}
           >
             <PieChartWithLegend
