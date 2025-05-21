@@ -23,7 +23,7 @@ interface HintCardProps {
     const [showHint, setShowHint] = useState(false);
 
     useEffect(() => { 
-      const timer = setTimeout(() => setShowHint(true), 0);
+      const timer = setTimeout(() => setShowHint(true), 2000);
       return () => clearTimeout(timer);
     }, []);
   
@@ -40,8 +40,8 @@ interface HintCardProps {
               p: 2,
               border: "1px solid #e0e0e0",
               borderRadius: 2,
-              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              bgcolor: "white",
+              boxShadow: "0 2px 4px #00000026",
+              bgcolor: "#fff",
             }}
           >
             <Box sx={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
@@ -60,7 +60,7 @@ interface HintCardProps {
                 href={card.linkToLoadMore}
                 underline="hover"
                 className="second-sub-title"
-                style={{color: "#3898FC" }}
+                style={{color: "rgba(56, 152, 252, 1)" }}
                 target="_blank"
                 rel="noopener noreferrer"
               >
