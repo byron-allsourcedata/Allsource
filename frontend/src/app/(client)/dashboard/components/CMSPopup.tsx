@@ -124,12 +124,7 @@ interface PopupProps {
   pixel_client_id: string;
 }
 
-const Popup: React.FC<PopupProps> = ({
-  open,
-  handleClose,
-  pixelCode,
-  pixel_client_id,
-}) => {
+const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
   const [selectedCMS, setSelectedCMS] = useState<string | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>("Install on CMS");
   const [shop_domain, setDomain] = useState<string>(() => {
@@ -283,10 +278,8 @@ const Popup: React.FC<PopupProps> = ({
 
       if (response.status === 200) {
         showToast("Successfully installed pixel");
-        handleClose();
       } else {
         showErrorToast("Failed to install pixel");
-        handleClose();
       }
     } catch (error) {
       showErrorToast("An error occurred while installing the pixel");
