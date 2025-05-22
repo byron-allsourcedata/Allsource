@@ -2577,7 +2577,7 @@ const AccountSetup = () => {
                           Install with WordPress
                         </Typography>
                       </Box>
-                      <Link href="https://wordpress.org/plugins/maximiz/"
+                      <Link href="https://wordpress.org/plugins/allsource"
                         target="_blank" className='first-sub-title' style={{ fontSize: "14px", color: "rgba(56, 152, 252, 1)" }}
                         sx={{ textDecoration: "underline", cursor: "pointer" }}>
                         Tutorial
@@ -2592,7 +2592,7 @@ const AccountSetup = () => {
                         <Typography className='first-sub-title' sx={{ ...maintext, p: 0, fontWeight: '500' }}>Add our offical Maximiz pixel plugin to your Wordpress site.</Typography>
                       </Box>
                       <Box />
-                      <Button component={Link} href="https://wordpress.org/plugins/maximiz/" target="_blank" variant="outlined" sx={{ backgroundColor: 'rgba(56, 152, 252, 1)', color: 'rgba(255, 255, 255, 1)', width: "110px", height: "40px", textTransform: 'none', padding: '1.2 3', border: '1px solid rgba(56, 152, 252, 1)', '&:hover': { backgroundColor: 'rgba(56, 152, 252, 1)' } }}>
+                      <Button component={Link} href="https://wordpress.org/plugins/allsource" target="_blank" variant="outlined" sx={{ backgroundColor: 'rgba(56, 152, 252, 1)', color: 'rgba(255, 255, 255, 1)', width: "110px", height: "40px", textTransform: 'none', padding: '1.2 3', border: '1px solid rgba(56, 152, 252, 1)', '&:hover': { backgroundColor: 'rgba(56, 152, 252, 1)' } }}>
                         <Typography className='second-sub-title' sx={{ fontSize: '14px !important', color: '#fff !important', textWrap: 'wrap' }}>Get plugin</Typography>
                       </Button>
                     </Box>

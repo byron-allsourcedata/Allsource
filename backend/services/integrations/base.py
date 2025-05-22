@@ -1,4 +1,6 @@
 import httpx
+import ssl
+import truststore
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
@@ -46,7 +48,7 @@ class IntegrationService:
                  suppression_persistence: IntegrationsSuppressionPersistence,
                  epi_persistence: ExternalAppsInstallationsPersistence):
         self.db = db
-        self.client = httpx.Client()
+        self.client = httpx.Client(verify=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT))
         self.integration_persistence = integration_persistence
         self.user_persistence = user_persistence
         self.lead_persistence = lead_persistence

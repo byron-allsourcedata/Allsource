@@ -5,7 +5,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "../../../context/UserContext";
 import { useHints } from "../../../context/HintsContext";
-import TrialStatus from "./TrialLabel";
+import FreeTrialLabel from "./FreeTrialLabel";
 import DomainButton from "./DomainsButton";
 import NavigationMenu from "@/app/(client)/components/NavigationMenu";
 import { SliderProvider } from "../../../context/SliderContext";
@@ -78,11 +78,11 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
     window.location.href = "/signin";
   };
 
-    useEffect(() => {
-      if (newNotification) {
-        setHasNewNotifications(true);
-      }
-    }, [newNotification]);
+  useEffect(() => {
+    if (newNotification) {
+      setHasNewNotifications(true);
+    }
+  }, [newNotification]);
 
 
   useEffect(() => {
@@ -116,7 +116,7 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
 
     router.push("/partners");
     router.refresh();
-    
+
   };
 
 
@@ -162,8 +162,8 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
     setHasNotification(false);
   }
   return (
-    <Box sx={{display: 'flex', width: '100%', flexDirection: 'column',  }}>
-      <Box sx={{ display: 'block',  }}>
+    <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column', }}>
+      <Box sx={{ display: 'block', }}>
         <Box sx={{ display: { md: 'none' } }}>
           <SliderProvider><NavigationMenu NewRequestNotification={hasNewNotifications || hasNewNotifications} /></SliderProvider>
         </Box>
@@ -192,32 +192,32 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
             )}
             <Box sx={{ display: 'flex', ml: 3 }}>
               {!pathname.includes('audience-dashboard') &&
-                (pathname.includes('dashboard') || 
-                pathname.includes('leads') || 
-                pathname.includes('company') || 
-                pathname.includes('suppressions')) && <DomainButton />}
+                (pathname.includes('dashboard') ||
+                  pathname.includes('leads') ||
+                  pathname.includes('company') ||
+                  pathname.includes('suppressions')) && <DomainButton />}
             </Box>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            <TrialStatus />
+            <FreeTrialLabel />
 
-            <Box sx={{marginRight: '1.5rem', display: "flex", alignItems: "center"}}>
-            <Typography className="fiveth-sub-title" style={{color: "rgba(50, 54, 62, 1)"}}>Hints</Typography>
-            <Switch checked={showHints} onChange={toggleHints} sx={{
-              '& .MuiSwitch-switchBase': {
+          <Box sx={{ display: "flex", alignItems: "center" }}>
+            <Box sx={{ marginRight: '1.5rem', display: "flex", alignItems: "center" }}>
+              <Typography className="fiveth-sub-title" style={{ color: "rgba(50, 54, 62, 1)" }}>Hints</Typography>
+              <Switch checked={showHints} onChange={toggleHints} sx={{
+                '& .MuiSwitch-switchBase': {
                   '&+.MuiSwitch-track': {
                     backgroundColor: "rgba(163, 176, 194, 1)",
                     opacity: 1
                   },
                   '&.Mui-checked': {
-                      color: '#fff',
-                      '&+.MuiSwitch-track': {
-                          backgroundColor: "rgba(56, 152, 252, 1)",
-                          opacity: 1
-                      }
+                    color: '#fff',
+                    '&+.MuiSwitch-track': {
+                      backgroundColor: "rgba(56, 152, 252, 1)",
+                      opacity: 1
+                    }
                   },
-              },
-            }} />
+                },
+              }} />
             </Box>
 
             <Button
@@ -371,13 +371,13 @@ const Header: React.FC<HeaderProps> = ({ NewRequestNotification, NotificationDat
       </Box>
       <NotificationPopup open={notificationIconPopupOpen} onClose={handleNotificationIconPopupClose} anchorEl={anchorElNotificate} />
       {NotificationData && (
-          <CustomNotification
-            id={NotificationData.id}
-            message={NotificationData.text}
-            showDismiss={true}
-            onDismiss={onDismissNotification}
-          />
-        )}
+        <CustomNotification
+          id={NotificationData.id}
+          message={NotificationData.text}
+          showDismiss={true}
+          onDismiss={onDismissNotification}
+        />
+      )}
     </Box>
   );
 };

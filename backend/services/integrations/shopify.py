@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 import binascii
 import httpx
@@ -28,6 +29,9 @@ from datetime import datetime, timedelta, timezone
 from services.aws import AWSService
 from sqlalchemy.orm import Session
 
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class ShopifyIntegrationService:
 
@@ -169,20 +173,28 @@ class ShopifyIntegrationService:
 
 
     def __handle_request(self, method: str, url: str, headers: dict = None, json: dict = None, data: dict = None, params: dict = None):
-        if self.client.is_closed:
-            self.client = httpx.Client()
+        try:
+            if self.client.is_closed:
+                self.client = httpx.Client()
 
-        response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
+            response = self.client.request(method, url, headers=headers, json=json, data=data, params=params)
 
-        if response.is_redirect:
-            redirect_url = response.headers.get('Location')
-            if redirect_url:
-                response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
+            if response.is_redirect:
+                redirect_url = response.headers.get('Location')
+                if redirect_url:
+                    response = self.client.request(method, redirect_url, headers=headers, json=json, data=data, params=params)
 
-        if response.status_code not in {200, 201}:
-            raise HTTPException(status_code=response.status_code, detail={'status': 'error'})
-        
-        return response
+            if response.status_code not in {200, 201}:
+                logger.error(f"Connection error: {response.text}")
+                return None
+            
+            return response
+        except httpx.ConnectError as e:
+            logger.error(f"Connection error: {e}")
+            return None
+        except httpx.RequestError as e:
+            logger.error(f"Request error: {e}")
+            return None
 
 
     def __get_orders(self, credential):
@@ -237,7 +249,7 @@ class ShopifyIntegrationService:
         with shopify.Session.temp(domain.domain, ShopifyConfig.api_version, access_token):
             shopify.GraphQL().execute(query)
 
-    def __set_pixel(self, user_id, domain, credentials):
+    def __set_pixel(self, user_id: int, domain: int, credentials: IntegrationCredentials):
         client_id = domain.data_provider_id
         if client_id is None:
             client_id = hashlib.sha256((str(domain.id) + os.getenv('SECRET_SALT')).encode()).hexdigest()
@@ -259,9 +271,7 @@ class ShopifyIntegrationService:
             "Content-Type": "application/json"
         }
         scrips_list = self.__handle_request("GET", url, headers=headers)
-        if scrips_list.status_code == 401:
-            credentials.shopify.error_message = 'Invalid Access Token'
-            self.integration_persistence.db.commit()
+        if not scrips_list or scrips_list.status_code == 401:
             raise HTTPException(status_code=403, detail={'status': IntegrationsStatus.CREDENTAILS_INVALID.value})
         for script in scrips_list.json().get('script_tags'):
             if 'shopify-pixel-code' in script.get('src'):

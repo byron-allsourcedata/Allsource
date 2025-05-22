@@ -46,11 +46,11 @@ class UsersService:
         result = self.subscription_service.get_user_subscription_with_trial_status(
             self.user.get('id'))
         if result['subscription']:
-
             return {
                 "is_artificial_status": result['is_artificial_status'],
                 "is_trial": result['subscription'].is_trial,
                 "plan_end": result['subscription'].plan_end,
+                "lead_credits": result['subscription'].lead_credits
             }
         return {
             "is_trial_pending": True
@@ -64,14 +64,16 @@ class UsersService:
                 "full_name": team_member.get('full_name'),
                 "is_partner": team_member.get('is_partner'),
                 "business_type": team_member.get('business_type'),
-                "source": team_member.get('source_platform')
+                "source": team_member.get('source_platform'),
+                "leads_credits": self.user.get('leads_credits')
             }
         return {
             "email": self.user.get('email'),
             "full_name": self.user.get('full_name'),
             "is_partner": self.user.get('is_partner'),
             "business_type": self.user.get('business_type'),
-            "source_platform": self.user.get('source_platform')
+            "source_platform": self.user.get('source_platform'),
+            "leads_credits": self.user.get('leads_credits')
         }
 
     def add_percent_to_domain(self, domain: UserDomains, activate_percent, is_current_subscription_id):

@@ -2,7 +2,7 @@
 import React, { ReactNode, useEffect, useState } from "react";
 import { Box, Grid } from "@mui/material";
 import Sidebar from "./components/Sidebar";
-import TrialStatus from "./components/TrialLabel";
+import FreeTrialLabel from "./components/FreeTrialLabel";
 import { usePathname } from 'next/navigation';
 import { useSlider, SliderProvider } from '@/context/SliderContext';
 import Header from "./components/Header";
@@ -105,7 +105,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             <Grid item xs={12} sx={{
               padding: "0px", display: { xs: 'block', md: 'none' },
             }}>
-              <TrialStatus />
+              <FreeTrialLabel />
             </Grid>
             {isLoading && <CustomizedProgressBar />}
             <Grid item xs={12} md="auto" lg="auto" sx={{
