@@ -33,8 +33,8 @@ import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import Papa, { ParseResult } from "papaparse";
 import ProgressBar from "@/components/ProgressBar";
-import { useHints } from "@/context/HintsContext";
 import HintCard from "../../components/HintCard";
+import { useSourcesHints } from "../context/SourcesHintsContext";
 
 interface Row {
   id: number;
@@ -93,7 +93,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 const SourcesImport: React.FC = () => {
-  const { changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useHints();
+  const { changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useSourcesHints();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
