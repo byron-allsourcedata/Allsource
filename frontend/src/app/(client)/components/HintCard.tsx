@@ -23,7 +23,7 @@ interface HintCardProps {
     const [showHint, setShowHint] = useState(false);
 
     useEffect(() => { 
-      const timer = setTimeout(() => setShowHint(true), 0);
+      const timer = setTimeout(() => setShowHint(true), 2000);
       return () => clearTimeout(timer);
     }, []);
   
