@@ -24,18 +24,9 @@ interface StateHint {
 
 
 const SmartAudiencesBuilder: React.FC = () => {
-    const { showHints, smartsBuilderHints, changeSmartsBuilderHint } = useHints();
+    const { resetSmartsTableHints, smartsBuilderHints, changeSmartsBuilderHint } = useHints();
     const [useCaseType, setUseCaseType] = useState<string>("");
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
-
-    // const [isOpenSelect, setIsOpenSelect] = useState<StateHint[]>([
-    //     { show: true, id: 0 },
-    //     { show: false, id: 1 },
-    //     { show: false, id: 2 },
-    //     { show: false, id: 3 },
-    //     { show: false, id: 4 },
-    //     { show: false, id: 5 },
-    // ]);
 
     const block1Ref = useRef<HTMLDivElement | null>(null);
     const block2Ref = useRef<HTMLDivElement | null>(null);
@@ -66,18 +57,9 @@ const SmartAudiencesBuilder: React.FC = () => {
         closeDotHintClick(0)
     };
 
-    // useEffect(() => {
-    //     if (showHints && !isOpenSelect) {
-    //       setIsOpenSelect([
-    //         { show: true, id: 0 },
-    //         { show: false, id: 1 },
-    //         { show: false, id: 2 },
-    //         { show: false, id: 3 },
-    //         { show: false, id: 4 },
-    //         { show: false, id: 5 },
-    //       ]);
-    //     }
-    //   }, [showHints]);
+    useEffect(() => {
+
+      }, []);
 
     const toggleDotHintClick = (id: number) => {
         changeSmartsBuilderHint(id, "show", "toggle")
@@ -192,7 +174,7 @@ const SmartAudiencesBuilder: React.FC = () => {
                                     <MenuItem className="second-sub-title" value={"Postal"}>Postal</MenuItem>
                                     <MenuItem className="second-sub-title" value={"LinkedIn"}>LinkedIn</MenuItem>
                                 </Select>
-                                {showHints && smartsBuilderHints[0].show &&  (
+                                {smartsBuilderHints[0].show &&  (
                                     <HintCard
                                         card={hintCards[0]}
                                         positionLeft={340}

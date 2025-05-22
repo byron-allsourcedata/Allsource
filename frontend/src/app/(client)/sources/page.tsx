@@ -57,7 +57,7 @@ import TableCustomCell from "./components/table/TableCustomCell";
 import FirstTimeScreen from "./components/FirstTimeScreen"
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import HintCard from "../components/HintCard";
-import { useHints } from "@/context/HintsContext";
+import { useSourcesHints } from "./context/SourcesHintsContext";
 
 interface HintCardInterface {
   description: string;
@@ -148,7 +148,7 @@ const Sources: React.FC = () => {
   const isDebug = searchParams.get("is_debug") === "true";
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
-  const { changeSourcesTableHint, sourcesTableHints, resetSourcesTableHints } = useHints();
+  const { changeSourcesTableHint, sourcesTableHints, resetSourcesTableHints } = useSourcesHints();
 
   const hintCards: HintCardInterface[] = [
     {
