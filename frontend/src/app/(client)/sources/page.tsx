@@ -945,7 +945,7 @@ const Sources: React.FC = () => {
                 display: "flex",
                 flexDirection: "column",
                 pr: 2,
-                // overflow: "auto",
+                overflow: "auto",
                 maxWidth: "100%",
                 "@media (max-width: 900px)": {
                   pt: "2px",
@@ -957,7 +957,7 @@ const Sources: React.FC = () => {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  // overflow: "hidden",
+                  // overflow: "auto",
                   height: "100%",
                   "@media (max-width: 900px)": {
                     paddingRight: 0,
@@ -970,7 +970,7 @@ const Sources: React.FC = () => {
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    // overflow: "hidden",
+                    // overflow: "auto",
                   }}
                 >
                   <Box
