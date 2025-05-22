@@ -20,7 +20,7 @@ import {
 import React, { useState, useEffect, Suspense } from "react";
 import CustomTooltip from "@/components/customToolTip";
 import Image from "next/image";
-import CustomToolTip from '@/components/customToolTip';
+import CustomToolTip from "@/components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
@@ -34,7 +34,11 @@ import CircularProgress from "@mui/material/CircularProgress";
 import FirstTimeScreen from "./FirstTimeScreen";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
-import { CardsSection, FirstTimeScreenCommon } from "@/components/first-time-screens";
+import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
+import {
+  CardsSection,
+  FirstTimeScreenCommon,
+} from "@/components/first-time-screens";
 
 type TableData = {
   id: string;
@@ -95,6 +99,12 @@ const Insights = () => {
       isClickable: true,
     },
   ];
+
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  const handleOpenPopup = () => {
+    setPopupOpen(true);
+  };
 
   const toNormalText = (sourceType: string) =>
     sourceType
@@ -224,7 +234,11 @@ const Insights = () => {
                 }}
               >
                 <Typography className="first-sub-title">Insights</Typography>
-                <CustomToolTip title={'Insights.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/insights' />
+                <CustomToolTip
+                  title={"Insights."}
+                  linkText="Learn more"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/insights"
+                />
               </Box>
             </Box>
             <Box
@@ -376,9 +390,13 @@ const Insights = () => {
                                     key={index}
                                     hover={!isRowDisabled}
                                     sx={{
-                                      cursor: isRowDisabled ? "not-allowed" : "pointer",
+                                      cursor: isRowDisabled
+                                        ? "not-allowed"
+                                        : "pointer",
                                       opacity: isRowDisabled ? 0.5 : 1,
-                                      pointerEvents: isRowDisabled ? "none" : "auto",
+                                      pointerEvents: isRowDisabled
+                                        ? "none"
+                                        : "auto",
                                       display: "flex",
                                       justifyContent: "space-between",
                                       width: "100%",
@@ -386,7 +404,9 @@ const Insights = () => {
                                       margin: 0,
                                       flexWrap: "wrap",
                                     }}
-                                    onClick={() => !isRowDisabled && handleSelectRow(row)}
+                                    onClick={() =>
+                                      !isRowDisabled && handleSelectRow(row)
+                                    }
                                   >
                                     {/* NAME & TYPE */}
                                     <TableCell
@@ -490,7 +510,7 @@ const Insights = () => {
                                       </Box>
                                     </TableCell>
                                   </TableRow>
-                                )
+                                );
                               })}
                             </TableBody>
                           </Table>
@@ -503,62 +523,83 @@ const Insights = () => {
             </Box>
           </Box>
         ) : (
-          <Box>
+          <>
             <FirstTimeScreenCommon
-                  Header={{
-                    TextTitle: 'Insights',
-                    TextSubtitle: "Uncover key statistics, trends, and actionable data—it will help you refine your targeting and maximize results",
-                    link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync',
-                  }}
-                  InfoNotification={{
-                    Text: 'This page reveals powerful audience intelligence from your pixel data - discover top demographics, interests, behaviors, and purchase patterns to refine your targeting.',
-                  }}
-                  WarningNotification={{
-                    condition: sourceData.length === 0 && lookalikeData.length === 0,
-                    ctaUrl: '/sources',
-                    ctaLabel: 'Import Source',
-                    message: 'You need to have at least one source or lookalike to unlock this option '
-                  }}
-                  Content={<CardsSection items={[
+              Header={{
+                TextTitle: "Insights",
+                TextSubtitle:
+                  "Uncover key statistics, trends, and actionable data—it will help you refine your targeting and maximize results",
+                link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/insights",
+              }}
+              InfoNotification={{
+                Text: "This page reveals powerful audience intelligence from your pixel data - discover top demographics, interests, behaviors, and purchase patterns to refine your targeting.",
+              }}
+              WarningNotification={{
+                condition:
+                  sourceData.length === 0 && lookalikeData.length === 0,
+                ctaUrl: "/sources",
+                ctaLabel: "Import Source",
+                message:
+                  "You need to have at least one source or lookalike to unlock this option",
+              }}
+              Content={
+                <CardsSection
+                  items={[
                     {
-                      title: 'Sources Insights',
-                      subtitle: 'It will automatically collect visitor information from your website.',
-                      imageSrc: '/source.svg',
-                      onClick: () => router.push('/dashboard'),
-                      showRecommended: true,
-                    },
-                    {
-                      title: 'Lookalikes Insights',
-                      subtitle: 'Otherwise, you can upload a CSV file containing your existing customer data.',
-                      imageSrc: '/lookalike.svg',
-                      onClick: () => router.push('/sources'),
+                      title: "Sources Insights",
+                      subtitle:
+                        "Analyze your audience sources to identify high-performing segments and optimize targeting strategies",
+                      imageSrc: "/source.svg",
+                      onClick: handleOpenPopup,
                       showRecommended: false,
                     },
-                  ]} />}
-                  HelpCard={{
-                    headline: 'Stuck with Your Dashboard?',
-                    description: 'Book a free 30-minute call and get personalized help with platform navigation, analytics, or any dashboard issues.',
-                    helpPoints: [
-                      { title: 'Dashboard Walkthrough', description: 'Learn key features and shortcuts' },
-                      { title: 'Data Analysis Help', description: 'Understand your metrics and reports' },
-                      { title: 'Troubleshooting', description: 'Fix technical issues with an expert' },
-                    ],
-                  }}
-                  customStyleSX={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: "70%",
-                    margin: "0 auto",
-                    mt: 2
-                  }}
+                    {
+                      title: "Lookalikes Insights",
+                      subtitle:
+                        "View the aggregated profile of your generated lookalike audience, showing different insights characteristics",
+                      imageSrc: "/lookalike.svg",
+                      onClick: handleOpenPopup,
+                      showRecommended: false,
+                    },
+                  ]}
                 />
-                {/* {popupOpen && (
-                        <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} />
-                      )} */}
-            <FirstTimeScreen />
-          </Box>
+              }
+              HelpCard={{
+                headline: "Feeling Overwhelmed by Analytics?",
+                description:
+                  "Get a free 30-minute session to analyze your audience data and improve targeting.",
+                helpPoints: [
+                  {
+                    title: "Audience Profile Review",
+                    description: "Understand demographics & interests",
+                  },
+                  {
+                    title: "Behavior Analysis",
+                    description: "Interpret engagement patterns",
+                  },
+                  {
+                    title: "Targeting Recommendations",
+                    description: "Optimize based on your data",
+                  },
+                ],
+              }}
+              customStyleSX={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "70%",
+                margin: "0 auto",
+                mt: 2,
+              }}
+            />
+            {popupOpen && (
+              <WelcomePopup
+                open={popupOpen}
+                onClose={() => setPopupOpen(false)}
+              />
+            )}
+          </>
         )}
       </Box>
     </Box>

@@ -31,10 +31,14 @@ import FirstTimeScreen from "./FirstTimeScreen";
 import { CardData } from "@/types/first_time_screens";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
-import WelcomePopup from "@/components/CreatePixelSourcePopup";
+import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 import { getInteractiveSx } from "@/components/utils";
 import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
-import { CardsSection, FirstTimeScreenCommon, StepperTimeline } from "@/components/first-time-screens";
+import {
+  CardsSection,
+  FirstTimeScreenCommon,
+  StepperTimeline,
+} from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import BuilderIntro from "@/components/first-time-screens/BuilderIntro";
 
@@ -189,7 +193,7 @@ const CreateLookalikePage: React.FC = () => {
       setFormattedDates("");
     }
   };
-  const handleDateLabelChange = (label: string) => { };
+  const handleDateLabelChange = (label: string) => {};
 
   const handleApply = (dates: { start: Date | null; end: Date | null }) => {
     if (dates.start && dates.end) {
@@ -251,22 +255,22 @@ const CreateLookalikePage: React.FC = () => {
       label: string;
       value: string | ((f: any) => string);
     }[] = [
-        {
-          condition: filters.type && Object.values(filters.type).some(Boolean),
-          label: "Type",
-          value: () => getSelectedValues(filters.type!),
-        },
-        {
-          condition: filters.size?.length,
-          label: "Size",
-          value: () => filters.size!.join(", "),
-        },
-        {
-          condition: filters.searchQuery?.trim() !== "",
-          label: "Search",
-          value: filters.searchQuery || "",
-        },
-      ];
+      {
+        condition: filters.type && Object.values(filters.type).some(Boolean),
+        label: "Type",
+        value: () => getSelectedValues(filters.type!),
+      },
+      {
+        condition: filters.size?.length,
+        label: "Size",
+        value: () => filters.size!.join(", "),
+      },
+      {
+        condition: filters.searchQuery?.trim() !== "",
+        label: "Search",
+        value: filters.searchQuery || "",
+      },
+    ];
 
     // Iterate over the mappings to populate newSelectedFilters
     filterMappings.forEach(({ condition, label, value }) => {
@@ -295,16 +299,17 @@ const CreateLookalikePage: React.FC = () => {
       const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
       const startEpoch = appliedDates.start
         ? Math.floor(
-          new Date(appliedDates.start.toISOString()).getTime() / 1000
-        )
+            new Date(appliedDates.start.toISOString()).getTime() / 1000
+          )
         : null;
 
       const endEpoch = appliedDates.end
         ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
         : null;
 
-      let url = `/audience-lookalikes?page=${page + 1
-        }&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
+      let url = `/audience-lookalikes?page=${
+        page + 1
+      }&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
       if (startEpoch !== null && endEpoch !== null) {
         url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
       }
@@ -452,8 +457,8 @@ const CreateLookalikePage: React.FC = () => {
     const newFilters: FilterParams = {
       from_date: updatedFilters.find((f) => f.label === "From Date")
         ? dayjs(
-          updatedFilters.find((f) => f.label === "From Date")!.value
-        ).unix()
+            updatedFilters.find((f) => f.label === "From Date")!.value
+          ).unix()
         : null,
       to_date: updatedFilters.find((f) => f.label === "To Date")
         ? dayjs(updatedFilters.find((f) => f.label === "To Date")!.value).unix()
@@ -490,13 +495,13 @@ const CreateLookalikePage: React.FC = () => {
           end: appliedDates.end,
         },
       });
-    } catch (error) { }
+    } catch (error) {}
   };
 
   const [popupOpen, setPopupOpen] = useState(false);
 
   const handleOpenPopup = () => {
-    console.log(popupOpen && sourceCount === 0)
+    console.log(popupOpen && sourceCount === 0);
     setPopupOpen(true);
   };
 
@@ -732,8 +737,9 @@ const CreateLookalikePage: React.FC = () => {
               <Chip
                 className="paragraph"
                 key={filter.label}
-                label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
-                  }`}
+                label={`${filter.label}: ${
+                  displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
+                }`}
                 onDelete={() => handleDeleteFilter(filter)}
                 deleteIcon={
                   <CloseIcon
@@ -833,55 +839,71 @@ const CreateLookalikePage: React.FC = () => {
             <>
               <FirstTimeScreenCommon
                 Header={{
-                  TextTitle: 'Create Your First Lookalike',
-                  TextSubtitle: "This tool helps you expand your reach by finding new users who closely resemble your existing high-value audiences",
-                  link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes',
+                  TextTitle: "Create Your First Lookalike",
+                  TextSubtitle:
+                    "This tool helps you expand your reach by finding new users who closely resemble your existing high-value audiences",
+                  link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes",
                 }}
                 InfoNotification={{
-                  Text: 'This page shows all your lookalike audiences with performance analytics for each. Compare effectiveness, expansion potential, and conversion rates to optimize your targeting strategy.',
+                  Text: "This page shows all your lookalike audiences with performance analytics for each. Compare effectiveness, expansion potential, and conversion rates to optimize your targeting strategy.",
                 }}
                 WarningNotification={{
                   condition: sourceCount === 0 && showNotification,
-                  ctaUrl: '/sources',
-                  ctaLabel: 'Create Source',
-                  message: 'You need to import at least one source to create a lookalike'
+                  ctaUrl: "/sources",
+                  ctaLabel: "Import Source",
+                  message:
+                    "You need to import at least one source to create a lookalike",
                 }}
                 Content={
-                <>
-                <BuilderIntro
-                  steps={[
-                    {
-                      title: 'Select Source',
-                      subtitle: 'Choose a source that represents your ideal customer profile.',
-                    },
-                    {
-                      title: 'Choose Lookalike Size',
-                      subtitle: 'Specify how closely your lookalike should match the source.',
-                    },
-                    {
-                      title: 'Select Fields',
-                      subtitle: 'Choose which user attributes should carry the most weight.',
-                    },
-                    {
-                      title: 'Order Fields',
-                      subtitle: 'Arrange fields in order of importance to fine-tune audience.',
-                    },
-                  ]}
-                  tableSrc="/lookalike-screen.svg"
-                  headerTitle="Grow Your Audience with AI-Powered Lookalikes"
-                  caption="Go beyond conversions – build lookalikes from both your best customers AND failed leads. These audience models become your powerful building blocks – later combine them in Smart Audiences to create perfectly tuned targeting groups by mixing and excluding different segments."
-                  onBegin={handleOpenPopup}
-                  beginDisabled={sourceCount === 0}
-                />
-                </>
+                  <>
+                    <BuilderIntro
+                      steps={[
+                        {
+                          title: "Select Source",
+                          subtitle:
+                            "Choose a source that represents your ideal customer profile.",
+                        },
+                        {
+                          title: "Choose Lookalike Size",
+                          subtitle:
+                            "Specify how closely your lookalike should match the source.",
+                        },
+                        {
+                          title: "Select Fields",
+                          subtitle:
+                            "Choose which user attributes should carry the most weight.",
+                        },
+                        {
+                          title: "Order Fields",
+                          subtitle:
+                            "Arrange fields in order of importance to fine-tune audience.",
+                        },
+                      ]}
+                      tableSrc="/lookalike-screen.svg"
+                      headerTitle="Grow Your Audience with AI-Powered Lookalikes"
+                      caption="Go beyond conversions – build lookalikes from both your best customers AND failed leads. These audience models become your powerful building blocks – later combine them in Smart Audiences to create perfectly tuned targeting groups by mixing and excluding different segments."
+                      onBegin={handleOpenPopup}
+                      beginDisabled={sourceCount === 0}
+                    />
+                  </>
                 }
                 HelpCard={{
-                  headline: 'Need Help with Your Lookalike Audiences?',
-                  description: 'Let our experts help you refine, troubleshoot or scale your lookalike audiences in a free 30-minute call.',
+                  headline: "Need Help with Your Lookalike Audiences?",
+                  description:
+                    "Let our experts help you refine, troubleshoot or scale your lookalike audiences in a free 30-minute call.",
                   helpPoints: [
-                    { title: 'Lookalike Setup Review', description: 'Perfect your audience creation' },
-                    { title: 'Performance Optimization', description: ' Improve your lookalike results' },
-                    { title: 'Advanced Scaling Strategies ', description: 'Grow your best audiences' },
+                    {
+                      title: "Lookalike Setup Review",
+                      description: "Perfect your audience creation",
+                    },
+                    {
+                      title: "Performance Optimization",
+                      description: " Improve your lookalike results",
+                    },
+                    {
+                      title: "Advanced Scaling Strategies ",
+                      description: "Grow your best audiences",
+                    },
                   ],
                 }}
                 customStyleSX={{
@@ -891,16 +913,16 @@ const CreateLookalikePage: React.FC = () => {
                   alignItems: "center",
                   width: "70%",
                   margin: "0 auto",
-                  mt: 2
+                  mt: 2,
                 }}
               />
-                {popupOpen && sourceCount === 0 && (
-                  <WelcomePopup
-                    open={popupOpen}
-                    onClose={() => setPopupOpen(false)}
-                    variant={isPixelInstalledAnywhere ? "alternate" : "welcome"}
-                  />
-                )}
+              {popupOpen && sourceCount === 0 && (
+                <WelcomePopup
+                  open={popupOpen}
+                  onClose={() => setPopupOpen(false)}
+                  variant={isPixelInstalledAnywhere ? "alternate" : "welcome"}
+                />
+              )}
             </>
           )}
         </Box>

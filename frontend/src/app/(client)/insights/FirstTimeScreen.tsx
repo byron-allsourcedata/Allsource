@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import FirstTimeCards from "../components/FirstTimeCards";
 import { Box, Typography, Link as MuiLink, Grid } from "@mui/material";
-import WelcomePopup from "@/components/CreatePixelSourcePopup";
+import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 import { ExternalLink } from "@/components/ExternalLink";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { DashboardHelpCard } from "@/components/first-time-screens";

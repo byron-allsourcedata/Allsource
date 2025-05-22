@@ -1,30 +1,35 @@
 import React, { FC, useState } from "react";
-import {
-  Box,
-  Typography,
-  Link as MuiLink,
-  Button,
-} from "@mui/material";
+import { Box, Typography, Link as MuiLink, Button } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Image from "next/image";
 import { ExternalLink } from "@/components/ExternalLink";
-import WelcomePopup from "@/components/CreatePixelSourcePopup";
+import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 import { getInteractiveSx } from "@/components/utils";
 
 interface DataSyncFirstTimeScreenProps {
   onBegin?: () => void;
-  hasDataSync?: Boolean
+  hasDataSync?: Boolean;
 }
 
-
-const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasDataSync }) => {
+const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({
+  onBegin,
+  hasDataSync,
+}) => {
   const [popupOpen, setPopupOpen] = useState(false);
 
   const handleOpenPopup = () => {
     setPopupOpen(true);
   };
   return (
-    <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
+    <Box
+      sx={{
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 2,
+        mt: 2,
+      }}
+    >
       <Box sx={{ display: "flex", alignItems: "center", gap: 5 }}>
         <Typography
           variant="h5"
@@ -43,7 +48,13 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasDataSync
           href="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync"
           underline="hover"
           target="_blank"
-          sx={{ display: "flex", alignItems: "center", gap: 0.5, fontWeight: 300, color: "#3898FC" }}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 0.5,
+            fontWeight: 300,
+            color: "#3898FC",
+          }}
         >
           Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
         </MuiLink>
@@ -62,13 +73,15 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasDataSync
           flexDirection: "column",
           gap: 3,
           borderRadius: 1,
-          overflow: 'hidden',
+          overflow: "hidden",
           border: "1px solid rgba(237, 237, 237, 1)",
           ...getInteractiveSx(!hasDataSync),
-        }
-        }
+        }}
       >
-        <Typography variant="subtitle2" sx={{ color: "#151619", fontWeight: 400 }}>
+        <Typography
+          variant="subtitle2"
+          sx={{ color: "#151619", fontWeight: 400 }}
+        >
           Sync Audience to Any Platform
         </Typography>
 
@@ -91,15 +104,18 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasDataSync
         </Box>
 
         <Typography variant="body2" sx={{ color: "#7E7E7E" }}>
-          Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click.
+          Send your audience segments to connected platforms like Meta Ads,
+          Google Ads, and Mailchimp with one click.
         </Typography>
 
-        <Box sx={{
-          display: "flex",
-          width: "100%",
-          justifyContent: "end",
-          pr: 2
-        }}>
+        <Box
+          sx={{
+            display: "flex",
+            width: "100%",
+            justifyContent: "end",
+            pr: 2,
+          }}
+        >
           <Button
             variant="contained"
             className="second-sub-title"
@@ -123,7 +139,11 @@ const FirstTimeScree: FC<DataSyncFirstTimeScreenProps> = ({ onBegin, hasDataSync
         </Box>
       </Box>
       {popupOpen && !hasDataSync && (
-        <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} variant="integration"/>
+        <WelcomePopup
+          open={popupOpen}
+          onClose={() => setPopupOpen(false)}
+          variant="integration"
+        />
       )}
     </Box>
   );

@@ -4,4 +4,7 @@ export { default as CardsSection } from "./CardsSection";
 export { default as FeatureCard } from "./FeatureCard";
 export { default as FirstTimeScreenCommon } from "./FirstTimeScreenCommon";
 export { default as StepperTimeline } from "./StepperTimeline";
-export { DashboardHelpCard } from "./HelpCard"; 
+export { default as BuilderIntro } from "./BuilderIntro";
+export { default as AudienceSynergyPreview } from "./AudienceSynergyPreview";
+export { default as WelcomePopup } from "./CreatePixelSourcePopup";
+export { DashboardHelpCard } from "./HelpCard";

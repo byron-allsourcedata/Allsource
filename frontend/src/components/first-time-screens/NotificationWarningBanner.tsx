@@ -1,7 +1,6 @@
-"use client";
 import React, { useState } from "react";
 import { Box, Typography, Button } from "@mui/material";
-import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import { ReportProblemOutlinedIcon } from "@/icon";
 import { useRouter } from "next/navigation";
 
 interface NotificationBannerProps {
@@ -34,12 +33,21 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
     >
       {/* left part */}
       <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1 }}>
-        <ReportProblemOutlinedIcon sx={{ fontSize: 20, color: "rgba(230,90,89,1)" }} />
+        <ReportProblemOutlinedIcon
+          sx={{ fontSize: 20, color: "rgba(230,90,89,1)" }}
+        />
         <Typography className="second-sub-title">{message}</Typography>
       </Box>
 
       {/* right part */}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2, justifyContent: "flex-end" }}>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 2,
+          justifyContent: "flex-end",
+        }}
+      >
         <Button
           onClick={() => setOpen(false)}
           sx={{

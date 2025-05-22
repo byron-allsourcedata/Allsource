@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button, Card, Typography, Box, Avatar, Stack } from "@mui/material";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { CheckCircleIcon } from "@/icon";
 import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../ToastNotification";
@@ -111,7 +111,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
         display: "flex",
         alignItems: "center",
         padding: 4,
-        width: '100%',
+        width: "100%",
         borderRadius: "4px",
         backgroundImage: 'url("/card_background.svg")',
         backgroundSize: "cover",
@@ -123,7 +123,12 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
         <Avatar
           alt="Katie Jones"
           src="/katie_jones.svg"
-          sx={{ width: 120, height: 120, mx: "auto", backgroundColor: "rgba(118, 166, 245, 1)" }}
+          sx={{
+            width: 120,
+            height: 120,
+            mx: "auto",
+            backgroundColor: "rgba(118, 166, 245, 1)",
+          }}
         />
         <Typography
           sx={{

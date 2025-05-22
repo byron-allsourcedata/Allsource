@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
-import WelcomePopup from "@/components/CreatePixelSourcePopup";
+import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 import { getInteractiveSx } from "@/components/utils";
 import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 
@@ -110,7 +110,7 @@ const FirstTimeScreen = ({
       <Box
         onClick={handleOpenPopup}
         sx={{
-          position: 'relative',
+          position: "relative",
           zIndex: 0,
           width: "100%",
           mt: 3,
@@ -132,16 +132,16 @@ const FirstTimeScreen = ({
             },
           }),
           "& > *": {
-      position: "relative",
-      zIndex: 2,
-    },
+            position: "relative",
+            zIndex: 2,
+          },
         }}
       >
         <Box
           sx={{
             textAlign: "left",
-            position: "relative", 
-            zIndex: 0
+            position: "relative",
+            zIndex: 0,
           }}
         >
           <FirstTimeCards cardData={cardData} />

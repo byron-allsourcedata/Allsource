@@ -11,6 +11,7 @@ import { AxiosError } from "axios";
 import DataSyncList from "./components/DataSyncList";
 import { useRouter } from "next/navigation";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 
 const centerContainerStyles = {
   display: "flex",
@@ -36,6 +37,8 @@ import { useNotification } from "@/context/NotificationContext";
 import FirstTimeScree from "./components/FirstTimeScree";
 import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
 import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
+import { FirstTimeScreenCommon } from "@/components/first-time-screens";
+import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 
 interface DataSyncProps {
   service_name?: string;
@@ -72,6 +75,12 @@ const DataSync = () => {
     router.push("/dashboard");
   };
 
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  const handleOpenPopup = () => {
+    setPopupOpen(true);
+  };
+
   const [hasIntegrations, setHasIntegrations] = useState<boolean>(false);
   const [hasDataSync, setHasDataSync] = useState<boolean>(false);
 
@@ -87,7 +96,7 @@ const DataSync = () => {
           }
         );
         setHasIntegrations(response.data.hasIntegration);
-        console.log(response.data.hasIntegration)
+        console.log(response.data.hasIntegration);
         setHasDataSync(response.data.hasAnySync);
       } catch (err) {
         console.error("Error checking integrations:", err);
@@ -268,42 +277,69 @@ const DataSync = () => {
               </Box>
             ) : !isLoading && filters && !hasDataSync ? (
               <>
-                <Box sx={{ width: "98%", mt: 2 }}>
-                  {!hasIntegrations && (
-                    <NotificationBanner
-                      ctaUrl="/integrations"
-                      ctaLabel="Add Integration"
-                      message="You need to create at least one integration before you can sync your audience"
-                    />
-                  )}
-
-                  <FirstTimeScree
-                    onBegin={() => {
-                      router.push("/smart-audiences");
-                    }}
-                    hasDataSync={hasDataSync}
+                <FirstTimeScreenCommon
+                  Header={{
+                    TextTitle: "Data Sync",
+                    TextSubtitle: "Customise your sync settings",
+                    link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync",
+                  }}
+                  WarningNotification={{
+                    condition: !hasIntegrations,
+                    ctaUrl: "/integrations",
+                    ctaLabel: "Add Integration",
+                    message:
+                      "You need to create at least one integration before you can sync your audience",
+                  }}
+                  InfoNotification={{
+                    Text: "This page shows real-time synchronization status across all your integrated platforms. Monitor data flows, troubleshoot delays, and ensure all systems are updating properly.",
+                  }}
+                  Content={
+                    <>
+                      <AudienceSynergyPreview
+                        tableSrc="/smart-audience-synergy.svg"
+                        headerTitle="Sync Audience to Any Platform"
+                        caption="Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
+                        onBegin={handleOpenPopup}
+                        beginDisabled={!hasIntegrations}
+                      />
+                    </>
+                  }
+                  HelpCard={{
+                    headline: "Need Help with Data Synchronization?",
+                    description:
+                      "Book a free 30-minute session to troubleshoot, optimize, or automate your data flows.",
+                    helpPoints: [
+                      {
+                        title: "Connection Setup",
+                        description: "Configure integrations correctly",
+                      },
+                      {
+                        title: "Sync Diagnostics",
+                        description: "Fix failed data transfers",
+                      },
+                      {
+                        title: "Mapping Assistance",
+                        description: "Align your data fields",
+                      },
+                    ],
+                  }}
+                  customStyleSX={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "70%",
+                    margin: "0 auto",
+                    mt: 2,
+                  }}
+                />
+                {popupOpen && !hasDataSync && (
+                  <WelcomePopup
+                    open={popupOpen}
+                    onClose={() => setPopupOpen(false)}
+                    variant="integration"
                   />
-                  <Grid sx={{ mt: 2, mb: 3, width: "100%" }}>
-                    <DashboardHelpCard
-                      headline="Need Help with Data Synchronization?"
-                      description="Book a free 30-minute session to troubleshoot, optimize, or automate your data flows."
-                      helpPoints={[
-                        {
-                          title: "Connection Setup",
-                          description: "Configure integrations correctly",
-                        },
-                        {
-                          title: "Sync Diagnostics",
-                          description: "Fix failed data transfers",
-                        },
-                        {
-                          title: "Mapping Assistance",
-                          description: "Align your data fields",
-                        },
-                      ]}
-                    />
-                  </Grid>
-                </Box>
+                )}
               </>
             ) : (
               <>
