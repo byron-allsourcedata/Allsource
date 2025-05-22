@@ -50,13 +50,13 @@ export const HintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
   }, [showHints]);
 
   const initialSourcesBuilderHints: StateHint[] = [
-    { show: true, id: 0 },
-    { show: false, id: 1 },
-    { show: false, id: 2 },
-    { show: false, id: 3 },
-    { show: false, id: 4 },
-    { show: false, id: 5 },
-    { show: false, id: 6 },
+    { show: true, showBody: true, id: 0 },
+    { show: false, showBody: false, id: 1 },
+    { show: false, showBody: false, id: 2 },
+    { show: false, showBody: false, id: 3 },
+    { show: false, showBody: false, id: 4 },
+    { show: false, showBody: false, id: 5 },
+    { show: false, showBody: false, id: 6 },
   ];
 
   const initialSourcesTableHints: StateHint[] = [

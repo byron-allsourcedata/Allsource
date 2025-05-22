@@ -912,8 +912,9 @@ const SourcesImport: React.FC = () => {
                       <HintCard
                         card={hintCards[0]}
                         positionLeft={340}
-                        isOpenBody={sourcesBuilderHints[0].show}
-                        toggleClick={() => toggleDotHintClick(0)}
+                        isOpenBody={sourcesBuilderHints[0].showBody}
+                        toggleClick={() => changeSourcesBuilderHint(0, "showBody", "toggle")}
+                        closeClick={() => changeSourcesBuilderHint(0, "showBody", "close")}
                       />
                     )}
                   </FormControl>
@@ -1144,8 +1145,9 @@ const SourcesImport: React.FC = () => {
                       card={hintCards[3]}
                       positionLeft={360}
                       positionTop={100}
-                      isOpenBody={sourcesBuilderHints[3].show}
-                      toggleClick={() => toggleDotHintClick(3)}
+                      isOpenBody={sourcesBuilderHints[3].showBody}
+                      toggleClick={() => changeSourcesBuilderHint(3, "showBody", "toggle")}
+                      closeClick={() => changeSourcesBuilderHint(3, "showBody", "close")}
                     />
                   )}
                 </Box>
@@ -1424,8 +1426,9 @@ const SourcesImport: React.FC = () => {
                       <HintCard
                         card={hintCards[4]}
                         positionLeft={460}
-                        isOpenBody={sourcesBuilderHints[4].show}
-                        toggleClick={() => toggleDotHintClick(4)}
+                        isOpenBody={sourcesBuilderHints[4].showBody}
+                        toggleClick={() => changeSourcesBuilderHint(4, "showBody", "toggle")}
+                        closeClick={() => changeSourcesBuilderHint(4, "showBody", "close")}
                       />
                     )}
                   </Box>
@@ -1581,8 +1584,9 @@ const SourcesImport: React.FC = () => {
                       <HintCard
                         card={hintCards[1]}
                         positionLeft={340}
-                        isOpenBody={sourcesBuilderHints[1].show}
-                        toggleClick={() => toggleDotHintClick(1)}
+                        isOpenBody={sourcesBuilderHints[1].showBody}
+                        toggleClick={() => changeSourcesBuilderHint(1, "showBody", "toggle")}
+                        closeClick={() => changeSourcesBuilderHint(1, "showBody", "close")}
                       />
                     )}
                   </FormControl>
@@ -1732,8 +1736,9 @@ const SourcesImport: React.FC = () => {
                       card={hintCards[2]}
                       positionLeft={650}
                       positionTop={100}
-                      isOpenBody={sourcesBuilderHints[2].show}
-                      toggleClick={() => toggleDotHintClick(2)}
+                      isOpenBody={sourcesBuilderHints[2].showBody}
+                      toggleClick={() => changeSourcesBuilderHint(2, "showBody", "toggle")}
+                      closeClick={() => changeSourcesBuilderHint(2, "showBody", "close")}
                     />
                     )}
                   </Box>
@@ -1898,8 +1903,9 @@ const SourcesImport: React.FC = () => {
                       <HintCard
                         card={hintCards[5]}
                         positionLeft={140}
-                        isOpenBody={sourcesBuilderHints[5].show}
-                        toggleClick={() => toggleDotHintClick(5)}
+                        isOpenBody={sourcesBuilderHints[5].showBody}
+                        toggleClick={() => changeSourcesBuilderHint(5, "showBody", "toggle")}
+                        closeClick={() => changeSourcesBuilderHint(5, "showBody", "close")}
                       />
                     )}
                   </Box>
@@ -1985,8 +1991,9 @@ const SourcesImport: React.FC = () => {
                       <HintCard
                         card={hintCards[6]}
                         positionLeft={380}
-                        isOpenBody={sourcesBuilderHints[6].show}
-                        toggleClick={() => toggleDotHintClick(6)}
+                        isOpenBody={sourcesBuilderHints[6].showBody}
+                        toggleClick={() => changeSourcesBuilderHint(6, "showBody", "toggle")}
+                        closeClick={() => changeSourcesBuilderHint(6, "showBody", "close")}
                       />
                     )}
                     </Box>

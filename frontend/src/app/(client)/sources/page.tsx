@@ -921,12 +921,11 @@ const Sources: React.FC = () => {
                   {showHints && (
                     <HintCard
                       card={hintCards[1]}
-                      positionLeft={-350}
+                      positionLeft={-420}
                       positionTop={20}
                       rightSide={true}
                       isOpenBody={sourcesTableHints[1].showBody}
                       toggleClick={() => {
-                        console.log('f', sourcesTableHints[0].showBody)
                         if (sourcesTableHints[0].showBody) {
                           changeSourcesTableHint(0, "showBody", "close")
                         }
