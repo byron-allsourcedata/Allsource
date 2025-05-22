@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Box, Typography, Link, IconButton, Backdrop } from "@mui/material";
 import PulsingDotComponent from "./PulsingDot"
 import { CloseIcon } from "@/icon";
+import { useTimeout } from 'usehooks-ts'
 
 interface HintCardInterface {
   description: string;
@@ -20,12 +21,13 @@ interface HintCardProps {
   }
   
   const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, toggleClick, closeClick, isOpenBody, rightSide }) => {
-    const [showHint, setShowHint] = useState(false);
+    const [showHint, setShowHint] = useState(false)
 
-    useEffect(() => { 
-      const timer = setTimeout(() => setShowHint(true), 2000);
-      return () => clearTimeout(timer);
-    }, []);
+    const hideBody = () => {
+      setShowHint(true)
+    }
+
+    useTimeout(hideBody, 2000)
   
     return (
       <> 

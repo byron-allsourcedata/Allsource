@@ -1357,9 +1357,7 @@ const Sources: React.FC = () => {
                                                   if (sourcesTableHints[1].showBody) {
                                                     changeSourcesTableHint(1, "showBody", "close")
                                                   }
-                                                  
                                                   changeSourcesTableHint(0, "showBody", "toggle")
-                                                  
                                                 }}
                                                 closeClick={() => {
                                                   changeSourcesTableHint(0, "showBody", "close")
