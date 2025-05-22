@@ -3,7 +3,7 @@ import { Button, Card, Typography, Box, Avatar, Stack } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { showToast } from "./ToastNotification";
+import { showToast } from "../ToastNotification";
 
 interface HelpPoint {
   title: string;
@@ -111,6 +111,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
         display: "flex",
         alignItems: "center",
         padding: 4,
+        width: '100%',
         borderRadius: "4px",
         backgroundImage: 'url("/card_background.svg")',
         backgroundSize: "cover",
@@ -120,9 +121,9 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
     >
       <Box sx={{ flexShrink: 0, textAlign: "center", mr: 4 }}>
         <Avatar
-          alt="Patrick Joseph Quinn"
-          src="/avatar_helpcard.svg"
-          sx={{ width: 120, height: 120, mx: "auto" }}
+          alt="Katie Jones"
+          src="/katie_jones.svg"
+          sx={{ width: 120, height: 120, mx: "auto", backgroundColor: "rgba(118, 166, 245, 1)" }}
         />
         <Typography
           sx={{
@@ -133,7 +134,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
           }}
           mt={2}
         >
-          Patrick Joseph Quinn
+          Katie Jones
         </Typography>
         <Typography color="text.secondary">Your Expert</Typography>
       </Box>

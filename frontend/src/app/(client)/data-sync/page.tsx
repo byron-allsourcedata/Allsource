@@ -34,8 +34,8 @@ import FilterDatasync from "@/components/FilterDatasync";
 import AudiencePopup from "@/components/AudienceSlider";
 import { useNotification } from "@/context/NotificationContext";
 import FirstTimeScree from "./components/FirstTimeScree";
-import NotificationBanner from "@/components/NotificationBanner";
-import { DashboardHelpCard } from "@/components/HelpCard";
+import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
+import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 
 interface DataSyncProps {
   service_name?: string;

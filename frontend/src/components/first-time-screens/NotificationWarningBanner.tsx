@@ -23,16 +23,13 @@ const NotificationBanner: React.FC<NotificationBannerProps> = ({
   return (
     <Box
       sx={{
-        mb: 3,
         px: 2,
         py: 2,
-        width: "100%",
         display: "flex",
         justifyContent: "space-between",
         border: "1px solid rgba(224, 49, 48, 1)",
         borderRadius: "4px",
         flexDirection: { xs: "column", sm: "row" },
-        gap: 2,
       }}
     >
       {/* left part */}

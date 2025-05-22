@@ -1035,7 +1035,7 @@ const SmartAudiences: React.FC = () => {
                                         }}>
                                             {data.length === 0 ? (
                                                 <FirstTimeScreen cardData={cardData} hasSource={hasSource} hasPixel={isPixelInstalledAnywhere} />
-                                            ):
+                                            ) :
                                                 <Grid container spacing={1} sx={{ flex: 1 }}>
                                                     <Grid item xs={12} sx={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                                                         <TableContainer
@@ -1409,7 +1409,10 @@ const SmartAudiences: React.FC = () => {
                                                                                 <TableCell
                                                                                     sx={{ ...smartAudiences.table_array, position: 'relative' }}
                                                                                 >
-                                                                                    {(progress?.processed && progress?.processed === row?.active_segment_records) || (row?.processed_active_segment_records === row?.active_segment_records && (row.status === "unvalidated" || row?.processed_active_segment_records !== 0))
+                                                                                    {progressValidation?.total > 0 ? (
+                                                                                        (Math.max(progressValidation.total, row.validated_records))
+                                                                                            .toLocaleString('en-US')
+                                                                                    ) : (progress?.processed && progress?.processed === row?.active_segment_records) || (row?.processed_active_segment_records === row?.active_segment_records && (row.status === "unvalidated" || row?.processed_active_segment_records !== 0))
                                                                                         ? row.active_segment_records.toLocaleString('en-US')
                                                                                         : row?.processed_active_segment_records > progress?.processed
                                                                                             ? <ProgressBar progress={{ total: row?.active_segment_records, processed: row?.processed_active_segment_records }} />

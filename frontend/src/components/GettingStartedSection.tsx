@@ -13,7 +13,7 @@ import DomainVerificationOutlinedIcon from "@mui/icons-material/DomainVerificati
 import OpenInBrowserOutlinedIcon from "@mui/icons-material/OpenInBrowserOutlined";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import DomainSelector from "@/app/(client)/dashboard/components/DomainSelector";
-import { DashboardHelpCard } from "./HelpCard";
+import { DashboardHelpCard } from "./first-time-screens/HelpCard";
 
 const GettingStartedSection: React.FC = () => {
   const [selectedDomain, setSelectedDomain] = useState("");

@@ -33,7 +33,7 @@ import { showErrorToast } from "@/components/ToastNotification";
 import CircularProgress from "@mui/material/CircularProgress";
 import FirstTimeScreen from "./FirstTimeScreen";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
-import NotificationBanner from "@/components/NotificationBanner";
+import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
 
 type TableData = {
   id: string;

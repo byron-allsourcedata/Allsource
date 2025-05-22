@@ -6,10 +6,10 @@ import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import NotificationBanner from "@/components/NotificationBanner";
+import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
 import WelcomePopup from "@/components/CreatePixelSourcePopup";
 import { getInteractiveSx } from "@/components/utils";
-import { DashboardHelpCard } from "@/components/HelpCard";
+import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 
 type CardData = {
   title: string;

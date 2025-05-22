@@ -17,3 +17,4 @@ export {default as AssignmentIndIcon}  from '@mui/icons-material/AssignmentInd';
 export {default as WorkHistoryOutlinedIcon}  from '@mui/icons-material/WorkHistoryOutlined';
 export {default as WorkOutlineOutlinedIcon}  from '@mui/icons-material/WorkOutlineOutlined';
 export {default as HistoryOutlinedIcon}  from '@mui/icons-material/HistoryOutlined';
+export {default as InfoIcon}  from '@mui/icons-material/Info'

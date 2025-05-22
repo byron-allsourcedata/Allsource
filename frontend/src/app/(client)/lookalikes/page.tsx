@@ -30,10 +30,13 @@ import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined
 import FirstTimeScreen from "./FirstTimeScreen";
 import { CardData } from "@/types/first_time_screens";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import NotificationBanner from "@/components/NotificationBanner";
+import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
 import WelcomePopup from "@/components/CreatePixelSourcePopup";
 import { getInteractiveSx } from "@/components/utils";
-import { DashboardHelpCard } from "@/components/HelpCard";
+import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
+import { CardsSection, FirstTimeScreenCommon, StepperTimeline } from "@/components/first-time-screens";
+import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
+import BuilderIntro from "@/components/first-time-screens/BuilderIntro";
 
 const cardData: CardData[] = [
   {
@@ -101,7 +104,7 @@ const CreateLookalikePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const [lookalikesData, setLookalikeData] = useState<TableRowData[]>([]);
-  const [sourceCount, setSourceCount] = useState<number>();
+  const [sourceCount, setSourceCount] = useState<number>(0);
   const [showNotification, setShowNotification] = useState(true);
   const [isPixelInstalledAnywhere, setIsPixelInstalledAnywhere] =
     useState<boolean>(false);
@@ -186,7 +189,7 @@ const CreateLookalikePage: React.FC = () => {
       setFormattedDates("");
     }
   };
-  const handleDateLabelChange = (label: string) => {};
+  const handleDateLabelChange = (label: string) => { };
 
   const handleApply = (dates: { start: Date | null; end: Date | null }) => {
     if (dates.start && dates.end) {
@@ -248,22 +251,22 @@ const CreateLookalikePage: React.FC = () => {
       label: string;
       value: string | ((f: any) => string);
     }[] = [
-      {
-        condition: filters.type && Object.values(filters.type).some(Boolean),
-        label: "Type",
-        value: () => getSelectedValues(filters.type!),
-      },
-      {
-        condition: filters.size?.length,
-        label: "Size",
-        value: () => filters.size!.join(", "),
-      },
-      {
-        condition: filters.searchQuery?.trim() !== "",
-        label: "Search",
-        value: filters.searchQuery || "",
-      },
-    ];
+        {
+          condition: filters.type && Object.values(filters.type).some(Boolean),
+          label: "Type",
+          value: () => getSelectedValues(filters.type!),
+        },
+        {
+          condition: filters.size?.length,
+          label: "Size",
+          value: () => filters.size!.join(", "),
+        },
+        {
+          condition: filters.searchQuery?.trim() !== "",
+          label: "Search",
+          value: filters.searchQuery || "",
+        },
+      ];
 
     // Iterate over the mappings to populate newSelectedFilters
     filterMappings.forEach(({ condition, label, value }) => {
@@ -292,17 +295,16 @@ const CreateLookalikePage: React.FC = () => {
       const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
       const startEpoch = appliedDates.start
         ? Math.floor(
-            new Date(appliedDates.start.toISOString()).getTime() / 1000
-          )
+          new Date(appliedDates.start.toISOString()).getTime() / 1000
+        )
         : null;
 
       const endEpoch = appliedDates.end
         ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
         : null;
 
-      let url = `/audience-lookalikes?page=${
-        page + 1
-      }&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
+      let url = `/audience-lookalikes?page=${page + 1
+        }&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
       if (startEpoch !== null && endEpoch !== null) {
         url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
       }
@@ -450,8 +452,8 @@ const CreateLookalikePage: React.FC = () => {
     const newFilters: FilterParams = {
       from_date: updatedFilters.find((f) => f.label === "From Date")
         ? dayjs(
-            updatedFilters.find((f) => f.label === "From Date")!.value
-          ).unix()
+          updatedFilters.find((f) => f.label === "From Date")!.value
+        ).unix()
         : null,
       to_date: updatedFilters.find((f) => f.label === "To Date")
         ? dayjs(updatedFilters.find((f) => f.label === "To Date")!.value).unix()
@@ -488,12 +490,13 @@ const CreateLookalikePage: React.FC = () => {
           end: appliedDates.end,
         },
       });
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const [popupOpen, setPopupOpen] = useState(false);
 
   const handleOpenPopup = () => {
+    console.log(popupOpen && sourceCount === 0)
     setPopupOpen(true);
   };
 
@@ -729,9 +732,8 @@ const CreateLookalikePage: React.FC = () => {
               <Chip
                 className="paragraph"
                 key={filter.label}
-                label={`${filter.label}: ${
-                  displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
-                }`}
+                label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
+                  }`}
                 onDelete={() => handleDeleteFilter(filter)}
                 deleteIcon={
                   <CloseIcon
@@ -828,155 +830,78 @@ const CreateLookalikePage: React.FC = () => {
               </Box>
             </Box>
           ) : (
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "start",
-                borderRadius: 2,
-                pr: 1,
-                boxSizing: "border-box",
-                width: "100%",
-                textAlign: "start",
-                flex: 1,
-                "& img": {
-                  width: "auto",
-                  height: "auto",
-                  maxWidth: "100%",
-                },
-              }}
-            >
-              {sourceCount === 0 && showNotification && (
-                <NotificationBanner
-                  ctaUrl="/sources"
-                  ctaLabel="Create Source"
-                  message="You need to import at least one source to create a lookalike"
-                />
-              )}
-              <Box sx={{ display: "flex", alignItems: "center", gap: 4 }}>
-                <Typography
-                  variant="h5"
-                  className="first-sub-title"
-                  sx={{
-                    fontFamily: "Nunito Sans",
-                    fontSize: "24px !important",
-                    color: "#4a4a4a",
-                    fontWeight: "500 !important",
-                    lineHeight: "22px",
-                  }}
-                >
-                  Create Your First Lookalike
-                </Typography>
-                <MuiLink
-                  href="https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes"
-                  target="_blank"
-                  underline="hover"
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                    fontWeight: 300,
-                    color: "#3898FC",
-                  }}
-                >
-                  Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
-                </MuiLink>
-              </Box>
-              <Typography
-                variant="body1"
-                sx={{
-                  mt: 1,
-                  fontFamily: "Nunito Sans",
-                  fontSize: "14px",
-                  color: "rgba(50, 54, 62, 1)",
-                  fontWeight: "400",
-                  lineHeight: "22px",
+            <>
+              <FirstTimeScreenCommon
+                Header={{
+                  TextTitle: 'Create Your First Lookalike',
+                  TextSubtitle: "This tool helps you expand your reach by finding new users who closely resemble your existing high-value audiences",
+                  link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes',
                 }}
-              >
-                This tool helps you expand your reach by finding new users who
-                closely resemble your existing high-value audiences
-              </Typography>
-
-              <Box
-                onClick={handleOpenPopup}
-                sx={{
-                  width: "100%",
-                  mt: 3,
-                  padding: 3,
-                  pt: 0,
-                  borderRadius: "6px",
-                  border: "1px solid rgba(237, 237, 237, 1)",
-                  ...getInteractiveSx(sourceCount === 0),
+                InfoNotification={{
+                  Text: 'This page shows all your lookalike audiences with performance analytics for each. Compare effectiveness, expansion potential, and conversion rates to optimize your targeting strategy.',
                 }}
-              >
-                <Box
-                  sx={{
-                    textAlign: "left",
-                  }}
-                >
-                  <FirstTimeScreen cardData={cardData} />
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    width: "100%",
-                    justifyContent: "end",
-                    pr: 2,
-                  }}
-                >
-                  <Button
-                    onClick={() => {
-                      router.push("/lookalikes/builder");
-                    }}
-                    variant="contained"
-                    className="second-sub-title"
-                    disabled={sourceCount === 0}
-                    sx={{
-                      backgroundColor: "rgba(56, 152, 252, 1)",
-                      textTransform: "none",
-                      padding: "10px 24px",
-                      color: "#fff !important",
-                      ":hover": {
-                        backgroundColor: "rgba(48, 149, 250, 1)",
-                      },
-                      ":disabled": {
-                        backgroundColor: "rgba(56, 152, 252, 0.5)",
-                      },
-                    }}
-                  >
-                    Begin
-                  </Button>
-                </Box>
-              </Box>
-              <Grid sx={{ mt: 3, mb: 3, width: "100%" }}>
-                <DashboardHelpCard
-                  headline="Need Help with Your Lookalike Audiences?"
-                  description="Let our experts help you refine, troubleshoot or scale your lookalike audiences in a free 30-minute call."
-                  helpPoints={[
+                WarningNotification={{
+                  condition: sourceCount === 0 && showNotification,
+                  ctaUrl: '/sources',
+                  ctaLabel: 'Create Source',
+                  message: 'You need to import at least one source to create a lookalike'
+                }}
+                Content={
+                <>
+                <BuilderIntro
+                  steps={[
                     {
-                      title: "Lookalike Setup Review",
-                      description: "Ensure correct configuration",
+                      title: 'Select Source',
+                      subtitle: 'Choose a source that represents your ideal customer profile.',
                     },
                     {
-                      title: "Performance Optimization",
-                      description: "Improve your lookalike results",
+                      title: 'Choose Lookalike Size',
+                      subtitle: 'Specify how closely your lookalike should match the source.',
                     },
                     {
-                      title: "Advanced Scaling Strategies",
-                      description: "Grow your best audiences",
+                      title: 'Select Fields',
+                      subtitle: 'Choose which user attributes should carry the most weight.',
+                    },
+                    {
+                      title: 'Order Fields',
+                      subtitle: 'Arrange fields in order of importance to fine-tune audience.',
                     },
                   ]}
+                  tableSrc="/lookalike-screen.svg"
+                  headerTitle="Grow Your Audience with AI-Powered Lookalikes"
+                  caption="Go beyond conversions – build lookalikes from both your best customers AND failed leads. These audience models become your powerful building blocks – later combine them in Smart Audiences to create perfectly tuned targeting groups by mixing and excluding different segments."
+                  onBegin={handleOpenPopup}
+                  beginDisabled={sourceCount === 0}
                 />
-              </Grid>
-              {popupOpen && sourceCount === 0 && (
-                <WelcomePopup
-                  open={popupOpen}
-                  onClose={() => setPopupOpen(false)}
-                  variant={isPixelInstalledAnywhere ? "alternate" : "welcome"}
-                />
-              )}
-            </Box>
+                </>
+                }
+                HelpCard={{
+                  headline: 'Need Help with Your Lookalike Audiences?',
+                  description: 'Let our experts help you refine, troubleshoot or scale your lookalike audiences in a free 30-minute call.',
+                  helpPoints: [
+                    { title: 'Lookalike Setup Review', description: 'Perfect your audience creation' },
+                    { title: 'Performance Optimization', description: ' Improve your lookalike results' },
+                    { title: 'Advanced Scaling Strategies ', description: 'Grow your best audiences' },
+                  ],
+                }}
+                customStyleSX={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "70%",
+                  margin: "0 auto",
+                  mt: 2
+                }}
+              />
+                {popupOpen && sourceCount === 0 && (
+                  <WelcomePopup
+                    open={popupOpen}
+                    onClose={() => setPopupOpen(false)}
+                    variant={isPixelInstalledAnywhere ? "alternate" : "welcome"}
+                  />
+                )}
+            </>
           )}
         </Box>
         <FilterPopup
