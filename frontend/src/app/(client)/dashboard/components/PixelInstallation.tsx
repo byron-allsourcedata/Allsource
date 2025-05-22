@@ -291,7 +291,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                       "Quickly integrate using Google Tag Manager for seamless setup."
                     }
                     linkText="Learn more"
-                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-googleads"
+                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-google-tag-manager"
                   />
                 </Box>
               </Box>
