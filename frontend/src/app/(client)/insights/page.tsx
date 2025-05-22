@@ -34,6 +34,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import FirstTimeScreen from "./FirstTimeScreen";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
+import { CardsSection, FirstTimeScreenCommon } from "@/components/first-time-screens";
 
 type TableData = {
   id: string;
@@ -503,13 +504,59 @@ const Insights = () => {
           </Box>
         ) : (
           <Box>
-            {sourceData.length === 0 && lookalikeData.length === 0 && (
-              <NotificationBanner
-                ctaUrl="/sources"
-                ctaLabel="Create Source"
-                message="You need to have at least one source or lookalike to unlock this option"
-              />
-            )}
+            <FirstTimeScreenCommon
+                  Header={{
+                    TextTitle: 'Insights',
+                    TextSubtitle: "Uncover key statistics, trends, and actionable data—it will help you refine your targeting and maximize results",
+                    link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync',
+                  }}
+                  InfoNotification={{
+                    Text: 'This page reveals powerful audience intelligence from your pixel data - discover top demographics, interests, behaviors, and purchase patterns to refine your targeting.',
+                  }}
+                  WarningNotification={{
+                    condition: sourceData.length === 0 && lookalikeData.length === 0,
+                    ctaUrl: '/sources',
+                    ctaLabel: 'Import Source',
+                    message: 'You need to have at least one source or lookalike to unlock this option '
+                  }}
+                  Content={<CardsSection items={[
+                    {
+                      title: 'Sources Insights',
+                      subtitle: 'It will automatically collect visitor information from your website.',
+                      imageSrc: '/source.svg',
+                      onClick: () => router.push('/dashboard'),
+                      showRecommended: true,
+                    },
+                    {
+                      title: 'Lookalikes Insights',
+                      subtitle: 'Otherwise, you can upload a CSV file containing your existing customer data.',
+                      imageSrc: '/lookalike.svg',
+                      onClick: () => router.push('/sources'),
+                      showRecommended: false,
+                    },
+                  ]} />}
+                  HelpCard={{
+                    headline: 'Stuck with Your Dashboard?',
+                    description: 'Book a free 30-minute call and get personalized help with platform navigation, analytics, or any dashboard issues.',
+                    helpPoints: [
+                      { title: 'Dashboard Walkthrough', description: 'Learn key features and shortcuts' },
+                      { title: 'Data Analysis Help', description: 'Understand your metrics and reports' },
+                      { title: 'Troubleshooting', description: 'Fix technical issues with an expert' },
+                    ],
+                  }}
+                  customStyleSX={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "70%",
+                    margin: "0 auto",
+                    mt: 2
+                  }}
+                />
+                {/* {popupOpen && (
+                        <WelcomePopup open={popupOpen} onClose={() => setPopupOpen(false)} />
+                      )} */}
             <FirstTimeScreen />
           </Box>
         )}

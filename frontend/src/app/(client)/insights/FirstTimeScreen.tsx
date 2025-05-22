@@ -4,7 +4,7 @@ import { Box, Typography, Link as MuiLink, Grid } from "@mui/material";
 import WelcomePopup from "@/components/CreatePixelSourcePopup";
 import { ExternalLink } from "@/components/ExternalLink";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
+import { DashboardHelpCard } from "@/components/first-time-screens";
 
 type CardData = {
   title: string;
