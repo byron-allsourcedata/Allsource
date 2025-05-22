@@ -51,7 +51,7 @@ class PixelInstallationService:
                 var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];
                 k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);
                 s.pixelClientId = i;
-            }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js", "{client_id}", document, "script");
+            }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");
             </script>
         '''
 
