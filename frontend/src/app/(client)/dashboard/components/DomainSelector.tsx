@@ -6,9 +6,6 @@ import {
   Typography,
   Button,
   TextField,
-  Menu,
-  MenuItem,
-  IconButton,
   InputAdornment,
 } from "@mui/material";
 import CustomTooltip from "@/components/customToolTip";
@@ -17,6 +14,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import { SimpleDomainSelector } from "./SimpleDomainSelector";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "@/app/(client)/components/HintCard";
 
 interface Domain {
   id: number;
@@ -27,6 +26,12 @@ interface Domain {
   enable: boolean;
 }
 
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
+
 interface DomainSelectorProps {
   onDomainSelected: (domain: Domain) => void;
 }
@@ -34,6 +39,8 @@ interface DomainSelectorProps {
 const DomainSelector: React.FC<DomainSelectorProps> = ({
   onDomainSelected,
 }) => {
+  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
+    useHints();
   const [domains, setDomains] = useState<Domain[]>([]);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [addingNew, setAddingNew] = useState(false);
@@ -139,6 +146,16 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
     }
   };
 
+  const hintCards: HintCardInterface[] = [
+    {
+      description:
+        "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+      title: "Source Type",
+      linkToLoadMore:
+        "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+  ];
+
   return (
     <Box
       sx={{
@@ -150,7 +167,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
         marginBottom: "2rem",
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1,  pb: "4px" }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, pb: "4px" }}>
         <Typography
           sx={{
             fontFamily: "Nunito Sans",
@@ -258,20 +275,31 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
           </Button>
         </Box>
       ) : (
-        <SimpleDomainSelector
-          domains={domains}
-          selectedDomain={selectedDomain}
-          onChange={(newDomain) => {
-            setSelectedDomain(newDomain);
-            onDomainSelected(newDomain);
-            setDomains((prev) => {
-              if (!prev.find((d) => d.id === newDomain.id)) {
-                return [...prev, newDomain];
-              }
-              return prev;
-            });
-          }}
-        />
+        <Box sx={{ position: "relative" }}>
+          <SimpleDomainSelector
+            domains={domains}
+            selectedDomain={selectedDomain}
+            onChange={(newDomain) => {
+              setSelectedDomain(newDomain);
+              onDomainSelected(newDomain);
+              setDomains((prev) => {
+                if (!prev.find((d) => d.id === newDomain.id)) {
+                  return [...prev, newDomain];
+                }
+                return prev;
+              });
+            }}
+          />
+          {pixelSetupHints[0].show && !selectedDomain && (
+            <HintCard
+              card={hintCards[0]}
+              positionLeft={340}
+              isOpenBody={pixelSetupHints[0].showBody}
+              toggleClick={() => changePixelSetupHint(0, "showBody", "toggle")}
+              closeClick={() => changePixelSetupHint(0, "showBody", "close")}
+            />
+          )}
+        </Box>
       )}
     </Box>
   );

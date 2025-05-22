@@ -15,8 +15,28 @@ import OpenInBrowserOutlinedIcon from "@mui/icons-material/OpenInBrowserOutlined
 import VerifiedIcon from "@mui/icons-material/Verified";
 import DomainSelector from "@/app/(client)/dashboard/components/DomainSelector";
 import { DashboardHelpCard } from "./HelpCard";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "@/app/(client)/components/HintCard";
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
+
+const hintCards: HintCardInterface[] = [
+  {
+    description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+    title: "Source Type",
+    linkToLoadMore:
+      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+  },
+];
 
 const GettingStartedSection: React.FC = () => {
+  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
+    useHints();
   const [selectedDomain, setSelectedDomain] = useState("");
   const [selectedMethod, setSelectedMethod] = useState<string | null>("");
   const [stepData, setStepData] = useState<StepConfig[]>([
@@ -150,12 +170,7 @@ const GettingStartedSection: React.FC = () => {
         <RevenueTracking />
       </Grid>
 
-      <Grid
-        item
-        xs={12}
-        lg={8}
-        sx={{ display: { xs: "none", md: "block" }, overflow: "hidden" }}
-      >
+      <Grid item xs={12} lg={8} sx={{ display: { xs: "none", md: "block" } }}>
         <Box
           sx={{
             display: "flex",
@@ -207,11 +222,30 @@ const GettingStartedSection: React.FC = () => {
               }}
             />
           )}
-          {selectedDomain !== "" &&
-            selectedMethod !== "" &&
-            selectedMethod !== null && (
-              <VerifyPixelIntegration domain={selectedDomain} />
-            )}
+          <Box sx={{ position: "relative" }}>
+            {selectedDomain !== "" &&
+              selectedMethod !== "" &&
+              selectedMethod !== null && (
+                <VerifyPixelIntegration domain={selectedDomain} />
+              )}
+            {pixelSetupHints[0].show &&
+              selectedDomain !== "" &&
+              selectedMethod !== "" &&
+              selectedMethod !== null && (
+                <HintCard
+                  card={hintCards[0]}
+                  positionLeft={750}
+                  positionTop={50}
+                  isOpenBody={pixelSetupHints[0].showBody}
+                  toggleClick={() =>
+                    changePixelSetupHint(0, "showBody", "toggle")
+                  }
+                  closeClick={() =>
+                    changePixelSetupHint(0, "showBody", "close")
+                  }
+                />
+              )}
+          </Box>
         </Box>
       </Grid>
 

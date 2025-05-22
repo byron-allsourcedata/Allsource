@@ -1,8 +1,6 @@
 "use client";
 import { Box, Typography, Button } from "@mui/material";
 import React, { useState, useEffect } from "react";
-import axiosInstance from "../axios/axiosInterceptorInstance";
-import { showErrorToast, showToast } from "@/components/ToastNotification";
 
 type VerifyPixelIntegrationProps = {
   domain: string;
@@ -39,10 +37,6 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
         url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}`;
       window.open(newUrl, "_blank");
     }
-  };
-
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(event.target.value);
   };
 
   return (
