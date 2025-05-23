@@ -914,6 +914,7 @@ const AudienceDashboard: React.FC = () => {
                       imageSrc: '/pixel.svg',
                       onClick: () => router.push('/dashboard'),
                       showRecommended: true,
+                      img_height: 120
                     },
                     {
                       title: 'Import Source from CSV file',
@@ -921,6 +922,7 @@ const AudienceDashboard: React.FC = () => {
                       imageSrc: '/audience.svg',
                       onClick: () => router.push('/sources'),
                       showRecommended: false,
+                      img_height: 120
                     },
                   ]} />}
                   HelpCard={{

@@ -1425,6 +1425,7 @@ const Integrations = () => {
                       caption="Sync your audience data seamlessly with ad platforms and CRM tools to activate campaigns across channels."
                       onBegin={handleBegin}
                       beginDisabled={true}
+                      buttonLabel="Create Integration"
                     />
                   </>
                 }

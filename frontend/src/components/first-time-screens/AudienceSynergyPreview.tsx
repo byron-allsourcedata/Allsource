@@ -16,6 +16,7 @@ export interface AudienceSynergyPreviewProps {
   caption: string;
   onBegin: () => void;
   beginDisabled?: boolean;
+  buttonLabel?: string;
   sx?: SxProps<Theme>;
 }
 
@@ -25,6 +26,7 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
   caption,
   onBegin,
   beginDisabled = false,
+  buttonLabel = "Begin",
   sx,
 }) => {
   return (
@@ -79,7 +81,7 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
           {caption}
         </Typography>
 
-        <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
           <Button
             variant="contained"
             onClick={onBegin}
@@ -93,7 +95,7 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
               ":disabled": { backgroundColor: "rgba(56,152,252,0.5)" },
             }}
           >
-            Begin
+            {buttonLabel}
           </Button>
         </Box>
       </Box>
