@@ -11,6 +11,7 @@ import { AxiosError } from "axios";
 import DataSyncList from "./components/DataSyncList";
 import { useRouter } from "next/navigation";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
+import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 
 const centerContainerStyles = {
   display: "flex",
@@ -34,8 +35,11 @@ import FilterDatasync from "@/components/FilterDatasync";
 import AudiencePopup from "@/components/AudienceSlider";
 import { useNotification } from "@/context/NotificationContext";
 import FirstTimeScree from "./components/FirstTimeScree";
-import NotificationBanner from "@/components/NotificationBanner";
-import { DashboardHelpCard } from "@/components/HelpCard";
+import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
+import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
+import { FirstTimeScreenCommon } from "@/components/first-time-screens";
+import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
+import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
 interface DataSyncProps {
   service_name?: string;
@@ -72,6 +76,12 @@ const DataSync = () => {
     router.push("/dashboard");
   };
 
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  const handleOpenPopup = () => {
+    setPopupOpen(true);
+  };
+
   const [hasIntegrations, setHasIntegrations] = useState<boolean>(false);
   const [hasDataSync, setHasDataSync] = useState<boolean>(false);
 
@@ -87,7 +97,7 @@ const DataSync = () => {
           }
         );
         setHasIntegrations(response.data.hasIntegration);
-        console.log(response.data.hasIntegration)
+        console.log(response.data.hasIntegration);
         setHasDataSync(response.data.hasAnySync);
       } catch (err) {
         console.error("Error checking integrations:", err);
@@ -268,26 +278,40 @@ const DataSync = () => {
               </Box>
             ) : !isLoading && filters && !hasDataSync ? (
               <>
-                <Box sx={{ width: "98%", mt: 2 }}>
-                  {!hasIntegrations && (
-                    <NotificationBanner
-                      ctaUrl="/integrations"
-                      ctaLabel="Add Integration"
-                      message="You need to create at least one integration before you can sync your audience"
-                    />
-                  )}
-
-                  <FirstTimeScree
-                    onBegin={() => {
-                      router.push("/smart-audiences");
+                <Box sx={{ mt: 2 }}>
+                  <FirstTimeScreenCommon
+                    Header={{
+                      TextTitle: "Data Sync",
+                      TextSubtitle: "Customise your sync settings",
+                      link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync",
                     }}
-                    hasDataSync={hasDataSync}
-                  />
-                  <Grid sx={{ mt: 2, mb: 3, width: "100%" }}>
-                    <DashboardHelpCard
-                      headline="Need Help with Data Synchronization?"
-                      description="Book a free 30-minute session to troubleshoot, optimize, or automate your data flows."
-                      helpPoints={[
+                    WarningNotification={{
+                      condition: !hasIntegrations,
+                      ctaUrl: "/integrations",
+                      ctaLabel: "Add Integration",
+                      message:
+                        "You need to create at least one integration before you can sync your audience",
+                    }}
+                    InfoNotification={{
+                      Text: "This page shows real-time synchronization status across all your integrated platforms. Monitor data flows, troubleshoot delays, and ensure all systems are updating properly.",
+                    }}
+                    Content={
+                      <>
+                        <AudienceSynergyPreview
+                          tableSrc="/data_sync_FTS.svg"
+                          headerTitle="Sync Audience to Any Platform"
+                          caption="Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
+                          onBegin={handleOpenPopup}
+                          beginDisabled={!hasIntegrations}
+                          buttonLabel="Create Data Sync"
+                        />
+                      </>
+                    }
+                    HelpCard={{
+                      headline: "Need Help with Data Synchronization?",
+                      description:
+                        "Book a free 30-minute session to troubleshoot, optimize, or automate your data flows.",
+                      helpPoints: [
                         {
                           title: "Connection Setup",
                           description: "Configure integrations correctly",
@@ -300,10 +324,53 @@ const DataSync = () => {
                           title: "Mapping Assistance",
                           description: "Align your data fields",
                         },
-                      ]}
+                      ],
+                    }}
+                    LeftMenu={{
+                      header: "Fix & Optimize Your Data Flows",
+                      subtitle: "Free 30-Min Sync Audit",
+                      image: {
+                        url: "/data_sync_FTS.svg",
+                        width: 600,
+                        height: 300
+                      },
+                      items: [
+                        {
+                          Icon: SettingsIcon,
+                          title: "Connection Setup",
+                          subtitle: `We’ll ensure your integrations are properly configured for reliable data flow.`,
+                        },
+                        {
+                          Icon: SpeedIcon,
+                          title: "Sync Diagnostics",
+                          subtitle: `Identify and resolve synchronization failures in real-time.`,
+                        },
+                        {
+                          Icon: MovingIcon,
+                          title: "Mapping Assistance",
+                          subtitle: "Align your source and destination fields perfectly.",
+                        },
+                      ],
+                    }}
+                    customStyleSX={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      width: "70%",
+                      margin: "0 auto",
+                      mt: 2,
+                    }}
+                  />
+                  {popupOpen && !hasDataSync && (
+                    <WelcomePopup
+                      open={popupOpen}
+                      onClose={() => setPopupOpen(false)}
+                      variant="integration"
                     />
-                  </Grid>
+                  )}
                 </Box>
+
               </>
             ) : (
               <>

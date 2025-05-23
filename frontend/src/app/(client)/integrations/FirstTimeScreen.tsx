@@ -2,7 +2,7 @@ import React, { FC } from "react";
 import { Box, Typography, Link as MuiLink, Button, Grid } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Image from "next/image";
-import { DashboardHelpCard } from "@/components/HelpCard";
+import { DashboardHelpCard } from "@/components/first-time-screens";
 
 interface FirstTimeScreenProps {
   onBegin?: () => void;

@@ -1,13 +1,16 @@
-import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
-import { initialSourcesBuilderHints, initialSourcesTableHints } from '@/context/hintsStates';
+import React, { createContext, useState, ReactNode, useContext } from 'react';
+import { initialSourcesBuilderHints, initialSourcesTableHints, initialCreatedSourceHints } from './hintsInitialState';
 
 interface HintsContextType {
   changeSourcesBuilderHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
   changeSourcesTableHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
+  changeCreatedSourceHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void
   sourcesBuilderHints: StateHint[]
   sourcesTableHints: StateHint[]
+  createdSourceHints: StateHint[]
   resetSourcesBuilderHints: () => void
   resetSourcesTableHints: () => void
+  resetCreatedSourceHints: () => void
 }
 
 interface StateHint {
@@ -25,6 +28,7 @@ const SourcesHintsContext = createContext<HintsContextType | undefined>(undefine
 export const SourcesHintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
   const [sourcesBuilderHints, setSourcesBuilderHints] = useState<StateHint[]>(initialSourcesBuilderHints);
   const [sourcesTableHints, setSourcesTableHints] = useState<StateHint[]>(initialSourcesTableHints);
+  const [createdSourceHints, setCreatedSourceHints] = useState<StateHint[]>(initialCreatedSourceHints);
 
   const actionMap = {
     toggle: (currentState: boolean) => !currentState,
@@ -67,6 +71,11 @@ export const SourcesHintsProvider: React.FC<HintsProviderProps>  = ({ children }
       resetSourcesTableHints: () =>
         resetHintsState(setSourcesTableHints, initialSourcesTableHints),
       sourcesTableHints,
+      changeCreatedSourceHint: (id, key, action) =>
+        changeHintState(id, key, action, setCreatedSourceHints),
+      resetCreatedSourceHints: () =>
+        resetHintsState(setCreatedSourceHints, initialCreatedSourceHints),
+      createdSourceHints,
       }}>
       {children}
     </SourcesHintsContext.Provider>

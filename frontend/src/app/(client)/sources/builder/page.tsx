@@ -35,6 +35,7 @@ import Papa, { ParseResult } from "papaparse";
 import ProgressBar from "@/components/ProgressBar";
 import HintCard from "../../components/HintCard";
 import { useSourcesHints } from "../context/SourcesHintsContext";
+import { builderHintCards } from "../context/hintsCardsContent";
 
 interface Row {
   id: number;
@@ -142,58 +143,6 @@ const SourcesImport: React.FC = () => {
     { id: 3, name: "abandoned_cart_count", title: "abandoned_cart" },
     { id: 4, name: "converted_sales_count", title: "converted_sales" },
   ];
-
-  const hintCards: HintCardInterface[] = [
-   {
-    description:
-    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-    title: "Source Type",
-    linkToLoadMore:
-    "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-   },
-   {
-    description:
-    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-    title: "Domain",
-    linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-   },
-   {
-    description:
-    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-    title: "Data source",
-    linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-   },
-   {
-    description:
-    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-    title: "Source file",
-    linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-   },
-   {
-    description:
-    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-    title: "Data Maping",
-    linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-   },
-   {
-    description:
-    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-    title: "Target type",
-    linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-   },
-   {
-    description:
-    "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-    title: "Create",
-    linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-   }
-  ]
 
   const sourceTypeDescriptions: Record<string, string> = {
     "Customer Conversions":
@@ -360,12 +309,13 @@ const SourcesImport: React.FC = () => {
     setTargetAudience("");
     setSelectedDomainId(0)
     setSelectedDomain("")
-    setSourceType(event.target.value);
     closeDotHintClick(0);
     if (event.target.value === "Website - Pixel") {
       setShowTargetStep(false)
       setSourceMethod(2);
-      openDotHintClick(1);
+      if (sourceType === "") {//not working
+        openDotHintClick(1);
+      }
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
@@ -373,12 +323,15 @@ const SourcesImport: React.FC = () => {
     } else {
       setShowTargetStep(true)
       setSourceMethod(1);
+      // if (selectedDomain === "") {//not working
       openDotHintClick(3);
+      // }
       setPixelNotInstalled(false);
       setTimeout(() => {
         scrollToBlock(block2Ref);
       }, 0);
     }
+    setSourceType(event.target.value);
   };
 
   const handleTargetAudienceChange = (value: string) => {
@@ -388,7 +341,9 @@ const SourcesImport: React.FC = () => {
     }, 0);
     closeDotHintClick(2);
     closeDotHintClick(5);
-    openDotHintClick(6);
+    if (targetAudience === "") {
+      openDotHintClick(6);
+    }
     setFirstEventTypeClick(false)
   };
 
@@ -694,9 +649,11 @@ const SourcesImport: React.FC = () => {
 
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
     const domainName = event.target.value;
-    setSelectedDomain(domainName);
     closeDotHintClick(1);
-    openDotHintClick(2);
+    setSelectedDomain(domainName);
+    if (domainName === "") {
+      openDotHintClick(2);
+    }
 
     const selectedDomainData = domains.find(
       (domain: DomainsLeads) => domain.name === domainName
@@ -912,7 +869,7 @@ const SourcesImport: React.FC = () => {
                     </Select>
                     {sourcesBuilderHints[0].show && (
                       <HintCard
-                        card={hintCards[0]}
+                        card={builderHintCards[0]}
                         positionLeft={340}
                         isOpenBody={sourcesBuilderHints[0].showBody}
                         toggleClick={() => changeSourcesBuilderHint(0, "showBody", "toggle")}
@@ -1144,7 +1101,7 @@ const SourcesImport: React.FC = () => {
 
                   {sourcesBuilderHints[3].show && (
                     <HintCard
-                      card={hintCards[3]}
+                      card={builderHintCards[3]}
                       positionLeft={360}
                       positionTop={100}
                       isOpenBody={sourcesBuilderHints[3].showBody}
@@ -1426,7 +1383,7 @@ const SourcesImport: React.FC = () => {
                     )}
                     {sourcesBuilderHints[4].show && (
                       <HintCard
-                        card={hintCards[4]}
+                        card={builderHintCards[4]}
                         positionLeft={460}
                         isOpenBody={sourcesBuilderHints[4].showBody}
                         toggleClick={() => changeSourcesBuilderHint(4, "showBody", "toggle")}
@@ -1584,7 +1541,7 @@ const SourcesImport: React.FC = () => {
                     </Select>
                     {sourcesBuilderHints[1].show && (
                       <HintCard
-                        card={hintCards[1]}
+                        card={builderHintCards[1]}
                         positionLeft={340}
                         isOpenBody={sourcesBuilderHints[1].showBody}
                         toggleClick={() => changeSourcesBuilderHint(1, "showBody", "toggle")}
@@ -1735,7 +1692,7 @@ const SourcesImport: React.FC = () => {
                     })}
                     {sourcesBuilderHints[2].show && (
                       <HintCard
-                      card={hintCards[2]}
+                      card={builderHintCards[2]}
                       positionLeft={650}
                       positionTop={100}
                       isOpenBody={sourcesBuilderHints[2].showBody}
@@ -1903,7 +1860,7 @@ const SourcesImport: React.FC = () => {
                     ))}
                     {sourcesBuilderHints[5].show && (
                       <HintCard
-                        card={hintCards[5]}
+                        card={builderHintCards[5]}
                         positionLeft={140}
                         isOpenBody={sourcesBuilderHints[5].showBody}
                         toggleClick={() => changeSourcesBuilderHint(5, "showBody", "toggle")}
@@ -1991,7 +1948,7 @@ const SourcesImport: React.FC = () => {
                       />
                       {sourcesBuilderHints[6].show && (
                       <HintCard
-                        card={hintCards[6]}
+                        card={builderHintCards[6]}
                         positionLeft={380}
                         isOpenBody={sourcesBuilderHints[6].showBody}
                         toggleClick={() => changeSourcesBuilderHint(6, "showBody", "toggle")}

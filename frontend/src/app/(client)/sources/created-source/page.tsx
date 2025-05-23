@@ -25,6 +25,9 @@ import { MoreVert } from "@mui/icons-material";
 import { SliderProvider } from "../../../../context/SliderContext";
 import ProgressBar from "../components/ProgressLoader";
 import { showToast, showErrorToast } from "@/components/ToastNotification";
+import HintCard from "../../components/HintCard";
+import { useSourcesHints } from "../context/SourcesHintsContext";
+import { createdHintCards } from "../context/hintsCardsContent";
 
 interface Source {
   id: string;
@@ -56,6 +59,7 @@ const SourcesList: React.FC = () => {
   const [selectedName, setSelectedName] = React.useState<string | null>(null);
   const { sourceProgress } = useSSE();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { changeCreatedSourceHint, createdSourceHints, resetCreatedSourceHints } = useSourcesHints();
 
   const isOpenFullName = Boolean(anchorElFullName);
 
@@ -93,6 +97,10 @@ const SourcesList: React.FC = () => {
         }
       }, 2000);
     }
+
+    // useEffect(() => {
+    //   resetCreatedSourceHints()
+    // }, [])
 
     return () => {
       if (intervalRef.current) {
@@ -196,6 +204,7 @@ const SourcesList: React.FC = () => {
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
+          height: "calc(100vh - 4.25rem)",
           pr: 2,
           "@media (max-width: 900px)": {
             height: "calc(100vh - 4.25rem)",
@@ -243,28 +252,51 @@ const SourcesList: React.FC = () => {
                 },
               }}
             >
-              <Button
-                variant="outlined"
-                sx={{
-                  height: "40px",
-                  borderRadius: "4px",
-                  textTransform: "none",
-                  fontSize: "14px",
-                  lineHeight: "19.6px",
-                  fontWeight: "500",
-                  color: "rgba(56, 152, 252, 1)",
-                  borderColor: "rgba(56, 152, 252, 1)",
-                  "&:hover": {
-                    backgroundColor: "rgba(80, 82, 178, 0.1)",
+              <Box sx={{display: "block", position: "relative"}}>
+                <Button
+                  variant="outlined"
+                  sx={{
+                    height: "40px",
+                    borderRadius: "4px",
+                    textTransform: "none",
+                    fontSize: "14px",
+                    lineHeight: "19.6px",
+                    fontWeight: "500",
+                    color: "rgba(56, 152, 252, 1)",
                     borderColor: "rgba(56, 152, 252, 1)",
-                  },
-                }}
-                onClick={() => {
-                  router.push("/sources/builder");
-                }}
-              >
-                Add Another Source
-              </Button>
+                    "&:hover": {
+                      backgroundColor: "rgba(80, 82, 178, 0.1)",
+                      borderColor: "rgba(56, 152, 252, 1)",
+                    },
+                  }}
+                  onClick={() => {
+                    router.push("/sources/builder");
+                  }}
+                >
+                  Add Another Source
+                </Button>
+
+                <HintCard
+                  card={createdHintCards[2]}
+                  positionLeft={-420}
+                  positionTop={20}
+                  rightSide={true}
+                  isOpenBody={createdSourceHints[2].showBody}
+                  toggleClick={() => {
+                    if (createdSourceHints[1].showBody) {
+                      changeCreatedSourceHint(1, "showBody", "close")
+                    }
+                    if (createdSourceHints[0].showBody) {
+                      changeCreatedSourceHint(0, "showBody", "close")
+                    }
+                    changeCreatedSourceHint(2, "showBody", "toggle")
+                  }}
+                  closeClick={() => {
+                    changeCreatedSourceHint(2, "showBody", "close")
+                  }}
+                />
+
+              </Box>
             </Box>
           </Box>
           <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
@@ -547,19 +579,41 @@ const SourcesList: React.FC = () => {
                     </Typography>
                   </Box>
                   {/* need chnage < on !== */}
-                  <IconButton
-                    onClick={(event) => handleOpenPopover(event)}
-                    sx={{
-                      "@media (max-width: 900px)": { display: "none" },
-                      ":hover": { backgroundColor: "transparent" },
-                    }}
-                  >
-                    <MoreVert
-                      sx={{ color: "rgba(32, 33, 36, 1)" }}
-                      height={8}
-                      width={24}
+                  <Box sx={{position: "relative"}}>
+                    <IconButton
+                      onClick={(event) => handleOpenPopover(event)}
+                      sx={{
+                        "@media (max-width: 900px)": { display: "none" },
+                        ":hover": { backgroundColor: "transparent" },
+                      }}
+                    >
+                      <MoreVert
+                        sx={{ color: "rgba(32, 33, 36, 1)" }}
+                        height={8}
+                        width={24}
+                      />
+                    </IconButton>
+
+                    <HintCard
+                      card={createdHintCards[0]}
+                      positionLeft={-420}
+                      positionTop={20}
+                      rightSide={true}
+                      isOpenBody={createdSourceHints[0].showBody}
+                      toggleClick={() => {
+                        if (createdSourceHints[1].showBody) {
+                          changeCreatedSourceHint(1, "showBody", "close")
+                        }
+                        if (createdSourceHints[2].showBody) {
+                          changeCreatedSourceHint(2, "showBody", "close")
+                        }
+                        changeCreatedSourceHint(0, "showBody", "toggle")
+                      }}
+                      closeClick={() => {
+                        changeCreatedSourceHint(0, "showBody", "close")
+                      }}
                     />
-                  </IconButton>
+                  </Box>
                 </Box>
                 {/* need chnage < on !== */}
                 <IconButton
@@ -606,32 +660,55 @@ const SourcesList: React.FC = () => {
                 >
                   All Sources
                 </Button>
-                <Button
-                  variant="contained" /* need chnage < on !== */
-                  disabled={isCreateDisabled}
-                  onClick={() =>
-                    router.push(`/lookalikes/builder?source_uuid=${createdData?.id}`)
-                  }
-                  className="second-sub-title"
-                  sx={{
-                    backgroundColor: "rgba(56, 152, 252, 1)",
-                    textTransform: "none",
-                    padding: "10px 24px",
-                    color: "#fff !important",
-                    ":hover": {
-                      backgroundColor: "rgba(62, 64, 142, 1)",
-                    },
-                    ":active": {
+                <Box sx={{position: "relative"}}>
+                  <Button
+                    variant="contained" /* need chnage < on !== */
+                    disabled={false}
+                    onClick={() =>
+                      router.push(`/lookalikes/builder?source_uuid=${createdData?.id}`)
+                    }
+                    className="second-sub-title"
+                    sx={{
                       backgroundColor: "rgba(56, 152, 252, 1)",
-                    },
-                    ":disabled": {
-                      backgroundColor: "rgba(56, 152, 252, 1)",
-                      opacity: 0.6,
-                    },
-                  }}
-                >
-                  Create Lookalike
-                </Button>
+                      textTransform: "none",
+                      padding: "10px 24px",
+                      color: "#fff !important",
+                      ":hover": {
+                        backgroundColor: "rgba(62, 64, 142, 1)",
+                      },
+                      ":active": {
+                        backgroundColor: "rgba(56, 152, 252, 1)",
+                      },
+                      ":disabled": {
+                        backgroundColor: "rgba(56, 152, 252, 1)",
+                        opacity: 0.6,
+                      },
+                    }}
+                  >
+                    Create Lookalike
+                  </Button>
+
+                  {!createdSourceHints[0].showBody && <HintCard
+                    card={createdHintCards[1]}
+                    positionLeft={-400}
+                    positionTop={20}
+                    rightSide={true}
+                    isOpenBody={createdSourceHints[1].showBody}
+                    toggleClick={() => {
+                      if (createdSourceHints[0].showBody) {
+                        changeCreatedSourceHint(0, "showBody", "close")
+                      }
+                      if (createdSourceHints[2].showBody) {
+                        changeCreatedSourceHint(2, "showBody", "close")
+                      }
+                      changeCreatedSourceHint(1, "showBody", "toggle")
+                    }}
+                    closeClick={() => {
+                      changeCreatedSourceHint(1, "showBody", "close")
+                    }}
+                  />}
+                </Box>
+
               </Box>
             </Box>
             <Popover

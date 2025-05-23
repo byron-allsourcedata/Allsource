@@ -261,7 +261,7 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
           border: "1px solid rgba(184, 184, 184, 1)",
           borderRadius: "4px",
           padding: "6px 12px",
-          width: "45%",
+          width: "50%",
           justifyContent: "space-between",
         }}
       >

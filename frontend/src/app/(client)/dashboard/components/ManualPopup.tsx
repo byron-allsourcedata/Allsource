@@ -15,31 +15,14 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import Image from "next/image";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "@/app/(client)/components/HintCard";
 
-const style = {
-  position: "fixed" as "fixed",
-  top: 0,
-  right: 0,
-  width: "45%",
-  height: "100%",
-  bgcolor: "background.paper",
-  boxShadow: 24,
-  p: 4,
-  display: "flex",
-  flexDirection: "column",
-  transition: "transform 0.3s ease-in-out",
-  transform: "translateX(100%)",
-  "@media (max-width: 600px)": {
-    width: "100%",
-    height: "100%",
-    p: 0,
-  },
-};
-
-const openStyle = {
-  transform: "translateX(0%)",
-  right: 0,
-};
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
 
 const maintext = {
   textAlign: "left",
@@ -65,6 +48,8 @@ interface PopupProps {
 }
 
 const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
+  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
+    useHints();
   const [email, setEmail] = useState("");
   const handleCopy = () => {
     navigator.clipboard.writeText(pixelCode);
@@ -79,6 +64,15 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
       })
       .catch((error) => {});
   };
+
+  const hintCards: HintCardInterface[] = [
+    {
+      description: `Enter your developer’s email address in the input field and click "Send". We’ll send installation instructions for setting up the pixel manually to the provided email.`,
+      title: "Enter your developer's email address",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+    },
+  ];
 
   return (
     <>
@@ -233,6 +227,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
             display="flex"
             alignItems="center"
             justifyContent="space-between"
+            position="relative"
             flexDirection="row"
             sx={{
               "@media (max-width: 600px)": {
@@ -300,6 +295,18 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                 Send
               </Typography>
             </Button>
+            {pixelSetupHints[14].show && (
+              <HintCard
+                card={hintCards[0]}
+                positionLeft={670}
+                positionTop={17}
+                isOpenBody={pixelSetupHints[14].showBody}
+                toggleClick={() =>
+                  changePixelSetupHint(14, "showBody", "toggle")
+                }
+                closeClick={() => changePixelSetupHint(14, "showBody", "close")}
+              />
+            )}
           </Box>
         </Box>
       </Box>

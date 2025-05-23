@@ -20,7 +20,7 @@ import {
 import React, { useState, useEffect, Suspense } from "react";
 import CustomTooltip from "@/components/customToolTip";
 import Image from "next/image";
-import CustomToolTip from '@/components/customToolTip';
+import CustomToolTip from "@/components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
@@ -33,7 +33,13 @@ import { showErrorToast } from "@/components/ToastNotification";
 import CircularProgress from "@mui/material/CircularProgress";
 import FirstTimeScreen from "./FirstTimeScreen";
 import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
-import NotificationBanner from "@/components/NotificationBanner";
+import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
+import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
+import {
+  CardsSection,
+  FirstTimeScreenCommon,
+} from "@/components/first-time-screens";
+import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
 type TableData = {
   id: string;
@@ -94,6 +100,12 @@ const Insights = () => {
       isClickable: true,
     },
   ];
+
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  const handleOpenPopup = () => {
+    setPopupOpen(true);
+  };
 
   const toNormalText = (sourceType: string) =>
     sourceType
@@ -223,7 +235,11 @@ const Insights = () => {
                 }}
               >
                 <Typography className="first-sub-title">Insights</Typography>
-                <CustomToolTip title={'Insights.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/insights' />
+                <CustomToolTip
+                  title={"Insights."}
+                  linkText="Learn more"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/insights"
+                />
               </Box>
             </Box>
             <Box
@@ -375,9 +391,13 @@ const Insights = () => {
                                     key={index}
                                     hover={!isRowDisabled}
                                     sx={{
-                                      cursor: isRowDisabled ? "not-allowed" : "pointer",
+                                      cursor: isRowDisabled
+                                        ? "not-allowed"
+                                        : "pointer",
                                       opacity: isRowDisabled ? 0.5 : 1,
-                                      pointerEvents: isRowDisabled ? "none" : "auto",
+                                      pointerEvents: isRowDisabled
+                                        ? "none"
+                                        : "auto",
                                       display: "flex",
                                       justifyContent: "space-between",
                                       width: "100%",
@@ -385,7 +405,9 @@ const Insights = () => {
                                       margin: 0,
                                       flexWrap: "wrap",
                                     }}
-                                    onClick={() => !isRowDisabled && handleSelectRow(row)}
+                                    onClick={() =>
+                                      !isRowDisabled && handleSelectRow(row)
+                                    }
                                   >
                                     {/* NAME & TYPE */}
                                     <TableCell
@@ -489,7 +511,7 @@ const Insights = () => {
                                       </Box>
                                     </TableCell>
                                   </TableRow>
-                                )
+                                );
                               })}
                             </TableBody>
                           </Table>
@@ -502,16 +524,111 @@ const Insights = () => {
             </Box>
           </Box>
         ) : (
-          <Box>
-            {sourceData.length === 0 && lookalikeData.length === 0 && (
-              <NotificationBanner
-                ctaUrl="/sources"
-                ctaLabel="Create Source"
-                message="You need to have at least one source or lookalike to unlock this option"
+          <>
+            <FirstTimeScreenCommon
+              Header={{
+                TextTitle: "Insights",
+                TextSubtitle:
+                  "Uncover key statistics, trends, and actionable data—it will help you refine your targeting and maximize results",
+                link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/insights",
+              }}
+              InfoNotification={{
+                Text: "This page reveals powerful audience intelligence from your pixel data - discover top demographics, interests, behaviors, and purchase patterns to refine your targeting.",
+              }}
+              WarningNotification={{
+                condition:
+                  sourceData.length === 0 && lookalikeData.length === 0,
+                ctaUrl: "/sources",
+                ctaLabel: "Import Source",
+                message:
+                  "You need to have at least one source or lookalike to unlock this option",
+              }}
+              Content={
+                <CardsSection
+                  items={[
+                    {
+                      title: "Sources Insights",
+                      subtitle:
+                        "Analyze your audience sources to identify high-performing segments and optimize targeting strategies",
+                      imageSrc: "/source.svg",
+                      onClick: handleOpenPopup,
+                      showRecommended: false,
+                      img_height: 170
+                    },
+                    {
+                      title: "Lookalikes Insights",
+                      subtitle:
+                        "View the aggregated profile of your generated lookalike audience, showing different insights characteristics",
+                      imageSrc: "/lookalike.svg",
+                      onClick: handleOpenPopup,
+                      showRecommended: false,
+                      img_height: 170
+                    },
+                  ]}
+                />
+              }
+              HelpCard={{
+                headline: "Feeling Overwhelmed by Analytics?",
+                description:
+                  "Get a free 30-minute session to analyze your audience data and improve targeting.",
+                helpPoints: [
+                  {
+                    title: "Audience Profile Review",
+                    description: "Understand demographics & interests",
+                  },
+                  {
+                    title: "Behavior Analysis",
+                    description: "Interpret engagement patterns",
+                  },
+                  {
+                    title: "Targeting Recommendations",
+                    description: "Optimize based on your data",
+                  },
+                ],
+              }}
+              LeftMenu={{
+                header: "Decode Your Audience Insights Like a Pro",
+                subtitle: "Free 30-Min Strategy Session",
+                image: {
+                  url: "/source.svg",
+                  width: 600,
+                  height: 300
+                },
+                items: [
+                  {
+                    Icon: SettingsIcon,
+                    title: "Audience Profile Review",
+                    subtitle: `We’ll analyze your audience composition to uncover hidden opportunities and gaps.`,
+                  },
+                  {
+                    Icon: SpeedIcon,
+                    title: "Behavior Analysis",
+                    subtitle: `Understand what your audience actually does – not just who they are.`,
+                  },
+                  {
+                    Icon: MovingIcon,
+                    title: "Targeting Recommendations",
+                    subtitle: "Get customized suggestions to refine your audience strategy.",
+                  },
+                ],
+              }}
+              customStyleSX={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                width: "70%",
+                margin: "0 auto",
+                mt: 2,
+              }}
+            />
+            {popupOpen && (
+              <WelcomePopup
+                open={popupOpen}
+                onClose={() => setPopupOpen(false)}
               />
             )}
-            <FirstTimeScreen />
-          </Box>
+          </>
         )}
       </Box>
     </Box>

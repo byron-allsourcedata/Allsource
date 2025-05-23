@@ -67,6 +67,9 @@ import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 import BingAdsIntegrationPopup from "@/components/BingAdsIntegrationPopup";
 import FirstTimeScreen from "./FirstTimeScreen";
 import { hasIn } from "lodash";
+import { FirstTimeScreenCommon } from "@/components/first-time-screens";
+import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
+import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
 interface IntegrationBoxProps {
   image: string;
@@ -237,11 +240,9 @@ const IntegrationBox = ({
         }}
         title={
           is_integrated
-            ? `A ${
-                service_name.charAt(0).toUpperCase() + service_name.slice(1)
-              } account is already integrated. To connect a different account, please remove the existing ${
-                service_name.charAt(0).toUpperCase() + service_name.slice(1)
-              } integration first.`
+            ? `A ${service_name.charAt(0).toUpperCase() + service_name.slice(1)
+            } account is already integrated. To connect a different account, please remove the existing ${service_name.charAt(0).toUpperCase() + service_name.slice(1)
+            } integration first.`
             : ""
         }
       >
@@ -250,8 +251,8 @@ const IntegrationBox = ({
             backgroundColor: !is_integrated
               ? "rgba(0, 0, 0, 0.04)"
               : active
-              ? "rgba(80, 82, 178, 0.1)"
-              : "transparent",
+                ? "rgba(80, 82, 178, 0.1)"
+                : "transparent",
             border: active
               ? "1px solid rgba(56, 152, 252, 1)"
               : "1px solid #E4E4E4",
@@ -735,20 +736,20 @@ const UserIntegrationsList = ({
   };
 
   const integrationsAvailable = [
-    { image: 'klaviyo.svg', service_name: 'klaviyo' },
-    { image: 'meta-icon.svg', service_name: 'meta' },
-    { image: 'omnisend_icon_black.svg', service_name: 'omnisend' },
-    { image: 'mailchimp-icon.svg', service_name: 'mailchimp' },
-    { image: 'sendlane-icon.svg', service_name: 'sendlane' },
-    { image: 'zapier-icon.svg', service_name: 'zapier' },
-    { image: 'slack-icon.svg', service_name: 'slack' },
-    { image: 'webhook-icon.svg', service_name: 'webhook' },
-    { image: 'hubspot.svg', service_name: 'hubspot' },
-    { image: 'google-ads.svg', service_name: 'google_ads' },
-    { image: 'salesforce-icon.svg', service_name: 'sales_force' },
-    { image: 'bing-ads.svg', service_name: 'bing_ads' },
-    { image: 's3-icon.svg', service_name: 's3' },
-    { image: 'linkedin-icon.svg', service_name: 'linkedin' }
+    { image: "klaviyo.svg", service_name: "klaviyo" },
+    { image: "meta-icon.svg", service_name: "meta" },
+    { image: "omnisend_icon_black.svg", service_name: "omnisend" },
+    { image: "mailchimp-icon.svg", service_name: "mailchimp" },
+    { image: "sendlane-icon.svg", service_name: "sendlane" },
+    { image: "zapier-icon.svg", service_name: "zapier" },
+    { image: "slack-icon.svg", service_name: "slack" },
+    { image: "webhook-icon.svg", service_name: "webhook" },
+    { image: "hubspot.svg", service_name: "hubspot" },
+    { image: "google-ads.svg", service_name: "google_ads" },
+    { image: "salesforce-icon.svg", service_name: "sales_force" },
+    { image: "bing-ads.svg", service_name: "bing_ads" },
+    { image: "s3-icon.svg", service_name: "s3" },
+    { image: "linkedin-icon.svg", service_name: "linkedin" },
   ];
 
   const integratedServices = integrationsCredentials.map(
@@ -1097,16 +1098,20 @@ const UserIntegrationsList = ({
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
-      {openModal === 'linkedin' && (
+      {openModal === "linkedin" && (
         <LinkedinConnectPopup
           open={true}
           handlePopupClose={handleClose}
-          invalid_api_key={integrationsCredentials.find(integration => integration.service_name === 'linkedin')?.is_failed === true}
+          invalid_api_key={
+            integrationsCredentials.find(
+              (integration) => integration.service_name === "linkedin"
+            )?.is_failed === true
+          }
           boxShadow="rgba(0, 0, 0, 0.1)"
         />
       )}
 
-      {openModal === 'bing_ads' && (
+      {openModal === "bing_ads" && (
         <BingAdsIntegrationPopup
           open={true}
           handleClose={handleClose}
@@ -1297,10 +1302,9 @@ const Integrations = () => {
         showToast("Connect to Bigcommerce Successfully");
       } else {
         showErrorToast(
-          `Connect to Bigcommerce Failed ${
-            statusIntegrate && statusIntegrate != "Failed"
-              ? statusIntegrate
-              : ""
+          `Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != "Failed"
+            ? statusIntegrate
+            : ""
           }`
         );
       }
@@ -1397,152 +1401,225 @@ const Integrations = () => {
   return (
     <>
       {isLoading && <CustomizedProgressBar />}
-      {!isLoading &&(
+      {!isLoading && (
         <>
-        {showFirstTime && (
-        <Box sx={{width: "98%"}}>
-          <FirstTimeScreen onBegin={handleBegin} />
-        </Box>
-      )}
-      {!showFirstTime && (
-        <TabContext value={value}>
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-              mb: 0,
-              "@media (max-width: 900px)": {
-                flexDirection: "column",
-                display: "flex",
-                alignItems: "flex-start",
-              },
-              "@media (max-width: 600px)": {
-                flexDirection: "column",
-                display: "flex",
-                ml: 0,
-                alignItems: "flex-start",
-              },
-              "@media (max-width: 440px)": {
-                flexDirection: "column",
-                justifyContent: "flex-start",
-              },
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                position: "sticky",
-                top: 0,
-                pt: "12px",
-                pb: "12px",
-                pl: "8px",
-                zIndex: 1,
-                backgroundColor: "#fff",
-                justifyContent: "space-between",
-                width: "100%",
-                "@media (max-width: 900px)": { left: 0, zIndex: 1 },
-                "@media (max-width: 700px)": {
-                  flexDirection: "column",
+          {showFirstTime && (
+            <>
+              <FirstTimeScreenCommon
+                Header={{
+                  TextTitle: "Integrations",
+                  TextSubtitle:
+                    "Connect your favourite tools to automate tasks and ensure all your data is accessible in one place",
+                  link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/integrations",
+                }}
+                InfoNotification={{
+                  Text: "This page manages all your connected platforms and data pipelines in one centralized hub. View status, configure settings, and troubleshoot connections for seamless data flow across your marketing stack.",
+                }}
+                Content={
+                  <>
+                    <AudienceSynergyPreview
+                      tableSrc="/integrations-first-time-screen.svg"
+                      headerTitle="Connect Your Marketing Platforms"
+                      caption="Sync your audience data seamlessly with ad platforms and CRM tools to activate campaigns across channels."
+                      onBegin={handleBegin}
+                      beginDisabled={true}
+                      buttonLabel="Create Integration"
+                    />
+                  </>
+                }
+                HelpCard={{
+                  headline: "Struggling with Integrations?",
+                  description:
+                    "Get expert help connecting your platforms in a free 30-minute troubleshooting session.",
+                  helpPoints: [
+                    {
+                      title: "Connection Setup",
+                      description: "Step-by-step integration guidance",
+                    },
+                    {
+                      title: "Error Resolution",
+                      description: " Fix API/auth issues",
+                    },
+                    {
+                      title: "Data Flow Optimization",
+                      description: " Ensure seamless sync",
+                    },
+                  ],
+                }}
+                LeftMenu={{
+                  header: "Fix & Optimize Your Data Flows",
+                  subtitle: "Free 30-Min Sync Strategy Session",
+                  items: [
+                    {
+                      Icon: SettingsIcon,
+                      title: "Connection Setup",
+                      subtitle: `We’ll verify your data sources are properly linked to deliver accurate insights.`,
+                    },
+                    {
+                      Icon: SpeedIcon,
+                      title: "Error Resolution",
+                      subtitle: `Diagnose and fix sync failures that skew your analytics.`,
+                    },
+                    {
+                      Icon: MovingIcon,
+                      title: "Data Flow Optimization",
+                      subtitle: "Streamline how insights reach your dashboards.",
+                    },
+                  ],
+                }}
+                customStyleSX={{
                   display: "flex",
-                  alignItems: "flex-start",
-                  zIndex: 1,
-                  width: "100%",
-                },
-                "@media (max-width: 440px)": {
                   flexDirection: "column",
-                  pt: hasNotification ? "3rem" : "0.75rem",
-                  top: hasNotification ? "4.5rem" : "",
-                  zIndex: 1,
-                  justifyContent: "flex-start",
-                },
-                "@media (max-width: 400px)": {
-                  pt: hasNotification ? "4.25rem" : "",
-                  pb: "6px",
-                },
-              }}
-            >
+                  justifyContent: "center",
+                  alignItems: "center",
+                  width: "70%",
+                  margin: "0 auto",
+                  mt: 2,
+                }}
+              />
+            </>
+          )}
+          {!showFirstTime && (
+            <TabContext value={value}>
               <Box
                 sx={{
-                  flexShrink: 0,
                   display: "flex",
                   flexDirection: "row",
                   alignItems: "center",
-                  width: "10%",
-                  gap: 1,
-                  "@media (max-width: 600px)": { mb: 2 },
-                  "@media (max-width: 440px)": { mb: 1 },
+                  justifyContent: "space-between",
+                  width: "100%",
+                  mb: 0,
+                  "@media (max-width: 900px)": {
+                    flexDirection: "column",
+                    display: "flex",
+                    alignItems: "flex-start",
+                  },
+                  "@media (max-width: 600px)": {
+                    flexDirection: "column",
+                    display: "flex",
+                    ml: 0,
+                    alignItems: "flex-start",
+                  },
+                  "@media (max-width: 440px)": {
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                  },
                 }}
               >
-                <Typography
-                  className="first-sub-title"
+                <Box
                   sx={{
-                    fontFamily: "Nunito Sans",
-                    fontSize: "16px",
-                    lineHeight: "normal",
-                    fontWeight: 600,
-                    color: "#202124",
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    position: "sticky",
+                    top: 0,
+                    pt: "12px",
+                    pb: "12px",
+                    pl: "8px",
+                    zIndex: 1,
+                    backgroundColor: "#fff",
+                    justifyContent: "space-between",
+                    width: "100%",
+                    "@media (max-width: 900px)": { left: 0, zIndex: 1 },
+                    "@media (max-width: 700px)": {
+                      flexDirection: "column",
+                      display: "flex",
+                      alignItems: "flex-start",
+                      zIndex: 1,
+                      width: "100%",
+                    },
+                    "@media (max-width: 440px)": {
+                      flexDirection: "column",
+                      pt: hasNotification ? "3rem" : "0.75rem",
+                      top: hasNotification ? "4.5rem" : "",
+                      zIndex: 1,
+                      justifyContent: "flex-start",
+                    },
+                    "@media (max-width: 400px)": {
+                      pt: hasNotification ? "4.25rem" : "",
+                      pb: "6px",
+                    },
                   }}
                 >
-                  Integrations
-                </Typography>
-
-                <Box sx={{ "@media (max-width: 600px)": { display: "none" } }}>
-                  <CustomTooltip
-                    title={
-                      "Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."
-                    }
-                    linkText="Learn more"
-                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/integrations"
-                  />
-                </Box>
-              </Box>
-
-              <Box
-                sx={{
-                  flexGrow: 1,
-                  display: "flex",
-                  justifyContent: "center",
-                  width: "100%",
-                  pr: "10%",
-                  alignItems: "center",
-                  "@media (max-width: 900px)": { pr: 0 },
-                  "@media (max-width: 600px)": { width: "97%", pr: "0" },
-                }}
-              >
-                {status === "PIXEL_INSTALLATION_NEEDED" ? (
-                  ""
-                ) : (
-                  <TabList
-                    centered
-                    aria-label="Integrations Tabs"
-                    TabIndicatorProps={{
-                      sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
-                    }}
+                  <Box
                     sx={{
-                      textTransform: "none",
-                      minHeight: 0,
-                      pb: 0,
-                      "& .MuiTabs-indicator": {
-                        backgroundColor: "rgba(56, 152, 252, 1)",
-                        height: "1.4px",
-                      },
-                      "@media (max-width: 600px)": {
-                        border: "1px solid rgba(228, 228, 228, 1)",
-                        borderRadius: "4px",
-                        width: "100%",
-                        "& .MuiTabs-indicator": {
-                          height: "0",
-                        },
-                      },
+                      flexShrink: 0,
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      width: "10%",
+                      gap: 1,
+                      "@media (max-width: 600px)": { mb: 2 },
+                      "@media (max-width: 440px)": { mb: 1 },
                     }}
-                    onChange={handleTabChange}
                   >
-                    {/* <Tab label="Pixel Management" value="2" className="main-text"
+                    <Typography
+                      className="first-sub-title"
+                      sx={{
+                        fontFamily: "Nunito Sans",
+                        fontSize: "16px",
+                        lineHeight: "normal",
+                        fontWeight: 600,
+                        color: "#202124",
+                      }}
+                    >
+                      Integrations
+                    </Typography>
+
+                    <Box
+                      sx={{ "@media (max-width: 600px)": { display: "none" } }}
+                    >
+                      <CustomTooltip
+                        title={
+                          "Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."
+                        }
+                        linkText="Learn more"
+                        linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/integrations"
+                      />
+                    </Box>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      flexGrow: 1,
+                      display: "flex",
+                      justifyContent: "center",
+                      width: "100%",
+                      pr: "10%",
+                      alignItems: "center",
+                      "@media (max-width: 900px)": { pr: 0 },
+                      "@media (max-width: 600px)": { width: "97%", pr: "0" },
+                    }}
+                  >
+                    {status === "PIXEL_INSTALLATION_NEEDED" ? (
+                      ""
+                    ) : (
+                      <TabList
+                        centered
+                        aria-label="Integrations Tabs"
+                        TabIndicatorProps={{
+                          sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
+                        }}
+                        sx={{
+                          textTransform: "none",
+                          minHeight: 0,
+                          pb: 0,
+                          "& .MuiTabs-indicator": {
+                            backgroundColor: "rgba(56, 152, 252, 1)",
+                            height: "1.4px",
+                          },
+                          "@media (max-width: 600px)": {
+                            border: "1px solid rgba(228, 228, 228, 1)",
+                            borderRadius: "4px",
+                            width: "100%",
+                            "& .MuiTabs-indicator": {
+                              height: "0",
+                            },
+                          },
+                        }}
+                        onChange={handleTabChange}
+                      >
+                        {/* <Tab label="Pixel Management" value="2" className="main-text"
                       sx={{
                         textTransform: 'none',
                         padding: '4px 10px',
@@ -1566,38 +1643,38 @@ const Integrations = () => {
                           },
                         }
                       }} /> */}
-                  </TabList>
-                )}
+                      </TabList>
+                    )}
+                  </Box>
+                </Box>
               </Box>
-            </Box>
-          </Box>
-          <Box>
-            <TabPanel
-              value="1"
-              sx={{
-                flexGrow: 1,
-                height: "100%",
-                overflowY: "auto",
-                padding: 0,
-                ml: 1.5,
-              }}
-            >
-              <UserIntegrationsList
-                integrationsCredentials={integrationsCredentials}
-                changeTab={changeTab}
-                integrations={integrations}
-                handleSaveSettings={handleSaveSettings}
-                handleDeleteSettings={handleDeleteSettings}
-              />
-            </TabPanel>
-            <TabPanel value="2" sx={{ width: "100%", padding: "12px 0px" }}>
-              <Box sx={{ overflow: "auto", padding: 0 }}>
-                <PixelManagment />
+              <Box>
+                <TabPanel
+                  value="1"
+                  sx={{
+                    flexGrow: 1,
+                    height: "100%",
+                    overflowY: "auto",
+                    padding: 0,
+                    ml: 1.5,
+                  }}
+                >
+                  <UserIntegrationsList
+                    integrationsCredentials={integrationsCredentials}
+                    changeTab={changeTab}
+                    integrations={integrations}
+                    handleSaveSettings={handleSaveSettings}
+                    handleDeleteSettings={handleDeleteSettings}
+                  />
+                </TabPanel>
+                <TabPanel value="2" sx={{ width: "100%", padding: "12px 0px" }}>
+                  <Box sx={{ overflow: "auto", padding: 0 }}>
+                    <PixelManagment />
+                  </Box>
+                </TabPanel>
               </Box>
-            </TabPanel>
-          </Box>
-        </TabContext>
-      )} 
+            </TabContext>
+          )}
         </>
       )}
       {showSlider && <Slider />}

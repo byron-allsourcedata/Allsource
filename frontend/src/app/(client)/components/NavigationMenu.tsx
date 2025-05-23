@@ -46,7 +46,7 @@ import CheckIcon from "@mui/icons-material/Check";
 import LeadsIcon from "@mui/icons-material/People";
 import LegendToggleIcon from "@mui/icons-material/LegendToggle";
 import InsightsIcon from "@mui/icons-material/Insights";
-import InsertChartOutlinedIcon from '@mui/icons-material/InsertChartOutlined';
+import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 
 const navigationmenuStyles = {
   mobileMenuHeader: {
@@ -398,10 +398,10 @@ const NavigationMenu: React.FC<NavigationProps> = ({
             onClick={handleTogglePixel}
             sx={{
               ...(isActive("/pixel") ||
-                isActive("/dashboard") ||
-                isActive("/leads") ||
-                isActive("/company") ||
-                isActive("/supression")
+              isActive("/dashboard") ||
+              isActive("/leads") ||
+              isActive("/company") ||
+              isActive("/supression")
                 ? navigationmenuStyles.activeItem
                 : {}),
               ...navigationmenuStyles.mobileDrawerList,
@@ -517,9 +517,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
             button
             onClick={() => handleNavigation("/insights")}
             sx={{
-              ...(isActive("/insights")
-                ? navigationmenuStyles.activeItem
-                : {}),
+              ...(isActive("/insights") ? navigationmenuStyles.activeItem : {}),
               ...navigationmenuStyles.mobileDrawerList,
             }}
           >
