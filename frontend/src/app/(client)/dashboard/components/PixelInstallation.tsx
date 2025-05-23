@@ -137,6 +137,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         try {
           setGoogleOpen(true);
           setShowGoogleInline(true);
+          onInstallSelected("google");
         } catch (error) {}
       }
     };
