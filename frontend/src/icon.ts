@@ -22,3 +22,6 @@ export { default as LegendToggleOutlinedIcon } from "@mui/icons-material/LegendT
 export { default as AllInboxOutlinedIcon } from "@mui/icons-material/AllInboxOutlined";
 export { default as CheckCircleIcon } from "@mui/icons-material/CheckCircle";
 export { default as ReportProblemOutlinedIcon } from "@mui/icons-material/ReportProblemOutlined";
+export { default as SettingsIcon } from'@mui/icons-material/Settings';
+export { default as SpeedIcon } from'@mui/icons-material/Speed';
+export { default as MovingIcon } from'@mui/icons-material/Moving';

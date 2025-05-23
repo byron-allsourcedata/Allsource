@@ -69,6 +69,7 @@ import FirstTimeScreen from "./FirstTimeScreen";
 import { hasIn } from "lodash";
 import { FirstTimeScreenCommon } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
+import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
 interface IntegrationBoxProps {
   image: string;
@@ -239,11 +240,9 @@ const IntegrationBox = ({
         }}
         title={
           is_integrated
-            ? `A ${
-                service_name.charAt(0).toUpperCase() + service_name.slice(1)
-              } account is already integrated. To connect a different account, please remove the existing ${
-                service_name.charAt(0).toUpperCase() + service_name.slice(1)
-              } integration first.`
+            ? `A ${service_name.charAt(0).toUpperCase() + service_name.slice(1)
+            } account is already integrated. To connect a different account, please remove the existing ${service_name.charAt(0).toUpperCase() + service_name.slice(1)
+            } integration first.`
             : ""
         }
       >
@@ -252,8 +251,8 @@ const IntegrationBox = ({
             backgroundColor: !is_integrated
               ? "rgba(0, 0, 0, 0.04)"
               : active
-              ? "rgba(80, 82, 178, 0.1)"
-              : "transparent",
+                ? "rgba(80, 82, 178, 0.1)"
+                : "transparent",
             border: active
               ? "1px solid rgba(56, 152, 252, 1)"
               : "1px solid #E4E4E4",
@@ -1303,10 +1302,9 @@ const Integrations = () => {
         showToast("Connect to Bigcommerce Successfully");
       } else {
         showErrorToast(
-          `Connect to Bigcommerce Failed ${
-            statusIntegrate && statusIntegrate != "Failed"
-              ? statusIntegrate
-              : ""
+          `Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != "Failed"
+            ? statusIntegrate
+            : ""
           }`
         );
       }
@@ -1445,6 +1443,27 @@ const Integrations = () => {
                     {
                       title: "Data Flow Optimization",
                       description: " Ensure seamless sync",
+                    },
+                  ],
+                }}
+                LeftMenu={{
+                  header: "Fix & Optimize Your Data Flows",
+                  subtitle: "Free 30-Min Sync Strategy Session",
+                  items: [
+                    {
+                      Icon: SettingsIcon,
+                      title: "Connection Setup",
+                      subtitle: `We’ll verify your data sources are properly linked to deliver accurate insights.`,
+                    },
+                    {
+                      Icon: SpeedIcon,
+                      title: "Error Resolution",
+                      subtitle: `Diagnose and fix sync failures that skew your analytics.`,
+                    },
+                    {
+                      Icon: MovingIcon,
+                      title: "Data Flow Optimization",
+                      subtitle: "Streamline how insights reach your dashboards.",
                     },
                   ],
                 }}
