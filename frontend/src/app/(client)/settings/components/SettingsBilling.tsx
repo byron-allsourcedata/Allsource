@@ -1609,7 +1609,7 @@ export const SettingsBilling: React.FC = () => {
                         />
                     </Box>
 
-                    <Box sx={{ position: 'relative' }}>
+                    <Box sx={{ position: 'relative', height: '100%' }}>
                         <Box sx={{
                             px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
                             width: '620px',
@@ -1649,18 +1649,11 @@ export const SettingsBilling: React.FC = () => {
                                 >
                                     Send
                                 </Button>
-
                             </Box>
                         </Box>
                     </Box>
                 </Box>
-
             </Drawer>
-
         </Box >
-
-
-
-
     );
 };

@@ -18,7 +18,8 @@ class AudienceSourcesMatchedPerson(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False,
                 server_default=text('gen_random_uuid()'))
     source_id = Column(UUID(as_uuid=True), ForeignKey(AudienceSource.id, ondelete='CASCADE'), nullable=False)
-    enrichment_user_id = Column(UUID(as_uuid=True), ForeignKey(EnrichmentUser.id), nullable=False)
+    enrichment_user_id = Column(UUID(as_uuid=True), ForeignKey(EnrichmentUser.id), nullable=True)
+    enrichment_user_asid = Column(UUID(as_uuid=True), nullable=True)
     mapped_fields = Column(JSON, nullable=True)
     created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())

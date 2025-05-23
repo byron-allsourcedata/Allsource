@@ -13,11 +13,13 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import LegendToggleOutlinedIcon from "@mui/icons-material/LegendToggleOutlined";
-import AllInboxOutlinedIcon from "@mui/icons-material/AllInboxOutlined";
 import { useRouter } from "next/navigation";
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import {
+  OpenInNewIcon,
+  CloseIcon,
+  LegendToggleOutlinedIcon,
+  AllInboxOutlinedIcon,
+} from "@/icon";
 import Image from "next/image";
 
 type WelcomePopupProps = {
@@ -55,7 +57,8 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
 
   const navigateToExamplePage = () => {
     handleClose();
-    window.location.href = "https://allsourceio.zohodesk.com/portal/en/kb/allsource";
+    window.location.href =
+      "https://allsourceio.zohodesk.com/portal/en/kb/allsource";
   };
 
   return (
@@ -71,11 +74,14 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
       />
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
         {variant === "welcome" ? (
-
           <>
             <DialogTitle sx={{ p: "16px 16px 8px" }}>
               <Box
-                sx={{ display: "flex", justifyContent: "flex-end", width: "100%" }}
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  width: "100%",
+                }}
               >
                 <IconButton
                   sx={{ width: "30px", height: "30px" }}
@@ -94,7 +100,10 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
               </Typography>
             </DialogTitle>
             <DialogContent sx={{ p: 4 }}>
-              <Typography className="fourth-sub-title" sx={{ textAlign: "center" }}>
+              <Typography
+                className="fourth-sub-title"
+                sx={{ textAlign: "center" }}
+              >
                 To create a lookalike you need to provide a data source.
               </Typography>
               <Grid
@@ -114,7 +123,10 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                       sx={{ display: "flex", flexDirection: "column", gap: 2 }}
                     >
                       <Box
-                        sx={{ display: "flex", justifyContent: "space-between" }}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                        }}
                       >
                         <Typography className="first-sub-title">
                           Install Pixel
@@ -131,7 +143,8 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                             sx={{
                               color: "rgba(43, 91, 0, 1) !important",
                               fontSize: "14px !important",
-                              backgroundColor: "rgba(234, 248, 221, 1) !important",
+                              backgroundColor:
+                                "rgba(234, 248, 221, 1) !important",
                               padding: "4px 12px",
                               borderRadius: "4px",
                             }}
@@ -141,8 +154,8 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                         </Box>
                       </Box>
                       <Typography className="description">
-                        It will automatically collect visitor information from your
-                        website.
+                        It will automatically collect visitor information from
+                        your website.
                       </Typography>
                       <Box
                         sx={{
@@ -160,11 +173,14 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                         variant="contained"
                         fullWidth
                         onClick={navigateToSourcePage}
-                        sx={{ backgroundColor: "#3898FC", dropShadow: "#00000040" }}
+                        sx={{
+                          backgroundColor: "#3898FC",
+                          dropShadow: "#00000040",
+                        }}
                       >
                         <IconButton
                           sx={{ width: "30px", height: "30px", color: "#fff" }}
-                          onClick={() => { }}
+                          onClick={() => {}}
                         >
                           <LegendToggleOutlinedIcon />
                         </IconButton>
@@ -267,8 +283,12 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                         onClick={navigateToSourcePage}
                       >
                         <IconButton
-                          sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-                          onClick={() => { }}
+                          sx={{
+                            width: "30px",
+                            height: "30px",
+                            color: "#3898FC",
+                          }}
+                          onClick={() => {}}
                         >
                           <AllInboxOutlinedIcon />
                         </IconButton>
@@ -301,10 +321,12 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
               >
                 Create your source first
               </Typography>
-
             </DialogTitle>
             <DialogContent sx={{ p: 3 }}>
-              <Typography className="fourth-sub-title" sx={{ textAlign: "center" }}>
+              <Typography
+                className="fourth-sub-title"
+                sx={{ textAlign: "center" }}
+              >
                 To create a lookalike you need to import at least one source
               </Typography>
               <Box sx={{ p: 4 }}>
@@ -318,8 +340,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                     backgroundSize: "contain",
                     borderRadius: 2,
                   }}
-                >
-                </Box>
+                ></Box>
                 <Box sx={{ display: "flex", gap: 2, mt: 3 }}>
                   <Button
                     variant="outlined"
@@ -334,7 +355,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                     </Typography>
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-                      onClick={() => { }}
+                      onClick={() => {}}
                     >
                       <OpenInNewIcon sx={{ fontSize: 20 }} />
                     </IconButton>
@@ -347,9 +368,8 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                   >
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#fff" }}
-                      onClick={() => { }}
-                    >
-                    </IconButton>
+                      onClick={() => {}}
+                    ></IconButton>
                     <Typography
                       className="description"
                       style={{ color: "#fff" }}
@@ -377,10 +397,12 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
               >
                 Generate your Smart Audience first
               </Typography>
-
             </DialogTitle>
             <DialogContent sx={{ p: 3 }}>
-              <Typography className="fourth-sub-title" sx={{ textAlign: "center" }}>
+              <Typography
+                className="fourth-sub-title"
+                sx={{ textAlign: "center" }}
+              >
                 To synk your data you need to generate smart audience
               </Typography>
               <Box sx={{ p: 4 }}>
@@ -407,7 +429,6 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                     fullWidth
                     onClick={navigateToExamplePage}
                   >
-
                     <Typography
                       className="description"
                       style={{ color: "#3898FC" }}
@@ -416,7 +437,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                     </Typography>
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-                      onClick={() => { }}
+                      onClick={() => {}}
                     >
                       <OpenInNewIcon sx={{ fontSize: 20 }} />
                     </IconButton>
@@ -429,9 +450,8 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                   >
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#fff" }}
-                      onClick={() => { }}
-                    >
-                    </IconButton>
+                      onClick={() => {}}
+                    ></IconButton>
                     <Typography
                       className="description"
                       style={{ color: "#fff" }}
