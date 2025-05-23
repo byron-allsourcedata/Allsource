@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Image from "next/image";
+import CustomTooltip from "@/components/customToolTip";
 import { styles } from "../../../../css/cmsStyles";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
@@ -124,12 +125,7 @@ interface PopupProps {
   pixel_client_id: string;
 }
 
-const Popup: React.FC<PopupProps> = ({
-  open,
-  handleClose,
-  pixelCode,
-  pixel_client_id,
-}) => {
+const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
   const [selectedCMS, setSelectedCMS] = useState<string | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>("Install on CMS");
   const [shop_domain, setDomain] = useState<string>(() => {
@@ -152,7 +148,7 @@ const Popup: React.FC<PopupProps> = ({
         try {
           const parsed = JSON.parse(savedMe);
           return parsed.source_platform || "";
-        } catch (error) {}
+        } catch (error) { }
       }
     }
     return "";
@@ -175,7 +171,7 @@ const Popup: React.FC<PopupProps> = ({
             setAccessTokenExists(true);
           }
         }
-      } catch (error) {}
+      } catch (error) { }
       try {
         const response_big_commerce = await axiosInstance.get(
           "/integrations/credentials/bigcommerce"
@@ -186,7 +182,7 @@ const Popup: React.FC<PopupProps> = ({
             setAccessTokenExists(true);
           }
         }
-      } catch (error) {}
+      } catch (error) { }
 
       if (sourcePlatform === "shopify") {
         setSelectedCMS("Shopify");
@@ -283,10 +279,8 @@ const Popup: React.FC<PopupProps> = ({
 
       if (response.status === 200) {
         showToast("Successfully installed pixel");
-        handleClose();
       } else {
         showErrorToast("Failed to install pixel");
-        handleClose();
       }
     } catch (error) {
       showErrorToast("An error occurred while installing the pixel");
@@ -371,46 +365,46 @@ const Popup: React.FC<PopupProps> = ({
             },
           }}
         >
-          <Grid
-            item
-            xs={12}
-            md={6}
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "100%",
-            }}
-          >
+          <Grid item xs={12} md={6} sx={{ width: "100%" }}>
             <Button
               variant="outlined"
               fullWidth
               onClick={() => handleButtonClick("Shopify")}
               sx={{
                 ...buttonGoogle(selectedCMS === "Shopify"),
-                "@media (max-width: 600px)": {
-                  width: "90%",
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "start",
-                  gap: 1,
-                },
+                position: "relative",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: 2,
               }}
             >
+              <Box
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                }}
+              >
+                <CustomTooltip
+                  title={"Quickly integrate using Shopify for seamless setup."}
+                  linkText="Learn more"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify"
+                />
+              </Box>
               <Image
                 src={"/install_cms1.svg"}
                 alt="Install on Shopify"
                 width={38}
                 height={38}
-                style={{ marginRight: 4 }}
+                style={{ marginBottom: 12 }}
               />
               <Typography className="second-sub-title" sx={typographyGoogle}>
                 Shopify
               </Typography>
             </Button>
           </Grid>
+
           {sourcePlatform !== "shopify" && (
             <>
               <Grid
@@ -418,10 +412,6 @@ const Popup: React.FC<PopupProps> = ({
                 xs={12}
                 md={6}
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
                   width: "100%",
                 }}
               >
@@ -431,6 +421,11 @@ const Popup: React.FC<PopupProps> = ({
                   onClick={() => handleButtonClick("WordPress")}
                   sx={{
                     ...buttonStyles(selectedCMS === "WordPress"),
+                    position: "relative",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    padding: 2,
                     "@media (max-width: 600px)": {
                       width: "90%",
                       display: "flex",
@@ -441,6 +436,19 @@ const Popup: React.FC<PopupProps> = ({
                     },
                   }}
                 >
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                    }}
+                  >
+                    <CustomTooltip
+                      title={"Quickly integrate using Wordpress for seamless setup."}
+                      linkText="Learn more"
+                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                    />
+                  </Box>
                   <Image
                     src={"/install_cms2.svg"}
                     alt="Install on WordPress"
@@ -461,10 +469,6 @@ const Popup: React.FC<PopupProps> = ({
                 xs={12}
                 md={6}
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
                   width: "100%",
                 }}
               >
@@ -474,6 +478,11 @@ const Popup: React.FC<PopupProps> = ({
                   onClick={() => handleButtonClick("Bigcommerce")}
                   sx={{
                     ...buttonStyles(selectedCMS === "Bigcommerce"),
+                    position: "relative",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    padding: 2,
                     "@media (max-width: 600px)": {
                       width: "90%",
                       display: "flex",
@@ -484,6 +493,19 @@ const Popup: React.FC<PopupProps> = ({
                     },
                   }}
                 >
+                  <Box
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                }}
+              >
+                <CustomTooltip
+                  title={"Quickly integrate using Bigcommerce for seamless setup."}
+                  linkText="Learn more"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-bigcommerce"
+                />
+              </Box>
                   <Image
                     src={"/bigcommerce-icon.svg"}
                     alt="Install on Bigcommerce"
@@ -498,6 +520,9 @@ const Popup: React.FC<PopupProps> = ({
                   </Typography>
                 </Button>
               </Grid>
+
+
+
             </>
           )}
         </Box>
@@ -567,11 +592,11 @@ const Popup: React.FC<PopupProps> = ({
                               ? shop_domain.replace(/^https?:\/\//, "")
                               : ""
                             : shop_domain
-                            ? `https://${shop_domain.replace(
+                              ? `https://${shop_domain.replace(
                                 /^https?:\/\//,
                                 ""
                               )}`
-                            : "https://"
+                              : "https://"
                         }
                         sx={styles.formField}
                         onFocus={handleFocus}
@@ -904,30 +929,30 @@ const Popup: React.FC<PopupProps> = ({
                   >
                     {(sourcePlatform !== "big_commerce" ||
                       !accessTokenExists) && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: 0,
-                          justifyContent: "start",
-                        }}
-                      >
-                        <Image src="/2.svg" alt="2" width={20} height={20} />
-                        <Typography
-                          className="first-sub-title"
+                        <Box
                           sx={{
-                            ...maintext,
-                            textAlign: "left",
-                            padding: "1em 0em 1em 1em",
-                            fontWeight: "500",
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            padding: 0,
+                            justifyContent: "start",
                           }}
                         >
-                          Enter your Bigcommerce store hash in the designated
-                          field. This allows our system to identify your store.
-                        </Typography>
-                      </Box>
-                    )}
+                          <Image src="/2.svg" alt="2" width={20} height={20} />
+                          <Typography
+                            className="first-sub-title"
+                            sx={{
+                              ...maintext,
+                              textAlign: "left",
+                              padding: "1em 0em 1em 1em",
+                              fontWeight: "500",
+                            }}
+                          >
+                            Enter your Bigcommerce store hash in the designated
+                            field. This allows our system to identify your store.
+                          </Typography>
+                        </Box>
+                      )}
 
                     <Box
                       component="pre"
@@ -959,32 +984,32 @@ const Popup: React.FC<PopupProps> = ({
                     </Box>
                     {(sourcePlatform !== "big_commerce" ||
                       !accessTokenExists) && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "start",
-                        }}
-                      >
-                        <Image src="/3.svg" alt="3" width={20} height={20} />
-                        <Typography
-                          className="first-sub-title"
+                        <Box
                           sx={{
-                            ...maintext,
-                            textAlign: "left",
-                            padding: "2em 1em 1em",
-                            fontWeight: "500",
-                            "@media (max-width: 600px)": { padding: "1em" },
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "start",
                           }}
                         >
-                          Once you have submitted the required information, our
-                          system will automatically install the script on your
-                          Bigcommerce store. You don’t need to take any further
-                          action.
-                        </Typography>
-                      </Box>
-                    )}
+                          <Image src="/3.svg" alt="3" width={20} height={20} />
+                          <Typography
+                            className="first-sub-title"
+                            sx={{
+                              ...maintext,
+                              textAlign: "left",
+                              padding: "2em 1em 1em",
+                              fontWeight: "500",
+                              "@media (max-width: 600px)": { padding: "1em" },
+                            }}
+                          >
+                            Once you have submitted the required information, our
+                            system will automatically install the script on your
+                            Bigcommerce store. You don’t need to take any further
+                            action.
+                          </Typography>
+                        </Box>
+                      )}
                     <Box
                       sx={{
                         display: "flex",
@@ -996,7 +1021,7 @@ const Popup: React.FC<PopupProps> = ({
                       }}
                     >
                       {sourcePlatform === "big_commerce" &&
-                      accessTokenExists ? (
+                        accessTokenExists ? (
                         <Typography
                           sx={{
                             color: "#333",

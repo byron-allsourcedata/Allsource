@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Link as MuiLink, Grid, Typography } from "@mui/material";
 import { dashboardStyles } from "@/app/(client)/dashboard/dashboardStyles";
 import {
   StepConfig,
@@ -8,7 +8,8 @@ import {
 import PixelInstallation from "@/app/(client)/dashboard/components/PixelInstallation";
 import VerifyPixelIntegration from "../components/VerifyPixelIntegration";
 import RevenueTracking from "@/components/RevenueTracking";
-import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import CustomTooltip from "@/components/customToolTip";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DomainVerificationOutlinedIcon from "@mui/icons-material/DomainVerificationOutlined";
 import OpenInBrowserOutlinedIcon from "@mui/icons-material/OpenInBrowserOutlined";
 import VerifiedIcon from "@mui/icons-material/Verified";
@@ -165,50 +166,70 @@ const GettingStartedSection: React.FC = () => {
                 <VerifyPixelIntegration domain={selectedDomain} />
                 <RevenueTracking />
               </Grid>
+      <Grid
+        item
+        xs={12}
+        lg={8}
+        sx={{ display: { xs: "none", md: "block" }, overflow: "hidden" }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
+          <Typography
+            variant="h4"
+            component="h1"
+            className="first-sub-title"
+            sx={{
+              ...dashboardStyles.title,
+              textAlign: "center",
+              display: "inline",
+              m: 0,
+            }}
+          >
+            Install Your Pixel
+          </Typography>
+          <MuiLink
+            href="https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel"
+            target="_blank"
+            underline="hover"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              fontWeight: 300,
+              color: "#3898FC",
+              fontSize: "1rem",
+            }}
+          >
+            Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
+          </MuiLink>
+        </Box>
 
-              <Grid
-                item
-                xs={12}
-                lg={8}
-                sx={{
-                  display: { xs: "none", md: "block" },
-                  overflow: "hidden",
-                }}
-              >
-                <Typography
-                  variant="h4"
-                  component="h1"
-                  className="first-sub-title"
-                  sx={dashboardStyles.title}
-                >
-                  Install Your Pixel
-                  {/* <CustomTooltip
-            title="Boost engagement and reduce cart abandonment with personalized messages tailored for your visitors."
-            linkText="Learn more"
-            linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
-          /> */}
-                </Typography>
-                <Box sx={{ pl: 8, mt: 3 }}>
-                  <DomainSelector
-                    onDomainSelected={(domain) => {
-                      setSelectedDomain(domain.domain);
-                    }}
-                  />
-                  {selectedDomain !== "" && (
-                    <PixelInstallation
-                      onInstallSelected={(method) => {
-                        handleInstallSelected(method);
-                        setSelectedMethod(method);
-                      }}
-                    />
-                  )}
-                  {selectedDomain !== "" &&
-                    selectedMethod !== "" &&
-                    selectedMethod !== null && (
-                      <VerifyPixelIntegration domain={selectedDomain} />
-                    )}
-                </Box>
-              </Grid>
+        <Box sx={{ pl: 8, mt: 3 }}>
+          <DomainSelector
+            onDomainSelected={(domain) => {
+              setSelectedDomain(domain.domain);
+            }}
+          />
+          {selectedDomain !== "" && (
+            <PixelInstallation
+              onInstallSelected={(method) => {
+                handleInstallSelected(method);
+                setSelectedMethod(method);
+              }}
+            />
+          )}
+          {selectedDomain !== "" &&
+            selectedMethod !== "" &&
+            selectedMethod !== null && (
+              <VerifyPixelIntegration domain={selectedDomain} />
+            )}
+        </Box>
+      </Grid>
 
               <Grid
                 item

@@ -33,8 +33,8 @@ import CustomToolTip from "@/components/customToolTip";
 import { useNotification } from "@/context/NotificationContext";
 import Papa, { ParseResult } from "papaparse";
 import ProgressBar from "@/components/ProgressBar";
-import { useHints } from "@/context/HintsContext";
 import HintCard from "../../components/HintCard";
+import { useSourcesHints } from "../context/SourcesHintsContext";
 
 interface Row {
   id: number;
@@ -93,7 +93,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 }));
 
 const SourcesImport: React.FC = () => {
-  const { showHints, changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useHints();
+  const { changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useSourcesHints();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
@@ -210,10 +210,12 @@ const SourcesImport: React.FC = () => {
 
   const closeDotHintClick = (id: number) => {
     changeSourcesBuilderHint(id, "show", "close")
+    changeSourcesBuilderHint(id, "showBody", "close")
   };
 
   const openDotHintClick = (id: number) => {
     changeSourcesBuilderHint(id, "show", "open")
+    changeSourcesBuilderHint(id, "showBody", "open")
   };
 
   const defaultRows: Row[] = [
@@ -363,7 +365,7 @@ const SourcesImport: React.FC = () => {
     if (event.target.value === "Website - Pixel") {
       setShowTargetStep(false)
       setSourceMethod(2);
-      toggleDotHintClick(1);
+      openDotHintClick(1);
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
@@ -371,7 +373,7 @@ const SourcesImport: React.FC = () => {
     } else {
       setShowTargetStep(true)
       setSourceMethod(1);
-      toggleDotHintClick(3);
+      openDotHintClick(3);
       setPixelNotInstalled(false);
       setTimeout(() => {
         scrollToBlock(block2Ref);
@@ -650,7 +652,7 @@ const SourcesImport: React.FC = () => {
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
-      toggleDotHintClick(5);
+      openDotHintClick(5);
     } catch (error: unknown) {
       if (error instanceof Error) {
         showErrorToast(error.message);
@@ -694,7 +696,7 @@ const SourcesImport: React.FC = () => {
     const domainName = event.target.value;
     setSelectedDomain(domainName);
     closeDotHintClick(1);
-    toggleDotHintClick(2);
+    openDotHintClick(2);
 
     const selectedDomainData = domains.find(
       (domain: DomainsLeads) => domain.name === domainName
@@ -908,7 +910,7 @@ const SourcesImport: React.FC = () => {
                         Interest (CSV)
                       </MenuItem>
                     </Select>
-                    {showHints && sourcesBuilderHints[0].show && (
+                    {sourcesBuilderHints[0].show && (
                       <HintCard
                         card={hintCards[0]}
                         positionLeft={340}
@@ -1140,7 +1142,7 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   )}
 
-                  {showHints && sourcesBuilderHints[3].show && (
+                  {sourcesBuilderHints[3].show && (
                     <HintCard
                       card={hintCards[3]}
                       positionLeft={360}
@@ -1422,7 +1424,7 @@ const SourcesImport: React.FC = () => {
                         </Typography>
                       </Box>
                     )}
-                    {showHints && sourcesBuilderHints[4].show && (
+                    {sourcesBuilderHints[4].show && (
                       <HintCard
                         card={hintCards[4]}
                         positionLeft={460}
@@ -1580,7 +1582,7 @@ const SourcesImport: React.FC = () => {
                         </MenuItem>
                       ))}
                     </Select>
-                    {showHints && sourcesBuilderHints[1].show && (
+                    {sourcesBuilderHints[1].show && (
                       <HintCard
                         card={hintCards[1]}
                         positionLeft={340}
@@ -1731,7 +1733,7 @@ const SourcesImport: React.FC = () => {
                         </Button>
                       );
                     })}
-                    {showHints && sourcesBuilderHints[2].show && (
+                    {sourcesBuilderHints[2].show && (
                       <HintCard
                       card={hintCards[2]}
                       positionLeft={650}
@@ -1899,7 +1901,7 @@ const SourcesImport: React.FC = () => {
                         {option}
                       </ToggleButton>
                     ))}
-                    {showHints && sourcesBuilderHints[5].show && (
+                    {sourcesBuilderHints[5].show && (
                       <HintCard
                         card={hintCards[5]}
                         positionLeft={140}
@@ -1987,7 +1989,7 @@ const SourcesImport: React.FC = () => {
                           }
                         }}
                       />
-                      {showHints && sourcesBuilderHints[6].show && (
+                      {sourcesBuilderHints[6].show && (
                       <HintCard
                         card={hintCards[6]}
                         positionLeft={380}

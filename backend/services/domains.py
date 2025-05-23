@@ -55,7 +55,10 @@ class UserDomainsService:
             }
             for domain in domains
         ]
-
+    
+    def clean_account(self, email):
+        self.domain_persistence.clear_account_from_domains(email)
+        return f"{os.environ.get('SITE_HOST_URL')}"
         
     def update_domain_name(self, domain_id: int, domain_name: str):
         self.domain_persistence.update_domain_name(domain_id, domain_name)

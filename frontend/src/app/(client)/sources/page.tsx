@@ -57,8 +57,8 @@ import TableCustomCell from "./components/table/TableCustomCell";
 import FirstTimeScreen from "./components/FirstTimeScreen"
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import HintCard from "../components/HintCard";
-import { useHints } from "@/context/HintsContext";
 import { CardsSection, FirstTimeScreenCommon } from "@/components/first-time-screens";
+import { useSourcesHints } from "./context/SourcesHintsContext";
 
 interface HintCardInterface {
   description: string;
@@ -149,7 +149,7 @@ const Sources: React.FC = () => {
   const isDebug = searchParams.get("is_debug") === "true";
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
-  const { showHints, changeSourcesTableHint, sourcesTableHints, resetSourcesTableHints } = useHints();
+  const { changeSourcesTableHint, sourcesTableHints, resetSourcesTableHints } = useSourcesHints();
 
   const hintCards: HintCardInterface[] = [
     {
@@ -919,24 +919,23 @@ const Sources: React.FC = () => {
                     )}
                   </Button>
 
-                  {showHints && (
-                    <HintCard
-                      card={hintCards[1]}
-                      positionLeft={-420}
-                      positionTop={20}
-                      rightSide={true}
-                      isOpenBody={sourcesTableHints[1].showBody}
-                      toggleClick={() => {
-                        if (sourcesTableHints[0].showBody) {
-                          changeSourcesTableHint(0, "showBody", "close")
-                        }
-                        changeSourcesTableHint(1, "showBody", "toggle")
-                      }}
-                      closeClick={() => {
-                        changeSourcesTableHint(1, "showBody", "close")
-                      }}
+                  
+                  <HintCard
+                    card={hintCards[1]}
+                    positionLeft={-420}
+                    positionTop={20}
+                    rightSide={true}
+                    isOpenBody={sourcesTableHints[1].showBody}
+                    toggleClick={() => {
+                      if (sourcesTableHints[0].showBody) {
+                        changeSourcesTableHint(0, "showBody", "close")
+                      }
+                      changeSourcesTableHint(1, "showBody", "toggle")
+                    }}
+                    closeClick={() => {
+                      changeSourcesTableHint(1, "showBody", "close")
+                    }}
                     />
-                  )}
                 </Box>
               </Box>
             }
@@ -947,7 +946,7 @@ const Sources: React.FC = () => {
                 display: "flex",
                 flexDirection: "column",
                 pr: 2,
-                // overflow: "auto",
+                overflow: "auto",
                 maxWidth: "100%",
                 "@media (max-width: 900px)": {
                   pt: "2px",
@@ -959,7 +958,7 @@ const Sources: React.FC = () => {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  // overflow: "hidden",
+                  // overflow: "auto",
                   height: "100%",
                   "@media (max-width: 900px)": {
                     paddingRight: 0,
@@ -972,7 +971,7 @@ const Sources: React.FC = () => {
                     flex: 1,
                     display: "flex",
                     flexDirection: "column",
-                    // overflow: "hidden",
+                    // overflow: "auto",
                   }}
                 >
                   <Box
@@ -1404,7 +1403,7 @@ const Sources: React.FC = () => {
                                             </IconButton>
                                           )}
                                         </Box>
-                                        {showHints && label === "Actions" && (
+                                        {label === "Actions" && (
                                               <HintCard
                                                 card={hintCards[0]}
                                                 positionLeft={-380}
@@ -1415,15 +1414,13 @@ const Sources: React.FC = () => {
                                                   if (sourcesTableHints[1].showBody) {
                                                     changeSourcesTableHint(1, "showBody", "close")
                                                   }
-                                                  
                                                   changeSourcesTableHint(0, "showBody", "toggle")
-                                                  
                                                 }}
                                                 closeClick={() => {
                                                   changeSourcesTableHint(0, "showBody", "close")
                                                 }}
                                               />
-                                            )}
+                                            )}  
                                       </TableCell>
                                     )
                                   )}
