@@ -38,6 +38,7 @@ interface PopupProps {
 const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const clientSecret = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
 
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<{ token: string } | null>(null);
@@ -338,9 +339,10 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         "https://www.googleapis.com/auth/tagmanager.publish",
         "https://www.googleapis.com/auth/tagmanager.edit.containerversions",
       ].join(" ");
-      const currentUrl = new URL(window.location.href);
-      currentUrl.search = "";
-      const redirectUri = currentUrl.href;
+      // const currentUrl = new URL(window.location.href);
+      // currentUrl.search = "";
+      const redirectUri = `${baseUrl}/leads`;
+      console.log(redirectUri)
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth
                 ?client_id=${clientId}
                 &redirect_uri=${encodeURIComponent(redirectUri)}
