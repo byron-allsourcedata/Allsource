@@ -63,5 +63,6 @@ export interface PreviewConfig {
   caption: string
   onBegin: () => void
   beginDisabled?: boolean
+  buttonLabel?: string
   sx?: SxProps<Theme>
 }

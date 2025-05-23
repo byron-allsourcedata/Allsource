@@ -11,9 +11,9 @@ const CardsSection: React.FC<CardsSectionProps> = ({ items }) => {
     return (
         <Grid
             container
-            alignItems="center"
+            alignItems="stretch"
             justifyContent="center"
-            sx={{ gap: 2 }}
+            sx={{ gap: 1 }}
         >
             {items.map((props, index) => (
                 <Grid item xs={12} md={5.9} key={index} padding={0}>

@@ -1292,7 +1292,7 @@ const SmartAudiences: React.FC = () => {
                         maxWidth: "100%",
                         pl: 0,
                         pr: 0,
-                        pt: "14px",
+                        pt: "7px",
                         "@media (max-width: 900px)": {
                           pt: "2px",
                           pb: "18px",
@@ -1348,6 +1348,7 @@ const SmartAudiences: React.FC = () => {
                                   caption="Combine your highest-performing sources and lookalikes into powerful audience stacks, then strategically trim low-quality segments. This is where smarter targeting begins."
                                   onBegin={handleOpenPopup}
                                   beginDisabled={!hasSource}
+                                  buttonLabel="Create Smart Audience"
                                 />
                               </>
                             }

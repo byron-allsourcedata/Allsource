@@ -884,6 +884,7 @@ const CreateLookalikePage: React.FC = () => {
                       caption="Go beyond conversions – build lookalikes from both your best customers AND failed leads. These audience models become your powerful building blocks – later combine them in Smart Audiences to create perfectly tuned targeting groups by mixing and excluding different segments."
                       onBegin={handleOpenPopup}
                       beginDisabled={sourceCount === 0}
+                      buttonLabel="Create Lookalike"
                     />
                   </>
                 }

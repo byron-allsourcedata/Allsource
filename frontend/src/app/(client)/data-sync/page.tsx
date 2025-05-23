@@ -277,7 +277,8 @@ const DataSync = () => {
               </Box>
             ) : !isLoading && filters && !hasDataSync ? (
               <>
-                <FirstTimeScreenCommon
+              <Box sx={{mt: 2}}>
+              <FirstTimeScreenCommon
                   Header={{
                     TextTitle: "Data Sync",
                     TextSubtitle: "Customise your sync settings",
@@ -301,6 +302,7 @@ const DataSync = () => {
                         caption="Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
                         onBegin={handleOpenPopup}
                         beginDisabled={!hasIntegrations}
+                        buttonLabel="Create Data Sync"
                       />
                     </>
                   }
@@ -340,6 +342,8 @@ const DataSync = () => {
                     variant="integration"
                   />
                 )}
+              </Box>
+                
               </>
             ) : (
               <>

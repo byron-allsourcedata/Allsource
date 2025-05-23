@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Typography, Link as MuiLink } from "@mui/material";
+import { Box, Typography, Link as MuiLink, Button } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { DashboardHelpCard } from "./HelpCard";
 import NotificationInfoBanner from "./NotificationInfoBanner";
@@ -20,6 +20,8 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
   customStyleSX,
 }) => {
   const [bannerVisible, setBannerVisible] = useState(true);
+  const CALENDLY_URL = 'https://calendly.com/validateapi-allforce/30min';
+
   return (
     <Box
       sx={{
@@ -28,7 +30,7 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
       }}
     >
       {WarningNotification?.condition && (
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{}}>
           <NotificationBanner
             ctaUrl={WarningNotification.ctaUrl}
             ctaLabel={WarningNotification.ctaLabel}
@@ -107,6 +109,25 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
                 )}
               </Box>
             )}
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <Button
+                component="a"
+        href={CALENDLY_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        variant="contained"
+                sx={{
+                  backgroundColor: "rgba(56,152,252,1)",
+                  textTransform: "none",
+                  padding: "10px 24px",
+                  color: "#fff !important",
+                  ":hover": { backgroundColor: "rgba(48,149,250,1)" },
+                  ":disabled": { backgroundColor: "rgba(56,152,252,0.5)" },
+                }}
+              >
+                Request a Demo
+              </Button>
+            </Box>
           </Box>
         </Box>
 
@@ -120,7 +141,11 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
 
         {/* Main Content */}
         {Content && (
-          <Box sx={{ width: "100%", mt: 3 }}>
+          <Box sx={{
+            width: "100%",
+            mt: bannerVisible ? 3 : 0
+
+          }}>
             {typeof Content === "function"
               ? React.createElement(Content as React.ComponentType)
               : Content}
