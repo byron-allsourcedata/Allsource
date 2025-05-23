@@ -15,7 +15,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import LegendToggleOutlinedIcon from "@mui/icons-material/LegendToggleOutlined";
 import AllInboxOutlinedIcon from "@mui/icons-material/AllInboxOutlined";
 import { useRouter } from "next/navigation";
-import { DashboardHelpCard } from "@/components/HelpCard";
+import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 
 type CardData = {
   title: string;
@@ -43,7 +43,7 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
         container
         alignItems="center"
         justifyContent="center"
-        sx={{ pr: 2, gap: 2, mt: 2, width: "100%" }}
+        sx={{  gap: 2, mt: 2, width: "100%" }}
       >
         {/* Left Section */}
         <Grid item xs={12} md={5.9} padding={0}>
@@ -55,8 +55,8 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
               boxShadow: "none",
               cursor: "pointer",
               ":hover": {
-                backgroundColor: "rgba(232, 239, 255, 0.4)",
-                border: "1px solid rgba(1, 113, 248, 0.5)",
+                backgroundColor: "rgba(246, 249, 255, 1)",
+                border: "1px solid rgba(1, 113, 248, 0.4)",
                 "& .fiveth-sub-title": { color: "rgba(21, 22, 25, 1)" },
               },
             }}
@@ -97,7 +97,7 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
               <Box
                 sx={{
                   height: 140,
-                  backgroundColor: "#f0f4ff",
+                  // backgroundColor: "#f0f4ff",
                   backgroundImage: "url(./pixel.svg)",
                   backgroundPosition: "center",
                   backgroundRepeat: "no-repeat",
@@ -122,8 +122,8 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
               boxShadow: "none",
               cursor: "pointer",
               ":hover": {
-                backgroundColor: "rgba(232, 239, 255, 0.4)",
-                border: "1px solid rgba(1, 113, 248, 0.5)",
+                backgroundColor: "rgba(246, 249, 255, 1)",
+                border: "1px solid rgba(1, 113, 248, 0.4)",
                 "& .fiveth-sub-title": { color: "rgba(21, 22, 25, 1)" },
               },
             }}
@@ -142,7 +142,7 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
               <Box
                 sx={{
                   height: 140,
-                  backgroundColor: "#f0f4ff",
+                  // backgroundColor: "#f0f4ff",
                   backgroundImage: "url(./audience.svg)",
                   backgroundPosition: "center",
                   backgroundRepeat: "no-repeat",

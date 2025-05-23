@@ -57,7 +57,9 @@ import TableCustomCell from "./components/table/TableCustomCell";
 import FirstTimeScreen from "./components/FirstTimeScreen"
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import HintCard from "../components/HintCard";
+import { CardsSection, FirstTimeScreenCommon } from "@/components/first-time-screens";
 import { useSourcesHints } from "./context/SourcesHintsContext";
+import { tableHintCards } from "./context/hintsCardsContent";
 
 interface HintCardInterface {
   description: string;
@@ -149,23 +151,6 @@ const Sources: React.FC = () => {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
   const { changeSourcesTableHint, sourcesTableHints, resetSourcesTableHints } = useSourcesHints();
-
-  const hintCards: HintCardInterface[] = [
-    {
-     description:
-     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-     title: "Actions",
-     linkToLoadMore:
-     "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-    },
-    {
-     description:
-     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-     title: "Builder",
-     linkToLoadMore:
-       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-    },
-  ]
 
   const cardData: CardData[] = [
     {
@@ -920,7 +905,7 @@ const Sources: React.FC = () => {
 
                   
                   <HintCard
-                    card={hintCards[1]}
+                    card={tableHintCards[1]}
                     positionLeft={-420}
                     positionTop={20}
                     rightSide={true}
@@ -1053,7 +1038,64 @@ const Sources: React.FC = () => {
                     {data.length === 0 &&
                       isMakeRequest &&
                       !(selectedFilters.length > 0) && (
-                        <FirstTimeScreen cardData={cardData} />
+                        <FirstTimeScreenCommon 
+                        Header={{
+                          TextTitle: 'Import Your First Source',
+                          TextSubtitle: "To begin building your audience, you'll first need to provide a data source. Create a source based on one of this types:",
+                          link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/sources',
+                        }}
+                        InfoNotification={{
+                          Text: 'This page displays all your created sources with key performance metrics for each. Track traffic quality, conversion rates, and ROI to identify your best-performing customer acquisition channels.',
+                        }}
+                        Content={<CardsSection items={[
+                          {
+                            title: 'Pixel',
+                            subtitle: 'Install Pixel on your website to automatically collect visitor information in real-time.',
+                            imageSrc: '/pixel.svg',
+                            onClick: () => router.push('/sources/builder?type=pixel'),
+                            showRecommended: false,
+                          },
+                          {
+                            title: 'Customer Conversions (CSV)',
+                            subtitle: 'This file should contains users who succesfully completed valuable actions.',
+                            imageSrc: '/converted-sale.svg',
+                            onClick: () => router.push('/sources/builder?type=customer-conversions'),
+                            showRecommended: false,
+                          },
+                          {
+                            title: 'Failed Leads (CSV)',
+                            subtitle: `This file should contains users who engaged but didn't convert, so you can exclude them later.`,
+                            imageSrc: '/failed-leads.svg',
+                            onClick: () => router.push('/sources/builder?type=failed-leads'),
+                            showRecommended: false,
+                          },
+                          {
+                            title: 'Interests (CSV)',
+                            subtitle: 'This file should contain users who recently engaged with specific topics. ',
+                            imageSrc: '/interests.svg',
+                            onClick: () => router.push('/sources/builder?type=interests'),
+                            showRecommended: false,
+                          },
+                        ]} />}
+                        HelpCard={{
+                          headline: 'Need Help with Your Source?',
+                          description: 'Book a free 30-minute call to optimize your source settings, troubleshoot issues, or boost performance.',
+                          helpPoints: [
+                            { title: 'Source Setup Review', description: 'Ensure correct configuration' },
+                            { title: 'Performance Audit', description: 'Diagnose and improve results' },
+                            { title: 'Advanced Strategies', description: 'Unlock hidden potential' },
+                          ],
+                        }}
+                        customStyleSX={{
+                          display: "flex",
+                          flexDirection: "column",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          width: "70%",
+                          margin: "0 auto",
+                          mt: 2
+                        }}
+                        />
                       )
                     }
                     {data.length === 0 &&
@@ -1347,7 +1389,7 @@ const Sources: React.FC = () => {
                                         </Box>
                                         {label === "Actions" && (
                                               <HintCard
-                                                card={hintCards[0]}
+                                                card={tableHintCards[0]}
                                                 positionLeft={-380}
                                                 positionTop={100}
                                                 rightSide={true}
