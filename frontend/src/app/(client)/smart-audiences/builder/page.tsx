@@ -42,7 +42,7 @@ const SmartAudiencesBuilder: React.FC = () => {
             setTimeout(() => {
                 scrollToBlock(block5Ref)
             }, 0)
-            openDotHintClick(2)
+            openDotHintClick(6)
         }
         closeDotHintClick(0)
     };

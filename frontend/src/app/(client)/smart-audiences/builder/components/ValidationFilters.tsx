@@ -25,6 +25,8 @@ import { useRouter } from "next/navigation";
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { useHints } from "@/context/HintsContext";
 import HintCard from "../../../components/HintCard";
+import { builderHintCards } from "../../context/hintsCardsContent";
+import { useSmartsHints } from "../../context/SmartsHintsContext";
 
 interface HintCardInterface {
   description: string;
@@ -42,10 +44,6 @@ interface ExpandableFilterProps {
   onValidate: (data: FilterData) => void;
   onEdit: () => void;
   setPersentsData: (value: number) => void;
-  toggleDotHintClickBlock4: () => void;
-  toggleDotHintClickBlock5: () => void;
-  hintCard: HintCardInterface
-  isOpenSelect: boolean
 }
 
 interface Recency {
@@ -89,14 +87,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
   onSkip,
   onValidate,
   onEdit,
-  setPersentsData,
-  toggleDotHintClickBlock4,
-  toggleDotHintClickBlock5,
-  hintCard,
-  isOpenSelect
+  setPersentsData
 }) => {
   const router = useRouter();
-  const { showHints } = useHints();
+  const { changeSmartsBuilderHint, smartsBuilderHints } = useSmartsHints();
   const [isOpenPersonalEmail, setIsOpenPersonalEmail] = useState(false);
   const [isOpenBusinessEmail, setIsOpenBusinessEmail] = useState(false);
   const [isOpenPhone, setIsOpenPhone] = useState(false);
@@ -148,6 +142,20 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
           : [...prev, option]
       );
     }
+  };
+
+  const toggleDotHintClick = (id: number) => {
+    changeSmartsBuilderHint(id, "showBody", "toggle")
+  };
+
+  const closeDotHintClick = (id: number) => {
+    changeSmartsBuilderHint(id, "show", "close")
+    changeSmartsBuilderHint(id, "showBody", "close")
+  };
+
+  const openDotHintClick = (id: number) => {
+    changeSmartsBuilderHint(id, "show", "open")
+    changeSmartsBuilderHint(id, "showBody", "open")
   };
 
   const getEstimatePredictable = async (validations: string[]) => {
@@ -436,7 +444,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                 Validation
               </Typography>
             </Box>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, position: "relative" }}>
               <Typography
                 className="table-data"
                 sx={{
@@ -448,6 +456,23 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
               >
                 Recommended
               </Typography>
+
+              {
+              <HintCard
+                  card={builderHintCards[7]}
+                  positionLeft={-325}
+                  positionTop={90}
+                  rightSide={true}
+                  isOpenBody={smartsBuilderHints[7].showBody}
+                  toggleClick={() => {
+                    if (smartsBuilderHints[8].showBody) {
+                      closeDotHintClick(8)
+                    }
+                    toggleDotHintClick(7)
+                  }}
+                  closeClick={() => closeDotHintClick(7)}
+              />
+              } 
             </Box>
           </Box>
           <Typography
@@ -459,15 +484,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
           >
             Choose parameters that you want to validate.
           </Typography>
-          {showHints && isOpenSelect && (
-                    <HintCard
-                        card={hintCard}
-                        positionLeft={320}
-                        positionTop={20}
-                        toggleClick={toggleDotHintClickBlock4}
-                    />
-                  )} 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1}}>
             {/* Personal Email Filter */}
             <Box sx={ValidationStyle.main_filter_form}>
               <Box
@@ -540,7 +557,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                 </IconButton>
               </Box>
               <Collapse in={isOpenPersonalEmail}>
-                <Box
+                  <Box
                   sx={{
                     display: "flex",
                     flexDirection: "column",
@@ -817,7 +834,8 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                       </Box>
                     </Box>
                   </Box>
-                </Box>
+
+                  </Box>
               </Collapse>
             </Box>
 
@@ -1551,6 +1569,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                   </Typography>
                 </Button>
               ) : (
+                <Box sx={{position: "relative"}}>
                 <Button
                   variant="contained"
                   onClick={handleSkip}
@@ -1574,6 +1593,24 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                     Skip
                   </Typography>
                 </Button>
+
+                {
+                  <HintCard
+                      card={builderHintCards[8]}
+                      positionLeft={-420}
+                      positionTop={20}
+                      rightSide={true}
+                      isOpenBody={smartsBuilderHints[8].showBody}
+                      toggleClick={() => {
+                        if (smartsBuilderHints[7].showBody) {
+                          closeDotHintClick(7)
+                        }
+                        toggleDotHintClick(8)
+                      }}
+                      closeClick={() => closeDotHintClick(8)}
+                  />
+                }
+                  </Box>
               )}
             </Box>
           </Box>
@@ -1616,8 +1653,9 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
               onClick={() => {
                 handleValidate()
                 scrollToNewBlock()
-                toggleDotHintClickBlock4()
-                toggleDotHintClickBlock5()
+                closeDotHintClick(7)
+                closeDotHintClick(8)
+                openDotHintClick(9)
               }}
               sx={{
                 ...smartAudiences.buttonform,

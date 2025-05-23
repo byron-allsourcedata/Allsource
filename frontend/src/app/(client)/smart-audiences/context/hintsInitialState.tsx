@@ -12,6 +12,10 @@ const initialSmartsBuilderHints: StateHint[] = [
     { show: false, showBody: false, id: 4 },
     { show: false, showBody: false, id: 5 },
     { show: false, showBody: false, id: 6 },
+    { show: false, showBody: false, id: 7 },
+    { show: false, showBody: false, id: 8 },
+    { show: false, showBody: false, id: 9 },
+    { show: false, showBody: false, id: 10 },
   ];
 
 const initialSmartsTableHints: StateHint[] = [
