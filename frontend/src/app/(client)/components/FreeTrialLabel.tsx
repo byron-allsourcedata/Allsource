@@ -140,7 +140,7 @@ const FreeTrialLabel: React.FC = () => {
                 </Typography>
               </Box>
 
-              <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {/* <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <AllInboxIcon fontSize="small" sx={{ color: "#3898FC" }} />
                 <Typography variant="body2" sx={{ fontSize: "13px" }}>
                   <Box component="span" sx={{ color: "rgba(0, 0, 0, 0.5)" }}>
@@ -148,7 +148,7 @@ const FreeTrialLabel: React.FC = () => {
                   </Box>
                   /{creditsLimitCount.toLocaleString()} Credits
                 </Typography>
-              </Box>
+              </Box> */}
 
               <Button
                 onClick={handleChoosePlanSlider}

@@ -57,6 +57,7 @@ axiosInterceptorInstance.interceptors.response.use(
     if (error.response) {
       switch (error.response.status) {
         case 307:
+          break;
         case 400:
           break;
         case 401:
@@ -79,7 +80,6 @@ axiosInterceptorInstance.interceptors.response.use(
             case "PIXEL_INSTALLATION_NEEDED":
               break;
             case "FILL_COMPANY_DETAILS":
-              navigateTo('dashboard');
               // navigateTo("/account-setup");
               break;
             case "TEAM_TOKEN_EXPIRED":
@@ -94,7 +94,6 @@ axiosInterceptorInstance.interceptors.response.use(
               navigateTo(`${error.response.data.stripe_payment_url}`);
               break;
             case "FORBIDDEN":
-              navigateTo(`/dashboard`);
               break;
           }
           break;
