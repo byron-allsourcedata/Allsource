@@ -44,6 +44,9 @@ import {
   DateRangeIcon,
   EditIcon,
   HeadsetMicOutlinedIcon,
+  SpeedIcon,
+  SettingsIcon,
+  MovingIcon,
 } from "@/icon";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -250,7 +253,7 @@ const OverflowTooltipText = ({
 }: OverflowTooltipTextProps) => {
   const [isOverflowed, setIsOverflowed] = useState(false);
   const textRef = useRef<HTMLSpanElement>(null);
-  
+
   useEffect(() => {
     if (textRef.current) {
       setIsOverflowed(
@@ -474,7 +477,7 @@ const SmartAudiences: React.FC = () => {
         const hasPending = data.some(
           (item) =>
             item.active_segment_records !==
-              item.processed_active_segment_records ||
+            item.processed_active_segment_records ||
             item.status === "validating"
         );
 
@@ -517,7 +520,7 @@ const SmartAudiences: React.FC = () => {
         ? isFirstLoad
           ? setLoading(true)
           : setLoaderForTable(true)
-        : () => {};
+        : () => { };
 
       const accessToken = localStorage.getItem("token");
       if (!accessToken) {
@@ -529,8 +532,8 @@ const SmartAudiences: React.FC = () => {
 
       const startEpoch = appliedDates.start
         ? Math.floor(
-            new Date(appliedDates.start.toISOString()).getTime() / 1000
-          )
+          new Date(appliedDates.start.toISOString()).getTime() / 1000
+        )
         : null;
       const endEpoch = appliedDates.end
         ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
@@ -668,7 +671,7 @@ const SmartAudiences: React.FC = () => {
     }
   };
 
-  const handleDateLabelChange = (label: string) => {};
+  const handleDateLabelChange = (label: string) => { };
 
   const handleFilterPopupOpen = () => {
     setFilterPopupOpen(true);
@@ -849,26 +852,26 @@ const SmartAudiences: React.FC = () => {
       label: string;
       value: string | ((f: any) => string);
     }[] = [
-      {
-        condition:
-          filters.selectedStatuses &&
-          Object.values(filters.selectedStatuses).some(Boolean),
-        label: "Status",
-        value: () => getSelectedValues(filters.selectedStatuses!),
-      },
-      {
-        condition:
-          filters.selectedUseCases &&
-          Object.values(filters.selectedUseCases).some(Boolean),
-        label: "Use Case",
-        value: () => getSelectedValues(filters.selectedUseCases!),
-      },
-      {
-        condition: filters.searchQuery,
-        label: "Search",
-        value: filters.searchQuery!,
-      },
-    ];
+        {
+          condition:
+            filters.selectedStatuses &&
+            Object.values(filters.selectedStatuses).some(Boolean),
+          label: "Status",
+          value: () => getSelectedValues(filters.selectedStatuses!),
+        },
+        {
+          condition:
+            filters.selectedUseCases &&
+            Object.values(filters.selectedUseCases).some(Boolean),
+          label: "Use Case",
+          value: () => getSelectedValues(filters.selectedUseCases!),
+        },
+        {
+          condition: filters.searchQuery,
+          label: "Search",
+          value: filters.searchQuery!,
+        },
+      ];
 
     filterMappings.forEach(({ condition, label, value }) => {
       if (condition) {
@@ -1259,10 +1262,9 @@ const SmartAudiences: React.FC = () => {
                           <Chip
                             className="paragraph"
                             key={filter.label}
-                            label={`${filter.label}: ${
-                              displayValue.charAt(0).toUpperCase() +
+                            label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() +
                               displayValue.slice(1)
-                            }`}
+                              }`}
                             onDelete={() => handleDeleteFilter(filter)}
                             deleteIcon={
                               <CloseIcon
@@ -1292,7 +1294,7 @@ const SmartAudiences: React.FC = () => {
                         maxWidth: "100%",
                         pl: 0,
                         pr: 0,
-                        pt: "14px",
+                        pt: "7px",
                         "@media (max-width: 900px)": {
                           pt: "2px",
                           pb: "18px",
@@ -1348,6 +1350,7 @@ const SmartAudiences: React.FC = () => {
                                   caption="Combine your highest-performing sources and lookalikes into powerful audience stacks, then strategically trim low-quality segments. This is where smarter targeting begins."
                                   onBegin={handleOpenPopup}
                                   beginDisabled={!hasSource}
+                                  buttonLabel="Create Smart Audience"
                                 />
                               </>
                             }
@@ -1368,6 +1371,32 @@ const SmartAudiences: React.FC = () => {
                                 {
                                   title: "Expansion Strategies",
                                   description: "Scale what's working",
+                                },
+                              ],
+                            }}
+                            LeftMenu={{
+                              header: "Build Smarter Audiences",
+                              subtitle: "Free 30-Min AI Optimization Session",
+                              image: {
+                                url: "/smart-audience-synergy.svg",
+                                width: 600,
+                                height: 300
+                              },
+                              items: [
+                                {
+                                  Icon: SettingsIcon,
+                                  title: "Audience Quality Check",
+                                  subtitle: `We’ll audit your current Smart Audiences to ensure optimal performance.`,
+                                },
+                                {
+                                  Icon: SpeedIcon,
+                                  title: "Performance Tuning",
+                                  subtitle: `Fine-tune your settings for maximum conversions.`,
+                                },
+                                {
+                                  Icon: MovingIcon,
+                                  title: "Expansion Strategies",
+                                  subtitle: "Safely scale your best audiences without quality loss.",
                                 },
                               ],
                             }}
@@ -1592,7 +1621,7 @@ const SmartAudiences: React.FC = () => {
                                         sx={{
                                           backgroundColor:
                                             selectedRows.has(row.id) &&
-                                            !loaderForTable
+                                              !loaderForTable
                                               ? "rgba(247, 247, 247, 1)"
                                               : "#fff",
                                           borderTop:
@@ -1716,10 +1745,10 @@ const SmartAudiences: React.FC = () => {
                                                     "rgba(56, 152, 252, 1)",
                                                 },
                                                 "& .MuiOutlinedInput-root:hover fieldset":
-                                                  {
-                                                    color:
-                                                      "rgba(56, 152, 252, 1)",
-                                                  },
+                                                {
+                                                  color:
+                                                    "rgba(56, 152, 252, 1)",
+                                                },
                                                 "& .MuiOutlinedInput-root": {
                                                   "&:hover fieldset": {
                                                     borderColor:
@@ -1870,13 +1899,13 @@ const SmartAudiences: React.FC = () => {
                                               }}
                                             >
                                               {progressValidation?.total >
-                                              row.validated_records
+                                                row.validated_records
                                                 ? progressValidation?.total.toLocaleString(
-                                                    "en-US"
-                                                  )
+                                                  "en-US"
+                                                )
                                                 : row.validated_records.toLocaleString(
-                                                    "en-US"
-                                                  )}
+                                                  "en-US"
+                                                )}
                                             </Box>
                                           )}
                                         </TableCell>
@@ -1920,13 +1949,13 @@ const SmartAudiences: React.FC = () => {
                                               row.validated_records
                                             ).toLocaleString("en-US")
                                           ) : (progress?.processed &&
-                                              progress?.processed ===
-                                                row?.active_segment_records) ||
+                                            progress?.processed ===
+                                            row?.active_segment_records) ||
                                             (row?.processed_active_segment_records ===
                                               row?.active_segment_records &&
                                               (row.status === "unvalidated" ||
                                                 row?.processed_active_segment_records !==
-                                                  0)) ? (
+                                                0)) ? (
                                             row.active_segment_records.toLocaleString(
                                               "en-US"
                                             )
@@ -1973,8 +2002,8 @@ const SmartAudiences: React.FC = () => {
                                                   progressValidation?.total
                                                     ? "Ready"
                                                     : preRenderStatus(
-                                                        setStatus(row.status)
-                                                      )
+                                                      setStatus(row.status)
+                                                    )
                                                 ).background,
                                                 padding: "3px 8px",
                                                 borderRadius: "2px",
@@ -1987,16 +2016,16 @@ const SmartAudiences: React.FC = () => {
                                                   progressValidation?.total
                                                     ? "Ready"
                                                     : preRenderStatus(
-                                                        setStatus(row.status)
-                                                      )
+                                                      setStatus(row.status)
+                                                    )
                                                 ).color,
                                               }}
                                             >
                                               {progressValidation?.total
                                                 ? "Ready"
                                                 : preRenderStatus(
-                                                    setStatus(row.status)
-                                                  )}
+                                                  setStatus(row.status)
+                                                )}
                                             </Typography>
                                           </Box>
                                         </TableCell>
@@ -2061,9 +2090,9 @@ const SmartAudiences: React.FC = () => {
                                                 disabled={
                                                   !(
                                                     selectedRowData?.status ===
-                                                      "ready" ||
+                                                    "ready" ||
                                                     selectedRowData?.status ===
-                                                      "n_a"
+                                                    "n_a"
                                                   )
                                                 }
                                                 sx={{
@@ -2088,11 +2117,11 @@ const SmartAudiences: React.FC = () => {
                                               <ListItemButton
                                                 disabled={
                                                   selectedRowData?.active_segment_records !==
-                                                    selectedRowData?.processed_active_segment_records ||
+                                                  selectedRowData?.processed_active_segment_records ||
                                                   selectedRowData?.status ===
-                                                    "unvalidated" ||
+                                                  "unvalidated" ||
                                                   selectedRowData?.status ===
-                                                    "validating"
+                                                  "validating"
                                                 }
                                                 sx={{
                                                   padding: "4px 16px",
@@ -2242,7 +2271,7 @@ const SmartAudiences: React.FC = () => {
                               </Table>
                             </TableContainer>
                             {count_smarts_audience &&
-                            count_smarts_audience > 10 ? (
+                              count_smarts_audience > 10 ? (
                               <Box
                                 sx={{
                                   display: "flex",

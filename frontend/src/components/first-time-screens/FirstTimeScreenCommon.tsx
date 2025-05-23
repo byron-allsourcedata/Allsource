@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import { Box, Typography, Link as MuiLink } from "@mui/material";
+import { Box, Typography, Link as MuiLink, Button } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { DashboardHelpCard } from "./HelpCard";
 import NotificationInfoBanner from "./NotificationInfoBanner";
 import { TimeScreenProps } from "@/types/first_time_screens";
 import NotificationBanner from "./NotificationWarningBanner";
+import { BookACallPopup, LeftMenuProps } from "@/app/(client)/components/BookACallPopup";
 
 const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
   Header,
@@ -18,8 +19,17 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
   Content,
   HelpCard,
   customStyleSX,
+  LeftMenu
 }) => {
   const [bannerVisible, setBannerVisible] = useState(true);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+  const handleOpenPopup = () => {
+    setIsPopupOpen(true);
+  };
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+  };
   return (
     <Box
       sx={{
@@ -28,7 +38,7 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
       }}
     >
       {WarningNotification?.condition && (
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{}}>
           <NotificationBanner
             ctaUrl={WarningNotification.ctaUrl}
             ctaLabel={WarningNotification.ctaLabel}
@@ -107,6 +117,22 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
                 )}
               </Box>
             )}
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <Button
+                onClick={handleOpenPopup}
+                variant="contained"
+                sx={{
+                  backgroundColor: "rgba(56,152,252,1)",
+                  textTransform: "none",
+                  padding: "10px 24px",
+                  color: "#fff !important",
+                  ":hover": { backgroundColor: "rgba(48,149,250,1)" },
+                  ":disabled": { backgroundColor: "rgba(56,152,252,0.5)" },
+                }}
+              >
+                Request a Demo
+              </Button>
+            </Box>
           </Box>
         </Box>
 
@@ -120,7 +146,11 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
 
         {/* Main Content */}
         {Content && (
-          <Box sx={{ width: "100%", mt: 3 }}>
+          <Box sx={{
+            width: "100%",
+            mt: bannerVisible ? 3 : 0
+
+          }}>
             {typeof Content === "function"
               ? React.createElement(Content as React.ComponentType)
               : Content}
@@ -128,7 +158,7 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
         )}
 
         {/* Help Card */}
-        <Box sx={{ mt: 3, width: "100%" }}>
+        <Box sx={{ my: 3, width: "100%" }}>
           {HelpCard && (
             <DashboardHelpCard
               headline={HelpCard.headline}
@@ -138,6 +168,7 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
           )}
         </Box>
       </Box>
+      <BookACallPopup open={isPopupOpen} handleClose={handleClosePopup} leftMenu={LeftMenu} />
     </Box>
   );
 };

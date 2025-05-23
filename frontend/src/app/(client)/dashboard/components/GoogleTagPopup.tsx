@@ -262,7 +262,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       );
       let pixelCode = manualResponse.data.manual;
       const tagData = {
-        name: "Maximiz pixel script",
+        name: "Allsource pixel script",
         type: "html",
         parameter: [
           {
@@ -349,7 +349,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                 &access_type=offline
                 &prompt=select_account`.replace(/\s+/g, "");
 
-      window.location.href = authUrl;
+      window.open(authUrl, "_blank");
     } catch (error) {
       showErrorToast("Failed to log in.");
     }
@@ -661,7 +661,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                   display: "flex",
                   justifyContent: "flex-end",
                   gap: 1,
-                  position: "absolute",
                   bottom: 0,
                   right: "3%",
                   top: "91%",

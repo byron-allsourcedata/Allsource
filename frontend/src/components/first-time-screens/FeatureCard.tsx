@@ -14,6 +14,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
             variant="outlined"
             onClick={onClick}
             sx={{
+                height: '100%',
                 backgroundColor: 'transparent',
                 boxShadow: 'none',
                 cursor: 'pointer',

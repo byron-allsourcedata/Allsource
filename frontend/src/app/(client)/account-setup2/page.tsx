@@ -772,7 +772,7 @@ const AccountSetup = () => {
       let manualResponse = await axiosInterceptorInstance.get(`/install-pixel/manually`);
       let pixelCode = manualResponse.data.manual;
       const tagData = {
-        name: 'Maximiz pixel script',
+        name: 'Allsource pixel script',
         type: 'html',
         parameter: [
           {

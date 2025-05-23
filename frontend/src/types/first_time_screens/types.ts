@@ -1,3 +1,4 @@
+import { LeftMenuProps } from "@/app/(client)/components/BookACallPopup";
 import { SxProps, Theme } from "@mui/material";
 
 export type CardData = {
@@ -37,6 +38,7 @@ export interface TimeScreenProps {
   HelpCard: DashboardHelpCardProps;
   customStyleSX?: SxProps<Theme>;
   WarningNotification?: NotificationWarningProps;
+  LeftMenu?: LeftMenuProps;
 }
 
 export interface FeatureCardProps {
@@ -63,5 +65,6 @@ export interface PreviewConfig {
   caption: string
   onBegin: () => void
   beginDisabled?: boolean
+  buttonLabel?: string
   sx?: SxProps<Theme>
 }

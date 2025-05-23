@@ -23,6 +23,14 @@ import {
   showToast,
 } from "../../../../components/ToastNotification";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "@/app/(client)/components/HintCard";
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
 
 const style = {
   bgcolor: "background.paper",
@@ -126,6 +134,9 @@ interface PopupProps {
 }
 
 const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
+  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
+    useHints();
+  const [showHint, setShowHint] = useState(true);
   const [selectedCMS, setSelectedCMS] = useState<string | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>("Install on CMS");
   const [shop_domain, setDomain] = useState<string>(() => {
@@ -148,7 +159,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
         try {
           const parsed = JSON.parse(savedMe);
           return parsed.source_platform || "";
-        } catch (error) { }
+        } catch (error) {}
       }
     }
     return "";
@@ -171,7 +182,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
             setAccessTokenExists(true);
           }
         }
-      } catch (error) { }
+      } catch (error) {}
       try {
         const response_big_commerce = await axiosInstance.get(
           "/integrations/credentials/bigcommerce"
@@ -182,7 +193,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
             setAccessTokenExists(true);
           }
         }
-      } catch (error) { }
+      } catch (error) {}
 
       if (sourcePlatform === "shopify") {
         setSelectedCMS("Shopify");
@@ -216,6 +227,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 
   const handleButtonClick = async (cms: string) => {
     setSelectedCMS(cms);
+    setShowHint(false);
     setHeaderTitle(`Install with ${cms}`);
   };
 
@@ -314,8 +326,68 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
     return !errors.shop_domain && !errors.access_token;
   };
 
+  const hintCards: HintCardInterface[] = [
+    {
+      description:
+        "Click on your platform (Shopify, WordPress, or BigCommerce) to see a step-by-step guide for installing the pixel. Follow the instructions to complete the setup.",
+      title: "Choose CMS",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+    },
+    {
+      description:
+        "Enter your Shopify store domain in the provided field. We've prefilled it based on your earlier selection, but you can choose a different one if needed. Note: if you change the domain here, make sure to also update it in the domain selection step.",
+      title: "Enter Shop Domain",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify",
+    },
+    {
+      description:
+        "Enter your Shopify API access token. This token is required for secure communication between your store and our application. You can get the token in your Shopify admin under “Settings” → “Apps and sales channels” → “Develop app” → “Admin API”.",
+      title: "Enter a Shopify Access Token",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify",
+    },
+    {
+      description: `Click the "Install" button, and we’ll automatically inject our script into your Shopify store. No further action is needed — the setup completes automatically.`,
+      title: "Install the Script",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify",
+    },
+    {
+      description: `Add our official Allsource Pixel plugin to your WordPress site. This allows for seamless pixel integration without manual setup.`,
+      title: "Install the Plugin",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress",
+    },
+    {
+      description: `Enter your Site ID during the checkout process. This connects your site to Allsource for accurate event tracking.`,
+      title: "Enter Your Site ID",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress",
+    },
+    {
+      description: `Check if Allsource is receiving data from your site. If everything is set up correctly, events will start appearing automatically.`,
+      title: "Verify Connection",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress",
+    },
+    {
+      description: `Enter your unique BigCommerce Store Hash in the designated field. This helps our system identify your store. You can find the Store Hash in your admin panel URL — it's the part between /stores/ and /manage.`,
+      title: "Enter Store Hash",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress",
+    },
+    {
+      description: `Once you’ve submitted the required information, click “Install”. We’ll automatically add our script to your BigCommerce store. No further action is needed on your part.`,
+      title: "Script Installation",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress",
+    },
+  ];
+
   return (
-    <Box sx={{ ...style, ...(open ? openStyle : {}) }}>
+    <Box sx={{ ...style, ...(open ? openStyle : {}), zIndex: 1200 }}>
       <Box sx={{ flex: 1 }}>
         <Box
           sx={{
@@ -348,6 +420,16 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
           >
             Choose CMS
           </Typography>
+          {pixelSetupHints[5].show && showHint && (
+            <HintCard
+              card={hintCards[0]}
+              positionLeft={350}
+              positionTop={50}
+              isOpenBody={pixelSetupHints[5].showBody}
+              toggleClick={() => changePixelSetupHint(5, "showBody", "toggle")}
+              closeClick={() => changePixelSetupHint(5, "showBody", "close")}
+            />
+          )}
         </Box>
         <Box
           sx={{
@@ -444,9 +526,11 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                     }}
                   >
                     <CustomTooltip
-                      title={"Quickly integrate using Wordpress for seamless setup."}
+                      title={
+                        "Quickly integrate using Wordpress for seamless setup."
+                      }
                       linkText="Learn more"
-                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress"
                     />
                   </Box>
                   <Image
@@ -494,18 +578,20 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                   }}
                 >
                   <Box
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                }}
-              >
-                <CustomTooltip
-                  title={"Quickly integrate using Bigcommerce for seamless setup."}
-                  linkText="Learn more"
-                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-bigcommerce"
-                />
-              </Box>
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                    }}
+                  >
+                    <CustomTooltip
+                      title={
+                        "Quickly integrate using Bigcommerce for seamless setup."
+                      }
+                      linkText="Learn more"
+                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-bigcommerce"
+                    />
+                  </Box>
                   <Image
                     src={"/bigcommerce-icon.svg"}
                     alt="Install on Bigcommerce"
@@ -520,9 +606,6 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                   </Typography>
                 </Button>
               </Grid>
-
-
-
             </>
           )}
         </Box>
@@ -576,6 +659,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         display: "flex",
                         width: "60%",
                         justifyContent: "center",
+                        position: "relative",
                         margin: 0,
                         pl: 4.25,
                       }}
@@ -592,11 +676,11 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                               ? shop_domain.replace(/^https?:\/\//, "")
                               : ""
                             : shop_domain
-                              ? `https://${shop_domain.replace(
+                            ? `https://${shop_domain.replace(
                                 /^https?:\/\//,
                                 ""
                               )}`
-                              : "https://"
+                            : "https://"
                         }
                         sx={styles.formField}
                         onFocus={handleFocus}
@@ -606,6 +690,20 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         InputLabelProps={{ sx: styles.inputLabel }}
                         disabled={sourcePlatform === "shopify"}
                       />
+                      {pixelSetupHints[6].show && (
+                        <HintCard
+                          card={hintCards[1]}
+                          positionLeft={420}
+                          positionTop={35}
+                          isOpenBody={pixelSetupHints[6].showBody}
+                          toggleClick={() =>
+                            changePixelSetupHint(6, "showBody", "toggle")
+                          }
+                          closeClick={() =>
+                            changePixelSetupHint(6, "showBody", "close")
+                          }
+                        />
+                      )}
                     </Box>
                     <Box
                       sx={{
@@ -638,6 +736,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         display: "flex",
                         width: "100%",
                         justifyContent: "center",
+                        position: "relative",
                         margin: 0,
                         pl: 4.25,
                       }}
@@ -657,6 +756,20 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           sourcePlatform === "shopify" && accessTokenExists
                         }
                       />
+                      {pixelSetupHints[7].show && (
+                        <HintCard
+                          card={hintCards[2]}
+                          positionLeft={660}
+                          positionTop={35}
+                          isOpenBody={pixelSetupHints[7].showBody}
+                          toggleClick={() =>
+                            changePixelSetupHint(7, "showBody", "toggle")
+                          }
+                          closeClick={() =>
+                            changePixelSetupHint(7, "showBody", "close")
+                          }
+                        />
+                      )}
                     </Box>
                     {sourcePlatform !== "shopify" && (
                       <Box
@@ -691,6 +804,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         flexDirection: "column",
                         justifyContent: "flex-end",
                         padding: "0em 2.25em",
+                        overflow: "visible",
                       }}
                     >
                       {sourcePlatform === "shopify" && accessTokenExists ? (
@@ -709,29 +823,45 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           Pixel Installed
                         </Typography>
                       ) : (
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          sx={{
-                            ...styles.submitButton,
-                            marginTop: "auto",
-                            maxWidth: "88px",
-                            minHeight: "40px",
-                            opacity: isFormValid() ? 1 : 0.6,
-                            pointerEvents: isFormValid() ? "auto" : "none",
-                            backgroundColor: isFormValid()
-                              ? "rgba(56, 152, 252, 1)"
-                              : "rgba(56, 152, 252, 0.6)",
-                            "&.Mui-disabled": {
-                              backgroundColor: "rgba(56, 152, 252, 0.6)",
-                              color: "#fff",
-                            },
-                          }}
-                          onClick={handleSubmit}
-                          disabled={!isFormValid}
-                        >
-                          Install
-                        </Button>
+                        <Box position="relative">
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            sx={{
+                              ...styles.submitButton,
+                              marginTop: "auto",
+                              maxWidth: "88px",
+                              minHeight: "40px",
+                              opacity: isFormValid() ? 1 : 0.6,
+                              pointerEvents: isFormValid() ? "auto" : "none",
+                              backgroundColor: isFormValid()
+                                ? "rgba(56, 152, 252, 1)"
+                                : "rgba(56, 152, 252, 0.6)",
+                              "&.Mui-disabled": {
+                                backgroundColor: "rgba(56, 152, 252, 0.6)",
+                                color: "#fff",
+                              },
+                            }}
+                            onClick={handleSubmit}
+                            disabled={!isFormValid}
+                          >
+                            Install
+                          </Button>
+                          {pixelSetupHints[8].show && (
+                            <HintCard
+                              card={hintCards[3]}
+                              positionLeft={110}
+                              positionTop={15}
+                              isOpenBody={pixelSetupHints[8].showBody}
+                              toggleClick={() =>
+                                changePixelSetupHint(8, "showBody", "toggle")
+                              }
+                              closeClick={() =>
+                                changePixelSetupHint(8, "showBody", "close")
+                              }
+                            />
+                          )}
+                        </Box>
                       )}
                     </Box>
                   </Box>
@@ -739,7 +869,12 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
               ) : selectedCMS === "WordPress" ? (
                 <>
                   <Box
-                    sx={{ flex: 1, overflowY: "auto", paddingBottom: "2em" }}
+                    sx={{
+                      flex: 1,
+                      overflowY: "auto",
+                      overflow: "visible",
+                      paddingBottom: "2em",
+                    }}
                   >
                     <Box
                       sx={{
@@ -765,7 +900,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         site.
                       </Typography>
                     </Box>
-                    <Box>
+                    <Box position="relative">
                       <Button
                         component={Link}
                         href="https://wordpress.org/plugins/allsource"
@@ -795,6 +930,20 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           Get plugin
                         </Typography>
                       </Button>
+                      {pixelSetupHints[9].show && (
+                        <HintCard
+                          card={hintCards[4]}
+                          positionLeft={190}
+                          positionTop={20}
+                          isOpenBody={pixelSetupHints[9].showBody}
+                          toggleClick={() =>
+                            changePixelSetupHint(9, "showBody", "toggle")
+                          }
+                          closeClick={() =>
+                            changePixelSetupHint(9, "showBody", "close")
+                          }
+                        />
+                      )}
                     </Box>
                     <Box
                       sx={{
@@ -829,6 +978,8 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                             display: "flex",
                             flexDirection: "row",
                             alignItems: "center",
+                            position: "relative",
+                            overflow: "visible",
                             gap: 1,
                           }}
                         >
@@ -860,11 +1011,31 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                               {pixel_client_id}
                             </code>
                           </Box>
-                          <Box sx={{ display: "flex", padding: "0px" }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              padding: "0px",
+                              position: "relative",
+                            }}
+                          >
                             <IconButton onClick={handleCopyToClipboard}>
                               <ContentCopyIcon />
                             </IconButton>
                           </Box>
+                          {pixelSetupHints[10].show && (
+                            <HintCard
+                              card={hintCards[5]}
+                              positionLeft={540}
+                              positionTop={35}
+                              isOpenBody={pixelSetupHints[10].showBody}
+                              toggleClick={() =>
+                                changePixelSetupHint(10, "showBody", "toggle")
+                              }
+                              closeClick={() =>
+                                changePixelSetupHint(10, "showBody", "close")
+                              }
+                            />
+                          )}
                         </Box>
                         during the checkout process
                       </Typography>
@@ -891,30 +1062,46 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         Verify if Allsource is receiving data from your site
                       </Typography>
                     </Box>
-                    <Button
-                      onClick={handleInstallButtonClick}
-                      variant="outlined"
-                      sx={{
-                        ml: 5,
-                        backgroundColor: "rgba(255, 255, 255, 1)",
-                        textTransform: "none",
-                        padding: "1em 2em",
-                        border: "1px solid rgba(56, 152, 252, 1)",
-                      }}
-                    >
-                      <Typography
-                        className="second-sub-title"
+                    <Box position="relative">
+                      <Button
+                        onClick={handleInstallButtonClick}
+                        variant="outlined"
                         sx={{
-                          fontSize: "14px !important",
-                          color: "rgba(56, 152, 252, 1) !important",
-                          lineHeight: "22.4px",
-                          textAlign: "left",
-                          textWrap: "wrap",
+                          ml: 5,
+                          backgroundColor: "rgba(255, 255, 255, 1)",
+                          textTransform: "none",
+                          padding: "1em 2em",
+                          border: "1px solid rgba(56, 152, 252, 1)",
                         }}
                       >
-                        View installation
-                      </Typography>
-                    </Button>
+                        <Typography
+                          className="second-sub-title"
+                          sx={{
+                            fontSize: "14px !important",
+                            color: "rgba(56, 152, 252, 1) !important",
+                            lineHeight: "22.4px",
+                            textAlign: "left",
+                            textWrap: "wrap",
+                          }}
+                        >
+                          View installation
+                        </Typography>
+                      </Button>
+                      {pixelSetupHints[11].show && (
+                        <HintCard
+                          card={hintCards[6]}
+                          positionLeft={235}
+                          positionTop={20}
+                          isOpenBody={pixelSetupHints[11].showBody}
+                          toggleClick={() =>
+                            changePixelSetupHint(11, "showBody", "toggle")
+                          }
+                          closeClick={() =>
+                            changePixelSetupHint(11, "showBody", "close")
+                          }
+                        />
+                      )}
+                    </Box>
                   </Box>
                 </>
               ) : (
@@ -924,42 +1111,45 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                       flex: 1,
                       overflowY: "auto",
                       paddingBottom: "1em",
+                      overflow: "visible",
                       height: "100%",
                     }}
                   >
                     {(sourcePlatform !== "big_commerce" ||
                       !accessTokenExists) && (
-                        <Box
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          padding: 0,
+                          justifyContent: "start",
+                        }}
+                      >
+                        <Image src="/2.svg" alt="2" width={20} height={20} />
+                        <Typography
+                          className="first-sub-title"
                           sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            padding: 0,
-                            justifyContent: "start",
+                            ...maintext,
+                            textAlign: "left",
+                            padding: "1em 0em 1em 1em",
+                            fontWeight: "500",
                           }}
                         >
-                          <Image src="/2.svg" alt="2" width={20} height={20} />
-                          <Typography
-                            className="first-sub-title"
-                            sx={{
-                              ...maintext,
-                              textAlign: "left",
-                              padding: "1em 0em 1em 1em",
-                              fontWeight: "500",
-                            }}
-                          >
-                            Enter your Bigcommerce store hash in the designated
-                            field. This allows our system to identify your store.
-                          </Typography>
-                        </Box>
-                      )}
+                          Enter your Bigcommerce store hash in the designated
+                          field. This allows our system to identify your store.
+                        </Typography>
+                      </Box>
+                    )}
 
                     <Box
                       component="pre"
+                      position="relative"
                       sx={{
                         display: "flex",
                         width: "100%",
                         justifyContent: "center",
+                        overflow: "visible",
                         margin: 0,
                         pl: 4.25,
                       }}
@@ -981,35 +1171,49 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         onChange={handleStoreHashChange}
                         InputLabelProps={{ sx: styles.inputLabel }}
                       />
+                      {pixelSetupHints[12].show && (
+                        <HintCard
+                          card={hintCards[7]}
+                          positionLeft={660}
+                          positionTop={35}
+                          isOpenBody={pixelSetupHints[12].showBody}
+                          toggleClick={() =>
+                            changePixelSetupHint(12, "showBody", "toggle")
+                          }
+                          closeClick={() =>
+                            changePixelSetupHint(12, "showBody", "close")
+                          }
+                        />
+                      )}
                     </Box>
                     {(sourcePlatform !== "big_commerce" ||
                       !accessTokenExists) && (
-                        <Box
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "start",
+                        }}
+                      >
+                        <Image src="/3.svg" alt="3" width={20} height={20} />
+                        <Typography
+                          className="first-sub-title"
                           sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            justifyContent: "start",
+                            ...maintext,
+                            textAlign: "left",
+                            padding: "2em 1em 1em",
+                            fontWeight: "500",
+                            "@media (max-width: 600px)": { padding: "1em" },
                           }}
                         >
-                          <Image src="/3.svg" alt="3" width={20} height={20} />
-                          <Typography
-                            className="first-sub-title"
-                            sx={{
-                              ...maintext,
-                              textAlign: "left",
-                              padding: "2em 1em 1em",
-                              fontWeight: "500",
-                              "@media (max-width: 600px)": { padding: "1em" },
-                            }}
-                          >
-                            Once you have submitted the required information, our
-                            system will automatically install the script on your
-                            Bigcommerce store. You don’t need to take any further
-                            action.
-                          </Typography>
-                        </Box>
-                      )}
+                          Once you have submitted the required information, our
+                          system will automatically install the script on your
+                          Bigcommerce store. You don’t need to take any further
+                          action.
+                        </Typography>
+                      </Box>
+                    )}
                     <Box
                       sx={{
                         display: "flex",
@@ -1021,7 +1225,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                       }}
                     >
                       {sourcePlatform === "big_commerce" &&
-                        accessTokenExists ? (
+                      accessTokenExists ? (
                         <Typography
                           sx={{
                             color: "#333",
@@ -1037,26 +1241,42 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           Pixel Installed
                         </Typography>
                       ) : (
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          sx={{
-                            ...styles.submitButton,
-                            marginTop: "auto",
-                            maxWidth: "88px",
-                            minHeight: "40px",
-                            pointerEvents: !!storeHash ? "auto" : "none",
-                            backgroundColor: "rgba(56, 152, 252, 1)",
-                            "&.Mui-disabled": {
-                              backgroundColor: "rgba(56, 152, 252, 0.3)",
-                              color: "#fff",
-                            },
-                          }}
-                          onClick={handleSubmitBigcommerce}
-                          disabled={!storeHash}
-                        >
-                          Install
-                        </Button>
+                        <Box position="relative">
+                          <Button
+                            fullWidth
+                            variant="contained"
+                            sx={{
+                              ...styles.submitButton,
+                              marginTop: "auto",
+                              maxWidth: "88px",
+                              minHeight: "40px",
+                              pointerEvents: !!storeHash ? "auto" : "none",
+                              backgroundColor: "rgba(56, 152, 252, 1)",
+                              "&.Mui-disabled": {
+                                backgroundColor: "rgba(56, 152, 252, 0.3)",
+                                color: "#fff",
+                              },
+                            }}
+                            onClick={handleSubmitBigcommerce}
+                            disabled={!storeHash}
+                          >
+                            Install
+                          </Button>
+                          {pixelSetupHints[13]?.show && (
+                            <HintCard
+                              card={hintCards[8]}
+                              positionLeft={110}
+                              positionTop={15}
+                              isOpenBody={pixelSetupHints[13].showBody}
+                              toggleClick={() =>
+                                changePixelSetupHint(13, "showBody", "toggle")
+                              }
+                              closeClick={() =>
+                                changePixelSetupHint(13, "showBody", "close")
+                              }
+                            />
+                          )}
+                        </Box>
                       )}
                     </Box>
                   </Box>

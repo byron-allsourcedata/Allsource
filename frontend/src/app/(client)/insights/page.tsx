@@ -39,6 +39,7 @@ import {
   CardsSection,
   FirstTimeScreenCommon,
 } from "@/components/first-time-screens";
+import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
 type TableData = {
   id: string;
@@ -552,6 +553,7 @@ const Insights = () => {
                       imageSrc: "/source.svg",
                       onClick: handleOpenPopup,
                       showRecommended: false,
+                      img_height: 170
                     },
                     {
                       title: "Lookalikes Insights",
@@ -560,6 +562,7 @@ const Insights = () => {
                       imageSrc: "/lookalike.svg",
                       onClick: handleOpenPopup,
                       showRecommended: false,
+                      img_height: 170
                     },
                   ]}
                 />
@@ -580,6 +583,32 @@ const Insights = () => {
                   {
                     title: "Targeting Recommendations",
                     description: "Optimize based on your data",
+                  },
+                ],
+              }}
+              LeftMenu={{
+                header: "Decode Your Audience Insights Like a Pro",
+                subtitle: "Free 30-Min Strategy Session",
+                image: {
+                  url: "/source.svg",
+                  width: 600,
+                  height: 300
+                },
+                items: [
+                  {
+                    Icon: SettingsIcon,
+                    title: "Audience Profile Review",
+                    subtitle: `We’ll analyze your audience composition to uncover hidden opportunities and gaps.`,
+                  },
+                  {
+                    Icon: SpeedIcon,
+                    title: "Behavior Analysis",
+                    subtitle: `Understand what your audience actually does – not just who they are.`,
+                  },
+                  {
+                    Icon: MovingIcon,
+                    title: "Targeting Recommendations",
+                    subtitle: "Get customized suggestions to refine your audience strategy.",
                   },
                 ],
               }}
