@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
-import { initialSourcesBuilderHints, initialSourcesTableHints } from '@/context/hintsStates';
+import React, { createContext, useState, ReactNode, useContext } from 'react';
+import { initialSourcesBuilderHints, initialSourcesTableHints } from './hintsInitialState';
 
 interface HintsContextType {
   changeSourcesBuilderHint: (id: number, key: "show" | "showBody", action: "toggle" | "close" | "open") => void

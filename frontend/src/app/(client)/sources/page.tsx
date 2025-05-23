@@ -59,6 +59,7 @@ import { useScrollShadow } from "@/hooks/useScrollShadow";
 import HintCard from "../components/HintCard";
 import { CardsSection, FirstTimeScreenCommon } from "@/components/first-time-screens";
 import { useSourcesHints } from "./context/SourcesHintsContext";
+import { tableHintCards } from "./context/hintsCardsContent";
 
 interface HintCardInterface {
   description: string;
@@ -150,23 +151,6 @@ const Sources: React.FC = () => {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
   const { changeSourcesTableHint, sourcesTableHints, resetSourcesTableHints } = useSourcesHints();
-
-  const hintCards: HintCardInterface[] = [
-    {
-     description:
-     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-     title: "Actions",
-     linkToLoadMore:
-     "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-    },
-    {
-     description:
-     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-     title: "Builder",
-     linkToLoadMore:
-       "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-    },
-  ]
 
   const cardData: CardData[] = [
     {
@@ -921,7 +905,7 @@ const Sources: React.FC = () => {
 
                   
                   <HintCard
-                    card={hintCards[1]}
+                    card={tableHintCards[1]}
                     positionLeft={-420}
                     positionTop={20}
                     rightSide={true}
@@ -1405,7 +1389,7 @@ const Sources: React.FC = () => {
                                         </Box>
                                         {label === "Actions" && (
                                               <HintCard
-                                                card={hintCards[0]}
+                                                card={tableHintCards[0]}
                                                 positionLeft={-380}
                                                 positionTop={100}
                                                 rightSide={true}
