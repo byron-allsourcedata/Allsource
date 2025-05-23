@@ -8,23 +8,13 @@ import SmartAudiencesContacts from "./components/SmartAudienceContacts";
 import SmartAudiencesTarget from "./components/SmartAudienceTarget";
 import CustomTooltip from "@/components/customToolTip";
 import { useFetchAudienceData } from "@/hooks/useFetchAudienceData";
-import { useHints } from "@/context/HintsContext";
 import HintCard from "../../components/HintCard";
-
-interface HintCardInterface {
-    description: string;
-    title: string;
-    linkToLoadMore: string;
-}
-
-interface StateHint {
-    id: number;
-    show: boolean;
-}
+import { useSmartsHints } from "../context/SmartsHintsContext";
+import { builderHintCards } from "../context/hintsCardsContent";
 
 
 const SmartAudiencesBuilder: React.FC = () => {
-    const { resetSmartsTableHints, smartsBuilderHints, changeSmartsBuilderHint } = useHints();
+    const { resetSmartsTableHints, smartsBuilderHints, changeSmartsBuilderHint } = useSmartsHints();
     const [useCaseType, setUseCaseType] = useState<string>("");
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
@@ -46,13 +36,13 @@ const SmartAudiencesBuilder: React.FC = () => {
             setTimeout(() => {
                 scrollToBlock(block2Ref)
             }, 0)
-            toggleDotHintClick(1)
+            openDotHintClick(1)
         }
         else {
             setTimeout(() => {
                 scrollToBlock(block5Ref)
             }, 0)
-            toggleDotHintClick(2)
+            openDotHintClick(2)
         }
         closeDotHintClick(0)
     };
@@ -67,10 +57,12 @@ const SmartAudiencesBuilder: React.FC = () => {
 
     const closeDotHintClick = (id: number) => {
         changeSmartsBuilderHint(id, "show", "close")
+        changeSmartsBuilderHint(id, "showBody", "close")
     };
 
     const openDotHintClick = (id: number) => {
         changeSmartsBuilderHint(id, "show", "open")
+        changeSmartsBuilderHint(id, "showBody", "open")
     };
 
     const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {
@@ -91,51 +83,6 @@ const SmartAudiencesBuilder: React.FC = () => {
             </Box>
         )
     }
-
-    const hintCards: HintCardInterface[] = [
-        {
-         description:
-         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-         title: "Use case",
-         linkToLoadMore:
-         "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-        },
-        {
-         description:
-         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-         title: "Select your Contacts1",
-         linkToLoadMore:
-           "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-        },
-        {
-         description:
-         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-         title: "Target Type",
-         linkToLoadMore:
-           "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-        },
-        {
-         description:
-         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-         title: "Select your Contacts2",
-         linkToLoadMore:
-           "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-        },
-        {
-         description:
-         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-         title: "Validation",
-         linkToLoadMore:
-           "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-        },
-        {
-         description:
-         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-         title: "Generate Active Segments",
-         linkToLoadMore:
-           "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
-        }
-    ]
 
 
     return (
@@ -176,9 +123,11 @@ const SmartAudiencesBuilder: React.FC = () => {
                                 </Select>
                                 {smartsBuilderHints[0].show &&  (
                                     <HintCard
-                                        card={hintCards[0]}
+                                        card={builderHintCards[0]}
                                         positionLeft={340}
-                                        toggleClick={() => toggleDotHintClick(0)}
+                                        isOpenBody={smartsBuilderHints[0].showBody}
+                                        toggleClick={() => changeSmartsBuilderHint(0, "showBody", "toggle")}
+                                        closeClick={() => changeSmartsBuilderHint(0, "showBody", "close")}
                                     />
                                 )}
                             </FormControl>
@@ -189,9 +138,6 @@ const SmartAudiencesBuilder: React.FC = () => {
                                 block2Ref={block2Ref}
                                 block3Ref={block3Ref}
                                 block4Ref={block4Ref}
-                                hintCards={hintCards}
-                                toggleDotHintClick={toggleDotHintClick}
-                                closeDotHintClick={closeDotHintClick}
                                 scrollToBlock={scrollToBlock}
                                 useCaseType={useCaseType}
                                 sourceData={sourceData}
@@ -206,10 +152,6 @@ const SmartAudiencesBuilder: React.FC = () => {
                                     block8Ref={block8Ref}
                                     block9Ref={block9Ref}
                                     block10Ref={block10Ref}
-                                    hintCards={hintCards}
-                                    toggleDotHintClick={toggleDotHintClick}
-                                    closeDotHintClick={closeDotHintClick}
-                                    openDotHintClick={openDotHintClick}
                                     scrollToBlock={scrollToBlock}
                                     useCaseType={useCaseType}
                                     sourceData={sourceData}
@@ -217,7 +159,6 @@ const SmartAudiencesBuilder: React.FC = () => {
                                 />
                             )
                         )}
-
 
                     </Box>
                 </Box>

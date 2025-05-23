@@ -38,8 +38,9 @@ import CalculationPopup from "./CalculationPopup";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { useHints } from "@/context/HintsContext";
 import HintCard from "../../../components/HintCard";
+import { builderHintCards } from "../../context/hintsCardsContent";
+import { useSmartsHints } from "../../context/SmartsHintsContext";
 
 interface HintCardInterface {
   description: string;
@@ -94,10 +95,6 @@ interface SelectedData {
 
 interface SmartAudienceTargetProps {
   scrollToBlock: (block: React.RefObject<HTMLDivElement>) => void
-  toggleDotHintClick: (id: number) => void
-  closeDotHintClick: (id: number) => void
-  openDotHintClick: (id: number) => void
-  hintCards: HintCardInterface[];
   block5Ref: React.RefObject<HTMLDivElement>
   block6Ref: React.RefObject<HTMLDivElement>
   block7Ref: React.RefObject<HTMLDivElement>
@@ -133,10 +130,6 @@ const toSnakeCase = (str: string) => {
 
 const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   scrollToBlock,
-  toggleDotHintClick,
-  closeDotHintClick,
-  openDotHintClick,
-  hintCards,
   block5Ref,
   block6Ref,
   block7Ref,
@@ -148,7 +141,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   lookalikeData,
 }) => {
   const router = useRouter();
-  const { showHints, smartsBuilderHints } = useHints();
+  const { changeSmartsBuilderHint, smartsBuilderHints } = useSmartsHints();
   const [loading, setLoading] = useState(false);
   const [audienceName, setAudienceName] = useState<string>("");
   const [option, setOption] = useState<string>("");
@@ -204,6 +197,20 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   const formatNumber = (value: string) => {
     return value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
+
+  const toggleDotHintClick = (id: number) => {
+      changeSmartsBuilderHint(id, "show", "toggle")
+  };
+
+  const closeDotHintClick = (id: number) => {
+    changeSmartsBuilderHint(id, "show", "close")
+    changeSmartsBuilderHint(id, "showBody", "close")
+};
+
+  const openDotHintClick = (id: number) => {
+    changeSmartsBuilderHint(id, "show", "open")
+    changeSmartsBuilderHint(id, "showBody", "open")
+};
 
   const handleInputNumberChange = (
     event: React.ChangeEvent<HTMLInputElement>
@@ -512,11 +519,13 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
               {option}
             </ToggleButton>
           ))}
-          {showHints && smartsBuilderHints[2].show && (
+          {smartsBuilderHints[2].show && (
               <HintCard
-                  card={hintCards[2]}
+                  card={builderHintCards[2]}
                   positionLeft={215}
+                  isOpenBody={smartsBuilderHints[2].showBody}
                   toggleClick={() => toggleDotHintClick(2)}
+                  closeClick={() => closeDotHintClick(2)}
               />
             )} 
         </Box>
@@ -753,11 +762,13 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                       Exclude
                     </MenuItem>
                   </Select>
-                  {showHints && smartsBuilderHints[3].show && !option && (
+                  {smartsBuilderHints[3].show && !option && (
                     <HintCard
-                        card={hintCards[3]}
+                        card={builderHintCards[3]}
                         positionLeft={340}
+                        isOpenBody={smartsBuilderHints[3].showBody}
                         toggleClick={() => toggleDotHintClick(3)}
+                        closeClick={() => closeDotHintClick(3)}
                     />
                   )} 
                 </FormControl>
@@ -792,11 +803,13 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                         Lookalike
                       </MenuItem>
                     </Select>
-                    {showHints && smartsBuilderHints[3].show && option && (
+                    {smartsBuilderHints[3].show && option && (
                     <HintCard
-                        card={hintCards[3]}
+                        card={builderHintCards[3]}
                         positionLeft={340}
+                        isOpenBody={smartsBuilderHints[3].showBody}
                         toggleClick={() => toggleDotHintClick(3)}
+                        closeClick={() => closeDotHintClick(3)}
                     />
                   )} 
                   </FormControl>
@@ -977,7 +990,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
       {AudienceSize && (
         <ExpandableFilter
           block8Ref={block8Ref}
-          hintCard={hintCards[4]}
+          hintCard={builderHintCards[4]}
           toggleDotHintClickBlock4={() => toggleDotHintClick(4)}
           toggleDotHintClickBlock5={() => toggleDotHintClick(5)}
           isOpenSelect={smartsBuilderHints[4].show} 
@@ -1145,12 +1158,15 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                     }}
                   />
 
-                  {showHints && smartsBuilderHints[5].show &&  (
+                  {smartsBuilderHints[5].show &&  (
                     <HintCard
-                        card={hintCards[5]}
+                        card={builderHintCards[5]}
                         positionLeft={320}
                         positionTop={20}
+                        isOpenBody={smartsBuilderHints[5].showBody}
                         toggleClick={() => toggleDotHintClick(5)}
+                        closeClick={() => closeDotHintClick(5)}
+
                     />
                   )} 
                 </Box>
