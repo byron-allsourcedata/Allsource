@@ -342,7 +342,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       // const currentUrl = new URL(window.location.href);
       // currentUrl.search = "";
       const redirectUri = `${baseUrl}/leads`;
-      console.log(redirectUri)
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth
                 ?client_id=${clientId}
                 &redirect_uri=${encodeURIComponent(redirectUri)}
