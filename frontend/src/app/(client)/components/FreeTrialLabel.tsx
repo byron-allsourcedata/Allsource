@@ -31,9 +31,16 @@ const FreeTrialLabel: React.FC = () => {
   );
 
   useEffect(() => {
-    if (accessToken) {
-      refetch();
-    }
+    if (!accessToken) return;
+
+    const fetch = async () => {
+      try {
+        const response = await refetch();
+      } catch (err: any) {
+      }
+    };
+
+    fetch();
   }, [accessToken]);
 
   useEffect(() => {

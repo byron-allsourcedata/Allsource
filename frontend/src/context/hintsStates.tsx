@@ -33,9 +33,9 @@ const initialLookalikesTableHints: StateHint[] = [
 ];
 
 const initialPixelSetupHints: StateHint[] = [
-  { show: true, showBody: false, id: 0 },
-  { show: true, showBody: false, id: 1 },
-  { show: true, showBody: false, id: 2 },
+  { show: true, showBody: true, id: 0 },
+  { show: true, showBody: true, id: 1 },
+  { show: true, showBody: true, id: 2 },
   { show: true, showBody: false, id: 3 },
   { show: true, showBody: false, id: 4 },
   { show: true, showBody: false, id: 5 },
