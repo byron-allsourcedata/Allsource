@@ -37,7 +37,7 @@ import LegendToggleIcon from "@mui/icons-material/LegendToggle";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InsightsIcon from "@mui/icons-material/Insights";
-import InsertChartOutlinedIcon from '@mui/icons-material/InsertChartOutlined';
+import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import { display } from "@mui/system";
 
 const sidebarStyles = {
@@ -273,9 +273,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       if (isAuthorized.current) {
         router.push(route);
         return;
-      }
-
-      else {
+      } else {
         const response = await axiosInstance.get("/check-user-authorization");
         const status = response.data.status;
 

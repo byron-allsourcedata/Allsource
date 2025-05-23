@@ -349,7 +349,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                 &access_type=offline
                 &prompt=select_account`.replace(/\s+/g, "");
 
-      window.location.href = authUrl;
+      window.open(authUrl, "_blank");
     } catch (error) {
       showErrorToast("Failed to log in.");
     }

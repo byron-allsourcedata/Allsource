@@ -6,8 +6,6 @@ import React, {
   useContext,
 } from "react";
 import {
-  initialSourcesBuilderHints,
-  initialSourcesTableHints,
   initialSmartsBuilderHints,
   initialSmartsTableHints,
   initialLookalikesBuilderHints,
@@ -18,16 +16,6 @@ import {
 interface HintsContextType {
   showHints: boolean;
   toggleHints: () => void;
-  changeSourcesBuilderHint: (
-    id: number,
-    key: "show" | "showBody",
-    action: "toggle" | "close" | "open"
-  ) => void;
-  changeSourcesTableHint: (
-    id: number,
-    key: "show" | "showBody",
-    action: "toggle" | "close" | "open"
-  ) => void;
   changeSmartsBuilderHint: (
     id: number,
     key: "show" | "showBody",
@@ -53,15 +41,11 @@ interface HintsContextType {
     key: "show" | "showBody",
     action: "toggle" | "close" | "open"
   ) => void;
-  sourcesBuilderHints: StateHint[];
-  sourcesTableHints: StateHint[];
   smartsBuilderHints: StateHint[];
   smartsTableHints: StateHint[];
   lookalikesBuilderHints: StateHint[];
   lookalikesTableHints: StateHint[];
   pixelSetupHints: StateHint[];
-  resetSourcesBuilderHints: () => void;
-  resetSourcesTableHints: () => void;
   resetPixelSetupHints: () => void;
   resetSmartsTableHints: () => void;
 }
@@ -94,13 +78,6 @@ export const HintsProvider: React.FC<HintsProviderProps> = ({ children }) => {
     if (isFirstReload) return;
     localStorage.setItem("showHints", String(showHints));
   }, [showHints]);
-
-  const [sourcesBuilderHints, setSourcesBuilderHints] = useState<StateHint[]>(
-    initialSourcesBuilderHints
-  );
-  const [sourcesTableHints, setSourcesTableHints] = useState<StateHint[]>(
-    initialSourcesTableHints
-  );
 
   const [smartsBuilderHints, setSmartsBuilderHints] = useState<StateHint[]>(
     initialSmartsBuilderHints
@@ -153,16 +130,6 @@ export const HintsProvider: React.FC<HintsProviderProps> = ({ children }) => {
       value={{
         showHints,
         toggleHints: () => setShowHints((prev) => !prev),
-        changeSourcesBuilderHint: (id, key, action) =>
-          changeHintState(id, key, action, setSourcesBuilderHints),
-        resetSourcesBuilderHints: () =>
-          resetHintsState(setSourcesBuilderHints, initialSourcesBuilderHints),
-        sourcesBuilderHints,
-        changeSourcesTableHint: (id, key, action) =>
-          changeHintState(id, key, action, setSourcesTableHints),
-        resetSourcesTableHints: () =>
-          resetHintsState(setSourcesTableHints, initialSourcesTableHints),
-        sourcesTableHints,
         changeSmartsBuilderHint: (id, key, action) =>
           changeHintState(id, key, action, setSmartsBuilderHints),
         smartsBuilderHints,

@@ -85,13 +85,6 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  useEffect(() => {
-    if (domains.length > 0 && !selectedDomain) {
-      setSelectedDomain(domains[0]);
-      onDomainSelected(domains[0]);
-    }
-  }, [domains]);
-
   const validateDomain = (input: string): boolean => {
     const domainPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}$/i;
     return domainPattern.test(input.trim());
@@ -149,10 +142,24 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
   const hintCards: HintCardInterface[] = [
     {
       description:
-        "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-      title: "Source Type",
+        "Click to add your website domain. After entering the domain, you’ll be able to install the tracking pixel.",
+      title: "Add domain",
       linkToLoadMore:
-        "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+    },
+    {
+      description:
+        'Enter your website domain in the input field and click "Save". We’ll store it and use it to set up the tracking pixel.',
+      title: "Enter domain",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+    },
+    {
+      description:
+        'Select a domain from the list to link the tracking pixel to the correct website. If your domain is missing, click "Add new domain" to enter it manually. Make sure the domain is valid — the pixel will be installed on the selected one.',
+      title: "Select a domain",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
     },
   ];
 
@@ -189,19 +196,37 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
       </Typography>
 
       {domains.length === 0 && !addingNew ? (
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setAddingNew(true)}
-          sx={{
-            backgroundColor: "rgba(56, 152, 252, 1)",
-            textTransform: "none",
-          }}
-        >
-          Add domain
-        </Button>
+        <Box sx={{ position: "relative" }}>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setAddingNew(true)}
+            sx={{
+              backgroundColor: "rgba(56, 152, 252, 1)",
+              textTransform: "none",
+            }}
+          >
+            Add domain
+          </Button>
+          {pixelSetupHints[0].show && domains.length === 0 && !addingNew && (
+            <HintCard
+              card={hintCards[0]}
+              positionLeft={150}
+              positionTop={-3}
+              isOpenBody={pixelSetupHints[0].showBody}
+              toggleClick={() => changePixelSetupHint(0, "showBody", "toggle")}
+              closeClick={() => changePixelSetupHint(0, "showBody", "close")}
+            />
+          )}
+        </Box>
       ) : addingNew ? (
-        <Box display="flex" alignItems="start" gap={2} pt={1}>
+        <Box
+          display="flex"
+          alignItems="start"
+          position="relative"
+          gap={2}
+          pt={1}
+        >
           <TextField
             onKeyDown={(e) => e.stopPropagation()}
             fullWidth
@@ -256,6 +281,16 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               ),
             }}
           />
+          {pixelSetupHints[1].show && addingNew && (
+            <HintCard
+              card={hintCards[1]}
+              positionLeft={263}
+              positionTop={-10}
+              isOpenBody={pixelSetupHints[1].showBody}
+              toggleClick={() => changePixelSetupHint(1, "showBody", "toggle")}
+              closeClick={() => changePixelSetupHint(1, "showBody", "close")}
+            />
+          )}
           <Button
             variant="contained"
             sx={{
@@ -290,13 +325,14 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               });
             }}
           />
-          {pixelSetupHints[0].show && !selectedDomain && (
+          {pixelSetupHints[2]?.show && !selectedDomain && (
             <HintCard
-              card={hintCards[0]}
-              positionLeft={340}
-              isOpenBody={pixelSetupHints[0].showBody}
-              toggleClick={() => changePixelSetupHint(0, "showBody", "toggle")}
-              closeClick={() => changePixelSetupHint(0, "showBody", "close")}
+              card={hintCards[2]}
+              positionLeft={365}
+              positionTop={-5}
+              isOpenBody={pixelSetupHints[2].showBody}
+              toggleClick={() => changePixelSetupHint(2, "showBody", "toggle")}
+              closeClick={() => changePixelSetupHint(2, "showBody", "close")}
             />
           )}
         </Box>

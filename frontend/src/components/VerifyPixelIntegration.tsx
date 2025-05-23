@@ -1,14 +1,25 @@
 "use client";
-import { Box, Typography, Button } from "@mui/material";
+import { Box, Typography, Button, BoxClassKey } from "@mui/material";
 import React, { useState, useEffect } from "react";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "@/app/(client)/components/HintCard";
 
 type VerifyPixelIntegrationProps = {
   domain: string;
+  showHint: boolean;
 };
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
 
 const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
   domain,
+  showHint,
 }) => {
+  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
+    useHints();
   const [inputValue, setInputValue] = useState<string>("");
 
   const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN;
@@ -39,13 +50,24 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
     }
   };
 
+  const hintCards: HintCardInterface[] = [
+    {
+      description:
+        "Click to add your website domain. After entering the domain, you’ll be able to install the tracking pixel.",
+      title: "Verify Pixel",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+    },
+  ];
+
   return (
     <Box
       sx={{
         padding: "1rem",
         border: "1px solid #e4e4e4",
         borderRadius: "8px",
-        overflow: "hidden",
+        zIndex: 100,
+        position: "relative",
         backgroundColor: "rgba(255, 255, 255, 1)",
         boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.08)",
         marginBottom: "2rem",
@@ -81,6 +103,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
         display="flex"
         alignItems="center"
         justifyContent="end"
+        position="relative"
         sx={{
           "@media (max-width: 600px)": {
             alignItems: "flex-start",
@@ -113,6 +136,16 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
         >
           Verify
         </Button>
+        {pixelSetupHints[3].show && showHint && (
+          <HintCard
+            card={hintCards[0]}
+            positionLeft={710}
+            positionTop={-20}
+            isOpenBody={pixelSetupHints[3].showBody}
+            toggleClick={() => changePixelSetupHint(3, "showBody", "toggle")}
+            closeClick={() => changePixelSetupHint(3, "showBody", "close")}
+          />
+        )}
       </Box>
     </Box>
   );

@@ -11,6 +11,14 @@ import GoogleTagPopup from "../components/GoogleTagPopup";
 import CRMPopup from "./CMSPopup";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { showErrorToast } from "@/components/ToastNotification";
+import { useHints } from "@/context/HintsContext";
+import HintCard from "@/app/(client)/components/HintCard";
+
+interface HintCardInterface {
+  description: string;
+  title: string;
+  linkToLoadMore: string;
+}
 
 interface CmsData {
   manual?: string;
@@ -23,7 +31,10 @@ interface PixelInstallationProps {
 const PixelInstallation: React.FC<PixelInstallationProps> = ({
   onInstallSelected,
 }) => {
+  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
+    useHints();
   const { setShowSlider } = useSlider();
+  const [showHint, setShowHint] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showManualInline, setShowManualInline] = useState(false);
   const [showGoogleInline, setShowGoogleInline] = useState(false);
@@ -33,11 +44,12 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
     if (showManualInline) {
       setShowManualInline(false);
       onInstallSelected(null);
+      setShowHint(false);
       return;
     }
 
     onInstallSelected("manual");
-
+    setShowHint(true);
     try {
       setShowGoogleInline(false);
       setShowCMSInline(false);
@@ -72,9 +84,11 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
     if (showGoogleInline) {
       setShowGoogleInline(false);
       onInstallSelected(null);
+      setShowHint(false);
       return;
     }
     onInstallSelected("google");
+    setShowHint(true);
     try {
       setShowCMSInline(false);
       setShowManualInline(false);
@@ -111,7 +125,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         try {
           const parsed = JSON.parse(savedMe);
           return parsed.source_platform || "";
-        } catch (error) { }
+        } catch (error) {}
       }
     }
     return "";
@@ -125,7 +139,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
       if (authorizationCode) {
         try {
           setGoogleOpen(true);
-        } catch (error) { }
+        } catch (error) {}
       }
     };
 
@@ -140,10 +154,12 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
     if (showCMSInline) {
       setShowCMSInline(false);
       onInstallSelected(null);
+      setShowHint(false);
       return;
     }
 
     onInstallSelected("cms");
+    setShowHint(true);
     try {
       setShowGoogleInline(false);
       setShowManualInline(false);
@@ -171,6 +187,30 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
       setIsLoading(false);
     }
   };
+
+  const hintCards: HintCardInterface[] = [
+    {
+      description:
+        "Choose the installation method that works best for your website. You can use Google Tag Manager, upload the code manually, or install it through a CMS like Shopify, WordPress, or BigCommerce.",
+      title: "Choose the installation method",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+    },
+    {
+      description:
+        'Enter your website domain in the input field and click "Save". We’ll store it and use it to set up the tracking pixel.',
+      title: "Enter domain",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+    },
+    {
+      description:
+        'Select a domain from the list to link the tracking pixel to the correct website. If your domain is missing, click "Add new domain" to enter it manually. Make sure the domain is valid — the pixel will be installed on the selected one.',
+      title: "Select a domain",
+      linkToLoadMore:
+        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+    },
+  ];
 
   return (
     <Box
@@ -214,25 +254,35 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
           linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel"
         />
       </Box>
-
-      <Typography
-        variant="body2"
-        color="textSecondary"
-        className="table-data"
-        mb={2}
-        sx={{
-          fontFamily: "Nunito Sans",
-          fontWeight: "500",
-          color: "rgba(128, 128, 128, 1)",
-          fontSize: "12px",
-          "@media (max-width: 1199px)": {
-            fontSize: "0.875rem",
-            lineHeight: "normal",
-          },
-        }}
-      >
-        Select how you would like to install the pixel
-      </Typography>
+      <Box sx={{ position: "relative" }}>
+        <Typography
+          variant="body2"
+          color="textSecondary"
+          className="table-data"
+          mb={2}
+          sx={{
+            fontFamily: "Nunito Sans",
+            fontWeight: "500",
+            color: "rgba(128, 128, 128, 1)",
+            fontSize: "12px",
+            "@media (max-width: 1199px)": {
+              fontSize: "0.875rem",
+              lineHeight: "normal",
+            },
+          }}
+        >
+          Select how you would like to install the pixel
+        </Typography>
+        {pixelSetupHints[4].show && !showHint && (
+          <HintCard
+            card={hintCards[0]}
+            positionLeft={350}
+            isOpenBody={pixelSetupHints[4].showBody}
+            toggleClick={() => changePixelSetupHint(4, "showBody", "toggle")}
+            closeClick={() => changePixelSetupHint(4, "showBody", "close")}
+          />
+        )}
+      </Box>
       <Grid container md={12}>
         <Box
           sx={{
@@ -281,11 +331,13 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                   width={24}
                   height={24}
                 />
-                <Box sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                }}>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                  }}
+                >
                   <CustomTooltip
                     title={
                       "Quickly integrate using Google Tag Manager for seamless setup."
@@ -335,11 +387,13 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                   width={24}
                   height={24}
                 />
-                <Box sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                }}>
+                <Box
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                  }}
+                >
                   <CustomTooltip
                     title={
                       "Manually install to have full control over setup and configuration."
@@ -422,15 +476,15 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                 </Typography>
               ) : (
                 <Box>
-                  <Box sx={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                  }}>
+                  <Box
+                    sx={{
+                      position: "absolute",
+                      top: 8,
+                      right: 8,
+                    }}
+                  >
                     <CustomTooltip
-                      title={
-                        "CMS integrations."
-                      }
+                      title={"CMS integrations."}
                       linkText="Learn more"
                       linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
                     />
