@@ -15,7 +15,10 @@ import ProgressBar from '../../sources/components/ProgressLoader';
 import ThreeDotsLoader from '../../sources/components/ThreeDotsLoader';
 import { getUseCaseIcon } from '../components/utils/getUseCaseIcon'
 import Image from 'next/image';
-import { getStatusStyle } from '../components/utils/getStatusStyle';
+import { getStatusStyle } from '../components/utils/getStatusStyle'
+import HintCard from "../../components/HintCard";
+import { useSmartsHints } from "../context/SmartsHintsContext";
+import { createdHintCards } from "../context/hintsCardsContent";
 
 interface SmartAudienceSource {
     id: string,
@@ -32,6 +35,7 @@ interface SmartAudienceSource {
 }
 
 const SourcesList: React.FC = () => {
+    const { changeCreatedSmartHint, createdSmartsHints } = useSmartsHints();
     const router = useRouter();
     const searchParams = useSearchParams();
     const data = searchParams.get('data');
@@ -161,6 +165,7 @@ const SourcesList: React.FC = () => {
             )}
             <Box sx={{
                 display: 'flex', flexDirection: 'column', overflow: 'auto', pr: 2,
+                height: "calc(100vh - 4.25rem)",
                 '@media (max-width: 900px)': {
                     height: 'calc(100vh - 4.25rem)'
                 }
@@ -364,9 +369,27 @@ const SourcesList: React.FC = () => {
                                         )}
                                     </Box>
                                     {/* need chnage < on !== */}
-                                    <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': { display: 'none' }, ':hover': { backgroundColor: 'transparent' } }} >
-                                        <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
-                                    </IconButton>
+                                    <Box sx={{position: "relative"}}>
+                                        <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ '@media (max-width: 900px)': { display: 'none' }, ':hover': { backgroundColor: 'transparent' } }} >
+                                            <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
+                                        </IconButton>
+                                        <HintCard
+                                            card={createdHintCards[0]}
+                                            positionLeft={-420}
+                                            positionTop={20}
+                                            rightSide={true}
+                                            isOpenBody={createdSmartsHints[0].showBody}
+                                            toggleClick={() => {
+                                                if (createdSmartsHints[1].showBody) {
+                                                    changeCreatedSmartHint(1, "showBody", "close")
+                                                }
+                                                changeCreatedSmartHint(0, "showBody", "toggle")
+                                            }}
+                                            closeClick={() => {
+                                                changeCreatedSmartHint(0, "showBody", "close")
+                                            }}
+                                        />
+                                    </Box>
                                 </Box>
                                 {/* need chnage < on !== */}
                                 <IconButton onClick={(event) => handleOpenPopover(event)} sx={{ display: 'none', '@media (max-width: 900px)': { display: 'block' }, ':hover': { backgroundColor: 'transparent' } }} >
@@ -394,29 +417,47 @@ const SourcesList: React.FC = () => {
                                 >
                                     All Smart Audiences
                                 </Button>
-                                <Button
-                                    variant="contained"/* need chnage < on !== */
-                                    onClick={() => router.push(`/smart-audiences/builder`)}
-                                    className='second-sub-title'
-                                    sx={{
-                                        backgroundColor: 'rgba(56, 152, 252, 1)',
-                                        textTransform: 'none',
-                                        padding: '10px 24px',
-                                        color: '#fff !important',
-                                        ":hover": {
-                                            backgroundColor: "rgba(62, 64, 142, 1)"
-                                        },
-                                        ":active": {
-                                            backgroundColor: "rgba(56, 152, 252, 1)"
-                                        },
-                                        ":disabled": {
-                                            backgroundColor: "rgba(56, 152, 252, 1)",
-                                            opacity: 0.6,
-                                        },
-                                    }}
-                                >
-                                    Generate Smart Audience
-                                </Button>
+                                <Box sx={{display: "block", position: "relative"}}>
+                                    <Button
+                                        variant="contained"/* need chnage < on !== */
+                                        onClick={() => router.push(`/smart-audiences/builder`)}
+                                        className='second-sub-title'
+                                        sx={{
+                                            backgroundColor: 'rgba(56, 152, 252, 1)',
+                                            textTransform: 'none',
+                                            padding: '10px 24px',
+                                            color: '#fff !important',
+                                            ":hover": {
+                                                backgroundColor: "rgba(62, 64, 142, 1)"
+                                            },
+                                            ":active": {
+                                                backgroundColor: "rgba(56, 152, 252, 1)"
+                                            },
+                                            ":disabled": {
+                                                backgroundColor: "rgba(56, 152, 252, 1)",
+                                                opacity: 0.6,
+                                            },
+                                        }}
+                                    >
+                                        Generate Smart Audience
+                                    </Button>
+                                    <HintCard
+                                        card={createdHintCards[1]}
+                                        positionLeft={-410}
+                                        positionTop={20}
+                                        rightSide={true}
+                                        isOpenBody={createdSmartsHints[1].showBody}
+                                        toggleClick={() => {
+                                            if (createdSmartsHints[0].showBody) {
+                                                changeCreatedSmartHint(0, "showBody", "close")
+                                            }
+                                            changeCreatedSmartHint(1, "showBody", "toggle")
+                                        }}
+                                        closeClick={() => {
+                                            changeCreatedSmartHint(1, "showBody", "close")
+                                        }}
+                                        />
+                                </Box>
                             </Box>
                         </Box>
                         <Popover
