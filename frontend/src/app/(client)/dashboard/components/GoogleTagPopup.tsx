@@ -262,7 +262,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       );
       let pixelCode = manualResponse.data.manual;
       const tagData = {
-        name: "Maximiz pixel script",
+        name: "Allsource pixel script",
         type: "html",
         parameter: [
           {
