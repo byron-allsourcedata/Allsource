@@ -199,7 +199,7 @@ const GettingStartedSection: React.FC = () => {
                     Install Your Pixel
                   </Typography>
                   <MuiLink
-                    href="https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel"
+                    href="https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-pixel-installation"
                     target="_blank"
                     underline="hover"
                     sx={{
