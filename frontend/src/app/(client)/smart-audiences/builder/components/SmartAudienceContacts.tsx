@@ -516,7 +516,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                         positionLeft={340}
                         isOpenBody={smartsBuilderHints[1].showBody}
                         toggleClick={() => toggleDotHintClick(1)}
-                        closeClick={() => closeDotHintClick(1)}
+                        closeClick={() => changeSmartsBuilderHint(1, "showBody", "close")}
                     />
                   )} 
               </FormControl>
@@ -550,7 +550,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                         positionLeft={340}
                         isOpenBody={smartsBuilderHints[2].showBody}
                         toggleClick={() => toggleDotHintClick(2)}
-                        closeClick={() => closeDotHintClick(2)}
+                        closeClick={() => changeSmartsBuilderHint(2, "showBody", "close")}
                     />
                   )} 
                 </FormControl>
@@ -655,7 +655,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                         positionTop={20}
                         isOpenBody={smartsBuilderHints[3].showBody}
                         toggleClick={() => toggleDotHintClick(3)}
-                        closeClick={() => closeDotHintClick(3)}
+                        closeClick={() => changeSmartsBuilderHint(3, "showBody", "close")}
                     />
                   )} 
               </Box>
@@ -746,7 +746,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                   rightSide={true}
                   isOpenBody={smartsBuilderHints[4].showBody}
                   toggleClick={() => toggleDotHintClick(4)}
-                  closeClick={() => closeDotHintClick(4)}
+                  closeClick={() => changeSmartsBuilderHint(4, "showBody", "close")}
               />
             )} 
           </Box>
@@ -816,7 +816,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                   positionTop={30}
                   isOpenBody={smartsBuilderHints[5].showBody}
                   toggleClick={() => toggleDotHintClick(5)}
-                  closeClick={() => closeDotHintClick(5)}
+                  closeClick={() => changeSmartsBuilderHint(5, "showBody", "close")}
               />
             )} 
           </Box>
