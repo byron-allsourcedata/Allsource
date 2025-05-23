@@ -142,13 +142,12 @@ class UserDomainsPersistence:
         return self.db.query(func.count(UserDomains.id)).filter_by(user_id=user_id).scalar()
     
     def clear_account_from_domains(self, email):
-        subquery = self.db.query(Users.id).filter(Users.email == email).subquery()
-
-        self.db.query(UserDomains)\
-            .filter(UserDomains.user_id.in_(subquery))\
-            .delete(synchronize_session=False)
-
-        self.db.commit()
+        user = self.db.query(Users.id).filter_by(email=email).first()
+        if user:
+            self.db.query(UserDomains)\
+                .filter(UserDomains.user_id == user.id)\
+                .delete(synchronize_session=False)
+            self.db.commit()
 
 
     def update_domain_name(self, domain_id: int, domain_name: str):
