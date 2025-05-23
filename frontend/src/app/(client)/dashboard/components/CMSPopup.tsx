@@ -530,7 +530,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         "Quickly integrate using Wordpress for seamless setup."
                       }
                       linkText="Learn more"
-                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress"
                     />
                   </Box>
                   <Image
