@@ -39,6 +39,7 @@ import NotificationBanner from "@/components/first-time-screens/NotificationWarn
 import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 import { FirstTimeScreenCommon } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
+import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
 interface DataSyncProps {
   service_name?: string;
@@ -277,73 +278,99 @@ const DataSync = () => {
               </Box>
             ) : !isLoading && filters && !hasDataSync ? (
               <>
-              <Box sx={{mt: 2}}>
-              <FirstTimeScreenCommon
-                  Header={{
-                    TextTitle: "Data Sync",
-                    TextSubtitle: "Customise your sync settings",
-                    link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync",
-                  }}
-                  WarningNotification={{
-                    condition: !hasIntegrations,
-                    ctaUrl: "/integrations",
-                    ctaLabel: "Add Integration",
-                    message:
-                      "You need to create at least one integration before you can sync your audience",
-                  }}
-                  InfoNotification={{
-                    Text: "This page shows real-time synchronization status across all your integrated platforms. Monitor data flows, troubleshoot delays, and ensure all systems are updating properly.",
-                  }}
-                  Content={
-                    <>
-                      <AudienceSynergyPreview
-                        tableSrc="/smart-audience-synergy.svg"
-                        headerTitle="Sync Audience to Any Platform"
-                        caption="Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
-                        onBegin={handleOpenPopup}
-                        beginDisabled={!hasIntegrations}
-                        buttonLabel="Create Data Sync"
-                      />
-                    </>
-                  }
-                  HelpCard={{
-                    headline: "Need Help with Data Synchronization?",
-                    description:
-                      "Book a free 30-minute session to troubleshoot, optimize, or automate your data flows.",
-                    helpPoints: [
-                      {
-                        title: "Connection Setup",
-                        description: "Configure integrations correctly",
+                <Box sx={{ mt: 2 }}>
+                  <FirstTimeScreenCommon
+                    Header={{
+                      TextTitle: "Data Sync",
+                      TextSubtitle: "Customise your sync settings",
+                      link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync",
+                    }}
+                    WarningNotification={{
+                      condition: !hasIntegrations,
+                      ctaUrl: "/integrations",
+                      ctaLabel: "Add Integration",
+                      message:
+                        "You need to create at least one integration before you can sync your audience",
+                    }}
+                    InfoNotification={{
+                      Text: "This page shows real-time synchronization status across all your integrated platforms. Monitor data flows, troubleshoot delays, and ensure all systems are updating properly.",
+                    }}
+                    Content={
+                      <>
+                        <AudienceSynergyPreview
+                          tableSrc="/data_sync_FTS.svg"
+                          headerTitle="Sync Audience to Any Platform"
+                          caption="Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
+                          onBegin={handleOpenPopup}
+                          beginDisabled={!hasIntegrations}
+                          buttonLabel="Create Data Sync"
+                        />
+                      </>
+                    }
+                    HelpCard={{
+                      headline: "Need Help with Data Synchronization?",
+                      description:
+                        "Book a free 30-minute session to troubleshoot, optimize, or automate your data flows.",
+                      helpPoints: [
+                        {
+                          title: "Connection Setup",
+                          description: "Configure integrations correctly",
+                        },
+                        {
+                          title: "Sync Diagnostics",
+                          description: "Fix failed data transfers",
+                        },
+                        {
+                          title: "Mapping Assistance",
+                          description: "Align your data fields",
+                        },
+                      ],
+                    }}
+                    LeftMenu={{
+                      header: "Fix & Optimize Your Data Flows",
+                      subtitle: "Free 30-Min Sync Audit",
+                      image: {
+                        url: "/data_sync_FTS.svg",
+                        width: 600,
+                        height: 300
                       },
-                      {
-                        title: "Sync Diagnostics",
-                        description: "Fix failed data transfers",
-                      },
-                      {
-                        title: "Mapping Assistance",
-                        description: "Align your data fields",
-                      },
-                    ],
-                  }}
-                  customStyleSX={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    width: "70%",
-                    margin: "0 auto",
-                    mt: 2,
-                  }}
-                />
-                {popupOpen && !hasDataSync && (
-                  <WelcomePopup
-                    open={popupOpen}
-                    onClose={() => setPopupOpen(false)}
-                    variant="integration"
+                      items: [
+                        {
+                          Icon: SettingsIcon,
+                          title: "Connection Setup",
+                          subtitle: `We’ll ensure your integrations are properly configured for reliable data flow.`,
+                        },
+                        {
+                          Icon: SpeedIcon,
+                          title: "Sync Diagnostics",
+                          subtitle: `Identify and resolve synchronization failures in real-time.`,
+                        },
+                        {
+                          Icon: MovingIcon,
+                          title: "Mapping Assistance",
+                          subtitle: "Align your source and destination fields perfectly.",
+                        },
+                      ],
+                    }}
+                    customStyleSX={{
+                      display: "flex",
+                      flexDirection: "column",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      width: "70%",
+                      margin: "0 auto",
+                      mt: 2,
+                    }}
                   />
-                )}
-              </Box>
-                
+                  {popupOpen && !hasDataSync && (
+                    <WelcomePopup
+                      open={popupOpen}
+                      onClose={() => setPopupOpen(false)}
+                      variant="integration"
+                    />
+                  )}
+                </Box>
+
               </>
             ) : (
               <>

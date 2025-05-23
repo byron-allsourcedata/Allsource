@@ -5,6 +5,7 @@ import { DashboardHelpCard } from "./HelpCard";
 import NotificationInfoBanner from "./NotificationInfoBanner";
 import { TimeScreenProps } from "@/types/first_time_screens";
 import NotificationBanner from "./NotificationWarningBanner";
+import { BookACallPopup, LeftMenuProps } from "@/app/(client)/components/BookACallPopup";
 
 const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
   Header,
@@ -18,10 +19,17 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
   Content,
   HelpCard,
   customStyleSX,
+  LeftMenu
 }) => {
   const [bannerVisible, setBannerVisible] = useState(true);
-  const CALENDLY_URL = 'https://calendly.com/validateapi-allforce/30min';
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
+  const handleOpenPopup = () => {
+    setIsPopupOpen(true);
+  };
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+  };
   return (
     <Box
       sx={{
@@ -111,11 +119,8 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
             )}
             <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
               <Button
-                component="a"
-        href={CALENDLY_URL}
-        target="_blank"
-        rel="noopener noreferrer"
-        variant="contained"
+                onClick={handleOpenPopup}
+                variant="contained"
                 sx={{
                   backgroundColor: "rgba(56,152,252,1)",
                   textTransform: "none",
@@ -153,7 +158,7 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
         )}
 
         {/* Help Card */}
-        <Box sx={{ mt: 3, width: "100%" }}>
+        <Box sx={{ my: 3, width: "100%" }}>
           {HelpCard && (
             <DashboardHelpCard
               headline={HelpCard.headline}
@@ -163,6 +168,7 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
           )}
         </Box>
       </Box>
+      <BookACallPopup open={isPopupOpen} handleClose={handleClosePopup} leftMenu={LeftMenu} />
     </Box>
   );
 };

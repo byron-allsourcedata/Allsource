@@ -41,6 +41,8 @@ import {
 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import BuilderIntro from "@/components/first-time-screens/BuilderIntro";
+import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
+import { width } from "@mui/system";
 
 const cardData: CardData[] = [
   {
@@ -193,7 +195,7 @@ const CreateLookalikePage: React.FC = () => {
       setFormattedDates("");
     }
   };
-  const handleDateLabelChange = (label: string) => {};
+  const handleDateLabelChange = (label: string) => { };
 
   const handleApply = (dates: { start: Date | null; end: Date | null }) => {
     if (dates.start && dates.end) {
@@ -255,22 +257,22 @@ const CreateLookalikePage: React.FC = () => {
       label: string;
       value: string | ((f: any) => string);
     }[] = [
-      {
-        condition: filters.type && Object.values(filters.type).some(Boolean),
-        label: "Type",
-        value: () => getSelectedValues(filters.type!),
-      },
-      {
-        condition: filters.size?.length,
-        label: "Size",
-        value: () => filters.size!.join(", "),
-      },
-      {
-        condition: filters.searchQuery?.trim() !== "",
-        label: "Search",
-        value: filters.searchQuery || "",
-      },
-    ];
+        {
+          condition: filters.type && Object.values(filters.type).some(Boolean),
+          label: "Type",
+          value: () => getSelectedValues(filters.type!),
+        },
+        {
+          condition: filters.size?.length,
+          label: "Size",
+          value: () => filters.size!.join(", "),
+        },
+        {
+          condition: filters.searchQuery?.trim() !== "",
+          label: "Search",
+          value: filters.searchQuery || "",
+        },
+      ];
 
     // Iterate over the mappings to populate newSelectedFilters
     filterMappings.forEach(({ condition, label, value }) => {
@@ -299,17 +301,16 @@ const CreateLookalikePage: React.FC = () => {
       const timezoneOffsetInHours = -new Date().getTimezoneOffset() / 60;
       const startEpoch = appliedDates.start
         ? Math.floor(
-            new Date(appliedDates.start.toISOString()).getTime() / 1000
-          )
+          new Date(appliedDates.start.toISOString()).getTime() / 1000
+        )
         : null;
 
       const endEpoch = appliedDates.end
         ? Math.floor(new Date(appliedDates.end.toISOString()).getTime() / 1000)
         : null;
 
-      let url = `/audience-lookalikes?page=${
-        page + 1
-      }&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
+      let url = `/audience-lookalikes?page=${page + 1
+        }&per_page=${rowsPerPage}&timezone_offset=${timezoneOffsetInHours}`;
       if (startEpoch !== null && endEpoch !== null) {
         url += `&from_date=${startEpoch}&to_date=${endEpoch}`;
       }
@@ -457,8 +458,8 @@ const CreateLookalikePage: React.FC = () => {
     const newFilters: FilterParams = {
       from_date: updatedFilters.find((f) => f.label === "From Date")
         ? dayjs(
-            updatedFilters.find((f) => f.label === "From Date")!.value
-          ).unix()
+          updatedFilters.find((f) => f.label === "From Date")!.value
+        ).unix()
         : null,
       to_date: updatedFilters.find((f) => f.label === "To Date")
         ? dayjs(updatedFilters.find((f) => f.label === "To Date")!.value).unix()
@@ -495,7 +496,7 @@ const CreateLookalikePage: React.FC = () => {
           end: appliedDates.end,
         },
       });
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const [popupOpen, setPopupOpen] = useState(false);
@@ -737,9 +738,8 @@ const CreateLookalikePage: React.FC = () => {
               <Chip
                 className="paragraph"
                 key={filter.label}
-                label={`${filter.label}: ${
-                  displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
-                }`}
+                label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() + displayValue.slice(1)
+                  }`}
                 onDelete={() => handleDeleteFilter(filter)}
                 deleteIcon={
                   <CloseIcon
@@ -904,6 +904,32 @@ const CreateLookalikePage: React.FC = () => {
                     {
                       title: "Advanced Scaling Strategies ",
                       description: "Grow your best audiences",
+                    },
+                  ],
+                }}
+                LeftMenu={{
+                  header: "Get Your Lookalike Settings Perfect",
+                  subtitle: "30-minute consultation on audience modeling best practices",
+                  image:{
+                    url: "/lookalike-screen.svg",
+                    width: 600,
+                    height: 300
+                  },
+                  items: [
+                    {
+                      Icon: SettingsIcon,
+                      title: "Lookalike Setup Review",
+                      subtitle: `Get expert feedback on your audience settings to maximize conversions`,
+                    },
+                    {
+                      Icon: SpeedIcon,
+                      title: "Performance Optimization",
+                      subtitle: `Unlock your lookalikes full potential – get data-driven tweaks to boost conversions`,
+                    },
+                    {
+                      Icon: MovingIcon,
+                      title: "Advanced Scaling Strategies",
+                      subtitle: "Turn your high-performers into scalable growth engines with AI",
                     },
                   ],
                 }}

@@ -19,6 +19,7 @@ import {
   CardsSection,
   FirstTimeScreenCommon,
 } from "@/components/first-time-screens";
+import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
 interface EventDate {
   relative: string;
@@ -932,6 +933,27 @@ const AudienceDashboard: React.FC = () => {
                       { title: 'Dashboard Walkthrough', description: 'Learn key features and shortcuts' },
                       { title: 'Data Analysis Help', description: 'Understand your metrics and reports' },
                       { title: 'Troubleshooting', description: 'Fix technical issues with an expert' },
+                    ],
+                  }}
+                  LeftMenu={{
+                    header: "Unlock Your Dashboard’s Full Potential",
+                    subtitle: "Free 30-Min Expert Walkthrough",
+                    items: [
+                      {
+                        Icon: SettingsIcon,
+                        title: "Dashboard Walkthrough",
+                        subtitle: `We'll guide you through key features to save you hours of exploration.`,
+                      },
+                      {
+                        Icon: SpeedIcon,
+                        title: "Data Analysis Help",
+                        subtitle: "Go beyond numbers – learn how to extract insights tailored to your goals.",
+                      },
+                      {
+                        Icon: MovingIcon,
+                        title: "Troubleshooting",
+                        subtitle: "Fix glitches fast and ensure your data flows accurately.",
+                      },
                     ],
                   }}
                   customStyleSX={{
