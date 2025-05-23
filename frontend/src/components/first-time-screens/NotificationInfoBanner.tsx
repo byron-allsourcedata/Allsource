@@ -11,6 +11,7 @@ const NotificationInfoBanner: React.FC<NotificationBannerProps> = ({ message, on
   return (
     <Box
       sx={{
+        width: "100%",
         position: 'relative',
         display: 'flex',
         alignItems: 'center',

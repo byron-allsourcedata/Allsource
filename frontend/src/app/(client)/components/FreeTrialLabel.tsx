@@ -73,16 +73,15 @@ const FreeTrialLabel: React.FC = () => {
       {is_artificial_status && (
         <Box
           sx={{
+            width: '100%',
             display: "flex",
             alignItems: "center",
-            flexGrow: 1,
             px: 2,
             justifyContent: "space-between",
             flexWrap: "wrap",
             backgroundColor: "#EBF5FF",
             borderRadius: "8px",
             border: "2px solid rgba(56, 152, 252, 0.2)",
-            width: "100%",
             fontSize: "14px",
             "@media (min-width: 901px)": {
               marginRight: "2em",
