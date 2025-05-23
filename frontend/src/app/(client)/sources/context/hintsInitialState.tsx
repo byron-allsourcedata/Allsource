@@ -19,4 +19,10 @@ const initialSourcesTableHints: StateHint[] = [
     { show: true, showBody: false, id: 1 },
 ];
 
-export { initialSourcesBuilderHints, initialSourcesTableHints };
+const initialCreatedSourceHints: StateHint[] = [
+    { show: true, showBody: true, id: 0 },
+    { show: true, showBody: false, id: 1 },
+    { show: true, showBody: false, id: 2 },
+];
+
+export { initialSourcesBuilderHints, initialSourcesTableHints, initialCreatedSourceHints };
