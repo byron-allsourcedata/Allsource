@@ -202,10 +202,6 @@ const GettingStartedSection: React.FC = () => {
                           showHint={showHintVerify}
                         />
                       )}
-                      <VerifyPixelIntegration
-                          domain={selectedDomain}
-                          showHint={showHintVerify}
-                        />
                   </Box>
                 </Grid>
 
