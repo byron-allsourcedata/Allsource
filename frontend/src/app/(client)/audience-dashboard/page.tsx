@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid, Link, Typography } from "@mui/material";
 import { dashboardStyles } from "../dashboard/dashboardStyles";
 import CustomTooltip from "@/components/customToolTip";
 import { useNotification } from "../../../context/NotificationContext";
@@ -14,8 +14,11 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import SmartAudienceCard from "./components/SmartAudienceCard";
 import { showErrorToast } from "@/components/ToastNotification";
 import { TableData } from "@/types/lookalike";
-import { ExternalLink } from "@/components/ExternalLink";
-import FirstTimeScreen from "./components/FirstTimeScreen";
+import { useRouter } from "next/navigation";
+import {
+  CardsSection,
+  FirstTimeScreenCommon,
+} from "@/components/first-time-screens";
 
 interface EventDate {
   relative: string;
@@ -91,6 +94,7 @@ const AudienceDashboard: React.FC = () => {
     data_sync: 0,
   });
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const router = useRouter();
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [pixelCardActive, setPixelCardActive] = useState(false);
   const [hasValid, setHasValid] = useState<boolean>(false);
@@ -893,50 +897,52 @@ const AudienceDashboard: React.FC = () => {
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ width: "100" }}>
-                <Box
-                  sx={{ display: "flex", alignItems: "center", gap: 4, pt: 2 }}
-                >
-                  <Typography
-                    variant="h5"
-                    className="first-sub-title"
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      fontSize: "24px !important",
-                      color: "#4a4a4a",
-                      fontWeight: "500 !important",
-                      lineHeight: "22px",
-                    }}
-                  >
-                    Dashboard
-                  </Typography>
-                  <ExternalLink href="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main">
-                    Learn more
-                  </ExternalLink>
-                </Box>
-                <Typography
-                  variant="body1"
-                  sx={{
-                    mt: 1,
-                    fontFamily: "Nunito Sans",
-                    fontSize: "14px",
-                    color: "rgba(50, 54, 62, 1)",
-                    fontWeight: "400",
-                    lineHeight: "22px",
+              <>
+                <FirstTimeScreenCommon
+                  Header={{
+                    TextTitle: 'Dashboard',
+                    TextSubtitle: "To begin building your audience, you'll need to provide a data source",
+                    link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync',
                   }}
-                >
-                  To begin building your audience, you&apos;ll need to provide a
-                  data source
-                </Typography>
-
-                <Box
-                  sx={{
-                    width: "100%",
+                  InfoNotification={{
+                    Text: 'Your dashboard displays key performance data across 5 core areas: pixel-captured users, created sources, lookalikes, smart audiences, and data sync status. Monitor all critical metrics in one place to optimize targeting.',
                   }}
-                >
-                  <FirstTimeScreen cardData={cardData} />
-                </Box>
-              </Box>
+                  Content={<CardsSection items={[
+                    {
+                      title: 'Install Pixel',
+                      subtitle: 'It will automatically collect visitor information from your website.',
+                      imageSrc: '/pixel.svg',
+                      onClick: () => router.push('/dashboard'),
+                      showRecommended: true,
+                    },
+                    {
+                      title: 'Import Source from CSV file',
+                      subtitle: 'Otherwise, you can upload a CSV file containing your existing customer data.',
+                      imageSrc: '/audience.svg',
+                      onClick: () => router.push('/sources'),
+                      showRecommended: false,
+                    },
+                  ]} />}
+                  HelpCard={{
+                    headline: 'Stuck with Your Dashboard?',
+                    description: 'Book a free 30-minute call and get personalized help with platform navigation, analytics, or any dashboard issues.',
+                    helpPoints: [
+                      { title: 'Dashboard Walkthrough', description: 'Learn key features and shortcuts' },
+                      { title: 'Data Analysis Help', description: 'Understand your metrics and reports' },
+                      { title: 'Troubleshooting', description: 'Fix technical issues with an expert' },
+                    ],
+                  }}
+                  customStyleSX={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    width: "70%",
+                    margin: "0 auto",
+                    mt: 2
+                  }}
+                />
+              </>
             )}
           </>
         )}

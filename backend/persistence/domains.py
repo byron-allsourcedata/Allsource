@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from models.five_x_five_users import FiveXFiveUser
 from models.users_domains import UserDomains
 from models.leads_users import LeadUser
+from models.users import Users
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from sqlalchemy.orm import Session, aliased
@@ -139,6 +140,16 @@ class UserDomainsPersistence:
 
     def count_domain(self, user_id: int):
         return self.db.query(func.count(UserDomains.id)).filter_by(user_id=user_id).scalar()
+    
+    def clear_account_from_domains(self, email):
+        subquery = self.db.query(Users.id).filter(Users.email == email).subquery()
+
+        self.db.query(UserDomains)\
+            .filter(UserDomains.user_id.in_(subquery))\
+            .delete(synchronize_session=False)
+
+        self.db.commit()
+
 
     def update_domain_name(self, domain_id: int, domain_name: str):
         self.db.query(UserDomains).filter(

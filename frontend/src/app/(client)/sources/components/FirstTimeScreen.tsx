@@ -3,7 +3,7 @@ import FirstTimeCards from "../../components/FirstTimeCards";
 import { Box, Typography, Link as MuiLink, Grid } from "@mui/material";
 import { ExternalLink } from "@/components/ExternalLink";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { DashboardHelpCard } from "@/components/HelpCard";
+import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 
 type CardData = {
   title: string;

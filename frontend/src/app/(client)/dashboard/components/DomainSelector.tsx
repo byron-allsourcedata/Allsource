@@ -11,6 +11,7 @@ import {
   IconButton,
   InputAdornment,
 } from "@mui/material";
+import CustomTooltip from "@/components/customToolTip";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
 import { SimpleDomainSelector } from "./SimpleDomainSelector";
@@ -149,17 +150,23 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
         marginBottom: "2rem",
       }}
     >
-      <Typography
-        sx={{
-          fontFamily: "Nunito Sans",
-          fontWeight: 700,
-          fontSize: "16px",
-          color: "#1c1c1c",
-          pb: "4px",
-        }}
-      >
-        1. Choose your domain
-      </Typography>
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1,  pb: "4px" }}>
+        <Typography
+          sx={{
+            fontFamily: "Nunito Sans",
+            fontWeight: 700,
+            fontSize: "16px",
+            color: "#1c1c1c",
+          }}
+        >
+          1. Choose your domain
+        </Typography>
+        <CustomTooltip
+          title="Set which domain's user activity will be tracked."
+          linkText="Learn more"
+          linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel"
+        />
+      </Box>
       <Typography className="paragraph" sx={{ marginBottom: "1rem" }}>
         Select the domain you want to install pixel on
       </Typography>

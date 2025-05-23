@@ -80,7 +80,7 @@ export const BookACallPopup: React.FC<Props> = ({
               }}
             >
               <Image
-                src="/Katie Johns.svg"
+                src="/katie_jones.svg"
                 alt="Katie Johns"
                 width={120}
                 height={120}

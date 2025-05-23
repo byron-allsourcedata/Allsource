@@ -4,12 +4,12 @@ import Image from "next/image";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import axios, { AxiosError } from "axios";
 import { useSlider } from "@/context/SliderContext";
+import CustomTooltip from "@/components/customToolTip";
 import React, { useEffect, useState, useMemo } from "react";
 import ManualPopup from "../components/ManualPopup";
 import GoogleTagPopup from "../components/GoogleTagPopup";
 import CRMPopup from "./CMSPopup";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import CustomTooltip from "@/components/customToolTip";
 import { showErrorToast } from "@/components/ToastNotification";
 
 interface CmsData {
@@ -111,7 +111,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         try {
           const parsed = JSON.parse(savedMe);
           return parsed.source_platform || "";
-        } catch (error) {}
+        } catch (error) { }
       }
     }
     return "";
@@ -125,7 +125,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
       if (authorizationCode) {
         try {
           setGoogleOpen(true);
-        } catch (error) {}
+        } catch (error) { }
       }
     };
 
@@ -187,27 +187,34 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         },
       }}
     >
-      <Typography
-        variant="h6"
-        component="div"
-        mb={1}
-        className="first-sub-title"
-        sx={{
-          fontFamily: "Nunito Sans",
-          fontWeight: "700",
-          lineHeight: "21.82px",
-          textAlign: "left",
-          color: "#1c1c1c",
-          fontSize: "1rem",
-          "@media (max-width: 1199px)": {
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+        <Typography
+          variant="h6"
+          component="div"
+          className="first-sub-title"
+          sx={{
+            fontFamily: "Nunito Sans",
+            fontWeight: "700",
+            lineHeight: "21.82px",
+            textAlign: "left",
+            color: "#1c1c1c",
             fontSize: "1rem",
-            lineHeight: "normal",
-            marginBottom: "0.25rem",
-          },
-        }}
-      >
-        2. Pixel Installation
-      </Typography>
+            "@media (max-width: 1199px)": {
+              fontSize: "1rem",
+              lineHeight: "normal",
+              marginBottom: "0.25rem",
+            },
+          }}
+        >
+          2. Pixel Installation
+        </Typography>
+        <CustomTooltip
+          title="Set which domain's user activity will be tracked."
+          linkText="Learn more"
+          linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel"
+        />
+      </Box>
+
       <Typography
         variant="body2"
         color="textSecondary"
@@ -274,13 +281,19 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                   width={24}
                   height={24}
                 />
-                <CustomTooltip
-                  title={
-                    "Quickly integrate using Google Tag Manager for seamless setup."
-                  }
-                  linkText="Learn more"
-                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
-                />
+                <Box sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                }}>
+                  <CustomTooltip
+                    title={
+                      "Quickly integrate using Google Tag Manager for seamless setup."
+                    }
+                    linkText="Learn more"
+                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-google-tag-manager"
+                  />
+                </Box>
               </Box>
               <Typography className="second-sub-title" sx={typographyGoogle}>
                 Install on Google Tag Manager
@@ -322,13 +335,19 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                   width={24}
                   height={24}
                 />
-                <CustomTooltip
-                  title={
-                    "Manually install to have full control over setup and configuration."
-                  }
-                  linkText="Learn more"
-                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
-                />
+                <Box sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                }}>
+                  <CustomTooltip
+                    title={
+                      "Manually install to have full control over setup and configuration."
+                    }
+                    linkText="Learn more"
+                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-manually"
+                  />
+                </Box>
               </Box>
               <Typography className="second-sub-title" sx={typographyStyles}>
                 Install Manually
@@ -402,12 +421,28 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                   Shopify settings
                 </Typography>
               ) : (
-                <Typography
-                  className="second-sub-title"
-                  sx={{ ...typographyStyles, pt: "9px" }}
-                >
-                  Install on CMS
-                </Typography>
+                <Box>
+                  <Box sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                  }}>
+                    <CustomTooltip
+                      title={
+                        "CMS integrations."
+                      }
+                      linkText="Learn more"
+                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                    />
+                  </Box>
+
+                  <Typography
+                    className="second-sub-title"
+                    sx={{ ...typographyStyles, pt: "9px" }}
+                  >
+                    Install on CMS
+                  </Typography>
+                </Box>
               )}
             </Button>
           </Grid>

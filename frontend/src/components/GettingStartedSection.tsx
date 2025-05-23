@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Link as MuiLink, Grid, Typography } from "@mui/material";
 import { dashboardStyles } from "@/app/(client)/dashboard/dashboardStyles";
 import {
   StepConfig,
@@ -8,12 +8,13 @@ import {
 import PixelInstallation from "@/app/(client)/dashboard/components/PixelInstallation";
 import VerifyPixelIntegration from "../components/VerifyPixelIntegration";
 import RevenueTracking from "@/components/RevenueTracking";
-import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import CustomTooltip from "@/components/customToolTip";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DomainVerificationOutlinedIcon from "@mui/icons-material/DomainVerificationOutlined";
 import OpenInBrowserOutlinedIcon from "@mui/icons-material/OpenInBrowserOutlined";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import DomainSelector from "@/app/(client)/dashboard/components/DomainSelector";
-import { DashboardHelpCard } from "./HelpCard";
+import { FirstTimeScreenCommon } from "./first-time-screens";
 
 const GettingStartedSection: React.FC = () => {
   const [selectedDomain, setSelectedDomain] = useState("");
@@ -121,53 +122,93 @@ const GettingStartedSection: React.FC = () => {
   };
 
   return (
-    <Grid container sx={{ height: "100%", pt: 3, pr: 2 }}>
-      <Grid item xs={12} sx={{ display: { md: "none" }, overflow: "hidden" }}>
-        <Typography
-          variant="h4"
-          component="h1"
-          className="first-sub-title"
-          sx={dashboardStyles.title}
-        >
-          Install Your Pixel
-        </Typography>
-        <VerticalStepper steps={stepData} />
-        <DomainSelector
-          onDomainSelected={(domain) => {
-            setSelectedDomain(domain.domain);
-          }}
-        />
-        {selectedDomain !== "" && (
-          <PixelInstallation
-            onInstallSelected={(method) => {
-              handleInstallSelected(method);
-            }}
-          />
-        )}
+    <>
+      <FirstTimeScreenCommon
+        Header={{
+          TextTitle: "Analytics",
+          TextSubtitle:
+            "Contacts automatically sync across devices and platforms",
+          link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/analytics",
+        }}
+        InfoNotification={{
+          Text: "This page shows complete performance data from your tracking pixel, revealing how users interact with your website. Analyze conversion paths, drop-off points, and audience behavior to optimize campaigns.",
+        }}
+        Content={
+          <>
+            <Grid container sx={{ height: "100%", pt: 3, pr: 2 }}>
+              <Grid
+                item
+                xs={12}
+                sx={{ display: { md: "none" }, overflow: "hidden" }}
+              >
+                <Typography
+                  variant="h4"
+                  component="h1"
+                  className="first-sub-title"
+                  sx={dashboardStyles.title}
+                >
+                  Install Your Pixel
+                </Typography>
+                <VerticalStepper steps={stepData} />
+                <DomainSelector
+                  onDomainSelected={(domain) => {
+                    setSelectedDomain(domain.domain);
+                  }}
+                />
+                {selectedDomain !== "" && (
+                  <PixelInstallation
+                    onInstallSelected={(method) => {
+                      handleInstallSelected(method);
+                    }}
+                  />
+                )}
 
-        <VerifyPixelIntegration domain={selectedDomain} />
-        <RevenueTracking />
-      </Grid>
-
+                <VerifyPixelIntegration domain={selectedDomain} />
+                <RevenueTracking />
+              </Grid>
       <Grid
         item
         xs={12}
         lg={8}
         sx={{ display: { xs: "none", md: "block" }, overflow: "hidden" }}
       >
-        <Typography
-          variant="h4"
-          component="h1"
-          className="first-sub-title"
-          sx={dashboardStyles.title}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+          }}
         >
-          Install Your Pixel
-          {/* <CustomTooltip
-            title="Boost engagement and reduce cart abandonment with personalized messages tailored for your visitors."
-            linkText="Learn more"
-            linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
-          /> */}
-        </Typography>
+          <Typography
+            variant="h4"
+            component="h1"
+            className="first-sub-title"
+            sx={{
+              ...dashboardStyles.title,
+              textAlign: "center",
+              display: "inline",
+              m: 0,
+            }}
+          >
+            Install Your Pixel
+          </Typography>
+          <MuiLink
+            href="https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel"
+            target="_blank"
+            underline="hover"
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.5,
+              fontWeight: 300,
+              color: "#3898FC",
+              fontSize: "1rem",
+            }}
+          >
+            Learn more <OpenInNewIcon sx={{ fontSize: 14 }} />
+          </MuiLink>
+        </Box>
+
         <Box sx={{ pl: 8, mt: 3 }}>
           <DomainSelector
             onDomainSelected={(domain) => {
@@ -190,16 +231,16 @@ const GettingStartedSection: React.FC = () => {
         </Box>
       </Grid>
 
-      <Grid
-        item
-        xs={12}
-        lg={3}
-        sx={{ display: { xs: "none", md: "block" }, mt: 6 }}
-      >
-        <VerticalStepper steps={stepData} />
-      </Grid>
+              <Grid
+                item
+                xs={12}
+                lg={3}
+                sx={{ display: { xs: "none", md: "block" }, mt: 6 }}
+              >
+                <VerticalStepper steps={stepData} />
+              </Grid>
 
-      <Grid
+              {/* <Grid
         sx={{
           mb: 3,
           pr: 12,
@@ -227,9 +268,9 @@ const GettingStartedSection: React.FC = () => {
             },
           ]}
         />
-      </Grid>
+      </Grid> */}
 
-      {/* <Grid item xs={12}>
+              {/* <Grid item xs={12}>
         <Box
           sx={{
             position: "fixed",
@@ -339,7 +380,39 @@ const GettingStartedSection: React.FC = () => {
           </Box>
         </Box>
       </Grid> */}
-    </Grid>
+            </Grid>
+          </>
+        }
+        HelpCard={{
+          headline: "Need Help with Pixel Setup?",
+          description:
+            "Book a 30-minute call, and our expert will guide you through the platform and troubleshoot any pixel issues.",
+          helpPoints: [
+            {
+              title: "Quick Setup Walkthrough",
+              description: "Step-by-step pixel installation help",
+            },
+            {
+              title: "Troubleshooting Session",
+              description: "Fix errors and verify your pixel",
+            },
+            {
+              title: "Platform Demo",
+              description: "See how everything works in action",
+            },
+          ],
+        }}
+        customStyleSX={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          width: "90%",
+          margin: "0 auto",
+          mt: 2,
+        }}
+      />
+    </>
   );
 };
 

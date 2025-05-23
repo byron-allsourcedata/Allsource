@@ -241,7 +241,7 @@ const Header: React.FC<HeaderProps> = ({
                 (pathname.includes("dashboard") ||
                   pathname.includes("leads") ||
                   pathname.includes("company") ||
-                  pathname.includes("suppressions")) && <DomainButton />}
+                  pathname.includes("suppressions"))}
             </Box>
           </Box>
           <Box sx={{ padding: 3 }}>
