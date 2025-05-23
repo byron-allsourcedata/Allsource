@@ -93,9 +93,6 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
       setShowCMSInline(false);
       setShowManualInline(false);
       setIsLoading(true);
-      const response = await axiosInterceptorInstance.get(
-        "/install-pixel/google-tag"
-      );
       setGoogleOpen(true);
       setShowGoogleInline(true);
     } catch (error) {
@@ -139,6 +136,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
       if (authorizationCode) {
         try {
           setGoogleOpen(true);
+          setShowGoogleInline(true);
         } catch (error) {}
       }
     };

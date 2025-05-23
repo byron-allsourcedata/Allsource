@@ -661,7 +661,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                   display: "flex",
                   justifyContent: "flex-end",
                   gap: 1,
-                  position: "absolute",
                   bottom: 0,
                   right: "3%",
                   top: "91%",
