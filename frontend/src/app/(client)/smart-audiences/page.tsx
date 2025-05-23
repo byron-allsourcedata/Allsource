@@ -200,12 +200,6 @@ const columns = [
   },
 ];
 
-const [popupOpen, setPopupOpen] = useState(false);
-
-const handleOpenPopup = () => {
-  setPopupOpen(true);
-};
-
 const getUseCaseStyle = (status: string) => {
   switch (status) {
     case "postal":
@@ -256,7 +250,7 @@ const OverflowTooltipText = ({
 }: OverflowTooltipTextProps) => {
   const [isOverflowed, setIsOverflowed] = useState(false);
   const textRef = useRef<HTMLSpanElement>(null);
-
+  
   useEffect(() => {
     if (textRef.current) {
       setIsOverflowed(
@@ -978,6 +972,13 @@ const SmartAudiences: React.FC = () => {
       .split("_")
       .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
       .join(" ");
+  };
+
+
+  const [popupOpen, setPopupOpen] = useState(false);
+
+  const handleOpenPopup = () => {
+    setPopupOpen(true);
   };
 
   return (
