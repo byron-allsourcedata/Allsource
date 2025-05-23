@@ -103,7 +103,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             },
           }}>
             <Grid item xs={12} sx={{
-              padding: "0px", display: { xs: 'block', md: 'none' },
+              padding: "0px", display: { xs: 'block', md: 'none' }, width: "100%"
             }}>
               <FreeTrialLabel />
             </Grid>

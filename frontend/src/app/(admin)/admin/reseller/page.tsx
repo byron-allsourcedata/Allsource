@@ -12,6 +12,7 @@ import FreeTrialLabel from '../../../(client)/components/FreeTrialLabel'
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Checkbox from '@mui/material/Checkbox';
+import { width } from '@mui/system';
 
 
 const SidebarAdmin = dynamic(() => import('../../SidebarAdmin'), {
@@ -138,7 +139,7 @@ const Reseller: React.FC = () => {
                   <Image src='/logo.svg' priority alt='logo' height={31} width={130} />
               </Link>
           </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', }}>
         <FreeTrialLabel />
           <Button
             aria-controls={open ? 'profile-menu' : undefined}
