@@ -32,7 +32,7 @@ export interface DashboardHelpCardProps {
 }
 
 export interface TimeScreenProps {
-  Header: HeaderProps;
+  Header?: HeaderProps;
   InfoNotification?: InfoNotificationProps;
   Content?: React.ReactNode | React.ComponentType;
   HelpCard: DashboardHelpCardProps;

@@ -75,6 +75,9 @@ import {
   BuilderIntro,
 } from "@/components/first-time-screens";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
+import HintCard from "../components/HintCard";
+import { useSmartsHints } from "./context/SmartsHintsContext";
+import { tableHintCards } from "./context/hintsCardsContent";
 
 interface Smarts {
   id: string;
@@ -326,6 +329,7 @@ const OverflowTooltipText = ({
 
 const SmartAudiences: React.FC = () => {
   const router = useRouter();
+  const { changeSmartsTableHint, smartsTableHints } = useSmartsHints();
   const { hasNotification } = useNotification();
   const { smartAudienceProgress, validationProgress } = useSSE();
   const [data, setData] = useState<Smarts[]>([]);
@@ -1042,6 +1046,7 @@ const SmartAudiences: React.FC = () => {
                       display: "flex",
                       flexDirection: "row",
                       alignItems: "center",
+                      position: "relative",
                       gap: "15px",
                       pt: "4px",
                       pr: 2,
@@ -1134,6 +1139,23 @@ const SmartAudiences: React.FC = () => {
                         />
                       )}
                     </Button>
+                    
+                    <HintCard
+                    card={tableHintCards[1]}
+                    positionLeft={-420}
+                    positionTop={20}
+                    rightSide={true}
+                    isOpenBody={smartsTableHints[1].showBody}
+                    toggleClick={() => {
+                      if (smartsTableHints[0].showBody) {
+                        changeSmartsTableHint(0, "showBody", "close")
+                      }
+                      changeSmartsTableHint(1, "showBody", "toggle")
+                    }}
+                    closeClick={() => {
+                      changeSmartsTableHint(1, "showBody", "close")
+                    }}
+                  />
                     <Button
                       disabled={data?.length === 0}
                       aria-controls={
@@ -1529,6 +1551,24 @@ const SmartAudiences: React.FC = () => {
                                               </IconButton>
                                             )}
                                           </Box>
+                                          {label === "Actions" && (
+                                          <HintCard
+                                            card={tableHintCards[0]}
+                                            positionLeft={-380}
+                                            positionTop={100}
+                                            rightSide={true}
+                                            isOpenBody={smartsTableHints[0].showBody}
+                                            toggleClick={() => {
+                                              if (smartsTableHints[1].showBody) {
+                                                changeSmartsTableHint(1, "showBody", "close")
+                                              }
+                                              changeSmartsTableHint(0, "showBody", "toggle")
+                                            }}
+                                            closeClick={() => {
+                                              changeSmartsTableHint(0, "showBody", "close")
+                                            }}
+                                          />
+                                        )}
                                         </TableCell>
                                       )
                                     )}

@@ -52,89 +52,92 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
         }}
       >
         {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: { xs: "column", sm: "row" },
-            alignItems: "center",
-            justifyContent: "space-between",
-            mb: 3,
-          }}
-        >
-          <Box>
-            <Typography
-              variant="h5"
-              align="center"
-              className="first-sub-title"
-              sx={{
-                fontFamily: "Nunito Sans",
-                fontSize: "24px !important",
-                color: "#4a4a4a",
-                fontWeight: "500 !important",
-                lineHeight: "22px",
-              }}
-            >
-              {Header.TextTitle}
-            </Typography>
-            {Header.TextSubtitle && (
-              <Box
+        {Header &&(
+            <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: "center",
+              justifyContent: "space-between",
+              mb: 3,
+            }}
+          >
+            <Box>
+              <Typography
+                variant="h5"
+                align="center"
+                className="first-sub-title"
                 sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  mt: 1,
+                  fontFamily: "Nunito Sans",
+                  fontSize: "24px !important",
+                  color: "#4a4a4a",
+                  fontWeight: "500 !important",
+                  lineHeight: "22px",
                 }}
               >
-                <Typography
-                  variant="body1"
+                {Header.TextTitle}
+              </Typography>
+              {Header.TextSubtitle && (
+                <Box
                   sx={{
-                    fontFamily: "Nunito Sans",
-                    fontSize: "14px",
-                    color: "rgba(50, 54, 62, 1)",
-                    fontWeight: "400",
-                    lineHeight: "22px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    mt: 1,
                   }}
                 >
-                  {Header.TextSubtitle}
-                </Typography>
-
-                {Header.link && (
-                  <MuiLink
-                    href={Header.link}
-                    target="_blank"
-                    underline="hover"
+                  <Typography
+                    variant="body1"
                     sx={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      color: "#3898FC",
-                      fontSize: 14,
                       fontFamily: "Nunito Sans",
+                      fontSize: "14px",
+                      color: "rgba(50, 54, 62, 1)",
+                      fontWeight: "400",
+                      lineHeight: "22px",
                     }}
                   >
-                    Learn more&nbsp;
-                    <OpenInNewIcon sx={{ fontSize: 16 }} />
-                  </MuiLink>
-                )}
+                    {Header.TextSubtitle}
+                  </Typography>
+  
+                  {Header.link && (
+                    <MuiLink
+                      href={Header.link}
+                      target="_blank"
+                      underline="hover"
+                      sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        color: "#3898FC",
+                        fontSize: 14,
+                        fontFamily: "Nunito Sans",
+                      }}
+                    >
+                      Learn more&nbsp;
+                      <OpenInNewIcon sx={{ fontSize: 16 }} />
+                    </MuiLink>
+                  )}
+                </Box>
+              )}
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+                <Button
+                  onClick={handleOpenPopup}
+                  variant="contained"
+                  sx={{
+                    backgroundColor: "rgba(56,152,252,1)",
+                    textTransform: "none",
+                    padding: "10px 24px",
+                    color: "#fff !important",
+                    ":hover": { backgroundColor: "rgba(48,149,250,1)" },
+                    ":disabled": { backgroundColor: "rgba(56,152,252,0.5)" },
+                  }}
+                >
+                  Request a Demo
+                </Button>
               </Box>
-            )}
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-              <Button
-                onClick={handleOpenPopup}
-                variant="contained"
-                sx={{
-                  backgroundColor: "rgba(56,152,252,1)",
-                  textTransform: "none",
-                  padding: "10px 24px",
-                  color: "#fff !important",
-                  ":hover": { backgroundColor: "rgba(48,149,250,1)" },
-                  ":disabled": { backgroundColor: "rgba(56,152,252,0.5)" },
-                }}
-              >
-                Request a Demo
-              </Button>
             </Box>
           </Box>
-        </Box>
+        )}
+        
 
         {/* Info Notification */}
         {InfoNotification && bannerVisible && (
