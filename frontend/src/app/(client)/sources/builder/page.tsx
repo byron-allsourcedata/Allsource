@@ -309,12 +309,13 @@ const SourcesImport: React.FC = () => {
     setTargetAudience("");
     setSelectedDomainId(0)
     setSelectedDomain("")
-    setSourceType(event.target.value);
     closeDotHintClick(0);
     if (event.target.value === "Website - Pixel") {
       setShowTargetStep(false)
       setSourceMethod(2);
-      openDotHintClick(1);
+      if (sourceType === "") {//not working
+        openDotHintClick(1);
+      }
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
@@ -322,12 +323,15 @@ const SourcesImport: React.FC = () => {
     } else {
       setShowTargetStep(true)
       setSourceMethod(1);
+      // if (selectedDomain === "") {//not working
       openDotHintClick(3);
+      // }
       setPixelNotInstalled(false);
       setTimeout(() => {
         scrollToBlock(block2Ref);
       }, 0);
     }
+    setSourceType(event.target.value);
   };
 
   const handleTargetAudienceChange = (value: string) => {
@@ -337,7 +341,9 @@ const SourcesImport: React.FC = () => {
     }, 0);
     closeDotHintClick(2);
     closeDotHintClick(5);
-    openDotHintClick(6);
+    if (targetAudience === "") {
+      openDotHintClick(6);
+    }
     setFirstEventTypeClick(false)
   };
 
@@ -643,9 +649,11 @@ const SourcesImport: React.FC = () => {
 
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
     const domainName = event.target.value;
-    setSelectedDomain(domainName);
     closeDotHintClick(1);
-    openDotHintClick(2);
+    setSelectedDomain(domainName);
+    if (domainName === "") {
+      openDotHintClick(2);
+    }
 
     const selectedDomainData = domains.find(
       (domain: DomainsLeads) => domain.name === domainName
