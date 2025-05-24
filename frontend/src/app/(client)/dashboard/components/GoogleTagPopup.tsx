@@ -203,8 +203,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       const commitResponse = await axios.post(
         `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}:create_version`,
         {
-          name: "Maximiz: Auto Commit and Publish",
-          notes: "Maximiz: Automatically committed and published via API",
+          name: "Allsource: Auto Commit and Publish",
+          notes: "Allsource: Automatically committed and published via API",
         },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
@@ -248,7 +248,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       );
       let triggerId = findTriggerIdByName(
         triggers,
-        "All Pages Trigger for Miximiz pixel script"
+        "All Pages Trigger for Allsource pixel script"
       );
       if (!triggerId) {
         triggerId = await createAllPagesTrigger(

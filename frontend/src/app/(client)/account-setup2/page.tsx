@@ -673,7 +673,7 @@ const AccountSetup = () => {
 
   const createAllPagesTrigger = async (accessToken: string, accountId: string, containerId: string, workspaceId: string) => {
     const triggerData = {
-      name: 'All Pages Trigger for Miximiz pixel script',
+      name: 'All Pages Trigger for Allsource pixel script',
       type: 'pageview',
       filter: [],
     };
@@ -728,8 +728,8 @@ const AccountSetup = () => {
       const commitResponse = await axios.post(
         `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}:create_version`,
         {
-          name: 'Maximiz: Auto Commit and Publish',
-          notes: 'Maximiz: Automatically committed and published via API',
+          name: 'Allsource: Auto Commit and Publish',
+          notes: 'Allsource: Automatically committed and published via API',
         },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
@@ -765,7 +765,7 @@ const AccountSetup = () => {
         return;
       }
       const triggers = await fetchExistingTriggers(accessToken, accountId, containerId, workspaceId);
-      let triggerId = findTriggerIdByName(triggers, 'All Pages Trigger for Miximiz pixel script');
+      let triggerId = findTriggerIdByName(triggers, 'All Pages Trigger for Allsource pixel script');
       if (!triggerId) {
         triggerId = await createAllPagesTrigger(accessToken, accountId, containerId, workspaceId);
       }
