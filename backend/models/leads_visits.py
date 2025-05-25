@@ -23,8 +23,8 @@ class LeadsVisits(Base):
     end_date = Column(Date, nullable=True)
     end_time = Column(Time, nullable=True)
     pages_count = Column(Integer, nullable=True)
-    average_time_sec = Column(Integer, nullable=True, default=10)
-    full_time_sec = Column(Integer, nullable=True, default=10)
+    average_time_sec = Column(Integer, nullable=False, default=10)
+    full_time_sec = Column(Integer, nullable=False, default=10)
     lead_id = Column(
         BigInteger,
         ForeignKey('leads_users.id', ondelete='CASCADE'),
