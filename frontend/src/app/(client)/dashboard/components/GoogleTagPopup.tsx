@@ -99,7 +99,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     workspaceId: string
   ) => {
     const triggerData = {
-      name: "All Pages Trigger for Miximiz pixel script",
+      name: "All Pages Trigger for Allsource pixel script",
       type: "pageview",
       filter: [],
     };
@@ -111,8 +111,14 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       return response.data.triggerId;
-    } catch (error) {
-      throw error;
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        showErrorToast(e.message);
+      } else if (e instanceof Error) {
+        showErrorToast(e.message);
+      } else {
+        showErrorToast("An unknown error occurred.");
+      }
     }
   };
 
@@ -125,7 +131,15 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
             { headers: { Authorization: `Bearer ${session.token}` } }
           );
           setContainers(response.data.container || []);
-        } catch (error) {}
+        } catch (e) {
+          if (axios.isAxiosError(e)) {
+            showErrorToast(e.message);
+          } else if (e instanceof Error) {
+            showErrorToast(e.message);
+          } else {
+            showErrorToast("An unknown error occurred.");
+          }
+        }
       }
     };
 
@@ -141,7 +155,15 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
             { headers: { Authorization: `Bearer ${session.token}` } }
           );
           setWorkspaces(response.data.workspace || []);
-        } catch (error) {}
+        } catch (e) {
+          if (axios.isAxiosError(e)) {
+            showErrorToast(e.message);
+          } else if (e instanceof Error) {
+            showErrorToast(e.message);
+          } else {
+            showErrorToast("An unknown error occurred.");
+          }
+        }
       }
     };
 
@@ -157,7 +179,15 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         }
       );
       setAccounts(response.data.account || []);
-    } catch (error) {}
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        showErrorToast(e.message);
+      } else if (e instanceof Error) {
+        showErrorToast(e.message);
+      } else {
+        showErrorToast("An unknown error occurred.");
+      }
+    }
   };
 
   const updateTagWithTrigger = async (
@@ -274,6 +304,23 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         ],
       };
       try {
+        const existingTagsResponse = await axios.get(
+          `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+
+        const existingTags = existingTagsResponse.data.tag || [];
+        const existingTag = existingTags.find(
+          (tag: any) => tag.name === "Allsource pixel script"
+        );
+
+        if (existingTag?.tagId) {
+          await axios.delete(
+            `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${existingTag.tagId}`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+        }
+
         const tagResponse = await axios.post(
           `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
           tagData,
@@ -296,18 +343,31 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
           workspaceId
         );
       } catch (e) {
-        showErrorToast("Tag already created!");
-        handleClose();
-      }
-      handleClose();
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-      } else {
-        if (error instanceof Error) {
+        if (axios.isAxiosError(e)) {
+          showErrorToast(e.message);
+        } else if (e instanceof Error) {
+          showErrorToast(e.message);
+        } else {
+          showErrorToast("An unknown error occurred.");
         }
       }
-      showErrorToast("Failed to create and send tag.");
+      handleClose();
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        showErrorToast(e.message);
+      } else if (e instanceof Error) {
+        showErrorToast(e.message);
+      } else {
+        showErrorToast("An unknown error occurred.");
+      }
     } finally {
+      setSession(null)
+      setAccounts([])
+      setContainers([])
+      setSelectedAccount("")
+      setSelectedContainer("")
+      setWorkspaces([])
+      setSelectedWorkspace("")
       setLoading(false);
       handleClose();
     }

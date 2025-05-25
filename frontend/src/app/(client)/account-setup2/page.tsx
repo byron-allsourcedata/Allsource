@@ -500,7 +500,7 @@ const AccountSetup = () => {
       if (partner) {
         router.push('/partners')
       }
-      else{
+      else {
         router.push('/dashboard')
         localStorage.setItem('welcome_popup', "true");
       }
@@ -783,6 +783,23 @@ const AccountSetup = () => {
         ]
       };
       try {
+        const existingTagsResponse = await axios.get(
+          `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
+          { headers: { Authorization: `Bearer ${accessToken}` } }
+        );
+
+        const existingTags = existingTagsResponse.data.tag || [];
+        const existingTag = existingTags.find(
+          (tag: any) => tag.name === "Allsource pixel script"
+        );
+
+        if (existingTag?.tagId) {
+          await axios.delete(
+            `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${existingTag.tagId}`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+        }
+
         const tagResponse = await axios.post(
           `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
           tagData,
@@ -794,17 +811,31 @@ const AccountSetup = () => {
         await submitAndPublishWorkspace(accessToken, accountId, containerId, workspaceId);
         setActiveTab((prev) => prev + 1)
       } catch (e) {
-        showErrorToast('Tag already created!')
-      }
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-      } else {
-        if (error instanceof Error) {
+        if (axios.isAxiosError(e)) {
+          showErrorToast(e.message);
+        } else if (e instanceof Error) {
+          showErrorToast(e.message);
+        } else {
+          showErrorToast("An unknown error occurred.");
         }
       }
-      showErrorToast('Failed to create and send tag.')
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        showErrorToast(e.message);
+      } else if (e instanceof Error) {
+        showErrorToast(e.message);
+      } else {
+        showErrorToast("An unknown error occurred.");
+      }
     }
     finally {
+      setSession(null)
+      setAccounts([])
+      setContainers([])
+      setSelectedAccount("")
+      setSelectedContainer("")
+      setWorkspaces([])
+      setSelectedWorkspace("")
       setLoading(false);
     }
   };
