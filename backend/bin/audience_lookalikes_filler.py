@@ -388,6 +388,7 @@ def process_lookalike_pipeline(
 async def aud_sources_reader(message: IncomingMessage, db_session: Session, connection, similar_audiences_scores_service: SimilarAudiencesScoresService, similar_audience_service: SimilarAudienceService):
     try:
         message_body = json.loads(message.body)
+        logging.info(f"msg body {message_body}")
         lookalike_id = message_body.get('lookalike_id')
         
         audience_lookalike = db_session.query(AudienceLookalikes).filter(AudienceLookalikes.id == lookalike_id).first()
@@ -478,6 +479,7 @@ async def main():
     db_name = os.getenv('DB_NAME')
 
     try:
+        logging.info("Starting processing...")
         rmq_connection = RabbitMQConnection()
         connection = await rmq_connection.connect()
         channel = await connection.channel()
