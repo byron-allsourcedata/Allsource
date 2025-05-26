@@ -14,6 +14,7 @@ export interface AudienceSynergyPreviewProps {
   headerTitle: string;
   tableSrc: string;
   caption: string;
+  onOpenPopup: () => void;
   onBegin: () => void;
   beginDisabled?: boolean;
   buttonLabel?: string;
@@ -25,6 +26,7 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
   tableSrc,
   caption,
   onBegin,
+  onOpenPopup,
   beginDisabled = false,
   buttonLabel = "Begin",
   sx,
@@ -33,7 +35,7 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
     <Box
       onClick={(e) => {
         if (beginDisabled) {
-          onBegin();
+          onOpenPopup();
         }
       }}
       sx={{

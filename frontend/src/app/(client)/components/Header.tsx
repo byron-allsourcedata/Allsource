@@ -244,7 +244,7 @@ const Header: React.FC<HeaderProps> = ({
                   pathname.includes("suppressions"))}
             </Box>
           </Box>
-          <Box sx={{ padding: 3, width: "100%", px: 8 }}>
+          <Box sx={{ padding: 3, width: "100%", px: 3.5 }}>
             <FreeTrialLabel />
           </Box>
 

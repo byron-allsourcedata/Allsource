@@ -80,7 +80,7 @@ const FreeTrialLabel: React.FC = () => {
             justifyContent: "space-between",
             flexWrap: "wrap",
             backgroundColor: "#EBF5FF",
-            borderRadius: "8px",
+            borderRadius: 1,
             border: "2px solid rgba(56, 152, 252, 0.2)",
             fontSize: "14px",
             "@media (min-width: 901px)": {
@@ -95,54 +95,83 @@ const FreeTrialLabel: React.FC = () => {
               gap: "12px",
               p: "6.25px 0px",
               fontSize: "12px",
-              width: "100%",
+              flexGrow: 1,
               justifyContent: "space-between",
+              alignItems: "center",
               color: "#323232",
             }}
           >
             <Box>
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography className="second-sub-title">
+                <Typography sx={{
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  lineHeight: '22px',
+                  letterSpacing: '0%',
+                  verticalAlign: 'middle',
+                }}>
                   You are on Free Trial:
                 </Typography>
                 <Typography
                   sx={{
-                    fontWeight: "400",
-                    fontFamily: "Nunito Sans",
-                    color: "rgba(50, 50, 50, 0.6)",
-                    fontSize: "12px",
+                    fontFamily: 'Nunito Sans',
+                    fontWeight: 400,
+                    fontSize: '12px',
+                    lineHeight: '22px',
+                    letterSpacing: '0%',
+                    verticalAlign: 'middle',
+                    color: 'rgba(50, 50, 50, 0.6)',
                   }}
                 >
                   To upgrade, unlock or schedule demo, please
                 </Typography>
                 <Typography
-                  component="span"
-                  sx={{
-                    fontWeight: "400",
-                    fontFamily: "Nunito Sans",
-                    color: "rgba(50, 50, 50, 0.6)",
-                    fontSize: "12px",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                  }}
                   onClick={handleContactSales}
+                  sx={{
+                    fontFamily: 'Nunito Sans',
+                    fontWeight: 400,
+                    fontSize: '12px',
+                    lineHeight: '22px',
+                    letterSpacing: '0%',
+                    verticalAlign: 'middle',
+                    color: 'rgba(50, 50, 50, 1)',
+                    textDecoration: 'underline',
+                    textDecorationStyle: 'solid',
+                    textDecorationOffset: '0%',
+                    textDecorationThickness: '0%',
+                    cursor: 'pointer',
+                  }}
                 >
                   Contact sales
                 </Typography>
               </Box>
             </Box>
 
-            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 5 }}>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 5 }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <DomainVerificationIcon
                   fontSize="small"
                   sx={{ color: "#3898FC" }}
                 />
-                <Typography variant="body2" sx={{ fontSize: "13px" }}>
-                  <Box component="span" sx={{ color: "rgba(0, 0, 0, 0.5)" }}>
+                <Typography
+                  sx={{
+                    fontFamily: 'Nunito Sans',
+                    fontWeight: 400,
+                    fontSize: '12px',
+                    lineHeight: '22px',
+                    letterSpacing: '0%',
+                    verticalAlign: 'middle',
+                    color: 'inherit',
+                  }}
+                >
+                  <Box
+                    component="span"
+                    sx={{ color: 'rgba(50, 54, 62, 0.5)', fontFamily: 'Nunito Sans' }}
+                  >
                     {domainCount}
                   </Box>
-                  /1
+                  /1 Domains
                 </Typography>
               </Box>
 
@@ -158,23 +187,22 @@ const FreeTrialLabel: React.FC = () => {
 
               <Button
                 onClick={handleChoosePlanSlider}
-                variant="outlined"
                 sx={{
-                  textTransform: "none",
-                  fontFamily: "Nunito Sans",
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  px: "9px",
-                  py: "2px",
-                  borderColor: "#3898FC",
-                  borderRadius: "4px",
-                  bgcolor: "#3898FC",
-                  marginLeft: "auto",
-                  color: "#FFFFFF",
-                  textAlign: "right",
-                  "&:hover": {
-                    bgcolor: "#E6F2FF",
-                    borderColor: "#3898FC",
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  lineHeight: '22px',
+                  letterSpacing: '0%',
+                  verticalAlign: 'middle',
+                  textTransform: 'none',
+                  px: '9px',
+                  py: 0,
+                  borderRadius: '4px',
+                  bgcolor: 'rgba(56, 152, 252, 1)',
+                  color: '#FFFFFF',
+                  textAlign: 'right',
+                  '&:hover': {
+                    backgroundColor: 'rgba(30, 136, 229, 1)',
                   },
                 }}
               >
