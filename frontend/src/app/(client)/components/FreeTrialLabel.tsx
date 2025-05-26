@@ -80,7 +80,7 @@ const FreeTrialLabel: React.FC = () => {
             justifyContent: "space-between",
             flexWrap: "wrap",
             backgroundColor: "#EBF5FF",
-            borderRadius: "8px",
+            borderRadius: 1,
             border: "2px solid rgba(56, 152, 252, 0.2)",
             fontSize: "14px",
             "@media (min-width: 901px)": {
