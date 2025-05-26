@@ -26,12 +26,12 @@ class AudienceLookalikes(Base):
     created_date = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     user_id = Column(
         Integer,
-        ForeignKey('users.id', ondelete='CASCADE', onupdate='SET NULL'),
+        ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False
     )
     created_by_user_id = Column(
         Integer,
-        ForeignKey('users.id', ondelete='SET NULL', onupdate='SET NULL'),
+        ForeignKey('users.id', ondelete='CASCADE'),
         nullable=False
     )
     processed_size = Column(Integer, server_default='0', nullable=False)

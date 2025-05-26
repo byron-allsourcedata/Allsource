@@ -23,8 +23,8 @@ class AudienceSource(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False,
                 server_default=text('gen_random_uuid()'))
-    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
-    created_by_user_id = Column(Integer, ForeignKey('users.id', onupdate='SET NULL'), nullable=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
+    created_by_user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     name = Column(VARCHAR(128), nullable=False)
     file_url = Column(VARCHAR(256), nullable=True)
     created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

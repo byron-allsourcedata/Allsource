@@ -1,8 +1,11 @@
+import logging
+
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import RedirectResponse
+
+from dependencies import get_domain_service
 from schemas.users import PixelFormResponse
-from dependencies import get_domain_service, UserDomainsService
-import logging
+from services.domains import UserDomainsService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
