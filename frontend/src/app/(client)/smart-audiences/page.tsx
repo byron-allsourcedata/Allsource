@@ -1367,12 +1367,19 @@ const SmartAudiences: React.FC = () => {
                                         "Before finalizing your audience, verify contact data quality through our validation system. *This step is only  for direct marketing.",
                                     },
                                   ]}
-                                  tableSrc="/smart-audience-synergy.svg"
-                                  headerTitle="Next-Level Audience Synergy"
-                                  caption="Combine your highest-performing sources and lookalikes into powerful audience stacks, then strategically trim low-quality segments. This is where smarter targeting begins."
-                                  onBegin={handleOpenPopup}
-                                  beginDisabled={!hasSource}
-                                  buttonLabel="Create Smart Audience"
+                                  previewProps={{
+                                    tableSrc: "/smart-audience-synergy.svg",
+                                    headerTitle: "Next-Level Audience Synergy",
+                                    caption:
+                                      "Combine your highest-performing sources and lookalikes into powerful audience stacks, then strategically trim low-quality segments. This is where smarter targeting begins.",
+                                    onOpenPopup: handleOpenPopup,      
+                                    onBegin: () => router.push("/smart-audiences/builder"),        
+                                    beginDisabled: !hasSource,
+                                    buttonLabel: "Create Smart Audience",
+                                    sx: {
+                                      
+                                    },
+                                  }}
                                 />
                               </>
                             }

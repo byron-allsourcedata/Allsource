@@ -1421,8 +1421,9 @@ const Integrations = () => {
                       tableSrc="/integrations-first-time-screen.svg"
                       headerTitle="Connect Your Marketing Platforms"
                       caption="Sync your audience data seamlessly with ad platforms and CRM tools to activate campaigns across channels."
+                      onOpenPopup={handleBegin}
                       onBegin={handleBegin}
-                      beginDisabled={true}
+                      beginDisabled={false}
                       buttonLabel="Create Integration"
                     />
                   </>

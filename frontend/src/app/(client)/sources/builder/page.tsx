@@ -229,6 +229,7 @@ const SourcesImport: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    setShowTargetStep(true);
     if (typeFromSearchParams) {
       let newType = "";
       if (typeFromSearchParams === "customer-conversions")
@@ -236,6 +237,7 @@ const SourcesImport: React.FC = () => {
       if (typeFromSearchParams === "failed-leads") newType = "Failed Leads";
       if (typeFromSearchParams === "interests") newType = "Interest";
       if (typeFromSearchParams === "pixel") {
+        setShowTargetStep(false);
         newType = "Website - Pixel";
         setTimeout(() => {
           scrollToBlock(block4Ref);

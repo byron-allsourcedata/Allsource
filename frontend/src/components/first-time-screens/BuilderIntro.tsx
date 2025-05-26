@@ -1,18 +1,18 @@
 import React, { FC } from "react";
 import { Box, SxProps, Theme } from "@mui/material";
 import StepperTimeline, { Step } from "./StepperTimeline";
-import AudienceSynergyPreview from "./AudienceSynergyPreview";
-import { PreviewConfig } from "@/types/first_time_screens";
+import AudienceSynergyPreview, { AudienceSynergyPreviewProps } from "./AudienceSynergyPreview";
 
-export interface BuilderIntroProps extends PreviewConfig {
+export interface BuilderIntroProps {
   steps: Step[];
+  previewProps: AudienceSynergyPreviewProps;
   sx?: SxProps<Theme>;
 }
 
 const BuilderIntro: FC<BuilderIntroProps> = ({
   steps,
   sx,
-  ...previewProps
+  previewProps,
 }) => (
   <Box
     sx={{
