@@ -6,48 +6,19 @@ import React, {
   useContext,
 } from "react";
 import {
-  initialSmartsBuilderHints,
-  initialSmartsTableHints,
-  initialLookalikesBuilderHints,
-  initialLookalikesTableHints,
   initialPixelSetupHints,
 } from "./hintsStates";
 
 interface HintsContextType {
   showHints: boolean;
   toggleHints: () => void;
-  changeSmartsBuilderHint: (
-    id: number,
-    key: "show" | "showBody",
-    action: "toggle" | "close" | "open"
-  ) => void;
-  changeSmartsTableHint: (
-    id: number,
-    key: "show" | "showBody",
-    action: "toggle" | "close" | "open"
-  ) => void;
-  changeLookalikesTableHint: (
-    id: number,
-    key: "show" | "showBody",
-    action: "toggle" | "close" | "open"
-  ) => void;
-  changeLookalikesBuilderHint: (
-    id: number,
-    key: "show" | "showBody",
-    action: "toggle" | "close" | "open"
-  ) => void;
   changePixelSetupHint: (
     id: number,
     key: "show" | "showBody",
     action: "toggle" | "close" | "open"
   ) => void;
-  smartsBuilderHints: StateHint[];
-  smartsTableHints: StateHint[];
-  lookalikesBuilderHints: StateHint[];
-  lookalikesTableHints: StateHint[];
   pixelSetupHints: StateHint[];
   resetPixelSetupHints: () => void;
-  resetSmartsTableHints: () => void;
 }
 
 interface StateHint {
@@ -67,7 +38,7 @@ export const HintsProvider: React.FC<HintsProviderProps> = ({ children }) => {
   const [isFirstReload, setIsFirstLoad] = useState(true);
 
   useEffect(() => {
-    const savedShowHints = localStorage.getItem("showHints");
+    const savedShowHints = localStorage.getItem("show_hints");
     if (savedShowHints !== null) {
       setShowHints(savedShowHints === "true");
     }
@@ -76,22 +47,9 @@ export const HintsProvider: React.FC<HintsProviderProps> = ({ children }) => {
 
   useEffect(() => {
     if (isFirstReload) return;
-    localStorage.setItem("showHints", String(showHints));
+    localStorage.setItem("show_hints", String(showHints));
   }, [showHints]);
 
-  const [smartsBuilderHints, setSmartsBuilderHints] = useState<StateHint[]>(
-    initialSmartsBuilderHints
-  );
-  const [smartsTableHints, setSmartsTableHints] = useState<StateHint[]>(
-    initialSmartsTableHints
-  );
-
-  const [lookalikesBuilderHints, setLookalikesBuilderHints] = useState<
-    StateHint[]
-  >(initialLookalikesBuilderHints);
-  const [lookalikesTableHints, setLookalikeTableHints] = useState<StateHint[]>(
-    initialLookalikesTableHints
-  );
 
   const [pixelSetupHints, setPixelSetupHints] = useState<StateHint[]>(
     initialPixelSetupHints
@@ -130,25 +88,11 @@ export const HintsProvider: React.FC<HintsProviderProps> = ({ children }) => {
       value={{
         showHints,
         toggleHints: () => setShowHints((prev) => !prev),
-        changeSmartsBuilderHint: (id, key, action) =>
-          changeHintState(id, key, action, setSmartsBuilderHints),
-        smartsBuilderHints,
-        changeSmartsTableHint: (id, key, action) =>
-          changeHintState(id, key, action, setSmartsTableHints),
-        smartsTableHints,
-        changeLookalikesTableHint: (id, key, action) =>
-          changeHintState(id, key, action, setSmartsTableHints),
-        lookalikesTableHints,
-        changeLookalikesBuilderHint: (id, key, action) =>
-          changeHintState(id, key, action, setSmartsBuilderHints),
-        lookalikesBuilderHints,
         changePixelSetupHint: (id, key, action) =>
           changeHintState(id, key, action, setPixelSetupHints),
         resetPixelSetupHints: () =>
           resetHintsState(setPixelSetupHints, initialPixelSetupHints),
         pixelSetupHints,
-        resetSmartsTableHints: () =>
-          resetHintsState(setSmartsTableHints, initialSmartsTableHints),
       }}
     >
       {children}
