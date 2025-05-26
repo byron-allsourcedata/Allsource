@@ -71,7 +71,7 @@ import TableCustomCell from "../sources/components/table/TableCustomCell";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import FirstTimeScreen from "./components/FirstTimeScreen";
 import {
-  FirstTimeScreenCommon,
+  FirstTimeScreenCommonVariant1,
   BuilderIntro,
 } from "@/components/first-time-screens";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
@@ -1325,7 +1325,7 @@ const SmartAudiences: React.FC = () => {
                     >
                       {data.length === 0 ? (
                         <>
-                          <FirstTimeScreenCommon
+                          <FirstTimeScreenCommonVariant1
                             Header={{
                               TextTitle: "Generate Smart Audience",
                               TextSubtitle:

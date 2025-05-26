@@ -7,7 +7,7 @@ import { TimeScreenProps } from "@/types/first_time_screens";
 import NotificationBanner from "./NotificationWarningBanner";
 import { BookACallPopup, LeftMenuProps } from "@/app/(client)/components/BookACallPopup";
 
-const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
+const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
   Header,
   InfoNotification,
   WarningNotification = {
@@ -175,4 +175,4 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
   );
 };
 
-export default FirstTimeScreenCommon;
+export default FirstTimeScreenCommon1;

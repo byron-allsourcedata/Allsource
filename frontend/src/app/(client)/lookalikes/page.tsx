@@ -36,7 +36,7 @@ import { getInteractiveSx } from "@/components/utils";
 import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 import {
   CardsSection,
-  FirstTimeScreenCommon,
+  FirstTimeScreenCommonVariant1,
   StepperTimeline,
 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
@@ -837,7 +837,7 @@ const CreateLookalikePage: React.FC = () => {
             </Box>
           ) : (
             <>
-              <FirstTimeScreenCommon
+              <FirstTimeScreenCommonVariant1
                 Header={{
                   TextTitle: "Create Your First Lookalike",
                   TextSubtitle:

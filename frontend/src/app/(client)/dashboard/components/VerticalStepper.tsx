@@ -32,6 +32,7 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
   return (
     <Box
       sx={{
+        width: '100%',
         border: "1px solid rgba(231, 231, 233, 1)",
         p: 3,
         borderRadius: "4px",
@@ -47,6 +48,7 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
         nonLinear
         sx={{
           backgroundColor: "transparent",
+          width: '100%',
         }}
       >
         {steps.map((step, index) => (
@@ -80,8 +82,8 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
                     step.status === "active"
                       ? "rgba(56, 152, 252, 1) !important"
                       : step.status === "completed"
-                      ? "rgba(0, 0, 0, 1) !important" // Чёрный
-                      : "rgba(82, 82, 82, 1) !important", // Серый
+                      ? "rgba(0, 0, 0, 1) !important" // Black
+                      : "rgba(82, 82, 82, 1) !important", // Gray
                 },
               }}
             >
