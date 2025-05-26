@@ -16,10 +16,7 @@ class SuppressionList(Base):
         VARCHAR(256),
         nullable=True
     )
-    created_at = Column(
-        TIMESTAMP(precision=7),
-        nullable=True
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     total_emails = Column(
         TEXT,
         nullable=True

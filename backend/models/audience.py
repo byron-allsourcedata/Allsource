@@ -21,11 +21,7 @@ class Audience(Base):
         nullable=False
     )
     type = Column(String(16), nullable=False)
-    created_at = Column(
-        TIMESTAMP,
-        server_default=text('now()'),
-        nullable=False
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     status = Column(String(16), nullable=False)
     exported_on = Column(TIMESTAMP, nullable=True)
 

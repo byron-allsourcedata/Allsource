@@ -70,7 +70,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
       description: `Enter your developer’s email address in the input field and click "Send". We’ll send installation instructions for setting up the pixel manually to the provided email.`,
       title: "Enter your developer's email address",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/send-pixel-installation-instructions",
     },
   ];
 

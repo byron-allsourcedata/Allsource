@@ -21,7 +21,7 @@ class LeadOrders(Base):
     platform_order_id = Column(BigInteger, nullable=True)
     currency_code = Column(VARCHAR(8), nullable=True)
     total_price = Column(Numeric(10, 2), nullable=True)
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     platform_created_at = Column(TIMESTAMP, nullable=True)
     platform = Column(VARCHAR, nullable=True)
     platfrom_email = Column(VARCHAR, nullable=True)

@@ -29,11 +29,7 @@ class AudienceSmartValidation(Base):
         VARCHAR(128),
         nullable=True
     )
-    created_at = Column(
-        TIMESTAMP(timezone=False),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(
         TIMESTAMP(timezone=False),
         nullable=False,

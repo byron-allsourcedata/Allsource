@@ -149,7 +149,7 @@ const containerStyles = (hasNotification: boolean) => ({
     backgroundColor: "rgba(255, 255, 255, 1)",
     borderRight: "1px solid rgba(228, 228, 228, 1)",
     height: hasNotification ? "calc(100vh - 6.85rem)" : "calc(100vh - 4.25rem)",
-    maxWidth: "170px",
+    maxWidth: "175px",
     display: "flex",
     overflow: "hidden",
     overflowY: "auto",

@@ -3,10 +3,10 @@ import { initialSourcesBuilderHints, initialSourcesTableHints, initialCreatedSou
 import { changeHintState, resetHintsState, StateHint, HintKey, HintAction } from '@/utils/hintsUtils';
 
 interface HintsContextType {
-  changeSourcesBuilderHint: (id: number, key: HintKey, action: HintAction) => void;
-  changeSourcesTableHint: (id: number, key: HintKey, action: HintAction) => void;
-  changeCreatedSourceHint: (id: number, key: HintKey, action: HintAction) => void;
-  sourcesBuilderHints: StateHint[]
+  changeLookalikesBuilderHint: (id: number, key: HintKey, action: HintAction) => void
+  changeSourcesTableHint: (id: number, key: HintKey, action: HintAction) => void
+  changeCreatedSourceHint: (id: number, key: HintKey, action: HintAction) => void
+  lookalikesBuilderHints: StateHint[]
   sourcesTableHints: StateHint[]
   createdSourceHints: StateHint[]
   resetSourcesBuilderHints: () => void
@@ -21,17 +21,17 @@ interface HintsProviderProps {
 const SourcesHintsContext = createContext<HintsContextType | undefined>(undefined);
 
 export const SourcesHintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
-  const [sourcesBuilderHints, setSourcesBuilderHints] = useState<StateHint[]>(initialSourcesBuilderHints);
+  const [lookalikesBuilderHints, setSourcesBuilderHints] = useState<StateHint[]>(initialSourcesBuilderHints);
   const [sourcesTableHints, setSourcesTableHints] = useState<StateHint[]>(initialSourcesTableHints);
   const [createdSourceHints, setCreatedSourceHints] = useState<StateHint[]>(initialCreatedSourceHints);
 
   return (
     <SourcesHintsContext.Provider value={{ 
-      changeSourcesBuilderHint: (id, key, action) =>
+      changeLookalikesBuilderHint: (id, key, action) =>
         changeHintState(id, key, action, setSourcesBuilderHints),
       resetSourcesBuilderHints: () =>
         resetHintsState(setSourcesBuilderHints, initialSourcesBuilderHints),
-      sourcesBuilderHints,
+      lookalikesBuilderHints,
       changeSourcesTableHint: (id, key, action) =>
         changeHintState(id, key, action, setSourcesTableHints),
       resetSourcesTableHints: () =>
@@ -48,7 +48,7 @@ export const SourcesHintsProvider: React.FC<HintsProviderProps>  = ({ children }
   );
 };
 
-export const useSourcesHints = () => {
+export const useLookalikesHints = () => {
     const context = useContext(SourcesHintsContext);
     if (context === undefined) {
       throw new Error('useHints must be used within a HintsProvider');

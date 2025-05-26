@@ -16,5 +16,5 @@ class LeadEmailsVerification(Base):
     )
     email = Column(VARCHAR(128), nullable=False)
     is_verify = Column(Boolean, nullable=False)
-    created_at = Column(TIMESTAMP, nullable=False)
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     verify_result = Column(VARCHAR(64), nullable=False)

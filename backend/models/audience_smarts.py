@@ -23,11 +23,7 @@ class AudienceSmart(Base):
     )
 
     name = Column(String(128), nullable=False)
-    created_at = Column(
-        TIMESTAMP,
-        server_default=func.now(),
-        nullable=False
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(
         TIMESTAMP,
         server_default=func.now(),

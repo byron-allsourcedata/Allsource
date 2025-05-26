@@ -19,6 +19,7 @@ import Image from "next/image";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CloseIcon from "@mui/icons-material/Close";
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface GTMContainer {
   containerId: string;
@@ -48,6 +49,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
   const [selectedContainer, setSelectedContainer] = useState<string>("");
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const [selectedWorkspace, setSelectedWorkspace] = useState<string>("");
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [tagIdToDelete, setTagIdToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const handleRedirect = async () => {
@@ -69,6 +72,40 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
 
     handleRedirect();
   }, []);
+
+  const handleDeleteClick = (tagId: string) => {
+    setTagIdToDelete(tagId);
+    setOpenConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!tagIdToDelete) return;
+
+    const accessToken = session?.token || "";
+    const accountId = selectedAccount;
+    const containerId = selectedContainer;
+    const workspaceId = selectedWorkspace;
+
+    try {
+      await axios.delete(
+        `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${tagIdToDelete}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      showToast("Tag deleted successfully!");
+      handleCreateAndSendTag()
+    } catch (error) {
+      console.error('Error when deleting a tag:', error);
+      showErrorToast(`Failed to delete tag: ${error}`);
+    } finally {
+      setOpenConfirm(false);
+      setTagIdToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setOpenConfirm(false);
+    setTagIdToDelete(null);
+  };
 
   const fetchExistingTriggers = async (
     accessToken: string,
@@ -315,33 +352,31 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         );
 
         if (existingTag?.tagId) {
-          await axios.delete(
-            `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${existingTag.tagId}`,
+          handleDeleteClick(existingTag.tagId);
+          return
+        } else {
+          const tagResponse = await axios.post(
+            `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
+            tagData,
             { headers: { Authorization: `Bearer ${accessToken}` } }
           );
+          const tagId = tagResponse.data.tagId;
+          await updateTagWithTrigger(
+            accessToken,
+            accountId,
+            containerId,
+            workspaceId,
+            tagId,
+            triggerId
+          );
+          showToast("Tag created and sent successfully!");
+          await submitAndPublishWorkspace(
+            accessToken,
+            accountId,
+            containerId,
+            workspaceId
+          );
         }
-
-        const tagResponse = await axios.post(
-          `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
-          tagData,
-          { headers: { Authorization: `Bearer ${accessToken}` } }
-        );
-        const tagId = tagResponse.data.tagId;
-        await updateTagWithTrigger(
-          accessToken,
-          accountId,
-          containerId,
-          workspaceId,
-          tagId,
-          triggerId
-        );
-        showToast("Tag created and sent successfully!");
-        await submitAndPublishWorkspace(
-          accessToken,
-          accountId,
-          containerId,
-          workspaceId
-        );
       } catch (e) {
         if (axios.isAxiosError(e)) {
           showErrorToast(e.message);
@@ -352,6 +387,13 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         }
       }
       handleClose();
+      setSession(null)
+      setAccounts([])
+      setContainers([])
+      setSelectedAccount("")
+      setSelectedContainer("")
+      setWorkspaces([])
+      setSelectedWorkspace("")
     } catch (e) {
       if (axios.isAxiosError(e)) {
         showErrorToast(e.message);
@@ -361,15 +403,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         showErrorToast("An unknown error occurred.");
       }
     } finally {
-      setSession(null)
-      setAccounts([])
-      setContainers([])
-      setSelectedAccount("")
-      setSelectedContainer("")
-      setWorkspaces([])
-      setSelectedWorkspace("")
       setLoading(false);
-      handleClose();
     }
   };
 
@@ -449,6 +483,13 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
           />
         </Box>
       )}
+      <ConfirmDialog
+        open={openConfirm}
+        title="Confirmation of googleTag deletion"
+        description="A pixel script has been detected in your Google Tag Manager container. Do you really want to delete this tag?"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
       <Box
         sx={{
           bgcolor: "background.paper",
@@ -544,36 +585,32 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
             <Box>
               <Box
                 sx={{
-                  display: "flex",
-                  width: "100%",
-                  flexDirection: "row",
-                  alignItems: "center",
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
                   gap: 2,
-                  justifyContent: "start",
+                  my: 2,
                 }}
               >
                 <Image src="/2.svg" alt="1" width={20} height={20} />
                 <Typography
                   variant="h6"
                   sx={{
-                    fontFamily: "Nunito Sans, sans-serif",
-                    fontSize: "16px",
-                    fontWeight: "600",
-                    color: "rgba(33, 43, 54, 0.87)",
-                    mb: "1.2em",
-                    textAlign: "left",
-                    lineHeight: "21.82px",
-                    letterSpacing: "0.5px",
-                    "@media (max-width: 600px)": {
-                      fontSize: "18px",
-                      textAlign: "left",
-                      mb: "1em",
+                    fontFamily: 'Nunito Sans, sans-serif',
+                    fontSize: '16px',
+                    fontWeight: 600,
+                    color: 'rgba(33, 43, 54, 0.87)',
+                    lineHeight: '21.82px',
+                    letterSpacing: '0.5px',
+                    '@media (max-width: 600px)': {
+                      fontSize: '18px',
                     },
                   }}
                 >
                   Setup GTM connection
                 </Typography>
               </Box>
+
               <FormControl fullWidth sx={{ mb: 2, mt: 1 }}>
                 <InputLabel
                   sx={{

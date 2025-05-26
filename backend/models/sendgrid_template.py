@@ -29,10 +29,7 @@ class SendgridTemplate(Base):
         VARCHAR,
         nullable=True
     )
-    created_at = Column(
-        TIMESTAMP(precision=7),
-        nullable=False
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(
         TIMESTAMP(precision=7),
         nullable=False

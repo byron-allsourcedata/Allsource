@@ -70,11 +70,7 @@ class Partner(Base):
         nullable=False,
         server_default=text('true')
     )
-    created_at = Column(
-        TIMESTAMP,
-        nullable=False,
-        server_default=text('now()')
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(
         TIMESTAMP,
         nullable=False,
