@@ -18,11 +18,7 @@ class AudienceSmartsUseCase(Base):
         VARCHAR(64),
         nullable=False
     )
-    created_at = Column(
-        TIMESTAMP,
-        nullable=False,
-        server_default=func.now()
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(
         TIMESTAMP,
         nullable=False,

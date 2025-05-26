@@ -34,7 +34,4 @@ class ReferralUser(Base):
         nullable=False,
         server_default=text("'partner'::character varying")
     )
-    created_at = Column(
-        TIMESTAMP,
-        nullable=False
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

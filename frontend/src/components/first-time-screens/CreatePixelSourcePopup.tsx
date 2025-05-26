@@ -57,9 +57,12 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
 
   const navigateToExamplePage = () => {
     handleClose();
-    window.location.href =
-      "https://allsourceio.zohodesk.com/portal/en/kb/allsource";
+    window.open(
+      "https://allsourceio.zohodesk.com/portal/en/kb/allsource",
+      "_blank"
+    );
   };
+
 
   return (
     <>
@@ -180,7 +183,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                       >
                         <IconButton
                           sx={{ width: "30px", height: "30px", color: "#fff" }}
-                          onClick={() => {}}
+                          onClick={() => { }}
                         >
                           <LegendToggleOutlinedIcon />
                         </IconButton>
@@ -288,7 +291,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                             height: "30px",
                             color: "#3898FC",
                           }}
-                          onClick={() => {}}
+                          onClick={() => { }}
                         >
                           <AllInboxOutlinedIcon />
                         </IconButton>
@@ -355,7 +358,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                     </Typography>
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-                      onClick={() => {}}
+                      onClick={() => { }}
                     >
                       <OpenInNewIcon sx={{ fontSize: 20 }} />
                     </IconButton>
@@ -368,7 +371,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                   >
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#fff" }}
-                      onClick={() => {}}
+                      onClick={() => { }}
                     ></IconButton>
                     <Typography
                       className="description"
@@ -437,7 +440,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                     </Typography>
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#3898FC" }}
-                      onClick={() => {}}
+                      onClick={() => { }}
                     >
                       <OpenInNewIcon sx={{ fontSize: 20 }} />
                     </IconButton>
@@ -450,7 +453,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                   >
                     <IconButton
                       sx={{ width: "30px", height: "30px", color: "#fff" }}
-                      onClick={() => {}}
+                      onClick={() => { }}
                     ></IconButton>
                     <Typography
                       className="description"

@@ -37,8 +37,4 @@ class UserAccountNotification(Base):
         nullable=False,
         server_default=text('false')
     )
-    created_at = Column(
-        TIMESTAMP,
-        nullable=True,
-        server_default=func.now()
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))

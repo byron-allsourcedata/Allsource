@@ -24,11 +24,7 @@ class AudienceLookalikesPerson(Base):
         ForeignKey(EnrichmentUser.id, ondelete='CASCADE'),
         nullable=False
     )
-    created_at = Column(
-        TIMESTAMP,
-        server_default=text('now()'),
-        nullable=False
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     
     __table_args__ = (
         Index('audience_smarts_persons_lookalike_id', lookalike_id),

@@ -47,7 +47,7 @@ class LeadUser(Base):
         nullable=True
     )
     behavior_type = Column(VARCHAR, nullable=True)
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     shopify_user_id = Column(VARCHAR, nullable=True)
     klaviyo_user_id = Column(VARCHAR, nullable=True)
     bigcommerce_user_id = Column(VARCHAR, nullable=True)

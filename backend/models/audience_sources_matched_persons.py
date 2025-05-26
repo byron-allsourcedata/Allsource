@@ -21,7 +21,7 @@ class AudienceSourcesMatchedPerson(Base):
     enrichment_user_id = Column(UUID(as_uuid=True), ForeignKey(EnrichmentUser.id), nullable=True)
     enrichment_user_asid = Column(UUID(as_uuid=True), nullable=True)
     mapped_fields = Column(JSON, nullable=True)
-    created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
     email = Column(VARCHAR(64), nullable=True)
     first_name = Column(VARCHAR(64), nullable=True)

@@ -23,10 +23,7 @@ class SubscriptionTransactions(Base):
         ForeignKey('subscription_plans.id', ondelete='CASCADE'),
         nullable=True
     )
-    created_at = Column(
-        TIMESTAMP(precision=6),
-        nullable=True
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     platform_subscription_id = Column(
         VARCHAR,
         nullable=True

@@ -23,11 +23,7 @@ class AudienceDataSyncImportedPersons(Base):
         ForeignKey('integrations_users_sync.id', ondelete='CASCADE'),
         nullable=True
     )
-    created_at = Column(
-        TIMESTAMP,
-        server_default=text('CURRENT_TIMESTAMP'),
-        nullable=True
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     updated_at = Column(TIMESTAMP, nullable=True)
     enrichment_user_id = Column(
         UUID(as_uuid=True),

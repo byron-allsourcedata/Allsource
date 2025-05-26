@@ -31,10 +31,7 @@ class ReferralPayouts(Base):
         VARCHAR(128),
         nullable=False
     )
-    created_at = Column(
-        TIMESTAMP,
-        nullable=False
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     status = Column(
         VARCHAR(16),
         nullable=False,

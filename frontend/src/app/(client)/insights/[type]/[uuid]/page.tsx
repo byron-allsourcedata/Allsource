@@ -205,7 +205,7 @@ const Insights = () => {
           }}
         >
           {type === "sources" ? "Source" : "Lookalike"} - {name}
-          <CustomTooltip title="Insights" />
+          <CustomTooltip title="Insights" linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/insights" />
         </Typography>
         <Box
           sx={{
