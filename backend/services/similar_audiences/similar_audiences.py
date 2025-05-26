@@ -8,6 +8,7 @@ from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 from typing_extensions import deprecated
 
+from resolver import injectable
 from schemas.similar_audiences import AudienceData, AudienceFeatureImportance, NormalizationConfig
 from .audience_data_normalization import AudienceDataNormalizationService, AudienceDataNormalizationServiceDep, \
     default_normalization_config
@@ -15,6 +16,7 @@ from .exceptions import EqualTrainTargets, EmptyTrainDataset
 
 pd.set_option('future.no_silent_downcasting', True)
 
+@injectable
 class SimilarAudienceService:
     def __init__(self, audience_data_normalization_service: AudienceDataNormalizationService):
         self.audience_data_normalization_service = audience_data_normalization_service

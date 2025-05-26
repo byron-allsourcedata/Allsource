@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional, Dict
 
 from pydantic import BaseModel
 
@@ -25,27 +26,10 @@ class Lookalike(BaseModel):
     pass
 
 class LookalikeInfo(BaseModel):
-    lookalike: Lookalike
+    lookalike: Dict
     name: str
     source_type: str
     full_name: str
     source_origin: str
-    domain: str
+    domain: Optional[str]
     target_schema: str
-
-
-class CreatedLookalike(BaseModel):
-    pass
-    # return {
-    #     "id": lookalike.id,
-    #     "name": lookalike.name,
-    #     "source": sources.source,
-    #     "source_type": sources.type,
-    #     "size": lookalike.size,
-    #     "size_progress": lookalike.processed_size,
-    #     "train_model_size": lookalike.train_model_size,
-    #     "processed_train_model_size": lookalike.processed_train_model_size,
-    #     "lookalike_size": lookalike.lookalike_size,
-    #     "created_date": lookalike.created_date,
-    #     "created_by": created_by,
-    # }

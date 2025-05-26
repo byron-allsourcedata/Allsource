@@ -298,7 +298,6 @@ class AudienceSmartsService:
 
         lookalike_list = []
         for lookalike_info in lookalikes:
-            # TODO: check which data is required by frontend
             lookalike_list.append({
                 **lookalike_info.lookalike.__dict__,
                 "source": lookalike_info.name,

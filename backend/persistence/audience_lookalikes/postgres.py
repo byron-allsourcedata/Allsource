@@ -7,11 +7,10 @@ from uuid import UUID
 
 import pytz
 from fastapi import HTTPException
-from sqlalchemy import asc, desc, or_, func
+from sqlalchemy import asc, desc, or_, func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
-
+from db_dependencies import Db
 from enums import LookalikeSize, BusinessType
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources import AudienceSource
@@ -21,16 +20,20 @@ from models.enrichment import EnrichmentPersonalProfiles, EnrichmentFinancialRec
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.users import Users
 from models.users_domains import UserDomains
-from persistence.audience_lookalikes.dto import SourceInfo, LookalikeInfo, Lookalike
+from persistence.audience_lookalikes.dto import SourceInfo, LookalikeInfo
 from persistence.audience_lookalikes.interface import AudienceLookalikesPersistenceInterface
 from resolver import injectable
 from schemas.similar_audiences import AudienceFeatureImportance
 
 
-
+@injectable
 class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterface):
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
+
+    def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
+        query = select(AudienceLookalikes).where(AudienceLookalikes.id == lookalike_id)
+        return self.db.execute(query).scalar()
 
     def get_source_info(self, uuid_of_source, user_id) -> Optional[SourceInfo]:
         result: tuple[AudienceSource, str] | None = (
@@ -74,6 +77,7 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
             lookalike_type: Optional[str] = None,
             search_query: Optional[str] = None
     ) -> Tuple[List[LookalikeInfo], int, int, int]:
+
         query = (
             self.db.query(
                 AudienceLookalikes,
@@ -140,13 +144,14 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
         max_page = math.ceil(count / per_page)
 
         lookalikes = [LookalikeInfo(
-            lookalike=Lookalike(),
+            lookalike=raw_lookalike.__dict__,
             source_type=source_type,
             name=name,
             full_name=full_name,
             source_origin=source_origin,
             domain=domain,
-            target_schema=target_schema
+            target_schema=target_schema,
+
         ) for raw_lookalike, name, source_type, full_name, source_origin, domain, target_schema in result_query]
         return lookalikes, count, max_page, source_count
 

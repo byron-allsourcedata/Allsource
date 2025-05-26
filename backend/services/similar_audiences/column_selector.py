@@ -124,9 +124,9 @@ class AudienceColumnSelector:
             "state_abbr": EnrichmentPersonalProfiles.state_abbr.label(
                 "state_abbr"
             ),
-            "state": EnrichmentPersonalProfiles.state_abbr.label(
-                "state"
-            ),
+            # "state": EnrichmentPersonalProfiles.state_abbr.label(
+            #     "state"
+            # ),
             "zip_code5": cast(
                 EnrichmentPersonalProfiles.zip_code5,
                 String

@@ -1,17 +1,18 @@
 import abc
-from typing import Tuple, Optional, List, Any
+from abc import abstractmethod
+from typing import Tuple, Optional, List
+from uuid import UUID
 
+from models import AudienceLookalikes
 from .dto import SourceInfo, LookalikeInfo
 
 
 class AudienceLookalikesPersistenceInterface(abc.ABC):
-
-
-    @abc.abstractmethod
+    @abstractmethod
     def get_source_info(self, uuid_of_source, user_id) -> Optional[SourceInfo]:
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def get_lookalikes(
             self,
             user_id: int,
@@ -27,4 +28,9 @@ class AudienceLookalikesPersistenceInterface(abc.ABC):
     ) -> Tuple[List[LookalikeInfo], int, int, int]:
         pass
 
-
+    @abstractmethod
+    def get_lookalike(
+        self,
+        lookalike_id: UUID
+        ) -> Optional[AudienceLookalikes]:
+        pass

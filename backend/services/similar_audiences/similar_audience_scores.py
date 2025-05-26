@@ -1,42 +1,21 @@
+from decimal import Decimal
 from typing import (
     List,
     Dict,
-    Any
+    Any, Tuple
 )
 from uuid import UUID
 
 from catboost import CatBoostRegressor
-from fastapi import Depends
 from pandas import DataFrame
-from sqlalchemy import update
-from sqlalchemy.dialects.postgresql import dialect
-from sqlalchemy.orm import (
-    Session,
-    Query
-)
-from typing_extensions import (
-    Annotated,
-    deprecated
-)
 
-from dependencies import (
-    Db
-)
-from models import AudienceLookalikes
-from persistence.enrichment_lookalike_scores import (
-    EnrichmentLookalikeScoresPersistence,
-    EnrichmentLookalikeScoresPersistenceDep
-)
-from persistence.enrichment_models import (
-    EnrichmentModelsPersistence,
-    EnrichmentModelsPersistenceDep
-)
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
+from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence
+from persistence.enrichment_models import EnrichmentModelsPersistence
+from resolver import injectable
 from schemas.similar_audiences import NormalizationConfig
-from services.similar_audiences.audience_data_normalization import (
-    AudienceDataNormalizationService,
-    default_normalization_config,
-    AudienceDataNormalizationServiceDep
-)
+from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
+from services.similar_audiences.column_selector import AudienceColumnSelector
 
 
 def is_uuid(value):
@@ -47,95 +26,64 @@ def is_uuid(value):
         return False
 
 
+@injectable
 class SimilarAudiencesScoresService:
     enrichment_models_persistence: EnrichmentModelsPersistence
     enrichment_lookalike_scores_persistence: EnrichmentLookalikeScoresPersistence
     normalization_service: AudienceDataNormalizationService
-    db: Session
+    column_selector: AudienceColumnSelector
 
-    def __init__(self, db: Session, enrichment_models_persistence: EnrichmentModelsPersistence, enrichment_lookalike_scores_persistence: EnrichmentLookalikeScoresPersistence,
-                 normalization_service: AudienceDataNormalizationService):
+    def __init__(
+        self,
+        enrichment_models_persistence: EnrichmentModelsPersistence,
+        enrichment_lookalike_scores_persistence: EnrichmentLookalikeScoresPersistence,
+        normalization_service: AudienceDataNormalizationService,
+        column_selector: AudienceColumnSelector,
+        lookalikes: AudienceLookalikesPersistence
+    ):
         self.enrichment_models_persistence = enrichment_models_persistence
         self.enrichment_lookalike_scores_persistence = enrichment_lookalike_scores_persistence
         self.normalization_service = normalization_service
-        self.db = db
+        self.column_selector = column_selector
+        self.lookalikes= lookalikes
 
 
     def save_enrichment_model(self, lookalike_id: UUID, model: CatBoostRegressor):
         return self.enrichment_models_persistence.save(lookalike_id, model)
 
 
-    @deprecated("Implement cursor manually")
-    def calculate_scores(self, model: CatBoostRegressor, lookalike_id: UUID, query: Query, config: NormalizationConfig, user_id_key: str = 'user_id'):
-        total = query.count()
-        self.db.execute(
-            update(AudienceLookalikes)
-            .where(AudienceLookalikes.id == lookalike_id)
-            .values(train_model_size=total)
-        )
-        self.db.commit()
-
-        compiled = query.statement.compile(
-            dialect=dialect(),
-            compile_kwargs={"literal_binds": True}
-        )
-
-        count = 0
-        with self.db.connection() as conn:
-            with conn.connection.cursor() as cursor:
-                cursor.execute(str(compiled))
-                columns = [desc[0] for desc in cursor.description]
-
-                while True:
-                    rows = cursor.fetchmany(10000)
-
-                    if not rows:
-                        print("done")
-                        break
-
-                    count += len(rows)
-                    print(f"fetched {count}\r")
-
-                    dict_rows = [dict(zip(columns, row)) for row in rows]
-                    user_ids = []
-                    feature_dicts = []
-                    for rd in dict_rows:
-                        user_ids.append(rd[user_id_key])
-                        feats = {
-                            k: (str(v) if v is not None else "None")
-                            for k, v in rd.items()
-                            if k != user_id_key
-                        }
-                        feature_dicts.append(feats)
-
-                    scores = self.calculate_score_dict_batch(model, feature_dicts, config)
-                    self.enrichment_lookalike_scores_persistence.bulk_insert(lookalike_id, list(zip(user_ids, scores)))
-
-                    self.db.execute(
-                        update(AudienceLookalikes)
-                        .where(AudienceLookalikes.id == lookalike_id)
-                        .values(processed_train_model_size=count)
-                    )
-
-                    print("done insert")
-                    self.db.flush()
-                    self.db.commit()
-        self.db.commit()
-
+    def get_lookalike_scores(
+        self,
+        source_uuid: UUID,
+        lookalike_id: UUID,
+        total_rows: int
+    ) -> List[Tuple[UUID, Decimal]]:
+        return self.enrichment_lookalike_scores_persistence.get_lookalike_scores(source_uuid, lookalike_id, total_rows)
 
     def calculate_batch_scores(
         self,
         enrichment_user_ids: List[UUID],
         batch: List[Dict[str, Any]],
         model: CatBoostRegressor,
-        lookalike_id: UUID,
+        lookalike_id: UUID
     ):
-        # TODO:
-        config = default_normalization_config()
+        lookalike = self.lookalikes.get_lookalike(lookalike_id)
+        config = self.get_config(lookalike.significant_fields)
+
         scores = self.calculate_score_dict_batch(model, batch, config)
         self.enrichment_lookalike_scores_persistence.bulk_insert(lookalike_id, list(zip(enrichment_user_ids, scores)))
         self.enrichment_lookalike_scores_persistence.commit()
 
+
+    def get_config(self, significant_fields: dict):
+        column_names = self.column_selector.clickhouse_columns(significant_fields)
+        column_names = list(set(column_names))
+        column_names = [column for column in column_names if column != "zip_code5"]
+        return NormalizationConfig(
+            ordered_features={},
+            numerical_features=[],
+            unordered_features=column_names
+        )
 
     def calculate_score_dict_batch(self, model: CatBoostRegressor, persons: List[dict], config: NormalizationConfig) -> List[float]:
         df = DataFrame(persons)
@@ -147,12 +95,3 @@ class SimilarAudiencesScoresService:
         result = model.predict(df_normed)
         return result.tolist()
 
-
-
-
-
-def get_similar_audiences_service(db: Db, models: EnrichmentModelsPersistenceDep, scores: EnrichmentLookalikeScoresPersistenceDep, normalization: AudienceDataNormalizationServiceDep) -> SimilarAudiencesScoresService:
-    return SimilarAudiencesScoresService(db=db, models=models, scores=scores, normalization=normalization)
-
-
-SimilarAudiencesServiceDep = Annotated[SimilarAudiencesScoresService, Depends(get_similar_audiences_service)]

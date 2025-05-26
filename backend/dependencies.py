@@ -16,10 +16,9 @@ from typing_extensions import Annotated
 from starlette.requests import Request
 from starlette.exceptions import HTTPException
 
-from config import ClickhouseConfig
 from config.auth import AuthConfig
 from config.aws import get_s3_client
-from config.database import SessionLocal
+from db_dependencies import get_db
 from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
 from models.users import Users as User
@@ -92,24 +91,6 @@ from services.referral import ReferralService
 
 logger = logging.getLogger(__name__)
 
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-Db = Annotated[Session, Depends(get_db)]
-
-def get_clickhouse_db():
-    ch = ClickhouseConfig.get_client()
-    try:
-        yield ch
-    finally:
-        ch.close()
-
-Clickhouse = Annotated[clickhouse_connect.driver.Client, Depends(get_clickhouse_db)]
 
 async def verify_signature(request: Request):
     logger.debug("Starting verification")
@@ -231,10 +212,6 @@ def get_notification_persistence(db: Session = Depends(get_db)):
     return NotificationPersistence(db)
 
 
-def get_lookalikes_persistence(db: Session = Depends(get_db)):
-    return AudienceLookalikesPersistence(db=db)
-
-
 def get_accounts_service(
         referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence),
         user_persistence: UserPersistence = Depends(get_user_persistence_service),
@@ -258,8 +235,8 @@ def get_audience_sources_service(
 
 
 def get_audience_smarts_service(
+        lookalikes_persistence_service: AudienceLookalikesPersistence,
         audience_smarts_persistence: AudienceSmartsPersistence = Depends(get_audience_smarts_persistence),
-        lookalikes_persistence_service: AudienceLookalikesPostgresPersistence = Depends(get_lookalikes_persistence),
         audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence),
         audience_settings_persistence: AudienceSettingPersistence = Depends(get_audience_setting_persistence)
 ):
@@ -735,15 +712,3 @@ def check_api_key(maximiz_api_key=Header(None),
         raise HTTPException(status_code=404, detail={'status': DomainStatus.DOMAIN_NOT_FOUND.value})
     raise HTTPException(status_code=401, detail={'status': UserAuthorizationStatus.INVALID_API_KEY.value})
 
-
-def get_lookalikes_service(
-        lookalikes_persistence_service: AudienceLookalikesPostgresPersistence = Depends(get_lookalikes_persistence)):
-    return AudienceLookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)
-
-def get_audience_data_normalization():
-    return AudienceDataNormalizationService()
-
-def get_similar_audience_service(
-        audience_data_normalization_service: AudienceDataNormalizationService = Depends(get_audience_data_normalization)
-):
-    return SimilarAudienceService(audience_data_normalization_service=audience_data_normalization_service)

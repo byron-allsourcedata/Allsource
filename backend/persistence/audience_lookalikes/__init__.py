@@ -1,13 +1,11 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy.orm import Session
 
+from services.similar_audiences.audience_profile_fetcher import get_dependency
 from .interface import AudienceLookalikesPersistenceInterface
 from .postgres import AudienceLookalikesPostgresPersistence
 
-def get_audience_lookalikes_persistence(db: Session) -> AudienceLookalikesPersistenceInterface:
-    return AudienceLookalikesPostgresPersistence(db)
-
-AudienceLookalikesPersistence = Annotated[AudienceLookalikesPostgresPersistence, Depends(get_audience_lookalikes_persistence)]
+# Provide for FastAPI default implementation for ProfileFetcher
+AudienceLookalikesPersistence = Annotated[AudienceLookalikesPersistenceInterface, get_dependency(AudienceLookalikesPostgresPersistence)]
 

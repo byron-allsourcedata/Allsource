@@ -2,7 +2,7 @@ from typing import List, Dict, Optional
 from uuid import UUID
 
 from config import ClickhouseConfig
-from dependencies import Clickhouse, Db
+from db_dependencies import Clickhouse, Db
 from enums import BusinessType
 from models import AudienceSourcesMatchedPerson, EnrichmentUser
 from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence
@@ -36,10 +36,10 @@ class ClickhousePersistence:
             .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
         )
 
-        # TODO: Add hard limit to number of rows
         if limit is not None:
             q = q.limit(limit)
-
+        else:
+            q = q.limit(500_000)
         rows = q.all()
 
         b2c_columns = [

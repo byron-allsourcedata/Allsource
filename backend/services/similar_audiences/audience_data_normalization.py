@@ -8,6 +8,7 @@ from pandas import DataFrame
 from pandas.errors import PerformanceWarning
 import numpy as np
 from config.folders import Folders
+from resolver import injectable
 from schemas.similar_audiences import AudienceData, NormalizationConfig, OrderedFeatureRules
 
 pd.set_option('future.no_silent_downcasting', True)
@@ -66,7 +67,11 @@ def default_normalization_config() -> NormalizationConfig:
     )
 
 
+@injectable
 class AudienceDataNormalizationService:
+    def __init__(self):
+        pass
+
     def normalize(self, audience_data: List[AudienceData]) -> Tuple[DataFrame, DataFrame]:
         df = self.get_audience_dataframe(audience_data)
         return self.normalize_dataframe(df=df, config=default_normalization_config())
@@ -107,6 +112,7 @@ class AudienceDataNormalizationService:
 
     def slice_zipcodes(self, df: DataFrame):
         if 'zip_code5' in df.columns:
+            df['zip_code5'] = df['zip_code5'].astype(str)
             df['zip_code3'] = df['zip_code5'].str[:3]
             df['zip_code4'] = df['zip_code5'].str[:4]
 

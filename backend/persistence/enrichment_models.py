@@ -2,19 +2,19 @@ from typing import Optional
 from uuid import UUID
 
 from catboost import CatBoostRegressor
-from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from typing_extensions import Annotated
 
-from dependencies import Db
+from db_dependencies import Db
 from models.enrichment.enrichment_models import EnrichmentModels
+from resolver import injectable
 
 
+@injectable
 class EnrichmentModelsPersistence:
     db: Session
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
 
@@ -43,11 +43,3 @@ class EnrichmentModelsPersistence:
 
         model, = result
         return model
-
-
-
-def get_persistence_repository(db: Db) -> EnrichmentModelsPersistence:
-    return EnrichmentModelsPersistence(db)
-
-
-EnrichmentModelsPersistenceDep = Annotated[EnrichmentModelsPersistence, Depends(get_persistence_repository)]

@@ -1,9 +1,10 @@
-from typing import List, Tuple, Dict, Set
+from typing import List, Tuple, Dict, Set, Optional
 from uuid import UUID
 
 from pydantic.v1 import UUID4
 
-from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence, AudienceLookalikesPersistence
+from models import AudienceLookalikes
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from enums import BaseEnum, BusinessType
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
@@ -58,6 +59,7 @@ PROFESSIONAL_PROFILE = {
 }
 
 
+@injectable
 class AudienceLookalikesService:
     def __init__(self, lookalikes_persistence_service: AudienceLookalikesPersistence):
         self.lookalikes_persistence_service = lookalikes_persistence_service
@@ -104,10 +106,10 @@ class AudienceLookalikesService:
                 lookalike.similarity_score = similarity_scores
                 
             result.append({
-                **lookalike_info.lookalike.__dict__,
-                "source": lookalike_info.source_name,
+                **lookalike_info.lookalike,
+                "source": lookalike_info.name,
                 "source_type": lookalike_info.source_type,
-                "created_by": lookalike_info.created_by,
+                "created_by": lookalike_info.lookalike['created_by_user_id'],
                 "source_origin": lookalike_info.source_origin,
                 "domain": lookalike_info.domain,
                 "target_schema": lookalike_info.target_schema
@@ -121,6 +123,10 @@ class AudienceLookalikesService:
                 "source_count": source_count
             }
         }
+
+    def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
+        return self.lookalikes_persistence_service.get_lookalike(lookalike_id=lookalike_id)
+
 
     def get_source_info(self, uuid_of_source, user) -> dict:
         source_info = self.lookalikes_persistence_service.get_source_info(uuid_of_source, user.get('id'))
