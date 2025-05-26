@@ -75,12 +75,12 @@ const FreeTrialLabel: React.FC = () => {
           sx={{
             width: '100%',
             display: "flex",
-            alignItems: "center",
+            alignItems: "flex-end",
             px: 2,
             justifyContent: "space-between",
             flexWrap: "wrap",
             backgroundColor: "#EBF5FF",
-            borderRadius: 1,
+            borderRadius: "4px",
             border: "2px solid rgba(56, 152, 252, 0.2)",
             fontSize: "14px",
             "@media (min-width: 901px)": {
@@ -97,19 +97,17 @@ const FreeTrialLabel: React.FC = () => {
               fontSize: "12px",
               flexGrow: 1,
               justifyContent: "space-between",
-              alignItems: "center",
               color: "#323232",
+              alignItems: "flex-end"
             }}
           >
             <Box>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}>
                 <Typography sx={{
                   fontFamily: 'Nunito Sans',
                   fontWeight: 600,
                   fontSize: '12px',
-                  lineHeight: '22px',
                   letterSpacing: '0%',
-                  verticalAlign: 'middle',
                 }}>
                   You are on Free Trial:
                 </Typography>
@@ -118,9 +116,7 @@ const FreeTrialLabel: React.FC = () => {
                     fontFamily: 'Nunito Sans',
                     fontWeight: 400,
                     fontSize: '12px',
-                    lineHeight: '22px',
                     letterSpacing: '0%',
-                    verticalAlign: 'middle',
                     color: 'rgba(50, 50, 50, 0.6)',
                   }}
                 >
@@ -132,7 +128,6 @@ const FreeTrialLabel: React.FC = () => {
                     fontFamily: 'Nunito Sans',
                     fontWeight: 400,
                     fontSize: '12px',
-                    lineHeight: '22px',
                     letterSpacing: '0%',
                     verticalAlign: 'middle',
                     color: 'rgba(50, 50, 50, 1)',
@@ -148,20 +143,18 @@ const FreeTrialLabel: React.FC = () => {
               </Box>
             </Box>
 
-            <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 5 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Box sx={{ display: "flex", gap: 5 }}>
+              <Box sx={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
                 <DomainVerificationIcon
                   fontSize="small"
-                  sx={{ color: "#3898FC" }}
+                  sx={{ color: "#3898FC", alignSelf: 'flex-end', fontSize: "18px" }}
                 />
                 <Typography
                   sx={{
                     fontFamily: 'Nunito Sans',
                     fontWeight: 400,
                     fontSize: '12px',
-                    lineHeight: '22px',
                     letterSpacing: '0%',
-                    verticalAlign: 'middle',
                     color: 'inherit',
                   }}
                 >
