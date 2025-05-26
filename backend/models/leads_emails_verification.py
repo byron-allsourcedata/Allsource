@@ -1,4 +1,7 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR, Index, BigInteger, text, Boolean, Sequence
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, TIMESTAMP, VARCHAR, Index, BigInteger, Boolean, Sequence
+
 from .base import Base
 
 

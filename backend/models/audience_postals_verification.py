@@ -1,6 +1,8 @@
-from sqlalchemy import Column, TIMESTAMP, Index, UUID, text, Boolean, Integer, VARCHAR
-from .base import Base
-from sqlalchemy.sql import func
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, TIMESTAMP, Index, UUID, text, Boolean, VARCHAR, event
+
+from .base import Base, update_timestamps
 
 
 class AudiencePostalVerification(Base):
@@ -21,12 +23,10 @@ class AudiencePostalVerification(Base):
         nullable=False
     )
     created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at = Column(
-        TIMESTAMP,
-        nullable=False,
-        server_default=func.now(),
-        onupdate=func.now()
-    )
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+
     __table_args__ = (
         Index('audience_postals_verification_postal_code_idx', postal_code, unique=True),
     )
+
+event.listen(AudiencePostalVerification, "before_update", update_timestamps)

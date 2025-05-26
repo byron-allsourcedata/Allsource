@@ -1,4 +1,7 @@
-from sqlalchemy import Column, Integer, VARCHAR, Index, TIMESTAMP, TEXT, ForeignKey, BigInteger, text, Sequence
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, VARCHAR, Index, TIMESTAMP, TEXT, ForeignKey, BigInteger, Sequence
+
 from .base import Base
 
 
@@ -60,10 +63,7 @@ class LeadCompany(Base):
         VARCHAR(256),
         nullable=True
     )
-    last_updated = Column(
-        TIMESTAMP,
-        nullable=True
-    )
+    last_updated = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     description = Column(
         TEXT,
         nullable=True

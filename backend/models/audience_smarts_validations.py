@@ -1,5 +1,5 @@
-from sqlalchemy import Column, TIMESTAMP, ForeignKey, UUID, text, Index, VARCHAR
-from .base import Base
+from sqlalchemy import Column, TIMESTAMP, ForeignKey, UUID, text, event, VARCHAR
+from .base import Base, update_timestamps
 from datetime import datetime, timezone
 from models.audience_smarts_persons import AudienceSmartPerson
 
@@ -30,12 +30,7 @@ class AudienceSmartValidation(Base):
         nullable=True
     )
     created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at = Column(
-        TIMESTAMP(timezone=False),
-        nullable=False,
-        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
-    )
-    
-    # __table_args__ = (
-    #     Index('audience_smarts_created_at_idx', created_at, unique=True),
-    # )
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+
+event.listen(AudienceSmartValidation, "before_update", update_timestamps)
+

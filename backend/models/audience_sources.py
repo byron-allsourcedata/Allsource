@@ -1,8 +1,9 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index, UUID, text, func
-from .base import Base, create_timestamps, update_timestamps
-from models.users_domains import UserDomains
-from sqlalchemy.dialects.postgresql import ENUM
 from datetime import datetime, timezone
+
+from sqlalchemy import Column, Integer, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index, UUID, text, event
+from sqlalchemy.dialects.postgresql import ENUM
+
+from .base import Base, update_timestamps
 
 target_schemas = ENUM('b2c', 'b2b', name='target_schemas', create_type=False)
 
@@ -43,5 +44,7 @@ class AudienceSource(Base):
     )
     insights = Column(JSON, nullable=True)
     significant_fields = Column(JSON, nullable=True)
+
+event.listen(AudienceSource, "before_update", update_timestamps)
 
 

@@ -1,11 +1,9 @@
-from sqlalchemy import Column, Integer, VARCHAR, event, TIMESTAMP, ForeignKey, Boolean, Index, text, BigInteger, \
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, ForeignKey, Boolean, Index, text, BigInteger, \
     Sequence
-from .base import Base, create_timestamps
-from .lead_company import LeadCompany
-from .leads_visits import LeadsVisits
-from .users import Users
-from .five_x_five_users import FiveXFiveUser
-from .users_domains import UserDomains
+
+from .base import Base
 
 
 class LeadUser(Base):
@@ -96,5 +94,3 @@ class LeadUser(Base):
         server_default=text('false')
     )
 
-
-event.listen(LeadUser, "before_insert", create_timestamps)

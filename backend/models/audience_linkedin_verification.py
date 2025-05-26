@@ -1,7 +1,9 @@
-from sqlalchemy import Column, TIMESTAMP, ForeignKey, Index, UUID, text, Boolean, Text
-from .base import Base
-from sqlalchemy.sql import func
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, TIMESTAMP, ForeignKey, Index, UUID, text, Boolean, Text, event
+
 from models.audience_smarts_persons import AudienceSmartPerson
+from .base import Base, update_timestamps
 
 
 class AudienceLinkedinVerification(Base):
@@ -30,9 +32,6 @@ class AudienceLinkedinVerification(Base):
         nullable=False
     )
     created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at = Column(
-        TIMESTAMP,
-        nullable=False,
-        server_default=func.now(),
-        onupdate=func.now()
-    )
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+
+event.listen(AudienceLinkedinVerification, "before_update", update_timestamps)

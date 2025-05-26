@@ -1,9 +1,8 @@
 import uuid
-from typing import Any
 
-from sqlalchemy import UniqueConstraint, text, ForeignKey, SmallInteger, String, Integer, Index
+from sqlalchemy import UniqueConstraint, text, ForeignKey, SmallInteger, String, Index
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import UUID, INT4RANGE
 
 from models.base import Base
 

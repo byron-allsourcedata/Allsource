@@ -1,10 +1,9 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index, UUID, text, String, BigInteger, \
-    PrimaryKeyConstraint
-from .base import Base
-from models.users import Users
-from models.audience_smarts_use_cases import AudienceSmartsUseCase
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, TIMESTAMP, JSON, VARCHAR, ForeignKey, Index, UUID, text, String, BigInteger, event
 from sqlalchemy.dialects.postgresql import ENUM
-from sqlalchemy.sql import func
+
+from .base import Base, update_timestamps
 
 audience_smarts_statuses = ENUM(
     'unvalidated', 'validating', 'ready', 'synced', 'data_syncing', 'n_a', 'failed',
@@ -24,12 +23,7 @@ class AudienceSmart(Base):
 
     name = Column(String(128), nullable=False)
     created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at = Column(
-        TIMESTAMP,
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False
-    )
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     user_id = Column(
         BigInteger,
         ForeignKey('users.id'),
@@ -68,3 +62,5 @@ class AudienceSmart(Base):
         Index('audience_smarts_user_created_at', user_id, created_at),
         Index('audience_smarts_pkey', id, unique=True),
     )
+
+event.listen(AudienceSmart, "before_update", update_timestamps)

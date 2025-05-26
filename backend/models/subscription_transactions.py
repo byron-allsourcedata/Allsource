@@ -1,7 +1,9 @@
-from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR, DECIMAL, NUMERIC, BigInteger, text, Sequence
-from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP
+from datetime import datetime, timezone
 
-from .base import Base, create_timestamps, update_timestamps
+from sqlalchemy import Column, ForeignKey, VARCHAR, NUMERIC, BigInteger, Sequence
+from sqlalchemy.dialects.postgresql import TIMESTAMP
+
+from .base import Base
 
 
 class SubscriptionTransactions(Base):
@@ -69,6 +71,3 @@ class SubscriptionTransactions(Base):
         nullable=True
     )
 
-
-event.listen(SubscriptionTransactions, "before_insert", create_timestamps)
-event.listen(SubscriptionTransactions, "before_update", update_timestamps)

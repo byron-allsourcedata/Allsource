@@ -1,7 +1,9 @@
-from sqlalchemy import Column, ForeignKey, event, Integer, VARCHAR, Index, DECIMAL, BigInteger, text, Sequence
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, ForeignKey, event, VARCHAR, Index, DECIMAL, BigInteger, Sequence
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
-from .base import Base, create_timestamps
+from .base import Base, update_timestamps
 
 
 class UsersUnlockedFiveXFiveUser(Base):
@@ -23,14 +25,8 @@ class UsersUnlockedFiveXFiveUser(Base):
         ForeignKey('users.id', ondelete='CASCADE'),
         nullable=True
     )
-    created_at = Column(
-        TIMESTAMP(precision=6),
-        nullable=True
-    )
-    updated_at = Column(
-        TIMESTAMP(precision=6),
-        nullable=True
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     transaction_id = Column(
         VARCHAR,
         nullable=True
@@ -54,4 +50,4 @@ class UsersUnlockedFiveXFiveUser(Base):
     )
 
 
-event.listen(UsersUnlockedFiveXFiveUser, "before_insert", create_timestamps)
+event.listen(UsersUnlockedFiveXFiveUser, "before_insert", update_timestamps)

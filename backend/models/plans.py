@@ -1,7 +1,7 @@
-from sqlalchemy import Column, event, Integer, ForeignKey, Index, BigInteger, text, Text, Numeric, Boolean, Sequence
-from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, VARCHAR, JSONB
+from sqlalchemy import Column, Integer, ForeignKey, Index, BigInteger, text, Text, Numeric, Boolean, Sequence
+from sqlalchemy.dialects.postgresql import VARCHAR, JSONB
 
-from .base import Base, create_timestamps, update_timestamps
+from .base import Base
 
 
 class SubscriptionPlan(Base):
@@ -53,5 +53,3 @@ class SubscriptionPlan(Base):
     )
 
 
-event.listen(SubscriptionPlan, "before_insert", create_timestamps)
-event.listen(SubscriptionPlan, "before_update", update_timestamps)

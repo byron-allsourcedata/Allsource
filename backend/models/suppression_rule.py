@@ -1,5 +1,8 @@
-from sqlalchemy import Column, event, Integer, BOOLEAN, TIMESTAMP, TEXT, ForeignKey, Boolean, text, Index, Sequence
-from .base import Base, create_timestamps
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, Integer, BOOLEAN, TIMESTAMP, TEXT, ForeignKey, Boolean, text, Index, Sequence
+
+from .base import Base
 
 
 class SuppressionRule(Base):
@@ -14,10 +17,7 @@ class SuppressionRule(Base):
         primary_key=True,
         nullable=False,
     )
-    created_at = Column(
-        TIMESTAMP,
-        nullable=True
-    )
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     is_stop_collecting_contacts = Column(
         Boolean,
         nullable=True
@@ -74,5 +74,3 @@ class SuppressionRule(Base):
                 "actual_contect_days": self.actual_contect_days,
                 "is_delete_contacts": self.is_delete_contacts
             }
-
-event.listen(SuppressionRule, "before_insert", create_timestamps)

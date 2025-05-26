@@ -1,6 +1,9 @@
-from sqlalchemy import Column, event, Integer, TEXT, BigInteger, text, Sequence
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, TEXT, BigInteger, Sequence
 from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR
-from .base import Base, create_timestamps
+
+from .base import Base
 
 
 class SuppressionList(Base):
@@ -39,5 +42,3 @@ class SuppressionList(Base):
             "status": self.status
         }
 
-
-event.listen(SuppressionList, "before_insert", create_timestamps)

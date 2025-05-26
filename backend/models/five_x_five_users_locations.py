@@ -1,5 +1,6 @@
+from sqlalchemy import Column, ForeignKey, BigInteger
+
 from .base import Base
-from sqlalchemy import Column, Integer, ForeignKey, BigInteger
 
 
 class FiveXFiveUsersLocations(Base):

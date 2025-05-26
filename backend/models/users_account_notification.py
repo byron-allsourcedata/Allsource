@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, BOOLEAN, TEXT, DateTime, Index, BigInteger, text, ForeignKey, Boolean, Sequence
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, TEXT, Index, BigInteger, text, ForeignKey, Boolean, Sequence
 from sqlalchemy.dialects.postgresql import TIMESTAMP
-from sqlalchemy.sql import func
+
 from .base import Base
 
 

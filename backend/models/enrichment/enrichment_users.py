@@ -1,8 +1,9 @@
-from sqlalchemy import Column, UniqueConstraint, text, Index
+from sqlalchemy import Column, UniqueConstraint, text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 
 from models.base import Base
+
 
 class EnrichmentUser(Base):
     __tablename__ = 'enrichment_users'
