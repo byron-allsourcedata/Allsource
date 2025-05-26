@@ -48,6 +48,7 @@ import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 import { fetchUserData } from '@/services/meService';
 import BookADemoPopup from "./components/BookADemoPopup"
+import ConfirmDialog from "@/components/ConfirmDialog";
 
 interface GTMAccount {
   accountId: string;
@@ -128,6 +129,8 @@ const AccountSetup = () => {
   const [emailDeveloper, setEmailDeveloper] = useState<string>();
   const [activeTab, setActiveTab] = useState(0);
   const { full_name: userFullName, email: userEmail, partner } = useUser();
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [tagIdToDelete, setTagIdToDelete] = useState<string | null>(null);
 
   interface CmsData {
     manual?: string;
@@ -162,6 +165,40 @@ const AccountSetup = () => {
     } catch (error) {
       throw error;
     }
+  };
+
+  const handleDeleteClick = (tagId: string) => {
+    setTagIdToDelete(tagId);
+    setOpenConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!tagIdToDelete) return;
+
+    const accessToken = session?.token || "";
+    const accountId = selectedAccount;
+    const containerId = selectedContainer;
+    const workspaceId = selectedWorkspace;
+
+    try {
+      await axios.delete(
+        `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${tagIdToDelete}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      showToast("Tag deleted successfully!");
+      handleCreateAndSendTag()
+    } catch (error) {
+      console.error('Error when deleting a tag:', error);
+      showErrorToast(`Failed to delete tag: ${error}`);
+    } finally {
+      setOpenConfirm(false);
+      setTagIdToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setOpenConfirm(false);
+    setTagIdToDelete(null);
   };
 
   useEffect(() => {
@@ -794,10 +831,8 @@ const AccountSetup = () => {
         );
 
         if (existingTag?.tagId) {
-          await axios.delete(
-            `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${existingTag.tagId}`,
-            { headers: { Authorization: `Bearer ${accessToken}` } }
-          );
+          handleDeleteClick(existingTag.tagId);
+          return
         }
 
         const tagResponse = await axios.post(
@@ -809,6 +844,13 @@ const AccountSetup = () => {
         await updateTagWithTrigger(accessToken, accountId, containerId, workspaceId, tagId, triggerId)
         showToast('Tag created and sent successfully!')
         await submitAndPublishWorkspace(accessToken, accountId, containerId, workspaceId);
+        setSession(null)
+        setAccounts([])
+        setContainers([])
+        setSelectedAccount("")
+        setSelectedContainer("")
+        setWorkspaces([])
+        setSelectedWorkspace("")
         setActiveTab((prev) => prev + 1)
       } catch (e) {
         if (axios.isAxiosError(e)) {
@@ -829,13 +871,6 @@ const AccountSetup = () => {
       }
     }
     finally {
-      setSession(null)
-      setAccounts([])
-      setContainers([])
-      setSelectedAccount("")
-      setSelectedContainer("")
-      setWorkspaces([])
-      setSelectedWorkspace("")
       setLoading(false);
     }
   };
@@ -1102,6 +1137,14 @@ const AccountSetup = () => {
           <BorderLinearProgress variant="indeterminate" />
         </Box>
       }
+
+      <ConfirmDialog
+        open={openConfirm}
+        title="Confirmation of googleTag deletion"
+        description="A pixel script has been detected in your Google Tag Manager container. Do you really want to delete this tag?"
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
 
       <div id='calendly-popup-wrapper' className="book-call-button__wrapper" style={{ zIndex: 2000 }}> </div>
 

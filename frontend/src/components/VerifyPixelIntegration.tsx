@@ -56,7 +56,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
         "Click to add your website domain. After entering the domain, you’ll be able to install the tracking pixel.",
       title: "Verify Pixel",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/verify-pixel",
     },
   ];
 
