@@ -37,7 +37,7 @@ import { useNotification } from "@/context/NotificationContext";
 import FirstTimeScree from "./components/FirstTimeScree";
 import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
 import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
-import { FirstTimeScreenCommon } from "@/components/first-time-screens";
+import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
@@ -279,7 +279,7 @@ const DataSync = () => {
             ) : !isLoading && filters && !hasDataSync ? (
               <>
                 <Box sx={{ mt: 2 }}>
-                  <FirstTimeScreenCommon
+                  <FirstTimeScreenCommonVariant1
                     Header={{
                       TextTitle: "Data Sync",
                       TextSubtitle: "Customise your sync settings",

@@ -17,7 +17,7 @@ import { TableData } from "@/types/lookalike";
 import { useRouter } from "next/navigation";
 import {
   CardsSection,
-  FirstTimeScreenCommon,
+  FirstTimeScreenCommonVariant1,
 } from "@/components/first-time-screens";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
@@ -899,7 +899,7 @@ const AudienceDashboard: React.FC = () => {
               </Box>
             ) : (
               <>
-                <FirstTimeScreenCommon
+                <FirstTimeScreenCommonVariant1
                   Header={{
                     TextTitle: 'Dashboard',
                     TextSubtitle: "To begin building your audience, you'll need to provide a data source",

@@ -1768,7 +1768,7 @@ const SourcesImport: React.FC = () => {
                 </>
               ) : null}
 
-              {sourceMethod !== 2 && (selectedDomainId || file) && (
+              {showTargetStep && sourceMethod !== 0 && (selectedDomainId || file) && (
                 <Box
                   ref={block4Ref}
                   sx={{
