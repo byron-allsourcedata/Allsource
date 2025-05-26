@@ -139,10 +139,9 @@ const FirstTimeScreenCommon: React.FC<TimeScreenProps> = ({
         )}
         
 
-        {/* Info Notification */}
         {InfoNotification && bannerVisible && (
           <NotificationInfoBanner
-            message="Your dashboard displays key performance data across 5 core areas: pixel-captured users, created sources, lookalikes, smart audiences, and data sync status. Monitor all critical metrics in one place to optimize targeting."
+            message={InfoNotification.Text}
             onClose={() => setBannerVisible(false)}
           />
         )}
