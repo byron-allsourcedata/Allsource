@@ -63,7 +63,7 @@ class LeadCompany(Base):
         VARCHAR(256),
         nullable=True
     )
-    last_updated = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    last_updated = Column(TIMESTAMP, nullable=True)
     description = Column(
         TEXT,
         nullable=True
