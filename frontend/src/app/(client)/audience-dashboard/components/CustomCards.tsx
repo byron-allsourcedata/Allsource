@@ -191,6 +191,7 @@ interface CustomCardsProps {
   onCardClick: (card: string) => void;
   selectedCard: string | null;
   pixelCardActive?: boolean;
+  disabledCards: {pixel: boolean, audience: boolean}
 }
 
 const CustomCards: React.FC<CustomCardsProps> = ({
@@ -198,38 +199,59 @@ const CustomCards: React.FC<CustomCardsProps> = ({
   onCardClick,
   selectedCard,
   pixelCardActive,
+  disabledCards
 }) => {
   return (
     <Grid container wrap="nowrap" sx={{ flexWrap: 'nowrap', }} spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
-      <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
+      <Grid item sx={{ 
+        "@media (max-width: 600px)": { minWidth: 320 }, 
+        pointerEvents: disabledCards.pixel ? "none" : "auto", 
+        opacity: disabledCards.pixel ? 0.5 : 1 }} 
+        xs={12} md={2.4}>
         <PixelContactsCard
           value={values.pixel_contacts}
           onClick={() => onCardClick("Pixel Contacts")}
           isActive={selectedCard === "Pixel Contacts" || pixelCardActive}
         />
       </Grid>
-      <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
+      <Grid item sx={{ 
+        "@media (max-width: 600px)": { minWidth: 320 }, 
+        pointerEvents: disabledCards.audience ? "none" : "auto", 
+        opacity: disabledCards.pixel ? 0.5 : 1 }} 
+        xs={12} md={2.4}>
         <SourcesCard
           value={values.sources}
           onClick={() => onCardClick("Sources")}
           isActive={selectedCard === "Sources"}
         />
       </Grid>
-      <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
+      <Grid item sx={{ 
+        "@media (max-width: 600px)": { minWidth: 320 }, 
+        pointerEvents: disabledCards.audience ? "none" : "auto", 
+        opacity: disabledCards.pixel ? 0.5 : 1 }} 
+        xs={12} md={2.4}>
         <LookalikesCard
           value={values.lookalikes}
           onClick={() => onCardClick("Lookalikes")}
           isActive={selectedCard === "Lookalikes"}
         />
       </Grid>
-      <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
+      <Grid item sx={{ 
+        "@media (max-width: 600px)": { minWidth: 320 }, 
+        pointerEvents: disabledCards.audience ? "none" : "auto", 
+        opacity: disabledCards.pixel ? 0.5 : 1 }} 
+        xs={12} md={2.4}>
         <SmartAudienceCard
           value={values.smart_audience}
           onClick={() => onCardClick("Smart Audience")}
           isActive={selectedCard === "Smart Audience"}
         />
       </Grid>
-      <Grid item sx={{ "@media (max-width: 600px)": { minWidth: 320 } }} xs={12} md={2.4}>
+      <Grid item sx={{ 
+          "@media (max-width: 600px)": { minWidth: 320 }, 
+          pointerEvents: disabledCards.audience ? "none" : "auto", 
+          opacity: disabledCards.pixel ? 0.5 : 1 }} 
+          xs={12} md={2.4}>
         <DataSyncCard
           value={values.data_sync}
           onClick={() => onCardClick("Data sync")}

@@ -697,6 +697,10 @@ const AudienceDashboard: React.FC = () => {
                     }}
                   >
                     <CustomCards
+                      disabledCards={{
+                        pixel: pixelContacts.length === 0,
+                        audience: eventCards.sources.length === 0 
+                      }}
                       values={values}
                       onCardClick={handleCardClick}
                       selectedCard={selectedCard}
