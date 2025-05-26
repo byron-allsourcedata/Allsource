@@ -37,7 +37,7 @@ import NotificationBanner from "@/components/first-time-screens/NotificationWarn
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 import {
   CardsSection,
-  FirstTimeScreenCommon,
+  FirstTimeScreenCommonVariant1,
 } from "@/components/first-time-screens";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
@@ -525,7 +525,7 @@ const Insights = () => {
           </Box>
         ) : (
           <>
-            <FirstTimeScreenCommon
+            <FirstTimeScreenCommonVariant1
               Header={{
                 TextTitle: "Insights",
                 TextSubtitle:

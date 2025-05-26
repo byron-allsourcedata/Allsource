@@ -57,7 +57,7 @@ import TableCustomCell from "./components/table/TableCustomCell";
 import FirstTimeScreen from "./components/FirstTimeScreen"
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import HintCard from "../components/HintCard";
-import { CardsSection, FirstTimeScreenCommon } from "@/components/first-time-screens";
+import { CardsSection, FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import { useSourcesHints } from "./context/SourcesHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
@@ -1039,7 +1039,7 @@ const Sources: React.FC = () => {
                     {data.length === 0 &&
                       isMakeRequest &&
                       !(selectedFilters.length > 0) && (
-                        <FirstTimeScreenCommon
+                        <FirstTimeScreenCommonVariant1
                           Header={{
                             TextTitle: 'Import Your First Source',
                             TextSubtitle: "To begin building your audience, you'll first need to provide a data source. Create a source based on one of this types:",
