@@ -1,8 +1,6 @@
-from sqlalchemy import Column, Integer, DATE, TIME, VARCHAR, ForeignKey, Index, BigInteger, text, Date, Time, Sequence
+from sqlalchemy import Column, Integer, VARCHAR, ForeignKey, Index, BigInteger, Date, Time, Sequence
 
 from .base import Base
-from .five_x_five_users import FiveXFiveUser
-from .users_domains import UserDomains
 
 
 class LeadsVisits(Base):

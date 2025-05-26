@@ -24,11 +24,11 @@ const ProgressBar = ({ progress }: ProgressBarProps) => {
         sx={{
           width: "100%",
           height: "6px",
-          backgroundColor: "rgba(217, 217, 217, 1)",
+          backgroundColor: "rgba(56, 152, 252, 1)",
           borderRadius: "54px",
           overflow: 'hidden',
           "& .MuiLinearProgress-bar": {
-            backgroundColor: "#3898FC",
+            backgroundColor: "rgba(207, 216, 226, 1)",
             borderRadius: "54px",
           },
         }}

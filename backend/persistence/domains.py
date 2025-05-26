@@ -138,17 +138,23 @@ class UserDomainsPersistence:
         self.db.commit()
         return domain
 
+    def delete_user(self, user: Users):
+        self.db.delete(user)
+        self.db.commit()
+
+    def create_user_by_dict(self, user_dict: dict):
+        user = Users(**user_dict)
+        self.db.add(user)
+        self.db.commit()
+        return user.id
+
+
+    def get_user_by_email(self, email: str):
+        user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
+        return user_object
+
     def count_domain(self, user_id: int):
         return self.db.query(func.count(UserDomains.id)).filter_by(user_id=user_id).scalar()
-    
-    def clear_account_from_domains(self, email):
-        user = self.db.query(Users.id).filter_by(email=email).first()
-        if user:
-            self.db.query(UserDomains)\
-                .filter(UserDomains.user_id == user.id)\
-                .delete(synchronize_session=False)
-            self.db.commit()
-
 
     def update_domain_name(self, domain_id: int, domain_name: str):
         self.db.query(UserDomains).filter(

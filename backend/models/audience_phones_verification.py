@@ -1,13 +1,9 @@
-from sqlalchemy import Column, TIMESTAMP, VARCHAR, Index, ForeignKey, UUID, text, Boolean, Text
-from .base import Base
-from sqlalchemy.dialects.postgresql import ENUM
-from sqlalchemy.sql import func
-from models.audience_smarts_persons import AudienceSmartPerson
+from datetime import datetime, timezone
 
-# enrichment_phone_verification_statuses = ENUM(
-#     'connected', 'connected-75', 'disconnected', 'disconnected-75', 'busy', 'unreachable', 'invalid phone', 'restricted'
-#     name='enrichment_phone_verification_statuses', create_type=True
-# )
+from sqlalchemy import Column, TIMESTAMP, VARCHAR, Index, UUID, text, Boolean, Text, event
+
+from .base import Base, update_timestamps
+
 
 class AudiencePhoneVerification(Base):
     __tablename__ = "audience_phones_verification"
@@ -34,9 +30,7 @@ class AudiencePhoneVerification(Base):
         nullable=False
     )
     created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at = Column(
-        TIMESTAMP,
-        nullable=False,
-        server_default=func.now(),
-        onupdate=func.now()
-    )
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+
+event.listen(AudiencePhoneVerification, "before_update", update_timestamps)
+

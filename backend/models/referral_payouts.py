@@ -1,6 +1,6 @@
-from sqlalchemy import Column, Integer, TIMESTAMP, TEXT, text, BigInteger, ForeignKey, Sequence
+from sqlalchemy import Column, TIMESTAMP, TEXT, text, BigInteger, ForeignKey, Sequence
 from sqlalchemy.dialects.postgresql import NUMERIC, VARCHAR
-from enums import PayoutsStatus, ConfirmationStatus
+
 from .base import Base
 
 

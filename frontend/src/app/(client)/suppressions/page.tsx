@@ -14,6 +14,7 @@ import { useNotification } from '../../../context/NotificationContext';
 import { showErrorToast } from "@/components/ToastNotification";
 import GettingStartedSection from '@/components/GettingStartedSection';
 import { SliderProvider } from "@/context/SliderContext";
+import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 
 const centerContainerStyles = {
     display: 'flex',
@@ -101,7 +102,7 @@ const Suppressions: React.FC = () => {
     return (
         <Box sx={{ ...suppressionsStyle.mainContent }}>
             {status !== 'PIXEL_INSTALLATION_NEEDED' && (
-                    <>
+                <>
                     <Box
                         sx={{
                             display: 'flex',
@@ -137,7 +138,7 @@ const Suppressions: React.FC = () => {
                             }
                         }}
                     >
-                
+
                         <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', width: '10%', gap: 1, "@media (max-width: 600px)": { mb: 2 }, "@media (max-width: 440px)": { mb: 1 }, }}>
                             <Typography className="first-sub-title">Suppressions</Typography>
                             <Box sx={{ "@media (max-width: 600px)": { display: 'none' } }}><CustomTooltip title={"Suppressions help manage and filter out contacts or data points that should not receive communications or updates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/suppressions" /></Box>
@@ -215,12 +216,52 @@ const Suppressions: React.FC = () => {
                                 </Tabs>
                             )}
                         </Box>
-                 
-            </Box>
-            </>
-                )}
+
+                    </Box>
+                </>
+            )}
             {status === 'PIXEL_INSTALLATION_NEEDED' ? (
-                <GettingStartedSection />
+                <Box sx={{ mr: 2, width: '100%', px: 1 }}>
+                    <FirstTimeScreenCommonVariant2
+                        Header={{
+                            TextTitle: "Install Pixel",
+                        }}
+                        InfoNotification={{
+                            Text: "Supressions page will be available after pixel installation",
+                        }}
+                        HelpCard={{
+                            headline: "Need Help with Pixel Setup?",
+                            description:
+                                "Book a 30-minute call, and our expert will guide you through the platform and troubleshoot any pixel issues.",
+                            helpPoints: [
+                                {
+                                    title: "Quick Setup Walkthrough",
+                                    description: "Step-by-step pixel installation help",
+                                },
+                                {
+                                    title: "Troubleshooting Session",
+                                    description: "Fix errors and verify your pixel",
+                                },
+                                {
+                                    title: "Platform Demo",
+                                    description: "See how everything works in action",
+                                },
+                            ],
+                        }}
+                        Content={
+                            <GettingStartedSection />
+                        }
+                        customStyleSX={{
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            width: "100%",
+                            pb: 2,
+                            mt: 2,
+                        }}
+                    />
+                </Box>
             ) : (
                 <Box sx={{
                     flexGrow: 1,

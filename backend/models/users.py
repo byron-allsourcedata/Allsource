@@ -1,7 +1,9 @@
-from sqlalchemy import Column, DateTime, event, Integer, Boolean, text, ForeignKey, BigInteger, Index, Sequence
-from sqlalchemy.dialects.postgresql import BIGINT, BOOLEAN, INTEGER, TIMESTAMP, VARCHAR, ARRAY, JSON
+from datetime import datetime, timezone
 
-from .base import Base, create_timestamps, update_timestamps
+from sqlalchemy import Column, DateTime, Integer, Boolean, text, ForeignKey, BigInteger, Index, Sequence
+from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR, ARRAY, JSON
+
+from .base import Base
 
 
 class Users(Base):
@@ -25,8 +27,8 @@ class Users(Base):
     team_owner_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     image = Column(VARCHAR, nullable=True)
     company_name = Column(VARCHAR, nullable=True)
-    created_at = Column(TIMESTAMP(precision=7), nullable=True)
-    last_login = Column(TIMESTAMP(precision=7), nullable=True)
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    last_login = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     payment_status = Column(VARCHAR, nullable=True, server_default=text("'PENDING'::character varying"))
     customer_id = Column(VARCHAR, nullable=True)
     company_website = Column(VARCHAR, nullable=True)
@@ -71,6 +73,3 @@ class Users(Base):
 
 
 User = Users
-
-event.listen(User, "before_insert", create_timestamps)
-event.listen(User, "before_update", update_timestamps)

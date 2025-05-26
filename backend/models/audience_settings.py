@@ -1,6 +1,8 @@
-from sqlalchemy import Column, TIMESTAMP, TEXT, VARCHAR, UUID, text, String, Text
-from .base import Base
-from sqlalchemy.sql import func
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, TIMESTAMP, UUID, text, String, Text, event
+
+from .base import Base, update_timestamps
 
 
 class AudienceSetting(Base):
@@ -16,9 +18,6 @@ class AudienceSetting(Base):
     alias = Column(String, nullable=False)
     value = Column(Text, nullable=False)
     created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at = Column(
-        TIMESTAMP,
-        server_default=text('now()'),
-        onupdate=text('now()'),
-        nullable=False
-    )
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+
+event.listen(AudienceSetting, "before_update", update_timestamps)

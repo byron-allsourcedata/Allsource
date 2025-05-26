@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, TEXT, UUID, SmallInteger, TIMESTAMP, ForeignKey, text, Boolean, Index, inspect
+from sqlalchemy import Column, TEXT, UUID, TIMESTAMP, ForeignKey, text, Boolean, Index, inspect
 from sqlalchemy.orm import relationship
+
 from models.base import Base
+
 
 class EnrichmentUserContact(Base):
     __tablename__ = 'enrichment_users_contacts'

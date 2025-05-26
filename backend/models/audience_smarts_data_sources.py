@@ -1,16 +1,10 @@
-from sqlalchemy import Column, event, TIMESTAMP, JSON, VARCHAR, Index, UUID, ForeignKey, text, String
+from sqlalchemy import Column, UUID, ForeignKey, text, String, Index
 
-from .audience_lookalikes import AudienceLookalikes
-from .audience_smarts import AudienceSmart
-from .audience_sources import AudienceSource
 from .base import Base
 
 
 class AudienceSmartsDataSources(Base):
     __tablename__ = 'audience_smarts_data_sources'
-    __table_args__ = (
-        # Index('audience_smarts_data_sources_pkey', 'id', unique=True),
-    )
 
     id = Column(
         UUID(as_uuid=True),
@@ -33,4 +27,8 @@ class AudienceSmartsDataSources(Base):
         UUID(as_uuid=True),
         ForeignKey('audience_lookalikes.id', ondelete='CASCADE'),
         nullable=True
+    )
+
+    __table_args__ = (
+        Index('audience_smarts_data_sources_pkey', id, unique=True),
     )

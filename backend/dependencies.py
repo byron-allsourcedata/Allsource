@@ -1,90 +1,87 @@
 import logging
-import hmac
 import os
-import time
-import math
-from hashlib import sha256
-from slack_sdk.signature import SignatureVerifier
 from datetime import datetime
 from typing import Optional
+
 from fastapi import Depends, Header, HTTPException, status
 from jose import jwt, JWTError
+from slack_sdk.signature import SignatureVerifier
 from sqlalchemy.orm import Session
-from typing_extensions import Annotated
-from starlette.requests import Request
 from starlette.exceptions import HTTPException
+from starlette.requests import Request
+from typing_extensions import Annotated
+
 from config.auth import AuthConfig
 from config.aws import get_s3_client
 from config.database import SessionLocal
 from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
-from models.users import Users as User
 from persistence.audience_dashboard import DashboardAudiencePersistence
-from persistence.audience_settings import AudienceSettingPersistence
 from persistence.audience_insights import AudienceInsightsPersistence
-from persistence.audience_sources import AudienceSourcesPersistence
-from persistence.audience_smarts import AudienceSmartsPersistence
-from persistence.company_persistence import CompanyPersistence
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
-from persistence.referral_user import ReferralUserPersistence
-from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
+from persistence.audience_settings import AudienceSettingPersistence
+from persistence.audience_smarts import AudienceSmartsPersistence
+from persistence.audience_sources import AudienceSourcesPersistence
+from persistence.audience_sources_matched_persons import AudienceSourcesMatchedPersonsPersistence
+from persistence.company_persistence import CompanyPersistence
 from persistence.domains import UserDomainsPersistence, UserDomains
-from persistence.million_verifier import MillionVerifierPersistence
-from services.audience_insights import AudienceInsightsService
-from services.companies import CompanyService
-from services.lookalikes import AudienceLookalikesService
-from services.payouts import PayoutsService
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
-from services.integrations.slack import SlackService
+from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.suppression import IntegrationsSuppressionPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.leads_persistence import LeadsPersistence
+from persistence.million_verifier import MillionVerifierPersistence
 from persistence.notification import NotificationPersistence
+from persistence.partners_asset_persistence import PartnersAssetPersistence
+from persistence.partners_persistence import PartnersPersistence
 from persistence.plans_persistence import PlansPersistence
+from persistence.referral_discount_code_persistence import ReferralDiscountCodesPersistence
+from persistence.referral_payouts import ReferralPayoutsPersistence
+from persistence.referral_user import ReferralUserPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.settings_persistence import SettingsPersistence
 from persistence.suppression_persistence import SuppressionPersistence
-from persistence.audience_sources_matched_persons import AudienceSourcesMatchedPersonsPersistence
-from persistence.partners_asset_persistence import PartnersAssetPersistence
-from persistence.partners_persistence import PartnersPersistence
 from persistence.user_persistence import UserPersistence
-from persistence.integrations.external_apps_installations import ExternalAppsInstallationsPersistence
-from persistence.referral_discount_code_persistence import ReferralDiscountCodesPersistence
 from schemas.auth_token import Token
-from services.audience_sources import AudienceSourceService
-from services.audience_smarts import AudienceSmartsService
-from services.audience_dashboard import DashboardAudienceService
 from services.accounts import AccountsService
 from services.admin_customers import AdminCustomersService
 from services.audience import AudienceService
+from services.audience_dashboard import DashboardAudienceService
+from services.audience_insights import AudienceInsightsService
+from services.audience_smarts import AudienceSmartsService
+from services.audience_sources import AudienceSourceService
 from services.aws import AWSService
+from services.companies import CompanyService
 from services.company_info import CompanyInfoService
 from services.dashboard import DashboardService
 from services.domains import UserDomainsService
 from services.integrations.base import IntegrationService
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.slack import SlackService
 from services.leads import LeadsService
+from services.lookalikes import AudienceLookalikesService
 from services.notification import Notification
+from services.partners import PartnersService
+from services.partners_assets import PartnersAssetService
 from services.payments import PaymentsService
 from services.payments_plans import PaymentsPlans
+from services.payouts import PayoutsService
 from services.pixel_installation import PixelInstallationService
 from services.plans import PlansService
+from services.referral import ReferralService
 from services.settings import SettingsService
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 from services.sse_events import SseEventsService
-from services.subscriptions import SubscriptionService
 from services.stripe_service import StripeService, get_stripe_payment_url
+from services.subscriptions import SubscriptionService
 from services.suppression import SuppressionService
 from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
 from services.webhook import WebhookService
-from services.partners_assets import PartnersAssetService
-from services.partners import PartnersService
-from services.referral import ReferralService
 
 logger = logging.getLogger(__name__)
 

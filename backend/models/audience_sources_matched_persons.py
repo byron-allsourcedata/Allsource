@@ -1,10 +1,11 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Index, UUID, String, Float, DECIMAL, \
-    VARCHAR, text, func
+from datetime import datetime, timezone
 
-from .audience_sources import AudienceSource
+from sqlalchemy import Column, event, Integer, TIMESTAMP, JSON, ForeignKey, Index, UUID, DECIMAL, \
+    VARCHAR, text
+
 from models.enrichment.enrichment_users import EnrichmentUser
-from .base import Base, create_timestamps, update_timestamps
-from .five_x_five_users import FiveXFiveUser
+from .audience_sources import AudienceSource
+from .base import Base, update_timestamps
 
 
 class AudienceSourcesMatchedPerson(Base):
@@ -22,7 +23,7 @@ class AudienceSourcesMatchedPerson(Base):
     enrichment_user_asid = Column(UUID(as_uuid=True), nullable=True)
     mapped_fields = Column(JSON, nullable=True)
     created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at = Column(TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now())
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     email = Column(VARCHAR(64), nullable=True)
     first_name = Column(VARCHAR(64), nullable=True)
     last_name = Column(VARCHAR(64), nullable=True)
@@ -46,6 +47,4 @@ class AudienceSourcesMatchedPerson(Base):
     count_min = Column(Integer, nullable=True, server_default=text('1'))
     count_max = Column(Integer, nullable=True, server_default=text('1'))
 
-
-event.listen(AudienceSourcesMatchedPerson, "before_insert", create_timestamps)
 event.listen(AudienceSourcesMatchedPerson, "before_update", update_timestamps)

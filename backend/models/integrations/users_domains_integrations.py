@@ -1,10 +1,10 @@
+from datetime import datetime, timezone
+
+from sqlalchemy import VARCHAR, Integer, Column, Boolean, TIMESTAMP, Index, ForeignKey, text, String, Text, \
+    BigInteger, Sequence
 from sqlalchemy.dialects.postgresql import JSONB
 
 from models.base import Base
-from models.users import Users
-from models.users_domains import UserDomains
-from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP, Index, func, ForeignKey, text, String, Text, \
-    BigInteger, Sequence
 
 
 class UserIntegration(Base):
@@ -34,7 +34,10 @@ class UserIntegration(Base):
     is_failed = Column(Boolean, nullable=False, server_default=text('false'))
     shop_id = Column(VARCHAR(32), nullable=True)
     slack_team_id = Column(VARCHAR(32), nullable=True)
-    created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
+    created_at = Column(
+        TIMESTAMP(timezone=False),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+    )
     user_id = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=True)
     is_slack_first_message_sent = Column(Boolean, nullable=False, server_default=text('false'))
     limit = Column(BigInteger, nullable=False, server_default=text('100'))

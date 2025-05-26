@@ -5,7 +5,7 @@ from uuid import UUID
 from catboost import CatBoostRegressor
 from fastapi import Depends
 from pandas import DataFrame
-from sqlalchemy import update
+from sqlalchemy import update, func
 from sqlalchemy.dialects.postgresql import dialect
 from sqlalchemy.orm import Session, Query
 from typing_extensions import Annotated
@@ -47,7 +47,9 @@ class SimilarAudiencesScoresService:
 
 
     def calculate_scores(self, model: CatBoostRegressor, lookalike_id: UUID, query: Query, config: NormalizationConfig, user_id_key: str = 'user_id'):
-        total = query.count()
+        count_query = query.statement.with_only_columns(func.count()).order_by(None)
+        total = query.session.execute(count_query).scalar()
+
         self.db.execute(
             update(AudienceLookalikes)
             .where(AudienceLookalikes.id == lookalike_id)
@@ -98,7 +100,6 @@ class SimilarAudiencesScoresService:
                     )
 
                     print("done insert")
-                    self.db.flush()
                     self.db.commit()
         self.db.commit()
 

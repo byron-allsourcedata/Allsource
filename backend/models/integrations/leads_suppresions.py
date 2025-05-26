@@ -1,7 +1,7 @@
 from models.base import Base
 from sqlalchemy import VARCHAR, Integer, Column, JSON, Boolean, TIMESTAMP, BigInteger, text, String, ForeignKey, \
     Sequence
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class LeadsSupperssion(Base):
@@ -26,4 +26,7 @@ class LeadsSupperssion(Base):
         ForeignKey('users_domains_integrations.id', ondelete='CASCADE'),
         nullable=False
     )
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(
+        TIMESTAMP(timezone=False),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
+    )

@@ -1,8 +1,10 @@
-from sqlalchemy import Column, Integer, VARCHAR, event, BigInteger, Sequence, String, ForeignKey, text
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, event, BigInteger, Sequence, String, ForeignKey
 from sqlalchemy import TIMESTAMP
 
 from .base import Base
-from .base import create_timestamps, update_timestamps
+from .base import update_timestamps
 
 
 class Audience(Base):
@@ -26,5 +28,4 @@ class Audience(Base):
     exported_on = Column(TIMESTAMP, nullable=True)
 
 
-event.listen(Audience, "before_insert", create_timestamps)
 event.listen(Audience, "before_update", update_timestamps)

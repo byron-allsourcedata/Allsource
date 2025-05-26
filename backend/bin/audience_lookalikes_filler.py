@@ -6,7 +6,7 @@ import functools
 import json
 from collections import Counter
 
-from sqlalchemy import desc, cast, String, exists, select
+from sqlalchemy import desc, cast, String, exists, select, func
 import statistics
 import aioboto3
 from aio_pika import IncomingMessage
@@ -35,9 +35,8 @@ from decimal import Decimal
 from datetime import datetime
 from sqlalchemy import create_engine, cast, String
 from sqlalchemy.orm import Session
-from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, EnrichmentLookalikeScore
-
-
+from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, \
+    EnrichmentLifestyle, EnrichmentVoterRecord, EnrichmentLookalikeScore
 
 load_dotenv()
 
@@ -47,26 +46,29 @@ SLEEP_INTERVAL = 60 * 10
 SELECTED_ROW_COUNT = 500
 AUDIENCE_LOOKALIKES_PROGRESS = "AUDIENCE_LOOKALIKES_PROGRESS"
 
+
 def setup_logging(level):
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    
+
+
 async def send_sse(connection, user_id: int, data: dict):
     try:
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
-                    connection=connection,
-                    queue_name=f'sse_events_{str(user_id)}',
-                    message_body={
-                        "status": AUDIENCE_LOOKALIKES_PROGRESS,
-                        "data": data
-                    }
-                )
+            connection=connection,
+            queue_name=f'sse_events_{str(user_id)}',
+            message_body={
+                "status": AUDIENCE_LOOKALIKES_PROGRESS,
+                "data": data
+            }
+        )
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
+
 
 def get_max_size(lookalike_size):
     if lookalike_size == 'almost_identical':
@@ -79,8 +81,9 @@ def get_max_size(lookalike_size):
         size = 200000
     elif lookalike_size == 'broad':
         size = 500000
-        
+
     return size
+
 
 def get_enrichment_user_column_map() -> Dict[str, Any]:
     return {
@@ -88,7 +91,8 @@ def get_enrichment_user_column_map() -> Dict[str, Any]:
         "age": EnrichmentPersonalProfiles.age.label("age"),
         "gender": EnrichmentPersonalProfiles.gender.label("gender"),
         "homeowner": EnrichmentPersonalProfiles.homeowner.label("homeowner"),
-        "length_of_residence_years": EnrichmentPersonalProfiles.length_of_residence_years.label("length_of_residence_years"),
+        "length_of_residence_years": EnrichmentPersonalProfiles.length_of_residence_years.label(
+            "length_of_residence_years"),
         "marital_status": EnrichmentPersonalProfiles.marital_status.label("marital_status"),
         "business_owner": EnrichmentPersonalProfiles.business_owner.label("business_owner"),
         "birth_day": EnrichmentPersonalProfiles.birth_day.label("birth_day"),
@@ -112,7 +116,8 @@ def get_enrichment_user_column_map() -> Dict[str, Any]:
         "credit_card_premium": EnrichmentFinancialRecord.credit_card_premium.label("credit_card_premium"),
         "credit_card_new_issue": EnrichmentFinancialRecord.credit_card_new_issue.label("credit_card_new_issue"),
         "credit_lines": EnrichmentFinancialRecord.credit_lines.label("credit_lines"),
-        "credit_range_of_new_credit_lines": EnrichmentFinancialRecord.credit_range_of_new_credit_lines.label("credit_range_of_new_credit_lines"),
+        "credit_range_of_new_credit_lines": EnrichmentFinancialRecord.credit_range_of_new_credit_lines.label(
+            "credit_range_of_new_credit_lines"),
         "donor": EnrichmentFinancialRecord.donor.label("donor"),
         "investor": EnrichmentFinancialRecord.investor.label("investor"),
         "mail_order_donor": EnrichmentFinancialRecord.mail_order_donor.label("mail_order_donor"),
@@ -163,39 +168,62 @@ def get_enrichment_user_column_map() -> Dict[str, Any]:
     }
 
 def build_dynamic_query_and_config(
-    db_session: Session,
-    sig: Dict[str, float]
+        db_session: Session,
+        sig: Dict[str, float]
 ) -> Tuple:
-    column_map = get_enrichment_user_column_map()
-    for key in ['job_title', 'company_name', 'start_date', 'end_date', 'is_current', 'location', 'job_description',
-                'party_affiliation', 'congressional_district', 'voting_propensity']:
-        column_map.pop(key, None)
-    employment_subq = (
+    column_map = {k: v for k, v in get_enrichment_user_column_map().items() if k not in {
+        'job_title', 'company_name', 'start_date', 'end_date', 'is_current', 'location',
+        'job_description', 'party_affiliation', 'congressional_district', 'voting_propensity'
+    }}
+
+    employment_base = (
         db_session
         .query(
-            EnrichmentEmploymentHistory.asid.label('asid'),
-            EnrichmentEmploymentHistory.job_title.label('job_title'),
-            EnrichmentEmploymentHistory.company_name.label('company_name'),
-            EnrichmentEmploymentHistory.start_date.label('start_date'),
-            EnrichmentEmploymentHistory.end_date.label('end_date'),
-            EnrichmentEmploymentHistory.is_current.label('is_current'),
-            EnrichmentEmploymentHistory.location.label('location'),
-            EnrichmentEmploymentHistory.job_description.label('job_description')
+            EnrichmentEmploymentHistory.asid,
+            EnrichmentEmploymentHistory.job_title,
+            EnrichmentEmploymentHistory.company_name,
+            EnrichmentEmploymentHistory.start_date,
+            EnrichmentEmploymentHistory.end_date,
+            EnrichmentEmploymentHistory.is_current,
+            EnrichmentEmploymentHistory.location,
+            EnrichmentEmploymentHistory.job_description,
+            func.row_number()
+            .over(
+                partition_by=EnrichmentEmploymentHistory.asid,
+                order_by=EnrichmentEmploymentHistory.id
+            )
+            .label("rn")
         )
         .filter(EnrichmentEmploymentHistory.is_current == True)
-        .distinct(EnrichmentEmploymentHistory.asid)
-        .subquery('emp_curr')
+        .subquery("emp_ranked")
     )
-    voter_subq = (
+
+    employment_subq = (
+        db_session
+        .query(employment_base)
+        .filter(employment_base.c.rn == 1)
+        .subquery("emp_curr")
+    )
+
+    voter_base = (
         db_session
         .query(
-            EnrichmentVoterRecord.asid.label('asid'),
-            EnrichmentVoterRecord.party_affiliation.label('party_affiliation'),
-            EnrichmentVoterRecord.congressional_district.label('congressional_district'),
-            EnrichmentVoterRecord.voting_propensity.label('voting_propensity')
+            EnrichmentVoterRecord.asid,
+            EnrichmentVoterRecord.party_affiliation,
+            EnrichmentVoterRecord.congressional_district,
+            EnrichmentVoterRecord.voting_propensity,
+            func.row_number()
+            .over(partition_by=EnrichmentVoterRecord.asid, order_by=EnrichmentVoterRecord.id)
+            .label("rn")
         )
-        .distinct(EnrichmentVoterRecord.asid)
-        .subquery('voter_curr')
+        .subquery("voter_ranked")
+    )
+
+    voter_subq = (
+        db_session
+        .query(voter_base)
+        .filter(voter_base.c.rn == 1)
+        .subquery("voter_curr")
     )
 
     column_map.update({
@@ -259,11 +287,11 @@ def build_dynamic_query_and_config(
 
 
 def fetch_user_profiles(
-    db_session: Session,
-    audience_lookalike: AudienceLookalikes
+        db_session: Session,
+        audience_lookalike: AudienceLookalikes
 ) -> List[Dict]:
     sig_fields = audience_lookalike.significant_fields or {}
-        
+
     column_map = {
         "customer_value": (AudienceSourcesMatchedPerson.value_score.label("customer_value")),
         **get_enrichment_user_column_map()
@@ -322,16 +350,16 @@ def fetch_user_profiles(
                 data_kwargs[label] = str(value)
 
         profiles.append(data_kwargs)
-        
+
     return profiles
 
 
 def train_and_save_model(
-    lookalike_id: int,
-    user_profiles: List[Dict],
-    config: NormalizationConfig,
-    similar_audiences_scores_service: SimilarAudiencesScoresService,
-    similar_audience_service: SimilarAudienceService
+        lookalike_id: int,
+        user_profiles: List[Dict],
+        config: NormalizationConfig,
+        similar_audiences_scores_service: SimilarAudiencesScoresService,
+        similar_audience_service: SimilarAudienceService
 ):
     dict_enrichment = [
         {k: str(v) if v is not None else "None" for k, v in profile.items()}
@@ -347,11 +375,11 @@ def train_and_save_model(
 
 
 def calculate_and_store_scores(
-    model,
-    lookalike_id: int,
-    query,
-    similar_audiences_scores_service: SimilarAudiencesScoresService,
-    config
+        model,
+        lookalike_id: int,
+        query,
+        similar_audiences_scores_service: SimilarAudiencesScoresService,
+        config
 ):
     similar_audiences_scores_service.calculate_scores(
         model=model,
@@ -361,11 +389,12 @@ def calculate_and_store_scores(
         config=config
     )
 
+
 def process_lookalike_pipeline(
-    db_session: Session,
-    audience_lookalike: AudienceLookalikes,
-    similar_audiences_scores_service: SimilarAudiencesScoresService,
-    similar_audience_service: SimilarAudienceService
+        db_session: Session,
+        audience_lookalike: AudienceLookalikes,
+        similar_audiences_scores_service: SimilarAudiencesScoresService,
+        similar_audience_service: SimilarAudienceService
 ):
     sig = audience_lookalike.significant_fields or {}
     query, config = build_dynamic_query_and_config(db_session, sig)
@@ -385,11 +414,15 @@ def process_lookalike_pipeline(
         config=config
     )
 
-async def aud_sources_reader(message: IncomingMessage, db_session: Session, connection, similar_audiences_scores_service: SimilarAudiencesScoresService, similar_audience_service: SimilarAudienceService):
+
+async def aud_sources_reader(message: IncomingMessage, db_session: Session, connection,
+                             similar_audiences_scores_service: SimilarAudiencesScoresService,
+                             similar_audience_service: SimilarAudienceService):
     try:
         message_body = json.loads(message.body)
+        logging.info(f"msg body {message_body}")
         lookalike_id = message_body.get('lookalike_id')
-        
+
         audience_lookalike = db_session.query(AudienceLookalikes).filter(AudienceLookalikes.id == lookalike_id).first()
         if not audience_lookalike:
             logging.info(f"audience_lookalike with id {lookalike_id} not found")
@@ -397,7 +430,9 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
             return
 
         total_rows = get_max_size(audience_lookalike.lookalike_size)
-        process_lookalike_pipeline(db_session=db_session, audience_lookalike=audience_lookalike, similar_audiences_scores_service=similar_audiences_scores_service, similar_audience_service=similar_audience_service)
+        process_lookalike_pipeline(db_session=db_session, audience_lookalike=audience_lookalike,
+                                   similar_audiences_scores_service=similar_audiences_scores_service,
+                                   similar_audience_service=similar_audience_service)
 
         source_uid_select = (
             select(AudienceSourcesMatchedPerson.enrichment_user_id)
@@ -438,21 +473,24 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
         audience_lookalike.similarity_score = similarity_score
         db_session.add(audience_lookalike)
         db_session.flush()
-        await send_sse(connection, audience_lookalike.user_id, {"lookalike_id": str(audience_lookalike.id), "total": total_rows, "processed": 0})
-        
+        await send_sse(connection, audience_lookalike.user_id,
+                       {"lookalike_id": str(audience_lookalike.id), "total": total_rows, "processed": 0})
+
         if not enrichment_lookalike_scores:
             await message.ack()
             return
-            
-        persons = [str(enrichment_lookalike_score.enrichment_user_id) for enrichment_lookalike_score in enrichment_lookalike_scores]
-        
+
+        persons = [str(enrichment_lookalike_score.enrichment_user_id) for enrichment_lookalike_score in
+                   enrichment_lookalike_scores]
+
         message_body = {
             'lookalike_id': str(audience_lookalike.id),
             'user_id': audience_lookalike.user_id,
             'enrichment_user': persons
         }
 
-        await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_MATCHING, message_body=message_body)
+        await publish_rabbitmq_message(connection=connection, queue_name=AUDIENCE_LOOKALIKES_MATCHING,
+                                       message_body=message_body)
 
         db_session.commit()
         await message.ack()
@@ -470,7 +508,7 @@ async def main():
             log_level = logging.DEBUG
         elif arg != 'INFO':
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
-    
+
     setup_logging(log_level)
     db_username = os.getenv('DB_USERNAME')
     db_password = os.getenv('DB_PASSWORD')
@@ -478,6 +516,7 @@ async def main():
     db_name = os.getenv('DB_NAME')
 
     try:
+        logging.info("Starting processing...")
         rmq_connection = RabbitMQConnection()
         connection = await rmq_connection.connect()
         channel = await connection.channel()
@@ -489,9 +528,13 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
         audience_data_normalization_service = AudienceDataNormalizationService()
-        
-        similar_audience_service = SimilarAudienceService(audience_data_normalization_service=audience_data_normalization_service)
-        similar_audiences_scores_service = SimilarAudiencesScoresService(normalization_service=audience_data_normalization_service, db=db_session, enrichment_models_persistence = EnrichmentModelsPersistence(db=db_session), enrichment_lookalike_scores_persistence = EnrichmentLookalikeScoresPersistence(db=db_session))
+
+        similar_audience_service = SimilarAudienceService(
+            audience_data_normalization_service=audience_data_normalization_service)
+        similar_audiences_scores_service = SimilarAudiencesScoresService(
+            normalization_service=audience_data_normalization_service, db=db_session,
+            enrichment_models_persistence=EnrichmentModelsPersistence(db=db_session),
+            enrichment_lookalike_scores_persistence=EnrichmentLookalikeScoresPersistence(db=db_session))
         reader_queue = await channel.declare_queue(
             name=AUDIENCE_LOOKALIKES_READER,
             durable=True,
@@ -499,7 +542,9 @@ async def main():
                 'x-consumer-timeout': 14400000,
             }
         )
-        await reader_queue.consume(functools.partial(aud_sources_reader, db_session=db_session, connection=connection, similar_audience_service=similar_audience_service, similar_audiences_scores_service=similar_audiences_scores_service))
+        await reader_queue.consume(functools.partial(aud_sources_reader, db_session=db_session, connection=connection,
+                                                     similar_audience_service=similar_audience_service,
+                                                     similar_audiences_scores_service=similar_audiences_scores_service))
 
         await asyncio.Future()
 
@@ -515,7 +560,7 @@ async def main():
             logging.info("Closing RabbitMQ connection...")
             await rmq_connection.close()
         logging.info("Shutting down...")
-        
+
 
 if __name__ == "__main__":
     asyncio.run(main())

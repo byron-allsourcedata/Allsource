@@ -70,7 +70,6 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
         position: "relative",
         backgroundColor: "rgba(255, 255, 255, 1)",
         boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.08)",
-        marginBottom: "2rem",
         "@media (max-width: 900px)": {
           marginBottom: "1.5rem",
           padding: "1rem",

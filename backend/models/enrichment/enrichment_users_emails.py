@@ -1,10 +1,11 @@
 import uuid
 
 from sqlalchemy import UniqueConstraint, text, ForeignKey, Index
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
-from models.enrichment.enrichment_users import EnrichmentUser
+from sqlalchemy.orm import Mapped, mapped_column
+
 from models.base import Base
+from models.enrichment.enrichment_users import EnrichmentUser
 
 
 class EnrichmentUsersEmails(Base):

@@ -1,10 +1,11 @@
 import uuid
+from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, VARCHAR, Index, UUID, ForeignKey, text, String, BigInteger
+from sqlalchemy import Column, Index, UUID, ForeignKey, String, BigInteger, event
 from sqlalchemy.dialects.postgresql import TIMESTAMP
-from models.integrations.integrations_users_sync import IntegrationUserSync
+
 from models.enrichment.enrichment_users import EnrichmentUser
-from .base import Base
+from .base import Base, update_timestamps
 
 
 class AudienceDataSyncImportedPersons(Base):
@@ -39,3 +40,4 @@ class AudienceDataSyncImportedPersons(Base):
             'audience_data_sync_imported_persons_data_sync', data_sync_id, unique=False
         ),
     )
+event.listen(AudienceDataSyncImportedPersons, "before_update", update_timestamps)

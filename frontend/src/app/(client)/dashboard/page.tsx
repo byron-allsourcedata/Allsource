@@ -35,6 +35,7 @@ import { useNotification } from "../../../context/NotificationContext";
 import RevenueTracking from "@/components/RevenueTracking";
 import WelcomePopup from "./components/WelcomePopup";
 import GettingStartedSection from "@/components/GettingStartedSection";
+import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -578,7 +579,47 @@ const Dashboard: React.FC = () => {
           />
         </Grid>
       ) : (
-        <GettingStartedSection />
+        <Box sx={{mr: 2}}>
+          <FirstTimeScreenCommonVariant2
+            Header={{
+              TextTitle: "Install Pixel",
+            }}
+            InfoNotification={{
+              Text: "Analytics page will be available after pixel installation",
+            }}
+            HelpCard={{
+              headline: "Need Help with Pixel Setup?",
+              description:
+                "Book a 30-minute call, and our expert will guide you through the platform and troubleshoot any pixel issues.",
+              helpPoints: [
+                {
+                  title: "Quick Setup Walkthrough",
+                  description: "Step-by-step pixel installation help",
+                },
+                {
+                  title: "Troubleshooting Session",
+                  description: "Fix errors and verify your pixel",
+                },
+                {
+                  title: "Platform Demo",
+                  description: "See how everything works in action",
+                },
+              ],
+            }}
+            Content={
+              <GettingStartedSection />
+            }
+            customStyleSX={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              width: "100%",
+              pb: 2,
+              mt: 2,
+            }}
+          />
+        </Box>
       )}
       {showSlider && <Slider />}
       {welcomePopup && <WelcomePopup />}

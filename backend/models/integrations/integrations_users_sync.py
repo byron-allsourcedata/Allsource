@@ -1,11 +1,11 @@
-from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index, BigInteger, func, \
-    text, \
-    String, DateTime, Sequence
-
-from sqlalchemy.dialects.postgresql import ENUM
 from datetime import datetime, timezone
-from models.enrichment.enrichment_users import EnrichmentUser
+
+from sqlalchemy import Column, Integer, VARCHAR, TIMESTAMP, Boolean, JSON, UUID, ForeignKey, Index, BigInteger, text, \
+    String, Sequence
+from sqlalchemy.dialects.postgresql import ENUM
+
 from models.base import Base
+from models.enrichment.enrichment_users import EnrichmentUser
 
 data_sync_type = ENUM('pixel', 'audience', name='data_sync_type', create_type=True)
 

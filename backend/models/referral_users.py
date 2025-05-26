@@ -1,4 +1,7 @@
-from sqlalchemy import Column, Integer, VARCHAR, Index, TIMESTAMP, BigInteger, text, ForeignKey, Sequence
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, VARCHAR, Index, TIMESTAMP, BigInteger, text, ForeignKey, Sequence
+
 from .base import Base
 
 

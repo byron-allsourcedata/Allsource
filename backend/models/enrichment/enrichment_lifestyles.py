@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Boolean, ForeignKey, text, Index, String
+from sqlalchemy import Column, ForeignKey, text, Index, String
 from sqlalchemy.dialects.postgresql import UUID
+
 from models.base import Base
 
 

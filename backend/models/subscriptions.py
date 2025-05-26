@@ -1,6 +1,9 @@
-from sqlalchemy import Column, ForeignKey, Integer, BOOLEAN, TEXT, event, Index, BigInteger, text, Boolean, Sequence
-from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
-from .base import Base, create_timestamps, update_timestamps
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, ForeignKey, Integer, TEXT, Index, BigInteger, text, Boolean, Sequence, event
+from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR
+
+from .base import Base, update_timestamps
 
 
 class UserSubscriptions(Base):
@@ -17,14 +20,8 @@ class UserSubscriptions(Base):
         primary_key=True,
         nullable=False,
     )
-    updated_at = Column(
-        TIMESTAMP(precision=7),
-        nullable=True
-    )
-    created_at = Column(
-        TIMESTAMP(precision=7),
-        nullable=True
-    )
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     plan_start = Column(
         TIMESTAMP(precision=7),
         nullable=True
@@ -103,5 +100,4 @@ class UserSubscriptions(Base):
 
 Subscription = UserSubscriptions
 
-event.listen(Subscription, "before_insert", create_timestamps)
 event.listen(Subscription, "before_update", update_timestamps)

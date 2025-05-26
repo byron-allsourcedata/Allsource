@@ -14,7 +14,6 @@ import DomainVerificationOutlinedIcon from "@mui/icons-material/DomainVerificati
 import OpenInBrowserOutlinedIcon from "@mui/icons-material/OpenInBrowserOutlined";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import DomainSelector from "@/app/(client)/dashboard/components/DomainSelector";
-import { FirstTimeScreenCommon } from "./first-time-screens";
 
 const GettingStartedSection: React.FC = () => {
   const [selectedDomain, setSelectedDomain] = useState("");
@@ -124,128 +123,83 @@ const GettingStartedSection: React.FC = () => {
 
   return (
     <>
-      <Box sx={{pr: 3}}>
-        <FirstTimeScreenCommon
-          // Header={{
-          //   TextTitle: "Analytics",
-          //   TextSubtitle:
-          //     "Contacts automatically sync across devices and platforms",
-          //   link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/analytics",
-          // }}
-          InfoNotification={{
-            Text: "This page shows complete performance data from your tracking pixel, revealing how users interact with your website. Analyze conversion paths, drop-off points, and audience behavior to optimize campaigns.",
-          }}
-          Content={
-            <>
-              <Grid container sx={{ height: "100%", pr: 2 }}>
-                <Grid
-                  item
-                  xs={12}
-                  sx={{ display: { md: "none" }, overflow: "hidden" }}
-                >
-                  <Typography
-                    variant="h4"
-                    component="h1"
-                    className="first-sub-title"
-                    sx={dashboardStyles.title}
-                  >
-                    Install Your Pixel
-                  </Typography>
-                  <VerticalStepper steps={stepData} />
-                  <DomainSelector
-                    onDomainSelected={(domain) => {
-                      setSelectedDomain(domain.domain);
-                    }}
-                  />
-                  {selectedDomain !== "" && (
-                    <PixelInstallation
-                      onInstallSelected={(method) => {
-                        handleInstallSelected(method);
-                        setShowHintVerify(true);
-                      }}
-                    />
-                  )}
+      <Grid container sx={{ height: "100%", pr: 2 }}>
+        <Grid
+          item
+          xs={12}
+          sx={{ display: { md: "none" }, overflow: "hidden" }}
+        >
+          <Typography
+            variant="h4"
+            component="h1"
+            className="first-sub-title"
+            sx={dashboardStyles.title}
+          >
+            Install Your Pixel
+          </Typography>
+          <VerticalStepper steps={stepData} />
+          <DomainSelector
+            onDomainSelected={(domain) => {
+              setSelectedDomain(domain.domain);
+            }}
+          />
+          {selectedDomain !== "" && (
+            <PixelInstallation
+              onInstallSelected={(method) => {
+                handleInstallSelected(method);
+                setShowHintVerify(true);
+              }}
+            />
+          )}
 
-                  <VerifyPixelIntegration
-                    domain={selectedDomain}
-                    showHint={showHintVerify}
-                  />
-                </Grid>
-                <Grid
-                  item
-                  xs={12}
-                  lg={8}
-                  sx={{
-                    display: { xs: "none", md: "block" },
-                  }}
-                >
-                  <Box sx={{ }}>
-                    <DomainSelector
-                      onDomainSelected={(domain) => {
-                        setSelectedDomain(domain.domain);
-                      }}
-                    />
-                    {selectedDomain !== "" && (
-                      <PixelInstallation
-                        onInstallSelected={(method) => {
-                          handleInstallSelected(method);
-                          setSelectedMethod(method);
-                          setShowHintVerify(true);
-                        }}
-                      />
-                    )}
-                    {selectedDomain !== "" &&
-                      selectedMethod !== "" &&
-                      selectedMethod !== null && (
-                        <VerifyPixelIntegration
-                          domain={selectedDomain}
-                          showHint={showHintVerify}
-                        />
-                      )}
-                  </Box>
-                </Grid>
+          <VerifyPixelIntegration
+            domain={selectedDomain}
+            showHint={showHintVerify}
+          />
+        </Grid>
+        <Grid
+          item
+          xs={12}
+          lg={8}
+          sx={{
+            display: { xs: "none", md: "block" },
+          }}
+        >
+          <Box sx={{}}>
+            <DomainSelector
+              onDomainSelected={(domain) => {
+                setSelectedDomain(domain.domain);
+              }}
+            />
+            {selectedDomain !== "" && (
+              <PixelInstallation
+                onInstallSelected={(method) => {
+                  handleInstallSelected(method);
+                  setSelectedMethod(method);
+                  setShowHintVerify(true);
+                }}
+              />
+            )}
+            {selectedDomain !== "" &&
+              selectedMethod !== "" &&
+              selectedMethod !== null && (
+                <VerifyPixelIntegration
+                  domain={selectedDomain}
+                  showHint={showHintVerify}
+                />
+              )}
+          </Box>
+        </Grid>
 
-                <Grid
-                  item
-                  xs={12}
-                  lg={3}
-                  sx={{ display: { xs: "none", md: "block" }, }}
-                >
-                  <VerticalStepper steps={stepData} />
-                </Grid>
-              </Grid>
-            </>
-          }
-          HelpCard={{
-            headline: "Need Help with Pixel Setup?",
-            description:
-              "Book a 30-minute call, and our expert will guide you through the platform and troubleshoot any pixel issues.",
-            helpPoints: [
-              {
-                title: "Quick Setup Walkthrough",
-                description: "Step-by-step pixel installation help",
-              },
-              {
-                title: "Troubleshooting Session",
-                description: "Fix errors and verify your pixel",
-              },
-              {
-                title: "Platform Demo",
-                description: "See how everything works in action",
-              },
-            ],
-          }}
-          customStyleSX={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            width: "100%",
-            pb: 2,
-            mt: 2,
-          }}
-        />
-      </Box>
+        <Grid
+          item
+          xs={12}
+          lg={4}
+          sx={{ display: { xs: "none", md: "block" },}}
+        >
+          <VerticalStepper steps={stepData} />
+        </Grid>
+      </Grid>
     </>
   );
 };

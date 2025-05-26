@@ -1,9 +1,10 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, BOOLEAN, VARCHAR, Index, text, ForeignKey, Boolean, inspect, \
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, Integer, TIMESTAMP, VARCHAR, Index, text, ForeignKey, Boolean, inspect, \
     Sequence
 from sqlalchemy.orm import relationship
 
-from .base import Base, create_timestamps, update_timestamps
-from models.users import Users
+from .base import Base
 
 
 class Partner(Base):
@@ -89,7 +90,3 @@ class Partner(Base):
             c.key: getattr(self, c.key)
             for c in inspect(self).mapper.column_attrs
         }
-
-
-event.listen(Partner, "before_insert", create_timestamps)
-event.listen(Partner, "before_update", update_timestamps)

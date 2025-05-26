@@ -1,10 +1,11 @@
 import uuid
+from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, TIMESTAMP, ForeignKey, UUID, Boolean, text, Index, Text
+from sqlalchemy import Column, TIMESTAMP, ForeignKey, UUID, Boolean, text, Index, event
+
 from models.audience_smarts import AudienceSmart
 from models.enrichment.enrichment_users import EnrichmentUser
-from .base import Base
-from sqlalchemy.sql import func
+from .base import Base, update_timestamps
 
 
 class AudienceSmartPerson(Base):
@@ -45,10 +46,7 @@ class AudienceSmartPerson(Base):
         server_default=text('true')
     )
     created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    updated_at = Column(
-        TIMESTAMP,
-        nullable=False,
-        server_default=func.now(),
-        onupdate=func.now()
-    )
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+
+event.listen(AudienceSmartPerson, "before_update", update_timestamps)
     

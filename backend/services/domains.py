@@ -2,6 +2,7 @@ from fastapi import HTTPException
 import uuid
 import os
 from enums import SubscriptionStatus
+from models import Users
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.plans_persistence import PlansPersistence
 from schemas.domains import DomainResponse, UpdateDomain
@@ -26,6 +27,18 @@ class UserDomainsService:
                 raise HTTPException(status_code=403, detail={'status': SubscriptionStatus.NEED_UPGRADE_PLAN.value})
         new_domain = self.domain_persistence.create_domain(user.get('id'), {'domain': normalize_url(domain)})
         return self.domain_mapped(new_domain)
+
+    def clean_account(self, email):
+        user = self.domain_persistence.get_user_by_email(email=email)
+        user_dict = {
+            c.name: getattr(user, c.name)
+            for c in Users.__table__.columns
+            if c.name not in ['id', 'current_subscription_id']
+        }
+        self.domain_persistence.delete_user(user=user)
+        user_id = self.domain_persistence.create_user_by_dict(user_dict=user_dict)
+        self.subscription_service.create_subscription_from_free_trial(user_id=user_id, ftd=None) 
+        return f"{os.environ.get('SITE_HOST_URL')}"
 
     def get_domains(self, user_id: int, **filter_by):
         domains = self.domain_persistence.get_domains_by_user(user_id)
@@ -55,11 +68,7 @@ class UserDomainsService:
             }
             for domain in domains
         ]
-    
-    def clean_account(self, email):
-        self.domain_persistence.clear_account_from_domains(email)
-        return f"{os.environ.get('SITE_HOST_URL')}"
-        
+
     def update_domain_name(self, domain_id: int, domain_name: str):
         self.domain_persistence.update_domain_name(domain_id, domain_name)
         return {'status': 'SUCCESS'}

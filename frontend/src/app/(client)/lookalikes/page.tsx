@@ -36,7 +36,7 @@ import { getInteractiveSx } from "@/components/utils";
 import { DashboardHelpCard } from "@/components/first-time-screens/HelpCard";
 import {
   CardsSection,
-  FirstTimeScreenCommon,
+  FirstTimeScreenCommonVariant1,
   StepperTimeline,
 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
@@ -837,7 +837,7 @@ const CreateLookalikePage: React.FC = () => {
             </Box>
           ) : (
             <>
-              <FirstTimeScreenCommon
+              <FirstTimeScreenCommonVariant1
                 Header={{
                   TextTitle: "Create Your First Lookalike",
                   TextSubtitle:
@@ -879,12 +879,19 @@ const CreateLookalikePage: React.FC = () => {
                             "Arrange fields in order of importance to fine-tune audience.",
                         },
                       ]}
-                      tableSrc="/lookalike-screen.svg"
-                      headerTitle="Grow Your Audience with AI-Powered Lookalikes"
-                      caption="Go beyond conversions – build lookalikes from both your best customers AND failed leads. These audience models become your powerful building blocks – later combine them in Smart Audiences to create perfectly tuned targeting groups by mixing and excluding different segments."
-                      onBegin={handleOpenPopup}
-                      beginDisabled={sourceCount === 0}
-                      buttonLabel="Create Lookalike"
+                      previewProps={{
+                        tableSrc: "/lookalike-screen.svg",
+                        headerTitle: "Grow Your Audience with AI-Powered Lookalikes",
+                        caption:
+                          "Go beyond conversions – build lookalikes from both your best customers AND failed leads. These audience models become your powerful building blocks – later combine them in Smart Audiences to create perfectly tuned targeting groups by mixing and excluding different segments.",
+                        onOpenPopup: handleOpenPopup,      
+                        onBegin: () => router.push("/lookalikes/builder"),        
+                        beginDisabled: sourceCount === 0,
+                        buttonLabel: "Create Lookalike",
+                        sx: {
+                          
+                        },
+                      }}
                     />
                   </>
                 }

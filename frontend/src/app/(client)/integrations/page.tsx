@@ -67,7 +67,7 @@ import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 import BingAdsIntegrationPopup from "@/components/BingAdsIntegrationPopup";
 import FirstTimeScreen from "./FirstTimeScreen";
 import { hasIn } from "lodash";
-import { FirstTimeScreenCommon } from "@/components/first-time-screens";
+import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 
@@ -1405,7 +1405,7 @@ const Integrations = () => {
         <>
           {showFirstTime && (
             <>
-              <FirstTimeScreenCommon
+              <FirstTimeScreenCommonVariant1
                 Header={{
                   TextTitle: "Integrations",
                   TextSubtitle:
@@ -1421,8 +1421,9 @@ const Integrations = () => {
                       tableSrc="/integrations-first-time-screen.svg"
                       headerTitle="Connect Your Marketing Platforms"
                       caption="Sync your audience data seamlessly with ad platforms and CRM tools to activate campaigns across channels."
+                      onOpenPopup={handleBegin}
                       onBegin={handleBegin}
-                      beginDisabled={true}
+                      beginDisabled={false}
                       buttonLabel="Create Integration"
                     />
                   </>

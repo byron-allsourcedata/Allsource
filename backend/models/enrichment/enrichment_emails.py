@@ -2,10 +2,11 @@ import enum
 import uuid
 
 from sqlalchemy import UniqueConstraint, text, String, Enum as SAEnum, Index, func
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
 
 from models.base import Base
+
 
 class EmailType(enum.Enum):
     personal = "personal"

@@ -1,6 +1,8 @@
-from sqlalchemy import Column, BigInteger, TIMESTAMP, VARCHAR, ForeignKey, Index, UniqueConstraint
-from sqlalchemy import event
-from .base import Base, create_timestamps, update_timestamps
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, BigInteger, TIMESTAMP, VARCHAR, ForeignKey, Index, UniqueConstraint, event
+
+from .base import Base, update_timestamps
 
 
 class DataSyncImportedLead(Base):
@@ -15,8 +17,8 @@ class DataSyncImportedLead(Base):
         ForeignKey('integrations_users_sync.id', ondelete='CASCADE', onupdate='CASCADE'),
         nullable=False
     )
-    created_at = Column(TIMESTAMP, nullable=True)
-    updated_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     lead_users_id = Column(
         BigInteger,
         ForeignKey('leads_users.id', ondelete='CASCADE', onupdate='CASCADE'),
@@ -38,6 +40,4 @@ class DataSyncImportedLead(Base):
         ),
     )
 
-
-event.listen(DataSyncImportedLead, 'before_insert', create_timestamps)
-event.listen(DataSyncImportedLead, 'before_update', update_timestamps)
+event.listen(DataSyncImportedLead, "before_update", update_timestamps)

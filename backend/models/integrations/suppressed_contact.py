@@ -1,6 +1,8 @@
+from datetime import timezone, datetime
+
+from sqlalchemy import Column, TIMESTAMP, ForeignKey, Index, VARCHAR, BigInteger, Sequence
+
 from models.base import Base
-from sqlalchemy import Integer, Column, TIMESTAMP, ForeignKey, Index, VARCHAR, BigInteger, text, Sequence
-from datetime import datetime
 
 
 class SuppressedContact(Base):
@@ -26,8 +28,8 @@ class SuppressedContact(Base):
         nullable=False
     )
     created_at = Column(
-        TIMESTAMP,
-        nullable=True
+        TIMESTAMP(timezone=False),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
     )
     suppression_type = Column(
         VARCHAR,
