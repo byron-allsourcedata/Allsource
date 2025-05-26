@@ -301,7 +301,8 @@ const DataSync = () => {
                           tableSrc="/data_sync_FTS.svg"
                           headerTitle="Sync Audience to Any Platform"
                           caption="Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
-                          onBegin={handleOpenPopup}
+                          onOpenPopup={handleOpenPopup}
+                          onBegin={() => router.push("/smart-audiences")}
                           beginDisabled={!hasIntegrations}
                           buttonLabel="Create Data Sync"
                         />

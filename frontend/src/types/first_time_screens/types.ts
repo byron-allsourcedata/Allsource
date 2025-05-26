@@ -57,14 +57,15 @@ export interface NotificationWarningProps {
   message: string;
 }
 
-export interface PreviewConfig {
-  headerTitle: string
-  headerSubtitle?: string
-  headerLink?: string
-  tableSrc: string
-  caption: string
-  onBegin: () => void
-  beginDisabled?: boolean
-  buttonLabel?: string
-  sx?: SxProps<Theme>
-}
+// export interface PreviewConfig {
+//   headerTitle: string
+//   headerSubtitle?: string
+//   headerLink?: string
+//   tableSrc: string
+//   caption: string
+//   onOpenPopup
+//   onBegin: () => void
+//   beginDisabled?: boolean
+//   buttonLabel?: string
+//   sx?: SxProps<Theme>
+// }
