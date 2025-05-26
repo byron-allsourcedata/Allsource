@@ -209,6 +209,7 @@ const Signup: React.FC = () => {
           localStorage.removeItem(UTM_STORAGE_KEY);
           const responseData = response.data;
           if (typeof window !== 'undefined') {
+            localStorage.setItem("show_hints", String(true));
             if (responseData.token && responseData.token !== null) {
               localStorage.setItem('token', responseData.token);
             }
