@@ -1,0 +1,3 @@
+from .postgres import AudienceSmartsPostgresPersistence
+
+AudienceSmartsPersistence = AudienceSmartsPostgresPersistence
