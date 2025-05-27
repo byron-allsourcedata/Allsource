@@ -217,7 +217,7 @@ const CustomCards: React.FC<CustomCardsProps> = ({
       <Grid item sx={{ 
         "@media (max-width: 600px)": { minWidth: 320 }, 
         pointerEvents: disabledCards.audience ? "none" : "auto", 
-        opacity: disabledCards.pixel ? 0.5 : 1 }} 
+        opacity: disabledCards.audience ? 0.5 : 1 }} 
         xs={12} md={2.4}>
         <SourcesCard
           value={values.sources}
@@ -228,7 +228,7 @@ const CustomCards: React.FC<CustomCardsProps> = ({
       <Grid item sx={{ 
         "@media (max-width: 600px)": { minWidth: 320 }, 
         pointerEvents: disabledCards.audience ? "none" : "auto", 
-        opacity: disabledCards.pixel ? 0.5 : 1 }} 
+        opacity: disabledCards.audience ? 0.5 : 1 }} 
         xs={12} md={2.4}>
         <LookalikesCard
           value={values.lookalikes}
@@ -239,7 +239,7 @@ const CustomCards: React.FC<CustomCardsProps> = ({
       <Grid item sx={{ 
         "@media (max-width: 600px)": { minWidth: 320 }, 
         pointerEvents: disabledCards.audience ? "none" : "auto", 
-        opacity: disabledCards.pixel ? 0.5 : 1 }} 
+        opacity: disabledCards.audience ? 0.5 : 1 }} 
         xs={12} md={2.4}>
         <SmartAudienceCard
           value={values.smart_audience}
@@ -250,7 +250,7 @@ const CustomCards: React.FC<CustomCardsProps> = ({
       <Grid item sx={{ 
           "@media (max-width: 600px)": { minWidth: 320 }, 
           pointerEvents: disabledCards.audience ? "none" : "auto", 
-          opacity: disabledCards.pixel ? 0.5 : 1 }} 
+          opacity: disabledCards.audience ? 0.5 : 1 }} 
           xs={12} md={2.4}>
         <DataSyncCard
           value={values.data_sync}
