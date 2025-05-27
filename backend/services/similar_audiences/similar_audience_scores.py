@@ -11,6 +11,7 @@ from sqlalchemy.dialects.postgresql import dialect
 from sqlalchemy.orm import Session, Query
 from typing_extensions import Annotated
 
+from config.database import SqlConfigBase
 from dependencies import Db
 from models import AudienceLookalikes, EnrichmentUserContact, EnrichmentUser
 from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence, \
@@ -69,89 +70,94 @@ class SimilarAudiencesScoresService:
 
         compiled_user = user_query.compile(dialect=dialect())
 
+        import psycopg2
 
 
-        with self.db.connection() as conn:
-            conn.execution_options(stream_results=True)
-            with conn.connection.cursor() as cursor:
+        url = SqlConfigBase().url
+        conn = psycopg2.connect(url)
 
-                cursor.execute("SET enable_hashjoin = off")
-                print("preparing cursor")
+        cursor = conn.cursor(name="my_named_cursor")  # creates a server-side cursor
+        cursor.execute(str(compiled_user))
 
-                start = time.perf_counter()
-                print(str(compiled_user))
-                # conn.execution_options(stream_results=False)
-                cursor.execute(str(compiled_user))
-                end = time.perf_counter()
-                print(f"query time: {end - start}")
+        print("preparing cursor")
 
-                columns = [desc[0] for desc in cursor.description]
-
-                while True:
-                    conn.execution_options(stream_results=True)
-                    start = time.perf_counter()
-
-                    rows = cursor.fetchmany(10000)
-                    end = time.perf_counter()
-                    conn.execution_options(stream_results=False)
-
-                    result = end- start
-                    print(f"fetch time: {result:.3f}")
-
-                    if not rows:
-                        print("done")
-                        break
-
-                    count += len(rows)
-                    print(f"fetched from cursor {count}\r")
-
-                    start = time.perf_counter()
-                    dict_rows = [dict(zip(columns, row)) for row in rows]
-
-                    asids = [rd['asid'] for rd in dict_rows]
-
-
-                    result = query.where(EnrichmentUser.asid.in_(asids))
-                    feature_dicts = [dict(row._mapping) for row in result]
-                    user_ids = [rd['id'] for rd in dict_rows]
+        start = time.perf_counter()
+        print(str(compiled_user))
+        # conn.execution_options(stream_results=False)
+        end = time.perf_counter()
+        print(f"query time: {end - start}")
 
 
 
-                    # feature_dicts = []
-                    # for rd in dict_rows:
-                    #     user_ids.append(rd[user_id_key])
-                    #     feats = {
-                    #         k: (str(v) if v is not None else "None")
-                    #         for k, v in rd.items()
-                    #         if k != user_id_key
-                    #     }
-                    #     feature_dicts.append(feats)
+
+        while True:
+
+            start = time.perf_counter()
+
+            rows = cursor.fetchmany(10000)
+            end = time.perf_counter()
+
+            result = end - start
+            print(f"fetch time: {result:.3f}")
+
+            if not rows:
+                print("done")
+                break
+
+            count += len(rows)
+            print(f"fetched from cursor {count}\r")
+
+            start = time.perf_counter()
+            dict_rows = [dict(zip(['id', 'asid'], row)) for row in rows]
+
+            asids = [rd['asid'] for rd in dict_rows]
+
+            result = query.where(EnrichmentUser.asid.in_(asids))
+            feature_dicts = [dict(row._mapping) for row in result]
+            user_ids = [rd['id'] for rd in dict_rows]
+
+            # feature_dicts = []
+            # for rd in dict_rows:
+            #     user_ids.append(rd[user_id_key])
+            #     feats = {
+            #         k: (str(v) if v is not None else "None")
+            #         for k, v in rd.items()
+            #         if k != user_id_key
+            #     }
+            #     feature_dicts.append(feats)
+
+            scores = self.calculate_score_dict_batch(model, feature_dicts, config)
+
+            end = time.perf_counter()
+            result = end - start
+            print(f"calculation time: {result:.3f}")
+            start = time.perf_counter()
+            self.enrichment_lookalike_scores_persistence.bulk_insert(lookalike_id, list(zip(user_ids, scores)))
+
+            end = time.perf_counter()
+            result = end - start
+            print(f"insert time: {result:.3f}")
+
+            start = time.perf_counter()
+            self.db.execute(
+                update(AudienceLookalikes)
+                .where(AudienceLookalikes.id == lookalike_id)
+                .values(processed_train_model_size=count)
+            )
+
+            end = time.perf_counter()
+            result = end - start
+            print(f"lookalike update time: {result:.3f}")
+            self.db.commit()
 
 
-                    scores = self.calculate_score_dict_batch(model, feature_dicts, config)
+        cur.close()
+        conn.close()
 
-                    end = time.perf_counter()
-                    result = end - start
-                    print(f"calculation time: {result:.3f}")
-                    start = time.perf_counter()
-                    self.enrichment_lookalike_scores_persistence.bulk_insert(lookalike_id, list(zip(user_ids, scores)))
 
-                    end = time.perf_counter()
-                    result = end - start
-                    print(f"insert time: {result:.3f}")
 
-                    start = time.perf_counter()
-                    self.db.execute(
-                        update(AudienceLookalikes)
-                        .where(AudienceLookalikes.id == lookalike_id)
-                        .values(processed_train_model_size=count)
-                    )
-
-                    end = time.perf_counter()
-                    result = end - start
-                    print(f"lookalike update time: {result:.3f}")
-                    self.db.commit()
         self.db.commit()
+
 
 
     def calculate_score_dict_batch(self, model: CatBoostRegressor, persons: List[dict], config: NormalizationConfig) -> List[float]:
