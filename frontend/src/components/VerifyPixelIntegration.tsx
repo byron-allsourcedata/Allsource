@@ -45,7 +45,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 
       const hasQuery = url.includes("?");
       const newUrl =
-        url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}`;
+        url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}` + `&domain_url=${process.env.NEXT_PUBLIC_API_DASHBOARD_URL}`;
       window.open(newUrl, "_blank");
     }
   };

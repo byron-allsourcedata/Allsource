@@ -994,6 +994,7 @@ const SmartAudiences: React.FC = () => {
         display: "flex",
         flexDirection: "column",
         height: "100%",
+        overflow: "auto",
         "@media (max-width: 900px)": {
           minHeight: "100vh",
         },
@@ -1225,11 +1226,9 @@ const SmartAudiences: React.FC = () => {
                   display: "flex",
                   flexDirection: "column",
                   pr: 2,
-                  overflow: "auto",
                   maxWidth: "100%",
                   "@media (max-width: 900px)": {
                     pt: "2px",
-                    pb: "18px",
                   },
                 }}
               >
@@ -1237,7 +1236,6 @@ const SmartAudiences: React.FC = () => {
                   sx={{
                     display: "flex",
                     flexDirection: "column",
-                    overflow: "hidden",
                     height: "100%",
                     "@media (max-width: 900px)": {
                       paddingRight: 0,
@@ -1250,7 +1248,6 @@ const SmartAudiences: React.FC = () => {
                       flex: 1,
                       display: "flex",
                       flexDirection: "column",
-                      overflow: "hidden",
                     }}
                   >
                     <Box
@@ -1323,7 +1320,7 @@ const SmartAudiences: React.FC = () => {
                         },
                       }}
                     >
-                      {data.length === 0 ? (
+                      {data.length === 0 && (
                         <>
                           <FirstTimeScreenCommonVariant1
                             Header={{
@@ -1451,7 +1448,9 @@ const SmartAudiences: React.FC = () => {
                             />
                           )}
                         </>
-                      ) : (
+                      )}
+                      
+                      {data.length !== 0 && (
                         <Grid container spacing={1} sx={{ flex: 1 }}>
                           <Grid
                             item
@@ -1462,38 +1461,21 @@ const SmartAudiences: React.FC = () => {
                               justifyContent: "space-between",
                             }}
                           >
-                            <TableContainer
-                              ref={tableContainerRef}
+                          <TableContainer
+                            ref={tableContainerRef}
+                            sx={{
+                              height: "calc(90vh - 4.25rem - 45px - 16px)",
+                              overflowX: "scroll",
+                            }}
+                          >
+                              <Table
+                              stickyHeader
                               component={Paper}
-                              sx={{
+                              sx={{ 
+                                tableLayout: "fixed", 
                                 border: "1px solid rgba(235, 235, 235, 1)",
-                                overflowX: "auto",
-                                maxHeight:
-                                  selectedFilters.length > 0
-                                    ? hasNotification
-                                      ? "63vh"
-                                      : "68vh"
-                                    : "72vh",
-                                overflowY: "auto",
-                                "@media (max-height: 800px)": {
-                                  maxHeight:
-                                    selectedFilters.length > 0
-                                      ? hasNotification
-                                        ? "53vh"
-                                        : "57vh"
-                                      : "70vh",
-                                },
-                                "@media (max-width: 400px)": {
-                                  maxHeight:
-                                    selectedFilters.length > 0
-                                      ? hasNotification
-                                        ? "53vh"
-                                        : "60vh"
-                                      : "67vh",
-                                },
                               }}
                             >
-                              <Table stickyHeader aria-label="leads table">
                                 <TableHead sx={{ position: "relative" }}>
                                   <TableRow>
                                     {columns.map(
