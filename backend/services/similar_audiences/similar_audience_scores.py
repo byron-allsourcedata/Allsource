@@ -1,3 +1,4 @@
+import time
 from decimal import Decimal
 from typing import List
 from uuid import UUID
@@ -5,7 +6,7 @@ from uuid import UUID
 from catboost import CatBoostRegressor
 from fastapi import Depends
 from pandas import DataFrame
-from sqlalchemy import update, func
+from sqlalchemy import update, func, text
 from sqlalchemy.dialects.postgresql import dialect
 from sqlalchemy.orm import Session, Query
 from typing_extensions import Annotated
@@ -63,12 +64,23 @@ class SimilarAudiencesScoresService:
 
         count = 0
         with self.db.connection() as conn:
+            self.db.execute(text("SET LOCAL enable_hashjoin = off"))
             with conn.connection.cursor() as cursor:
+
+                start = time.perf_counter()
                 cursor.execute(str(compiled))
+                end = time.perf_counter()
+                print(f"query time: {end - start}")
+
                 columns = [desc[0] for desc in cursor.description]
 
                 while True:
+                    start = time.perf_counter()
                     rows = cursor.fetchmany(10000)
+                    end = time.perf_counter()
+
+                    result = end- start
+                    print(f"fetch time: {result:.3f}")
 
                     if not rows:
                         print("done")
@@ -77,6 +89,7 @@ class SimilarAudiencesScoresService:
                     count += len(rows)
                     print(f"fetched {count}\r")
 
+                    start = time.perf_counter()
                     dict_rows = [dict(zip(columns, row)) for row in rows]
                     user_ids = []
                     feature_dicts = []
@@ -90,15 +103,27 @@ class SimilarAudiencesScoresService:
                         feature_dicts.append(feats)
 
                     scores = self.calculate_score_dict_batch(model, feature_dicts, config)
+
+                    end = time.perf_counter()
+                    result = end - start
+                    print(f"calculation time: {result:.3f}")
+                    start = time.perf_counter()
                     self.enrichment_lookalike_scores_persistence.bulk_insert(lookalike_id, list(zip(user_ids, scores)))
 
+                    end = time.perf_counter()
+                    result = end - start
+                    print(f"insert time: {result:.3f}")
+
+                    start = time.perf_counter()
                     self.db.execute(
                         update(AudienceLookalikes)
                         .where(AudienceLookalikes.id == lookalike_id)
                         .values(processed_train_model_size=count)
                     )
 
-                    print("done insert")
+                    end = time.perf_counter()
+                    result = end - start
+                    print(f"lookalike update time: {result:.3f}")
                     self.db.commit()
         self.db.commit()
 
