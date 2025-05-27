@@ -674,7 +674,7 @@ const SourcesList: React.FC = () => {
                       padding: "10px 24px",
                       color: "#fff !important",
                       ":hover": {
-                        backgroundColor: "rgba(62, 64, 142, 1)",
+                        backgroundColor: "rgba(30, 136, 229, 1)",
                       },
                       ":active": {
                         backgroundColor: "rgba(56, 152, 252, 1)",

@@ -313,8 +313,8 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
   },
   buttonform: {
     height: "40px",
-    ":active": {
-      backgroundColor: "rgba(56, 152, 252, 1)"
+    ":hover": {
+      backgroundColor: "rgba(80, 82, 178, 0.1)",
     },
     ":disabled": {
       backgroundColor: "rgba(56, 152, 252, 1)",
@@ -327,7 +327,7 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
     padding: "4px",
     borderRadius: "4px",
     textAlign: "start",
-    mb:2,
+    mb: 2,
     fontFamily: 'Nunito Sans',
     "&:focus": {
       borderColor: "rgba(56, 152, 252, 1)",
@@ -368,4 +368,4 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
     borderRadius: '3px',
     padding: '4px 12px'
   }
-  };
+};

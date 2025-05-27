@@ -1743,7 +1743,7 @@ const SourcesImport: React.FC = () => {
                           width: "120px",
                           height: "40px",
                           ":hover": {
-                            backgroundColor: "rgba(62, 64, 142, 1)",
+                            backgroundColor: "rgba(30, 136, 229, 1)",
                           },
                           ":active": {
                             backgroundColor: "rgba(56, 152, 252, 1)",
@@ -1987,7 +1987,7 @@ const SourcesImport: React.FC = () => {
                           width: "92px",
                           height: "40px",
                           ":hover": {
-                            borderColor: "rgba(62, 64, 142, 1)",
+                            borderColor: "rgba(30, 136, 229, 1)",
                           },
                           ":active": {
                             borderColor: "rgba(56, 152, 252, 1)",
@@ -2025,10 +2025,10 @@ const SourcesImport: React.FC = () => {
                           width: "120px",
                           height: "40px",
                           ":hover": {
-                            backgroundColor: "rgba(62, 64, 142, 1)",
+                            backgroundColor: "rgba(30, 136, 229, 1)",
                           },
                           ":active": {
-                            backgroundColor: "rgba(56, 152, 252, 1)",
+                            backgroundColor: "rgba(116, 183, 253, 1)",
                           },
                           ":disabled": {
                             backgroundColor: "rgba(56, 152, 252, 1)",
