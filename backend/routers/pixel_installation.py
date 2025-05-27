@@ -7,7 +7,8 @@ from dependencies import get_pixel_installation_service, check_user_authorizatio
 from enums import PixelStatus, BaseEnum
 from typing import Optional
 from models.users import User
-from schemas.pixel_installation import PixelInstallationRequest, EmailFormRequest, ManualFormResponse
+from schemas.pixel_installation import PixelInstallationRequest, EmailFormRequest, ManualFormResponse, \
+    PixelInstallationResponse
 from schemas.users import PixelFormResponse
 from schemas.domains import UpdateDomain
 from services.pixel_installation import PixelInstallationService
@@ -48,3 +49,11 @@ async def cms(pixel_installation_service: PixelInstallationService = Depends(get
               user: User = Depends(check_user_authorization_without_pixel), domain=Depends(check_domain)):
     manual_result, pixel_client_id = pixel_installation_service.get_manual(user, domain)
     return ManualFormResponse(manual=manual_result, pixel_client_id=pixel_client_id)
+
+@router.get("/check-pixel-installation-status", response_model=Optional[PixelInstallationResponse])
+async def check_pixel_installation_status(
+        domain: str = Query(..., description="The exact domain to check, e.g. example.com"),
+        pixel_installation_service: PixelInstallationService = Depends(get_pixel_installation_service),
+        user: dict = Depends(check_user_authorization_without_pixel)
+):
+    return pixel_installation_service.check_pixel_installation_status(user, domain)
