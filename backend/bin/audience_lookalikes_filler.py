@@ -176,64 +176,19 @@ def build_dynamic_query_and_config(
         'job_description', 'party_affiliation', 'congressional_district', 'voting_propensity'
     }}
 
-    employment_base = (
-        db_session
-        .query(
-            EnrichmentEmploymentHistory.asid,
-            EnrichmentEmploymentHistory.job_title,
-            EnrichmentEmploymentHistory.company_name,
-            EnrichmentEmploymentHistory.start_date,
-            EnrichmentEmploymentHistory.end_date,
-            EnrichmentEmploymentHistory.is_current,
-            EnrichmentEmploymentHistory.location,
-            EnrichmentEmploymentHistory.job_description,
-            func.row_number()
-            .over(
-                partition_by=EnrichmentEmploymentHistory.asid,
-                order_by=EnrichmentEmploymentHistory.id
-            )
-            .label("rn")
-        )
-        .filter(EnrichmentEmploymentHistory.is_current == True)
-        .subquery("emp_ranked")
-    )
-
-    employment_subq = (
-        db_session
-        .query(employment_base)
-        .filter(employment_base.c.rn == 1)
-        .subquery("emp_curr")
-    )
-
-    voter_base = (
-        db_session
-        .query(
-            EnrichmentVoterRecord.asid,
-            EnrichmentVoterRecord.party_affiliation,
-            EnrichmentVoterRecord.congressional_district,
-            EnrichmentVoterRecord.voting_propensity,
-            func.row_number()
-            .over(partition_by=EnrichmentVoterRecord.asid, order_by=EnrichmentVoterRecord.id)
-            .label("rn")
-        )
-        .subquery("voter_ranked")
-    )
-
     voter_subq = (
         db_session
-        .query(voter_base)
-        .filter(voter_base.c.rn == 1)
+        .query(
+            EnrichmentVoterRecord.asid.label('asid'),
+            EnrichmentVoterRecord.party_affiliation.label('party_affiliation'),
+            EnrichmentVoterRecord.congressional_district.label('congressional_district'),
+            EnrichmentVoterRecord.voting_propensity.label('voting_propensity')
+        )
         .subquery("voter_curr")
     )
 
+
     column_map.update({
-        'job_title': employment_subq.c.job_title,
-        'company_name': employment_subq.c.company_name,
-        'start_date': employment_subq.c.start_date,
-        'end_date': employment_subq.c.end_date,
-        'is_current': employment_subq.c.is_current,
-        'location': employment_subq.c.location,
-        'job_description': employment_subq.c.job_description,
         'party_affiliation': voter_subq.c.party_affiliation,
         'congressional_district': voter_subq.c.congressional_district,
         'voting_propensity': voter_subq.c.voting_propensity,
@@ -253,7 +208,7 @@ def build_dynamic_query_and_config(
         .select_from(EnrichmentUser)
         .outerjoin(
             EnrichmentPersonalProfiles,
-            EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
+            EnrichmentUser.asid == EnrichmentPersonalProfiles.asid
         )
         .outerjoin(
             EnrichmentFinancialRecord,
@@ -266,10 +221,6 @@ def build_dynamic_query_and_config(
         .outerjoin(
             EnrichmentProfessionalProfile,
             EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
-        )
-        .outerjoin(
-            employment_subq,
-            employment_subq.c.asid == EnrichmentUser.asid
         )
         .outerjoin(
             voter_subq,

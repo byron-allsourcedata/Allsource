@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session, Query
 from typing_extensions import Annotated
 
 from dependencies import Db
-from models import AudienceLookalikes
+from models import AudienceLookalikes, EnrichmentUserContact, EnrichmentUser
 from persistence.enrichment_lookalike_scores import EnrichmentLookalikeScoresPersistence, \
     EnrichmentLookalikeScoresPersistenceDep
 from persistence.enrichment_models import EnrichmentModelsPersistence, EnrichmentModelsPersistenceDep
@@ -47,8 +47,7 @@ class SimilarAudiencesScoresService:
 
 
     def calculate_scores(self, model: CatBoostRegressor, lookalike_id: UUID, query: Query, config: NormalizationConfig, user_id_key: str = 'user_id'):
-        count_query = query.statement.with_only_columns(func.count()).order_by(None)
-        total = query.session.execute(count_query).scalar()
+        total = self.db.query(EnrichmentUser).count()
 
         self.db.execute(
             update(AudienceLookalikes)
