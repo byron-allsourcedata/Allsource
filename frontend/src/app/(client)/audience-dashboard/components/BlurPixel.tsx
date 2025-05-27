@@ -7,6 +7,7 @@ import {
     Card 
 } from "@mui/material";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const BlurPixel = ({
 }) => {
@@ -66,15 +67,13 @@ const BlurPixel = ({
                 <Typography className="first-sub-title" align="center">
                   Install Pixel to unlock
                 </Typography>
-                <Box
-                  sx={{
-                    height: 140,
-                    backgroundImage: 'url(/pixel.svg)',
-                    backgroundPosition: 'center',
-                    backgroundRepeat: 'no-repeat',
-                    borderRadius: 2,
-                  }}
-                />
+                <Image
+                    src="/pixel.svg"
+                    alt="pixel"
+                    height={0}
+                    width={0}
+                    style={{width: "auto", height: "auto"}}
+                        />
                 <Typography className="description" align="center" sx={{textWrap: "balance"}}>
                   It will automatically collect visitor information from your
                   website.
