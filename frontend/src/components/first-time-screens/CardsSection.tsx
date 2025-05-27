@@ -13,10 +13,10 @@ const CardsSection: React.FC<CardsSectionProps> = ({ items }) => {
             container
             alignItems="stretch"
             justifyContent="center"
-            sx={{ gap: 1 }}
+            sx={{ gap: 3 }}
         >
             {items.map((props, index) => (
-                <Grid item xs={12} md={5.9} key={index} padding={0}>
+                <Grid item xs={12} md={5.8} key={index} padding={0}>
                     <FeatureCard {...props} />
                 </Grid>
             ))}
