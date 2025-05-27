@@ -6,7 +6,7 @@ from uuid import UUID
 from catboost import CatBoostRegressor
 from fastapi import Depends
 from pandas import DataFrame
-from sqlalchemy import update, func, text
+from sqlalchemy import update, func, text, select
 from sqlalchemy.dialects.postgresql import dialect
 from sqlalchemy.orm import Session, Query
 from typing_extensions import Annotated
@@ -63,13 +63,22 @@ class SimilarAudiencesScoresService:
         )
 
         count = 0
+
+
+        user_query = select(EnrichmentUser).select_from(EnrichmentUser)
+
+        compiled_user = user_query.compile(dialect=dialect())
+
+
         with self.db.connection() as conn:
             self.db.execute(text("SET LOCAL enable_hashjoin = off"))
             with conn.connection.cursor() as cursor:
+
                 cursor.execute("SET enable_hashjoin = off")
                 print("preparing cursor")
                 start = time.perf_counter()
-                cursor.execute(str(compiled))
+                print(str(compiled_user))
+                cursor.execute(str(compiled_user))
                 end = time.perf_counter()
                 print(f"query time: {end - start}")
 
@@ -88,20 +97,29 @@ class SimilarAudiencesScoresService:
                         break
 
                     count += len(rows)
-                    print(f"fetched {count}\r")
+                    print(f"fetched from cursor {count}\r")
 
                     start = time.perf_counter()
                     dict_rows = [dict(zip(columns, row)) for row in rows]
-                    user_ids = []
-                    feature_dicts = []
-                    for rd in dict_rows:
-                        user_ids.append(rd[user_id_key])
-                        feats = {
-                            k: (str(v) if v is not None else "None")
-                            for k, v in rd.items()
-                            if k != user_id_key
-                        }
-                        feature_dicts.append(feats)
+
+                    asids = [rd['asid'] for rd in dict_rows]
+
+
+                    result = query.where(EnrichmentUser.asid.in_(asids))
+                    feature_dicts = [dict(row._mapping) for row in result]
+
+
+                    user_ids = [rd["id"] for rd in dict_rows]
+
+                    # feature_dicts = []
+                    # for rd in dict_rows:
+                    #     user_ids.append(rd[user_id_key])
+                    #     feats = {
+                    #         k: (str(v) if v is not None else "None")
+                    #         for k, v in rd.items()
+                    #         if k != user_id_key
+                    #     }
+                    #     feature_dicts.append(feats)
 
                     scores = self.calculate_score_dict_batch(model, feature_dicts, config)
 

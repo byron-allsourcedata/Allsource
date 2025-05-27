@@ -178,8 +178,6 @@ def build_dynamic_query_and_config(
 
 
 
-
-
     selected_fields = [name for name in sig.keys() if name in column_map]
     dynamic_columns = [column_map[name] for name in selected_fields]
     select_columns = [
