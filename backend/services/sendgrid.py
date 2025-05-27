@@ -37,7 +37,7 @@ class SendgridHandler:
             attachedfile: Optional[any] = None,
             cc_emails: List[str] = None,
             html_content: str = None,
-            from_user: str = "noreply@allsource.ai",
+            from_user: str = "noreply@maximiz.ai",
     ) -> dict:
         # UNSAFE: opt out of ssl check
         tempfunc = ssl._create_default_https_context
