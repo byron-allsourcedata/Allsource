@@ -207,7 +207,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         'Select a domain from the list to link the tracking pixel to the correct website. If your domain is missing, click "Add new domain" to enter it manually. Make sure the domain is valid — the pixel will be installed on the selected one.',
       title: "Select a domain",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/select-a-domain",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/create-or-select-your-domain",
     },
   ];
 
