@@ -177,8 +177,18 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                         fullWidth
                         onClick={navigateToSourcePage}
                         sx={{
-                          backgroundColor: "#3898FC",
+                          backgroundColor: "rgba(56,152,252,1)",
                           dropShadow: "#00000040",
+                          "&:hover": {
+                            backgroundColor: "rgba(30,136,229,1)",
+                          },
+                          "&:active": {
+                            backgroundColor: "rgba(116,183,253,1)",
+                          },
+                          "&.Mui-disabled": {
+                            backgroundColor: "rgba(56,152,252,1)",
+                            color: "#fff !important",
+                          },
                         }}
                       >
                         <IconButton
