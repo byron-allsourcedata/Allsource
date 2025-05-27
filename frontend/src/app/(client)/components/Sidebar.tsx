@@ -38,6 +38,7 @@ import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InsightsIcon from "@mui/icons-material/Insights";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
+import FastForward from "@mui/icons-material/FastForward";
 import { display } from "@mui/system";
 
 const sidebarStyles = {
@@ -327,7 +328,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         overflow: "hidden",
       }}
     >
-      {/* Audience-dashboard */}
+
       <List
         sx={{
           ...sidebarStyles.menu,
@@ -336,6 +337,21 @@ const Sidebar: React.FC<SidebarProps> = ({
           overflowX: "hidden",
         }}
       >
+        <ListItem
+          button
+          onClick={() => handleNavigation("/get-started")}
+          sx={
+            isActive("/get-started")
+              ? sidebarStyles.activeItem
+              : sidebarStyles.ListItem
+          }
+        >
+          <ListItemIcon sx={sidebarStyles.listItemIcon}>
+            <FastForward />
+          </ListItemIcon>
+          <ListItemText primary="Get Started" />
+        </ListItem>
+        {/* Audience-dashboard */}
         <ListItem
           button
           onClick={() => handleNavigation("/audience-dashboard")}

@@ -3,7 +3,7 @@ import { Box, Typography, Tabs, Tab, Button, Checkbox, Stack } from "@mui/materi
 import { Suspense, useEffect, useState } from "react";
 import CustomTooltip from "@/components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import Image from "next/image";
@@ -13,7 +13,7 @@ import GettingStartedSection from '@/components/GettingStartedSection';
 import { SliderProvider } from "@/context/SliderContext";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircle';
 import FirstTimeScreen from "./FirstTimeScreen";
-import SourcesImport from "@/app/(client)/sources/builder/page";
+import SourcesImport from "./SourcesImport";
 import { SourcesHintsProvider } from "../sources/context/SourcesHintsContext";
 import {
     CardsSection,
@@ -46,6 +46,9 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 };
 
 const GetStarted: React.FC = () => {
+    const searchParams = useSearchParams();
+    const pixel = searchParams.get("pixel");
+    const source = searchParams.get("source");
     const { hasNotification } = useNotification();
     const router = useRouter();
     const [tabIndex, setTabIndex] = useState<number>(0);
@@ -85,7 +88,12 @@ const GetStarted: React.FC = () => {
     }
     useEffect(() => {
         checkPixel()
-    }, [])
+        if (pixel) {
+            setTabIndex(1);
+        } else if (source) {
+            setTabIndex(2);
+        }
+    }, [pixel, source])
 
     if (loading) {
         return <CustomizedProgressBar />;
@@ -168,7 +176,7 @@ const GetStarted: React.FC = () => {
                 />
             ) : (
                 <Box sx={{
-                    width: '100%', flex: 1, pr: '2.5rem', pl: '2.5rem', "@media (max-width: 600px)": { pr: 0, pl: 0 },
+                    width: '100%', pr: '2.5rem', pl: '2.5rem', "@media (max-width: 600px)": { pr: 0, pl: 0 },
                 }}>
                     <Box sx={{ width: '100%', pt: 3 }}>
                         {tabIndex === 1 && (
@@ -191,7 +199,7 @@ const GetStarted: React.FC = () => {
                         <Stack flexDirection={"column"} width={"75%"} justifyContent={"center"}>
                             {tabIndex === 2 && (
                                 <>
-                                    {/* <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column', width: '100%', }}>
+                                    <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column', width: '100%', }}>
                                         <Typography className="first-sub-title" fontSize={'20px !important'}>Import Source</Typography>
                                         {sourceBannerVisible && <NotificationInfoBanner
                                             bgColor="rgba(235, 245, 255, 1)"
@@ -200,15 +208,13 @@ const GetStarted: React.FC = () => {
                                             message={"Sources can be either audiences captured by your pixel or manually uploaded customer lists in CSV format. Later it will be your 'seed audiences' - it will train our AI to find for you similar high-value users across platforms."}
                                             onClose={() => setSourceBannerVisible(false)}
                                         />}
-                                    </Box> */}
-
-                                    <Box sx={{ flex: 1 }}>
-                                        <SourcesHintsProvider>
-                                            <Suspense fallback={<ProgressBar />}>
-                                                <SourcesImport />
-                                            </Suspense>
-                                        </SourcesHintsProvider>
                                     </Box>
+
+                                    <SourcesHintsProvider>
+                                        <Suspense fallback={<ProgressBar />}>
+                                            <SourcesImport hideTitle={true} />
+                                        </Suspense>
+                                    </SourcesHintsProvider>
                                 </>
                             )}
                         </Stack>
