@@ -251,7 +251,7 @@ const Suppressions: React.FC = () => {
                         Content={
                             <GettingStartedSection />
                         }
-                        customStyleSX={{
+                        ContentStyleSX={{
                             display: "flex",
                             flexDirection: "column",
                             justifyContent: "center",

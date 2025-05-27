@@ -21,6 +21,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
                 ':hover': {
                     backgroundColor: 'rgba(246, 249, 255, 1)',
                     border: '1px solid rgba(1, 113, 248, 0.4)',
+                    boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.1)',
                     '& .feature-card-title': { color: 'rgba(21, 22, 25, 1)' },
                 },
             }}

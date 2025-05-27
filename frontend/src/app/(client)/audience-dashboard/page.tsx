@@ -976,7 +976,7 @@ const AudienceDashboard: React.FC = () => {
                       },
                     ],
                   }}
-                  customStyleSX={{
+                  ContentStyleSX={{
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "center",

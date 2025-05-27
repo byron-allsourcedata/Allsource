@@ -1468,7 +1468,7 @@ const Integrations = () => {
                     },
                   ],
                 }}
-                customStyleSX={{
+                ContentStyleSX={{
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",

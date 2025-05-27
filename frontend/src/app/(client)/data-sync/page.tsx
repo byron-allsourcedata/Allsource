@@ -353,7 +353,7 @@ const DataSync = () => {
                         },
                       ],
                     }}
-                    customStyleSX={{
+                    ContentStyleSX={{
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
