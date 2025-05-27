@@ -51,15 +51,10 @@ interface EventTypeInterface {
   title: string;
 }
 
-interface StateHint {
-  id: number;
-  show: boolean;
-}
-
-interface HintCardInterface {
-  description: string;
-  title: string;
-  linkToLoadMore: string;
+interface InterfaceMappingRowsSourceType {
+  "Failed Leads": Row[];
+  "Interest": Row[];
+  "Customer Conversions": Row[];
 }
 
 interface NewSource {
@@ -101,7 +96,6 @@ const SourcesImport: React.FC = () => {
     useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [firstEventTypeClick, setFirstEventTypeClick] = useState(true);
   const [sourceType, setSourceType] = useState<string>("");
   const [selectedDomain, setSelectedDomain] = useState<string>("");
   const [sourceName, setSourceName] = useState<string>("");
@@ -149,7 +143,7 @@ const SourcesImport: React.FC = () => {
       "Please upload a CSV file containing the list of customers who have successfully completed an order on your website.",
     "Failed Leads":
       "Please upload a CSV file containing leads who did not complete a purchase or dropped off during the signup process.",
-    Interest:
+    "Interest":
       "Please upload a CSV file of users who showed interest in your product or service, such as newsletter subscribers or ebook downloaders.",
   };
 
@@ -167,7 +161,7 @@ const SourcesImport: React.FC = () => {
     changeSourcesBuilderHint(id, "showBody", "open")
   };
 
-  const defaultRows: Row[] = [
+  const defaultMapping: Row[] = [
     { id: 1, type: "Email", value: "", canDelete: false, isHidden: false },
     {
       id: 2,
@@ -178,6 +172,9 @@ const SourcesImport: React.FC = () => {
     },
     { id: 3, type: "Last Name", value: "", canDelete: true, isHidden: false },
     { id: 4, type: "First Name", value: "", canDelete: true, isHidden: false },
+  ];
+
+  const customerConversionsMapping: Row[] = [
     {
       id: 5,
       type: "Transaction Date",
@@ -185,8 +182,42 @@ const SourcesImport: React.FC = () => {
       canDelete: true,
       isHidden: false,
     },
+    {
+      id: 6,
+      type: "Order Amount",
+      value: "",
+      canDelete: true,
+      isHidden: false,
+    },
   ];
-  const [rows, setRows] = useState<Row[]>(defaultRows);
+
+  const failedLeadsMapping: Row[] = [
+    {
+      id: 5,
+      type: "Lead Date",
+      value: "",
+      canDelete: true,
+      isHidden: false,
+    },
+  ];
+
+  const interestMapping: Row[] = [
+    {
+      id: 5,
+      type: "Interest Date",
+      value: "",
+      canDelete: true,
+      isHidden: false,
+    },
+  ];
+
+  const mappingRowsSourceType: InterfaceMappingRowsSourceType = {
+    "Interest": interestMapping,
+    "Failed Leads": failedLeadsMapping,
+    "Customer Conversions": customerConversionsMapping
+  }
+
+  const [mappingRows, setMappingRows] = useState<Row[]>([]);
 
   const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {
     if (blockRef.current) {
@@ -197,7 +228,7 @@ const SourcesImport: React.FC = () => {
   // Mapping
 
   const handleMapListChange = (id: number, value: string) => {
-    setRows(rows.map((row) => (row.id === id ? { ...row, value } : row)));
+    setMappingRows(mappingRows.map((row) => (row.id === id ? { ...row, value } : row)));
 
     if (id === 1) {
       setEmailNotSubstitution(false);
@@ -205,8 +236,8 @@ const SourcesImport: React.FC = () => {
   };
 
   const handleDelete = (id: number) => {
-    setRows(
-      rows.map((row) => (row.id === id ? { ...row, isHidden: true } : row))
+    setMappingRows(
+      mappingRows.map((row) => (row.id === id ? { ...row, isHidden: true } : row))
     );
   };
 
@@ -216,11 +247,11 @@ const SourcesImport: React.FC = () => {
   };
 
   const handleAdd = () => {
-    const hiddenRowIndex = rows.findIndex((row) => row.isHidden);
+    const hiddenRowIndex = mappingRows.findIndex((row) => row.isHidden);
     if (hiddenRowIndex !== -1) {
-      const updatedRows = [...rows];
+      const updatedRows = [...mappingRows];
       updatedRows[hiddenRowIndex].isHidden = false;
-      setRows(updatedRows);
+      setMappingRows(updatedRows);
     }
   };
 
@@ -255,35 +286,6 @@ const SourcesImport: React.FC = () => {
     }
   }, [typeFromSearchParams]);
 
-  useEffect(() => {
-    let updatedRows = defaultRows.map((row) => {
-      if (row.type === "Transaction Date") {
-        let newType = row.type;
-        if (sourceType === "Customer Conversions")
-          newType = "Transaction Date";
-        if (sourceType === "Failed Leads") newType = "Lead Date";
-        if (sourceType === "Interest") newType = "Interest Date";
-
-        return { ...row, type: newType };
-      }
-      return row;
-    });
-    if (sourceType === "Customer Conversions") {
-      updatedRows = [
-        ...updatedRows,
-        {
-          id: 6,
-          type: "Order Amount",
-          value: "",
-          canDelete: true,
-          isHidden: false,
-        },
-      ];
-    }
-
-    setRows(updatedRows);
-  }, [sourceType]);
-
   const smartSubstitutionHeaders = async (headings: string[]) => {
     setIsChatGPTProcessing(true);
     try {
@@ -307,15 +309,13 @@ const SourcesImport: React.FC = () => {
   // Switching
 
   const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
-    handleDeleteFile();
-    setTargetAudience("");
-    setSelectedDomainId(0)
-    setSelectedDomain("")
+    const newSourceType = event.target.value
+
     closeDotHintClick(0);
-    if (event.target.value === "Website - Pixel") {
+    if (newSourceType=== "Website - Pixel") {
       setShowTargetStep(false)
       setSourceMethod(2);
-      if (sourceType === "") {//not working
+      if (selectedDomain === "") {
         openDotHintClick(1);
       }
       setTimeout(() => {
@@ -323,17 +323,24 @@ const SourcesImport: React.FC = () => {
       }, 0);
       fetchDomainsAndLeads();
     } else {
+      console.log(mappingRowsSourceType, newSourceType, mappingRowsSourceType[newSourceType as keyof InterfaceMappingRowsSourceType])
+      setMappingRows([...defaultMapping, ...mappingRowsSourceType[newSourceType as keyof InterfaceMappingRowsSourceType]]);
       setShowTargetStep(true)
       setSourceMethod(1);
-      // if (selectedDomain === "") {//not working
-      openDotHintClick(3);
-      // }
+      if (sourceType === "") {
+        openDotHintClick(3);
+      }
       setPixelNotInstalled(false);
       setTimeout(() => {
         scrollToBlock(block2Ref);
       }, 0);
     }
-    setSourceType(event.target.value);
+
+    handleDeleteFile();
+    setTargetAudience("");
+    setSelectedDomainId(0)
+    setSelectedDomain("")
+    setSourceType(newSourceType);
   };
 
   const handleTargetAudienceChange = (value: string) => {
@@ -346,7 +353,6 @@ const SourcesImport: React.FC = () => {
     if (targetAudience === "") {
       openDotHintClick(6);
     }
-    setFirstEventTypeClick(false)
   };
 
   // Uploading
@@ -355,7 +361,7 @@ const SourcesImport: React.FC = () => {
     setFile(null);
     setFileName("");
     setEmailNotSubstitution(false);
-    setRows(defaultRows);
+    setMappingRows(defaultMapping);
   };
 
   const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -417,7 +423,7 @@ const SourcesImport: React.FC = () => {
   const handleSumbit = async () => {
     setLoading(true);
 
-    const rowsToSubmit = rows.map(
+    const rowsToSubmit = mappingRows.map(
       ({ id, canDelete, isHidden, ...rest }) => rest
     );
 
@@ -562,12 +568,12 @@ const SourcesImport: React.FC = () => {
         setEmailNotSubstitution(true);
       }
 
-      const updatedRows = rows.map((row, index) => ({
+      const updatedRows = mappingRows.map((row, index) => ({
         ...row,
         value: newHeadings[index] === "None" ? "" : newHeadings[index],
       }));
 
-      setRows(updatedRows);
+      setMappingRows(updatedRows);
     } catch (error: unknown) {
       throw error;
     }
@@ -652,10 +658,10 @@ const SourcesImport: React.FC = () => {
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
     const domainName = event.target.value;
     closeDotHintClick(1);
-    setSelectedDomain(domainName);
-    if (domainName === "") {
+    if (selectedDomain === "") {
       openDotHintClick(2);
     }
+    setSelectedDomain(domainName);
 
     const selectedDomainData = domains.find(
       (domain: DomainsLeads) => domain.name === domainName
@@ -1194,7 +1200,7 @@ const SourcesImport: React.FC = () => {
                         />
                       </Grid>
                     </Grid>
-                    {rows
+                    {mappingRows
                       ?.filter((row) => !row.isHidden)
                       .map((row, index) => (
                         <Box
@@ -1364,7 +1370,7 @@ const SourcesImport: React.FC = () => {
                           </Grid>
                         </Box>
                       ))}
-                    {rows.some((row) => row.isHidden) && (
+                    {mappingRows.some((row) => row.isHidden) && (
                       <Box
                         sx={{ display: "flex", justifyContent: "flex-start" }}
                         onClick={handleAdd}
@@ -1618,13 +1624,6 @@ const SourcesImport: React.FC = () => {
                       </Typography>
                     </Box>
                     <Box
-                      onClick={() => {
-                        if (firstEventTypeClick) {
-                          setFirstEventTypeClick(false)
-                          closeDotHintClick(2);
-                          openDotHintClick(5);
-                        }
-                      }}
                       sx={{
                         display: "flex",
                         gap: 2,
@@ -1734,7 +1733,11 @@ const SourcesImport: React.FC = () => {
                     <Box sx={{ display: "flex", justifyContent: "right" }}>
                       <Button
                         variant="contained"
-                        onClick={() => setShowTargetStep(true)}
+                        onClick={() => {
+                          setShowTargetStep(true)
+                          closeDotHintClick(2);
+                          openDotHintClick(5);
+                        }}
                         sx={{
                           backgroundColor: "rgba(56, 152, 252, 1)",
                           width: "120px",
