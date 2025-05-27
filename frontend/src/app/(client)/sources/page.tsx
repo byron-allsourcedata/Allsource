@@ -30,7 +30,6 @@ import {
   Chip,
   Tooltip,
 } from "@mui/material";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import { sourcesStyles } from "./sourcesStyles";
@@ -39,7 +38,6 @@ import { SliderProvider } from "../../../context/SliderContext";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
-// import FilterPopup from './CompanyFilters';
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import dayjs from "dayjs";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
@@ -54,19 +52,13 @@ import { useSSE } from "../../../context/SSEContext";
 import FilterPopup from "./components/SearchFilter";
 import CloseIcon from "@mui/icons-material/Close";
 import TableCustomCell from "./components/table/TableCustomCell";
-import FirstTimeScreen from "./components/FirstTimeScreen"
 import { useScrollShadow } from "@/hooks/useScrollShadow";
+import TableWithEmptyData from "./components/table/TableWIthEmptyData";
 import HintCard from "../components/HintCard";
 import { CardsSection, FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import { useSourcesHints } from "./context/SourcesHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
-
-interface HintCardInterface {
-  description: string;
-  title: string;
-  linkToLoadMore: string;
-}
 
 interface Source {
   id: string;
@@ -99,6 +91,13 @@ interface FilterParams {
   selectedDomains: string[];
   createdDate: string[];
   dateRange: { fromDate: number | null; toDate: number | null };
+}
+
+interface TableColumns {
+  key: string;
+  label: string;
+  widths: { width: string; minWidth: string; maxWidth: string };
+  sortable?: boolean;
 }
 
 type CardData = {
@@ -192,7 +191,7 @@ const Sources: React.FC = () => {
     },
   ];
 
-  const columns = [
+  const columns: TableColumns[] = [
     {
       key: "name",
       label: "Name",
@@ -759,7 +758,7 @@ const Sources: React.FC = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          height: "calc(100vh - 4.25rem)",
+          height: "100%",
           // overflow: "auto",
           "@media (max-width: 900px)": {
             minHeight: "100vh",
@@ -943,7 +942,7 @@ const Sources: React.FC = () => {
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  // overflow: "auto",
+                  overflow: "hidden",
                   height: "100%",
                   "@media (max-width: 900px)": {
                     paddingRight: 0,
@@ -957,6 +956,7 @@ const Sources: React.FC = () => {
                     display: "flex",
                     flexDirection: "column",
                     // overflow: "auto",
+                    overflow: "hidden",
                   }}
                 >
                   <Box
@@ -1123,18 +1123,20 @@ const Sources: React.FC = () => {
                     {data.length === 0 &&
                       selectedFilters.length > 0 &&
                       !loaderForTable && (
-                        <Box
-                          sx={{
-                            ...sourcesStyles.centerContainerStyles,
-                            border: "1px solid rgba(235, 235, 235, 1)",
-                            borderRadius: "8px",
-                            overflow: "hidden",
-                          }}
-                        >
+                        <TableWithEmptyData columns={columns} loaderForTable={loaderForTable} selectedFiltersLength={selectedFilters.length} isScrolledX={isScrolledX}/>
+                      )}
+                    {data.length !== 0 && (
+                      <Grid container spacing={1} sx={{ flex: 1 }}>
+                        <Grid item xs={12} sx={{
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between",
+                            }}>
                           <TableContainer
+                            ref={tableContainerRef}
                             component={Paper}
                             sx={{
-                              borderBottom: "none",
+                              border: "1px solid rgba(235, 235, 235, 1)",
                               overflowX: "auto",
                               maxHeight:
                                 selectedFilters.length > 0
@@ -1161,176 +1163,9 @@ const Sources: React.FC = () => {
                               },
                             }}
                           >
-                            <Table stickyHeader aria-label="leads table">
-                              <TableHead sx={{ position: "relative" }}>
-                                <TableRow>
-                                  {columns.map(
-                                    ({
-                                      key,
-                                      label,
-                                      sortable = false,
-                                      widths,
-                                    }) => (
-                                      <TableCell
-                                        key={key}
-                                        sx={{
-                                          ...sourcesStyles.table_column,
-                                          ...(key === "name" && {
-                                            position: "sticky",
-                                            left: 0,
-                                            zIndex: 10,
-                                            top: 0,
-                                            boxShadow: isScrolledX
-                                              ? "3px 0px 3px #00000033"
-                                              : "none",
-                                          }),
-                                        }}
-                                      >
-                                        <Box
-                                          sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "space-between",
-                                          }}
-                                        >
-                                          <Typography
-                                            variant="body2"
-                                            sx={{
-                                              ...sourcesStyles.table_column,
-                                              borderRight: "0",
-                                            }}
-                                          >
-                                            {label}
-                                          </Typography>
-                                        </Box>
-                                      </TableCell>
-                                    )
-                                  )}
-                                </TableRow>
-                                {loaderForTable ? (
-                                  <TableRow
-                                    sx={{
-                                      position: "sticky",
-                                      top: "56px",
-                                      zIndex: 11,
-                                    }}
-                                  >
-                                    <TableCell
-                                      colSpan={columns.length}
-                                      sx={{ p: 0, pb: "1px" }}
-                                    >
-                                      <LinearProgress
-                                        variant="indeterminate"
-                                        sx={{
-                                          width: "100%",
-                                          height: "2px",
-                                          position: "absolute",
-                                        }}
-                                      />
-                                    </TableCell>
-                                  </TableRow>
-                                ) : (
-                                  <TableRow
-                                    sx={{
-                                      position: "sticky",
-                                      top: "56px",
-                                      zIndex: 11,
-                                    }}
-                                  >
-                                    <TableCell
-                                      colSpan={columns.length}
-                                      sx={{
-                                        p: 0,
-                                        pb: "1px",
-                                        backgroundColor:
-                                          "rgba(235, 235, 235, 1)",
-                                        borderColor: "rgba(235, 235, 235, 1)",
-                                      }}
-                                    />
-                                  </TableRow>
-                                )}
-                              </TableHead>
-                            </Table>
-                          </TableContainer>
-
-                          <Box
-                            sx={{ p: 3, textAlign: "center", width: "100%" }}
-                          >
-                            <Typography
-                              variant="h5"
-                              sx={{
-                                mb: 3,
-                                fontFamily: "Nunito Sans",
-                                fontSize: "20px",
-                                color: "#4a4a4a",
-                                fontWeight: "600",
-                                lineHeight: "28px",
-                              }}
-                            >
-                              Data not matched yet
-                            </Typography>
-                            <Image
-                              src="/no-data.svg"
-                              alt="No Data"
-                              height={250}
-                              width={300}
-                            />
-                            <Typography
-                              variant="body1"
-                              color="textSecondary"
-                              sx={{
-                                mt: 3,
-                                fontFamily: "Nunito Sans",
-                                fontSize: "14px",
-                                color: "#808080",
-                                fontWeight: "600",
-                                lineHeight: "20px",
-                              }}
-                            >
-                              It seems that the current filters don’t match any
-                              records. Try adjusting the filters.
-                            </Typography>
-                          </Box>
-                        </Box>
-                      )}
-                    {data.length !== 0 && (
-                      <Grid container spacing={1} sx={{ flex: 1 }}>
-                        <Grid item xs={12}>
-                          <TableContainer
-                            ref={tableContainerRef}
-                            component={Paper}
-                            sx={{
-                              border: "1px solid rgba(235, 235, 235, 1)",
-                              overflowX: "visible",
-                              maxHeight:
-                                selectedFilters.length > 0
-                                  ? hasNotification
-                                    ? "63vh"
-                                    : "68vh"
-                                  : "72vh",
-                              overflowY: "visible",
-                              "@media (max-height: 800px)": {
-                                maxHeight:
-                                  selectedFilters.length > 0
-                                    ? hasNotification
-                                      ? "53vh"
-                                      : "57vh"
-                                    : "70vh",
-                              },
-                              "@media (max-width: 400px)": {
-                                maxHeight:
-                                  selectedFilters.length > 0
-                                    ? hasNotification
-                                      ? "53vh"
-                                      : "60vh"
-                                    : "67vh",
-                              },
-                            }}
-                          >
                             <Table
                               stickyHeader
                               aria-label="leads table"
-                              sx={{ tableLayout: "fixed" }}
                             >
                               <TableHead sx={{ position: "relative" }}>
                                 <TableRow>

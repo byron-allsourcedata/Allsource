@@ -311,6 +311,10 @@ const SourcesImport: React.FC = () => {
   const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
     const newSourceType = event.target.value
 
+    handleDeleteFile();
+    setTargetAudience("");
+    setSelectedDomainId(0)
+
     closeDotHintClick(0);
     if (newSourceType=== "Website - Pixel") {
       setShowTargetStep(false)
@@ -323,7 +327,6 @@ const SourcesImport: React.FC = () => {
       }, 0);
       fetchDomainsAndLeads();
     } else {
-      console.log(mappingRowsSourceType, newSourceType, mappingRowsSourceType[newSourceType as keyof InterfaceMappingRowsSourceType])
       setMappingRows([...defaultMapping, ...mappingRowsSourceType[newSourceType as keyof InterfaceMappingRowsSourceType]]);
       setShowTargetStep(true)
       setSourceMethod(1);
@@ -336,9 +339,6 @@ const SourcesImport: React.FC = () => {
       }, 0);
     }
 
-    handleDeleteFile();
-    setTargetAudience("");
-    setSelectedDomainId(0)
     setSelectedDomain("")
     setSourceType(newSourceType);
   };
