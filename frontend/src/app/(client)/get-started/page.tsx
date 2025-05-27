@@ -1,5 +1,5 @@
 "use client";
-import { Box, Typography, Tabs, Tab, Button, Checkbox } from "@mui/material";
+import { Box, Typography, Tabs, Tab, Button, Checkbox, Stack } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
 import CustomTooltip from "@/components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
@@ -126,7 +126,7 @@ const GetStarted: React.FC = () => {
             >
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: 1 }}>
                     <Typography className="first-sub-title" sx={{ fontSize: '24px !important', fontWeight: "500 !important" }}>Get Started</Typography>
-                    <Typography className="description">To begin building your audience, you'll need to provide a data source</Typography>
+                    <Typography className="description">To begin building your audience, you&apos;ll need to provide a data source</Typography>
                 </Box>
             </Box>
             {status === 'PIXEL_INSTALLATION_NEEDED' && tabIndex === 0 ? (
@@ -175,6 +175,9 @@ const GetStarted: React.FC = () => {
                             <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column' }}>
                                 <Typography className="first-sub-title" fontSize={'20px !important'}> Pixel Installation</Typography>
                                 {pixelBannerVisible && <NotificationInfoBanner
+                                    bgColor="rgba(235, 245, 255, 1)"
+                                    iconColor="rgba(56, 152, 252, 1)"
+                                    border="1px solid rgba(56, 152, 252, 0.3)"
                                     message={'A pixel is a small tracking code that collects visitor data from your website to measure performance and build audiences.'}
                                     onClose={() => setPixelBannerVisible(false)}
                                 />}
@@ -184,26 +187,31 @@ const GetStarted: React.FC = () => {
                             <GettingStartedSection />
                         </TabPanel>
                     </Box>
-                    <Box sx={{ width: '100%', pt: 3, "@media (max-width: 600px)": { pr: '8px' } }}>
-                        {tabIndex === 2 && (
-                            <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column', width: '80%', }}>
-                                <Typography className="first-sub-title" fontSize={'20px !important'}> Pixel Installation</Typography>
-                                {sourceBannerVisible && <NotificationInfoBanner
-                                    bgColor="rgba(235, 245, 255, 1)"
-                                    iconColor="rgba(56, 152, 252, 1)"
-                                    border="1px solid rgba(56, 152, 252, 0.3)"
-                                    message={"Sources can be either audiences captured by your pixel or manually uploaded customer lists in CSV format. Later it will be your 'seed audiences' - it will train our AI to find for you similar high-value users across platforms."}
-                                    onClose={() => setSourceBannerVisible(false)}
-                                />}
-                            </Box>
-                        )}
-                        <TabPanel value={tabIndex} index={2}>
-                            <SourcesHintsProvider>
-                                <Suspense fallback={<ProgressBar />}>
-                                    <SourcesImport hideTitle={true} />
-                                </Suspense>
-                            </SourcesHintsProvider>
-                        </TabPanel>
+                    <Box sx={{ width: '100%', display: 'flex', pt: 0, "@media (max-width: 600px)": { pr: '8px' }, alignItems: 'center', justifyContent: 'center' }}>
+                        <Stack flexDirection={"column"} width={"75%"} justifyContent={"center"}>
+                            {tabIndex === 2 && (
+                                <>
+                                    {/* <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column', width: '100%', }}>
+                                        <Typography className="first-sub-title" fontSize={'20px !important'}>Import Source</Typography>
+                                        {sourceBannerVisible && <NotificationInfoBanner
+                                            bgColor="rgba(235, 245, 255, 1)"
+                                            iconColor="rgba(56, 152, 252, 1)"
+                                            border="1px solid rgba(56, 152, 252, 0.3)"
+                                            message={"Sources can be either audiences captured by your pixel or manually uploaded customer lists in CSV format. Later it will be your 'seed audiences' - it will train our AI to find for you similar high-value users across platforms."}
+                                            onClose={() => setSourceBannerVisible(false)}
+                                        />}
+                                    </Box> */}
+
+                                    <Box sx={{ flex: 1 }}>
+                                        <SourcesHintsProvider>
+                                            <Suspense fallback={<ProgressBar />}>
+                                                <SourcesImport />
+                                            </Suspense>
+                                        </SourcesHintsProvider>
+                                    </Box>
+                                </>
+                            )}
+                        </Stack>
                     </Box>
                 </Box>)}
         </Box>

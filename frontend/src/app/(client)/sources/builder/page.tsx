@@ -88,11 +88,8 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   },
 }));
 
-interface SourcesImportProps {
-  hideTitle?: boolean;
-}
 
-const SourcesImport: React.FC<SourcesImportProps> = ({ hideTitle }) => {
+const SourcesImport: React.FC = () => {
   const { changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useSourcesHints();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
@@ -740,31 +737,29 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ hideTitle }) => {
           }}
         >
           <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            {!hideTitle && (
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginTop: hasNotification ? "1rem" : 4,
-                  flexWrap: "wrap",
-                  gap: "15px",
-                  "@media (max-width: 900px)": {
-                    marginTop: hasNotification ? "3rem" : "1rem",
-                  },
-                }}
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <Typography className="first-sub-title">
-                    Import Source
-                  </Typography>
-                  <CustomToolTip
-                    title={"Here you can upload new ones to expand your data."}
-                    linkText="Learn more"
-                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
-                  />
-                </Box>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                marginTop: hasNotification ? "1rem" : 4,
+                flexWrap: "wrap",
+                gap: "15px",
+                "@media (max-width: 900px)": {
+                  marginTop: hasNotification ? "3rem" : "1rem",
+                },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography className="first-sub-title">
+                  Import Source
+                </Typography>
+                <CustomToolTip
+                  title={"Here you can upload new ones to expand your data."}
+                  linkText="Learn more"
+                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                />
               </Box>
-            )}
+            </Box>
             <Box
               sx={{
                 flex: 1,
@@ -2072,10 +2067,10 @@ const SourcesImport: React.FC<SourcesImportProps> = ({ hideTitle }) => {
   );
 };
 
-const SourceBuilder: React.FC<{ hideTitle?: boolean }> = ({ hideTitle }) => {
+const SourceBuilder: React.FC = () => {
   return (
     <Suspense fallback={<ProgressBar />}>
-      <SourcesImport hideTitle={hideTitle} />
+      <SourcesImport />
     </Suspense>
   );
 };
