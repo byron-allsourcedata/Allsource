@@ -13,6 +13,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { showErrorToast } from "@/components/ToastNotification";
 import { useHints } from "@/context/HintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
+import { useRef } from "react";
 
 interface HintCardInterface {
   description: string;
@@ -39,6 +40,9 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
   const [showManualInline, setShowManualInline] = useState(false);
   const [showGoogleInline, setShowGoogleInline] = useState(false);
   const [showCMSInline, setShowCMSInline] = useState(false);
+  const manualRef = useRef<HTMLDivElement | null>(null);
+  const googleRef = useRef<HTMLDivElement | null>(null);
+  const cmsRef = useRef<HTMLDivElement | null>(null);
 
   const installManually = async () => {
     if (showManualInline) {
@@ -60,6 +64,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
       setPixelCode(response.data.manual);
       setOpen(true);
       setShowManualInline(true);
+      setTimeout(() => scrollToRef(manualRef), 100);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         const { status, data } = error.response;
@@ -95,6 +100,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
       setIsLoading(true);
       setGoogleOpen(true);
       setShowGoogleInline(true);
+      setTimeout(() => scrollToRef(googleRef), 100);
     } catch (error) {
       if (error instanceof AxiosError && error.response?.status === 403) {
         if (error.response.data.status === "NEED_BOOK_CALL") {
@@ -122,11 +128,15 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         try {
           const parsed = JSON.parse(savedMe);
           return parsed.source_platform || "";
-        } catch (error) {}
+        } catch (error) { }
       }
     }
     return "";
   }, [typeof window !== "undefined" ? sessionStorage.getItem("me") : null]);
+
+  const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   useEffect(() => {
     const handleRedirect = async () => {
@@ -138,7 +148,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
           setGoogleOpen(true);
           setShowGoogleInline(true);
           onInstallSelected("google");
-        } catch (error) {}
+        } catch (error) { }
       }
     };
 
@@ -167,6 +177,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
       setCmsData(response.data);
       setCMSOpen(true);
       setShowCMSInline(true);
+      setTimeout(() => scrollToRef(cmsRef), 100);
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
         const { status, data } = error.response;
@@ -217,6 +228,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         padding: "1.25em",
         border: "1px solid #e4e4e4",
         borderRadius: "8px",
+        width: '100%',
         backgroundColor: "rgba(255, 255, 255, 1)",
         boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.08)",
         marginBottom: "2rem",
@@ -501,22 +513,28 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
           </Grid>
         </Box>
         {showManualInline && (
-          <ManualPopup
-            open={openmanually}
-            handleClose={handleManualClose}
-            pixelCode={pixelCode}
-          />
+          <Box ref={manualRef} sx={{ width: '100%' }}>
+            <ManualPopup
+              open={openmanually}
+              handleClose={handleManualClose}
+              pixelCode={pixelCode}
+            />
+          </Box>
         )}
         {showGoogleInline && (
-          <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
+          <Box ref={googleRef} sx={{ width: '100%' }}>
+            <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
+          </Box>
         )}
         {showCMSInline && (
-          <CRMPopup
-            open={opencrm}
-            handleClose={handleCRMClose}
-            pixelCode={cmsData.manual || ""}
-            pixel_client_id={cmsData.pixel_client_id || ""}
-          />
+          <Box ref={cmsRef} sx={{ width: '100%' }}>
+            <CRMPopup
+              open={opencrm}
+              handleClose={handleCRMClose}
+              pixelCode={cmsData.manual || ""}
+              pixel_client_id={cmsData.pixel_client_id || ""}
+            />
+          </Box>
         )}
       </Grid>
       {isLoading && (

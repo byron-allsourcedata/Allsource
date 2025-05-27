@@ -88,6 +88,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   },
 }));
 
+
 const SourcesImport: React.FC = () => {
   const { changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useSourcesHints();
   const router = useRouter();
@@ -320,7 +321,7 @@ const SourcesImport: React.FC = () => {
     setSelectedDomainId(0)
 
     closeDotHintClick(0);
-    if (newSourceType=== "Website - Pixel") {
+    if (newSourceType === "Website - Pixel") {
       setShowTargetStep(false)
       setSourceMethod(2);
       if (selectedDomain === "") {
