@@ -1,5 +1,5 @@
 "use client";
-import { Box, Typography, Tabs, Tab, Button, Checkbox } from "@mui/material";
+import { Box, Typography, Tabs, Tab, Button, Checkbox, Stack } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
 import CustomTooltip from "@/components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
@@ -13,11 +13,14 @@ import GettingStartedSection from '@/components/GettingStartedSection';
 import { SliderProvider } from "@/context/SliderContext";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircle';
 import FirstTimeScreen from "./FirstTimeScreen";
+import SourcesImport from "@/app/(client)/sources/builder/page";
+import { SourcesHintsProvider } from "../sources/context/SourcesHintsContext";
 import {
     CardsSection,
     FirstTimeScreenCommonVariant1,
     NotificationInfoBanner,
 } from "@/components/first-time-screens";
+import ProgressBar from "@/components/ProgressBar";
 
 
 
@@ -48,7 +51,8 @@ const GetStarted: React.FC = () => {
     const [tabIndex, setTabIndex] = useState<number>(0);
     const [pixelInstalled, setPixelInstalled] = useState(false);
     const [sourceImported, setSourceImported] = useState(false);
-    const [pixelBannerVisible, setBannerVisible] = useState(true);
+    const [pixelBannerVisible, setPixelBannerVisible] = useState(true);
+    const [sourceBannerVisible, setSourceBannerVisible] = useState(true);
     const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
         setTabIndex(newIndex);
     };
@@ -89,69 +93,47 @@ const GetStarted: React.FC = () => {
 
     return (
         <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'relative',
-            width: '100%',
-            padding: 0,
-            margin: 0,
-            alignItems: 'center',
-            justifyContent: 'center',
-            '@media (max-width: 440px)': {
-                marginTop: '-60px',
-                padding: '0',
-            },
+            pb: 3
         }}>
-            <>
-                <Box
-                    sx={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        position: 'sticky',
-                        top: 0,
+            <Box
+                sx={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    pl: '0.5rem',
+                    mt: 2,
+                    backgroundColor: '#fff',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    "@media (max-width: 600px)": {
+                        pt: '4.25rem',
+                        flexDirection: 'column',
                         pl: '0.5rem',
+                        alignItems: 'flex-start',
                         zIndex: 10,
-                        pt: 2,
-                        backgroundColor: '#fff',
-                        justifyContent: 'space-between',
                         width: '100%',
-                        "@media (max-width: 900px)": {
-                            zIndex: 10
-                        },
-                        "@media (max-width: 600px)": {
-                            pt: '4.25rem',
-                            flexDirection: 'column',
-                            pl: '0.5rem',
-                            alignItems: 'flex-start',
-                            zIndex: 10,
-                            width: '100%',
-                            pr: 1.5
-                        },
-                        "@media (max-width: 440px)": {
-                            flexDirection: 'column',
-                            zIndex: 1,
-                            justifyContent: 'flex-start'
-                        },
-                        "@media (max-width: 400px)": {
-                            pb: '6px',
-                        }
-                    }}
-                >
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: 1 }}>
-                        <Typography className="first-sub-title" sx={{ fontSize: '24px !important', fontWeight: "500 !important" }}>Get Started</Typography>
-                        <Typography className="description">To begin building your audience, you'll need to provide a data source</Typography>
-                    </Box>
+                        pr: 1.5
+                    },
+                    "@media (max-width: 440px)": {
+                        flexDirection: 'column',
+                        zIndex: 1,
+                        justifyContent: 'flex-start'
+                    },
+                    "@media (max-width: 400px)": {
+                        pb: '6px',
+                    }
+                }}
+            >
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: 1 }}>
+                    <Typography className="first-sub-title" sx={{ fontSize: '24px !important', fontWeight: "500 !important" }}>Get Started</Typography>
+                    <Typography className="description">To begin building your audience, you&apos;ll need to provide a data source</Typography>
                 </Box>
-                <Box display="flex" flexDirection="row" width="100%" mt={3}>
-
-                </Box>
-            </>
+            </Box>
             {status === 'PIXEL_INSTALLATION_NEEDED' && tabIndex === 0 ? (
                 <FirstTimeScreenCommonVariant1
                     InfoNotification={{
                         Text: 'Ready to begin? Install your website pixel and set up your first source – these foundational steps will activate all key features.',
-                        sx: { width: '100%', pr: 3 }
+                        sx: { width: '100%', pr: 3, "@media (max-width: 600px)": { pt: 3, pr: 2 } }
                     }}
                     Content={<CardsSection items={[
                         {
@@ -186,26 +168,50 @@ const GetStarted: React.FC = () => {
                 />
             ) : (
                 <Box sx={{
-                    flexGrow: 1,
-                    overflow: 'auto',
-
-                    width: '100%', pr: '2.5rem', pl: '2.5rem', "@media (max-width: 600px)": { pr: 0, pl: 0 },
+                    width: '100%', flex: 1, pr: '2.5rem', pl: '2.5rem', "@media (max-width: 600px)": { pr: 0, pl: 0 },
                 }}>
-                    <Box sx={{ width: '100%' }}>
-                        <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column' }}>
-                            <Typography className="first-sub-title" fontSize={'20px !important'}> Pixel Installation</Typography>
-                            {pixelBannerVisible && <NotificationInfoBanner
-                                message={'A pixel is a small tracking code that collects visitor data from your website to measure performance and build audiences.'}
-                                onClose={() => setBannerVisible(false)}
-                            />}
-                        </Box>
+                    <Box sx={{ width: '100%', pt: 3 }}>
+                        {tabIndex === 1 && (
+                            <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column' }}>
+                                <Typography className="first-sub-title" fontSize={'20px !important'}> Pixel Installation</Typography>
+                                {pixelBannerVisible && <NotificationInfoBanner
+                                    bgColor="rgba(235, 245, 255, 1)"
+                                    iconColor="rgba(56, 152, 252, 1)"
+                                    border="1px solid rgba(56, 152, 252, 0.3)"
+                                    message={'A pixel is a small tracking code that collects visitor data from your website to measure performance and build audiences.'}
+                                    onClose={() => setPixelBannerVisible(false)}
+                                />}
+                            </Box>
+                        )}
                         <TabPanel value={tabIndex} index={1}>
                             <GettingStartedSection />
                         </TabPanel>
                     </Box>
-                    <Box sx={{ width: '100%', "@media (max-width: 600px)": { pr: '8px' } }}>
-                        <TabPanel value={tabIndex} index={2}>
-                        </TabPanel>
+                    <Box sx={{ width: '100%', display: 'flex', pt: 0, "@media (max-width: 600px)": { pr: '8px' }, alignItems: 'center', justifyContent: 'center' }}>
+                        <Stack flexDirection={"column"} width={"75%"} justifyContent={"center"}>
+                            {tabIndex === 2 && (
+                                <>
+                                    {/* <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column', width: '100%', }}>
+                                        <Typography className="first-sub-title" fontSize={'20px !important'}>Import Source</Typography>
+                                        {sourceBannerVisible && <NotificationInfoBanner
+                                            bgColor="rgba(235, 245, 255, 1)"
+                                            iconColor="rgba(56, 152, 252, 1)"
+                                            border="1px solid rgba(56, 152, 252, 0.3)"
+                                            message={"Sources can be either audiences captured by your pixel or manually uploaded customer lists in CSV format. Later it will be your 'seed audiences' - it will train our AI to find for you similar high-value users across platforms."}
+                                            onClose={() => setSourceBannerVisible(false)}
+                                        />}
+                                    </Box> */}
+
+                                    <Box sx={{ flex: 1 }}>
+                                        <SourcesHintsProvider>
+                                            <Suspense fallback={<ProgressBar />}>
+                                                <SourcesImport />
+                                            </Suspense>
+                                        </SourcesHintsProvider>
+                                    </Box>
+                                </>
+                            )}
+                        </Stack>
                     </Box>
                 </Box>)}
         </Box>
