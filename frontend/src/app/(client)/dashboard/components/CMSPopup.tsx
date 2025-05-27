@@ -25,6 +25,7 @@ import {
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useHints } from "@/context/HintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
+import { useRef } from "react";
 
 interface HintCardInterface {
   description: string;
@@ -136,6 +137,10 @@ interface PopupProps {
 const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
   const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
     useHints();
+
+  const shopifyRef = useRef<HTMLDivElement | null>(null);
+  const wordpressRef = useRef<HTMLDivElement | null>(null);
+  const bigcommerceRef = useRef<HTMLDivElement | null>(null);
   const [showHint, setShowHint] = useState(true);
   const [selectedCMS, setSelectedCMS] = useState<string | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>("Install on CMS");
@@ -159,7 +164,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
         try {
           const parsed = JSON.parse(savedMe);
           return parsed.source_platform || "";
-        } catch (error) {}
+        } catch (error) { }
       }
     }
     return "";
@@ -182,7 +187,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
             setAccessTokenExists(true);
           }
         }
-      } catch (error) {}
+      } catch (error) { }
       try {
         const response_big_commerce = await axiosInstance.get(
           "/integrations/credentials/bigcommerce"
@@ -193,7 +198,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
             setAccessTokenExists(true);
           }
         }
-      } catch (error) {}
+      } catch (error) { }
 
       if (sourcePlatform === "shopify") {
         setSelectedCMS("Shopify");
@@ -225,10 +230,24 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
     setStoreHashError(!!value);
   };
 
+  const cmsRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
+    Shopify: shopifyRef,
+    WordPress: wordpressRef,
+    Bigcommerce: bigcommerceRef,
+  };
+
+  const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   const handleButtonClick = async (cms: string) => {
     setSelectedCMS(cms);
     setShowHint(false);
     setHeaderTitle(`Install with ${cms}`);
+    const targetRef = cmsRefMap[cms];
+    if (targetRef) {
+      setTimeout(() => scrollToRef(targetRef), 100);
+    }
   };
 
   const handleBackClick = () => {
@@ -622,6 +641,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
               {selectedCMS === "Shopify" ? (
                 <>
                   <Box
+                    ref={shopifyRef}
                     sx={{
                       flex: 1,
                       paddingBottom: "1em",
@@ -676,11 +696,11 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                               ? shop_domain.replace(/^https?:\/\//, "")
                               : ""
                             : shop_domain
-                            ? `https://${shop_domain.replace(
+                              ? `https://${shop_domain.replace(
                                 /^https?:\/\//,
                                 ""
                               )}`
-                            : "https://"
+                              : "https://"
                         }
                         sx={styles.formField}
                         onFocus={handleFocus}
@@ -869,6 +889,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
               ) : selectedCMS === "WordPress" ? (
                 <>
                   <Box
+                    ref={wordpressRef}
                     sx={{
                       flex: 1,
                       overflowY: "auto",
@@ -1107,6 +1128,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
               ) : (
                 <>
                   <Box
+                    ref={bigcommerceRef}
                     sx={{
                       flex: 1,
                       overflowY: "auto",
@@ -1117,30 +1139,30 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                   >
                     {(sourcePlatform !== "big_commerce" ||
                       !accessTokenExists) && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: 0,
-                          justifyContent: "start",
-                        }}
-                      >
-                        <Image src="/2.svg" alt="2" width={20} height={20} />
-                        <Typography
-                          className="first-sub-title"
+                        <Box
                           sx={{
-                            ...maintext,
-                            textAlign: "left",
-                            padding: "1em 0em 1em 1em",
-                            fontWeight: "500",
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            padding: 0,
+                            justifyContent: "start",
                           }}
                         >
-                          Enter your Bigcommerce store hash in the designated
-                          field. This allows our system to identify your store.
-                        </Typography>
-                      </Box>
-                    )}
+                          <Image src="/2.svg" alt="2" width={20} height={20} />
+                          <Typography
+                            className="first-sub-title"
+                            sx={{
+                              ...maintext,
+                              textAlign: "left",
+                              padding: "1em 0em 1em 1em",
+                              fontWeight: "500",
+                            }}
+                          >
+                            Enter your Bigcommerce store hash in the designated
+                            field. This allows our system to identify your store.
+                          </Typography>
+                        </Box>
+                      )}
 
                     <Box
                       component="pre"
@@ -1188,32 +1210,32 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                     </Box>
                     {(sourcePlatform !== "big_commerce" ||
                       !accessTokenExists) && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "start",
-                        }}
-                      >
-                        <Image src="/3.svg" alt="3" width={20} height={20} />
-                        <Typography
-                          className="first-sub-title"
+                        <Box
                           sx={{
-                            ...maintext,
-                            textAlign: "left",
-                            padding: "2em 1em 1em",
-                            fontWeight: "500",
-                            "@media (max-width: 600px)": { padding: "1em" },
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "start",
                           }}
                         >
-                          Once you have submitted the required information, our
-                          system will automatically install the script on your
-                          Bigcommerce store. You don’t need to take any further
-                          action.
-                        </Typography>
-                      </Box>
-                    )}
+                          <Image src="/3.svg" alt="3" width={20} height={20} />
+                          <Typography
+                            className="first-sub-title"
+                            sx={{
+                              ...maintext,
+                              textAlign: "left",
+                              padding: "2em 1em 1em",
+                              fontWeight: "500",
+                              "@media (max-width: 600px)": { padding: "1em" },
+                            }}
+                          >
+                            Once you have submitted the required information, our
+                            system will automatically install the script on your
+                            Bigcommerce store. You don’t need to take any further
+                            action.
+                          </Typography>
+                        </Box>
+                      )}
                     <Box
                       sx={{
                         display: "flex",
@@ -1225,7 +1247,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                       }}
                     >
                       {sourcePlatform === "big_commerce" &&
-                      accessTokenExists ? (
+                        accessTokenExists ? (
                         <Typography
                           sx={{
                             color: "#333",

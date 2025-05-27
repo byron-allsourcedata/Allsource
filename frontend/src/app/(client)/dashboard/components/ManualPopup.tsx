@@ -62,7 +62,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
       .then((response) => {
         showToast("Successfully send email");
       })
-      .catch((error) => {});
+      .catch((error) => { });
   };
 
   const hintCards: HintCardInterface[] = [
@@ -299,7 +299,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
               <HintCard
                 card={hintCards[0]}
                 positionLeft={670}
-                positionTop={17}
+                positionTop={-30}
                 isOpenBody={pixelSetupHints[14].showBody}
                 toggleClick={() =>
                   changePixelSetupHint(14, "showBody", "toggle")
