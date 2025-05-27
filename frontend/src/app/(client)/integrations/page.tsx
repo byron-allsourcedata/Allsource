@@ -1410,7 +1410,7 @@ const Integrations = () => {
                   TextTitle: "Integrations",
                   TextSubtitle:
                     "Connect your favourite tools to automate tasks and ensure all your data is accessible in one place",
-                  link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/integrations",
+                  link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-integration",
                 }}
                 InfoNotification={{
                   Text: "This page manages all your connected platforms and data pipelines in one centralized hub. View status, configure settings, and troubleshoot connections for seamless data flow across your marketing stack.",
@@ -1575,7 +1575,7 @@ const Integrations = () => {
                           "Connect your favourite tools to automate tasks and ensure all your data is accessible in one place."
                         }
                         linkText="Learn more"
-                        linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/integrations"
+                        linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-integration"
                       />
                     </Box>
                   </Box>

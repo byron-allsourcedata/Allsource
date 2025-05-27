@@ -126,7 +126,7 @@ class DashboardAudiencePersistence:
     def get_user_domains(self, user_id: int) -> list[str]:
         return [
             row[0] for row in self.db.query(UserDomains.domain)
-                .filter(UserDomains.user_id == user_id)
+                .filter(UserDomains.user_id == user_id, UserDomains.is_pixel_installed == True)
                 .all()
         ]
 

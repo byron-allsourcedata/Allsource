@@ -35,6 +35,7 @@ class DashboardAudienceService:
 
     def get_contacts_for_pixel_contacts_statistics(self, *, user: dict):
         results = self.dashboard_persistence.get_contacts_for_pixel_contacts_statistics(user_id=user.get('id'))
+        domains = self.dashboard_persistence.get_user_domains(user_id=user.get('id'))
         daily_data = {
             domain: {
                 'total_leads': 0,
@@ -43,7 +44,7 @@ class DashboardAudienceService:
                 'abandoned_cart': 0,
                 'converted_sale': 0,
             }
-            for domain in results
+            for domain in domains
         }
 
         for domain, behavior_type, count_converted_sales, lead_count in results:

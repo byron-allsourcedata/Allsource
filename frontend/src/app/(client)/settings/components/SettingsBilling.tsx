@@ -605,7 +605,7 @@ export const SettingsBilling: React.FC = () => {
                                     <Typography className="first-sub-title">
                                         Card Details
                                     </Typography>
-                                    <CustomTooltip title={"View detailed information about your card, including balance, transactions, and expiration date."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
+                                    <CustomTooltip title={"View detailed information about your card, including balance, transactions, and expiration date."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/card-details" />
                                 </Box>
                                 <Box sx={{
                                     border: '1px dashed rgba(56, 152, 252, 1)',
@@ -1345,7 +1345,7 @@ export const SettingsBilling: React.FC = () => {
                     <Typography variant="h6" className='first-sub-title' sx={{
                         lineHeight: '22px !important'
                     }}>Billing History</Typography>
-                    <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
+                    <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/billing-history" />
                 </Box>
                 <TableContainer sx={{
                     border: '1px solid #EBEBEB',

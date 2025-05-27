@@ -9,6 +9,8 @@ import AudienceChart from "./components/AudienceChart";
 import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import InfoCard from "./components/SelectedCards";
 import PixelCard from "./components/PixelCard";
+import BlurPixel from "./components/BlurPixel";
+import BlurAudience from "./components/BlurAudience";
 import MainSectionCard from "./components/MainSectionCards";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import SmartAudienceCard from "./components/SmartAudienceCard";
@@ -616,7 +618,7 @@ const AudienceDashboard: React.FC = () => {
                     top: 0,
                     pt: "12px",
                     pr: "1rem",
-                    zIndex: 1,
+                    zIndex: 100,
                     backgroundColor: "#fff",
                     justifyContent: "space-between",
                     width: "100%",
@@ -659,7 +661,7 @@ const AudienceDashboard: React.FC = () => {
                         "Indicates the count of resolved identities and revenue figures for the specified time"
                       }
                       linkText="Learn More"
-                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main"
+                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-audience"
                     />
                   </Typography>
                   <Box
@@ -695,6 +697,10 @@ const AudienceDashboard: React.FC = () => {
                     }}
                   >
                     <CustomCards
+                      disabledCards={{
+                        pixel: pixelContacts.length === 0,
+                        audience: eventCards.sources.length === 0 
+                      }}
                       values={values}
                       onCardClick={handleCardClick}
                       selectedCard={selectedCard}
@@ -762,7 +768,9 @@ const AudienceDashboard: React.FC = () => {
                             }}
                             md={2.4}
                           >
-                            {pixelContacts.map((contact, index) => (
+                            {pixelContacts.length === 0 ?
+                             <BlurPixel />
+                            : pixelContacts.map((contact, index) => (
                               <Box key={index} mt={1}>
                                 <PixelCard
                                   key={index}
@@ -783,114 +791,126 @@ const AudienceDashboard: React.FC = () => {
                                   }
                                 />
                               </Box>
-                            ))}
+                            ))
+                            }
                           </Grid>
+                          
+                          {eventCards.sources.length === 0 
+                          ? <Grid
+                              item
+                              xs={12}
+                              md={9.6}
+                            >
+                              <BlurAudience />
+                            </Grid>
+                          : 
+                          (
+                            <>
+                              <Grid
+                                item
+                                sx={{
+                                  "@media (max-width: 600px)": { minWidth: 320 },
+                                }}
+                                xs={12}
+                                md={2.4}
+                              >
+                                {eventCards.sources.map((card, index) => (
+                                  <Box key={index} mt={1}>
+                                    <MainSectionCard
+                                      key={card.id}
+                                      data={card}
+                                      highlighted={activeChainIds.includes(card.id)}
+                                      onClick={() => {
+                                        if (activeChainIds.includes(card.id)) {
+                                          setActiveChainIds([]);
+                                        } else {
+                                          setActiveChainIds(card.chain_ids);
+                                        }
+                                      } } />
+                                  </Box>
+                                ))}
+                              </Grid>
 
-                          <Grid
-                            item
-                            sx={{
-                              "@media (max-width: 600px)": { minWidth: 320 },
-                            }}
-                            xs={12}
-                            md={2.4}
-                          >
-                            {eventCards.sources.map((card, index) => (
-                              <Box key={index} mt={1}>
-                                <MainSectionCard
-                                  key={card.id}
-                                  data={card}
-                                  highlighted={activeChainIds.includes(card.id)}
-                                  onClick={() => {
-                                    if (activeChainIds.includes(card.id)) {
-                                      setActiveChainIds([]);
-                                    } else {
-                                      setActiveChainIds(card.chain_ids);
-                                    }
-                                  }}
-                                />
-                              </Box>
-                            ))}
-                          </Grid>
+                              <Grid
+                                item
+                                xs={12}
+                                sx={{
+                                  "@media (max-width: 600px)": { minWidth: 320 },
+                                }}
+                                md={2.4}
+                              >
+                                  {eventCards.lookalikes.map((card, index) => (
+                                    <Box key={index} mt={1}>
+                                      <MainSectionCard
+                                        key={card.id}
+                                        data={card}
+                                        highlighted={activeChainIds.includes(card.id)}
+                                        onClick={() => {
+                                          if (activeChainIds.includes(card.id)) {
+                                            setActiveChainIds([]);
+                                          } else {
+                                            setActiveChainIds(card.chain_ids);
+                                          }
+                                        } } />
+                                    </Box>
+                                  ))}
+                              </Grid>
 
-                          <Grid
-                            item
-                            xs={12}
-                            sx={{
-                              "@media (max-width: 600px)": { minWidth: 320 },
-                            }}
-                            md={2.4}
-                          >
-                            {eventCards.lookalikes.map((card, index) => (
-                              <Box key={index} mt={1}>
-                                <MainSectionCard
-                                  key={card.id}
-                                  data={card}
-                                  highlighted={activeChainIds.includes(card.id)}
-                                  onClick={() => {
-                                    if (activeChainIds.includes(card.id)) {
-                                      setActiveChainIds([]);
-                                    } else {
-                                      setActiveChainIds(card.chain_ids);
-                                    }
-                                  }}
-                                />
-                              </Box>
-                            ))}
-                          </Grid>
-                          <Grid
-                            item
-                            xs={12}
-                            sx={{
-                              "@media (max-width: 600px)": { minWidth: 320 },
-                            }}
-                            md={2.4}
-                          >
-                            {eventCards.smart_audience.map((card, index) => (
-                              <Box key={index} mt={1}>
-                                <SmartAudienceCard
-                                  key={card.id}
-                                  data={card}
-                                  highlighted={activeChainIds.includes(card.id)}
-                                  onClick={() => {
-                                    if (activeChainIds.includes(card.id)) {
-                                      setActiveChainIds([]);
-                                    } else {
-                                      setActiveChainIds(card.chain_ids);
-                                    }
-                                  }}
-                                />
-                              </Box>
-                            ))}
-                          </Grid>
-                          <Grid
-                            item
-                            xs={12}
-                            sx={{
-                              "@media (max-width: 600px)": {
-                                minWidth: 320,
-                                mr: 10,
-                                pr: 1.5,
-                              },
-                            }}
-                            md={2.4}
-                          >
-                            {eventCards.data_sync.map((card, index) => (
-                              <Box key={index} mt={1}>
-                                <MainSectionCard
-                                  key={card.id}
-                                  data={card}
-                                  highlighted={activeChainIds.includes(card.id)}
-                                  onClick={() => {
-                                    if (activeChainIds.includes(card.id)) {
-                                      setActiveChainIds([]);
-                                    } else {
-                                      setActiveChainIds(card.chain_ids);
-                                    }
-                                  }}
-                                />
-                              </Box>
-                            ))}
-                          </Grid>
+                              <Grid
+                                item
+                                xs={12}
+                                sx={{
+                                  "@media (max-width: 600px)": { minWidth: 320 },
+                                }}
+                                md={2.4}
+                              >
+                                {eventCards.smart_audience.map((card, index) => (
+                                  <Box key={index} mt={1}>
+                                    <SmartAudienceCard
+                                      key={card.id}
+                                      data={card}
+                                      highlighted={activeChainIds.includes(card.id)}
+                                      onClick={() => {
+                                        if (activeChainIds.includes(card.id)) {
+                                          setActiveChainIds([]);
+                                        } else {
+                                          setActiveChainIds(card.chain_ids);
+                                        }
+                                      } } />
+                                  </Box>
+                                ))}
+                              </Grid>
+
+                              <Grid
+                                item
+                                xs={12}
+                                sx={{
+                                  "@media (max-width: 600px)": {
+                                    minWidth: 320,
+                                    mr: 10,
+                                    pr: 1.5,
+                                  },
+                                }}
+                                md={2.4}
+                              >
+                                {eventCards.data_sync.map((card, index) => (
+                                  <Box key={index} mt={1}>
+                                    <MainSectionCard
+                                      key={card.id}
+                                      data={card}
+                                      highlighted={activeChainIds.includes(card.id)}
+                                      onClick={() => {
+                                        if (activeChainIds.includes(card.id)) {
+                                          setActiveChainIds([]);
+                                        } else {
+                                          setActiveChainIds(card.chain_ids);
+                                        }
+                                      } } />
+                                  </Box>
+                                ))}
+                              </Grid>  
+                            </>
+                          )}
                         </Grid>
                       </Box>
                     )}
@@ -903,7 +923,7 @@ const AudienceDashboard: React.FC = () => {
                   Header={{
                     TextTitle: 'Dashboard',
                     TextSubtitle: "To begin building your audience, you'll need to provide a data source",
-                    link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync',
+                    link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-data-source',
                   }}
                   InfoNotification={{
                     Text: 'Your dashboard displays key performance data across 5 core areas: pixel-captured users, created sources, lookalikes, smart audiences, and data sync status. Monitor all critical metrics in one place to optimize targeting.',

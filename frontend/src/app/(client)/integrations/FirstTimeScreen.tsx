@@ -34,7 +34,7 @@ const FirstTimeScreen: FC<FirstTimeScreenProps> = ({ onBegin }) => {
           Integrations
         </Typography>
         <MuiLink
-          href="https://allsourceio.zohodesk.com/portal/en/kb/articles/integrations"
+          href="https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-integration"
           underline="hover"
           target="_blank"
           sx={{

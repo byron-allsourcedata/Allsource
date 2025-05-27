@@ -10,42 +10,42 @@ const builderHintCards: HintCardInterface[] = [
     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Use case",
     linkToLoadMore:
-    "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    "https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-use-case",
    },
    {
     description:
     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Select your Contacts1",
     linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+      "https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-contacts1",
    },
    {
     description:
     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Select your Contacts2",
     linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+      "https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-contacts2",
    },
    {
     description:
     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Choose your Source/lOOk",
     linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+      "https://allsourceio.zohodesk.com/portal/en/kb/articles/choose-your-source-lookalike",
    },
    {
     description:
     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Calculate",
     linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+      "https://allsourceio.zohodesk.com/portal/en/kb/articles/calculate",
    },
    {
     description:
     "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
     title: "Name",
     linkToLoadMore:
-      "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+      "https://allsourceio.zohodesk.com/portal/en/kb/articles/enter-name",
    },
    {
     description:
@@ -91,14 +91,14 @@ const tableHintCards: HintCardInterface[] = [
         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
         title: "Actions",
         linkToLoadMore:
-        "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/actions",
     },
     {
         description:
         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
         title: "Builder",
         linkToLoadMore:
-        "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder",
     },
 ]
 
@@ -108,14 +108,14 @@ const createdHintCards: HintCardInterface[] = [
         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
         title: "Actions",
         linkToLoadMore:
-        "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/actions",
     },
     {
         description:
         "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
         title: "Builder",
         linkToLoadMore:
-        "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder",
     },
 ]
 
