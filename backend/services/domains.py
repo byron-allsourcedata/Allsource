@@ -86,8 +86,6 @@ class UserDomainsService:
         ).model_dump()
 
     def delete_domain(self, user_id: int, domain_id: int):
-        if self.domain_persistence.count_domain(user_id) == 1:
-            raise HTTPException(status_code=409, detail={'status': 'LAST_DOMAIN'})
         return self.domain_persistence.delete_domain(user_id, domain_id)
 
     def __create_api_key(self, domain: UserDomains):
