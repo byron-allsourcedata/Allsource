@@ -83,7 +83,7 @@ const PulsingDotComponent: React.FC<PulsingDotComponentProps> = ({
         left: !rightSide ? -7 : "auto",
         right: rightSide ? -7 : "auto",
         top: -5,
-        zIndex: 9998,
+        zIndex: 9999,
       }}
     >
       <PulsingDot onClick={toggleClick} />
