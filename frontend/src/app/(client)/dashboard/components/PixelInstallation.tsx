@@ -122,7 +122,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         try {
           const parsed = JSON.parse(savedMe);
           return parsed.source_platform || "";
-        } catch (error) {}
+        } catch (error) { }
       }
     }
     return "";
