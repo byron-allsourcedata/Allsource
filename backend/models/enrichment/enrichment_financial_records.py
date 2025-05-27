@@ -32,5 +32,5 @@ class EnrichmentFinancialRecord(Base):
     mail_order_donor = Column(String(8), nullable=False)
     
     __table_args__ = (
-        Index("ix_financial_asid", asid),
+        Index("ix_financial_asid", asid, unique=True),
     )
