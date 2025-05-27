@@ -419,6 +419,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
         persons = [str(enrichment_lookalike_score.enrichment_user_id) for enrichment_lookalike_score in
                    enrichment_lookalike_scores]
 
+        audience_lookalike = db_session.merge(audience_lookalike)
         message_body = {
             'lookalike_id': str(audience_lookalike.id),
             'user_id': audience_lookalike.user_id,

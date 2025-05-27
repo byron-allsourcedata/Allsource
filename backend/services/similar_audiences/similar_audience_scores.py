@@ -1,4 +1,5 @@
 import time
+import psycopg2
 from decimal import Decimal
 from typing import List
 from uuid import UUID
@@ -29,6 +30,19 @@ def is_uuid(value):
     except ValueError:
         return False
 
+def measure(func):
+    start = time.perf_counter()
+    result = func(0)
+    end = time.perf_counter()
+    return result, end - start
+
+def measure_print(func, prefix):
+    start = time.perf_counter()
+    result = func(0)
+    end = time.perf_counter()
+    print(f"{prefix}: {end - start:.3f}")
+    return result
+
 
 class SimilarAudiencesScoresService:
     enrichment_models_persistence: EnrichmentModelsPersistence
@@ -49,6 +63,8 @@ class SimilarAudiencesScoresService:
 
 
     def calculate_scores(self, model: CatBoostRegressor, lookalike_id: UUID, query: Query, config: NormalizationConfig, user_id_key: str = 'user_id'):
+        batch_size = 100000
+
         total = self.db.query(EnrichmentUser).count()
 
         self.db.execute(
@@ -58,47 +74,26 @@ class SimilarAudiencesScoresService:
         )
         self.db.commit()
 
-        compiled = query.statement.compile(
-            dialect=dialect(),
-            compile_kwargs={"literal_binds": True}
-        )
-
         count = 0
 
-
         user_query = select(EnrichmentUser).select_from(EnrichmentUser)
-
         compiled_user = user_query.compile(dialect=dialect())
 
-        import psycopg2
-
-
+        print("preparing cursor")
         url = SqlConfigBase().url
         conn = psycopg2.connect(url)
 
-        cursor = conn.cursor(name="my_named_cursor")  # creates a server-side cursor
+        cursor = conn.cursor(name="scores_filler_cursor")
+        start = time.perf_counter()
         cursor.execute(str(compiled_user))
 
-        print("preparing cursor")
-
-        start = time.perf_counter()
         print(str(compiled_user))
-        # conn.execution_options(stream_results=False)
         end = time.perf_counter()
-        print(f"query time: {end - start}")
-
-
-
+        print(f"cursor time: {end - start:.3f}")
 
         while True:
-
-            start = time.perf_counter()
-
-            rows = cursor.fetchmany(10000)
-            end = time.perf_counter()
-
-            result = end - start
-            print(f"fetch time: {result:.3f}")
+            rows, duration = measure(lambda _: cursor.fetchmany(batch_size))
+            print(f"fetch time: {duration:.3f}")
 
             if not rows:
                 print("done")
@@ -107,51 +102,39 @@ class SimilarAudiencesScoresService:
             count += len(rows)
             print(f"fetched from cursor {count}\r")
 
-            start = time.perf_counter()
+
             dict_rows = [dict(zip(['id', 'asid'], row)) for row in rows]
 
             asids = [rd['asid'] for rd in dict_rows]
 
-            result = query.where(EnrichmentUser.asid.in_(asids))
+            result = measure_print(lambda _: (
+                query.where(EnrichmentUser.asid.in_(asids))
+            ), "query time")
+
             feature_dicts = [dict(row._mapping) for row in result]
             user_ids = [rd['id'] for rd in dict_rows]
 
-            # feature_dicts = []
-            # for rd in dict_rows:
-            #     user_ids.append(rd[user_id_key])
-            #     feats = {
-            #         k: (str(v) if v is not None else "None")
-            #         for k, v in rd.items()
-            #         if k != user_id_key
-            #     }
-            #     feature_dicts.append(feats)
+            scores, duration = measure(lambda _: self.calculate_score_dict_batch(model, feature_dicts, config))
+            print(f"calculation time: {duration:.3f}")
 
-            scores = self.calculate_score_dict_batch(model, feature_dicts, config)
+            _, duration = measure(lambda _: (
+                self.enrichment_lookalike_scores_persistence.bulk_insert(
+                    lookalike_id,
+                    list(zip(user_ids, scores))
+                )
+            ))
+            print(f"insert time: {duration:.3f}")
 
-            end = time.perf_counter()
-            result = end - start
-            print(f"calculation time: {result:.3f}")
-            start = time.perf_counter()
-            self.enrichment_lookalike_scores_persistence.bulk_insert(lookalike_id, list(zip(user_ids, scores)))
-
-            end = time.perf_counter()
-            result = end - start
-            print(f"insert time: {result:.3f}")
-
-            start = time.perf_counter()
-            self.db.execute(
-                update(AudienceLookalikes)
-                .where(AudienceLookalikes.id == lookalike_id)
-                .values(processed_train_model_size=count)
-            )
-
-            end = time.perf_counter()
-            result = end - start
-            print(f"lookalike update time: {result:.3f}")
+            _, duration = measure(lambda _: (
+                self.db.execute(
+                    update(AudienceLookalikes)
+                    .where(AudienceLookalikes.id == lookalike_id)
+                    .values(processed_train_model_size=count)
+                )
+            ))
+            print(f"lookalike update time: {duration:.3f}")
             self.db.commit()
-
-
-        cur.close()
+        cursor.close()
         conn.close()
 
 
