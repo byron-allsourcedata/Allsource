@@ -1464,8 +1464,32 @@ const SmartAudiences: React.FC = () => {
                           <TableContainer
                             ref={tableContainerRef}
                             sx={{
-                              height: "calc(90vh - 4.25rem - 45px - 16px)",
+                              height: "70vh",
                               overflowX: "scroll",
+                              maxHeight:
+                                selectedFilters.length > 0
+                                  ? hasNotification
+                                    ? "63vh"
+                                    : "70vh"
+                                  : "70vh",
+                              "@media (max-height: 800px)": {
+                                height: "60vh",
+                                maxHeight:
+                                  selectedFilters.length > 0
+                                    ? hasNotification
+                                      ? "53vh"
+                                      : "60vh"
+                                    : "70vh",
+                              },
+                              "@media (max-width: 400px)": {
+                                height: "50vh",
+                                maxHeight:
+                                  selectedFilters.length > 0
+                                    ? hasNotification
+                                      ? "53vh"
+                                      : "50vh"
+                                    : "70vh",
+                              },
                             }}
                           >
                               <Table
