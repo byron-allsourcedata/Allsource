@@ -66,7 +66,8 @@ class SimilarAudiencesScoresService:
         with self.db.connection() as conn:
             self.db.execute(text("SET LOCAL enable_hashjoin = off"))
             with conn.connection.cursor() as cursor:
-
+                cursor.execute("SET enable_hashjoin = off")
+                print("preparing cursor")
                 start = time.perf_counter()
                 cursor.execute(str(compiled))
                 end = time.perf_counter()
