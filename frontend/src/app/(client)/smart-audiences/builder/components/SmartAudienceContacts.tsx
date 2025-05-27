@@ -343,7 +343,7 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
               >
                 Select your Contacts
               </Typography>
-              <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-builder" />
+              <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-contacts" />
             </Box>
             <Typography
               sx={{

@@ -332,7 +332,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
         "Click on your platform (Shopify, WordPress, or BigCommerce) to see a step-by-step guide for installing the pixel. Follow the instructions to complete the setup.",
       title: "Choose CMS",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/cms-integrations",
     },
     {
       description:

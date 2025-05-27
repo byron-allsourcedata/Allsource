@@ -145,14 +145,14 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
         "Click to add your website domain. After entering the domain, you’ll be able to install the tracking pixel.",
       title: "Add domain",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/verify-pixel",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/create-or-select-your-domain",
     },
     {
       description:
         'Enter your website domain in the input field and click "Save". We’ll store it and use it to set up the tracking pixel.',
       title: "Enter domain",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-create-a-domain",
     },
     {
       description:
@@ -188,7 +188,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
         <CustomTooltip
           title="Set which domain's user activity will be tracked."
           linkText="Learn more"
-          linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel"
+          linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/create-or-select-your-domain"
         />
       </Box>
       <Typography className="paragraph" sx={{ marginBottom: "1rem" }}>

@@ -193,14 +193,14 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         "Choose the installation method that works best for your website. You can use Google Tag Manager, upload the code manually, or install it through a CMS like Shopify, WordPress, or BigCommerce.",
       title: "Choose the installation method",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-pixel-installation",
     },
     {
       description:
         'Enter your website domain in the input field and click "Save". We’ll store it and use it to set up the tracking pixel.',
       title: "Enter domain",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-create-a-domain",
     },
     {
       description:
@@ -250,7 +250,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         <CustomTooltip
           title="Set which domain's user activity will be tracked."
           linkText="Learn more"
-          linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource/install-pixel"
+          linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-pixel-installation"
         />
       </Box>
       <Box sx={{ position: "relative" }}>
@@ -485,7 +485,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                     <CustomTooltip
                       title={"CMS integrations."}
                       linkText="Learn more"
-                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/cms-integrations"
                     />
                   </Box>
 

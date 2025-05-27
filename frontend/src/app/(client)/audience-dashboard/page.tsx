@@ -659,7 +659,7 @@ const AudienceDashboard: React.FC = () => {
                         "Indicates the count of resolved identities and revenue figures for the specified time"
                       }
                       linkText="Learn More"
-                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main"
+                      linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-audience"
                     />
                   </Typography>
                   <Box
@@ -903,7 +903,7 @@ const AudienceDashboard: React.FC = () => {
                   Header={{
                     TextTitle: 'Dashboard',
                     TextSubtitle: "To begin building your audience, you'll need to provide a data source",
-                    link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync',
+                    link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-data-source',
                   }}
                   InfoNotification={{
                     Text: 'Your dashboard displays key performance data across 5 core areas: pixel-captured users, created sources, lookalikes, smart audiences, and data sync status. Monitor all critical metrics in one place to optimize targeting.',

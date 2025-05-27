@@ -747,7 +747,7 @@ export const SettingsSubscription: React.FC = () => {
                             <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
                                 Custom plan
                             </Typography>
-                            <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
+                            <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/custom-plan" />
                         </Box>
                         <IconButton onClick={handleCustomPlanPopupClose} sx={{ p: 0 }}>
                             <CloseIcon sx={{ width: '20px', height: '20px' }} />
