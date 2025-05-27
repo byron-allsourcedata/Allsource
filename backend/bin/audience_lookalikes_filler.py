@@ -176,23 +176,9 @@ def build_dynamic_query_and_config(
         'job_description', 'party_affiliation', 'congressional_district', 'voting_propensity'
     }}
 
-    voter_subq = (
-        db_session
-        .query(
-            EnrichmentVoterRecord.asid.label('asid'),
-            EnrichmentVoterRecord.party_affiliation.label('party_affiliation'),
-            EnrichmentVoterRecord.congressional_district.label('congressional_district'),
-            EnrichmentVoterRecord.voting_propensity.label('voting_propensity')
-        )
-        .subquery("voter_curr")
-    )
 
 
-    column_map.update({
-        'party_affiliation': voter_subq.c.party_affiliation,
-        'congressional_district': voter_subq.c.congressional_district,
-        'voting_propensity': voter_subq.c.voting_propensity,
-    })
+
 
     selected_fields = [name for name in sig.keys() if name in column_map]
     dynamic_columns = [column_map[name] for name in selected_fields]
@@ -223,8 +209,8 @@ def build_dynamic_query_and_config(
             EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
         )
         .outerjoin(
-            voter_subq,
-            voter_subq.c.asid == EnrichmentUser.asid
+            EnrichmentVoterRecord,
+            EnrichmentVoterRecord.asid == EnrichmentUser.asid
         )
     )
 
