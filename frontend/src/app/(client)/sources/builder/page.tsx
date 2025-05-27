@@ -262,6 +262,7 @@ const SourcesImport: React.FC = () => {
   useEffect(() => {
     setShowTargetStep(true);
     if (typeFromSearchParams) {
+      closeDotHintClick(0);
       let newType = "";
       if (typeFromSearchParams === "customer-conversions")
         newType = "Customer Conversions";
@@ -275,7 +276,10 @@ const SourcesImport: React.FC = () => {
         }, 0);
         fetchDomainsAndLeads();
         setSourceMethod(2);
+        openDotHintClick(1);
       } else {
+        openDotHintClick(3);
+        setMappingRows([...defaultMapping, ...mappingRowsSourceType[newType as keyof InterfaceMappingRowsSourceType]]);
         setSourceMethod(1);
         setTimeout(() => {
           scrollToBlock(block2Ref);
