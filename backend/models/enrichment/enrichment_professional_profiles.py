@@ -1,4 +1,4 @@
-from sqlalchemy import Column, TEXT, UUID, ForeignKey, text, UniqueConstraint
+from sqlalchemy import Column, TEXT, UUID, ForeignKey, text, UniqueConstraint, Index
 from sqlalchemy.orm import relationship
 from models.base import Base
 
@@ -31,7 +31,7 @@ class EnrichmentProfessionalProfile(Base):
     annual_sales = Column(TEXT, nullable=True)
     
     __table_args__ = (
-        UniqueConstraint(asid, name='professional_profiles_asid_key'),
+        Index('professional_profiles_asid_idx', asid, unique=True),
     )
 
 from .enrichment_users import EnrichmentUser

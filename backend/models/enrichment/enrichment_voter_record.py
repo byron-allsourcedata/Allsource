@@ -22,5 +22,5 @@ class EnrichmentVoterRecord(Base):
     voting_propensity = Column(Float, nullable=True)
     
     __table_args__ = (
-        Index("ix_voter_asid", asid),
+        Index("ix_voter_asid", asid, unique=True),
     )
