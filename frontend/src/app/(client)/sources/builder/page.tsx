@@ -96,7 +96,6 @@ const SourcesImport: React.FC = () => {
     useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [firstEventTypeClick, setFirstEventTypeClick] = useState(true);
   const [sourceType, setSourceType] = useState<string>("");
   const [selectedDomain, setSelectedDomain] = useState<string>("");
   const [sourceName, setSourceName] = useState<string>("");
@@ -324,6 +323,7 @@ const SourcesImport: React.FC = () => {
       }, 0);
       fetchDomainsAndLeads();
     } else {
+      console.log(mappingRowsSourceType, newSourceType, mappingRowsSourceType[newSourceType as keyof InterfaceMappingRowsSourceType])
       setMappingRows([...defaultMapping, ...mappingRowsSourceType[newSourceType as keyof InterfaceMappingRowsSourceType]]);
       setShowTargetStep(true)
       setSourceMethod(1);
@@ -353,7 +353,6 @@ const SourcesImport: React.FC = () => {
     if (targetAudience === "") {
       openDotHintClick(6);
     }
-    setFirstEventTypeClick(false)
   };
 
   // Uploading
@@ -659,10 +658,10 @@ const SourcesImport: React.FC = () => {
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
     const domainName = event.target.value;
     closeDotHintClick(1);
-    setSelectedDomain(domainName);
-    if (domainName === "") {
+    if (selectedDomain === "") {
       openDotHintClick(2);
     }
+    setSelectedDomain(domainName);
 
     const selectedDomainData = domains.find(
       (domain: DomainsLeads) => domain.name === domainName
@@ -1625,13 +1624,6 @@ const SourcesImport: React.FC = () => {
                       </Typography>
                     </Box>
                     <Box
-                      onClick={() => {
-                        if (firstEventTypeClick) {
-                          setFirstEventTypeClick(false)
-                          closeDotHintClick(2);
-                          openDotHintClick(5);
-                        }
-                      }}
                       sx={{
                         display: "flex",
                         gap: 2,
@@ -1741,7 +1733,11 @@ const SourcesImport: React.FC = () => {
                     <Box sx={{ display: "flex", justifyContent: "right" }}>
                       <Button
                         variant="contained"
-                        onClick={() => setShowTargetStep(true)}
+                        onClick={() => {
+                          setShowTargetStep(true)
+                          closeDotHintClick(2);
+                          openDotHintClick(5);
+                        }}
                         sx={{
                           backgroundColor: "rgba(56, 152, 252, 1)",
                           width: "120px",
