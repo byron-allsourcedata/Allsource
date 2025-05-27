@@ -1,5 +1,6 @@
 import { FeatureCardProps } from "@/types/first_time_screens";
 import { Box, Card, CardContent, Typography } from "@mui/material";
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const FeatureCard: React.FC<FeatureCardProps> = ({
     title,
@@ -7,18 +8,19 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
     imageSrc,
     onClick,
     showRecommended = false,
-    img_height = 140
+    img_height = 140,
+    showInstalled = false
 }) => {
     return (
         <Card
             variant="outlined"
-            onClick={onClick}
+            {...(onClick && { onClick })}
             sx={{
                 height: '100%',
-                backgroundColor: 'transparent',
+                backgroundColor: showInstalled ? 'rgba(246, 248, 250, 1)' : 'transparent',
                 boxShadow: 'none',
-                cursor: 'pointer',
-                ':hover': {
+                cursor: showInstalled ? 'default' : 'pointer',
+                ':hover': showInstalled ? {} : {
                     backgroundColor: 'rgba(246, 249, 255, 1)',
                     border: '1px solid rgba(1, 113, 248, 0.4)',
                     '& .feature-card-title': { color: 'rgba(21, 22, 25, 1)' },
@@ -27,11 +29,22 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
         >
             <CardContent sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography
-                        className="first-sub-title"
-                    >
-                        {title}
-                    </Typography>
+                    <Box sx={{ display: 'flex' }}>
+                        {showInstalled &&
+                            <CheckCircleIcon
+                                sx={{
+                                    fontSize: 20,
+                                    color: 'rgba(96, 178, 21, 1)',
+                                    mr: 1,
+                                }}
+                            />
+                        }
+                        <Typography
+                            className="first-sub-title"
+                        >
+                            {title}
+                        </Typography>
+                    </Box>
                     {showRecommended && (
                         <Box
                             sx={{
@@ -51,6 +64,28 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
                                 }}
                             >
                                 Recommended
+                            </Typography>
+                        </Box>
+                    )}
+                    {showInstalled && (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 0.5,
+                            }}
+                        >
+                            <Typography
+                                className="table-data"
+                                sx={{
+                                    color: "rgba(43, 91, 0, 1) !important",
+                                    fontSize: "14px !important",
+                                    backgroundColor: "rgba(234, 248, 221, 1) !important",
+                                    padding: "4px 12px",
+                                    borderRadius: "4px",
+                                }}
+                            >
+                                Complited
                             </Typography>
                         </Box>
                     )}

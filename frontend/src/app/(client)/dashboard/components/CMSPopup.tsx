@@ -312,7 +312,8 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
         url +
         (hasQuery ? "&" : "?") +
         "mff=true" +
-        "&api=https://api-dev.maximiz.ai";
+        `&api=${process.env.NEXT_PUBLIC_API_DOMAIN}` +
+        `&domain_url=${process.env.NEXT_PUBLIC_API_DASHBOARD_URL}`;
       window.open(newUrl, "_blank");
     }
   };

@@ -36,5 +36,5 @@ class EnrichmentLifestyle(Base):
     smoker = Column(String(8), nullable=False)
     
     __table_args__ = (
-        Index("ix_lifestyle_asid", asid),
+        Index("ix_lifestyle_asid", asid, unique=True),
     )

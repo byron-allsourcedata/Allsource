@@ -12,6 +12,7 @@ import aioboto3
 from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session, aliased
 from dotenv import load_dotenv
+from sqlalchemy.sql.functions import coalesce
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -105,7 +106,7 @@ def get_enrichment_user_column_map() -> Dict[str, Any]:
         "language_code": EnrichmentPersonalProfiles.language_code.label("language_code"),
         "state_abbr": EnrichmentPersonalProfiles.state_abbr.label("state_abbr"),
         "state": EnrichmentPersonalProfiles.state_abbr.label("state"),
-        "zip_code5": cast(EnrichmentPersonalProfiles.zip_code5, String).label("zip_code5"),
+        "zip_code5": coalesce(cast(EnrichmentPersonalProfiles.zip_code5, String), "00000").label("zip_code5"),
 
         # — Financial Records —
         "income_range": EnrichmentFinancialRecord.income_range.label("income_range"),
@@ -176,68 +177,7 @@ def build_dynamic_query_and_config(
         'job_description', 'party_affiliation', 'congressional_district', 'voting_propensity'
     }}
 
-    employment_base = (
-        db_session
-        .query(
-            EnrichmentEmploymentHistory.asid,
-            EnrichmentEmploymentHistory.job_title,
-            EnrichmentEmploymentHistory.company_name,
-            EnrichmentEmploymentHistory.start_date,
-            EnrichmentEmploymentHistory.end_date,
-            EnrichmentEmploymentHistory.is_current,
-            EnrichmentEmploymentHistory.location,
-            EnrichmentEmploymentHistory.job_description,
-            func.row_number()
-            .over(
-                partition_by=EnrichmentEmploymentHistory.asid,
-                order_by=EnrichmentEmploymentHistory.id
-            )
-            .label("rn")
-        )
-        .filter(EnrichmentEmploymentHistory.is_current == True)
-        .subquery("emp_ranked")
-    )
 
-    employment_subq = (
-        db_session
-        .query(employment_base)
-        .filter(employment_base.c.rn == 1)
-        .subquery("emp_curr")
-    )
-
-    voter_base = (
-        db_session
-        .query(
-            EnrichmentVoterRecord.asid,
-            EnrichmentVoterRecord.party_affiliation,
-            EnrichmentVoterRecord.congressional_district,
-            EnrichmentVoterRecord.voting_propensity,
-            func.row_number()
-            .over(partition_by=EnrichmentVoterRecord.asid, order_by=EnrichmentVoterRecord.id)
-            .label("rn")
-        )
-        .subquery("voter_ranked")
-    )
-
-    voter_subq = (
-        db_session
-        .query(voter_base)
-        .filter(voter_base.c.rn == 1)
-        .subquery("voter_curr")
-    )
-
-    column_map.update({
-        'job_title': employment_subq.c.job_title,
-        'company_name': employment_subq.c.company_name,
-        'start_date': employment_subq.c.start_date,
-        'end_date': employment_subq.c.end_date,
-        'is_current': employment_subq.c.is_current,
-        'location': employment_subq.c.location,
-        'job_description': employment_subq.c.job_description,
-        'party_affiliation': voter_subq.c.party_affiliation,
-        'congressional_district': voter_subq.c.congressional_district,
-        'voting_propensity': voter_subq.c.voting_propensity,
-    })
 
     selected_fields = [name for name in sig.keys() if name in column_map]
     dynamic_columns = [column_map[name] for name in selected_fields]
@@ -253,7 +193,7 @@ def build_dynamic_query_and_config(
         .select_from(EnrichmentUser)
         .outerjoin(
             EnrichmentPersonalProfiles,
-            EnrichmentPersonalProfiles.asid == EnrichmentUser.asid
+            EnrichmentUser.asid == EnrichmentPersonalProfiles.asid
         )
         .outerjoin(
             EnrichmentFinancialRecord,
@@ -268,12 +208,8 @@ def build_dynamic_query_and_config(
             EnrichmentProfessionalProfile.asid == EnrichmentUser.asid
         )
         .outerjoin(
-            employment_subq,
-            employment_subq.c.asid == EnrichmentUser.asid
-        )
-        .outerjoin(
-            voter_subq,
-            voter_subq.c.asid == EnrichmentUser.asid
+            EnrichmentVoterRecord,
+            EnrichmentVoterRecord.asid == EnrichmentUser.asid
         )
     )
 
@@ -483,6 +419,7 @@ async def aud_sources_reader(message: IncomingMessage, db_session: Session, conn
         persons = [str(enrichment_lookalike_score.enrichment_user_id) for enrichment_lookalike_score in
                    enrichment_lookalike_scores]
 
+        audience_lookalike = db_session.merge(audience_lookalike)
         message_body = {
             'lookalike_id': str(audience_lookalike.id),
             'user_id': audience_lookalike.user_id,

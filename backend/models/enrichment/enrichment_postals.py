@@ -34,7 +34,7 @@ class EnrichmentPostal(Base):
     created_date = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
        
     __table_args__ = (
-        Index("enrichment_postals_asid_idx", asid),
+        Index("enrichment_postals_asid_idx", asid, unique=True),
     )
     
     enrichment_user = relationship(

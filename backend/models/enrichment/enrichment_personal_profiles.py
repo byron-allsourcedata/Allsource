@@ -89,8 +89,7 @@ class EnrichmentPersonalProfiles(Base):
     )
     
     __table_args__ = (
-        UniqueConstraint(asid, name="enrichment_personal_profiles_asid_key"),
-        Index("ix_enrichment_personal_profiles_asid", asid),
+        Index("ix_enrichment_personal_profiles_asid", asid, unique=True),
     )
 
 from models.enrichment.enrichment_users import EnrichmentUser

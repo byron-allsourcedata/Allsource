@@ -1076,19 +1076,6 @@ const AccountSetup = () => {
     }
   };
 
-  const handleInstallWordPress = () => {
-    let url = domainName.trim();
-    if (url) {
-      if (!/^https?:\/\//i.test(url)) {
-        url = "http://" + url;
-      }
-
-      const hasQuery = url.includes("?");
-      const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + "&api=https://api-dev.maximiz.ai";
-      window.open(newUrl, "_blank");
-    }
-  }
-
   const handleVerifyPixel = () => {
     let url = domainName.trim();
 
@@ -1098,7 +1085,7 @@ const AccountSetup = () => {
       }
 
       const hasQuery = url.includes("?");
-      const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + "&api=https://api-dev.maximiz.ai";
+      const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + "&api=https://api-dev.maximiz.ai" + `&domain_url=${process.env.NEXT_PUBLIC_API_DASHBOARD_URL}`;
       window.open(newUrl, "_blank");
     }
   };
