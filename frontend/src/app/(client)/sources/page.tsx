@@ -1106,14 +1106,15 @@ const Sources: React.FC = () => {
                       selectedFilters.length > 0 &&
                       !loaderForTable && (
                         <TableWithEmptyData columns={columns} loaderForTable={loaderForTable} selectedFiltersLength={selectedFilters.length} isScrolledX={isScrolledX}/>
-                      )}
+                    )}
+
                     {data.length !== 0 && (
                       <Grid container spacing={1} sx={{ flex: 1 }}>
                         <Grid item xs={12}>
                           <TableContainer
                             ref={tableContainerRef}
                             sx={{
-                              height: "calc(100vh - 4.25rem)",
+                              height: "calc(90vh - 4.25rem - 45px - 16px)",
                               overflowX: "scroll",
                             }}
                           >
