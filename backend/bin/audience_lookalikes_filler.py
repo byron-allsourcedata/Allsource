@@ -12,6 +12,7 @@ import aioboto3
 from aio_pika import IncomingMessage
 from sqlalchemy.orm import sessionmaker, Session, aliased
 from dotenv import load_dotenv
+from sqlalchemy.sql.functions import coalesce
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
@@ -105,7 +106,7 @@ def get_enrichment_user_column_map() -> Dict[str, Any]:
         "language_code": EnrichmentPersonalProfiles.language_code.label("language_code"),
         "state_abbr": EnrichmentPersonalProfiles.state_abbr.label("state_abbr"),
         "state": EnrichmentPersonalProfiles.state_abbr.label("state"),
-        "zip_code5": cast(EnrichmentPersonalProfiles.zip_code5, String).label("zip_code5"),
+        "zip_code5": coalesce(cast(EnrichmentPersonalProfiles.zip_code5, String), "00000").label("zip_code5"),
 
         # — Financial Records —
         "income_range": EnrichmentFinancialRecord.income_range.label("income_range"),

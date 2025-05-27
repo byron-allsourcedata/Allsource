@@ -70,14 +70,17 @@ class SimilarAudiencesScoresService:
         compiled_user = user_query.compile(dialect=dialect())
 
 
+
         with self.db.connection() as conn:
-            self.db.execute(text("SET LOCAL enable_hashjoin = off"))
+            conn.execution_options(stream_results=True)
             with conn.connection.cursor() as cursor:
 
                 cursor.execute("SET enable_hashjoin = off")
                 print("preparing cursor")
+
                 start = time.perf_counter()
                 print(str(compiled_user))
+                # conn.execution_options(stream_results=False)
                 cursor.execute(str(compiled_user))
                 end = time.perf_counter()
                 print(f"query time: {end - start}")
@@ -85,9 +88,12 @@ class SimilarAudiencesScoresService:
                 columns = [desc[0] for desc in cursor.description]
 
                 while True:
+                    conn.execution_options(stream_results=True)
                     start = time.perf_counter()
+
                     rows = cursor.fetchmany(10000)
                     end = time.perf_counter()
+                    conn.execution_options(stream_results=False)
 
                     result = end- start
                     print(f"fetch time: {result:.3f}")
@@ -107,9 +113,9 @@ class SimilarAudiencesScoresService:
 
                     result = query.where(EnrichmentUser.asid.in_(asids))
                     feature_dicts = [dict(row._mapping) for row in result]
+                    user_ids = [rd['id'] for rd in dict_rows]
 
 
-                    user_ids = [rd["id"] for rd in dict_rows]
 
                     # feature_dicts = []
                     # for rd in dict_rows:
@@ -120,6 +126,7 @@ class SimilarAudiencesScoresService:
                     #         if k != user_id_key
                     #     }
                     #     feature_dicts.append(feats)
+
 
                     scores = self.calculate_score_dict_batch(model, feature_dicts, config)
 
