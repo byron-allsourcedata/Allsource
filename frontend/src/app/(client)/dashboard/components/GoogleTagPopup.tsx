@@ -435,10 +435,17 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         "https://www.googleapis.com/auth/tagmanager.edit.containerversions",
       ].join(" ");
       const currentUrl = new URL(window.location.href);
-      const redirectUri = `${currentUrl}`;
+      if (currentUrl.searchParams.has('pixel')) {
+        const pixelValue = currentUrl.searchParams.get('pixel')!;
+        currentUrl.search = '';
+        currentUrl.searchParams.set('pixel', pixelValue);
+      } else {
+        currentUrl.search = '';
+      }
+      const newUrl = currentUrl.href;
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth
                 ?client_id=${clientId}
-                &redirect_uri=${encodeURIComponent(redirectUri)}
+                &redirect_uri=${encodeURIComponent(newUrl)}
                 &response_type=code
                 &scope=${encodeURIComponent(scope)}
                 &access_type=offline
