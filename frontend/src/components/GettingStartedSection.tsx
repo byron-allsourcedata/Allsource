@@ -53,8 +53,9 @@ const GettingStartedSection: React.FC = () => {
     const handleRedirect = async () => {
       const query = new URLSearchParams(window.location.search);
       const authorizationGoogleCode = query.get("code");
+      const installBigcommerce = query.get("install_bigcommerce");
       const googleScope = query.get("scope");
-      if (authorizationGoogleCode && googleScope) {
+      if ((authorizationGoogleCode && googleScope) || installBigcommerce) {
         let currentDomain = sessionStorage.getItem("current_domain");
         if (currentDomain) {
           setSelectedDomain(currentDomain);

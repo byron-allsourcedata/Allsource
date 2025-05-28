@@ -1346,24 +1346,6 @@ const Integrations = () => {
   }, []);
 
   useEffect(() => {
-    if (statusIntegrate) {
-      if (statusIntegrate == "Successfully") {
-        showToast("Connect to Bigcommerce Successfully");
-      } else {
-        showErrorToast(
-          `Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != "Failed"
-            ? statusIntegrate
-            : ""
-          }`
-        );
-      }
-    }
-    const newSearchParams = new URLSearchParams(searchParams.toString());
-    newSearchParams.delete("message");
-    router.replace(`?${newSearchParams.toString()}`);
-  }, [statusIntegrate]);
-
-  useEffect(() => {
     const fetchIntegrationCredentials = async () => {
       try {
         setLoading(true);
