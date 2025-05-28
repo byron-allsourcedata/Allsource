@@ -1468,12 +1468,12 @@ const Integrations = () => {
                     },
                   ],
                 }}
-                customStyleSX={{
+                ContentStyleSX={{
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
                   alignItems: "center",
-                  width: "70%",
+                  maxWidth: "840px",
                   margin: "0 auto",
                   mt: 2,
                 }}

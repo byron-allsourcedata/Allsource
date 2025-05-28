@@ -120,7 +120,7 @@ const PopupChargeCredits: React.FC<PopupDetailsProps> = ({ open, onClose, update
                         width: "67px",
                         height: "40px",
                         ":hover": {
-                            borderColor: "rgba(62, 64, 142, 1)"},
+                            borderColor: "rgba(30, 136, 229, 1)"},
                         ":active": {
                             borderColor: "rgba(56, 152, 252, 1)"},
                         ":disabled": {
@@ -147,7 +147,7 @@ const PopupChargeCredits: React.FC<PopupDetailsProps> = ({ open, onClose, update
                         width: "70px",
                         height: "40px",
                         ":hover": {
-                            backgroundColor: "rgba(62, 64, 142, 1)"},
+                            backgroundColor: "rgba(30, 136, 229, 1)"},
                         ":active": {
                             backgroundColor: "rgba(56, 152, 252, 1)"},
                         ":disabled": {

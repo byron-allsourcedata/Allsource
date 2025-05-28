@@ -13,6 +13,8 @@ import CustomNotification from "@/components/CustomNotification";
 import { useSSE } from "@/context/SSEContext";
 import { NotificationProvider } from "@/context/NotificationContext";
 import { HintsProvider } from '@/context/HintsContext';
+import { useSidebar } from "@/context/SidebarContext";
+import { fetchUserData } from "@/services/meService";
 
 interface ClientLayoutProps {
   children: ReactNode;
@@ -20,6 +22,7 @@ interface ClientLayoutProps {
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const pathname = usePathname(); // Get the current path
+  const { isGetStartedPage, setIsGetStartedPage } = useSidebar();
   const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/forgot-password',];
   const isAuthenticated = !excludedPaths.includes(pathname);
   const [showSlider, setSlider] = useState(false);
@@ -50,6 +53,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         const fetchData = async () => {
           try {
             const response = await axiosInstance.get("/notification");
+            await fetchUserData(setIsGetStartedPage);
             const notifications = response.data;
 
             const unreadNotifications = notifications.filter((notification: { is_checked: boolean }) => !notification.is_checked);
@@ -76,6 +80,8 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const handleDismissNotification = () => {
     setLatestNotification(null);
   };
+
+  const shouldShowGetStarted = isGetStartedPage === false;
 
 
   return (
@@ -119,7 +125,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
               top: latestNotification || newNotification ? 'calc(7.125rem)' : '4.25rem',
             }}>
               <SliderProvider>
-                <Sidebar setShowSlider={setSlider} setLoading={setIsLoading} hasNotification={Boolean(latestNotification || newNotification)} />
+                <Sidebar setShowSlider={setSlider} isGetStartedPage={shouldShowGetStarted} setLoading={setIsLoading} hasNotification={Boolean(latestNotification || newNotification)} />
               </SliderProvider>
             </Grid>
             <NotificationProvider hasNotification={Boolean(latestNotification || newNotification)}>

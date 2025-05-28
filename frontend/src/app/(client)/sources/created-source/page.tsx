@@ -277,22 +277,22 @@ const SourcesList: React.FC = () => {
                 </Button>
 
                 <HintCard
-                  card={createdHintCards[2]}
+                  card={createdHintCards["buider"]}
                   positionLeft={-420}
                   positionTop={20}
                   rightSide={true}
-                  isOpenBody={createdSourceHints[2].showBody}
+                  isOpenBody={createdSourceHints["buider"].showBody}
                   toggleClick={() => {
-                    if (createdSourceHints[1].showBody) {
-                      changeCreatedSourceHint(1, "showBody", "close")
+                    if (createdSourceHints["lookalike"].showBody) {
+                      changeCreatedSourceHint("lookalike", "showBody", "close")
                     }
-                    if (createdSourceHints[0].showBody) {
-                      changeCreatedSourceHint(0, "showBody", "close")
+                    if (createdSourceHints["actions"].showBody) {
+                      changeCreatedSourceHint("actions", "showBody", "close")
                     }
-                    changeCreatedSourceHint(2, "showBody", "toggle")
+                    changeCreatedSourceHint("buider", "showBody", "toggle")
                   }}
                   closeClick={() => {
-                    changeCreatedSourceHint(2, "showBody", "close")
+                    changeCreatedSourceHint("buider", "showBody", "close")
                   }}
                 />
 
@@ -595,22 +595,22 @@ const SourcesList: React.FC = () => {
                     </IconButton>
 
                     <HintCard
-                      card={createdHintCards[0]}
+                      card={createdHintCards["actions"]}
                       positionLeft={-420}
                       positionTop={20}
                       rightSide={true}
-                      isOpenBody={createdSourceHints[0].showBody}
+                      isOpenBody={createdSourceHints["actions"].showBody}
                       toggleClick={() => {
-                        if (createdSourceHints[1].showBody) {
-                          changeCreatedSourceHint(1, "showBody", "close")
+                        if (createdSourceHints["lookalike"].showBody) {
+                          changeCreatedSourceHint("lookalike", "showBody", "close")
                         }
-                        if (createdSourceHints[2].showBody) {
-                          changeCreatedSourceHint(2, "showBody", "close")
+                        if (createdSourceHints["buider"].showBody) {
+                          changeCreatedSourceHint("buider", "showBody", "close")
                         }
-                        changeCreatedSourceHint(0, "showBody", "toggle")
+                        changeCreatedSourceHint("actions", "showBody", "toggle")
                       }}
                       closeClick={() => {
-                        changeCreatedSourceHint(0, "showBody", "close")
+                        changeCreatedSourceHint("actions", "showBody", "close")
                       }}
                     />
                   </Box>
@@ -674,7 +674,7 @@ const SourcesList: React.FC = () => {
                       padding: "10px 24px",
                       color: "#fff !important",
                       ":hover": {
-                        backgroundColor: "rgba(62, 64, 142, 1)",
+                        backgroundColor: "rgba(30, 136, 229, 1)",
                       },
                       ":active": {
                         backgroundColor: "rgba(56, 152, 252, 1)",
@@ -688,23 +688,23 @@ const SourcesList: React.FC = () => {
                     Create Lookalike
                   </Button>
 
-                  {!createdSourceHints[0].showBody && <HintCard
-                    card={createdHintCards[1]}
+                  {!createdSourceHints["actions"].showBody && <HintCard
+                    card={createdHintCards["lookalike"]}
                     positionLeft={-400}
                     positionTop={20}
                     rightSide={true}
-                    isOpenBody={createdSourceHints[1].showBody}
+                    isOpenBody={createdSourceHints["lookalike"].showBody}
                     toggleClick={() => {
-                      if (createdSourceHints[0].showBody) {
-                        changeCreatedSourceHint(0, "showBody", "close")
+                      if (createdSourceHints["actions"].showBody) {
+                        changeCreatedSourceHint("actions", "showBody", "close")
                       }
-                      if (createdSourceHints[2].showBody) {
-                        changeCreatedSourceHint(2, "showBody", "close")
+                      if (createdSourceHints["buider"].showBody) {
+                        changeCreatedSourceHint("buider", "showBody", "close")
                       }
-                      changeCreatedSourceHint(1, "showBody", "toggle")
+                      changeCreatedSourceHint("lookalike", "showBody", "toggle")
                     }}
                     closeClick={() => {
-                      changeCreatedSourceHint(1, "showBody", "close")
+                      changeCreatedSourceHint("lookalike", "showBody", "close")
                     }}
                   />}
                 </Box>
