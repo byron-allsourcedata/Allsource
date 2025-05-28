@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { GoogleLogin } from "@react-oauth/google";
 import {
   Box,
   Button,
@@ -63,9 +62,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
           setSession({ token: accessToken });
           fetchAccounts(accessToken);
         } catch (error) {
-        } finally {
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, document.title, newUrl);
+          console.log(error)
         }
       }
     };
@@ -660,7 +657,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                     },
                   }}
                 >
-                  Select domain
+                  Select Container
                 </InputLabel>
                 <Select
                   value={selectedContainer}
