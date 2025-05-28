@@ -109,7 +109,7 @@ const EmailVerificate: React.FC = () => {
             localStorage.setItem("welcome_popup", "true");
             showToast("Verification done successfully");
             clearInterval(interval);
-            router.push("/dashboard");
+            router.push("/get-started");
             // router.push('/account-setup');
           }
         })
