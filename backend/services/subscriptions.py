@@ -336,7 +336,7 @@ class SubscriptionService:
         return user_payment_transaction
     
     def trackAwinConversion(self, user: User, price, subscription_type, date, subscription_id):
-        refer = os.getenv('SITE_URL')
+        refer = os.getenv('SITE_HOST_URL')
         awc = user.awin_awc
         order_id = f"{subscription_id}_{user.id}_{date}"
         awin_campaign_id = os.getenv('AWIN_CAMPAIGN_ID')
