@@ -16,7 +16,11 @@ export const changeHintState = (
   setStateFunction((prev) =>
     prev.map((hint) => {
       return hint.id === id
-        ? { ...hint, [key]: actionMap[action](hint[key] as boolean) }
+        ? { 
+          ...hint, 
+          [key]: actionMap[action](hint[key] as boolean),
+          ...(key === "show" && { showBody: actionMap[action](hint.showBody) })
+         }
         : hint;
     })
   );
@@ -32,5 +36,5 @@ export const resetHintsState = (
 export interface StateHint {
   id: number;
   show: boolean;
-  showBody?: boolean;
+  showBody: boolean;
 }

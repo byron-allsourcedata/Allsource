@@ -1,4 +1,4 @@
-from sqlalchemy import Column, UniqueConstraint, text
+from sqlalchemy import Column, UniqueConstraint, text, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 
@@ -19,7 +19,7 @@ class EnrichmentUser(Base):
         nullable=False
     )
     __table_args__ = (
-        UniqueConstraint(asid, name='enrichment_user_ids_asid_key'),
+        Index('enrichment_user_ids_asid_idx', asid, unique=True),
     )
     
 from .enrichment_user_contact import EnrichmentUserContact

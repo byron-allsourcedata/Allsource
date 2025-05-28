@@ -4,10 +4,19 @@ import { InfoIcon, CloseIcon } from "@/icon"
 
 interface NotificationBannerProps {
   message: string;
+  bgColor?: string;
+  iconColor?: string;
+  border?: string;
   onClose?: () => void;
 }
 
-const NotificationInfoBanner: React.FC<NotificationBannerProps> = ({ message, onClose }) => {
+const NotificationInfoBanner: React.FC<NotificationBannerProps> = ({
+  message,
+  onClose,
+  bgColor = 'rgba(254,247,223,1)',
+  iconColor = 'rgba(235,193,46,1)',
+  border = '1px solid rgba(235,193,46,0.3)',
+}) => {
   return (
     <Box
       sx={{
@@ -15,13 +24,13 @@ const NotificationInfoBanner: React.FC<NotificationBannerProps> = ({ message, on
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        bgcolor: 'rgba(254,247,223,1)',
-        border: '1px solid rgba(235,193,46,0.3)',
+        bgcolor: bgColor,
+        border: border,
         borderRadius: 1,
         p: 2,
       }}
     >
-      <InfoIcon sx={{ color: 'rgba(235,193,46,1)', mr: 3 }} />
+      <InfoIcon sx={{ color: iconColor, mr: 3 }} />
       <Typography
         sx={{
           color: 'rgba(50,54,62,1)',
@@ -37,9 +46,11 @@ const NotificationInfoBanner: React.FC<NotificationBannerProps> = ({ message, on
       </Typography>
       <Box sx={{ flexGrow: 1 }} />
       <IconButton onClick={onClose} size="small" sx={{
-        position: 'absolute',
-        top: 8,
-        right: 8,
+        "@media (max-width:600px)": {
+          position: 'absolute',
+          top: 8,
+          right: 8
+        }
       }}>
         <CloseIcon sx={{ fontSize: '20px', color: 'rgba(82, 82, 82, 1)' }} />
       </IconButton>

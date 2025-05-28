@@ -166,6 +166,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
   return (
     <Box
       sx={{
+        height: '100%',
         padding: "1rem",
         border: "1px solid #e4e4e4",
         borderRadius: "8px",
@@ -328,8 +329,8 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
           {pixelSetupHints[2]?.show && !selectedDomain && (
             <HintCard
               card={hintCards[2]}
-              positionLeft={365}
-              positionTop={-5}
+              positionLeft={400}
+              positionTop={15}
               isOpenBody={pixelSetupHints[2].showBody}
               toggleClick={() => changePixelSetupHint(2, "showBody", "toggle")}
               closeClick={() => changePixelSetupHint(2, "showBody", "close")}

@@ -1,8 +1,4 @@
-interface StateHint {
-    id: number;
-    show: boolean;
-    showBody?: boolean;
-  }
+import { StateHint } from '@/utils/hintsUtils';
 
 const initialSourcesBuilderHints: StateHint[] = [
     { show: true, showBody: true, id: 0 },

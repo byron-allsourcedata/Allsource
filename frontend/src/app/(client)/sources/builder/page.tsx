@@ -88,6 +88,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   },
 }));
 
+
 const SourcesImport: React.FC = () => {
   const { changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useSourcesHints();
   const router = useRouter();
@@ -147,18 +148,12 @@ const SourcesImport: React.FC = () => {
       "Please upload a CSV file of users who showed interest in your product or service, such as newsletter subscribers or ebook downloaders.",
   };
 
-  const toggleDotHintClick = (id: number) => {
-    changeSourcesBuilderHint(id, "show", "toggle")
-  };
-
   const closeDotHintClick = (id: number) => {
     changeSourcesBuilderHint(id, "show", "close")
-    changeSourcesBuilderHint(id, "showBody", "close")
   };
 
   const openDotHintClick = (id: number) => {
     changeSourcesBuilderHint(id, "show", "open")
-    changeSourcesBuilderHint(id, "showBody", "open")
   };
 
   const defaultMapping: Row[] = [
@@ -262,6 +257,7 @@ const SourcesImport: React.FC = () => {
   useEffect(() => {
     setShowTargetStep(true);
     if (typeFromSearchParams) {
+      closeDotHintClick(0);
       let newType = "";
       if (typeFromSearchParams === "customer-conversions")
         newType = "Customer Conversions";
@@ -275,7 +271,10 @@ const SourcesImport: React.FC = () => {
         }, 0);
         fetchDomainsAndLeads();
         setSourceMethod(2);
+        openDotHintClick(1);
       } else {
+        openDotHintClick(3);
+        setMappingRows([...defaultMapping, ...mappingRowsSourceType[newType as keyof InterfaceMappingRowsSourceType]]);
         setSourceMethod(1);
         setTimeout(() => {
           scrollToBlock(block2Ref);
@@ -316,7 +315,7 @@ const SourcesImport: React.FC = () => {
     setSelectedDomainId(0)
 
     closeDotHintClick(0);
-    if (newSourceType=== "Website - Pixel") {
+    if (newSourceType === "Website - Pixel") {
       setShowTargetStep(false)
       setSourceMethod(2);
       if (selectedDomain === "") {
@@ -615,6 +614,7 @@ const SourcesImport: React.FC = () => {
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
+      closeDotHintClick(3)
       openDotHintClick(5);
     } catch (error: unknown) {
       if (error instanceof Error) {

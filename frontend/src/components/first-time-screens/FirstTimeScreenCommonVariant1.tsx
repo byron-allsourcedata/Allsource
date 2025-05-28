@@ -20,6 +20,7 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
   HelpCard,
   ContentStyleSX,
   LeftMenu
+  MainBoxStyleSX
 }) => {
   const [bannerVisible, setBannerVisible] = useState(true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -33,6 +34,7 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
   return (
     <Box
       sx={{
+        ...MainBoxStyleSX,
         display: "flex",
         flexDirection: "column",
       }}
@@ -150,18 +152,19 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
 
 
         {InfoNotification && bannerVisible && (
-          <NotificationInfoBanner
-            message={InfoNotification.Text}
-            onClose={() => setBannerVisible(false)}
-          />
+          <Box sx={InfoNotification.sx}>
+            <NotificationInfoBanner
+              message={InfoNotification.Text}
+              onClose={() => setBannerVisible(false)}
+            />
+          </Box>
         )}
 
         {/* Main Content */}
         {Content && (
           <Box sx={{
-            width: "100%",
-            mt: bannerVisible ? 3 : 0
-
+            width: MainBoxStyleSX ? "65%" : "100%",
+            mt: bannerVisible ? 3 : 0,
           }}>
             {typeof Content === "function"
               ? React.createElement(Content as React.ComponentType)

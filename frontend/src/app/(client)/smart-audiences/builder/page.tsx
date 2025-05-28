@@ -51,18 +51,12 @@ const SmartAudiencesBuilder: React.FC = () => {
 
       }, []);
 
-    const toggleDotHintClick = (id: number) => {
-        changeSmartsBuilderHint(id, "show", "toggle")
-    };
-
     const closeDotHintClick = (id: number) => {
         changeSmartsBuilderHint(id, "show", "close")
-        changeSmartsBuilderHint(id, "showBody", "close")
     };
 
     const openDotHintClick = (id: number) => {
         changeSmartsBuilderHint(id, "show", "open")
-        changeSmartsBuilderHint(id, "showBody", "open")
     };
 
     const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {

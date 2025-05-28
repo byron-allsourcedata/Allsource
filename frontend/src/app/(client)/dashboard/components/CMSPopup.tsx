@@ -25,6 +25,7 @@ import {
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useHints } from "@/context/HintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
+import { useRef } from "react";
 
 interface HintCardInterface {
   description: string;
@@ -136,6 +137,10 @@ interface PopupProps {
 const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
   const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
     useHints();
+
+  const shopifyRef = useRef<HTMLDivElement | null>(null);
+  const wordpressRef = useRef<HTMLDivElement | null>(null);
+  const bigcommerceRef = useRef<HTMLDivElement | null>(null);
   const [showHint, setShowHint] = useState(true);
   const [selectedCMS, setSelectedCMS] = useState<string | null>(null);
   const [headerTitle, setHeaderTitle] = useState<string>("Install on CMS");
@@ -159,7 +164,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
         try {
           const parsed = JSON.parse(savedMe);
           return parsed.source_platform || "";
-        } catch (error) {}
+        } catch (error) { }
       }
     }
     return "";
@@ -182,7 +187,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
             setAccessTokenExists(true);
           }
         }
-      } catch (error) {}
+      } catch (error) { }
       try {
         const response_big_commerce = await axiosInstance.get(
           "/integrations/credentials/bigcommerce"
@@ -193,7 +198,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
             setAccessTokenExists(true);
           }
         }
-      } catch (error) {}
+      } catch (error) { }
 
       if (sourcePlatform === "shopify") {
         setSelectedCMS("Shopify");
@@ -225,10 +230,24 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
     setStoreHashError(!!value);
   };
 
+  const cmsRefMap: Record<string, React.RefObject<HTMLDivElement>> = {
+    Shopify: shopifyRef,
+    WordPress: wordpressRef,
+    Bigcommerce: bigcommerceRef,
+  };
+
+  const scrollToRef = (ref: React.RefObject<HTMLElement>) => {
+    ref.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
   const handleButtonClick = async (cms: string) => {
     setSelectedCMS(cms);
     setShowHint(false);
     setHeaderTitle(`Install with ${cms}`);
+    const targetRef = cmsRefMap[cms];
+    if (targetRef) {
+      setTimeout(() => scrollToRef(targetRef), 100);
+    }
   };
 
   const handleBackClick = () => {
@@ -312,7 +331,8 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
         url +
         (hasQuery ? "&" : "?") +
         "mff=true" +
-        "&api=https://api-dev.maximiz.ai";
+        `&api=${process.env.NEXT_PUBLIC_API_DOMAIN}` +
+        `&domain_url=${process.env.NEXT_PUBLIC_API_DASHBOARD_URL}`;
       window.open(newUrl, "_blank");
     }
   };
@@ -339,50 +359,50 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
         "Enter your Shopify store domain in the provided field. We've prefilled it based on your earlier selection, but you can choose a different one if needed. Note: if you change the domain here, make sure to also update it in the domain selection step.",
       title: "Enter Shop Domain",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify#_Pre-Integration_Requirements",
     },
     {
       description:
         "Enter your Shopify API access token. This token is required for secure communication between your store and our application. You can get the token in your Shopify admin under “Settings” → “Apps and sales channels” → “Develop app” → “Admin API”.",
       title: "Enter a Shopify Access Token",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify#Step_4_Insert_this_token_in_the_access_token_field",
     },
     {
       description: `Click the "Install" button, and we’ll automatically inject our script into your Shopify store. No further action is needed — the setup completes automatically.`,
       title: "Install the Script",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-shopify#Step_4_Insert_this_token_in_the_access_token_field",
     },
     {
       description: `Add our official Allsource Pixel plugin to your WordPress site. This allows for seamless pixel integration without manual setup.`,
       title: "Install the Plugin",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress#Method_1_Install_by_Downloading_the_Plugin",
     },
     {
       description: `Enter your Site ID during the checkout process. This connects your site to Allsource for accurate event tracking.`,
       title: "Enter Your Site ID",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress#WordPress_Integration_Guide",
     },
     {
       description: `Check if Allsource is receiving data from your site. If everything is set up correctly, events will start appearing automatically.`,
       title: "Verify Connection",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/verify-pixel",
     },
     {
       description: `Enter your unique BigCommerce Store Hash in the designated field. This helps our system identify your store. You can find the Store Hash in your admin panel URL — it's the part between /stores/ and /manage.`,
       title: "Enter Store Hash",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-bigcommerce#Step_1_Enter_Your_BigCommerce_Store_Hash",
     },
     {
       description: `Once you’ve submitted the required information, click “Install”. We’ll automatically add our script to your BigCommerce store. No further action is needed on your part.`,
       title: "Script Installation",
       linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-wordpress",
+        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-bigcommerce#Step_2_Install_the_Script_Automatically",
     },
   ];
 
@@ -622,6 +642,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
               {selectedCMS === "Shopify" ? (
                 <>
                   <Box
+                    ref={shopifyRef}
                     sx={{
                       flex: 1,
                       paddingBottom: "1em",
@@ -676,11 +697,11 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                               ? shop_domain.replace(/^https?:\/\//, "")
                               : ""
                             : shop_domain
-                            ? `https://${shop_domain.replace(
+                              ? `https://${shop_domain.replace(
                                 /^https?:\/\//,
                                 ""
                               )}`
-                            : "https://"
+                              : "https://"
                         }
                         sx={styles.formField}
                         onFocus={handleFocus}
@@ -869,6 +890,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
               ) : selectedCMS === "WordPress" ? (
                 <>
                   <Box
+                    ref={wordpressRef}
                     sx={{
                       flex: 1,
                       overflowY: "auto",
@@ -1107,6 +1129,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
               ) : (
                 <>
                   <Box
+                    ref={bigcommerceRef}
                     sx={{
                       flex: 1,
                       overflowY: "auto",
@@ -1117,30 +1140,30 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                   >
                     {(sourcePlatform !== "big_commerce" ||
                       !accessTokenExists) && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          padding: 0,
-                          justifyContent: "start",
-                        }}
-                      >
-                        <Image src="/2.svg" alt="2" width={20} height={20} />
-                        <Typography
-                          className="first-sub-title"
+                        <Box
                           sx={{
-                            ...maintext,
-                            textAlign: "left",
-                            padding: "1em 0em 1em 1em",
-                            fontWeight: "500",
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            padding: 0,
+                            justifyContent: "start",
                           }}
                         >
-                          Enter your Bigcommerce store hash in the designated
-                          field. This allows our system to identify your store.
-                        </Typography>
-                      </Box>
-                    )}
+                          <Image src="/2.svg" alt="2" width={20} height={20} />
+                          <Typography
+                            className="first-sub-title"
+                            sx={{
+                              ...maintext,
+                              textAlign: "left",
+                              padding: "1em 0em 1em 1em",
+                              fontWeight: "500",
+                            }}
+                          >
+                            Enter your Bigcommerce store hash in the designated
+                            field. This allows our system to identify your store.
+                          </Typography>
+                        </Box>
+                      )}
 
                     <Box
                       component="pre"
@@ -1188,32 +1211,32 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                     </Box>
                     {(sourcePlatform !== "big_commerce" ||
                       !accessTokenExists) && (
-                      <Box
-                        sx={{
-                          display: "flex",
-                          flexDirection: "row",
-                          alignItems: "center",
-                          justifyContent: "start",
-                        }}
-                      >
-                        <Image src="/3.svg" alt="3" width={20} height={20} />
-                        <Typography
-                          className="first-sub-title"
+                        <Box
                           sx={{
-                            ...maintext,
-                            textAlign: "left",
-                            padding: "2em 1em 1em",
-                            fontWeight: "500",
-                            "@media (max-width: 600px)": { padding: "1em" },
+                            display: "flex",
+                            flexDirection: "row",
+                            alignItems: "center",
+                            justifyContent: "start",
                           }}
                         >
-                          Once you have submitted the required information, our
-                          system will automatically install the script on your
-                          Bigcommerce store. You don’t need to take any further
-                          action.
-                        </Typography>
-                      </Box>
-                    )}
+                          <Image src="/3.svg" alt="3" width={20} height={20} />
+                          <Typography
+                            className="first-sub-title"
+                            sx={{
+                              ...maintext,
+                              textAlign: "left",
+                              padding: "2em 1em 1em",
+                              fontWeight: "500",
+                              "@media (max-width: 600px)": { padding: "1em" },
+                            }}
+                          >
+                            Once you have submitted the required information, our
+                            system will automatically install the script on your
+                            Bigcommerce store. You don’t need to take any further
+                            action.
+                          </Typography>
+                        </Box>
+                      )}
                     <Box
                       sx={{
                         display: "flex",
@@ -1225,7 +1248,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                       }}
                     >
                       {sourcePlatform === "big_commerce" &&
-                      accessTokenExists ? (
+                        accessTokenExists ? (
                         <Typography
                           sx={{
                             color: "#333",

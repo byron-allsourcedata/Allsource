@@ -17,6 +17,7 @@ export interface HeaderProps {
 
 export interface InfoNotificationProps {
   Text: string;
+  sx?: SxProps<Theme>;
   closeFunc?: () => void;
 }
 
@@ -39,14 +40,16 @@ export interface TimeScreenProps {
   ContentStyleSX?: SxProps<Theme>;
   WarningNotification?: NotificationWarningProps;
   LeftMenu?: LeftMenuProps;
+  MainBoxStyleSX?: SxProps<Theme>;
 }
 
 export interface FeatureCardProps {
   title: string;
   subtitle: string;
   imageSrc: string;
-  onClick: () => void;
+  onClick?: () => void;
   showRecommended?: boolean;
+  showInstalled?: boolean;
   img_height?: number;
 }
 

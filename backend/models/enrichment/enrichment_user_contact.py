@@ -40,7 +40,7 @@ class EnrichmentUserContact(Base):
     email = Column(TEXT, nullable=True)
     
     __table_args__ = (
-        Index("ix_enrichment_users_contacts_asid", asid),
+        Index("ix_enrichment_users_contacts_asid", asid, unique=True),
     )
 
     @classmethod
