@@ -5,8 +5,8 @@ import { BuilderKey, TableKey, CreatedKey } from './hintsCardsContent';
 
 interface HintsContextType {
   changeSmartsBuilderHint: (key: BuilderKey, hintKey: HintKey, action: HintAction) => void
-  changeSmartsTableHint: (key: BuilderKey, hintKey: HintKey, action: HintAction) => void
-  changeCreatedSmartHint: (key: BuilderKey, hintKey: HintKey, action: HintAction) => void
+  changeSmartsTableHint: (key: TableKey, hintKey: HintKey, action: HintAction) => void
+  changeCreatedSmartHint: (key: CreatedKey, hintKey: HintKey, action: HintAction) => void
   smartsBuilderHints: HintStateMap<BuilderKey>
   smartsTableHints: HintStateMap<TableKey>
   createdSmartsHints: HintStateMap<CreatedKey>

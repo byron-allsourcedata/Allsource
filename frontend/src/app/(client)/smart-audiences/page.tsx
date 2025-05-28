@@ -1142,19 +1142,19 @@ const SmartAudiences: React.FC = () => {
                     </Button>
                     
                     <HintCard
-                    card={tableHintCards[1]}
+                    card={tableHintCards["builder"]}
                     positionLeft={-420}
                     positionTop={20}
                     rightSide={true}
-                    isOpenBody={smartsTableHints[1].showBody}
+                    isOpenBody={smartsTableHints["builder"].showBody}
                     toggleClick={() => {
-                      if (smartsTableHints[0].showBody) {
-                        changeSmartsTableHint(0, "showBody", "close")
+                      if (smartsTableHints["actions"].showBody) {
+                        changeSmartsTableHint("actions", "showBody", "close")
                       }
-                      changeSmartsTableHint(1, "showBody", "toggle")
+                      changeSmartsTableHint("builder", "showBody", "toggle")
                     }}
                     closeClick={() => {
-                      changeSmartsTableHint(1, "showBody", "close")
+                      changeSmartsTableHint("builder", "showBody", "close")
                     }}
                   />
                     <Button
@@ -1566,19 +1566,19 @@ const SmartAudiences: React.FC = () => {
                                           </Box>
                                           {label === "Actions" && (
                                           <HintCard
-                                            card={tableHintCards[0]}
+                                            card={tableHintCards["actions"]}
                                             positionLeft={-380}
                                             positionTop={100}
                                             rightSide={true}
-                                            isOpenBody={smartsTableHints[0].showBody}
+                                            isOpenBody={smartsTableHints["actions"].showBody}
                                             toggleClick={() => {
-                                              if (smartsTableHints[1].showBody) {
-                                                changeSmartsTableHint(1, "showBody", "close")
+                                              if (smartsTableHints["builder"].showBody) {
+                                                changeSmartsTableHint("builder", "showBody", "close")
                                               }
-                                              changeSmartsTableHint(0, "showBody", "toggle")
+                                              changeSmartsTableHint("actions", "showBody", "toggle")
                                             }}
                                             closeClick={() => {
-                                              changeSmartsTableHint(0, "showBody", "close")
+                                              changeSmartsTableHint("actions", "showBody", "close")
                                             }}
                                           />
                                         )}
