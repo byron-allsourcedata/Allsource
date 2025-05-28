@@ -12,6 +12,7 @@ from models.referral_users import ReferralUser
 from models.teams_invitations import TeamInvitation
 from models.users import Users
 from models.users_domains import UserDomains
+from models.audience_sources import AudienceSource
 
 logger = logging.getLogger(__name__)
 
@@ -385,3 +386,6 @@ class UserPersistence:
             }
             for account in accounts
         ], query.count()
+
+    def has_sources_for_user(self, user_id: int) -> bool:
+        return self.db.query(AudienceSource).filter(AudienceSource.user_id == user_id).first() is not None

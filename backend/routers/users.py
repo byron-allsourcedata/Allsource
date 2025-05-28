@@ -11,7 +11,7 @@ from schemas.auth_google_token import AuthGoogleData
 from schemas.users import UserSignUpForm, UserSignUpFormResponse, UserLoginFormResponse, UserLoginForm, UpdatePassword, \
     ResendVerificationEmailResponse, ResetPasswordForm, ResetPasswordResponse, UpdatePasswordResponse, \
     CheckVerificationStatusResponse, VerifyTokenResponse, DismissNotificationsRequest, DeleteNotificationRequest, \
-    StripeAccountID, StripeConnectResponse
+    StripeAccountID, StripeConnectResponse, GetStartedResponse
 from services.notification import Notification
 from services.users import UsersService
 from services.users_auth import UsersAuth
@@ -24,11 +24,18 @@ router = APIRouter()
 def get_me(user_service: UsersService = Depends(get_users_service)):
     plan = user_service.get_info_plan()
     domains = user_service.get_domains()
-    user_info = user_service.get_my_info()  
+    user_info = user_service.get_my_info()
+
+    is_pixel_installed = any(domain.get("is_pixel_installed") is True for domain in domains)
+    has_source = user_service.check_source_import()
     return {
         "user_info": user_info,
         "user_plan": plan,
-        "user_domains": domains
+        "user_domains": domains,
+        "get_started": {
+            "is_pixel_installed": is_pixel_installed,
+            "is_source_imported": has_source,
+        }
     }
 
 
@@ -129,3 +136,11 @@ async def connect_stripe(connect_account_id: StripeAccountID,
                          user: UsersService = Depends(get_users_service)):
     result_status = user.add_stripe_account(connect_account_id.stripe_connect_account_id)
     return StripeConnectResponse(status=result_status)
+
+
+@router.get("/get-started")
+async def get_started_info(user_service: UsersService = Depends(get_users_service)):
+    domains = user_service.get_domains()
+    is_pixel_installed = any(domain.get("is_pixel_installed") is True for domain in domains)
+    has_source = user_service.check_source_import()
+    return GetStartedResponse(is_pixel_installed=is_pixel_installed, is_source_imported=has_source)
