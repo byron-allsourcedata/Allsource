@@ -57,6 +57,9 @@ import GoogleADSConnectPopup from "@/components/GoogleADSConnectPopup";
 import WebhookConnectPopup from "@/components/WebhookConnectPopup";
 import { useIntegrationContext } from "@/context/IntegrationContext";
 import HubspotDataSync from "./HubspotDataSync";
+import HintCard from "../../components/HintCard";
+import { useDataSyncHints } from "../context/dataSyncHintsContext";
+import { useNotification } from "@/context/NotificationContext";
 
 interface DataSyncProps {
   service_name?: string | null;
@@ -139,6 +142,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
   useEffect(() => {
     handleIntegrationsSync();
+    resetDataSyncHints();
   }, []);
 
   useEffect(() => {
@@ -770,6 +774,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     }
   };
 
+  const { hints, cards, changeDataSyncHint, resetDataSyncHints } = useDataSyncHints();
+  const { hasNotification } = useNotification();
+
   return (
     <>
       {isLoading && <CustomizedProgressBar />}
@@ -777,7 +784,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
         <>
           <Box
             display={"flex"}
-            sx={{ alignItems: "center", mt: 2, mb: "16px" }}
+            sx={{ alignItems: "center", mt: 2, mb: "16px", height: "100%", }}
           >
             <Box
               sx={{
@@ -826,15 +833,40 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           }}
         >
           <TableContainer
-            component={Paper}
             sx={{
-              border: "1px solid rgba(235, 235, 235, 1)",
-              overflowY: "auto",
-              maxHeight: "73vh",
+              height: "70vh",
+              overflowX: "scroll",
+              maxHeight:
+                data.length > 0
+                  ? hasNotification
+                    ? "63vh"
+                    : "70vh"
+                  : "70vh",
+              "@media (max-height: 800px)": {
+                height: "60vh",
+                maxHeight:
+                  data.length > 0
+                    ? hasNotification
+                      ? "53vh"
+                      : "60vh"
+                    : "70vh",
+              },
+              "@media (max-width: 400px)": {
+                height: "50vh",
+                maxHeight:
+                  data.length > 0
+                    ? hasNotification
+                      ? "53vh"
+                      : "50vh"
+                    : "70vh",
+              },
             }}
           >
-            <Table stickyHeader aria-label="datasync table">
-              <TableHead>
+            <Table stickyHeader aria-label="datasync table" component={Paper} sx={{
+              tableLayout: "fixed",
+              border: "1px solid rgba(235, 235, 235, 1)",
+            }}>
+              <TableHead sx={{ position: "relative" }}>
                 <TableRow>
                   {[
                     {
@@ -883,6 +915,22 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                         >
                           {label}
                         </Typography>
+                        {key === "action" && (
+                          <HintCard
+                            card={cards.action}
+                            positionLeft={-395}
+                            positionTop={78}
+                            rightSide={true}
+                            isOpenBody={hints.action.showBody}
+                            toggleClick={() => {
+                              changeDataSyncHint("action", "showBody", "toggle")
+                            }
+                            }
+                            closeClick={() =>
+                              changeDataSyncHint("action", "showBody", "close")
+                            }
+                          />
+                        )}
                         {sortable && orderBy === key && (
                           <IconButton size="small" sx={{ ml: 1 }}>
                             {order === "asc" ? (
@@ -1144,24 +1192,53 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                 )}
             </Box>
           </Popover>
-          {totalRows > 10 && (
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                padding: "16px",
-              }}
-            >
-              <CustomTablePagination
-                count={totalRows}
-                page={page}
-                rowsPerPage={rowsPerPage}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-                rowsPerPageOptions={rowsPerPageOptions}
-              />
-            </Box>
-          )}
+            {totalRows && totalRows > 10 ? (
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  padding: "24px 0 0",
+                  "@media (max-width: 600px)": {
+                    padding: "12px 0 0",
+                  },
+                }}
+              >
+                <CustomTablePagination
+                  count={totalRows ?? 0}
+                  page={page}
+                  rowsPerPage={rowsPerPage}
+                  onPageChange={handleChangePage}
+                  onRowsPerPageChange={handleChangeRowsPerPage}
+                  rowsPerPageOptions={rowsPerPageOptions}
+                />
+              </Box>
+            ) : (
+              <Box
+                display="flex"
+                justifyContent="flex-end"
+                alignItems="center"
+                sx={{
+                  padding: "16px",
+                  backgroundColor: "#fff",
+                  borderRadius: "4px",
+                  "@media (max-width: 600px)": {
+                    padding: "12px",
+                  },
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontFamily: "Nunito Sans",
+                    fontWeight: "400",
+                    fontSize: "12px",
+                    lineHeight: "16px",
+                    marginRight: "16px",
+                  }}
+                >
+                  {`1 - ${totalRows} of ${totalRows}`}
+                </Typography>
+              </Box>
+            )}
         </Box>
         {klaviyoIconPopupOpen && isEdit === true && (
           <>
