@@ -36,7 +36,7 @@ export interface TimeScreenProps {
   Header?: HeaderProps;
   InfoNotification?: InfoNotificationProps;
   Content?: React.ReactNode | React.ComponentType;
-  HelpCard: DashboardHelpCardProps;
+  HelpCard?: DashboardHelpCardProps;
   ContentStyleSX?: SxProps<Theme>;
   WarningNotification?: NotificationWarningProps;
   LeftMenu?: LeftMenuProps;

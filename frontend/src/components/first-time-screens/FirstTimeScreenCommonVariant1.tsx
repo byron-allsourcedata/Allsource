@@ -19,7 +19,7 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
   Content,
   HelpCard,
   ContentStyleSX,
-  LeftMenu
+  LeftMenu,
   MainBoxStyleSX
 }) => {
   const [bannerVisible, setBannerVisible] = useState(true);
