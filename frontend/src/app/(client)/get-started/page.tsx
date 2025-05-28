@@ -40,6 +40,7 @@ const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other })
 };
 
 const GetStarted: React.FC = () => {
+    const router = useRouter();
     const searchParams = useSearchParams();
     const pixel = searchParams.get("pixel");
     const source = searchParams.get("source");
@@ -78,6 +79,15 @@ const GetStarted: React.FC = () => {
             setTabIndex(2);
         }
     }, [pixel, source])
+
+
+    const handleClick = () => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('pixel', 'true');
+
+        router.replace(`?${params.toString()}`);
+        setTabIndex(1);
+    };
 
     if (loading) {
         return <CustomizedProgressBar />;
@@ -132,7 +142,7 @@ const GetStarted: React.FC = () => {
                             title: 'Install Pixel',
                             subtitle: 'It will automatically collect visitor information from your website.',
                             imageSrc: '/pixel.svg',
-                            onClick: pixelInstalled ? undefined : () => setTabIndex(1),
+                            onClick: pixelInstalled ? undefined : () => handleClick(),
                             showRecommended: false,
                             showInstalled: pixelInstalled,
                             img_height: 120

@@ -4,7 +4,7 @@ import { changeHintState, resetHintsState, HintKey, HintAction, HintStateMap } f
 import { BuilderKey, TableKey, CreatedKey } from './hintsCardsContent';
 
 interface HintsContextType {
-  changeSmartsBuilderHint: (key: BuilderKey, hintKey: HintKey, action: HintAction) => void
+  changeSmartsBuilderHint: (key: BuilderKey, hintKey: HintKey, action: HintAction, syncWithShowBody?: boolean) => void
   changeSmartsTableHint: (key: TableKey, hintKey: HintKey, action: HintAction) => void
   changeCreatedSmartHint: (key: CreatedKey, hintKey: HintKey, action: HintAction) => void
   smartsBuilderHints: HintStateMap<BuilderKey>
@@ -28,8 +28,8 @@ export const SmartsHintsProvider: React.FC<HintsProviderProps>  = ({ children })
 
   return (
     <SmartsHintsContext.Provider value={{ 
-      changeSmartsBuilderHint: (key, hintKey, action) =>
-        changeHintState(key, hintKey, action, setSmartsBuilderHints),
+      changeSmartsBuilderHint: (key, hintKey, action, syncWithShowBody: boolean = true) =>
+        changeHintState(key, hintKey, action, setSmartsBuilderHints, syncWithShowBody),
       resetSmartsBuilderHints: () =>
         resetHintsState(setSmartsBuilderHints, initialSmartsBuilderHints),
       smartsBuilderHints,

@@ -67,6 +67,27 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
   };
 
   useEffect(() => {
+    const handleRedirect = async () => {
+      const query = new URLSearchParams(window.location.search);
+      const authorizationGoogleCode = query.get("code");
+      const googleScope = query.get("scope");
+      if (authorizationGoogleCode && googleScope) {
+        const savedCurrentDomain = sessionStorage.getItem("current_domain");
+        if (savedCurrentDomain) {
+          const matchedDomain = domains.find(
+            (domain) => domain.domain === savedCurrentDomain
+          );
+          if (matchedDomain) {
+            setSelectedDomain(matchedDomain);
+          }
+        }
+      }
+    };
+
+    handleRedirect();
+  }, [domains]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       const saved = loadDomainsFromSession();
 

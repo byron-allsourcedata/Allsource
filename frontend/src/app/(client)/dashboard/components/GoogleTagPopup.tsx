@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { GoogleLogin } from "@react-oauth/google";
 import {
   Box,
   Button,
@@ -63,9 +62,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
           setSession({ token: accessToken });
           fetchAccounts(accessToken);
         } catch (error) {
-        } finally {
-          const newUrl = window.location.pathname;
-          window.history.replaceState({}, document.title, newUrl);
+          console.log(error)
         }
       }
     };
@@ -410,13 +407,17 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
   const exchangeCodeForToken = async (authorizationCode: string) => {
     try {
       const currentUrl = new URL(window.location.href);
-      currentUrl.search = "";
-      const redirectUri = currentUrl.href;
+      const pixel = currentUrl.searchParams.get('pixel');
+      currentUrl.search = '';
+      if (pixel !== null) {
+        currentUrl.searchParams.set('pixel', pixel);
+      }
+      const cleanedUrl = currentUrl.toString();
       const response = await axios.post("https://oauth2.googleapis.com/token", {
         code: authorizationCode,
         client_id: clientId,
         client_secret: clientSecret,
-        redirect_uri: redirectUri,
+        redirect_uri: cleanedUrl,
         grant_type: "authorization_code",
       });
       return response.data;
@@ -433,9 +434,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         "https://www.googleapis.com/auth/tagmanager.publish",
         "https://www.googleapis.com/auth/tagmanager.edit.containerversions",
       ].join(" ");
-      // const currentUrl = new URL(window.location.href);
-      // currentUrl.search = "";
-      const redirectUri = `${baseUrl}/leads`;
+      const currentUrl = new URL(window.location.href);
+      const redirectUri = `${currentUrl}`;
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth
                 ?client_id=${clientId}
                 &redirect_uri=${encodeURIComponent(redirectUri)}
@@ -660,7 +660,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                     },
                   }}
                 >
-                  Select domain
+                  Select Container
                 </InputLabel>
                 <Select
                   value={selectedContainer}
