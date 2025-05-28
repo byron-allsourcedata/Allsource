@@ -175,3 +175,6 @@ class UsersService:
     def add_stripe_account(self, stripe_connected_account_id: str):
         self.user_persistence_service.add_stripe_account(self.user.get('id'), stripe_connected_account_id)
         return 'SUCCESS_CONNECT'
+
+    def check_source_import(self):
+        return self.user_persistence_service.has_sources_for_user(self.user.get('id'))

@@ -21,7 +21,7 @@ import {
   ToggleButton,
 } from "@mui/material";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { sourcesStyles } from "../sourcesStyles";
 import DeleteOutlinedIcon from "@mui/icons-material/DeleteOutlined";
@@ -36,7 +36,10 @@ import ProgressBar from "@/components/ProgressBar";
 import HintCard from "../../components/HintCard";
 import { useSourcesHints } from "../context/SourcesHintsContext";
 import { builderHintCards } from "../context/hintsCardsContent";
+import { fetchUserData } from "@/services/meService";
+import { useSidebar } from "@/context/SidebarContext";
 import { BuilderKey } from '../context/hintsCardsContent';
+
 
 interface Row {
   id: number;
@@ -92,6 +95,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const SourcesImport: React.FC = () => {
   const { changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useSourcesHints();
+  const { setIsGetStartedPage } = useSidebar();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
@@ -125,6 +129,8 @@ const SourcesImport: React.FC = () => {
 
   const searchParams = useSearchParams();
   const typeFromSearchParams = searchParams.get("type");
+  const pathname = usePathname();
+  const isGetStartedPage = pathname.includes("get-started");
 
   const block1Ref = useRef<HTMLDivElement | null>(null);
   const block2Ref = useRef<HTMLDivElement | null>(null);
@@ -455,6 +461,7 @@ const SourcesImport: React.FC = () => {
         }
       );
       if (response.status === 200) {
+        await fetchUserData(setIsGetStartedPage);
         const dataString = encodeURIComponent(JSON.stringify(response.data));
         router.push(`/sources/created-source?data=${dataString}`);
       }
@@ -733,29 +740,31 @@ const SourcesImport: React.FC = () => {
           }}
         >
           <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                marginTop: hasNotification ? "1rem" : 4,
-                flexWrap: "wrap",
-                gap: "15px",
-                "@media (max-width: 900px)": {
-                  marginTop: hasNotification ? "3rem" : "1rem",
-                },
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Typography className="first-sub-title">
-                  Import Source
-                </Typography>
-                <CustomToolTip
-                  title={"Here you can upload new ones to expand your data."}
-                  linkText="Learn more"
-                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
-                />
+            {!isGetStartedPage && (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginTop: hasNotification ? "1rem" : 4,
+                  flexWrap: "wrap",
+                  gap: "15px",
+                  "@media (max-width: 900px)": {
+                    marginTop: hasNotification ? "3rem" : "1rem",
+                  },
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography className="first-sub-title">
+                    Import Source
+                  </Typography>
+                  <CustomToolTip
+                    title={"Here you can upload new ones to expand your data."}
+                    linkText="Learn more"
+                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+                  />
+                </Box>
               </Box>
-            </Box>
+            )}
             <Box
               sx={{
                 flex: 1,

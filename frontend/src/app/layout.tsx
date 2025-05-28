@@ -11,6 +11,7 @@ import { TrialProvider } from '../context/TrialProvider';
 import { HintsProvider } from '../context/HintsContext';
 import { SSEProvider } from '../context/SSEContext';
 import { IntegrationProvider } from "@/context/IntegrationContext";
+import { SidebarProvider } from "@/context/SidebarContext";
 import { usePathname } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -23,11 +24,11 @@ if (!googleClientId) {
 
 const formatPageTitle = (path: string) => {
   return path
-      .replace(/[-_]/g, " ")
-      .split("/")
-      .filter(Boolean)
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+    .replace(/[-_]/g, " ")
+    .split("/")
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 };
 
 
@@ -49,15 +50,17 @@ export default function RootLayout({
       <body className={inter.className}>
         <GoogleOAuthProvider clientId={googleClientId as string}>
           <SSEProvider>
-            <TrialProvider>
-              <HintsProvider>
-                <UserProvider>
+            <SidebarProvider>
+              <TrialProvider>
+                <HintsProvider>
+                  <UserProvider>
                     <IntegrationProvider>
                       {children}
                     </IntegrationProvider>
-                </UserProvider>
-              </HintsProvider>
-            </TrialProvider>
+                  </UserProvider>
+                </HintsProvider>
+              </TrialProvider>
+            </SidebarProvider>
           </SSEProvider>
         </GoogleOAuthProvider>
         <ToastNotificationContainer />

@@ -39,7 +39,8 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InsightsIcon from "@mui/icons-material/Insights";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import FastForward from "@mui/icons-material/FastForward";
-import { display } from "@mui/system";
+import { useSidebar } from "@/context/SidebarContext";
+import { fetchUserData } from "@/services/meService";
 
 const sidebarStyles = {
   container: {
@@ -221,12 +222,14 @@ interface SidebarProps {
   setShowSlider: Dispatch<SetStateAction<boolean>>;
   setLoading: Dispatch<SetStateAction<boolean>>;
   hasNotification: boolean;
+  isGetStartedPage: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   setShowSlider,
   setLoading,
   hasNotification,
+  isGetStartedPage
 }) => {
   const { domains, partner, backButton } = useUser();
   const router = useRouter();
@@ -337,20 +340,21 @@ const Sidebar: React.FC<SidebarProps> = ({
           overflowX: "hidden",
         }}
       >
-        <ListItem
-          button
-          onClick={() => handleNavigation("/get-started")}
-          sx={
-            isActive("/get-started")
-              ? sidebarStyles.activeItem
-              : sidebarStyles.ListItem
-          }
-        >
-          <ListItemIcon sx={sidebarStyles.listItemIcon}>
-            <FastForward />
-          </ListItemIcon>
-          <ListItemText primary="Get Started" />
-        </ListItem>
+        {isGetStartedPage &&
+          <ListItem
+            button
+            onClick={() => handleNavigation("/get-started")}
+            sx={
+              isActive("/get-started")
+                ? sidebarStyles.activeItem
+                : sidebarStyles.ListItem
+            }
+          >
+            <ListItemIcon sx={sidebarStyles.listItemIcon}>
+              <FastForward />
+            </ListItemIcon>
+            <ListItemText primary="Get Started" />
+          </ListItem>}
         {/* Audience-dashboard */}
         <ListItem
           button

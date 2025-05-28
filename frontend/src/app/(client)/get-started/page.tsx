@@ -1,18 +1,13 @@
 "use client";
-import { Box, Typography, Tabs, Tab, Button, Checkbox, Stack } from "@mui/material";
+import { Box, Typography, Stack } from "@mui/material";
 import { Suspense, useEffect, useState } from "react";
-import CustomTooltip from "@/components/customToolTip";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AxiosError } from "axios";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import Image from "next/image";
 import { useNotification } from '../../../context/NotificationContext';
-import { showErrorToast } from "@/components/ToastNotification";
 import GettingStartedSection from '@/components/GettingStartedSection';
 import { SliderProvider } from "@/context/SliderContext";
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircle';
-import FirstTimeScreen from "./FirstTimeScreen";
+import SourcesImport from "@/app/(client)/sources/builder/page";
 import { SourcesHintsProvider } from "../sources/context/SourcesHintsContext";
 import {
     CardsSection,
@@ -48,8 +43,6 @@ const GetStarted: React.FC = () => {
     const searchParams = useSearchParams();
     const pixel = searchParams.get("pixel");
     const source = searchParams.get("source");
-    const { hasNotification } = useNotification();
-    const router = useRouter();
     const [tabIndex, setTabIndex] = useState<number>(0);
     const [pixelInstalled, setPixelInstalled] = useState(false);
     const [sourceImported, setSourceImported] = useState(false);
@@ -61,25 +54,17 @@ const GetStarted: React.FC = () => {
     const [loading, setLoading] = useState(true)
     const [status, setStatus] = useState('');
 
-    const installPixel = () => {
-        router.push('/dashboard');
-    };
 
     const checkPixel = async () => {
         try {
-            const response = await axiosInstance.get('/check-user-authorization');
-            if (response.data.status === "NEED_BOOK_CALL") {
-                sessionStorage?.setItem("is_slider_opened", "true");
-            }
+            const response = await axiosInstance.get('/get-started');
+            const { is_pixel_installed, is_source_imported } = response.data;
+
+            setPixelInstalled(Boolean(is_pixel_installed));
+            setSourceImported(Boolean(is_source_imported));
         }
         catch (error) {
-            if (error instanceof AxiosError && error.response?.status === 403) {
-                if (error.response.data.status === 'PIXEL_INSTALLATION_NEEDED') {
-                    setStatus(error.response.data.status);
-                }
-            } else {
-                showErrorToast(`Error fetching data:${error}`);
-            }
+            console.error(error)
         } finally {
             setLoading(false)
         }
@@ -136,7 +121,7 @@ const GetStarted: React.FC = () => {
                     <Typography className="description">To begin building your audience, you&apos;ll need to provide a data source</Typography>
                 </Box>
             </Box>
-            {status === 'PIXEL_INSTALLATION_NEEDED' && tabIndex === 0 ? (
+            {tabIndex === 0 ? (
                 <FirstTimeScreenCommonVariant1
                     InfoNotification={{
                         Text: 'Ready to begin? Install your website pixel and set up your first source – these foundational steps will activate all key features.',
@@ -194,8 +179,8 @@ const GetStarted: React.FC = () => {
                             <GettingStartedSection />
                         </TabPanel>
                     </Box>
-                    <Box sx={{ width: '100%', display: 'flex', pt: 0, "@media (max-width: 600px)": { pr: '8px' }, alignItems: 'center', justifyContent: 'center' }}>
-                        <Stack flexDirection={"column"} width={"75%"} justifyContent={"center"}>
+                    <Box sx={{ width: '100%', display: 'flex', height: '100%', pt: 0, "@media (max-width: 600px)": { pr: '8px' }, alignItems: 'center', justifyContent: 'center' }}>
+                        <Stack flexDirection={"column"} height={"100%"} width={"75%"} justifyContent={"center"}>
                             {tabIndex === 2 && (
                                 <>
                                     <Box sx={{ gap: 2, display: 'flex', flexDirection: 'column', width: '100%', }}>
@@ -211,7 +196,8 @@ const GetStarted: React.FC = () => {
 
                                     <SourcesHintsProvider>
                                         <Suspense fallback={<ProgressBar />}>
-                                            {/* <SourcesImport hideTitle={true} /> */}
+                                            <SourcesImport />
+
                                         </Suspense>
                                     </SourcesHintsProvider>
                                 </>
