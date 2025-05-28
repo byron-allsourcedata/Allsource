@@ -70,8 +70,9 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
     const handleRedirect = async () => {
       const query = new URLSearchParams(window.location.search);
       const authorizationGoogleCode = query.get("code");
+      const statusIntegrate = query.get("message");
       const googleScope = query.get("scope");
-      if (authorizationGoogleCode && googleScope) {
+      if ((authorizationGoogleCode && googleScope) || statusIntegrate) {
         const savedCurrentDomain = sessionStorage.getItem("current_domain");
         if (savedCurrentDomain) {
           const matchedDomain = domains.find(

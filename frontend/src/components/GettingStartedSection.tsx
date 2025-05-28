@@ -53,8 +53,9 @@ const GettingStartedSection: React.FC = () => {
     const handleRedirect = async () => {
       const query = new URLSearchParams(window.location.search);
       const authorizationGoogleCode = query.get("code");
+      const statusIntegrate = query.get("message");
       const googleScope = query.get("scope");
-      if (authorizationGoogleCode && googleScope) {
+      if ((authorizationGoogleCode && googleScope) || statusIntegrate) {
         let currentDomain = sessionStorage.getItem("current_domain");
         if (currentDomain) {
           setSelectedDomain(currentDomain);
