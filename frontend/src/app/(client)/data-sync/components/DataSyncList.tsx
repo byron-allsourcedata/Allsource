@@ -140,6 +140,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     setOrderBy(property);
   };
 
+  const { hints, cards, changeDataSyncHint, resetDataSyncHints } = useDataSyncHints();
+  const { hasNotification } = useNotification();  
+
   useEffect(() => {
     handleIntegrationsSync();
     resetDataSyncHints();
@@ -773,9 +776,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       setIsLoading(false);
     }
   };
-
-  const { hints, cards, changeDataSyncHint, resetDataSyncHints } = useDataSyncHints();
-  const { hasNotification } = useNotification();
 
   return (
     <>

@@ -9,7 +9,7 @@ export interface HintCardInterface {
   export const dataSyncHintCards: Record<DataSyncKey, HintCardInterface> = {
     action: {
       title: "Action",
-      description: "Use the Actions menu (⋮) to manage your data sync tasks all in one place: download your synced records as a CSV, enable or disable the sync, edit its settings or credentials, and repair the sync if it fails.",
+      description: `description: "Click the Actions menu (⋮) in the rightmost column to open a popup where you can download synced records as a CSV, enable or disable the sync, edit the integration settings (opens the modal with API key and suppression options), or repair a failed sync—all in one place.`,
       linkToLoadMore:
         "https://allsourceio.zohodesk.com/portal/en/kb/articles/search-data-syncs",
     },
