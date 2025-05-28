@@ -151,20 +151,11 @@ const getStatusStyle = (status: string) => {
   }
 };
 
-// { key: 'name', label: 'Smart Audience Name' },
-// { key: 'use_case', label: 'Use Case' },
-// { key: 'validations', label: 'Validations' },
-// { key: 'created_date', label: 'Created', sortable: true },
-// { key: 'number_of_customers', label: 'Total Universe', sortable: true },
-// { key: 'active_segment_records', label: 'Active Segment', sortable: true },
-// { key: 'status', label: 'Status' },
-// { key: 'actions', label: 'Actions' }
-
 const columns = [
   {
     key: "name",
     label: "Smart Audience Name",
-    widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
+    widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
   },
   {
     key: "use_case",
@@ -174,7 +165,7 @@ const columns = [
   {
     key: "validations",
     label: "Validations",
-    widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
+    widths: { width: "11vw", minWidth: "11vw", maxWidth: "11vw" },
   },
   {
     key: "created_date",
@@ -191,18 +182,18 @@ const columns = [
   {
     key: "active_segment_records",
     label: "Active Segment",
-    widths: { width: "125px", minWidth: "125px", maxWidth: "125px" },
+    widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
     sortable: true,
   },
   {
     key: "status",
     label: "Status",
-    widths: { width: "11vw", minWidth: "11vw", maxWidth: "11vw" },
+    widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
   },
   {
     key: "actions",
     label: "Actions",
-    widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
+    widths: { width: "7vw", minWidth: "7vw", maxWidth: "7vw" },
   },
 ];
 
@@ -396,34 +387,6 @@ const SmartAudiences: React.FC = () => {
   const [hasSource, setHasSource] = useState(false);
   const [isPixelInstalledAnywhere, setIsPixelInstalledAnywhere] =
     useState<boolean>(false);
-
-  const cardData: CardData[] = [
-    {
-      title: "Step 1. Select Use Case",
-      description:
-        "Select between digital advertising platforms and direct marketing channels.",
-      icon: "/use-case.svg",
-    },
-    {
-      title: "Step 2. Choose Target Type",
-      description:
-        "Select B2B for business audiences, B2C for consumer targeting, or Both to create parallel segments.",
-      icon: "/target-type.svg",
-    },
-    {
-      title: "Step 3. Audience Refinement",
-      description:
-        "Combine your data sources. Select which source or lookalike to include or exclude.",
-      icon: "/data-source.svg",
-    },
-    {
-      title: "Step 4. Validation*",
-      description:
-        "Before finalizing your audience, verify contact data quality through our validation system.",
-      icon: "/smart-validation.svg",
-      isValidationField: true,
-    },
-  ];
 
   const checkHasSource = async () => {
     const response = await axiosInstance.get(
@@ -1316,7 +1279,6 @@ const SmartAudiences: React.FC = () => {
                         pt: "7px",
                         "@media (max-width: 900px)": {
                           pt: "2px",
-                          pb: "18px",
                         },
                       }}
                     >
@@ -1492,7 +1454,7 @@ const SmartAudiences: React.FC = () => {
                               },
                             }}
                           >
-                              <Table
+                            <Table
                               stickyHeader
                               component={Paper}
                               sx={{ 
@@ -1517,11 +1479,12 @@ const SmartAudiences: React.FC = () => {
                                           }
                                           key={key}
                                           sx={{
+                                            ...widths,
                                             ...smartAudiences.table_column,
                                             ...(key === "name" && {
                                               position: "sticky",
                                               left: 0,
-                                              zIndex: 10,
+                                              zIndex: 98,
                                               top: 0,
                                               boxShadow: isScrolledX
                                                 ? "3px 0px 3px #00000033"
@@ -1538,6 +1501,7 @@ const SmartAudiences: React.FC = () => {
                                             sx={{
                                               display: "flex",
                                               alignItems: "center",
+                                              position: "relative",
                                               justifyContent: "space-between",
                                             }}
                                           >
@@ -1585,49 +1549,6 @@ const SmartAudiences: React.FC = () => {
                                         </TableCell>
                                       )
                                     )}
-                                    {/* {[
-
-                                                                    ].map(({ key, label, sortable = false }) => (
-                                                                        <TableCell
-                                                                            key={key}
-                                                                            sx={{
-                                                                                ...smartAudiences.table_column,
-                                                                                borderBottom: 0,
-                                                                                ...(key === 'name' && {
-                                                                                    position: 'sticky',
-                                                                                    left: 0,
-                                                                                    zIndex: 10,
-                                                                                    top: 0,
-                                                                                    boxShadow: isScrolledX
-                                                                                    ? "3px 0px 3px #00000033"
-                                                                                    : "none",
-                                                                                }),
-                                                                                ...(key === 'average_time_sec' && {
-                                                                                    "::after": { content: 'none' }
-                                                                                })
-                                                                            }}
-
-                                                                            onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                                            style={{ cursor: sortable ? 'pointer' : 'default' }}
-                                                                        >
-                                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between", }}>
-                                                                                <Typography variant="body2" sx={{ ...smartAudiences.table_column, borderRight: '0' }}>{label}</Typography>
-                                                                                {sortable && (
-                                                                                    <IconButton size="small">
-                                                                                        {orderBy === key ? (
-                                                                                            order === 'asc' ? (
-                                                                                                <ArrowUpwardRoundedIcon fontSize="inherit" />
-                                                                                            ) : (
-                                                                                                <ArrowDownwardRoundedIcon fontSize="inherit" />
-                                                                                            )
-                                                                                        ) : (
-                                                                                            <SwapVertIcon fontSize="inherit" />
-                                                                                        )}
-                                                                                    </IconButton>
-                                                                                )}
-                                                                            </Box>
-                                                                        </TableCell>
-                                                                    ))} */}
                                   </TableRow>
                                   <TableRow
                                     sx={{

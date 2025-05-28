@@ -149,10 +149,6 @@ const SourcesImport: React.FC = () => {
       "Please upload a CSV file of users who showed interest in your product or service, such as newsletter subscribers or ebook downloaders.",
   };
 
-  useEffect(() => {
-    console.log(sourcesBuilderHints)
-  }, [sourcesBuilderHints]);
-
   const closeDotHintClick = (key: BuilderKey) => {
     changeSourcesBuilderHint(key, "show", "close")
   };
