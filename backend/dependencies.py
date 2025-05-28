@@ -21,14 +21,13 @@ from config.aws import get_s3_client
 from db_dependencies import get_db
 from enums import DomainStatus, UserAuthorizationStatus, TeamAccessLevel
 from exceptions import InvalidToken
-from models.users import Users as User
 from persistence.audience_dashboard import DashboardAudiencePersistence
 from persistence.audience_settings import AudienceSettingPersistence
 from persistence.audience_insights import AudienceInsightsPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_smarts import AudienceSmartsPersistence
 from persistence.company_persistence import CompanyPersistence
-from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence, AudienceLookalikesPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.referral_user import ReferralUserPersistence
 from persistence.referral_payouts import ReferralPayoutsPersistence
 from persistence.audience_persistence import AudiencePersistence
@@ -36,7 +35,6 @@ from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.million_verifier import MillionVerifierPersistence
 from services.audience_insights import AudienceInsightsService
 from services.companies import CompanyService
-from services.lookalikes import AudienceLookalikesService
 from services.payouts import PayoutsService
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from services.integrations.slack import SlackService
@@ -75,8 +73,6 @@ from services.payments_plans import PaymentsPlans
 from services.pixel_installation import PixelInstallationService
 from services.plans import PlansService
 from services.settings import SettingsService
-from services.similar_audiences import SimilarAudienceService
-from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
 from services.sse_events import SseEventsService
 from services.subscriptions import SubscriptionService
 from services.stripe_service import StripeService, get_stripe_payment_url
@@ -101,14 +97,8 @@ async def verify_signature(request: Request):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Forbidden")
 
 
-def get_audience_sources_persistence(db: Session = Depends(get_db)):
-    return AudienceSourcesPersistence(db)
-
 def get_audience_setting_persistence(db: Session = Depends(get_db)):
     return AudienceSettingPersistence(db)
-
-def get_audience_sources_matched_persons_persistence(db: Session = Depends(get_db)):
-    return AudienceSourcesMatchedPersonsPersistence(db)
 
 
 def get_audience_smarts_persistence(db: Session = Depends(get_db)):
@@ -225,9 +215,8 @@ def get_aws_service(s3_client=Depends(get_s3_client)) -> AWSService:
 
 
 def get_audience_sources_service(
-        audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence),
-        audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence = Depends(
-            get_audience_sources_matched_persons_persistence),
+        audience_sources_persistence: AudienceSourcesPersistence,
+        audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence,
         domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)):
     return AudienceSourceService(audience_sources_persistence=audience_sources_persistence,
                                  domain_persistence=domain_persistence,
@@ -235,9 +224,9 @@ def get_audience_sources_service(
 
 
 def get_audience_smarts_service(
+        audience_sources_persistence: AudienceSourcesPersistence,
         lookalikes_persistence_service: AudienceLookalikesPersistence,
         audience_smarts_persistence: AudienceSmartsPersistence = Depends(get_audience_smarts_persistence),
-        audience_sources_persistence: AudienceSourcesPersistence = Depends(get_audience_sources_persistence),
         audience_settings_persistence: AudienceSettingPersistence = Depends(get_audience_setting_persistence)
 ):
     return AudienceSmartsService(audience_smarts_persistence=audience_smarts_persistence,

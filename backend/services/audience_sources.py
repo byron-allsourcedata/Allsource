@@ -53,7 +53,12 @@ class AudienceSourceMath:
 
 
 class AudienceSourceService:
-    def __init__(self, audience_sources_persistence: AudienceSourcesPersistence, domain_persistence: UserDomainsPersistence, audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence):
+    def __init__(
+        self,
+        audience_sources_persistence: AudienceSourcesPersistence,
+        domain_persistence: UserDomainsPersistence,
+        audience_sources_matched_persons_persistence: AudienceSourcesMatchedPersonsPersistence
+    ):
         self.audience_sources_persistence = audience_sources_persistence
         self.domain_persistence = domain_persistence
         self.audience_sources_matched_persons_persistence = audience_sources_matched_persons_persistence

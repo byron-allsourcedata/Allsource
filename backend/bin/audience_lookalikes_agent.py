@@ -48,7 +48,12 @@ async def send_sse(connection, user_id: int, data: dict):
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")
 
-async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection):
+async def aud_sources_matching(
+    message: IncomingMessage,
+    db_session: Session,
+    connection,
+    insights: InsightsUtils
+):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -89,11 +94,10 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         loop = asyncio.get_running_loop()
         new_insights = await loop.run_in_executor(
             None,
-            InsightsUtils.compute_insights_for_lookalike,
+            insights.compute_insights_for_lookalike,
             lookalike_id,
-            db_session
         )
-        merged = InsightsUtils.merge_insights_json(existing_insights, new_insights)
+        merged = insights.merge_insights_json(existing_insights, new_insights)
 
         db_session.execute(
             update(AudienceLookalikes)
@@ -143,8 +147,15 @@ async def main():
             name=AUDIENCE_LOOKALIKES_MATCHING,
             durable=True,
         )
+        insights = InsightsUtils()
+
         await queue.consume(
-                functools.partial(aud_sources_matching, connection=connection, db_session=db_session)
+                functools.partial(
+                    aud_sources_matching,
+                    connection=connection,
+                    db_session=db_session,
+                    insights=insights
+                )
             )
 
         await asyncio.Future()

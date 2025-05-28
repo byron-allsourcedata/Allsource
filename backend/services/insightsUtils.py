@@ -1,25 +1,37 @@
 import re
-import uuid
 from collections import defaultdict, Counter
 from typing import List, Optional, Dict, Any
+from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Session
 
+from db_dependencies import Db
 from enums import BusinessType
-from models import AudienceSource
-from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
-from models.audience_lookalikes_persons import AudienceLookalikesPerson
-
-from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, \
-    EnrichmentFinancialRecord, EnrichmentLifestyle, EnrichmentVoterRecord, \
-    EnrichmentProfessionalProfile, EnrichmentEmploymentHistory
-
-
+from persistence.audience_lookalike_persons import AudienceLookalikesPersonPersistence
+from persistence.audience_sources import AudienceSourcesPersistence
+from persistence.audience_sources_matched_persons import AudienceSourcesMatchedPersonsPersistence
+from persistence.enrichment.postgres import EnrichmentPostgresPersistence
+from resolver import injectable
 from schemas.insights import InsightsByCategory
 
 
+@injectable
 class InsightsUtils:
+    def __init__(
+        self,
+        db: Db,
+        enrichment: EnrichmentPostgresPersistence,
+        sources: AudienceSourcesPersistence,
+        matched_persons: AudienceSourcesMatchedPersonsPersistence,
+        audience_persons: AudienceLookalikesPersonPersistence
+    ):
+        self.db = db
+        self.sources = sources
+        self.enrichment = enrichment
+        self.matched_persons = matched_persons
+        self.audience_persons = audience_persons
+
+
     @staticmethod
     def bucket_age(age_range: Optional[str]) -> str:
         low = None
@@ -43,8 +55,9 @@ class InsightsUtils:
             return "46-65"
         return "Other"
 
-    @staticmethod
-    def process_insights_for_asids(insights, asids: List[uuid.UUID], db_session: Session, audience_type: BusinessType):
+
+
+    def process_insights_for_asids(self, insights, asids: List[UUID], audience_type: BusinessType):
         is_invalid = lambda val: (
                 val is None
                 or str(val).upper() in ('UNKNOWN', 'U', '2', '', '-')
@@ -58,21 +71,7 @@ class InsightsUtils:
                 "education_level", "children_ages", "pets"
             ]
             personal_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            rows = (
-                db_session.query(
-                    EnrichmentPersonalProfiles.gender,
-                    EnrichmentPersonalProfiles.state_abbr,
-                    EnrichmentPersonalProfiles.religion,
-                    EnrichmentPersonalProfiles.homeowner,
-                    EnrichmentPersonalProfiles.age,
-                    EnrichmentPersonalProfiles.ethnicity,
-                    EnrichmentPersonalProfiles.language_code,
-                    EnrichmentPersonalProfiles.marital_status,
-                    EnrichmentPersonalProfiles.has_children,
-                )
-                .filter(EnrichmentPersonalProfiles.asid.in_(asids))
-                .all()
-            )
+            rows = self.enrichment.personal(asids)
 
             for row in rows:
                 for field, val in zip(personal_fields, row):
@@ -95,22 +94,7 @@ class InsightsUtils:
                 'mail_order_donor'
             ]
             fin_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            rows = db_session.query(
-                EnrichmentFinancialRecord.income_range,
-                EnrichmentFinancialRecord.net_worth,
-                EnrichmentFinancialRecord.credit_rating,
-                EnrichmentFinancialRecord.credit_cards,
-                EnrichmentFinancialRecord.bank_card,
-                EnrichmentFinancialRecord.credit_card_premium,
-                EnrichmentFinancialRecord.credit_card_new_issue,
-                EnrichmentFinancialRecord.credit_lines,
-                EnrichmentFinancialRecord.credit_range_of_new_credit_lines,
-                EnrichmentFinancialRecord.donor,
-                EnrichmentFinancialRecord.investor,
-                EnrichmentFinancialRecord.mail_order_donor,
-            ).filter(
-                EnrichmentFinancialRecord.asid.in_(asids)
-            ).all()
+            rows = self.enrichment.financial(asids)
 
             for row in rows:
                 for field, val in zip(financial_fields, row):
@@ -144,25 +128,7 @@ class InsightsUtils:
                 'beauty_cosmetic_interest'
             ]
             life_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            rows = db_session.query(
-                EnrichmentLifestyle.pets,
-                EnrichmentLifestyle.cooking_enthusiast,
-                EnrichmentLifestyle.travel,
-                EnrichmentLifestyle.mail_order_buyer,
-                EnrichmentLifestyle.online_purchaser,
-                EnrichmentLifestyle.book_reader,
-                EnrichmentLifestyle.health_and_beauty,
-                EnrichmentLifestyle.fitness,
-                EnrichmentLifestyle.outdoor_enthusiast,
-                EnrichmentLifestyle.tech_enthusiast,
-                EnrichmentLifestyle.diy,
-                EnrichmentLifestyle.automotive_buff,
-                EnrichmentLifestyle.smoker,
-                EnrichmentLifestyle.golf_enthusiasts,
-                EnrichmentLifestyle.beauty_cosmetics,
-            ).filter(
-                EnrichmentLifestyle.asid.in_(asids)
-            ).all()
+            rows = self.enrichment.lifestyles(asids)
 
             for row in rows:
                 for field, val in zip(lifestyle_fields, row):
@@ -179,13 +145,7 @@ class InsightsUtils:
             # 6) VOTER
             voter_fields = ['congressional_district', 'voting_propensity', 'political_party']
             voter_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            rows = db_session.query(
-                EnrichmentVoterRecord.congressional_district,
-                EnrichmentVoterRecord.voting_propensity,
-                EnrichmentVoterRecord.party_affiliation,
-            ).filter(
-                EnrichmentVoterRecord.asid.in_(asids)
-            ).all()
+            rows = self.enrichment.voter(asids)
 
             for row in rows:
                 for field, val in zip(voter_fields, row):
@@ -207,20 +167,7 @@ class InsightsUtils:
                 "company_size", "primary_industry", "annual_sales"
             ]
             prof_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            prof_rows = db_session.query(
-                EnrichmentProfessionalProfile.current_job_title,
-                EnrichmentProfessionalProfile.current_company_name,
-                EnrichmentProfessionalProfile.job_start_date,
-                EnrichmentProfessionalProfile.job_duration,
-                EnrichmentProfessionalProfile.job_location,
-                EnrichmentProfessionalProfile.job_level,
-                EnrichmentProfessionalProfile.department,
-                EnrichmentProfessionalProfile.company_size,
-                EnrichmentProfessionalProfile.primary_industry,
-                EnrichmentProfessionalProfile.annual_sales,
-            ).filter(
-                EnrichmentProfessionalProfile.asid.in_(asids)
-            ).all()
+            prof_rows = self.enrichment.professional(asids)
 
             for row in prof_rows:
                 for field, val in zip(prof_fields, row):
@@ -240,17 +187,7 @@ class InsightsUtils:
                 "end_date", "is_current", "location", "job_description"
             ]
             emp_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            emp_rows = db_session.query(
-                EnrichmentEmploymentHistory.job_title,
-                EnrichmentEmploymentHistory.company_name,
-                EnrichmentEmploymentHistory.start_date,
-                EnrichmentEmploymentHistory.end_date,
-                EnrichmentEmploymentHistory.is_current,
-                EnrichmentEmploymentHistory.location,
-                EnrichmentEmploymentHistory.job_description,
-            ).filter(
-                EnrichmentEmploymentHistory.asid.in_(asids)
-            ).all()
+            emp_rows = self.enrichment.employment(asids)
 
             for row in emp_rows:
                 for field, val in zip(emp_fields, row):
@@ -266,48 +203,33 @@ class InsightsUtils:
 
         return insights
 
-    @staticmethod
+
     def process_insights(
-        source_id: str,
-        db_session: Session,
+        self,
+        source_id: UUID,
         audience_type: BusinessType = BusinessType.ALL,
     ) -> "InsightsByCategory":
-        db_session.commit()
-        with db_session.begin():
+        self.db.commit()
+        with self.db.begin():
             try:
-                source_row = (
-                    db_session.query(AudienceSource)
-                    .filter(AudienceSource.id == source_id)
-                    .with_for_update()
-                    .one()
-                )
+                source_row = self.sources.get_by_id_for_update(source_id)
             except NoResultFound:
                 source_row.matched_records_status = "complete"
                 return InsightsByCategory()
 
-            user_ids = [
-                uid for (uid,) in db_session
-                .query(AudienceSourcesMatchedPerson.enrichment_user_id)
-                .filter(AudienceSourcesMatchedPerson.source_id == source_id)
-                .all()
-            ]
+            user_ids = [uid for (uid,) in self.matched_persons.by_source_id(source_id)]
             if not user_ids:
                 source_row.matched_records_status = "complete"
                 return InsightsByCategory()
 
-            asids = [
-                asid for (asid,) in db_session
-                .query(EnrichmentUser.asid)
-                .filter(EnrichmentUser.id.in_(user_ids))
-                .all()
-            ]
+            asids = [asid for (asid,) in self.enrichment.users(user_ids)]
             if not asids:
                 source_row.matched_records_status = "complete"
                 return InsightsByCategory()
 
             new_insights = InsightsByCategory()
-            new_insights = InsightsUtils.process_insights_for_asids(
-                new_insights, asids, db_session, audience_type
+            new_insights = self.process_insights_for_asids(
+                new_insights, asids, audience_type
             )
 
             merged = InsightsUtils.merge_insights_json(
@@ -318,29 +240,19 @@ class InsightsUtils:
             source_row.matched_records_status = "complete"
         return new_insights
 
-    @staticmethod
+
     def compute_insights_for_lookalike(
-            lookalike_id: uuid.UUID,
-            db_session: Session
+        self,
+        lookalike_id: UUID,
     ) -> InsightsByCategory:
         insights = InsightsByCategory()
-        user_ids = [
-            uid for (uid,) in db_session
-            .query(AudienceLookalikesPerson.enrichment_user_id)
-            .filter(AudienceLookalikesPerson.lookalike_id == lookalike_id)
-            .all()
-        ]
+        user_ids = [uid for (uid,) in self.audience_persons.by_lookalike_id(lookalike_id)]
         if not user_ids:
             return insights
 
-        asids = [
-            asid for (asid,) in db_session
-            .query(EnrichmentUser.asid)
-            .filter(EnrichmentUser.id.in_(user_ids))
-            .all()
-        ]
+        asids = [asid for (asid,) in self.enrichment.users(user_ids) ]
 
-        return InsightsUtils.process_insights_for_asids(insights, asids, db_session, audience_type=BusinessType.ALL)
+        return self.process_insights_for_asids(insights, asids, audience_type=BusinessType.ALL)
 
     @staticmethod
     def merge_insights_json(

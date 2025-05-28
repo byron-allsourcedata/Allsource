@@ -9,18 +9,19 @@ from uuid import UUID
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Union, Optional, Any, Dict, Tuple
+from typing import List, Union, Optional, Tuple
 import boto3
 from sqlalchemy import update, func
 from aio_pika import IncomingMessage, Connection
-from sqlalchemy import create_engine
-from dataclasses import asdict
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session
 from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
+from db_dependencies import Db
+from resolver import Resolver
 
 from models import EnrichmentUserContact
 from services.insightsUtils import InsightsUtils
@@ -30,8 +31,7 @@ from models.five_x_five_users import FiveXFiveUser
 from enums import TypeOfCustomer, EmailType, BusinessType
 from utils import get_utc_aware_date
 from models.leads_visits import LeadsVisits
-from models.enrichment import EnrichmentUsersEmails, EnrichmentUser, EnrichmentFinancialRecord, EnrichmentLifestyle, \
-    EnrichmentVoterRecord, EnrichmentPersonalProfiles, EnrichmentEmploymentHistory, EnrichmentProfessionalProfile
+from models.enrichment import EnrichmentUsersEmails, EnrichmentUser, EnrichmentProfessionalProfile
 from models.enrichment.enrichment_emails import EnrichmentEmails
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import PersonEntry, MessageBody, DataBodyNormalize, PersonRow, DataForNormalize, DataBodyFromSource
@@ -804,7 +804,14 @@ def calculate_and_save_significant_fields(db_session: Session, source_id: UUID, 
             )
         )
 
-async def aud_sources_matching(message: IncomingMessage, db_session: Session, connection: Connection, similar_audience_service: SimilarAudienceService, audience_lookalikes_service: AudienceLookalikesService):
+async def aud_sources_matching(
+    message: IncomingMessage,
+    db_session: Session,
+    connection: Connection,
+    similar_audience_service: SimilarAudienceService,
+    audience_lookalikes_service: AudienceLookalikesService,
+    insights: InsightsUtils
+):
     try:
         message_body_dict = json.loads(message.body)
         message_body = MessageBody(**message_body_dict)
@@ -886,7 +893,7 @@ async def aud_sources_matching(message: IncomingMessage, db_session: Session, co
         ).fetchone()
         logging.info(f"Updated processed and matched records for source_id {source_id}.")
         if processed_records >= total_records:
-            InsightsUtils.process_insights(source_id=source_id, db_session=db_session)
+            insights.process_insights(source_id=source_id)
             if type == 'user_ids':
                 calculate_and_save_significant_fields(db_session=db_session, source_id=source_id,
                                                       similar_audience_service=similar_audience_service,
@@ -925,10 +932,6 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
-    db_username = os.getenv('DB_USERNAME')
-    db_password = os.getenv('DB_PASSWORD')
-    db_host = os.getenv('DB_HOST')
-    db_name = os.getenv('DB_NAME')
 
     try:
         logging.info("Starting processing...")
@@ -937,24 +940,30 @@ async def main():
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
 
-        engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}", pool_pre_ping=True
-        )
-        Session = sessionmaker(bind=engine)
-        db_session = Session()
-
         queue = await channel.declare_queue(
             name=AUDIENCE_SOURCES_MATCHING,
             durable=True,
         )
+
+        resolver = Resolver()
+        db_session = await resolver.resolve(Db)
         similar_audience_service = SimilarAudienceService(audience_data_normalization_service=AudienceDataNormalizationService())
         lookalikes_persistence_service = AudienceLookalikesPostgresPersistence(db_session)
         audience_lookalikes_service = AudienceLookalikesService(lookalikes_persistence_service=lookalikes_persistence_service)
+        insights = await resolver.resolve(InsightsUtils)
         await queue.consume(
-            functools.partial(aud_sources_matching, connection=connection, db_session=db_session, similar_audience_service=similar_audience_service, audience_lookalikes_service=audience_lookalikes_service)
+            functools.partial(
+                aud_sources_matching,
+                connection=connection,
+                db_session=db_session,
+                similar_audience_service=similar_audience_service,
+                audience_lookalikes_service=audience_lookalikes_service,
+                insights=insights
+            )
         )
 
         await asyncio.Future()
+        await resolver.cleanup()
 
     except Exception:
         logging.error('Unhandled Exception:', exc_info=True)
