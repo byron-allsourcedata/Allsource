@@ -14,7 +14,8 @@ import { UpgradePlanPopup } from "../../components/UpgradePlanPopup";
 import CloseIcon from "@mui/icons-material/Close";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
-import { showToast } from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import { DeleteOutlinedIcon } from "@/icon";
 
 interface Domain {
   id: number;
@@ -28,7 +29,7 @@ interface Domain {
 interface SimpleDomainSelectorProps {
   domains: Domain[];
   selectedDomain: Domain | null;
-  onChange: (domain: Domain) => void;
+  onChange: (domain: Domain | null) => void;
 }
 
 interface AddDomainProps {
@@ -248,6 +249,26 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
     sessionStorage.setItem("current_domain", domain.domain);
     handleClose();
   };
+  const handleDelete = async (toDelete: Domain) => {
+    try {
+      await axiosInstance.delete(`/domains/${toDelete.id}`);
+      const updated = localDomains.filter((d) => d.id !== toDelete.id);
+      setLocalDomains(updated);
+      const meRaw = sessionStorage.getItem("me");
+      const me = meRaw ? JSON.parse(meRaw) : {};
+      me.domains = updated;
+      sessionStorage.setItem("me", JSON.stringify(me));
+
+      if (selectedDomain?.id === toDelete.id) {
+        onChange(null);
+      }
+
+      showToast("Domain deleted");
+    } catch (err) {
+      // console.error(err);
+      showErrorToast("Failed to delete domain");
+    }
+  };
 
   return (
     <>
@@ -338,6 +359,21 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
               >
                 {domain.domain.replace("https://", "")}
               </Typography>
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(domain);
+                }}
+                sx={{
+                  ml: 1,
+                  '&:hover': {
+                    color: 'rgba(30, 136, 229, 1)',
+                  },
+                }}
+              >
+                <DeleteOutlinedIcon fontSize="small" />
+              </IconButton>
             </Box>
           </MenuItem>
         ))}

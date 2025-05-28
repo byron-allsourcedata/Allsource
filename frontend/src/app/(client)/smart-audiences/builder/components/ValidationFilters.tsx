@@ -27,12 +27,7 @@ import { useHints } from "@/context/HintsContext";
 import HintCard from "../../../components/HintCard";
 import { builderHintCards } from "../../context/hintsCardsContent";
 import { useSmartsHints } from "../../context/SmartsHintsContext";
-
-interface HintCardInterface {
-  description: string;
-  title: string;
-  linkToLoadMore: string;
-}
+import { BuilderKey } from '../../context/hintsCardsContent';
 
 interface ExpandableFilterProps {
   block8Ref: React.RefObject<HTMLDivElement>;
@@ -144,16 +139,16 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
     }
   };
 
-  const toggleDotHintClick = (id: number) => {
-    changeSmartsBuilderHint(id, "showBody", "toggle")
+  const toggleDotHintClick = (key: BuilderKey) => {
+    changeSmartsBuilderHint(key, "showBody", "toggle")
   };
 
-  const closeDotHintClick = (id: number) => {
-    changeSmartsBuilderHint(id, "show", "close")
+  const closeDotHintClick = (key: BuilderKey) => {
+    changeSmartsBuilderHint(key, "show", "close")
   };
 
-  const openDotHintClick = (id: number) => {
-    changeSmartsBuilderHint(id, "show", "open")
+  const openDotHintClick = (key: BuilderKey) => {
+    changeSmartsBuilderHint(key, "show", "open")
   };
 
   const getEstimatePredictable = async (validations: string[]) => {
@@ -457,18 +452,18 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 
               {
               <HintCard
-                  card={builderHintCards[7]}
+                  card={builderHintCards["validation"]}
                   positionLeft={-325}
                   positionTop={90}
                   rightSide={true}
-                  isOpenBody={smartsBuilderHints[7].showBody}
+                  isOpenBody={smartsBuilderHints["validation"].showBody}
                   toggleClick={() => {
-                    if (smartsBuilderHints[8].showBody) {
-                      closeDotHintClick(8)
+                    if (smartsBuilderHints["skipValidation"].showBody) {
+                      closeDotHintClick("skipValidation")
                     }
-                    toggleDotHintClick(7)
+                    toggleDotHintClick("validation")
                   }}
-                  closeClick={() => closeDotHintClick(7)}
+                  closeClick={() => closeDotHintClick("validation")}
               />
               } 
             </Box>
@@ -1594,18 +1589,18 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 
                 {
                   <HintCard
-                      card={builderHintCards[8]}
+                      card={builderHintCards["skipValidation"]}
                       positionLeft={-420}
                       positionTop={20}
                       rightSide={true}
-                      isOpenBody={smartsBuilderHints[8].showBody}
+                      isOpenBody={smartsBuilderHints["skipValidation"].showBody}
                       toggleClick={() => {
-                        if (smartsBuilderHints[7].showBody) {
-                          closeDotHintClick(7)
+                        if (smartsBuilderHints["validation"].showBody) {
+                          closeDotHintClick("validation")
                         }
-                        toggleDotHintClick(8)
+                        toggleDotHintClick("skipValidation")
                       }}
-                      closeClick={() => closeDotHintClick(8)}
+                      closeClick={() => closeDotHintClick("skipValidation")}
                   />
                 }
                   </Box>
@@ -1651,9 +1646,9 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
               onClick={() => {
                 handleValidate()
                 scrollToNewBlock()
-                closeDotHintClick(7)
-                closeDotHintClick(8)
-                openDotHintClick(9)
+                closeDotHintClick("validation")
+                closeDotHintClick("skipValidation")
+                openDotHintClick("generateActiveSegment")
               }}
               sx={{
                 ...smartAudiences.buttonform,

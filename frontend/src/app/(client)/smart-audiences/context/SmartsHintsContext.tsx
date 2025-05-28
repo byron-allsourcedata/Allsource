@@ -1,14 +1,15 @@
 import React, { createContext, useState, ReactNode, useContext } from 'react';
 import { initialSmartsBuilderHints, initialSmartsTableHints, initialCreatedSmartHints } from './hintsInitialState';
-import { changeHintState, resetHintsState, StateHint, HintKey, HintAction } from '@/utils/hintsUtils';
+import { changeHintState, resetHintsState, HintKey, HintAction, HintStateMap } from '@/utils/hintsUtils';
+import { BuilderKey, TableKey, CreatedKey } from './hintsCardsContent';
 
 interface HintsContextType {
-  changeSmartsBuilderHint: (id: number, key: HintKey, action: HintAction) => void
-  changeSmartsTableHint: (id: number, key: HintKey, action: HintAction) => void
-  changeCreatedSmartHint: (id: number, key: HintKey, action: HintAction) => void
-  smartsBuilderHints: StateHint[]
-  smartsTableHints: StateHint[]
-  createdSmartsHints: StateHint[]
+  changeSmartsBuilderHint: (key: BuilderKey, hintKey: HintKey, action: HintAction) => void
+  changeSmartsTableHint: (key: TableKey, hintKey: HintKey, action: HintAction) => void
+  changeCreatedSmartHint: (key: CreatedKey, hintKey: HintKey, action: HintAction) => void
+  smartsBuilderHints: HintStateMap<BuilderKey>
+  smartsTableHints: HintStateMap<TableKey>
+  createdSmartsHints: HintStateMap<CreatedKey>
   resetSmartsBuilderHints: () => void
   resetSmartsTableHints: () => void
   resetCreatedSmartHints: () => void
@@ -21,24 +22,24 @@ interface HintsProviderProps {
 const SmartsHintsContext = createContext<HintsContextType | undefined>(undefined);
 
 export const SmartsHintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
-  const [smartsBuilderHints, setSmartsBuilderHints] = useState<StateHint[]>(initialSmartsBuilderHints);
-  const [smartsTableHints, setSmartsTableHints] = useState<StateHint[]>(initialSmartsTableHints);
-  const [createdSmartsHints, setCreatedSmartHints] = useState<StateHint[]>(initialCreatedSmartHints);
+  const [smartsBuilderHints, setSmartsBuilderHints] = useState<HintStateMap<BuilderKey>>(initialSmartsBuilderHints);
+  const [smartsTableHints, setSmartsTableHints] = useState<HintStateMap<TableKey>>(initialSmartsTableHints);
+  const [createdSmartsHints, setCreatedSmartHints] = useState<HintStateMap<CreatedKey>>(initialCreatedSmartHints);
 
   return (
     <SmartsHintsContext.Provider value={{ 
-      changeSmartsBuilderHint: (id, key, action) =>
-        changeHintState(id, key, action, setSmartsBuilderHints),
+      changeSmartsBuilderHint: (key, hintKey, action) =>
+        changeHintState(key, hintKey, action, setSmartsBuilderHints),
       resetSmartsBuilderHints: () =>
         resetHintsState(setSmartsBuilderHints, initialSmartsBuilderHints),
       smartsBuilderHints,
-      changeSmartsTableHint: (id, key, action) =>
-        changeHintState(id, key, action, setSmartsTableHints),
+      changeSmartsTableHint: (key, hintKey, action) =>
+        changeHintState(key, hintKey, action, setSmartsTableHints),
       resetSmartsTableHints: () =>
         resetHintsState(setSmartsTableHints, initialSmartsTableHints),
       smartsTableHints,
-      changeCreatedSmartHint: (id, key, action) =>
-        changeHintState(id, key, action, setCreatedSmartHints),
+      changeCreatedSmartHint: (key, hintKey, action) =>
+        changeHintState(key, hintKey, action, setCreatedSmartHints),
       resetCreatedSmartHints: () =>
         resetHintsState(setCreatedSmartHints, initialCreatedSmartHints),
       createdSmartsHints,

@@ -14,3 +14,6 @@ class EmailFormRequest(BaseModel):
 class ManualFormResponse(BaseModel):
     manual: str = Field(...)
     pixel_client_id: str = Field(...)
+
+class PixelInstallationResponse(BaseModel):
+    pixel_installation: bool

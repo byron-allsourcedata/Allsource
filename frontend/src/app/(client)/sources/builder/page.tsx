@@ -38,6 +38,7 @@ import { useSourcesHints } from "../context/SourcesHintsContext";
 import { builderHintCards } from "../context/hintsCardsContent";
 import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
+import { BuilderKey } from '../context/hintsCardsContent';
 
 
 interface Row {
@@ -154,12 +155,12 @@ const SourcesImport: React.FC = () => {
       "Please upload a CSV file of users who showed interest in your product or service, such as newsletter subscribers or ebook downloaders.",
   };
 
-  const closeDotHintClick = (id: number) => {
-    changeSourcesBuilderHint(id, "show", "close")
+  const closeDotHintClick = (key: BuilderKey) => {
+    changeSourcesBuilderHint(key, "show", "close")
   };
 
-  const openDotHintClick = (id: number) => {
-    changeSourcesBuilderHint(id, "show", "open")
+  const openDotHintClick = (key: BuilderKey) => {
+    changeSourcesBuilderHint(key, "show", "open")
   };
 
   const defaultMapping: Row[] = [
@@ -263,7 +264,7 @@ const SourcesImport: React.FC = () => {
   useEffect(() => {
     setShowTargetStep(true);
     if (typeFromSearchParams) {
-      closeDotHintClick(0);
+      closeDotHintClick("sourceType");
       let newType = "";
       if (typeFromSearchParams === "customer-conversions")
         newType = "Customer Conversions";
@@ -277,9 +278,9 @@ const SourcesImport: React.FC = () => {
         }, 0);
         fetchDomainsAndLeads();
         setSourceMethod(2);
-        openDotHintClick(1);
+        openDotHintClick("pixelDomain");
       } else {
-        openDotHintClick(3);
+        openDotHintClick("sourceFile");
         setMappingRows([...defaultMapping, ...mappingRowsSourceType[newType as keyof InterfaceMappingRowsSourceType]]);
         setSourceMethod(1);
         setTimeout(() => {
@@ -320,12 +321,12 @@ const SourcesImport: React.FC = () => {
     setTargetAudience("");
     setSelectedDomainId(0)
 
-    closeDotHintClick(0);
+    closeDotHintClick("sourceType");
     if (newSourceType === "Website - Pixel") {
       setShowTargetStep(false)
       setSourceMethod(2);
       if (selectedDomain === "") {
-        openDotHintClick(1);
+        openDotHintClick("pixelDomain");
       }
       setTimeout(() => {
         scrollToBlock(block4Ref);
@@ -336,7 +337,7 @@ const SourcesImport: React.FC = () => {
       setShowTargetStep(true)
       setSourceMethod(1);
       if (sourceType === "") {
-        openDotHintClick(3);
+        openDotHintClick("sourceFile");
       }
       setPixelNotInstalled(false);
       setTimeout(() => {
@@ -353,10 +354,10 @@ const SourcesImport: React.FC = () => {
     setTimeout(() => {
       scrollToBlock(block6Ref);
     }, 0);
-    closeDotHintClick(2);
-    closeDotHintClick(5);
+    closeDotHintClick("dataSource");
+    closeDotHintClick("targetType");
     if (targetAudience === "") {
-      openDotHintClick(6);
+      openDotHintClick("name");
     }
   };
 
@@ -621,8 +622,8 @@ const SourcesImport: React.FC = () => {
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
-      closeDotHintClick(3)
-      openDotHintClick(5);
+      closeDotHintClick("sourceFile");
+      openDotHintClick("targetType");
     } catch (error: unknown) {
       if (error instanceof Error) {
         showErrorToast(error.message);
@@ -664,9 +665,9 @@ const SourcesImport: React.FC = () => {
 
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
     const domainName = event.target.value;
-    closeDotHintClick(1);
+    closeDotHintClick("pixelDomain");
     if (selectedDomain === "") {
-      openDotHintClick(2);
+      openDotHintClick("dataSource");
     }
     setSelectedDomain(domainName);
 
@@ -884,13 +885,14 @@ const SourcesImport: React.FC = () => {
                         Interest (CSV)
                       </MenuItem>
                     </Select>
-                    {sourcesBuilderHints[0].show && (
+                    {sourcesBuilderHints["sourceType"].show && (
                       <HintCard
-                        card={builderHintCards[0]}
+                        card={builderHintCards["sourceType"]}
                         positionLeft={340}
-                        isOpenBody={sourcesBuilderHints[0].showBody}
-                        toggleClick={() => changeSourcesBuilderHint(0, "showBody", "toggle")}
-                        closeClick={() => changeSourcesBuilderHint(0, "showBody", "close")}
+                        isOpenBody={sourcesBuilderHints["sourceType"].showBody}
+                        toggleClick={() => changeSourcesBuilderHint("sourceType", "showBody", "toggle")}
+                        closeClick={() => changeSourcesBuilderHint("sourceType", "showBody", "close")}
+                      
                       />
                     )}
                   </FormControl>
@@ -1116,14 +1118,14 @@ const SourcesImport: React.FC = () => {
                     </Typography>
                   )}
 
-                  {sourcesBuilderHints[3].show && (
+                  {sourcesBuilderHints["sourceFile"].show && (
                     <HintCard
-                      card={builderHintCards[3]}
+                      card={builderHintCards["sourceFile"]}
                       positionLeft={360}
                       positionTop={100}
-                      isOpenBody={sourcesBuilderHints[3].showBody}
-                      toggleClick={() => changeSourcesBuilderHint(3, "showBody", "toggle")}
-                      closeClick={() => changeSourcesBuilderHint(3, "showBody", "close")}
+                      isOpenBody={sourcesBuilderHints["sourceFile"].showBody}
+                      toggleClick={() => changeSourcesBuilderHint("sourceFile", "showBody", "toggle")}
+                      closeClick={() => changeSourcesBuilderHint("sourceFile", "showBody", "close")}
                     />
                   )}
                 </Box>
@@ -1398,13 +1400,13 @@ const SourcesImport: React.FC = () => {
                         </Typography>
                       </Box>
                     )}
-                    {sourcesBuilderHints[4].show && (
+                    {sourcesBuilderHints["dataMaping"].show && (
                       <HintCard
-                        card={builderHintCards[4]}
+                        card={builderHintCards["dataMaping"]}
                         positionLeft={460}
-                        isOpenBody={sourcesBuilderHints[4].showBody}
-                        toggleClick={() => changeSourcesBuilderHint(4, "showBody", "toggle")}
-                        closeClick={() => changeSourcesBuilderHint(4, "showBody", "close")}
+                        isOpenBody={sourcesBuilderHints["dataMaping"].showBody}
+                        toggleClick={() => changeSourcesBuilderHint("dataMaping", "showBody", "toggle")}
+                        closeClick={() => changeSourcesBuilderHint("dataMaping", "showBody", "close")}
                       />
                     )}
                   </Box>
@@ -1556,13 +1558,13 @@ const SourcesImport: React.FC = () => {
                         </MenuItem>
                       ))}
                     </Select>
-                    {sourcesBuilderHints[1].show && (
+                    {sourcesBuilderHints["pixelDomain"].show && (
                       <HintCard
-                        card={builderHintCards[1]}
+                        card={builderHintCards["pixelDomain"]}
                         positionLeft={340}
-                        isOpenBody={sourcesBuilderHints[1].showBody}
-                        toggleClick={() => changeSourcesBuilderHint(1, "showBody", "toggle")}
-                        closeClick={() => changeSourcesBuilderHint(1, "showBody", "close")}
+                        isOpenBody={sourcesBuilderHints["pixelDomain"].showBody}
+                        toggleClick={() => changeSourcesBuilderHint("pixelDomain", "showBody", "toggle")}
+                        closeClick={() => changeSourcesBuilderHint("pixelDomain", "showBody", "close")}
                       />
                     )}
                   </FormControl>
@@ -1700,14 +1702,14 @@ const SourcesImport: React.FC = () => {
                           </Button>
                         );
                       })}
-                      {sourcesBuilderHints[2].show && (
+                      {sourcesBuilderHints["dataSource"].show && (
                         <HintCard
-                          card={builderHintCards[2]}
+                          card={builderHintCards["dataSource"]}
                           positionLeft={650}
                           positionTop={100}
-                          isOpenBody={sourcesBuilderHints[2].showBody}
-                          toggleClick={() => changeSourcesBuilderHint(2, "showBody", "toggle")}
-                          closeClick={() => changeSourcesBuilderHint(2, "showBody", "close")}
+                          isOpenBody={sourcesBuilderHints["dataSource"].showBody}
+                          toggleClick={() => changeSourcesBuilderHint("dataSource", "showBody", "toggle")}
+                          closeClick={() => changeSourcesBuilderHint("dataSource", "showBody", "close")}
                         />
                       )}
                     </Box>
@@ -1744,15 +1746,15 @@ const SourcesImport: React.FC = () => {
                         variant="contained"
                         onClick={() => {
                           setShowTargetStep(true)
-                          closeDotHintClick(2);
-                          openDotHintClick(5);
+                          closeDotHintClick("dataSource");
+                          openDotHintClick("targetType");
                         }}
                         sx={{
                           backgroundColor: "rgba(56, 152, 252, 1)",
                           width: "120px",
                           height: "40px",
                           ":hover": {
-                            backgroundColor: "rgba(62, 64, 142, 1)",
+                            backgroundColor: "rgba(30, 136, 229, 1)",
                           },
                           ":active": {
                             backgroundColor: "rgba(56, 152, 252, 1)",
@@ -1872,13 +1874,13 @@ const SourcesImport: React.FC = () => {
                         {option}
                       </ToggleButton>
                     ))}
-                    {sourcesBuilderHints[5].show && (
+                    {sourcesBuilderHints["targetType"].show && (
                       <HintCard
-                        card={builderHintCards[5]}
+                        card={builderHintCards["targetType"]}
                         positionLeft={140}
-                        isOpenBody={sourcesBuilderHints[5].showBody}
-                        toggleClick={() => changeSourcesBuilderHint(5, "showBody", "toggle")}
-                        closeClick={() => changeSourcesBuilderHint(5, "showBody", "close")}
+                        isOpenBody={sourcesBuilderHints["targetType"].showBody}
+                        toggleClick={() => changeSourcesBuilderHint("targetType", "showBody", "toggle")}
+                        closeClick={() => changeSourcesBuilderHint("targetType", "showBody", "close")}
                       />
                     )}
                   </Box>
@@ -1961,13 +1963,13 @@ const SourcesImport: React.FC = () => {
                           }
                         }}
                       />
-                      {sourcesBuilderHints[6].show && (
+                      {sourcesBuilderHints["name"].show && (
                         <HintCard
-                          card={builderHintCards[6]}
+                          card={builderHintCards["name"]}
                           positionLeft={380}
-                          isOpenBody={sourcesBuilderHints[6].showBody}
-                          toggleClick={() => changeSourcesBuilderHint(6, "showBody", "toggle")}
-                          closeClick={() => changeSourcesBuilderHint(6, "showBody", "close")}
+                          isOpenBody={sourcesBuilderHints["name"].showBody}
+                          toggleClick={() => changeSourcesBuilderHint("name", "showBody", "toggle")}
+                          closeClick={() => changeSourcesBuilderHint("name", "showBody", "close")}
                         />
                       )}
                     </Box>
@@ -1996,7 +1998,7 @@ const SourcesImport: React.FC = () => {
                           width: "92px",
                           height: "40px",
                           ":hover": {
-                            borderColor: "rgba(62, 64, 142, 1)",
+                            borderColor: "rgba(30, 136, 229, 1)",
                           },
                           ":active": {
                             borderColor: "rgba(56, 152, 252, 1)",
@@ -2034,10 +2036,10 @@ const SourcesImport: React.FC = () => {
                           width: "120px",
                           height: "40px",
                           ":hover": {
-                            backgroundColor: "rgba(62, 64, 142, 1)",
+                            backgroundColor: "rgba(30, 136, 229, 1)",
                           },
                           ":active": {
-                            backgroundColor: "rgba(56, 152, 252, 1)",
+                            backgroundColor: "rgba(116, 183, 253, 1)",
                           },
                           ":disabled": {
                             backgroundColor: "rgba(56, 152, 252, 1)",

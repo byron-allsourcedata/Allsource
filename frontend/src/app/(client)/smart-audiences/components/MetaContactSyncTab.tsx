@@ -922,7 +922,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({ setIsLoading, s
                                                 textTransform: 'none',
                                                 padding: '4px 22px',
                                                 ":hover": {
-                                                    backgroundColor: "rgba(62, 64, 142, 1)"},
+                                                    backgroundColor: "rgba(30, 136, 229, 1)"},
                                                 ":active": {
                                                     backgroundColor: "rgba(56, 152, 252, 1)"},
                                                 ":disabled": {

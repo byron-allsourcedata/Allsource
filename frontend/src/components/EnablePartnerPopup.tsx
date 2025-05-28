@@ -245,7 +245,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                     width: "70px",
                     height: "40px",
                     ":hover": {
-                        backgroundColor: "rgba(62, 64, 142, 1)"},
+                        backgroundColor: "rgba(30, 136, 229, 1)"},
                     ":active": {
                         backgroundColor: "rgba(56, 152, 252, 1)"},
                     ":disabled": {
@@ -272,7 +272,7 @@ const EnablePartnerPopup: React.FC<FormUploadPopupProps> = ({ enabledData, open,
                     width: "67px",
                     height: "40px",
                     ":hover": {
-                        borderColor: "rgba(62, 64, 142, 1)"},
+                        borderColor: "rgba(30, 136, 229, 1)"},
                     ":active": {
                         borderColor: "rgba(56, 152, 252, 1)"},
                     ":disabled": {

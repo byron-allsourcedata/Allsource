@@ -148,7 +148,7 @@ const GetStarted: React.FC = () => {
                         },
                     ]} />}
                     MainBoxStyleSX={{ width: '100%' }}
-                    customStyleSX={{
+                    ContentStyleSX={{
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",
@@ -197,6 +197,7 @@ const GetStarted: React.FC = () => {
                                     <SourcesHintsProvider>
                                         <Suspense fallback={<ProgressBar />}>
                                             <SourcesImport />
+
                                         </Suspense>
                                     </SourcesHintsProvider>
                                 </>
