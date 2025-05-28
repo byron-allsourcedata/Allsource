@@ -39,6 +39,7 @@ import { ResetProvider } from "@/context/ResetContext";
 import HintCard from "../../components/HintCard"; 
 import { useLookalikesHints } from "../context/LookalikesHintsContext"
 import { builderHintCards } from "../context/hintsCardsContent";
+import { BuilderKey } from '../context/hintsCardsContent';
 export const dynamic = 'force-dynamic';
 
 const CreateLookalikePage: React.FC = () => {
@@ -71,20 +72,20 @@ const CreateLookalikePage: React.FC = () => {
     setSelectedSourceId(row.id);
     setSelectSourceData([row]);
     setCurrentStep(1);
-    closeDotHintClick(0)
-    openDotHintClick(1)
+    closeDotHintClick("source")
+    openDotHintClick("size")
   };
 
-  const toggleDotHintClick = (id: number) => {
-    changeLookalikesBuilderHint(id, "show", "toggle")
+  const toggleDotHintClick = (key: BuilderKey) => {
+    changeLookalikesBuilderHint(key, "show", "toggle")
   };
 
-  const closeDotHintClick = (id: number) => {
-    changeLookalikesBuilderHint(id, "show", "close")
+  const closeDotHintClick = (key: BuilderKey) => {
+    changeLookalikesBuilderHint(key, "show", "close")
   };
 
-  const openDotHintClick = (id: number) => {
-    changeLookalikesBuilderHint(id, "show", "open")
+  const openDotHintClick = (key: BuilderKey) => {
+    changeLookalikesBuilderHint(key, "show", "open")
   };
 
   const getFilteredData = (data: any[]) =>
@@ -153,8 +154,8 @@ const CreateLookalikePage: React.FC = () => {
       if (response.data) {
         setCalculatedResults(response.data);
         setCurrentStep(2);
-        closeDotHintClick(1)
-        openDotHintClick(2)
+        closeDotHintClick("size")
+        openDotHintClick("predictable")
       }
     } catch {
       showErrorToast(
@@ -378,14 +379,14 @@ const CreateLookalikePage: React.FC = () => {
                             },
                           }}
                         />
-                        {lookalikesBuilderHints[0].show && (
+                        {lookalikesBuilderHints["source"].show && (
                           <HintCard
-                              card={builderHintCards[0]}
+                              card={builderHintCards["source"]}
                               positionTop={20}
                               positionLeft={200}
-                              isOpenBody={lookalikesBuilderHints[0].showBody}
-                              toggleClick={() => changeLookalikesBuilderHint(0, "showBody", "toggle")}
-                              closeClick={() => changeLookalikesBuilderHint(0, "showBody", "close")}
+                              isOpenBody={lookalikesBuilderHints["source"].showBody}
+                              toggleClick={() => changeLookalikesBuilderHint("source", "showBody", "toggle")}
+                              closeClick={() => changeLookalikesBuilderHint("source", "showBody", "close")}
                           />
                         )}
                         {isTableVisible && (
@@ -552,9 +553,9 @@ const CreateLookalikePage: React.FC = () => {
                     <AudienceSizeSelector
                       onSelectSize={handleSelectSize}
                       selectedSize={selectedSize}
-                      hintCard={builderHintCards[1]}
-                      toggleDotHintClickBlock1={() => toggleDotHintClick(1)}
-                      isOpenSelect={lookalikesBuilderHints[1].show}
+                      hintCard={builderHintCards["size"]}
+                      toggleDotHintClickBlock1={() => toggleDotHintClick("size")}
+                      isOpenSelect={lookalikesBuilderHints["size"].show}
                     />
                   </Box>
                 )}
@@ -602,12 +603,12 @@ const CreateLookalikePage: React.FC = () => {
                         currentStep={currentStep}
                         handlePrevStep={handlePrevStep}
                         handleNextStep={handleNextStep}
-                        hintCard2={builderHintCards[2]}
-                        hintCard3={builderHintCards[3]}
-                        toggleDotHintClickBlock2={() => toggleDotHintClick(2)}
-                        toggleDotHintClickBlock3={() => toggleDotHintClick(3)}
-                        isOpenSelect2={lookalikesBuilderHints[2].show}
-                        isOpenSelect3={lookalikesBuilderHints[3].show}
+                        hintCard2={builderHintCards["predictable"]}
+                        hintCard3={builderHintCards["order"]}
+                        toggleDotHintClickBlock2={() => toggleDotHintClick("predictable")}
+                        toggleDotHintClickBlock3={() => toggleDotHintClick("order")}
+                        isOpenSelect2={lookalikesBuilderHints["predictable"].show}
+                        isOpenSelect3={lookalikesBuilderHints["order"].show}
                         onFieldsOrderChangeUp={setDndFields}
                       />
                   </Box>

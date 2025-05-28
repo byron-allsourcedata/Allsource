@@ -11,6 +11,7 @@ import { useFetchAudienceData } from "@/hooks/useFetchAudienceData";
 import HintCard from "../../components/HintCard";
 import { useSmartsHints } from "../context/SmartsHintsContext";
 import { builderHintCards } from "../context/hintsCardsContent";
+import { BuilderKey } from '../context/hintsCardsContent';
 
 
 const SmartAudiencesBuilder: React.FC = () => {
@@ -36,27 +37,27 @@ const SmartAudiencesBuilder: React.FC = () => {
             setTimeout(() => {
                 scrollToBlock(block2Ref)
             }, 0)
-            openDotHintClick(1)
+            openDotHintClick("selectContacts1")
         }
         else {
             setTimeout(() => {
                 scrollToBlock(block5Ref)
             }, 0)
-            openDotHintClick(6)
+            openDotHintClick("targetType")
         }
-        closeDotHintClick(0)
+        closeDotHintClick("useCase")
     };
 
     useEffect(() => {
 
       }, []);
 
-    const closeDotHintClick = (id: number) => {
-        changeSmartsBuilderHint(id, "show", "close")
+    const closeDotHintClick = (key: BuilderKey) => {
+        changeSmartsBuilderHint(key, "show", "close")
     };
 
-    const openDotHintClick = (id: number) => {
-        changeSmartsBuilderHint(id, "show", "open")
+    const openDotHintClick = (key: BuilderKey) => {
+        changeSmartsBuilderHint(key, "show", "open")
     };
 
     const scrollToBlock = (blockRef: React.RefObject<HTMLDivElement>) => {
@@ -115,13 +116,13 @@ const SmartAudiencesBuilder: React.FC = () => {
                                     <MenuItem className="second-sub-title" value={"Postal"}>Postal</MenuItem>
                                     <MenuItem className="second-sub-title" value={"LinkedIn"}>LinkedIn</MenuItem>
                                 </Select>
-                                {smartsBuilderHints[0].show &&  (
+                                {smartsBuilderHints["useCase"].show &&  (
                                     <HintCard
-                                        card={builderHintCards[0]}
+                                        card={builderHintCards["useCase"]}
                                         positionLeft={340}
-                                        isOpenBody={smartsBuilderHints[0].showBody}
-                                        toggleClick={() => changeSmartsBuilderHint(0, "showBody", "toggle")}
-                                        closeClick={() => changeSmartsBuilderHint(0, "showBody", "close")}
+                                        isOpenBody={smartsBuilderHints["useCase"].showBody}
+                                        toggleClick={() => changeSmartsBuilderHint("useCase", "showBody", "toggle")}
+                                        closeClick={() => changeSmartsBuilderHint("useCase", "showBody", "close")}
                                     />
                                 )}
                             </FormControl>

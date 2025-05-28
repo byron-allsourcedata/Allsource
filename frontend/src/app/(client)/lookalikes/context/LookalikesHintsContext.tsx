@@ -1,14 +1,15 @@
 import React, { createContext, useState, ReactNode, useContext } from 'react';
 import { initialSourcesBuilderHints, initialSourcesTableHints, initialCreatedSourceHints } from './hintsInitialState';
-import { changeHintState, resetHintsState, StateHint, HintKey, HintAction } from '@/utils/hintsUtils';
+import { changeHintState, resetHintsState, HintKey, HintAction, HintStateMap } from '@/utils/hintsUtils';
+import { BuilderKey, TableKey, CreatedKey } from './hintsCardsContent';
 
 interface HintsContextType {
-  changeLookalikesBuilderHint: (id: number, key: HintKey, action: HintAction) => void
-  changeSourcesTableHint: (id: number, key: HintKey, action: HintAction) => void
-  changeCreatedSourceHint: (id: number, key: HintKey, action: HintAction) => void
-  lookalikesBuilderHints: StateHint[]
-  sourcesTableHints: StateHint[]
-  createdSourceHints: StateHint[]
+  changeLookalikesBuilderHint: (key: BuilderKey, hintKey: HintKey, action: HintAction) => void;
+  changeSourcesTableHint: (key: TableKey, hintKey: HintKey, action: HintAction) => void;
+  changeCreatedSourceHint: (key: CreatedKey, hintKey: HintKey, action: HintAction) => void;
+  lookalikesBuilderHints: HintStateMap<BuilderKey>
+  sourcesTableHints: HintStateMap<TableKey>
+  createdSourceHints: HintStateMap<CreatedKey>
   resetSourcesBuilderHints: () => void
   resetSourcesTableHints: () => void
   resetCreatedSourceHints: () => void
@@ -21,24 +22,24 @@ interface HintsProviderProps {
 const SourcesHintsContext = createContext<HintsContextType | undefined>(undefined);
 
 export const SourcesHintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
-  const [lookalikesBuilderHints, setSourcesBuilderHints] = useState<StateHint[]>(initialSourcesBuilderHints);
-  const [sourcesTableHints, setSourcesTableHints] = useState<StateHint[]>(initialSourcesTableHints);
-  const [createdSourceHints, setCreatedSourceHints] = useState<StateHint[]>(initialCreatedSourceHints);
+  const [lookalikesBuilderHints, setSourcesBuilderHints] = useState<HintStateMap<BuilderKey>>(initialSourcesBuilderHints);
+  const [sourcesTableHints, setSourcesTableHints] = useState<HintStateMap<TableKey>>(initialSourcesTableHints);
+  const [createdSourceHints, setCreatedSourceHints] = useState<HintStateMap<CreatedKey>>(initialCreatedSourceHints);
 
   return (
     <SourcesHintsContext.Provider value={{ 
-      changeLookalikesBuilderHint: (id, key, action) =>
-        changeHintState(id, key, action, setSourcesBuilderHints),
+      changeLookalikesBuilderHint: (key, hintKey, action) =>
+        changeHintState(key, hintKey, action, setSourcesBuilderHints),
       resetSourcesBuilderHints: () =>
         resetHintsState(setSourcesBuilderHints, initialSourcesBuilderHints),
       lookalikesBuilderHints,
-      changeSourcesTableHint: (id, key, action) =>
-        changeHintState(id, key, action, setSourcesTableHints),
+      changeSourcesTableHint: (key, hintKey, action) =>
+        changeHintState(key, hintKey, action, setSourcesTableHints),
       resetSourcesTableHints: () =>
         resetHintsState(setSourcesTableHints, initialSourcesTableHints),
       sourcesTableHints,
-      changeCreatedSourceHint: (id, key, action) =>
-        changeHintState(id, key, action, setCreatedSourceHints),
+      changeCreatedSourceHint: (key, hintKey, action) =>
+        changeHintState(key, hintKey, action, setCreatedSourceHints),
       resetCreatedSourceHints: () =>
         resetHintsState(setCreatedSourceHints, initialCreatedSourceHints),
       createdSourceHints,

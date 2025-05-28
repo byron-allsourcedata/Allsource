@@ -893,19 +893,19 @@ const Sources: React.FC = () => {
 
 
                   <HintCard
-                    card={tableHintCards[1]}
+                    card={tableHintCards["builder"]}
                     positionLeft={-420}
                     positionTop={20}
                     rightSide={true}
-                    isOpenBody={sourcesTableHints[1].showBody}
+                    isOpenBody={sourcesTableHints["builder"].showBody}
                     toggleClick={() => {
-                      if (sourcesTableHints[0].showBody) {
-                        changeSourcesTableHint(0, "showBody", "close")
+                      if (sourcesTableHints["actions"].showBody) {
+                        changeSourcesTableHint("actions", "showBody", "close")
                       }
-                      changeSourcesTableHint(1, "showBody", "toggle")
+                      changeSourcesTableHint("builder", "showBody", "toggle")
                     }}
                     closeClick={() => {
-                      changeSourcesTableHint(1, "showBody", "close")
+                      changeSourcesTableHint("builder", "showBody", "close")
                     }}
                   />
                 </Box>
@@ -1230,19 +1230,19 @@ const Sources: React.FC = () => {
                                         </Box>
                                         {label === "Actions" && (
                                           <HintCard
-                                            card={tableHintCards[0]}
+                                            card={tableHintCards["actions"]}
                                             positionLeft={-380}
                                             positionTop={100}
                                             rightSide={true}
-                                            isOpenBody={sourcesTableHints[0].showBody}
+                                            isOpenBody={sourcesTableHints["actions"].showBody}
                                             toggleClick={() => {
-                                              if (sourcesTableHints[1].showBody) {
-                                                changeSourcesTableHint(1, "showBody", "close")
+                                              if (sourcesTableHints["builder"].showBody) {
+                                                changeSourcesTableHint("builder", "showBody", "close")
                                               }
-                                              changeSourcesTableHint(0, "showBody", "toggle")
+                                              changeSourcesTableHint("actions", "showBody", "toggle")
                                             }}
                                             closeClick={() => {
-                                              changeSourcesTableHint(0, "showBody", "close")
+                                              changeSourcesTableHint("actions", "showBody", "close")
                                             }}
                                           />
                                         )}

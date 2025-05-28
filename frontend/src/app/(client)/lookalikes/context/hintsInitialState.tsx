@@ -1,24 +1,23 @@
 import { StateHint } from '@/utils/hintsUtils';
+import { BuilderKey, TableKey, CreatedKey } from './hintsCardsContent';
 
-const initialSourcesBuilderHints: StateHint[] = [
-    { show: true, showBody: true, id: 0 },
-    { show: false, showBody: false, id: 1 },
-    { show: false, showBody: false, id: 2 },
-    { show: false, showBody: false, id: 3 },
-    { show: false, showBody: false, id: 4 },
-    { show: false, showBody: false, id: 5 },
-    { show: false, showBody: false, id: 6 },
-  ];
 
-const initialSourcesTableHints: StateHint[] = [
-    { show: true, showBody: true, id: 0 },
-    { show: true, showBody: false, id: 1 },
-];
+const initialSourcesBuilderHints: Record<BuilderKey, StateHint> = {
+    "source": { show: true, showBody: true, id: 0 },
+    "size": { show: false, showBody: false, id: 1 },
+    "predictable": { show: false, showBody: false, id: 2 },
+    "order": { show: false, showBody: false, id: 3 },
+};
 
-const initialCreatedSourceHints: StateHint[] = [
-    { show: true, showBody: true, id: 0 },
-    { show: true, showBody: false, id: 1 },
-    { show: true, showBody: false, id: 2 },
-];
+const initialSourcesTableHints: Record<TableKey, StateHint> = {
+    "actions": { show: true, showBody: true, id: 0 },
+    "builder": { show: true, showBody: false, id: 1 },
+};
+
+const initialCreatedSourceHints: Record<CreatedKey, StateHint> = {
+    "actions": { show: true, showBody: true, id: 0 },
+    "lookalike": { show: true, showBody: false, id: 1 },
+    "builder": { show: true, showBody: false, id: 2 },
+};
 
 export { initialSourcesBuilderHints, initialSourcesTableHints, initialCreatedSourceHints };

@@ -35,6 +35,7 @@ import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import HintCard from "../../../components/HintCard";
 import { builderHintCards } from "../../context/hintsCardsContent";
 import { useSmartsHints } from "../../context/SmartsHintsContext";
+import { BuilderKey } from '../../context/hintsCardsContent';
 
 
 interface SelectedData {
@@ -109,16 +110,16 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
     DataItem[]
   >([]);
 
-  const toggleDotHintClick = (id: number) => {
-    changeSmartsBuilderHint(id, "showBody", "toggle")
+  const toggleDotHintClick = (key: BuilderKey) => {
+    changeSmartsBuilderHint(key, "showBody", "toggle")
   };
 
-  const closeDotHintClick = (id: number) => {
-    changeSmartsBuilderHint(id, "show", "close")
+  const closeDotHintClick = (key: BuilderKey) => {
+    changeSmartsBuilderHint(key, "show", "close")
   };
 
-  const openDotHintClick = (id: number) => {
-    changeSmartsBuilderHint(id, "show", "open")
+  const openDotHintClick = (key: BuilderKey) => {
+    changeSmartsBuilderHint(key, "show", "open")
   };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,13 +131,13 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
     setTimeout(() => {
       scrollToBlock(block3Ref)
     }, 0)
-    closeDotHintClick(2)
-    openDotHintClick(3)
+    closeDotHintClick("selectContacts2")
+    openDotHintClick("chooseSourceLookalike")
   };
 
   const handleSelectOption = (event: SelectChangeEvent<string>) => {
-    closeDotHintClick(1)
-    openDotHintClick(2)
+    closeDotHintClick("selectContacts1")
+    openDotHintClick("selectContacts2")
     setOption(event.target.value);
   };
 
@@ -157,8 +158,8 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
       return;
     }
 
-    closeDotHintClick(3)
-    openDotHintClick(4)
+    closeDotHintClick("chooseSourceLookalike")
+    openDotHintClick("calculate")
     setShowTable(false);
 
     if (option && sourceType) {
@@ -211,8 +212,8 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
         "/audience-smarts/calculate",
         selectedSources
       );
-      closeDotHintClick(4)
-      openDotHintClick(5)
+      closeDotHintClick("calculate")
+      openDotHintClick("name")
       if (response.status === 200) {
         if (response.data == 0) {
           showErrorToast("The selected source/lookalike does not contain matched persons!");
@@ -508,13 +509,13 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                     Exclude
                   </MenuItem>
                 </Select>
-                {smartsBuilderHints[1].show && !option && (
+                {smartsBuilderHints["selectContacts1"].show && !option && (
                     <HintCard
-                        card={builderHintCards[1]}
+                        card={builderHintCards["selectContacts1"]}
                         positionLeft={340}
-                        isOpenBody={smartsBuilderHints[1].showBody}
-                        toggleClick={() => toggleDotHintClick(1)}
-                        closeClick={() => changeSmartsBuilderHint(1, "showBody", "close")}
+                        isOpenBody={smartsBuilderHints["selectContacts1"].showBody}
+                        toggleClick={() => toggleDotHintClick("selectContacts1")}
+                        closeClick={() => changeSmartsBuilderHint("selectContacts1", "showBody", "close")}
                     />
                   )} 
               </FormControl>
@@ -542,13 +543,13 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                       Lookalike
                     </MenuItem>
                   </Select>
-                  {smartsBuilderHints[2].show && option && (
+                  {smartsBuilderHints["selectContacts2"].show && option && (
                     <HintCard
-                        card={builderHintCards[2]}
+                        card={builderHintCards["selectContacts2"]}
                         positionLeft={340}
-                        isOpenBody={smartsBuilderHints[2].showBody}
-                        toggleClick={() => toggleDotHintClick(2)}
-                        closeClick={() => changeSmartsBuilderHint(2, "showBody", "close")}
+                        isOpenBody={smartsBuilderHints["selectContacts2"].showBody}
+                        toggleClick={() => toggleDotHintClick("selectContacts2")}
+                        closeClick={() => changeSmartsBuilderHint("selectContacts2", "showBody", "close")}
                     />
                   )} 
                 </FormControl>
@@ -646,14 +647,14 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                     </Table>
                   </TableContainer>
                 )}
-                {smartsBuilderHints[3].show && (
+                {smartsBuilderHints["chooseSourceLookalike"].show && (
                     <HintCard
-                        card={builderHintCards[3]}
+                        card={builderHintCards["chooseSourceLookalike"]}
                         positionLeft={250}
                         positionTop={20}
-                        isOpenBody={smartsBuilderHints[3].showBody}
-                        toggleClick={() => toggleDotHintClick(3)}
-                        closeClick={() => changeSmartsBuilderHint(3, "showBody", "close")}
+                        isOpenBody={smartsBuilderHints["chooseSourceLookalike"].showBody}
+                        toggleClick={() => toggleDotHintClick("chooseSourceLookalike")}
+                        closeClick={() => changeSmartsBuilderHint("chooseSourceLookalike", "showBody", "close")}
                     />
                   )} 
               </Box>
@@ -736,15 +737,15 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                 Calculate
               </Typography>
             </Button>
-            {smartsBuilderHints[4].show && (
+            {smartsBuilderHints["calculate"].show && (
               <HintCard
-                  card={builderHintCards[4]}
+                  card={builderHintCards["calculate"]}
                   positionLeft={-290}
                   positionTop={30}
                   rightSide={true}
-                  isOpenBody={smartsBuilderHints[4].showBody}
-                  toggleClick={() => toggleDotHintClick(4)}
-                  closeClick={() => changeSmartsBuilderHint(4, "showBody", "close")}
+                  isOpenBody={smartsBuilderHints["calculate"].showBody}
+                  toggleClick={() => toggleDotHintClick("calculate")}
+                  closeClick={() => changeSmartsBuilderHint("calculate", "showBody", "close")}
               />
             )} 
           </Box>
@@ -807,14 +808,14 @@ const SmartAudiencesContacts: React.FC<SmartAudienceContactsProps> = ({
                 },
               }}
             />
-            {smartsBuilderHints[5].show && (
+            {smartsBuilderHints["name"].show && (
               <HintCard
-                  card={builderHintCards[5]}
+                  card={builderHintCards["name"]}
                   positionLeft={420}
                   positionTop={30}
-                  isOpenBody={smartsBuilderHints[5].showBody}
-                  toggleClick={() => toggleDotHintClick(5)}
-                  closeClick={() => changeSmartsBuilderHint(5, "showBody", "close")}
+                  isOpenBody={smartsBuilderHints["name"].showBody}
+                  toggleClick={() => toggleDotHintClick("name")}
+                  closeClick={() => changeSmartsBuilderHint("name", "showBody", "close")}
               />
             )} 
           </Box>
