@@ -33,7 +33,7 @@ interface HintCardInterface {
 }
 
 interface DomainSelectorProps {
-  onDomainSelected: (domain: Domain) => void;
+  onDomainSelected: (domain: Domain | null) => void;
 }
 
 const DomainSelector: React.FC<DomainSelectorProps> = ({
@@ -319,7 +319,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               setSelectedDomain(newDomain);
               onDomainSelected(newDomain);
               setDomains((prev) => {
-                if (!prev.find((d) => d.id === newDomain.id)) {
+                if (newDomain && !prev.find((d) => d.id === newDomain.id)) {
                   return [...prev, newDomain];
                 }
                 return prev;

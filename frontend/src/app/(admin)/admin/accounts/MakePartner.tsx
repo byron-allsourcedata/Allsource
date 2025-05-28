@@ -152,7 +152,7 @@ const MakePartner: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                         width: "92px",
                         height: "40px",
                         ":hover": {
-                            borderColor: "rgba(62, 64, 142, 1)"
+                            borderColor: "rgba(30, 136, 229, 1)"
                         },
                         ":active": {
                             borderColor: "rgba(56, 152, 252, 1)"
@@ -171,7 +171,7 @@ const MakePartner: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                                 fontWeight: "600",
                                 fontSize: "14px",
                                 lineHeight: "19.6px",
-                                ":hover": { color: "rgba(62, 64, 142, 1)" },
+                                ":hover": { color: "rgba(30, 136, 229, 1)" },
                             }}
                         >
                             No
@@ -182,7 +182,7 @@ const MakePartner: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                         width: "120px",
                         height: "40px",
                         ":hover": {
-                            backgroundColor: "rgba(62, 64, 142, 1)"
+                            backgroundColor: "rgba(30, 136, 229, 1)"
                         },
                         ":active": {
                             backgroundColor: "rgba(56, 152, 252, 1)"

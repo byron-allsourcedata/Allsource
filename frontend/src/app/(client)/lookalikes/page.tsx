@@ -837,7 +837,8 @@ const CreateLookalikePage: React.FC = () => {
             </Box>
           ) : (
             <>
-              <FirstTimeScreenCommonVariant1
+            <Box sx={{width: "100%"}}>
+            <FirstTimeScreenCommonVariant1
                 Header={{
                   TextTitle: "Create Your First Lookalike",
                   TextSubtitle:
@@ -940,17 +941,18 @@ const CreateLookalikePage: React.FC = () => {
                     },
                   ],
                 }}
-                customStyleSX={{
+                ContentStyleSX={{
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
                   alignItems: "center",
-                  width: "70%",
+                  maxWidth: "850px",
                   margin: "0 auto",
                   mt: 2,
                 }}
               />
-              {popupOpen && sourceCount === 0 && (
+            </Box>
+            {popupOpen && sourceCount === 0 && (
                 <WelcomePopup
                   open={popupOpen}
                   onClose={() => setPopupOpen(false)}

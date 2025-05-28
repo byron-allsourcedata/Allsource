@@ -164,7 +164,7 @@ const GetStarted: React.FC = () => {
                         },
                     ]} />}
                     MainBoxStyleSX={{ width: '100%' }}
-                    customStyleSX={{
+                    ContentStyleSX={{
                         display: "flex",
                         flexDirection: "column",
                         justifyContent: "center",

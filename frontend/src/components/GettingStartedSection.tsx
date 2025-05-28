@@ -140,7 +140,7 @@ const GettingStartedSection: React.FC = () => {
           <VerticalStepper steps={stepData} />
           <DomainSelector
             onDomainSelected={(domain) => {
-              setSelectedDomain(domain.domain);
+              setSelectedDomain(domain? domain.domain: "");
             }}
           />
           {selectedDomain !== "" && (
@@ -168,7 +168,7 @@ const GettingStartedSection: React.FC = () => {
           <Box sx={{}}>
             <DomainSelector
               onDomainSelected={(domain) => {
-                setSelectedDomain(domain.domain);
+                setSelectedDomain(domain? domain.domain: "");
               }}
             />
             {selectedDomain !== "" && (

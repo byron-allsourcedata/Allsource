@@ -39,7 +39,7 @@ const NotificationInfoBanner: React.FC<NotificationBannerProps> = ({
           fontSize: "14px",
           letterSpacing: "0%",
           lineHeight: "22px",
-          mr: 3
+          mr: 2
         }}
       >
         {message}

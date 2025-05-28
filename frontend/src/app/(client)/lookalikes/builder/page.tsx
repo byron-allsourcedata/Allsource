@@ -641,7 +641,7 @@ const CreateLookalikePage: React.FC = () => {
                     <TextField
                       fullWidth
                       variant="outlined"
-                      placeholder="name"
+                      placeholder="Name"
                       value={sourceName}
                       onChange={handleInputChange}
                       sx={{
