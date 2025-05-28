@@ -148,18 +148,12 @@ const SourcesImport: React.FC = () => {
       "Please upload a CSV file of users who showed interest in your product or service, such as newsletter subscribers or ebook downloaders.",
   };
 
-  const toggleDotHintClick = (id: number) => {
-    changeSourcesBuilderHint(id, "show", "toggle")
-  };
-
   const closeDotHintClick = (id: number) => {
     changeSourcesBuilderHint(id, "show", "close")
-    changeSourcesBuilderHint(id, "showBody", "close")
   };
 
   const openDotHintClick = (id: number) => {
     changeSourcesBuilderHint(id, "show", "open")
-    changeSourcesBuilderHint(id, "showBody", "open")
   };
 
   const defaultMapping: Row[] = [
@@ -620,6 +614,7 @@ const SourcesImport: React.FC = () => {
       setTimeout(() => {
         scrollToBlock(block4Ref);
       }, 0);
+      closeDotHintClick(3)
       openDotHintClick(5);
     } catch (error: unknown) {
       if (error instanceof Error) {

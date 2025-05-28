@@ -150,12 +150,10 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
 
   const closeDotHintClick = (id: number) => {
     changeSmartsBuilderHint(id, "show", "close")
-    changeSmartsBuilderHint(id, "showBody", "close")
   };
 
   const openDotHintClick = (id: number) => {
     changeSmartsBuilderHint(id, "show", "open")
-    changeSmartsBuilderHint(id, "showBody", "open")
   };
 
   const getEstimatePredictable = async (validations: string[]) => {
