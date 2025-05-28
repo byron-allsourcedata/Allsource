@@ -1095,7 +1095,7 @@ const Sources: React.FC = () => {
                             flexDirection: "column",
                             justifyContent: "center",
                             alignItems: "center",
-                            width: "70%",
+                            maxWidth: "850px",
                             margin: "0 auto",
                             mt: 2
                           }}

@@ -112,7 +112,7 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
                           color: "#3898FC",
                           fontSize: 14,
                           fontFamily: "Nunito Sans",
-                          ml: 2,
+                          ml: 1,
                         }}
                       >
                         Learn more&nbsp;
