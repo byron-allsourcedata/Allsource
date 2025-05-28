@@ -142,12 +142,12 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
     const handleRedirect = async () => {
       const query = new URLSearchParams(window.location.search);
       const authorizationCode = query.get("code");
-      const statusIntegrate = query.get("message");
-      
-      if (statusIntegrate) {
+      const installBigcommerce = query.get("install_bigcommerce");
+      if (installBigcommerce) {
         setShowCMSInline(true);
         onInstallSelected("cms");
-        if (statusIntegrate == "Successfully") {
+        setCMSOpen(true);
+        if (installBigcommerce == "true") {
           showToast("Connect to Bigcommerce Successfully. Pixel Installed");
         } else {
           showErrorToast(

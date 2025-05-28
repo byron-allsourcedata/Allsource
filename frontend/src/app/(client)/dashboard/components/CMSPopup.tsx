@@ -176,6 +176,11 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 
   useEffect(() => {
     const fetchCredentials = async () => {
+      const query = new URLSearchParams(window.location.search);
+      const installBigcommerce = query.get("install_bigcommerce");
+      if (installBigcommerce){
+        setSelectedCMS("Bigcommerce");
+      }
       try {
         const response_shopify = await axiosInstance.get(
           "/integrations/credentials/shopify"

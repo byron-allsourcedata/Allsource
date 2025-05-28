@@ -262,7 +262,7 @@ def bigcommerce_auth(
         domain = domain_entry[0] if domain_entry else None
         
         if not domain:
-            return RedirectResponse(f'{redirect_url}?message=Failed')
+            return RedirectResponse(f'{redirect_url}&install_bigcommerce=false')
         
         try:
             with integration_service as service:
@@ -276,9 +276,9 @@ def bigcommerce_auth(
                     domain=domain,
                     user=user
                 )
-            return RedirectResponse(f'{redirect_url}?message=Successfully')
+            return RedirectResponse(f'{redirect_url}?install_bigcommerce=true')
         except Exception:
-            return RedirectResponse(f'{redirect_url}?message=Failed')
+            return RedirectResponse(f'{redirect_url}?install_bigcommerce=false')
     else:
         with httpx.Client() as client:
             shop_response = client.get(

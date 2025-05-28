@@ -70,9 +70,9 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
     const handleRedirect = async () => {
       const query = new URLSearchParams(window.location.search);
       const authorizationGoogleCode = query.get("code");
-      const statusIntegrate = query.get("message");
+      const installBigcommerce = query.get("install_bigcommerce");
       const googleScope = query.get("scope");
-      if ((authorizationGoogleCode && googleScope) || statusIntegrate) {
+      if ((authorizationGoogleCode && googleScope) || installBigcommerce) {
         const savedCurrentDomain = sessionStorage.getItem("current_domain");
         if (savedCurrentDomain) {
           const matchedDomain = domains.find(
