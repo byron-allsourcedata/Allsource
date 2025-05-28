@@ -450,7 +450,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                 Recommended
               </Typography>
 
-              {
+              {smartsBuilderHints["validation"].show &&
               <HintCard
                   card={builderHintCards["validation"]}
                   positionLeft={-325}
@@ -463,7 +463,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                     }
                     toggleDotHintClick("validation")
                   }}
-                  closeClick={() => closeDotHintClick("validation")}
+                  closeClick={() => changeSmartsBuilderHint("validation", "showBody", "close")}
               />
               } 
             </Box>
@@ -1587,7 +1587,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                   </Typography>
                 </Button>
 
-                {
+                {smartsBuilderHints["skipValidation"].show &&
                   <HintCard
                       card={builderHintCards["skipValidation"]}
                       positionLeft={-420}
@@ -1600,7 +1600,7 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
                         }
                         toggleDotHintClick("skipValidation")
                       }}
-                      closeClick={() => closeDotHintClick("skipValidation")}
+                      closeClick={() => changeSmartsBuilderHint("skipValidation", "showBody", "close")}
                   />
                 }
                   </Box>
@@ -1677,6 +1677,9 @@ const AllFilters: React.FC<ExpandableFilterProps> = ({
         onContinue={() => setOpenPopup(false)}
         onSkip={ () => {
           handleSkipPopup()
+          closeDotHintClick("validation")
+          closeDotHintClick("skipValidation")
+          openDotHintClick("name")
           scrollToEveryOtherBlock()
         }}
       />

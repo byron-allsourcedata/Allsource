@@ -44,7 +44,6 @@ import { useSmartsHints } from "../../context/SmartsHintsContext";
 import { BuilderKey } from '../../context/hintsCardsContent';
 
 
-
 interface Recency {
   days: number;
 }
@@ -338,6 +337,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
     setLoading(true);
     try {
       closeDotHintClick("calculate")
+      openDotHintClick("validation")
+      changeSmartsBuilderHint("skipValidation", "show", "open", false)
       const response = await axiosInstance.post(
         "/audience-smarts/calculate",
         selectedSources

@@ -23,7 +23,8 @@ export const changeHintState = (
   key: string,
   hintKey: HintKey,
   action: HintAction,
-  setStateFunction: React.Dispatch<React.SetStateAction<HintStateMap<string>>>
+  setStateFunction: React.Dispatch<React.SetStateAction<HintStateMap<string>>>,
+  syncWithShowBody: boolean = true 
 ) => {
   setStateFunction((prev) => {
     const newState = actionMap[action](prev[key]?.[hintKey] || false);
@@ -32,7 +33,7 @@ export const changeHintState = (
       [key]: {
         ...prev[key],
         [hintKey]: newState,
-        ...(hintKey === "show" && { showBody: newState }),
+        ...(syncWithShowBody && hintKey === "show" && { showBody: newState }),
       },
     }}
   );
