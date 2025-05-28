@@ -13,7 +13,6 @@ import GettingStartedSection from '@/components/GettingStartedSection';
 import { SliderProvider } from "@/context/SliderContext";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircle';
 import FirstTimeScreen from "./FirstTimeScreen";
-import SourcesImport from "./SourcesImport";
 import { SourcesHintsProvider } from "../sources/context/SourcesHintsContext";
 import {
     CardsSection,
@@ -212,7 +211,7 @@ const GetStarted: React.FC = () => {
 
                                     <SourcesHintsProvider>
                                         <Suspense fallback={<ProgressBar />}>
-                                            <SourcesImport hideTitle={true} />
+                                            {/* <SourcesImport hideTitle={true} /> */}
                                         </Suspense>
                                     </SourcesHintsProvider>
                                 </>
