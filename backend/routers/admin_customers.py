@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, Query
 from services.admin_customers import AdminCustomersService
 from dependencies import get_admin_customers_service, check_user_admin
@@ -36,3 +38,9 @@ async def get_users(
 @router.put('/user')
 def update_user(update_data: UpdateUserRequest, admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
     return admin_customers_service.update_user(update_data)
+
+@router.get('/audience-metrics')
+async def get_audience_metrics(
+        admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
+    users = admin_customers_service.get_audience_metrics()
+    return users

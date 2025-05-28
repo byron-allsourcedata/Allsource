@@ -10,6 +10,7 @@ from models.users import Users
 from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
+from persistence.audience_dashboard import DashboardAudiencePersistence
 from services.subscriptions import SubscriptionService
 from services.users_auth import UsersAuth
 from utils import get_md5_hash
@@ -23,7 +24,7 @@ class AdminCustomersService:
 
     def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
                  plans_persistence: PlansPersistence, users_auth_service: UsersAuth, send_grid_persistence: SendgridPersistence,
-                 partners_persistence: PartnersPersistence):
+                 partners_persistence: PartnersPersistence, dashboard_audience_persistence: DashboardAudiencePersistence):
         self.db = db
         self.subscription_service = subscription_service
         self.user_persistence = user_persistence
@@ -31,6 +32,7 @@ class AdminCustomersService:
         self.users_auth_service = users_auth_service
         self.send_grid_persistence = send_grid_persistence
         self.partners_persistence = partners_persistence
+        self. dashboard_audience_persistence= dashboard_audience_persistence
 
     def get_users(self, page, per_page):
         users_dict, total_count = self.user_persistence.get_not_partner_users(page, per_page)
@@ -68,9 +70,23 @@ class AdminCustomersService:
             'count': total_count
         }
 
+    def get_audience_metrics(self):
+        audience_metrics = {}
+        dashboard_audience_data = self.dashboard_audience_persistence.get_audience_metrics()
+
+        for result in dashboard_audience_data:
+            key = result['key']
+            query = result['query']
+            count = query.scalar()
+            audience_metrics[key] = count or 0
+
+        return {
+            "audience_metrics": audience_metrics
+        }
+
     def get_user_by_email(self, email):
-        user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
-        return user_object
+            user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
+            return user_object
     
     def create_subscription_for_partner(self, user: Users):
         if not user.current_subscription_id:

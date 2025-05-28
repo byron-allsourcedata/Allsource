@@ -26,7 +26,7 @@ const sidebarStyles = {
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
         height: 'calc(100vh - 4.25rem)',
-        maxWidth: '146px',
+        maxWidth: '168px',
         display: 'flex',
         overflow: 'hidden',
         flexDirection: 'column',
@@ -153,7 +153,7 @@ const SidebarAdmin: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText primary="Users" />
                 </ListItemButton>
-                <ListItemButton
+                {/* <ListItemButton
                     onClick={() => handleNavigation('/admin/partners')}
                     sx={isActive('/admin/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
                 >
@@ -188,7 +188,7 @@ const SidebarAdmin: React.FC = () => {
                         <FeaturedPlayListIcon />
                     </ListItemIcon>
                     <ListItemText primary="Payouts" />
-                </ListItemButton>
+                </ListItemButton> */}
             </List>
         </Box>
     );

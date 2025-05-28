@@ -51,8 +51,8 @@ def create_access_token(token: Token, expires_delta: Union[timedelta, None] = No
     else:
         token_dict = token.__dict__
 
-    token_dict.update({"exp": int(expire.timestamp())})
-    encoded_jwt = jwt.encode(token_dict, AuthConfig.secret_key, AuthConfig.algorithm)
+        token_dict.update({"exp": int(expire.timestamp())})
+        encoded_jwt = jwt.encode(token_dict, AuthConfig.secret_key, AuthConfig.algorithm)
     return encoded_jwt
 
 

@@ -44,6 +44,49 @@ class DashboardAudiencePersistence:
         )
         return source_rows, installed_domains_count
 
+    def get_audience_metrics(self):
+        queries = [
+            {
+                'query': self.db.query(
+                    func.count(Users.id).label("count")
+                ),
+                'key': 'users'
+            },
+            {
+                'query': self.db.query(
+                    func.count(LeadUser.id).label("count")
+                )
+                .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id),
+                'key': 'pixel_contacts'
+            },
+            {
+                'query': self.db.query(
+                    func.count(AudienceSource.id).label("count")
+                ),
+                'key': 'sources_count'
+            },
+            {
+                'query': self.db.query(
+                    func.count(AudienceLookalikes.id).label("count")
+                ),
+                'key': 'lookalike_count'
+            },
+            {
+                'query': self.db.query(
+                    func.count(AudienceSmart.id).label("count")
+                ),
+                'key': 'smart_count'
+            },
+            {
+                'query': self.db.query(
+                    func.count(IntegrationUserSync.id).label("count")
+                )
+                .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id),
+                'key': 'sync_count'
+            }
+        ]
+        return queries
+
     def get_dashboard_audience_data(self, *, from_date: int, to_date: int, user_id: int):
         from_dt = datetime.fromtimestamp(from_date, tz=timezone.utc)
         to_dt = datetime.fromtimestamp(to_date, tz=timezone.utc)
