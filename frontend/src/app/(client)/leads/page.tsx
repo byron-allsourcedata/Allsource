@@ -1428,9 +1428,8 @@ const Leads: React.FC = () => {
                                                                 handleOpenPopup(row);
 
                                                             }}>{row.first_name} {row.last_name}</TableCell>
-                                                        <TableCustomCell
-                                                            children={
-                                                                row.is_active ? (
+                                                        <TableCell>
+                                                                {row.is_active ? (
                                                                     row.personal_emails ? (
                                                                         <Tooltip title={row.personal_emails.split(',')[0]}>
                                                                             <span className="truncate-email">
@@ -1443,7 +1442,8 @@ const Leads: React.FC = () => {
                                                                 ) : (
                                                                     <UnlockButton onClick={() => handleUnlock()} label="Unlock email" />
                                                                 )
-                                                            }/>
+                                                            }
+                                                        </TableCell>
 
                                                         {/* Business Email Column */}
                                                         <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
@@ -1463,8 +1463,8 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         {/* Mobile Phone Column */}
-                                                        <TableCustomCell
-                                                            rowExample={row.is_active ? (
+                                                        <TableCell>
+                                                            {row.is_active ? (
                                                                 row.mobile_phone
                                                                     ? row.mobile_phone.split(',')[0]
                                                                     : row.personal_phone
@@ -1474,8 +1474,8 @@ const Leads: React.FC = () => {
                                                                             : '--'
                                                             ) : (
                                                                 <UnlockButton onClick={() => handleUnlock()} label="Unlock mobile number" />
-                                                            )}>
-                                                        </TableCustomCell>
+                                                            )}
+                                                        </TableCell>
 
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date
@@ -1486,8 +1486,8 @@ const Leads: React.FC = () => {
                                                                 : '--'}
                                                         </TableCell>
 
-                                                        <TableCustomCell
-                                                            children={<Box
+                                                        <TableCell>
+                                                            <Box
                                                                 sx={{
                                                                     display: 'flex',
                                                                     padding: '2px 8px',
@@ -1504,11 +1504,11 @@ const Leads: React.FC = () => {
                                                                 }}
                                                             >
                                                                 {formatFunnelText(row.behavior_type) || '--'}
-                                                            </Box>}>
-                                                        </TableCustomCell>
+                                                            </Box>
+                                                        </TableCell>
 
-                                                        <TableCustomCell
-                                                            children={<Box
+                                                        <TableCell>
+                                                            <Box
                                                                 sx={{
                                                                     display: 'flex',
                                                                     padding: '2px 8px',
@@ -1525,8 +1525,8 @@ const Leads: React.FC = () => {
                                                                 }}
                                                             >
                                                                 {formatFunnelText(row.visitor_type) || '--'}
-                                                            </Box>}> 
-                                                            </TableCustomCell>
+                                                            </Box> 
+                                                            </TableCell>
 
                                                         <TableCell onClick={(e) => {
                                                             e.stopPropagation();
