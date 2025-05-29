@@ -224,13 +224,15 @@ interface SidebarProps {
   setLoading: Dispatch<SetStateAction<boolean>>;
   hasNotification: boolean;
   isGetStartedPage: boolean;
+  loading: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
   setShowSlider,
   setLoading,
   hasNotification,
-  isGetStartedPage
+  isGetStartedPage,
+  loading
 }) => {
   const { domains, partner, backButton } = useUser();
   const { installedResources } = useSidebar();
@@ -348,7 +350,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           overflowX: "hidden",
         }}
       >
-        {isGetStartedPage &&
+        {isGetStartedPage && !loading &&
           <ListItem
             button
             onClick={() => handleNavigation("/get-started")}
@@ -524,7 +526,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           <ListItemText primary="Sources" />
         </ListItem>
         <Box sx={{ position: "relative" }}>
-          <List disablePadding sx={{ opacity: isSourceInstalled ? 1 : 0.5 }}>
+          <List disablePadding sx={{ opacity: (isSourceInstalled || loading) ? 1 : 0.5 }}>
             {/* Lookalikes */}
             <ListItem
               button
@@ -606,7 +608,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </ListItem>
           </List>
 
-          {!isSourceInstalled && (
+          {!isSourceInstalled && !loading && (
             <Box
               sx={{
                 position: "absolute",

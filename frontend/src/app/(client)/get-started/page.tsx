@@ -53,7 +53,6 @@ const GetStarted: React.FC = () => {
         setTabIndex(newIndex);
     };
     const [loading, setLoading] = useState(true)
-    const [status, setStatus] = useState('');
 
 
     const checkPixel = async () => {
@@ -63,6 +62,9 @@ const GetStarted: React.FC = () => {
 
             setPixelInstalled(Boolean(is_pixel_installed));
             setSourceImported(Boolean(is_source_imported));
+            if (Boolean(is_pixel_installed) && Boolean(is_source_imported)) {
+                router.push('/audience-dashboard')
+            }
         }
         catch (error) {
             console.error(error)
@@ -72,13 +74,19 @@ const GetStarted: React.FC = () => {
 
     }
     useEffect(() => {
-        checkPixel()
-        if (pixel) {
-            setTabIndex(1);
-        } else if (source) {
-            setTabIndex(2);
-        }
-    }, [pixel, source])
+        const fetchData = async () => {
+            await checkPixel();
+
+            if (pixel) {
+                setTabIndex(1);
+            } else if (source) {
+                setTabIndex(2);
+            }
+        };
+
+        fetchData();
+
+    }, [pixel, source]);
 
 
     const handleClick = () => {
