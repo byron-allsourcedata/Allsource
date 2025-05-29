@@ -34,6 +34,9 @@ import CompanyFilterPopup from './CompanyFilters';
 import CompanyEmployees from './CompanyEmployees';
 import GettingStartedSection from '@/components/GettingStartedSection';
 import { FirstTimeScreenCommonVariant2 } from '@/components/first-time-screens';
+import HintCard from "../components/HintCard";
+import { useCompanyHints } from "./context/CompanyHintsContext";
+import { companyTableCards } from "./context/hintsCardsContent";
 
 
 interface FetchDataParams {
@@ -80,6 +83,7 @@ const Leads: React.FC = () => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
     const [industry, setIndustry] = React.useState<string[]>([]);
+    const { changeCompanyTableHint, companyTableHints, resetCompanyTableHints } = useCompanyHints();
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
