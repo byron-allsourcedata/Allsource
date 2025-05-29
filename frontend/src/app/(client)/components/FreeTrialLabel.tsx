@@ -163,7 +163,7 @@ const FreeTrialLabel: React.FC = () => {
                 <AllInboxIcon fontSize="small" sx={{ color: "#3898FC", fontSize: '17px' }} />
                 <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
                   <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 0.5)" }}>
-                    {(creditsLimitCount - creditsCount)?.toLocaleString()}/
+                    {(creditsCount)?.toLocaleString()}/
                   </Typography>
                   <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 1)" }}>
                     {creditsLimitCount?.toLocaleString()} Contacts
@@ -199,7 +199,7 @@ const FreeTrialLabel: React.FC = () => {
 
           <Box sx={{ width: "100%", mb: "8px" }}>
             <ProgressBar
-              progress={{ total: creditsLimitCount, processed: creditsCount, reversed: true }}
+              progress={{ total: creditsLimitCount, processed: creditsLimitCount - creditsCount, reversed: true }}
             />
           </Box>
         </Box>

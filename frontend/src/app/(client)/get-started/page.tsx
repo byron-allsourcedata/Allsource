@@ -9,6 +9,7 @@ import GettingStartedSection from '@/components/GettingStartedSection';
 import { SliderProvider } from "@/context/SliderContext";
 import SourcesImport from "@/app/(client)/sources/builder/page";
 import { SourcesHintsProvider } from "../sources/context/SourcesHintsContext";
+import WelcomePopup from "@/app/(client)/dashboard/components/WelcomePopup";
 import {
     CardsSection,
     FirstTimeScreenCommonVariant1,
@@ -49,9 +50,7 @@ const GetStarted: React.FC = () => {
     const [sourceImported, setSourceImported] = useState(false);
     const [pixelBannerVisible, setPixelBannerVisible] = useState(true);
     const [sourceBannerVisible, setSourceBannerVisible] = useState(true);
-    const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
-        setTabIndex(newIndex);
-    };
+    const [welcomePopup, setWelcomePopup] = useState<string | null>(null);
     const [loading, setLoading] = useState(true)
 
 
@@ -88,6 +87,11 @@ const GetStarted: React.FC = () => {
 
     }, [pixel, source]);
 
+    useEffect(() => {
+        const storedPopup = localStorage.getItem("welcome_popup");
+        setWelcomePopup(storedPopup);
+    }, []);
+
 
     const handleClick = () => {
         const params = new URLSearchParams(searchParams.toString());
@@ -105,6 +109,7 @@ const GetStarted: React.FC = () => {
         <Box sx={{
             pb: 3
         }}>
+            {welcomePopup && <WelcomePopup />}
             <Box
                 sx={{
                     display: 'flex',

@@ -279,10 +279,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleNavigation = async (route: string) => {
     try {
       setLoading(true);
+      const currentSearch = window.location.search;
+      const hasQuery = currentSearch.length > 0;
       const isSameRoute = pathname === route;
 
-      if (isSameRoute) {
-        window.location.reload();
+      if (isSameRoute && hasQuery) {
+        window.location.href = window.location.pathname;
+        return;
       }
       if (isAuthorized.current) {
         router.push(route);

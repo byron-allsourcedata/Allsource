@@ -42,13 +42,13 @@ const WelcomePopup = () => {
         open={open}
         onClick={handleClose}
         sx={{
-          zIndex: 1200,
+          zIndex: 3000,
           color: "#fff",
           backdropFilter: "blur(12px)",
           backgroundColor: "#0000001A",
         }}
       />
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <Dialog open={open} sx={{ zIndex: 3100 }} onClose={handleClose} maxWidth="md" fullWidth>
         <DialogTitle sx={{ p: "16px 16px 8px" }}>
           <Box
             sx={{ display: "flex", justifyContent: "flex-end", width: "100%" }}
