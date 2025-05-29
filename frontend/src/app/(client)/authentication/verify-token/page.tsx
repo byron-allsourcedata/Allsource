@@ -69,14 +69,14 @@ const VerifyToken = () => {
 
                 setTimeout(() => {
                   // router.push('/account-setup');
-                  router.push("/dashboard");
+                  router.push("/get-started");
                 }, 2500);
               }
             } else if (response.data.status === "INCORRECT_TOKEN") {
               showErrorToast("The link is incorrect or outdated");
               const localtoken = localStorage.getItem("token");
               if (localtoken) {
-                router.push(partner ? "/partners" : "/dashboard");
+                router.push(partner ? "/partners" : "/get-started");
               } else {
                 router.push("/signin");
               }

@@ -88,7 +88,7 @@ class PlansPersistence:
 
     def get_user_subscription_with_trial_status(self, user_id):
         result = (
-            self.db.query(UserSubscriptions, SubscriptionPlan.is_free_trial, SubscriptionPlan.trial_days, SubscriptionPlan.currency, SubscriptionPlan.price, SubscriptionPlan.alias)
+            self.db.query(UserSubscriptions, SubscriptionPlan.is_free_trial, SubscriptionPlan.trial_days, SubscriptionPlan.currency, SubscriptionPlan.price, SubscriptionPlan.alias, SubscriptionPlan.leads_credits)
             .join(User, User.current_subscription_id == UserSubscriptions.id)
             .join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)
             .filter(User.id == user_id)
