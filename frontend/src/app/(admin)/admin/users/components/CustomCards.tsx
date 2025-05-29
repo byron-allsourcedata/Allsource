@@ -113,7 +113,7 @@ const PixelContactsCard: React.FC<CardProps> = ({
 }) => (
   <StatCard
     value={value}
-    title="Pixel Contacts"
+    title="Pixel Installations"
     icon={<LegendToggleIcon sx={{ color: "#F45745", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#F4574533"
@@ -127,7 +127,7 @@ const UsersCard: React.FC<CardProps> = ({
 }) => (
   <StatCard
     value={value}
-    title="Users count"
+    title="Customers"
     icon={<GroupIcon sx={{ color: "#ED9206", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#FFE1B3"
@@ -208,7 +208,7 @@ const CustomCards: React.FC<CustomCardsProps> = ({
         opacity: 1 }} 
         xs={12} md={2.4}>
         <UsersCard
-          value={values.pixel_contacts}
+          value={values.users}
         />
       </Grid>
       <Grid item sx={{ 

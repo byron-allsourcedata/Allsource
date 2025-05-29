@@ -9,7 +9,9 @@ import dayjs from "dayjs";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import Image from "next/image";
+import CustomTablePagination from "@/components/CustomTablePagination";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
+import InviteAdmin from "./InviteAdmin";
 import SearchIcon from '@mui/icons-material/Search';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
@@ -21,13 +23,18 @@ import { fetchUserData } from "@/services/meService";
 
 
 interface UserData {
-    id: number
-    full_name: string
-    email: string
-    created_at: string
-    payment_status: string
-    is_trial: boolean
+    id: number;
+    full_name: string;
+    email: string;
+    created_at: string;
+    payment_status?: string;
+    is_trial?: boolean;
+    last_login: string;
+    invited_by_email?: string;
+    role: string[];
+    pixel_installed_count?: number;
 }
+
 
 interface tableHeaders {
     key: string,
@@ -38,6 +45,7 @@ interface tableHeaders {
 interface TableBodyUserProps {
     data: UserData[],
     tableHeaders: tableHeaders[],
+    setLoading: (state: boolean) => void;
 }
 
 const TableHeader: React.FC<{ onSort: (field: string) => void, sortField?: string, sortOrder?: string, tableHeaders: tableHeaders[] }> = ({ onSort, sortField, sortOrder, tableHeaders }) => {
@@ -92,7 +100,45 @@ const TableHeader: React.FC<{ onSort: (field: string) => void, sortField?: strin
     );
 };
 
-const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders }) => {
+const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, setLoading }) => {
+    const router = useRouter();
+    const { setBackButton, triggerBackButton } = useUser();
+
+    const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
+    const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
+
+    const handleLogin = async (user_account_id: number) => {
+        try {
+            setLoading(true)
+            const response = await axiosInstance.get('/admin/generate-token', {
+                params: {
+                    user_account_id: user_account_id
+                }
+            })
+            if (response.status === 200) {
+                const current_token = localStorage.getItem('token')
+                const current_domain = sessionStorage.getItem('current_domain')
+                sessionStorage.setItem('parent_domain', current_domain || '')
+                if (current_token) {
+                    localStorage.setItem('parent_token', current_token)
+                    localStorage.setItem('token', response.data.token)
+                    sessionStorage.removeItem('current_domain')
+                    sessionStorage.removeItem('me')
+                    await fetchUserData()
+                    router.push('/dashboard')
+                    router.refresh()
+                    setBackButton(true)
+                    triggerBackButton()
+                }
+            }
+        }
+        catch {
+        }
+        finally {
+            setLoading(false)
+        }
+    }
+
     const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
     const [activeRow, setActiveRow] = useState<number | null>(null);
 
@@ -161,13 +207,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders }) =
         }
     };
 
-    const formatFunnelText = (text: boolean) => {
-        if (text === false) {
-            return 'New';
-        }
-        if (text === true) {
-            return 'Returning';
-        }
+    const formatFunnelText = (text: string) => {
         if (text === 'NEED_CHOOSE_PLAN') {
             return "Need choose Plan"
         }
@@ -191,166 +231,217 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders }) =
         }
     };
 
-    const renderCellContent = (key: string, row: any) => {
+    const renderCellContent = (key: string, row: UserData) => {
+        const isCurrentUser = meData.email === row.email;
         switch (key) {
             case 'name':
-                return row.full_name || '--';
+                return (
+                    <Box
+                        className="table-data sticky-cell"
+                        sx={{
+                            ...suppressionsStyles.tableBodyColumn,
+                            paddingLeft: "16px",
+                            minWidth: "155px",
+                            maxWidth: "155px",
+                            position: "sticky",
+                            justifyContent: "space-between",
+                            left: 0,
+                            zIndex: 1,
+                            cursor: isCurrentUser ? "default" : "pointer",
+                            backgroundColor: "#fff",
+                            "&:hover .icon-button": {
+                                display: isCurrentUser ? "none" : "flex",
+                            },
+                        }}
+                        onClick={() => {
+                            if (!isCurrentUser) {
+                                handleLogin(row.id);
+                            }
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                overflowWrap: "break-word",
+                                justifyContent: "space-between",
+                                color: "rgba(56, 152, 252, 1)",
+                                gap: 0,
+                                width: "100%",
+                            }}
+                        >
+                            <Box sx={{ color: isCurrentUser ? "#000" : "rgba(56, 152, 252, 1)" }}>
+                                {row.full_name}
+                            </Box>
+
+                            {!isCurrentUser && (
+                                <IconButton
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleLogin(row.id);
+                                    }}
+                                    className="icon-button"
+                                    sx={{
+                                        display: "none",
+                                        alignItems: "center",
+                                        color: "rgba(56, 152, 252, 1)",
+                                    }}
+                                >
+                                    <Image
+                                        src="/outband.svg"
+                                        alt="outband"
+                                        width={15.98}
+                                        height={16}
+                                    />
+                                </IconButton>
+                            )}
+                        </Box>
+                    </Box>
+
+                );
             case 'email':
                 return row.email || '--';
+            case 'last_signed_in':
+                return formatDate(row.last_login);
+            case 'invited_by':
+                return row.invited_by_email || '--';
+            case 'access_level':
+                return row.role || '--';
+            case 'pixel_installed_count':
+                return row.pixel_installed_count || '0';
             case 'join_date':
                 return formatDate(row.created_at);
-            case 'plan_amount':
-                return row.email || '--';
-            case 'last_payment_date':
-                return row.email || '--';
-            case 'reward_status':
-                return row.email || '--';
-            case 'reward_payout_date':
-                return row.email || '--';
-            case 'sources':
-                return row.email || '--';
-                case 'status':
-                    return (
-                        <Typography
-                            className="paragraph"
-                            sx={{
-                                display: 'flex',
-                                padding: '2px 8px',
-                                borderRadius: '2px',
-                                fontFamily: 'Roboto',
-                                fontSize: '12px',
-                                fontWeight: '400',
-                                lineHeight: 'normal',
-                                backgroundColor: getStatusStyle(row.payment_status).background,
-                                color: getStatusStyle(row.payment_status).color,
-                                justifyContent: 'center',
-                                minWidth: '130px',
-                                textTransform: 'capitalize'
-                            }}
-                        >
-                            {formatFunnelText(row.payment_status) || "--"}
-                        </Typography>
-                    );
-            case 'actions':
+            case 'status':
                 return (
-                    <>
-                        <IconButton
-                            onClick={(event) => handleOpenMenu(event, row.id)}
-                            sx={{ ':hover': { backgroundColor: 'transparent' } }}
-                        >
-                            <MoreHoriz />
-                        </IconButton>
-                        <Popover
-                            open={Boolean(menuAnchor) && activeRow === row.id}
-                            anchorEl={menuAnchor}
-                            onClose={handleCloseMenu}
-                            anchorOrigin={{
-                                vertical: "bottom",
-                                horizontal: "center",
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    p: 1,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "flex-start",
-                                    width: "100%",
-                                    maxWidth: "160px",
+                    <Typography
+                        className="paragraph"
+                        sx={{
+                            display: 'flex',
+                            padding: '2px 8px',
+                            borderRadius: '2px',
+                            fontFamily: 'Roboto',
+                            fontSize: '12px',
+                            fontWeight: '400',
+                            lineHeight: 'normal',
+                            backgroundColor: getStatusStyle(row.payment_status).background,
+                            color: getStatusStyle(row.payment_status).color,
+                            justifyContent: 'center',
+                            minWidth: '130px',
+                            textTransform: 'capitalize'
+                        }}
+                    >
+                        {formatFunnelText(row.payment_status ?? '') || "--"}
+                    </Typography>
+                );
+            case 'actions':
+                if (row.role.includes('admin')) {
+                    return (
+                        <>
+                            <IconButton
+                                onClick={(event) => handleOpenMenu(event, row.id)}
+                                sx={{ ':hover': { backgroundColor: 'transparent' } }}
+                            >
+                                <MoreHoriz />
+                            </IconButton>
+                            <Popover
+                                open={Boolean(menuAnchor) && activeRow === row.id}
+                                anchorEl={menuAnchor}
+                                onClose={handleCloseMenu}
+                                anchorOrigin={{
+                                    vertical: "bottom",
+                                    horizontal: "center",
                                 }}
                             >
-                                <Button
+                                <Box
                                     sx={{
-                                        justifyContent: "flex-start",
+                                        p: 1,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "flex-start",
                                         width: "100%",
-                                        textTransform: "none",
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: "14px",
-                                        color: "rgba(32, 33, 36, 1)",
-                                        fontWeight: 600,
-                                        ":hover": {
-                                            color: "rgba(56, 152, 252, 1)",
-                                            backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        // Add your logic here
-                                        console.log("Payment history clicked");
+                                        maxWidth: "160px",
                                     }}
                                 >
-                                    Payment History
-                                </Button>
-                                <Button
+                                    <Button
+                                        sx={{
+                                            justifyContent: "flex-start",
+                                            width: "100%",
+                                            textTransform: "none",
+                                            fontFamily: "Nunito Sans",
+                                            fontSize: "14px",
+                                            color: "rgba(32, 33, 36, 1)",
+                                            fontWeight: 600,
+                                            ":hover": {
+                                                color: "rgba(56, 152, 252, 1)",
+                                                backgroundColor: "rgba(80, 82, 178, 0.1)",
+                                            },
+                                        }}
+                                        onClick={() => {
+                                            handleOpenSlider(row.id);
+                                        }}
+                                    >
+                                        Admin Payment History
+                                    </Button>
+                                </Box>
+                            </Popover>
+                        </>
+                    );
+                } else if (row.role.includes('customer')) {
+                    return (
+                        <>
+                            <IconButton
+                                onClick={(event) => handleOpenMenu(event, row.id)}
+                                sx={{ ':hover': { backgroundColor: 'transparent' } }}
+                            >
+                                <MoreHoriz />
+                            </IconButton>
+                            <Popover
+                                open={Boolean(menuAnchor) && activeRow === row.id}
+                                anchorEl={menuAnchor}
+                                onClose={handleCloseMenu}
+                                anchorOrigin={{
+                                    vertical: "bottom",
+                                    horizontal: "center",
+                                }}
+                            >
+                                <Box
                                     sx={{
-                                        justifyContent: "flex-start",
+                                        p: 1,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "flex-start",
                                         width: "100%",
-                                        textTransform: "none",
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: "14px",
-                                        color: "rgba(32, 33, 36, 1)",
-                                        fontWeight: 600,
-                                        ":hover": {
-                                            color: "rgba(56, 152, 252, 1)",
-                                            backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        // Add your logic here
-                                        console.log("Rewards history clicked");
+                                        maxWidth: "160px",
                                     }}
                                 >
-                                    Rewards History
-                                </Button>
-                                <Button
-                                    sx={{
-                                        justifyContent: "flex-start",
-                                        width: "100%",
-                                        textTransform: "none",
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: "14px",
-                                        color: "rgba(32, 33, 36, 1)",
-                                        fontWeight: 600,
-                                        ":hover": {
-                                            color: "rgba(56, 152, 252, 1)",
-                                            backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        // Add your logic here
-                                        console.log("Disable clicked");
-                                    }}
-                                >
-                                    Disable
-                                </Button>
-                                <Button
-                                    sx={{
-                                        justifyContent: "flex-start",
-                                        width: "100%",
-                                        textTransform: "none",
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: "14px",
-                                        color: "rgba(32, 33, 36, 1)",
-                                        fontWeight: 600,
-                                        ":hover": {
-                                            color: "rgba(56, 152, 252, 1)",
-                                            backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        // Add your logic here
-                                        console.log("Terminate clicked");
-                                    }}
-                                >
-                                    Terminate
-                                </Button>
-                            </Box>
-                        </Popover>
+                                    <Button
+                                        sx={{
+                                            justifyContent: "flex-start",
+                                            width: "100%",
+                                            textTransform: "none",
+                                            fontFamily: "Nunito Sans",
+                                            fontSize: "14px",
+                                            color: "rgba(32, 33, 36, 1)",
+                                            fontWeight: 600,
+                                            ":hover": {
+                                                color: "rgba(56, 152, 252, 1)",
+                                                backgroundColor: "rgba(80, 82, 178, 0.1)",
+                                            },
+                                        }}
+                                        onClick={() => {
+                                            console.log("Customer: View Orders clicked");
+                                        }}
+                                    >
+                                        View Orders
+                                    </Button>
+                                </Box>
+                            </Popover>
+                        </>
+                    );
+                } else {
+                    return null; // или какой-то дефолтный UI
+                }
 
-                    </>
-                );
-
-            default:
-                return row[key] || '--';
         }
     };
 
@@ -446,19 +537,16 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
             { key: 'email', label: 'Email ID', sortable: false },
             { key: 'join_date', label: 'Join date', sortable: true },
             { key: 'last_signed_in', label: 'Last signed-in', sortable: false },
-            { key: 'Invited by', label: 'Invited by', sortable: false },
-            { key: 'Access level', label: 'Access level', sortable: true },
+            { key: 'invited_by', label: 'Invited by', sortable: false },
+            { key: 'access_level', label: 'Access level', sortable: true },
             { key: 'actions', label: 'Actions', sortable: false },
         ]
         : [
             { key: 'name', label: 'Name', sortable: false },
             { key: 'email', label: 'Email', sortable: false },
             { key: 'join_date', label: 'Join date', sortable: true },
-            { key: 'plan_amount', label: 'Plan amount', sortable: false },
-            { key: 'last_payment_date', label: 'Last payment date', sortable: true },
-            { key: 'reward_status', label: 'Reward status', sortable: false },
-            { key: 'reward_payout_date', label: 'Reward Payout date', sortable: true },
-            { key: 'sources', label: 'Sources', sortable: false },
+            { key: 'last_signed_in', label: 'Last signed-in', sortable: false },
+            { key: 'pixel_installed_count', label: 'Pixel installed count', sortable: false },
             { key: 'status', label: 'Status', sortable: false },
             { key: 'actions', label: 'Actions', sortable: false },
         ];
@@ -473,6 +561,8 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [currentPage, setCurrentPage] = useState(1);
+    const [isSliderOpen, setSliderOpen] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const [totalPages, setTotalPage] = useState(1);
     const [formattedDates, setFormattedDates] = useState<string>('');
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain ?? { start: null, end: null });
@@ -488,19 +578,20 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
             router.push('/signin');
             return;
         }
-    
+
         const fetchData = async () => {
             try {
                 let url = '/admin'
                 if (tabIndex === 0) {
-                    url += `/users?page=${currentPage}&per_page=${rowsPerPage}`;
+                    url += `/admins?page=${currentPage}&per_page=${rowsPerPage}`;
                 } else if (tabIndex === 1) {
                     url += `/users?page=${currentPage}&per_page=${rowsPerPage}`;
                 }
-                
+
                 const response = await axiosInstance.get(url);
                 if (response.status === 200) {
                     setUserData(response.data.users);
+                    setTotalCount(response.data.count)
                 }
             }
             catch {
@@ -514,6 +605,16 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
 
     const handleSearchChange = (event: any) => {
         setSearch(event.target.value);
+    };
+
+    const handleOpenSlider = (id: number) => {
+        setSelectedUserId(id);
+        setSliderOpen(true);
+    };
+
+    const handleCloseSlider = () => {
+        setSliderOpen(false);
+        setSelectedUserId(null);
     };
 
     const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -557,8 +658,8 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     };
 
 
-    const handlePageChange = (event: React.ChangeEvent<unknown>, newPage: number) => {
-        setCurrentPage(newPage);
+    const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
+        setPage(newPage);
     };
 
 
@@ -593,37 +694,36 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
         setAccounts(sortedAccounts);
     };
 
+    const fetchInviteAdmin = useCallback(async () => {
+        setLoading(true);
+        try {
+            // const response = await axiosInstance.get("/admin-accounts", {
+            //     params: {
+            //         search,
+            //         start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
+            //         end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
+            //         page,
+            //         rows_per_page: rowsPerPage,
+            //         order_by: orderBy,
+            //         order,
+            //     }
+            // })
+            // if (response.status === 200 && response.data.totalCount > 0) {
+            //     setErrosResponse(false)
+            //     setPartners([...response.data.items])
+            //     setTotalCount(response.data.totalCount)
+            // }
+            // else {
+            //     setPartners([])
+            //     setErrosResponse(true)
+            //     setTotalCount(0)
+            // }
 
-    // const fetchRules = useCallback(async () => {
-    //     setLoading(true)
-    //     let response
-
-    //     try {
-    //             response = await axiosInstance.get(`/admin-accounts/${id}/`, {
-    //                 params: {
-    //                     search,
-    //                     start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
-    //                     end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
-    //                     page,
-    //                     rows_per_page: rowsPerPage,
-    //                     order_by: orderBy,
-    //                     order,
-    //                 }
-    //             });
-    //         else {
-    //             setAccounts([])
-    //             setErrosResponse(true)
-    //             setTotalCount(0)
-    //         }
-    //     } catch {
-    //     } finally {
-    //         setLoading(false)
-    //     }
-    // }, [search, appliedDates, page, rowsPerPage, orderBy, order]);
-
-    // useEffect(() => {
-    //     fetchRules();
-    // }, [appliedDates, page, rowsPerPage, orderBy, order]);
+        } catch {
+        } finally {
+            setLoading(false);
+        }
+    }, [page, rowsPerPage, search, appliedDates, orderBy, order]);
 
     useEffect(() => {
         if (
@@ -635,46 +735,20 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
 
     }, [appliedDatesFromMain]);
 
-    const handleLogin = async (user_account_id: number) => {
-        try {
-            setLoading(true)
-            const response = await axiosInstance.get('/referral/generate-token', {
-                params: {
-                    user_account_id: user_account_id
-                }
-            })
-            if (response.status === 200) {
-                const current_token = localStorage.getItem('token')
-                const current_domain = sessionStorage.getItem('current_domain')
-                sessionStorage.setItem('parent_domain', current_domain || '')
-                if (current_token) {
-                    localStorage.setItem('parent_token', current_token)
-                    localStorage.setItem('token', response.data.token)
-                    sessionStorage.removeItem('current_domain')
-                    sessionStorage.removeItem('me')
-                    await fetchUserData()
-                    router.push('/dashboard')
-                    router.refresh()
-                    setBackButton(true)
-                    triggerBackButton()
-                }
-            }
-        }
-        catch {
-        }
-        finally {
-            setLoading(false)
-        }
-    }
+
 
     const tabs = [
         { label: "Admins", visible: true },
-        { label: "Client Service Manager", visible: true }
+        { label: "Customers", visible: true }
     ];
 
 
     return (
         <>
+        {(isSliderOpen && selectedUserId) && <InviteAdmin isOpen={isSliderOpen}
+                            onClose={handleCloseSlider}
+                            onSumbit={fetchInviteAdmin}
+                            user_id={selectedUserId} />}
             <Box sx={{
                 backgroundColor: '#fff',
                 width: '100%',
@@ -820,8 +894,18 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                         <TableContainer component={Paper}>
                             <Table>
                                 <TableHeader onSort={handleSortRequest} tableHeaders={tableHeaders} sortField={orderBy} sortOrder={order} />
-                                <TableBodyClient data={userData} tableHeaders={tableHeaders} />
+                                <TableBodyClient data={userData} tableHeaders={tableHeaders} setLoading={setLoading} />
                             </Table>
+                            <Box sx={{ display: 'flex', justifyContent: 'end' }}>
+                                <CustomTablePagination
+                                    count={totalCount}
+                                    page={page}
+                                    rowsPerPage={allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10}
+                                    onPageChange={handlePageChange}
+                                    onRowsPerPageChange={handleRowsPerPageChange}
+                                    rowsPerPageOptions={[10, 25, 50, 100]}
+                                />
+                            </Box>
                         </TableContainer>
                     </Grid>
                 </Grid>

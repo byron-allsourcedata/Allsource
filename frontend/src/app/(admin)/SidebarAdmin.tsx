@@ -7,8 +7,8 @@ import {
     ListItemText,
     ListItemButton
 } from '@mui/material';
-import {useRouter} from 'next/navigation';
-import {usePathname} from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import LeadsIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
@@ -101,7 +101,7 @@ const sidebarStyles = {
     },
     ListItem: {
         minHeight: '4.5em',
-        color:'rgba(59, 59, 59, 1)',
+        color: 'rgba(59, 59, 59, 1)',
         ml: '3px'
     },
     activeItem: {
@@ -151,7 +151,7 @@ const SidebarAdmin: React.FC = () => {
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <LeadsIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Users" />
+                    <ListItemText primary="Users" sx={{ pr: 5 }} />
                 </ListItemButton>
                 {/* <ListItemButton
                     onClick={() => handleNavigation('/admin/partners')}

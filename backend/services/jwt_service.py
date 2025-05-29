@@ -40,19 +40,14 @@ def decode_jwt_data(token: str) -> Union[Mapping, Dict]:
     return jwt_data
 
 
-def create_access_token(token: Token, expires_delta: Union[timedelta, None] = None):
+def create_access_token(token_dict: dict, expires_delta: Union[timedelta, None] = None):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(days=AuthConfig.expire_days)
 
-    if isinstance(token, dict):
-        token_dict = token
-    else:
-        token_dict = token.__dict__
-
-        token_dict.update({"exp": int(expire.timestamp())})
-        encoded_jwt = jwt.encode(token_dict, AuthConfig.secret_key, AuthConfig.algorithm)
+    token_dict.update({"exp": int(expire.timestamp())})
+    encoded_jwt = jwt.encode(token_dict, AuthConfig.secret_key, AuthConfig.algorithm)
     return encoded_jwt
 
 

@@ -9,6 +9,7 @@ import {
     IconButton,
     Popover,
 } from "@mui/material";
+import axios from 'axios';
 import { useUser } from "@/context/UserContext";
 import { useTrial } from '@/context/TrialProvider';
 import { styled } from '@mui/material/styles';
@@ -22,6 +23,7 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
+import { showErrorToast } from "@/components/ToastNotification";
 
 
 
@@ -41,58 +43,7 @@ interface CustomCardsProps {
     lookalikes: number;
     smart_audience: number;
     data_sync: number;
-  }
-
-const IOSSwitch = styled((props: SwitchProps) => (
-    <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />
-))(({ theme }) => ({
-    width: 56,
-    height: 26,
-    padding: 0,
-    '& .MuiSwitch-switchBase': {
-        padding: 0,
-        margin: 2,
-        transitionDuration: '300ms',
-        '&.Mui-checked': {
-            transform: 'translateX(30px)',
-            color: '#fff',
-            '& + .MuiSwitch-track': {
-                backgroundColor: theme.palette.mode === 'dark' ? '#2ECA45' : '#65C466',
-                opacity: 1,
-                border: 0,
-            },
-            '&.Mui-disabled + .MuiSwitch-track': {
-                opacity: 0.5,
-            },
-        },
-        '&.Mui-focusVisible .MuiSwitch-thumb': {
-            color: '#33cf4d',
-            border: '6px solid #fff',
-        },
-        '&.Mui-disabled .MuiSwitch-thumb': {
-            color:
-                theme.palette.mode === 'light'
-                    ? theme.palette.grey[100]
-                    : theme.palette.grey[600],
-        },
-        '&.Mui-disabled + .MuiSwitch-track': {
-            opacity: theme.palette.mode === 'light' ? 0.7 : 0.3,
-        },
-    },
-    '& .MuiSwitch-thumb': {
-        boxSizing: 'border-box',
-        width: 22,
-        height: 22,
-    },
-    '& .MuiSwitch-track': {
-        borderRadius: 26 / 2,
-        backgroundColor: theme.palette.mode === 'light' ? '#E9E9EA' : '#39393D',
-        opacity: 1,
-        transition: theme.transitions.create(['background-color'], {
-            duration: 500,
-        }),
-    },
-}));
+}
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -164,10 +115,19 @@ const Users: React.FC = () => {
                         lookalikes: response.data.audience_metrics.lookalike_count ?? 0,
                         smart_audience: response.data.audience_metrics.smart_count ?? 0,
                         data_sync: response.data.audience_metrics.sync_count ?? 0,
-                      });
+                    });
                 }
             }
-            catch {
+            catch (error) {
+                if (axios.isAxiosError(error)) {
+                    if (error.response?.status === 403) {
+                        showErrorToast('Error 403: Access is denied');
+                        router.push('/signin');
+                    } else {
+                        showErrorToast(`Error: ${error.response?.status}`);
+                        router.push('/signin');
+                    }
+                }
             }
             finally {
                 setLoading(false);
@@ -224,14 +184,11 @@ const Users: React.FC = () => {
                     </Typography>
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column" }}>
+                    <Box>
+                        <CustomCards values={valuesMetrics} />
+                    </Box>
                     <Box sx={{ width: '100%' }}>
                         {<TabPanel value={tabIndex} index={0}>
-                            <Box>
-                                <CustomCards
-                                    values={valuesMetrics}
-                                />
-                            </Box>
-
                             <Account setLoading={setLoading} is_admin={true} loading={loading} tabIndex={tabIndex} handleTabChange={handleTabChange} />
                         </TabPanel>}
                     </Box>

@@ -48,40 +48,49 @@ class DashboardAudiencePersistence:
         queries = [
             {
                 'query': self.db.query(
-                    func.count(Users.id).label("count")
-                ),
-                'key': 'users'
+                    func.count(Users.id).label("count"))
+                    .filter(Users.role.contains(['customer'])),
+                'key': 'users_count'
             },
             {
                 'query': self.db.query(
-                    func.count(LeadUser.id).label("count")
+                    func.count(UserDomains.id).label("count")
                 )
-                .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id),
+                .join(Users, Users.id == UserDomains.user_id)\
+                .filter(UserDomains.is_pixel_installed == True, Users.role.contains(['customer'])),
                 'key': 'pixel_contacts'
             },
             {
                 'query': self.db.query(
                     func.count(AudienceSource.id).label("count")
-                ),
+                )
+                .join(Users, Users.id == AudienceSource.user_id) \
+                .filter(Users.role.contains(['customer'])),
                 'key': 'sources_count'
             },
             {
                 'query': self.db.query(
                     func.count(AudienceLookalikes.id).label("count")
-                ),
+                )
+                .join(Users, Users.id == AudienceLookalikes.user_id) \
+                .filter(Users.role.contains(['customer'])),
                 'key': 'lookalike_count'
             },
             {
                 'query': self.db.query(
                     func.count(AudienceSmart.id).label("count")
-                ),
+                )
+                .join(Users, Users.id == AudienceSmart.user_id) \
+                .filter(Users.role.contains(['customer'])),
                 'key': 'smart_count'
             },
             {
                 'query': self.db.query(
                     func.count(IntegrationUserSync.id).label("count")
                 )
-                .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id),
+                .join(UserDomains, UserDomains.id == IntegrationUserSync.domain_id) \
+                .join(Users, Users.id == UserDomains.user_id) \
+                .filter(Users.role.contains(['customer'])),
                 'key': 'sync_count'
             }
         ]

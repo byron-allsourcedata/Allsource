@@ -11,6 +11,7 @@ from persistence.plans_persistence import PlansPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.audience_dashboard import DashboardAudiencePersistence
+from services.jwt_service import create_access_token
 from services.subscriptions import SubscriptionService
 from services.users_auth import UsersAuth
 from utils import get_md5_hash
@@ -34,11 +35,50 @@ class AdminCustomersService:
         self.partners_persistence = partners_persistence
         self. dashboard_audience_persistence= dashboard_audience_persistence
 
-    def get_users(self, page, per_page):
-        users_dict, total_count = self.user_persistence.get_not_partner_users(page, per_page)
-        result = []
-        for user in users_dict:
+    def get_admin_users(self, page, per_page):
+        admin_users, total_count = self.user_persistence.get_admin_users(page, per_page)
+        users_dict = [
+            dict(
+                id=user.id,
+                email=user.email,
+                full_name=user.full_name,
+                created_at=user.created_at,
+                last_login=user.last_login,
+                invited_by_email=user.invited_by_email,
+                role=user.role,
+            )
+            for user in admin_users
+        ]
+        return {
+            'users': users_dict,
+            'count': total_count
+        }
 
+    def generate_access_token(self, user: dict, user_account_id: int):
+        if self.user_persistence.get_user_by_id(user_account_id):
+            token_info = {
+                "id": user_account_id,
+                "requester_access_user_id": user.get('id')
+            }
+            return create_access_token(token_info)
+        return None
+
+    def get_customer_users(self, page, per_page):
+        users, total_count = self.user_persistence.get_customer_users(page, per_page)
+        result = []
+        users_dict = [
+            dict(
+                id=user.id,
+                email=user.email,
+                full_name=user.full_name,
+                created_at=user.created_at,
+                last_login=user.last_login,
+                role=user.role,
+                pixel_installed_count=user.pixel_installed_count
+            )
+            for user in users
+        ]
+        for user in users_dict:
             payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(user)
             if payment_status == UserAuthorizationStatus.SUCCESS:
                 user_plan = self.db.query(
@@ -63,7 +103,10 @@ class AdminCustomersService:
                 "full_name": user.get('full_name'),
                 "created_at": user.get('created_at'),
                 'payment_status': payment_status,
-                "is_trial": self.plans_persistence.get_trial_status_by_user_id(user.get('id'))
+                "is_trial": self.plans_persistence.get_trial_status_by_user_id(user.get('id')),
+                'last_login': user.get('last_login'),
+                'role': user.get('role'),
+                'pixel_installed_count': user.get('pixel_installed_count')
             })
         return {
             'users': result,

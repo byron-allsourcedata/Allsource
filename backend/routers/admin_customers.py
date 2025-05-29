@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from services.admin_customers import AdminCustomersService
 from dependencies import get_admin_customers_service, check_user_admin
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
@@ -32,7 +32,15 @@ async def get_users(
         page: int = Query(1, alias="page", ge=1, description="Page number"),
         per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
-    users = admin_customers_service.get_users(page, per_page)
+    users = admin_customers_service.get_customer_users(page, per_page)
+    return users
+
+@router.get('/admins')
+async def get_admins(
+        page: int = Query(1, alias="page", ge=1, description="Page number"),
+        per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
+        admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
+    users = admin_customers_service.get_admin_users(page, per_page)
     return users
 
 @router.put('/user')
@@ -44,3 +52,15 @@ async def get_audience_metrics(
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
     users = admin_customers_service.get_audience_metrics()
     return users
+
+@router.get("/generate-token")
+async def generate_token(user_account_id: int,
+                         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
+                         user: dict = Depends(check_user_admin)):
+    token = admin_customers_service.generate_access_token(user=user, user_account_id=user_account_id)
+    if token:
+        return {"token": token}
+    raise HTTPException(
+        status_code=403,
+        detail="Access denied"
+    )
