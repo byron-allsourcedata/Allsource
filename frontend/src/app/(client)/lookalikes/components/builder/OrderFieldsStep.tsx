@@ -112,7 +112,10 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                                 rightSide={false}
                                 isOpenBody={lookalikesBuilderHints.order.showBody}
                                 toggleClick={() =>
+                                {
+                                    changeLookalikesBuilderHint("create_name", "showBody", "close")
                                     changeLookalikesBuilderHint("order", "showBody", "toggle")
+                                }
                                 }
                                 closeClick={() =>
                                     changeLookalikesBuilderHint("order", "showBody", "close")

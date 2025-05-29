@@ -352,8 +352,12 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                       positionLeft={-425}
                       rightSide={true}
                       isOpenBody={lookalikesTableHints.actions.showBody}
-                      toggleClick={() =>
+                      toggleClick={() => {
+                        changeLookalikesTableHint("insights", "showBody", "close")
+                        changeLookalikesTableHint("builder", "showBody", "close")
                         changeLookalikesTableHint("actions", "showBody", "toggle")
+                      }
+
                       }
                       closeClick={() =>
                         changeLookalikesTableHint("actions", "showBody", "close")
@@ -361,29 +365,33 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                     />
                   )}
                   {key === "name" && (
-      <Box
-        sx={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <HintCard
-          card={cardsLookalikeTable.insights}
-          positionTop={65}
-          positionLeft={90}
-          rightSide={false}
-          isOpenBody={lookalikesTableHints.insights.showBody}
-          toggleClick={() =>
-            changeLookalikesTableHint("insights", "showBody", "toggle")
-          }
-          closeClick={() =>
-            changeLookalikesTableHint("insights", "showBody", "close")
-          }
-        />
-      </Box>
-    )}
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                      }}
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <HintCard
+                        card={cardsLookalikeTable.insights}
+                        positionTop={65}
+                        positionLeft={90}
+                        rightSide={false}
+                        isOpenBody={lookalikesTableHints.insights.showBody}
+                        toggleClick={() => {
+                          changeLookalikesTableHint("actions", "showBody", "close")
+                          changeLookalikesTableHint("builder", "showBody", "close")
+                          changeLookalikesTableHint("insights", "showBody", "toggle")
+                        }
+
+                        }
+                        closeClick={() =>
+                          changeLookalikesTableHint("insights", "showBody", "close")
+                        }
+                      />
+                    </Box>
+                  )}
                   <Typography
                     variant="body2"
                     sx={{ ...lookalikesStyles.table_column, borderRight: "0" }}

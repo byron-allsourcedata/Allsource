@@ -567,8 +567,12 @@ const CreateLookalikePage: React.FC = () => {
                 positionLeft={-425}
                 rightSide={true}
                 isOpenBody={lookalikesTableHints.builder.showBody}
-                toggleClick={() =>
+                toggleClick={() => {
+                  changeLookalikesTableHint("actions", "showBody", "close")
+                  changeLookalikesTableHint("insights", "showBody", "close")
                   changeLookalikesTableHint("builder", "showBody", "toggle")
+                }
+
                 }
                 closeClick={() =>
                   changeLookalikesTableHint("builder", "showBody", "close")
