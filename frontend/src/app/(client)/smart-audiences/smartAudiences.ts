@@ -97,7 +97,7 @@ export const smartAudiences: { [key: string]: SxProps<Theme> } = {
     fontFamily: 'Nunito Sans', fontSize: '12px', fontWeight: '600',
     lineHeight: '16px',
     textAlign: 'left',
-    textWrap: 'nowrap',
+    textWrap: 'auto',
     color: '#202124',
     '&::after': {
       content: '""',
