@@ -111,7 +111,7 @@ const CreateLookalikePage: React.FC = () => {
       setLoading(false);
     }
   };
-  
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSourceName(event.target.value);
   };
@@ -524,7 +524,7 @@ const CreateLookalikePage: React.FC = () => {
                           rightSide={false}
                           isOpenBody={lookalikesBuilderHints.size.showBody}
                           toggleClick={() =>
-                            
+
                             changeLookalikesBuilderHint("size", "showBody", "toggle")
                           }
                           closeClick={() =>
@@ -636,8 +636,11 @@ const CreateLookalikePage: React.FC = () => {
                       positionLeft={500}
                       rightSide={false}
                       isOpenBody={lookalikesBuilderHints.create_name.showBody}
-                      toggleClick={() =>
+                      toggleClick={() => {
+                        changeLookalikesBuilderHint("order", "showBody", "close")
                         changeLookalikesBuilderHint("create_name", "showBody", "toggle")
+                      }
+
                       }
                       closeClick={() =>
                         changeLookalikesBuilderHint("create_name", "showBody", "close")
