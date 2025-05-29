@@ -785,7 +785,7 @@ const Leads: React.FC = () => {
                                         <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
                                     </Box>
                                     <Box sx={{
-                                        display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
+                                        display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
                                         '@media (max-width: 900px)': {
                                             gap: '8px'
                                         }
@@ -820,6 +820,27 @@ const Leads: React.FC = () => {
                                         >
                                             <DownloadIcon fontSize='medium' />
                                         </Button>
+
+                                        <HintCard
+                                            card={companyTableCards["download"]}
+                                            positionLeft={-420}
+                                            positionTop={20}
+                                            rightSide={true}
+                                            isOpenBody={companyTableHints["download"].showBody}
+                                            toggleClick={() => {
+                                            if (companyTableHints["overview"].showBody) {
+                                                changeCompanyTableHint("overview", "showBody", "close")
+                                            }
+                                            if (companyTableHints["employees"].showBody) {
+                                                changeCompanyTableHint("employees", "showBody", "close")
+                                            }
+                                            changeCompanyTableHint("download", "showBody", "toggle")
+                                            }}
+                                            closeClick={() => {
+                                                changeCompanyTableHint("download", "showBody", "close")
+                                            }}
+                                        />
+
                                         <Button
                                             onClick={handleFilterPopupOpen}
                                             disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
@@ -1061,7 +1082,7 @@ const Leads: React.FC = () => {
                                             }}
                                         >
                                             <Table stickyHeader aria-label="leads table">
-                                                <TableHead>
+                                                <TableHead sx={{ position: "relative" }}>
                                                     <TableRow>
                                                         {[
                                                             { key: 'company_name', label: 'Company', sortable: true },
@@ -1087,13 +1108,12 @@ const Leads: React.FC = () => {
                                                                         "::after": { content: 'none' }
                                                                     })
                                                                 }}
-                                                                onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                                style={{ cursor: sortable ? 'pointer' : 'default' }}
                                                             >
                                                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
                                                                     <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
                                                                     {sortable && (
-                                                                        <IconButton size="small">
+                                                                        <IconButton size="small" onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                                        style={{ cursor: sortable ? 'pointer' : 'default' }}>
                                                                             {orderBy === key ? (
                                                                                 order === 'asc' ? (
                                                                                     <NorthOutlinedIcon fontSize="inherit" />
@@ -1106,6 +1126,47 @@ const Leads: React.FC = () => {
                                                                         </IconButton>
                                                                     )}
                                                                 </Box>
+                                                            {key === "number_of_employees" && (
+                                                                <HintCard
+                                                                    card={companyTableCards["employees"]}
+                                                                    positionLeft={-300}
+                                                                    positionTop={80}
+                                                                    rightSide={true}
+                                                                    isOpenBody={companyTableHints["employees"].showBody}
+                                                                    toggleClick={() => {
+                                                                    if (companyTableHints["download"].showBody) {
+                                                                        changeCompanyTableHint("download", "showBody", "close")
+                                                                    }
+                                                                    if (companyTableHints["overview"].showBody) {
+                                                                        changeCompanyTableHint("overview", "showBody", "close")
+                                                                    }
+                                                                    changeCompanyTableHint("employees", "showBody", "toggle")
+                                                                    }}
+                                                                    closeClick={() => {
+                                                                        changeCompanyTableHint("employees", "showBody", "close")
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            {key === "company_name" && (
+                                                                <HintCard
+                                                                    card={companyTableCards["overview"]}
+                                                                    positionLeft={110}
+                                                                    positionTop={100}
+                                                                    isOpenBody={companyTableHints["overview"].showBody}
+                                                                    toggleClick={() => {
+                                                                    if (companyTableHints["download"].showBody) {
+                                                                        changeCompanyTableHint("download", "showBody", "close")
+                                                                    }
+                                                                    if (companyTableHints["employees"].showBody) {
+                                                                        changeCompanyTableHint("employees", "showBody", "close")
+                                                                    }
+                                                                    changeCompanyTableHint("overview", "showBody", "toggle")
+                                                                    }}
+                                                                    closeClick={() => {
+                                                                        changeCompanyTableHint("overview", "showBody", "close")
+                                                                    }}
+                                                                />
+                                                            )}
                                                             </TableCell>
                                                         ))}
                                                     </TableRow>

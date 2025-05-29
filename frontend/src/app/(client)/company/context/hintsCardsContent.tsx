@@ -1,6 +1,6 @@
 import { HintCardInterface } from '@/utils/hintsUtils';
 
-export type CompanyTableKey = "download" | "overview"
+export type CompanyTableKey = "download" | "overview" | "employees"
 export type EmployeesTableKey = "download" | "overview" | "unlock"
 
 
@@ -16,6 +16,13 @@ const companyTableCards: Record<CompanyTableKey, HintCardInterface> = {
       description:
       "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
       title: "Overview",
+      linkToLoadMore:
+      "https://allsourceio.zohodesk.com/portal/en/kb/articles/builder",
+  },
+  "employees": {
+      description:
+      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+      title: "Employees",
       linkToLoadMore:
       "https://allsourceio.zohodesk.com/portal/en/kb/articles/builder",
   },
