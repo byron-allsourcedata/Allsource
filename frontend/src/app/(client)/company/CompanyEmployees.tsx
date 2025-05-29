@@ -31,6 +31,9 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import UnlockButton from './UnlockButton';
 import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
+import HintCard from "../components/HintCard";
+import { useCompanyHints } from "./context/CompanyHintsContext";
+import { employeesTableCards } from "./context/hintsCardsContent";
 
 
 interface FetchDataParams {
@@ -82,6 +85,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [jobTitles, setJobTitles] = React.useState<string[]>([]);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
     const [employeeisUnlocked, setEmployeeisUnlocked] = useState(false);
+    const { changeEmployeesTableHint, employeesTableHints, resetEmployeesTableHints } = useCompanyHints();
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, jobTitle: string) => {

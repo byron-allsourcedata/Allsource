@@ -42,7 +42,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import dayjs from "dayjs";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomToolTip from "@/components/customToolTip";
-import CustomTablePagination from "@/components/CustomTablePagination";
+import PaginationComponent from "@/components/PaginationComponent";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ThreeDotsLoader from "./components/ThreeDotsLoader";
@@ -1672,53 +1672,14 @@ const Sources: React.FC = () => {
                               </TableBody>
                             </Table>
                           </TableContainer>
-                          {count_sources && count_sources > 10 ? (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                padding: "24px 0 0",
-                                "@media (max-width: 600px)": {
-                                  padding: "12px 0 0",
-                                },
-                              }}
-                            >
-                              <CustomTablePagination
-                                count={count_sources ?? 0}
-                                page={page}
-                                rowsPerPage={rowsPerPage}
-                                onPageChange={handleChangePage}
-                                onRowsPerPageChange={handleChangeRowsPerPage}
-                                rowsPerPageOptions={rowsPerPageOptions}
-                              />
-                            </Box>
-                          ) : (
-                            <Box
-                              display="flex"
-                              justifyContent="flex-end"
-                              alignItems="center"
-                              sx={{
-                                padding: "16px",
-                                backgroundColor: "#fff",
-                                borderRadius: "4px",
-                                "@media (max-width: 600px)": {
-                                  padding: "12px",
-                                },
-                              }}
-                            >
-                              <Typography
-                                sx={{
-                                  fontFamily: "Nunito Sans",
-                                  fontWeight: "400",
-                                  fontSize: "12px",
-                                  lineHeight: "16px",
-                                  marginRight: "16px",
-                                }}
-                              >
-                                {`1 - ${count_sources} of ${count_sources}`}
-                              </Typography>
-                            </Box>
-                          )}
+                          <PaginationComponent 
+                              countRows={count_sources ?? 0}
+                              page={page}
+                              rowsPerPage={rowsPerPage}
+                              onPageChange={handleChangePage}
+                              onRowsPerPageChange={handleChangeRowsPerPage}
+                              rowsPerPageOptions={rowsPerPageOptions}
+                          />
                         </Grid>
                       </Grid>
                     )}
