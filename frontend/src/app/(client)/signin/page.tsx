@@ -86,7 +86,7 @@ const Signin: React.FC = () => {
     setErrors(newErrors);
   };
 
-  const get_me = async () => {};
+  const get_me = async () => { };
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
@@ -99,9 +99,9 @@ const Signin: React.FC = () => {
 
   const checkPartner = (isPartner: boolean) => {
     if (isPartner) {
-      router.push("/partners");
+      //router.push("/partners");
     } else {
-      router.push("/audience-dashboard");
+      //router.push("/audience-dashboard");
     }
   };
 
@@ -189,7 +189,17 @@ const Signin: React.FC = () => {
 
             case "PIXEL_INSTALLATION_NEEDED":
               await fetchUserData();
-              router.push(partner ? "/partners" : "/audience-dashboard");
+              router.push(partner ? "/partners" : "/get-started");
+              break;
+
+            case "FILL_COMPANY_DETAILS":
+              let data = await fetchUserData();
+              const { is_pixel_installed, is_source_imported } = data?.get_started;
+              if (is_pixel_installed && is_source_imported) {
+                router.push('/audience-dashboard');
+              } else {
+                router.push('/get-started');
+              }
               break;
 
             default:
@@ -293,6 +303,15 @@ const Signin: React.FC = () => {
                   case "PIXEL_INSTALLATION_NEEDED":
                     router.push(partner ? "/partners" : "/audience-dashboard");
                     break;
+                  case "FILL_COMPANY_DETAILS":
+                    let data = await fetchUserData();
+                    const { is_pixel_installed, is_source_imported } = data?.get_started;
+                    if (is_pixel_installed && is_source_imported) {
+                      router.push('/audience-dashboard');
+                    } else {
+                      router.push('/get-started');
+                    }
+                    break;
                   default:
                     router.push("/audience-dashboard");
                     console.error(
@@ -304,7 +323,7 @@ const Signin: React.FC = () => {
                 console.error("Error during Google login:", error);
               }
             }}
-            onError={() => {}}
+            onError={() => { }}
             ux_mode="popup"
           />
           <Box sx={loginStyles.orDivider}>

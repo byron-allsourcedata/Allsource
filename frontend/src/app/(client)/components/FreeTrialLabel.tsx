@@ -46,8 +46,6 @@ const FreeTrialLabel: React.FC = () => {
   useEffect(() => {
     if (data) {
       const { user_info, user_plan, user_domains } = data;
-      console.log("Credits", user_info.leads_credits)
-      console.log("Limit", user_plan)
       if (user_info && user_plan) {
         setCreditsCount(user_info.leads_credits);
         setDomainCount(user_domains.length);
