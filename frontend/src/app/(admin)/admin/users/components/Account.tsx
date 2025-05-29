@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from '@/context/UserContext';
 import { Solitreo } from "next/font/google";
 import { fetchUserData } from "@/services/meService";
+import FilterPopup from "./FilterPopup";
 
 
 interface UserData {
@@ -301,7 +302,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                 );
             case 'email':
                 return row.email || '--';
-            case 'last_signed_in':
+            case 'last_login_date':
                 return formatDate(row.last_login);
             case 'invited_by':
                 return row.invited_by_email || '--';
@@ -311,6 +312,12 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                 return row.pixel_installed_count || '0';
             case 'join_date':
                 return formatDate(row.created_at);
+            case 'sources_count':
+                return row.pixel_installed_count || '0';
+            case 'lookalikes_count':
+                return row.pixel_installed_count || '0';
+            case 'credits_count':
+                return row.pixel_installed_count || '0';
             case 'status':
                 return (
                     <Typography
@@ -377,10 +384,10 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                             },
                                         }}
                                         onClick={() => {
-                                            handleOpenSlider(row.id);
+                                            console.log("Customer: View Orders clicked");
                                         }}
                                     >
-                                        Admin Payment History
+                                        View Orders
                                     </Button>
                                 </Box>
                             </Popover>
@@ -529,24 +536,32 @@ interface AccountData {
     status: string;
 }
 
+interface FilterParams {
+    joinDate: string[];
+    lastLoginDate: string | null;
+}
+
 
 const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, onBack, is_admin, fromMain, loading, setLoading, tabIndex, handleTabChange }) => {
     const tableHeaders = is_admin
         ? [
-            { key: 'name', label: 'Name', sortable: false },
-            { key: 'email', label: 'Email ID', sortable: false },
+            { key: 'name', label: 'Account name', sortable: false },
+            { key: 'email', label: 'Email', sortable: false },
             { key: 'join_date', label: 'Join date', sortable: true },
-            { key: 'last_signed_in', label: 'Last signed-in', sortable: false },
+            { key: 'last_signed_in', label: 'Last Login Date', sortable: false },
             { key: 'invited_by', label: 'Invited by', sortable: false },
             { key: 'access_level', label: 'Access level', sortable: true },
             { key: 'actions', label: 'Actions', sortable: false },
         ]
         : [
-            { key: 'name', label: 'Name', sortable: false },
+            { key: 'name', label: 'Account name', sortable: false },
             { key: 'email', label: 'Email', sortable: false },
             { key: 'join_date', label: 'Join date', sortable: true },
-            { key: 'last_signed_in', label: 'Last signed-in', sortable: false },
-            { key: 'pixel_installed_count', label: 'Pixel installed count', sortable: false },
+            { key: 'last_login_date', label: 'Last Login Date', sortable: false },
+            { key: 'pixel_installed_count', label: 'Pixel', sortable: false },
+            { key: 'sources_count', label: 'Sources', sortable: false },
+            { key: 'lookalikes_count', label: 'Lookalikes', sortable: false },
+            { key: 'credits_count', label: 'Credits count', sortable: false },
             { key: 'status', label: 'Status', sortable: false },
             { key: 'actions', label: 'Actions', sortable: false },
         ];
@@ -562,9 +577,12 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     const isCalendarOpen = Boolean(calendarAnchorEl);
     const [currentPage, setCurrentPage] = useState(1);
     const [isSliderOpen, setSliderOpen] = useState(false);
-    const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
     const [totalPages, setTotalPage] = useState(1);
+    const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [formattedDates, setFormattedDates] = useState<string>('');
+    const [joinDate, setJoinDate] = useState<string[]>([]);
+    const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
+    const [lastLoginDate, setLastLoginDate] = useState<string[]>([]);
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain ?? { start: null, end: null });
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     const allowedRowsPerPage = [10, 25, 50, 100];
@@ -607,14 +625,12 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
         setSearch(event.target.value);
     };
 
-    const handleOpenSlider = (id: number) => {
-        setSelectedUserId(id);
+    const handleFormOpenPopup = () => {
         setSliderOpen(true);
     };
 
-    const handleCloseSlider = () => {
+    const handleFormClosePopup = () => {
         setSliderOpen(false);
-        setSelectedUserId(null);
     };
 
     const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -662,10 +678,59 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
         setPage(newPage);
     };
 
+    const handleApplyFilters = (filters: FilterParams) => {
+        // const newSelectedFilters: { label: string; value: string }[] = [];
+
+        // const getSelectedValues = (obj: Record<string, boolean>): string => {
+        //     return Object.entries(obj)
+        //         .filter(([_, value]) => value)
+        //         .map(([key]) => key)
+        //         .join(', ');
+        // };
+
+        // // Map of filter conditions to their labels
+        // const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
+        //     { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
+        //     { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
+        //     { 
+        //         condition: filters.seniority && Object.values(filters.seniority).some(Boolean), 
+        //         label: 'Seniority', 
+        //         value: () => getSelectedValues(filters.seniority!) 
+        //     },
+        //     { 
+        //         condition: filters.jobTitle && Object.values(filters.jobTitle).some(Boolean), 
+        //         label: 'Job Title', 
+        //         value: () => getSelectedValues(filters.jobTitle!) 
+        //     },
+        //     { 
+        //         condition: filters.department && Object.values(filters.department).some(Boolean), 
+        //         label: 'Department', 
+        //         value: () => getSelectedValues(filters.department!) 
+        //     },
+        // ];
+
+
+        // filterMappings.forEach(({ condition, label, value }) => {
+        //     if (condition) {
+        //         newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
+        //     }
+        // });
+
+        // setSelectedFilters(newSelectedFilters);
+    };
+
 
 
     const handleRowsPerPageChange = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
+    };
+
+    const handleFilterPopupOpen = () => {
+        setFilterPopupOpen(true);
+    };
+
+    const handleFilterPopupClose = () => {
+        setFilterPopupOpen(false);
     };
 
     const handleSortRequest = (key: string) => {
@@ -694,37 +759,6 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
         setAccounts(sortedAccounts);
     };
 
-    const fetchInviteAdmin = useCallback(async () => {
-        setLoading(true);
-        try {
-            // const response = await axiosInstance.get("/admin-accounts", {
-            //     params: {
-            //         search,
-            //         start_date: appliedDates.start ? appliedDates.start.toLocaleDateString('en-CA') : null,
-            //         end_date: appliedDates.end ? appliedDates.end.toLocaleDateString('en-CA') : null,
-            //         page,
-            //         rows_per_page: rowsPerPage,
-            //         order_by: orderBy,
-            //         order,
-            //     }
-            // })
-            // if (response.status === 200 && response.data.totalCount > 0) {
-            //     setErrosResponse(false)
-            //     setPartners([...response.data.items])
-            //     setTotalCount(response.data.totalCount)
-            // }
-            // else {
-            //     setPartners([])
-            //     setErrosResponse(true)
-            //     setTotalCount(0)
-            // }
-
-        } catch {
-        } finally {
-            setLoading(false);
-        }
-    }, [page, rowsPerPage, search, appliedDates, orderBy, order]);
-
     useEffect(() => {
         if (
             appliedDatesFromMain?.start instanceof Date || appliedDatesFromMain?.start === null &&
@@ -739,16 +773,13 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
 
     const tabs = [
         { label: "Admins", visible: true },
-        { label: "Customers", visible: true }
+        { label: "Accounts", visible: true }
     ];
 
 
     return (
         <>
-        {(isSliderOpen && selectedUserId) && <InviteAdmin isOpen={isSliderOpen}
-                            onClose={handleCloseSlider}
-                            onSumbit={fetchInviteAdmin}
-                            user_id={selectedUserId} />}
+            <InviteAdmin open={isSliderOpen} onClose={handleFormClosePopup} />
             <Box sx={{
                 backgroundColor: '#fff',
                 width: '100%',
@@ -762,45 +793,61 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
             }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', pb: "24px", }}>
 
-                    <Tabs onChange={handleTabChange} value={tabIndex} sx={{
-                        textTransform: 'none',
-                        minHeight: 0,
-                        '& .MuiTabs-indicator': {
-                            backgroundColor: 'rgba(56, 152, 252, 1)',
-                            height: '1.4px',
-                        },
-                        "@media (max-width: 600px)": {
-                            border: '1px solid rgba(228, 228, 228, 1)', borderRadius: '4px', width: '100%', '& .MuiTabs-indicator': {
-                                height: '0',
+                    <Tabs
+                        value={tabIndex}
+                        onChange={handleTabChange}
+                        aria-label="partners role tabs"
+                        TabIndicatorProps={{
+                            sx: {
+                                backgroundColor: '#5052B2',
+                                height: '2px',
+                                bottom: 15,
                             },
-                        }
-                    }}
-                        aria-label="partners role tabs">
-                        {tabs.filter(t => t.visible).map((tab, index) => (
-                            <Tab key={index} label={tab.label} sx={{
-                                textTransform: 'none',
-                                padding: '4px 1px',
-                                minHeight: 'auto',
-                                flexGrow: 1,
-                                pb: '10px',
-                                textAlign: 'center',
-                                fontSize: '14px',
-                                fontWeight: 700,
-                                lineHeight: '19.1px',
-                                minWidth: 'auto',
-                                mr: 2,
-                                '&.Mui-selected': {
-                                    color: 'rgba(56, 152, 252, 1)'
+                        }}
+                        sx={{
+                            minHeight: 0,
+                            '@media (max-width: 600px)': {
+                                border: '1px solid rgba(228, 228, 228, 1)',
+                                borderRadius: '4px',
+                                width: '100%',
+                                '& .MuiTabs-indicator': {
+                                    height: '1.4px',
                                 },
-                                "@media (max-width: 600px)": {
-                                    mr: 0, borderRadius: '4px', '&.Mui-selected': {
-                                        backgroundColor: 'rgba(249, 249, 253, 1)',
-                                        border: '1px solid rgba(220, 220, 239, 1)'
+                            },
+                        }}
+                    >
+                        {tabs.filter(t => t.visible).map((tab, index) => (
+                            <Tab
+                                key={index}
+                                label={tab.label}
+                                sx={{
+                                    textTransform: 'none',
+                                    padding: '4px 1px',
+                                    minHeight: 'auto',
+                                    flexGrow: 1,
+                                    pb: '10px',
+                                    textAlign: 'center',
+                                    fontSize: '14px',
+                                    fontWeight: 700,
+                                    lineHeight: '19.1px',
+                                    minWidth: 'auto',
+                                    mr: 2,
+                                    '&.Mui-selected': {
+                                        color: '#5052B2',
                                     },
-                                }
-                            }} />
+                                    '@media (max-width: 600px)': {
+                                        mr: 1,
+                                        borderRadius: '4px',
+                                        '&.Mui-selected': {
+                                            backgroundColor: 'rgba(249, 249, 253, 1)',
+                                            border: '1px solid rgba(220, 220, 239, 1)',
+                                        },
+                                    },
+                                }}
+                            />
                         ))}
                     </Tabs>
+
 
                     <Box sx={{ display: 'flex', gap: "16px" }}>
                         <TextField
@@ -843,70 +890,57 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                                 },
                             }}
                         />
-                        <Button
-                            aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={isCalendarOpen ? 'true' : undefined}
-                            onClick={handleCalendarClick}
-                            sx={{
-                                textTransform: 'none',
-                                color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
-                                border: formattedDates ? '1.5px solid rgba(56, 152, 252, 1)' : '1.5px solid rgba(184, 184, 184, 1)',
-                                borderRadius: '4px',
-                                padding: '8px',
-                                minWidth: 'auto',
-                                '@media (max-width: 900px)': {
-                                    border: 'none',
-                                    padding: 0
-                                },
-                                '&:hover': {
-                                    border: '1.5px solid rgba(56, 152, 252, 1)',
-                                    '& .MuiSvgIcon-root': {
-                                        color: 'rgba(56, 152, 252, 1)'
-                                    }
-                                }
-                            }}
-                        >
-                            <DateRangeIcon
-                                fontSize="medium"
-                                sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }}
-                            />
-                            <Typography variant="body1" sx={{
-                                fontFamily: 'Roboto',
-                                fontSize: '14px',
-                                fontWeight: '400',
-                                color: 'rgba(32, 33, 36, 1)',
-                                lineHeight: '19.6px',
-                                textAlign: 'left'
-                            }}>
-                                {formattedDates}
-                            </Typography>
-                            {formattedDates &&
-                                <Box sx={{ pl: 2, display: 'flex', alignItems: 'center' }}>
-                                    <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
-                                </Box>
-                            }
-                        </Button>
+                        {tabIndex === 0 && (
+                            <Button
+                                variant="outlined"
+                                sx={{
+                                    height: '40px',
+                                    borderRadius: '4px',
+                                    textTransform: 'none',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    color: 'rgba(56, 152, 252, 1)',
+                                    borderColor: 'rgba(56, 152, 252, 1)',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(80, 82, 178, 0.1)',
+                                        borderColor: 'rgba(56, 152, 252, 1)',
+                                    },
+                                }}
+                                onClick={() => {
+                                    handleFormOpenPopup()
+                                }}
+                            >
+                                Add Admin
+                            </Button>
+                        )}
+                        <FilterPopup open={filterPopupOpen} 
+                        onClose={handleFilterPopupClose} 
+                        onApply={handleApplyFilters} 
+                        joinDate={joinDate || []} 
+                        lastLoginDate={lastLoginDate || []} />
+                            
                     </Box>
                 </Box>
                 <Grid container direction="column" justifyContent="flex-start" spacing={2} sx={{ minHeight: '100vh' }}>
                     <Grid item xs={12} sx={{ pl: 1, pr: 3, mt: 0 }}>
-                        <TableContainer component={Paper}>
-                            <Table>
+                        <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }}>
+                            <Table stickyHeader>
                                 <TableHeader onSort={handleSortRequest} tableHeaders={tableHeaders} sortField={orderBy} sortOrder={order} />
                                 <TableBodyClient data={userData} tableHeaders={tableHeaders} setLoading={setLoading} />
                             </Table>
-                            <Box sx={{ display: 'flex', justifyContent: 'end' }}>
-                                <CustomTablePagination
-                                    count={totalCount}
-                                    page={page}
-                                    rowsPerPage={allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10}
-                                    onPageChange={handlePageChange}
-                                    onRowsPerPageChange={handleRowsPerPageChange}
-                                    rowsPerPageOptions={[10, 25, 50, 100]}
-                                />
-                            </Box>
+
                         </TableContainer>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 2 }}>
+                            <CustomTablePagination
+                                count={totalCount}
+                                page={page}
+                                rowsPerPage={allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10}
+                                onPageChange={handlePageChange}
+                                onRowsPerPageChange={handleRowsPerPageChange}
+                                rowsPerPageOptions={[10, 25, 50, 100]}
+                            />
+                        </Box>
+
                     </Grid>
                 </Grid>
 

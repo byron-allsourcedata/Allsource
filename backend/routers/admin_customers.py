@@ -1,16 +1,19 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query, HTTPException
+
+from schemas.admin import InviteDetailsRequest
 from services.admin_customers import AdminCustomersService
 from dependencies import get_admin_customers_service, check_user_admin
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from schemas.users import UpdateUserRequest, UpdateUserResponse
-router = APIRouter(dependencies=[Depends(check_user_admin)])
+
+router = APIRouter()
 
 
 @router.get("/confirm_customer")
 async def verify_token(admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
-                       mail: str = Query(...), free_trial: bool = Query(...)):
+                       mail: str = Query(...), free_trial: bool = Query(...), user: dict = Depends(check_user_admin)):
     user = admin_customers_service.confirmation_customer(mail, free_trial)
     queue_name = f'sse_events_{str(user.id)}'
     rabbitmq_connection = RabbitMQConnection()
@@ -27,37 +30,59 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
         await rabbitmq_connection.close()
     return "OK"
 
+
 @router.get('/users')
 async def get_users(
+        user: dict = Depends(check_user_admin),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
         per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
     users = admin_customers_service.get_customer_users(page, per_page)
     return users
 
+
 @router.get('/admins')
 async def get_admins(
+        user: dict = Depends(check_user_admin),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
         per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
     users = admin_customers_service.get_admin_users(page, per_page)
     return users
 
+
 @router.put('/user')
-def update_user(update_data: UpdateUserRequest, admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
+def update_user(update_data: UpdateUserRequest,
+                admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
+                user: dict = Depends(check_user_admin)):
     return admin_customers_service.update_user(update_data)
+
 
 @router.get('/audience-metrics')
 async def get_audience_metrics(
+        user: dict = Depends(check_user_admin),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
     users = admin_customers_service.get_audience_metrics()
     return users
+
 
 @router.get("/generate-token")
 async def generate_token(user_account_id: int,
                          admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
                          user: dict = Depends(check_user_admin)):
     token = admin_customers_service.generate_access_token(user=user, user_account_id=user_account_id)
+    if token:
+        return {"token": token}
+    raise HTTPException(
+        status_code=403,
+        detail="Access denied"
+    )
+
+@router.get("/invite-user")
+async def invite_user(invite_details: InviteDetailsRequest,
+                      admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
+                      user: dict = Depends(check_user_admin)):
+    token = admin_customers_service.invite_user(user=user, email=invite_details.email, name=invite_details.name)
     if token:
         return {"token": token}
     raise HTTPException(

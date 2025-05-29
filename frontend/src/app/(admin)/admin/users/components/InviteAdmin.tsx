@@ -1,98 +1,139 @@
-"use client"
-import React, { useState } from 'react';
-import { Drawer, Box, Typography, IconButton, Backdrop, Button, TextField, LinearProgress, styled } from '@mui/material';
+import React, { ChangeEvent, useState, useEffect } from 'react';
+import { Drawer, Backdrop, Box, Typography, Button, IconButton, TextField, LinearProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
+import { styled } from '@mui/material/styles';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
 
-
-interface SliderProps {
-    isOpen: boolean;
+interface FormUploadPopupProps {
+    open: boolean;
     onClose: () => void;
-    user_id?: number;
-    onSumbit: () => void;
-    is_master?: boolean;
 }
 
-const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
-    height: 4,
-    borderRadius: 0,
-    backgroundColor: '#c6dafc',
-    '& .MuiLinearProgress-bar': {
-        borderRadius: 5,
-        backgroundColor: '#4285f4',
-    },
-}));
+interface RequestData {
+    email: string;
+    name: string;
+}
 
-
-const InviteAdmin: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit, is_master }) => {
-    const [commission, setCommission] = useState("");
+const InviteAdmin: React.FC<FormUploadPopupProps> = ({ open, onClose }) => {
+    const [fullName, setFullName] = useState("");
+    const [buttonContain, setButtonContain] = useState(false);
+    const [email, setEmail] = useState("");
     const [processing, setProcessing] = useState(false)
-    const handleClose = () => {
-        onClose();
+    const [emailError, setEmailError] = useState(false);
+
+    const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setEmail(value);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        setEmailError(!emailRegex.test(value) && value !== "");
     };
 
+    const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+        height: 4,
+        borderRadius: 0,
+        backgroundColor: '#c6dafc',
+        '& .MuiLinearProgress-bar': {
+            borderRadius: 5,
+            backgroundColor: '#4285f4',
+        },
+    }));
+
+
+    const handleClose = () => {
+        onClose()
+        setFullName("");
+        setEmail("");
+    }
+
     const handleSubmit = async () => {
-        setProcessing(true);
+        setButtonContain(false);
+        const requestData: RequestData = {
+            name: fullName.trim(),
+            email: email.trim()
+        };
         try {
-            const response = await axiosInstance.put('/admin/user', {
-                user_id: user_id,
-                is_partner: true,
-                commission: commission,
-                is_master: is_master ? true : false
+            setProcessing(true);
+            let response = await axiosInstance.post(`admin/invite-user`, requestData, {
+                headers: { 'Content-Type': 'application/json' },
             });
-            onSumbit()
-            showToast('User updated succesfuly')
+            if (response.status === 200) {
+                if (response.data.data) {
+                    showToast("Partner successfully submitted!");
+                }
+                if (response.data.message) {
+                    showErrorToast(response.data.message);
+                }
+            }
+
         } catch {
-            showErrorToast('Error updating user');
+            showErrorToast("Failed to submit the invite. Please try again.");
         } finally {
             handleClose();
-            setCommission("");
+            setFullName("");
+            setEmail("");
             setProcessing(false);
         }
     };
 
+    useEffect(() => {
+        setButtonContain([email, fullName].every(field => typeof field === "string" && field.trim().length > 0));
+    }, [email, fullName]);
 
     return (
         <>
-            <Backdrop open={isOpen} onClick={handleClose} sx={{ zIndex: 1200, color: '#fff' }} />
-            <Drawer anchor="right" onClose={handleClose} open={isOpen} PaperProps={{
-                sx: {
-                    width: '40%',
-                    position: 'fixed',
-                    top: 0,
-                    bottom: 0,
-                    '@media (max-width: 600px)': {
-                        width: '100%',
-                    }
-                },
-            }}
+            <Backdrop open={open} onClick={onClose} sx={{ zIndex: 1200, color: '#fff' }} />
+            <Drawer anchor="right" onClose={onClose}
                 slotProps={{
                     backdrop: {
                         sx: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.125)'
+                            backgroundColor: 'rgba(0, 0, 0, 0.01)'
                         }
                     }
-                }}>
+                }}
+                open={open}>
                 {processing && (
                     <Box
                         sx={{
                             width: '100%',
                             position: 'fixed',
-                            top: '4.25rem',
+                            top: '4.2rem',
                             zIndex: 1200,
                         }}
                     >
                         <BorderLinearProgress variant="indeterminate" />
                     </Box>
                 )}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 2, pb: 1.4, borderBottom: '1px solid #e4e4e4' }}>
-                    <Typography className='first-sub-title' sx={{ textAlign: 'center', '@media (max-width: 600px)': { fontSize: '16px', textAlign: 'left' }, '@media (min-width: 1500px)': { fontSize: '22px !important', lineHeight: '25.2px !important' } }}>
-                       Make {is_master ? 'Master' : ''} partner
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "24px",
+                        pb: '11px',
+                        borderBottom: "1px solid #e4e4e4",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: 9900,
+                        backgroundColor: "#fff",
+                    }}
+                >
+                    <Typography
+                        sx={{
+                            fontFamily: "Nunito Sans",
+                            fontSize: "16px",
+                            fontWeight: "600",
+                            lineHeight: "21.82px",
+                            color: "#202124"
+                        }}
+                    >
+                        Invite admin details
                     </Typography>
-                    <IconButton onClick={handleClose}>
-                        <CloseIcon sx={{ '@media (min-width: 1500px)': { fontSize: '28px !important', lineHeight: '25.2px !important' } }} />
-                    </IconButton>
+                    <Box sx={{ display: "flex", flexDirection: "row" }}>
+                        <IconButton onClick={handleClose}>
+                            <CloseIcon sx={{ width: "16px", height: "16px" }} />
+                        </IconButton>
+                    </Box>
                 </Box>
                 <Box
                     sx={{
@@ -102,7 +143,7 @@ const InviteAdmin: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                         sx={{
                             display: "flex",
                             flexDirection: "column",
-                            gap: "18px"
+                            gap: "32px"
                         }}>
                         <Typography
                             sx={{
@@ -113,13 +154,24 @@ const InviteAdmin: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                                 marginTop: "24px"
                             }}
                         >
-                            Are you sure you want to make the user a {is_master ? 'Master' : ''} partner?
+                            Invite your contacts to become official admins and grow together
                         </Typography>
 
                         <TextField
                             id="outlined-required"
-                            label="Enter the commision for reward payout"
-                            placeholder='Enter the commision for reward payout'
+                            label="Full name"
+                            placeholder='Full name'
+                            InputLabelProps={{
+                                sx: {
+                                    color: 'rgba(17, 17, 19, 0.6)',
+                                    fontFamily: 'Nunito Sans',
+                                    fontWeight: 400,
+                                    fontSize: '15px',
+                                    padding: 0,
+                                    top: '-1px',
+                                    margin: 0
+                                }
+                            }}
                             sx={{
                                 "& .MuiInputLabel-root.Mui-focused": {
                                     color: "rgba(17, 17, 19, 0.6)",
@@ -127,11 +179,55 @@ const InviteAdmin: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                                 "& .MuiInputLabel-root[data-shrink='false']": {
                                     transform: "translate(16px, 50%) scale(1)",
                                 },
+                                "& .MuiOutlinedInput-root": {
+                                    maxHeight: '40px'
+                                }
                             }}
-                            value={commission}
-                            onChange={(e) => setCommission(e.target.value)}
+                            InputProps={{
+                                className: "form-input"
+                            }}
+                            value={fullName}
+                            size='small'
+                            onChange={(e) => setFullName(e.target.value)}
                         />
 
+                        <TextField
+                            id="outlined-required"
+                            label="Email"
+                            type="email"
+                            placeholder='Email'
+                            InputLabelProps={{
+                                sx: {
+                                    color: 'rgba(17, 17, 19, 0.6)',
+                                    fontFamily: 'Nunito Sans',
+                                    fontWeight: 400,
+                                    fontSize: '15px',
+                                    padding: 0,
+                                    top: '-1px',
+                                    margin: 0
+                                }
+                            }}
+                            InputProps={{
+                                className: "form-input"
+                            }}
+                            sx={{
+                                width: "556px",
+                                "@media (max-width: 620px)": { width: "calc(100vw - 64px)" },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                    color: "rgba(17, 17, 19, 0.6)",
+                                },
+                                "& .MuiInputLabel-root[data-shrink='false']": {
+                                    transform: "translate(16px, 50%) scale(1)",
+                                },
+                                "& .MuiOutlinedInput-root": {
+                                    maxHeight: '40px'
+                                }
+                            }}
+                            value={email}
+                            onChange={handleEmailChange}
+                            error={emailError}
+                            helperText={emailError ? "Please enter a valid email address" : ""}
+                        />
                     </Box>
                 </Box>
                 <Box
@@ -152,7 +248,7 @@ const InviteAdmin: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                         width: "92px",
                         height: "40px",
                         ":hover": {
-                            borderColor: "rgba(30, 136, 229, 1)"
+                            borderColor: "rgba(62, 64, 142, 1)"
                         },
                         ":active": {
                             borderColor: "rgba(56, 152, 252, 1)"
@@ -171,18 +267,18 @@ const InviteAdmin: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                                 fontWeight: "600",
                                 fontSize: "14px",
                                 lineHeight: "19.6px",
-                                ":hover": { color: "rgba(30, 136, 229, 1)" },
+                                ":hover": { color: "rgba(62, 64, 142, 1)" },
                             }}
                         >
-                            No
+                            Cancel
                         </Typography>
                     </Button>
-                    <Button variant="contained" onClick={handleSubmit} sx={{
+                    <Button variant="contained" onClick={handleSubmit} disabled={!buttonContain} sx={{
                         backgroundColor: "rgba(56, 152, 252, 1)",
                         width: "120px",
                         height: "40px",
                         ":hover": {
-                            backgroundColor: "rgba(30, 136, 229, 1)"
+                            backgroundColor: "rgba(62, 64, 142, 1)"
                         },
                         ":active": {
                             backgroundColor: "rgba(56, 152, 252, 1)"
@@ -203,13 +299,13 @@ const InviteAdmin: React.FC<SliderProps> = ({ isOpen, onClose, user_id, onSumbit
                                 lineHeight: "19.6px",
                             }}
                         >
-                            Yes
+                            Send
                         </Typography>
                     </Button>
                 </Box>
             </Drawer>
         </>
-    );
+    )
 };
 
 export default InviteAdmin;

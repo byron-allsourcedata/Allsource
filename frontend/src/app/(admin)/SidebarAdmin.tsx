@@ -151,7 +151,7 @@ const SidebarAdmin: React.FC = () => {
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <LeadsIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Users" sx={{ pr: 5 }} />
+                    <ListItemText primary="Admin" sx={{ pr: 5 }} />
                 </ListItemButton>
                 {/* <ListItemButton
                     onClick={() => handleNavigation('/admin/partners')}

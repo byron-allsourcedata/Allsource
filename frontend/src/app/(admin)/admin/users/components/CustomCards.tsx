@@ -113,7 +113,7 @@ const PixelContactsCard: React.FC<CardProps> = ({
 }) => (
   <StatCard
     value={value}
-    title="Pixel Installations"
+    title="Domains"
     icon={<LegendToggleIcon sx={{ color: "#F45745", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#F4574533"
@@ -127,7 +127,7 @@ const UsersCard: React.FC<CardProps> = ({
 }) => (
   <StatCard
     value={value}
-    title="Customers"
+    title="Accounts"
     icon={<GroupIcon sx={{ color: "#ED9206", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#FFE1B3"
@@ -138,9 +138,9 @@ const SourcesCard: React.FC<CardProps> = ({ value, onClick, isActive }) => (
   <StatCard
     value={value}
     title="Sources"
-    icon={<AllInboxIcon sx={{ color: "rgba(56, 152, 252, 1)", fontSize: "36px" }} />}
+    icon={<AllInboxIcon sx={{ color: "#5052B2", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
-    borderColor="rgba(56, 152, 252, 1)33"
+    borderColor="#5052B233"
     onClick={onClick}
     isActive={isActive}
   />
@@ -165,7 +165,7 @@ const SmartAudienceCard: React.FC<CardProps> = ({
 }) => (
   <StatCard
     value={value}
-    title="Smart Audience"
+    title="Audiences"
     icon={<AutoFixHighIcon sx={{ color: "#6EC125", fontSize: "36px" }} />}
     textColor="rgba(32,33,36,1)"
     borderColor="#CAEFA980"

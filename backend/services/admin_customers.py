@@ -1,9 +1,12 @@
+import hashlib
+import json
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 from schemas.users import UpdateUserRequest
-from enums import UserAuthorizationStatus, UpdateUserStatus
+from enums import UserAuthorizationStatus, UpdateUserStatus, SendgridTemplate, SettingStatus, AdminStatus
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import Users
@@ -12,6 +15,7 @@ from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.user_persistence import UserPersistence
 from persistence.audience_dashboard import DashboardAudiencePersistence
 from services.jwt_service import create_access_token
+from services.sendgrid import SendgridHandler
 from services.subscriptions import SubscriptionService
 from services.users_auth import UsersAuth
 from utils import get_md5_hash
@@ -33,7 +37,7 @@ class AdminCustomersService:
         self.users_auth_service = users_auth_service
         self.send_grid_persistence = send_grid_persistence
         self.partners_persistence = partners_persistence
-        self. dashboard_audience_persistence= dashboard_audience_persistence
+        self.dashboard_audience_persistence = dashboard_audience_persistence
 
     def get_admin_users(self, page, per_page):
         admin_users, total_count = self.user_persistence.get_admin_users(page, per_page)
@@ -62,6 +66,41 @@ class AdminCustomersService:
             }
             return create_access_token(token_info)
         return None
+
+    def invite_user(self, user: dict, email: str, name: str):
+        exists_team_member = self.user_persistence.get_user_by_email(email=email)
+        if exists_team_member:
+            return {
+                'status': AdminStatus.ALREADY_EXISTS
+            }
+        template_id = self.send_grid_persistence.get_template_by_alias(
+            SendgridTemplate.TEAM_MEMBERS_TEMPLATE.value)
+        if not template_id:
+            logger.info("template_id is None")
+            return {
+                'status': AdminStatus.SENDGRID_TEMPLATE_NOT_FAILED
+            }
+
+        md5_token_info = {
+            'id': user.get('id'),
+            'user_mail': email,
+            'salt': os.getenv('SECRET_SALT')
+        }
+        json_string = json.dumps(md5_token_info, sort_keys=True)
+        md5_hash = hashlib.md5(json_string.encode()).hexdigest()
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/signup?admin_token={md5_hash}&user_mail={email}"
+        mail_object = SendgridHandler()
+        mail_object.send_sign_up_mail(
+            to_emails=email,
+            template_id=template_id,
+            template_placeholder={"full_name": name, "link": confirm_email_url}
+        )
+        invited_by_id = user.get('id')
+        self.user_persistence.save_pending_invations_admin(team_owner_id=user.get('id'), email=email,
+                                                                   invited_by_id=invited_by_id, md5_hash=md5_hash)
+        return {
+            'status': AdminStatus.SUCCESS
+        }
 
     def get_customer_users(self, page, per_page):
         users, total_count = self.user_persistence.get_customer_users(page, per_page)
