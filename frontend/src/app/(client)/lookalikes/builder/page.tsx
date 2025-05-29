@@ -512,9 +512,27 @@ const CreateLookalikePage: React.FC = () => {
                       border: "1px solid #E4E4E4",
                       backgroundColor: "white",
                       marginTop: 2,
-                      
+                      position: "relative"
                     }}
                   >
+                    {currentStep === 1 && (
+                      <Box sx={{ position: 'absolute', top: 0, left: 0 }}>
+                        <HintCard
+                          card={cardsLookalikeBuilder.size}
+                          positionTop={70}
+                          positionLeft={220}
+                          rightSide={false}
+                          isOpenBody={lookalikesBuilderHints.size.showBody}
+                          toggleClick={() =>
+                            changeLookalikesBuilderHint("size", "showBody", "toggle")
+                          }
+                          closeClick={() =>
+                            changeLookalikesBuilderHint("size", "showBody", "close")
+                          }
+                        />
+                      </Box>
+                    )}
+
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Typography
                         variant="h6"
@@ -533,23 +551,7 @@ const CreateLookalikePage: React.FC = () => {
                       onSelectSize={handleSelectSize}
                       selectedSize={selectedSize}
                     />
-                    <HintCard
-                      card={cardsLookalikeBuilder.size}
-                      positionTop={0}
-                      positionLeft={0}
-                      rightSide={false}
-                      isOpenBody={lookalikesBuilderHints.size.showBody}
-                      toggleClick={() =>
-                        changeLookalikesBuilderHint(
-                          "size",
-                          "showBody",
-                          "toggle"
-                        )
-                      }
-                      closeClick={() =>
-                        changeLookalikesBuilderHint("size", "showBody", "close")
-                      }
-                    />
+
                   </Box>
                 )}
 
@@ -611,6 +613,7 @@ const CreateLookalikePage: React.FC = () => {
                       backgroundColor: "white",
                       padding: "24px 20px",
                       mt: 1,
+                      position: "relative"
                     }}
                   >
                     <Typography
@@ -626,6 +629,19 @@ const CreateLookalikePage: React.FC = () => {
                     >
                       Create Name
                     </Typography>
+                    <HintCard
+                          card={cardsLookalikeBuilder.create_name}
+                          positionTop={40}
+                          positionLeft={500}
+                          rightSide={false}
+                          isOpenBody={lookalikesBuilderHints.create_name.showBody}
+                          toggleClick={() =>
+                            changeLookalikesBuilderHint("create_name", "showBody", "toggle")
+                          }
+                          closeClick={() =>
+                            changeLookalikesBuilderHint("create_name", "showBody", "close")
+                          }
+                        />
                     <TextField
                       fullWidth
                       variant="outlined"

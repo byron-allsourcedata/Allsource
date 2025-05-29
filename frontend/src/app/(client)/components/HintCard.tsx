@@ -38,7 +38,7 @@ const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, to
       {showHints && (
         <>
           <Backdrop open={isOpenBody ?? true} onClick={closeClick} sx={{ zIndex: 1, color: "#fff", backgroundColor: "transparent" }} />
-          <Box sx={{ position: "absolute", left: positionLeft, top: positionTop ?? 10, width: 400 }}>
+          <Box sx={{ position: "absolute", left: positionLeft, top: positionTop ?? 10, width: 400, pointerEvents: isOpenBody? undefined: "none" }}>
             {showHint &&
               <Box
                 sx={{
@@ -46,7 +46,7 @@ const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, to
                   position: "relative",
                   right: 0,
                   maxWidth: 400,
-                  zIndex: 9999,
+                  zIndex: isOpenBody? 9999: -1,
                   p: 2,
                   border: "1px solid #e0e0e0",
                   borderRadius: 2,
@@ -80,7 +80,7 @@ const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, to
 
               </Box>
             }
-            <PulsingDotComponent toggleClick={toggleClick} rightSide={rightSide} />
+            <PulsingDotComponent  toggleClick={toggleClick} rightSide={rightSide} />
           </Box>
         </>
       )}

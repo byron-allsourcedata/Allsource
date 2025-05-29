@@ -1,6 +1,6 @@
 import { HintCardInterface } from '@/utils/hintsUtils';
 
-export type BuilderKey = "search_source"| "edit_source" | "size" | "predictable" | "order";
+export type BuilderKey = "search_source"| "edit_source" | "size" | "predictable" | "order" | "create_name";
 export type TableKey = "actions" | "builder";
 export type CreatedKey = "actions" | "lookalike" | "builder";
 
@@ -37,6 +37,13 @@ const builderHintCards: Record<BuilderKey, HintCardInterface> = {
       title: "Order fields",
       description:
         "Drag and drop to prioritize your selected fields. Higher-priority fields will have a greater influence on the lookalike generation.",
+      linkToLoadMore:
+        "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+    "create_name": {
+      title: "Create Name",
+      description:
+        "Give your lookalike audience a clear, descriptive name so you can easily identify and manage it later—include key details like the source and size for instant recognition.",
       linkToLoadMore:
         "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
     },

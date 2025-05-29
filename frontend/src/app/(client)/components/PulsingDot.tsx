@@ -79,6 +79,7 @@ const PulsingDotComponent: React.FC<PulsingDotComponentProps> = ({
       justifyContent="center"
       sx={{
         cursor: "pointer",
+        pointerEvents: "all",
         position: "absolute",
         left: !rightSide ? -7 : "auto",
         right: rightSide ? -7 : "auto",
