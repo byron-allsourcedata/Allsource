@@ -15,6 +15,7 @@ import {
   LinearProgress,
   Typography,
   Collapse,
+  Button
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
@@ -40,19 +41,19 @@ import InsightsIcon from "@mui/icons-material/Insights";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import FastForward from "@mui/icons-material/FastForward";
 import { useSidebar } from "@/context/SidebarContext";
-import { fetchUserData } from "@/services/meService";
+
 
 const sidebarStyles = {
   container: {
     width: "100%",
     flexShrink: 0,
     fontFamily: "Nunito Sans",
-    fontSize: "14px",
+    fontSize: ".875rem",
     fontWeight: "400",
     backgroundColor: "rgba(255, 255, 255, 1)",
-    borderRight: "1px solid rgba(228, 228, 228, 1)",
-    height: "calc(100vh - 4.25rem)",
-    maxWidth: "146px",
+    borderRight: ".0625rem solid rgba(228, 228, 228, 1)",
+    height: "calc(100vh - 68px)",
+    maxWidth: "9.125rem",
     display: "flex",
     overflow: "hidden",
     flexDirection: "column",
@@ -64,74 +65,74 @@ const sidebarStyles = {
     paddingTop: "0 !important",
     pb: 0,
     "& .MuiListItem-root": {
-      paddingBottom: "1rem",
-      paddingTop: "1rem",
+      paddingBottom: "16px",
+      paddingTop: "16px",
       "&:hover": {
         backgroundColor: "#e0e0e0",
       },
     },
     "& .MuiListItemText-root": {
-      marginTop: "0px !important",
-      marginBottom: "0px !important",
+      marginTop: "0rem !important",
+      marginBottom: "0rem !important",
     },
     "& span.MuiTypography-root": {
       fontFamily: "Nunito Sans",
-      fontSize: "0.875rem",
+      fontSize: "14px",
       fontWeight: 400,
       lineHeight: "normal",
     },
   },
   listItemIcon: {
-    minWidth: "24px",
-    marginRight: "4px",
+    minWidth: "1.5rem",
+    marginRight: ".25rem",
   },
   footer: {
-    padding: "1rem",
+    padding: "16px",
     "& .MuiListItem-root": {},
   },
   settings: {
     alignItems: "center",
     paddingTop: "0 !important",
     "& .MuiListItem-root": {
-      paddingBottom: "1rem",
-      paddingTop: "1rem",
+      paddingBottom: "16px",
+      paddingTop: "16px",
       "&:hover": {
         backgroundColor: "#e0e0e0",
       },
     },
     "& .MuiListItemText-root": {
-      marginTop: "0px !important",
-      marginBottom: "0px !important",
+      marginTop: "0rem !important",
+      marginBottom: "0rem !important",
     },
     "& span.MuiTypography-root": {
       fontFamily: "Nunito Sans",
-      fontSize: "0.875rem",
+      fontSize: "14px",
       fontWeight: 400,
       lineHeight: "normal",
     },
   },
   setupSection: {
-    padding: "1rem",
+    padding: "16px",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
-    marginLeft: "1rem",
-    marginRight: "1rem",
-    border: "1px solid #e4e4e4",
-    borderRadius: "8px",
+    marginLeft: "16px",
+    marginRight: "16px",
+    border: ".0625rem solid #e4e4e4",
+    borderRadius: ".5rem",
     backgroundColor: "#fff",
-    marginBottom: "1rem",
-    boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+    marginBottom: "16px",
+    boxShadow: "0rem .125rem .25rem rgba(0, 0, 0, 0.1)",
   },
   ListItem: {
     cursor: "pointer",
     minHeight: "4.5em",
     color: "rgba(59, 59, 59, 1)",
-    ml: "3px",
+    ml: ".1875rem",
   },
   activeItem: {
     cursor: "pointer",
-    borderLeft: "3px solid rgba(56, 152, 252, 1)",
+    borderLeft: ".1875rem solid rgba(56, 152, 252, 1)",
     color: "rgba(56, 152, 252, 1)",
     minHeight: "4.5em",
     "& .MuiSvgIcon-root": {
@@ -146,12 +147,12 @@ const containerStyles = (hasNotification: boolean) => ({
     flexShrink: 0,
     flexGrow: 1,
     fontFamily: "Nunito Sans",
-    fontSize: "14px",
+    fontSize: ".875rem",
     fontWeight: "400",
     backgroundColor: "rgba(255, 255, 255, 1)",
-    borderRight: "1px solid rgba(228, 228, 228, 1)",
-    height: hasNotification ? "calc(100vh - 6.85rem)" : "calc(100vh - 4.25rem)",
-    maxWidth: "175px",
+    borderRight: ".0625rem solid rgba(228, 228, 228, 1)",
+    height: hasNotification ? "calc(100vh - 109.6px)" : "calc(100vh - 68px)",
+    maxWidth: "10.9375rem",
     display: "flex",
     overflow: "hidden",
     overflowY: "auto",
@@ -183,7 +184,7 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ percent_steps }) => {
             fontWeight: "400",
             lineHeight: "normal",
             color: "rgba(0, 0, 0, 1)",
-            fontSize: "0.875rem",
+            fontSize: "14px",
           }}
         >
           Setup
@@ -193,8 +194,8 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ percent_steps }) => {
         variant="determinate"
         value={percent_steps ? percent_steps : 0}
         sx={{
-          height: "8px",
-          borderRadius: "4px",
+          height: ".5rem",
+          borderRadius: ".25rem",
           backgroundColor: "rgba(219, 219, 219, 1)",
           "& .MuiLinearProgress-bar": {
             backgroundColor: "rgba(110, 193, 37, 1)",
@@ -209,7 +210,7 @@ const SetupSection: React.FC<ProgressSectionProps> = ({ percent_steps }) => {
           fontFamily: "Roboto",
           lineHeight: "normal",
           color: "rgba(120, 120, 120, 1)",
-          fontSize: "0.625rem",
+          fontSize: "10px",
         }}
       >
         {percent_steps ? percent_steps : 0}% complete
@@ -232,6 +233,9 @@ const Sidebar: React.FC<SidebarProps> = ({
   isGetStartedPage
 }) => {
   const { domains, partner, backButton } = useUser();
+  const { installedResources } = useSidebar();
+  const isPixelInstalled = installedResources.pixel;
+  const isSourceInstalled = installedResources.source;
   const router = useRouter();
   const pathname = usePathname();
   const [currentDomain, setCurrentDomain] = useState<string | null>(null);
@@ -273,7 +277,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleNavigation = async (route: string) => {
     try {
       setLoading(true);
+      const isSameRoute = pathname === route;
 
+      if (isSameRoute) {
+        window.location.reload();
+      }
       if (isAuthorized.current) {
         router.push(route);
         return;
@@ -393,73 +401,112 @@ const Sidebar: React.FC<SidebarProps> = ({
               {open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
             </Box>
           </ListItem>
-          <Collapse in={open} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-              {/* Insights */}
-              <ListItem
-                button
-                onClick={() => handleNavigation("/dashboard")}
-                sx={
-                  isActive("/dashboard")
-                    ? { ...sidebarStyles.activeItem, pl: 4 }
-                    : { ...sidebarStyles.ListItem, pl: 4 }
-                }
-              >
-                <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                  <InsertChartOutlinedIcon />
-                </ListItemIcon>
-                <ListItemText primary="Analytics" />
-              </ListItem>
+          {open && (
+            <Box sx={{ position: "relative" }}>
+              <Collapse in={open} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding sx={{ opacity: isPixelInstalled ? 1 : 0.5 }}>
+                  {/* Insights */}
+                  <ListItem
+                    button
+                    onClick={() => handleNavigation("/dashboard")}
+                    sx={
+                      isActive("/dashboard")
+                        ? { ...sidebarStyles.activeItem, pl: 4 }
+                        : { ...sidebarStyles.ListItem, pl: 4 }
+                    }
+                  >
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                      <InsertChartOutlinedIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Analytics" />
+                  </ListItem>
 
-              {/* Contacts */}
-              <ListItem
-                button
-                onClick={() => handleNavigation("/leads")}
-                sx={
-                  isActive("/leads")
-                    ? { ...sidebarStyles.activeItem, pl: 4 }
-                    : { ...sidebarStyles.ListItem, pl: 4 }
-                }
-              >
-                <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                  <LeadsIcon />
-                </ListItemIcon>
-                <ListItemText primary="Contacts" />
-              </ListItem>
+                  {/* Contacts */}
+                  <ListItem
+                    button
+                    onClick={() => handleNavigation("/leads")}
+                    sx={
+                      isActive("/leads")
+                        ? { ...sidebarStyles.activeItem, pl: 4 }
+                        : { ...sidebarStyles.ListItem, pl: 4 }
+                    }
+                  >
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                      <LeadsIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Contacts" />
+                  </ListItem>
 
-              {/* Company */}
-              <ListItem
-                button
-                onClick={() => handleNavigation("/company")}
-                sx={
-                  isActive("/company")
-                    ? { ...sidebarStyles.activeItem, pl: 4 }
-                    : { ...sidebarStyles.ListItem, pl: 4 }
-                }
-              >
-                <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                  <BusinessIcon />
-                </ListItemIcon>
-                <ListItemText primary="Company" />
-              </ListItem>
+                  {/* Company */}
+                  <ListItem
+                    button
+                    onClick={() => handleNavigation("/company")}
+                    sx={
+                      isActive("/company")
+                        ? { ...sidebarStyles.activeItem, pl: 4 }
+                        : { ...sidebarStyles.ListItem, pl: 4 }
+                    }
+                  >
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                      <BusinessIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Company" />
+                  </ListItem>
 
-              {/* Suppressions */}
-              <ListItem
-                button
-                onClick={() => handleNavigation("/suppressions")}
-                sx={
-                  isActive("/suppressions")
-                    ? { ...sidebarStyles.activeItem, pl: 4 }
-                    : { ...sidebarStyles.ListItem, pl: 4 }
-                }
-              >
-                <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                  <FeaturedPlayListIcon />
-                </ListItemIcon>
-                <ListItemText primary="Suppressions" />
-              </ListItem>
-            </List>
-          </Collapse>
+                  {/* Suppressions */}
+                  <ListItem
+                    button
+                    onClick={() => handleNavigation("/suppressions")}
+                    sx={
+                      isActive("/suppressions")
+                        ? { ...sidebarStyles.activeItem, pl: 4 }
+                        : { ...sidebarStyles.ListItem, pl: 4 }
+                    }
+                  >
+                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                      <FeaturedPlayListIcon />
+                    </ListItemIcon>
+                    <ListItemText primary="Suppressions" />
+                  </ListItem>
+                </List>
+              </Collapse>
+
+              {!isPixelInstalled && (
+                <Box
+                  sx={{
+                    position: "absolute",
+                    inset: 0,
+                    zIndex: 10,
+                    maxWidth: "10.875rem",
+                    backdropFilter: "blur(1px)",
+                    backgroundColor: "rgba(0, 0, 0, 0.05)",
+                    pointerEvents: "auto",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexDirection: "column",
+                  }}
+                >
+                  <Button
+                    variant="contained"
+                    sx={{
+                      textTransform: "none",
+                      backgroundColor: "rgba(56, 152, 252, 1)",
+                      color: "rgba(255, 255, 255, 1)",
+                      fontSize: ".875rem",
+                      fontFamily: "Nunito Sans",
+                      fontWeight: "600",
+                    }}
+                    onClick={() => handleNavigation("/get-started?pixel=true")}
+                  >
+                    Install Pixel
+                  </Button>
+                </Box>
+              )}
+            </Box>
+          )}
+
+
         </List>
         {/* Source */}
         <ListItem
@@ -476,89 +523,123 @@ const Sidebar: React.FC<SidebarProps> = ({
           </ListItemIcon>
           <ListItemText primary="Sources" />
         </ListItem>
-        {/* Lookalikes */}
-        <ListItem
-          button
-          onClick={() => handleNavigation("/lookalikes")}
-          sx={
-            isActive(`/lookalikes`)
-              ? sidebarStyles.activeItem
-              : sidebarStyles.ListItem
-          }
-        >
-          <ListItemIcon sx={sidebarStyles.listItemIcon}>
-            <ContactsIcon />
-          </ListItemIcon>
-          <ListItemText primary="Lookalikes" />
-        </ListItem>
-        {/* Insights */}
-        <ListItem
-          onClick={() => handleNavigation("/insights")}
-          sx={
-            isActive("/insights")
-              ? { ...sidebarStyles.activeItem }
-              : { ...sidebarStyles.ListItem }
-          }
-        >
-          <ListItemIcon sx={sidebarStyles.listItemIcon}>
-            <InsightsIcon />
-          </ListItemIcon>
-          <ListItemText primary="Insights" />
-        </ListItem>
-        {/* Smart-audience */}
-        <ListItem
-          button
-          onClick={() => handleNavigation("/smart-audiences")}
-          sx={
-            isActive(`/smart-audiences`)
-              ? sidebarStyles.activeItem
-              : sidebarStyles.ListItem
-          }
-        >
-          <ListItemIcon sx={sidebarStyles.listItemIcon}>
-            <AutoFixHighIcon sx={{ rotate: "275deg", mb: 1 }} />
-          </ListItemIcon>
-          <ListItemText
-            primary="Smart Audiences"
-            sx={{ whiteSpace: "nowrap" }}
-          />
-        </ListItem>
-        {/* Data-synce */}
-        <ListItem
-          button
-          onClick={() => handleNavigation("/data-sync")}
-          sx={
-            isActive("/data-sync")
-              ? sidebarStyles.activeItem
-              : sidebarStyles.ListItem
-          }
-        >
-          <ListItemIcon sx={sidebarStyles.listItemIcon}>
-            <CategoryIcon />
-          </ListItemIcon>
-          <ListItemText primary="Data Sync" />
-        </ListItem>
-        {/* <ListItem button onClick={() => handleNavigation('/prospect')} sx={isActive('/prospect') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
-                    <ListItemIcon sx={sidebarStyles.listItemIcon}>
-                        <Image src="/profile-circle-filled.svg" alt="profile-circle" height={20} width={20} />
-                    </ListItemIcon>
-                    <ListItemText primary="Prospect" />
-                </ListItem> */}
-        {/* integrations */}
-        <ListItem
-          button
-          onClick={() => handleNavigation("/integrations")}
-          sx={
-            isActive("/integrations")
-              ? sidebarStyles.activeItem
-              : sidebarStyles.ListItem
-          }
-        >
-          <ListItemIcon sx={sidebarStyles.listItemIcon}>
-            <IntegrationsIcon />
-          </ListItemIcon>
-          <ListItemText primary="Integrations" />
-        </ListItem>
+        <Box sx={{ position: "relative" }}>
+          <List disablePadding sx={{ opacity: isSourceInstalled ? 1 : 0.5 }}>
+            {/* Lookalikes */}
+            <ListItem
+              button
+              onClick={() => handleNavigation("/lookalikes")}
+              sx={
+                isActive(`/lookalikes`)
+                  ? sidebarStyles.activeItem
+                  : sidebarStyles.ListItem
+              }
+            >
+              <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                <ContactsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Lookalikes" />
+            </ListItem>
+
+            {/* Insights */}
+            <ListItem
+              button
+              onClick={() => handleNavigation("/insights")}
+              sx={
+                isActive("/insights")
+                  ? sidebarStyles.activeItem
+                  : sidebarStyles.ListItem
+              }
+            >
+              <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                <InsightsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Insights" />
+            </ListItem>
+
+            {/* Smart Audiences */}
+            <ListItem
+              button
+              onClick={() => handleNavigation("/smart-audiences")}
+              sx={
+                isActive(`/smart-audiences`)
+                  ? sidebarStyles.activeItem
+                  : sidebarStyles.ListItem
+              }
+            >
+              <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                <AutoFixHighIcon sx={{ rotate: "275deg", mb: 1 }} />
+              </ListItemIcon>
+              <ListItemText primary="Smart Audiences" sx={{ whiteSpace: "nowrap" }} />
+            </ListItem>
+
+            {/* Data Sync */}
+            <ListItem
+              button
+              onClick={() => handleNavigation("/data-sync")}
+              sx={
+                isActive("/data-sync")
+                  ? sidebarStyles.activeItem
+                  : sidebarStyles.ListItem
+              }
+            >
+              <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                <CategoryIcon />
+              </ListItemIcon>
+              <ListItemText primary="Data Sync" />
+            </ListItem>
+
+            {/* Integrations */}
+            <ListItem
+              button
+              onClick={() => handleNavigation("/integrations")}
+              sx={
+                isActive("/integrations")
+                  ? sidebarStyles.activeItem
+                  : sidebarStyles.ListItem
+              }
+            >
+              <ListItemIcon sx={sidebarStyles.listItemIcon}>
+                <IntegrationsIcon />
+              </ListItemIcon>
+              <ListItemText primary="Integrations" />
+            </ListItem>
+          </List>
+
+          {!isSourceInstalled && (
+            <Box
+              sx={{
+                position: "absolute",
+                inset: 0,
+                zIndex: 10,
+                maxWidth: "10.875rem",
+                backdropFilter: "blur(1px)",
+                backgroundColor: "rgba(0, 0, 0, 0.05)",
+                pointerEvents: "auto",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                flexDirection: "column",
+              }}
+            >
+              <Button
+                variant="contained"
+                sx={{
+                  textTransform: "none",
+                  backgroundColor: "rgba(56, 152, 252, 1)",
+                  color: "rgba(255, 255, 255, 1)",
+                  fontSize: ".875rem",
+                  fontFamily: "Nunito Sans",
+                  fontWeight: "600",
+                }}
+                onClick={() => handleNavigation("/get-started?source=true")}
+              >
+                Import Source
+              </Button>
+            </Box>
+          )}
+        </Box>
+
         {/* <ListItem button onClick={() => handleNavigation('/analytics')} sx={isActive('/analytics') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <AnalyticsIcon />
