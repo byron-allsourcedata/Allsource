@@ -50,7 +50,7 @@ class UsersService:
                 "is_artificial_status": result['is_artificial_status'],
                 "is_trial": result['subscription'].is_trial,
                 "plan_end": result['subscription'].plan_end,
-                "lead_credits": result['subscription'].lead_credits
+                "lead_credits": result['lead_credits']
             }
         return {
             "is_trial_pending": True

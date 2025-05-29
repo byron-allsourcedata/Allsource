@@ -23,7 +23,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
-import CustomTablePagination from '@/components/CustomTablePagination';
+import PaginationComponent from "@/components/PaginationComponent";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast, showToast } from '@/components/ToastNotification';
@@ -70,7 +70,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(15);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
@@ -85,6 +85,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [jobTitles, setJobTitles] = React.useState<string[]>([]);
     const [employeeId, setEmployeeId] = useState<number | null>(null)
     const [employeeisUnlocked, setEmployeeisUnlocked] = useState(false);
+    const [firstLockedValue, setFirstLockedValue] = useState<{ key: string; index: number } | null>(null);
     const { changeEmployeesTableHint, employeesTableHints, resetEmployeesTableHints } = useCompanyHints();
 
 
@@ -99,13 +100,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     };
 
     const isOpen = Boolean(anchorEl);
-
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'auto';
-        };
-    }, []);
 
     const handleClosePopup = () => {
         setOpenPopup(false);
@@ -269,18 +263,26 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             const response = await axiosInstance.get(url);
             const [employees, count] = response.data;
 
-    
+            employees.find((employee: any, index: number) => {
+                const hiddenField = Object.entries(employee).find(([key, value]: [string, any]) => value.visibility_status === "hidden");
+                if (hiddenField) {
+                    console.log({ key: hiddenField[0], index });
+                    setFirstLockedValue({ key: hiddenField[0], index });
+                    return true
+                }
+                return false;
+            })
             setData(Array.isArray(employees) ? employees : []);
             setCount(count || 0);
             setStatus(response.data.status);
     
-            const options = [15, 30, 50, 100, 200, 500];
+            const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
                 RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
             }
             setRowsPerPageOptions(RowsPerPageOptions);
-            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
+            const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 10;
             setRowsPerPage(selectedValue);
 
         } catch (error) {
@@ -626,7 +628,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                             <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
                         </Box>
                         <Box sx={{
-                            display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
+                            display: 'flex', flexDirection: 'row',  position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
                             '@media (max-width: 900px)': {
                                 gap: '8px'
                             }
@@ -661,6 +663,27 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                             >
                                 <DownloadIcon fontSize='medium' />
                             </Button>
+
+                            <HintCard
+                                card={employeesTableCards["download"]}
+                                positionLeft={-420}
+                                positionTop={20}
+                                rightSide={true}
+                                isOpenBody={employeesTableHints["download"].showBody}
+                                toggleClick={() => {
+                                if (employeesTableHints["overview"].showBody) {
+                                    changeEmployeesTableHint("overview", "showBody", "close")
+                                }
+                                if (employeesTableHints["unlock"].showBody) {
+                                    changeEmployeesTableHint("unlock", "showBody", "close")
+                                }
+                                changeEmployeesTableHint("download", "showBody", "toggle")
+                                }}
+                                closeClick={() => {
+                                    changeEmployeesTableHint("download", "showBody", "close")
+                                }}
+                            />
+
                             <Button
                                 onClick={handleFilterPopupOpen}
                                 disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
@@ -850,28 +873,44 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         ) : (
                             <Grid container spacing={1} sx={{ flex: 1 }}>
                                 <Grid item xs={12}>
-                                    <TableContainer
-                                        component={Paper}
-                                        sx={{
-                                            border: '1px solid rgba(235, 235, 235, 1)',
-                                            overflowX: 'scroll',
-                                            maxHeight: selectedFilters.length > 0
-                                                ? (hasNotification ? '63vh' : '68vh')
-                                                : '72vh',
-                                            overflowY: 'auto',
-                                            "@media (max-height: 800px)": {
-                                                maxHeight: selectedFilters.length > 0
-                                                    ? (hasNotification ? '53vh' : '57vh')
-                                                    : '70vh',
-                                            },
-                                            "@media (max-width: 400px)": {
-                                                maxHeight: selectedFilters.length > 0
-                                                    ? (hasNotification ? '53vh' : '60vh')
-                                                    : '67vh',
-                                            },
-                                        }}
-                                    >
-                                        <Table stickyHeader aria-label="leads table">
+                                <TableContainer                                
+                                    sx={{
+                                    height: "70vh",
+                                    overflowX: "scroll",
+                                    maxHeight:
+                                        selectedFilters.length > 0
+                                        ? hasNotification
+                                            ? "63vh"
+                                            : "70vh"
+                                        : "70vh",
+                                    "@media (max-height: 800px)": {
+                                        height: "60vh",
+                                        maxHeight:
+                                        selectedFilters.length > 0
+                                            ? hasNotification
+                                            ? "53vh"
+                                            : "60vh"
+                                            : "70vh",
+                                    },
+                                    "@media (max-width: 400px)": {
+                                        height: "50vh",
+                                        maxHeight:
+                                        selectedFilters.length > 0
+                                            ? hasNotification
+                                            ? "53vh"
+                                            : "50vh"
+                                            : "70vh",
+                                    },
+                                    }}>
+                                        <Table
+                                                stickyHeader
+                                                component={Paper}
+                                                aria-label="leads table"
+                                                sx={{ 
+                                                    tableLayout: "fixed", 
+                                                    border: "1px solid rgba(235, 235, 235, 1)",
+                                                }}
+                                                >
                                             <TableHead>
                                                 <TableRow>
                                                     {[
@@ -879,7 +918,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                         { key: 'personal_email', label: 'Personal Email', sortable: true },
                                                         { key: 'business_email', label: 'Business Email', sortable: true },
                                                         { key: 'linkedin', label: 'LinkedIn' },
-                                                        { key: 'mobile_number', label: 'Mobile Number'},
+                                                        { key: 'mobile_phone', label: 'Mobile Number'},
                                                         { key: 'job_title', label: 'Job Title'},
                                                         { key: 'seniority', label: 'Seniority'},
                                                         { key: 'department', label: 'Department'},
@@ -917,7 +956,50 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                                         )}
                                                                     </IconButton>
                                                                 )}
+
                                                             </Box>
+
+                                                            {key === firstLockedValue?.key && (
+                                                                <HintCard
+                                                                    card={employeesTableCards["unlock"]}
+                                                                    positionLeft={-220}
+                                                                    positionTop={64.5 * (firstLockedValue.index + 1)}
+                                                                    rightSide={true}
+                                                                    isOpenBody={employeesTableHints["unlock"].showBody}
+                                                                    toggleClick={() => {
+                                                                    if (employeesTableHints["download"].showBody) {
+                                                                        changeEmployeesTableHint("download", "showBody", "close")
+                                                                    }
+                                                                    if (employeesTableHints["overview"].showBody) {
+                                                                        changeEmployeesTableHint("overview", "showBody", "close")
+                                                                    }
+                                                                    changeEmployeesTableHint("unlock", "showBody", "toggle")
+                                                                    }}
+                                                                    closeClick={() => {
+                                                                        changeEmployeesTableHint("unlock", "showBody", "close")
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            {key === "employee_name" && (
+                                                                <HintCard
+                                                                    card={employeesTableCards["overview"]}
+                                                                    positionLeft={110}
+                                                                    positionTop={100}
+                                                                    isOpenBody={employeesTableHints["overview"].showBody}
+                                                                    toggleClick={() => {
+                                                                    if (employeesTableHints["download"].showBody) {
+                                                                        changeEmployeesTableHint("download", "showBody", "close")
+                                                                    }
+                                                                    if (employeesTableHints["unlock"].showBody) {
+                                                                        changeEmployeesTableHint("unlock", "showBody", "close")
+                                                                    }
+                                                                    changeEmployeesTableHint("overview", "showBody", "toggle")
+                                                                    }}
+                                                                    closeClick={() => {
+                                                                        changeEmployeesTableHint("overview", "showBody", "close")
+                                                                    }}
+                                                                />
+                                                            )}
                                                         </TableCell>
                                                     ))}
                                                 </TableRow>
@@ -1026,16 +1108,14 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                             </TableBody>
                                         </Table>
                                     </TableContainer>
-                                    {count_companies && count_companies > 15 && <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
-                                        <CustomTablePagination
-                                            count={count_companies ?? 0}
-                                            page={page}
-                                            rowsPerPage={rowsPerPage}
-                                            onPageChange={handleChangePage}
-                                            onRowsPerPageChange={handleChangeRowsPerPage}
-                                            rowsPerPageOptions={rowsPerPageOptions}
-                                        />
-                                    </Box>}
+                                    <PaginationComponent 
+                                        countRows={count_companies ?? 0}
+                                        page={page}
+                                        rowsPerPage={rowsPerPage}
+                                        onPageChange={handleChangePage}
+                                        onRowsPerPageChange={handleChangeRowsPerPage}
+                                        rowsPerPageOptions={rowsPerPageOptions}
+                                    />
                                 </Grid>
                             </Grid>
 
