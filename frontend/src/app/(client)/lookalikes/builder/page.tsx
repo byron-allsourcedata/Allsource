@@ -36,15 +36,13 @@ import ProgressBar from "@/components/ProgressBar";
 import { TableData, LookalikeData, CalculationResponse, FinancialResults, LifestylesResults, VoterResults, RealEstateResults, Field, FeatureObject, PersonalResults, ProfessionalProfileResults, EmploymentHistoryResults } from "@/types"
 import { FeatureImportanceTable, DragAndDropTable, AudienceFieldsSelector, OrderFieldsStep, CalculatedSteps } from "../components"
 import { ResetProvider } from "@/context/ResetContext";
-import HintCard from "../../components/HintCard"; 
+import HintCard from "../../components/HintCard";
 import { useLookalikesHints } from "../context/LookalikesHintsContext"
-import { builderHintCards } from "../context/hintsCardsContent";
 import { BuilderKey } from '../context/hintsCardsContent';
 export const dynamic = 'force-dynamic';
 
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
-  const { changeLookalikesBuilderHint, lookalikesBuilderHints, resetSourcesBuilderHints } = useLookalikesHints();
   const searchParams = useSearchParams();
   const preselectedUuid = searchParams.get("source_uuid");
   const [selectedSourceId, setSelectedSourceId] = useState<string>("");
@@ -61,31 +59,12 @@ const CreateLookalikePage: React.FC = () => {
   const [lookalike, setLookalikeData] = useState<LookalikeData[]>([]);
   const [calculatedResults, setCalculatedResults] =
     useState<CalculationResponse | null>(null);
-
   const [dndFields, setDndFields] = useState<Field[]>([]);
-
-  // useEffect(() => {
-  //   setDndFields(initialFields);
-  // }, [initialFields]);
-
+  const { lookalikesBuilderHints, cardsLookalikeBuilder, changeLookalikesBuilderHint, resetSourcesBuilderHints } = useLookalikesHints();
   const handleSelectRow = (row: any) => {
     setSelectedSourceId(row.id);
     setSelectSourceData([row]);
     setCurrentStep(1);
-    closeDotHintClick("source")
-    openDotHintClick("size")
-  };
-
-  const toggleDotHintClick = (key: BuilderKey) => {
-    changeLookalikesBuilderHint(key, "show", "toggle")
-  };
-
-  const closeDotHintClick = (key: BuilderKey) => {
-    changeLookalikesBuilderHint(key, "show", "close")
-  };
-
-  const openDotHintClick = (key: BuilderKey) => {
-    changeLookalikesBuilderHint(key, "show", "open")
   };
 
   const getFilteredData = (data: any[]) =>
@@ -154,8 +133,6 @@ const CreateLookalikePage: React.FC = () => {
       if (response.data) {
         setCalculatedResults(response.data);
         setCurrentStep(2);
-        closeDotHintClick("size")
-        openDotHintClick("predictable")
       }
     } catch {
       showErrorToast(
@@ -220,6 +197,7 @@ const CreateLookalikePage: React.FC = () => {
 
   useEffect(() => {
     handleSourceData();
+    resetSourcesBuilderHints();
   }, []);
 
   useEffect(() => {
@@ -317,8 +295,18 @@ const CreateLookalikePage: React.FC = () => {
                       borderRadius: "6px",
                       border: "1px solid #E4E4E4",
                       backgroundColor: "white",
+                      position: "relative"
                     }}
                   >
+                    <HintCard
+                      card={cardsLookalikeBuilder.search_source}
+                      positionTop={90}
+                      positionLeft={230}
+                      rightSide={false}
+                      isOpenBody={lookalikesBuilderHints.search_source.showBody}
+                      toggleClick={() => changeLookalikesBuilderHint("search_source", "showBody", "toggle")}
+                      closeClick={() => changeLookalikesBuilderHint("search_source", "showBody", "close")}
+                    />
                     <Typography
                       variant="h6"
                       sx={{
@@ -340,7 +328,7 @@ const CreateLookalikePage: React.FC = () => {
                         gap: 2,
                       }}
                     >
-                      <Box sx={{ width: "100%", position: "relative" }}>
+                      <Box sx={{ width: "100%", position: 'relative', overflow: 'visible' }}>
                         <TextField
                           fullWidth
                           variant="outlined"
@@ -379,16 +367,6 @@ const CreateLookalikePage: React.FC = () => {
                             },
                           }}
                         />
-                        {lookalikesBuilderHints["source"].show && (
-                          <HintCard
-                              card={builderHintCards["source"]}
-                              positionTop={20}
-                              positionLeft={200}
-                              isOpenBody={lookalikesBuilderHints["source"].showBody}
-                              toggleClick={() => changeLookalikesBuilderHint("source", "showBody", "toggle")}
-                              closeClick={() => changeLookalikesBuilderHint("source", "showBody", "close")}
-                          />
-                        )}
                         {isTableVisible && (
                           <TableContainer
                             component={Paper}
@@ -497,30 +475,30 @@ const CreateLookalikePage: React.FC = () => {
                     {selectSourceData.length > 0 && (
                       <SourceTableContainer tableData={selectSourceData} />
                     )}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', position: 'relative', mt: 2 }}>
+                      <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+                        <Button
+                          onClick={handleEdit}
+                          variant="outlined"
+                          sx={{
+                            ...smartAudiences.buttonform,
+                            borderColor: 'rgba(56, 152, 252, 1)',
+                            width: '92px',
+                            ':hover': { backgroundColor: '#fff' },
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              ...smartAudiences.textButton,
+                              color: 'rgba(56, 152, 252, 1)',
+                            }}
+                          >
+                            Edit
+                          </Typography>
+                        </Button>
+                      </Box>
+                    </Box>
 
-                    <Button
-                      onClick={handleEdit}
-                      variant="outlined"
-                      sx={{
-                        ...smartAudiences.buttonform,
-                        borderColor: 'rgba(56, 152, 252, 1)',
-                        width: '92px',
-                        mt: 2,
-                        alignSelf: 'flex-end',
-                        ':hover': {
-                          backgroundColor: '#fff',
-                        },
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          ...smartAudiences.textButton,
-                          color: 'rgba(56, 152, 252, 1)',
-                        }}
-                      >
-                        Edit
-                      </Typography>
-                    </Button>
                   </Box>
                 )}
 
@@ -534,6 +512,7 @@ const CreateLookalikePage: React.FC = () => {
                       border: "1px solid #E4E4E4",
                       backgroundColor: "white",
                       marginTop: 2,
+                      
                     }}
                   >
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -553,9 +532,23 @@ const CreateLookalikePage: React.FC = () => {
                     <AudienceSizeSelector
                       onSelectSize={handleSelectSize}
                       selectedSize={selectedSize}
-                      hintCard={builderHintCards["size"]}
-                      toggleDotHintClickBlock1={() => toggleDotHintClick("size")}
-                      isOpenSelect={lookalikesBuilderHints["size"].show}
+                    />
+                    <HintCard
+                      card={cardsLookalikeBuilder.size}
+                      positionTop={0}
+                      positionLeft={0}
+                      rightSide={false}
+                      isOpenBody={lookalikesBuilderHints.size.showBody}
+                      toggleClick={() =>
+                        changeLookalikesBuilderHint(
+                          "size",
+                          "showBody",
+                          "toggle"
+                        )
+                      }
+                      closeClick={() =>
+                        changeLookalikesBuilderHint("size", "showBody", "close")
+                      }
                     />
                   </Box>
                 )}
@@ -599,18 +592,12 @@ const CreateLookalikePage: React.FC = () => {
                 {calculatedResults && currentStep >= 2 && (
                   <Box sx={{ mt: 2 }}>
                     <CalculatedSteps
-                        calculatedResults={calculatedResults}
-                        currentStep={currentStep}
-                        handlePrevStep={handlePrevStep}
-                        handleNextStep={handleNextStep}
-                        hintCard2={builderHintCards["predictable"]}
-                        hintCard3={builderHintCards["order"]}
-                        toggleDotHintClickBlock2={() => toggleDotHintClick("predictable")}
-                        toggleDotHintClickBlock3={() => toggleDotHintClick("order")}
-                        isOpenSelect2={lookalikesBuilderHints["predictable"].show}
-                        isOpenSelect3={lookalikesBuilderHints["order"].show}
-                        onFieldsOrderChangeUp={setDndFields}
-                      />
+                      calculatedResults={calculatedResults}
+                      currentStep={currentStep}
+                      handlePrevStep={handlePrevStep}
+                      handleNextStep={handleNextStep}
+                      onFieldsOrderChangeUp={setDndFields}
+                    />
                   </Box>
                 )}
                 {/* Create Name block (now visible since currentStep is set to 2 after calculation) */}
@@ -675,6 +662,7 @@ const CreateLookalikePage: React.FC = () => {
                     gap: 2,
                     borderTop: "1px solid rgba(228, 228, 228, 1)",
                     pr: 2,
+                    mt: 1,
                     pt: "0.5rem",
                     pb: 1,
                   }}
@@ -738,6 +726,7 @@ const CreateLookalikePage: React.FC = () => {
                     borderTop: "1px solid rgba(228, 228, 228, 1)",
                     pr: 2,
                     pt: "0.5rem",
+                    mt: 1,
                     pb: 1,
                   }}
                 >

@@ -1,39 +1,47 @@
 import { HintCardInterface } from '@/utils/hintsUtils';
 
-export type BuilderKey = "source" | "size" | "predictable" | "order";
+export type BuilderKey = "search_source"| "edit_source" | "size" | "predictable" | "order";
 export type TableKey = "actions" | "builder";
 export type CreatedKey = "actions" | "lookalike" | "builder";
 
 const builderHintCards: Record<BuilderKey, HintCardInterface> = {
-    "source": {
-        description:
-        "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-        title: "Source",
-        linkToLoadMore:
+    "search_source": {
+      title: "Search source",
+      description:
+        "Use the search box to quickly filter your available data sources by name. Select the source you want to build a lookalike audience from.",
+      linkToLoadMore:
+        "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+    },
+    "edit_source": {
+      title: "Edit source",
+      description:
+        "Click “Edit” to change your selected source or choose a different one before continuing with the lookalike setup.",
+      linkToLoadMore:
         "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
     },
     "size": {
-        description:
-        "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-        title: "Lookalike Size",
-        linkToLoadMore:
+      title: "Lookalike size",
+      description:
+        "Select the size of your lookalike audience. A smaller size yields more closely matched users, while a larger size increases reach.",
+      linkToLoadMore:
         "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
     },
     "predictable": {
-        description:
-        "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-        title: "Predictable value",
-        linkToLoadMore:
+      title: "Predictable value",
+      description:
+        "Choose which attributes (e.g., age, location, interests) the model should consider when generating your lookalike audience. We recommend selecting at least three fields.",
+      linkToLoadMore:
         "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
     },
     "order": {
-        description:
-        "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
-        title: "Order vields",
-        linkToLoadMore:
+      title: "Order fields",
+      description:
+        "Drag and drop to prioritize your selected fields. Higher-priority fields will have a greater influence on the lookalike generation.",
+      linkToLoadMore:
         "https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
     },
-};
+  };
+  
 
 
 const tableHintCards: Record<TableKey, HintCardInterface> = {

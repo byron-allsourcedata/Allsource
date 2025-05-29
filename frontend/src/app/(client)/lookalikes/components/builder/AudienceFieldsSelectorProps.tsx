@@ -1,23 +1,13 @@
 import React, { memo, useEffect, useState } from "react";
-import { Box, Button, FormControlLabel, Grid, styled, Switch, Typography } from "@mui/material";
-import ArrowRightAltIcon from "@mui/icons-material/ArrowRightAlt";
+import { Box, Button, Grid, Typography } from "@mui/material";
 import type {
-  PersonalResults,
-  FinancialResults,
-  LifestylesResults,
-  VoterResults,
-  RealEstateResults,
-  ProfessionalProfileResults,
-  EmploymentHistoryResults,
   CalculationResponse,
   RecommendedByCategory,
 } from "@/types";
 import { FeatureImportanceTable } from "./FeatureImportanceTable";
-import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
-import { ResetProvider, useResetContext } from "@/context/ResetContext";
-import { PaymentIcon, HowToVoteIcon, DirectionsBikeIcon, AccountBoxIcon, OpenInNewIcon, AssignmentIndIcon, WorkHistoryOutlinedIcon, WorkOutlineOutlinedIcon, HistoryOutlinedIcon } from "@/icon"
-import { useHints } from "@/context/HintsContext";
-import HintCard from "../../../components/HintCard";
+import { PaymentIcon, HowToVoteIcon, DirectionsBikeIcon, AccountBoxIcon, OpenInNewIcon, WorkOutlineOutlinedIcon, HistoryOutlinedIcon } from "@/icon"
+import { useLookalikesHints } from "../../context/LookalikesHintsContext";
+import HintCard from "@/app/(client)/components/HintCard";
 
 interface AudienceFieldsSelectorProps {
   calculatedResults?: CalculationResponse
@@ -28,15 +18,6 @@ interface AudienceFieldsSelectorProps {
   canProcessed: boolean
   onResetSelection: () => void;
   disableResetSelection: boolean;
-  hintCard: HintCardInterface
-  toggleDotHintClickBlock: () => void
-  isOpenSelect: boolean
-}
-
-interface HintCardInterface {
-  description: string;
-  title: string;
-  linkToLoadMore: string;
 }
 
 const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
@@ -48,9 +29,8 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
   onResetSelection,
   currentSelection,
   disableResetSelection,
-  hintCard, toggleDotHintClickBlock, isOpenSelect
 }) => {
-  const { showHints } = useHints();
+  const { lookalikesBuilderHints, cardsLookalikeBuilder, changeLookalikesBuilderHint, resetSourcesBuilderHints } = useLookalikesHints();
   const [activeStep, setActiveStep] = React.useState(0);
   const { personal, financial, lifestyle, voter, professional_profile, employment_history } = currentSelection;
   const handleResetToRecommended = () => {
@@ -96,6 +76,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
         borderRadius: "6px",
         bgcolor: "white",
         p: 2,
+        position: "relative"
       }}
     >
       <Grid container sx={{ mb: 2 }}>
@@ -164,27 +145,46 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
           </Grid>
           <Grid item sx={{ borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
             {/* «Order fields» */}
-            <Button
-              onClick={handleStep(1)}
-              disableRipple
+            <Box
               sx={{
-                minWidth: 0,
-                textTransform: "none",
-                fontFamily: "Nunito Sans",
-                fontWeight: 700,
-                fontSize: "14px",
-                color: "rgba(112, 112, 113, 1)",
-                ml: 0.5,
-                // borderBottom: "1px solid rgba(212, 212, 212, 1)",
-                backgroundColor: "rgba(246, 248, 250, 1)",
-                "&:hover": { backgroundColor: "rgba(226, 229, 232, 0.74)" },
+                position: "relative",
+                display: "inline-flex",
+                alignItems: "center",
               }}
             >
-              Order fields
-            </Button>
+              <HintCard
+                card={cardsLookalikeBuilder.predictable}
+                positionTop={15}
+                positionLeft={130}
+                rightSide={false}
+                isOpenBody={lookalikesBuilderHints.predictable.showBody}
+                toggleClick={() =>
+                  changeLookalikesBuilderHint("predictable", "showBody", "toggle")
+                }
+                closeClick={() =>
+                  changeLookalikesBuilderHint("predictable", "showBody", "close")
+                }
+              />
+              <Button
+                onClick={handleStep(1)}
+                disableRipple
+                sx={{
+                  minWidth: 0,
+                  textTransform: "none",
+                  fontFamily: "Nunito Sans",
+                  fontWeight: 700,
+                  fontSize: "14px",
+                  color: "rgba(112, 112, 113, 1)",
+                  ml: 0.5,
+                  backgroundColor: "rgba(246, 248, 250, 1)",
+                  "&:hover": { backgroundColor: "rgba(226, 229, 232, 0.74)" },
+                }}
+              >
+                Order fields
+              </Button>
+            </Box>
           </Grid>
           <Grid item sx={{ flexGrow: 1, borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
-
           </Grid>
         </Grid>
         <Grid item md={2} sx={{ textAlign: "right", borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
@@ -232,14 +232,6 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
                   headerIcon={<AccountBoxIcon />}
                   initialFeatures={recommendedByCategory.personal}
                 />
-              {showHints && isOpenSelect && (
-                <HintCard
-                    card={hintCard}
-                    positionTop={20}
-                    positionLeft={800}
-                    toggleClick={toggleDotHintClickBlock}
-                  />
-                )}
               </Box>
               <Box sx={{ mb: 2 }}>
                 <FeatureImportanceTable
@@ -314,7 +306,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
               variant="body2"
               sx={{ fontSize: "14px", color: "text.secondary", mb: 2 }}
             >
-              When building an audience, it&aposs important to work with the
+              When building an audience, it&apos;s important to work with the
               right data. You have the flexibility to configure which
               predictable fields you want to use based on your specific
               goals. These fields might include things like age, location,

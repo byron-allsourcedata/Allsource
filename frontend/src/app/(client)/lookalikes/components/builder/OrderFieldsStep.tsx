@@ -6,6 +6,8 @@ import DragAndDropTable from "./DragAndDropTable";
 import { Stepper, Step, StepLabel, StepButton } from '@mui/material';
 import { ResetProvider, useResetContext } from "@/context/ResetContext";
 import { OpenInNewIcon } from "@/icon";
+import HintCard from "@/app/(client)/components/HintCard";
+import { useLookalikesHints } from "../../context/LookalikesHintsContext";
 
 interface OrderFieldsStepProps {
     fields: Field[];
@@ -23,7 +25,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
     disableResetOrder,
 }) => {
     const [activeStep, setActiveStep] = React.useState(1);
-
+    const { lookalikesBuilderHints, cardsLookalikeBuilder, changeLookalikesBuilderHint, resetSourcesBuilderHints } = useLookalikesHints();
     const handleStep = (step: number) => () => {
         setActiveStep(step);
         if (step === 0) {
@@ -96,6 +98,26 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                     </Grid>
                     <Grid item sx={{ borderRight: "1px solid rgba(233, 233, 233, 1)", borderLeft: "1px solid rgba(233, 233, 233, 1)", borderTopRightRadius: 3, borderTopLeftRadius: 3 }}>
                         {/* «Order fields» */}
+                                    <Box
+                                      sx={{
+                                        position: "relative",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <HintCard
+                                        card={cardsLookalikeBuilder.order}
+                                        positionTop={15}
+                                        positionLeft={130}
+                                        rightSide={false}
+                                        isOpenBody={lookalikesBuilderHints.order.showBody}
+                                        toggleClick={() =>
+                                          changeLookalikesBuilderHint("order", "showBody", "toggle")
+                                        }
+                                        closeClick={() =>
+                                          changeLookalikesBuilderHint("order", "showBody", "close")
+                                        }
+                                      />
                         <Button
                             onClick={handleStep(1)}
                             disableRipple
@@ -113,6 +135,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                         >
                             Order fields
                         </Button>
+                        </Box>
                     </Grid>
                     <Grid item sx={{ flexGrow: 1, borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
 

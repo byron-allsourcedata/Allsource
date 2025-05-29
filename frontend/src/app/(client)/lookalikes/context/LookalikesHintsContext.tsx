@@ -1,7 +1,7 @@
 import React, { createContext, useState, ReactNode, useContext } from 'react';
 import { initialSourcesBuilderHints, initialSourcesTableHints, initialCreatedSourceHints } from './hintsInitialState';
 import { changeHintState, resetHintsState, HintKey, HintAction, HintStateMap } from '@/utils/hintsUtils';
-import { BuilderKey, TableKey, CreatedKey } from './hintsCardsContent';
+import { BuilderKey, TableKey, CreatedKey, builderHintCards } from './hintsCardsContent';
 
 interface HintsContextType {
   changeLookalikesBuilderHint: (key: BuilderKey, hintKey: HintKey, action: HintAction) => void;
@@ -13,21 +13,23 @@ interface HintsContextType {
   resetSourcesBuilderHints: () => void
   resetSourcesTableHints: () => void
   resetCreatedSourceHints: () => void
+  cardsLookalikeBuilder: typeof builderHintCards;
+  
 }
 
 interface HintsProviderProps {
   children: ReactNode;
 }
 
-const SourcesHintsContext = createContext<HintsContextType | undefined>(undefined);
+const LookalikeHintsContext = createContext<HintsContextType | undefined>(undefined);
 
-export const SourcesHintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
+export const LookalikeHintsProvider: React.FC<HintsProviderProps>  = ({ children }) => {
   const [lookalikesBuilderHints, setSourcesBuilderHints] = useState<HintStateMap<BuilderKey>>(initialSourcesBuilderHints);
   const [sourcesTableHints, setSourcesTableHints] = useState<HintStateMap<TableKey>>(initialSourcesTableHints);
   const [createdSourceHints, setCreatedSourceHints] = useState<HintStateMap<CreatedKey>>(initialCreatedSourceHints);
 
   return (
-    <SourcesHintsContext.Provider value={{ 
+    <LookalikeHintsContext.Provider value={{ 
       changeLookalikesBuilderHint: (key, hintKey, action) =>
         changeHintState(key, hintKey, action, setSourcesBuilderHints),
       resetSourcesBuilderHints: () =>
@@ -43,14 +45,15 @@ export const SourcesHintsProvider: React.FC<HintsProviderProps>  = ({ children }
       resetCreatedSourceHints: () =>
         resetHintsState(setCreatedSourceHints, initialCreatedSourceHints),
       createdSourceHints,
+      cardsLookalikeBuilder: builderHintCards
       }}>
       {children}
-    </SourcesHintsContext.Provider>
+    </LookalikeHintsContext.Provider>
   );
 };
 
 export const useLookalikesHints = () => {
-    const context = useContext(SourcesHintsContext);
+    const context = useContext(LookalikeHintsContext);
     if (context === undefined) {
       throw new Error('useHints must be used within a HintsProvider');
     }
