@@ -10,7 +10,7 @@ import ManualPopup from "../components/ManualPopup";
 import GoogleTagPopup from "../components/GoogleTagPopup";
 import CRMPopup from "./CMSPopup";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { showErrorToast } from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { useHints } from "@/context/HintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
 import { useRef } from "react";
@@ -142,6 +142,19 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
     const handleRedirect = async () => {
       const query = new URLSearchParams(window.location.search);
       const authorizationCode = query.get("code");
+      const installBigcommerce = query.get("install_bigcommerce");
+      if (installBigcommerce) {
+        setShowCMSInline(true);
+        onInstallSelected("cms");
+        setCMSOpen(true);
+        if (installBigcommerce == "true") {
+          showToast("Connect to Bigcommerce Successfully. Pixel Installed");
+        } else {
+          showErrorToast(
+            "Failed to connect to BigCommerce. Your domain does not match the domain registered on BigCommerce."
+          );
+        }
+      }
 
       if (authorizationCode) {
         try {

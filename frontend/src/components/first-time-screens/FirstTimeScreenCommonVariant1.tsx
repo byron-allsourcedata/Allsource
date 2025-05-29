@@ -18,7 +18,7 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
   },
   Content,
   HelpCard,
-  customStyleSX,
+  ContentStyleSX,
   LeftMenu,
   MainBoxStyleSX
 }) => {
@@ -50,7 +50,7 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
       )}
       <Box
         sx={{
-          ...customStyleSX,
+          ...ContentStyleSX,
         }}
       >
         {/* Header */}
@@ -96,28 +96,30 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
                       color: "rgba(50, 54, 62, 1)",
                       fontWeight: "400",
                       lineHeight: "22px",
+                      display: "inline-block",
                     }}
                   >
                     {Header.TextSubtitle}
-                  </Typography>
 
-                  {Header.link && (
-                    <MuiLink
-                      href={Header.link}
-                      target="_blank"
-                      underline="hover"
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        color: "#3898FC",
-                        fontSize: 14,
-                        fontFamily: "Nunito Sans",
-                      }}
-                    >
-                      Learn more&nbsp;
-                      <OpenInNewIcon sx={{ fontSize: 16 }} />
-                    </MuiLink>
-                  )}
+                    {Header.link && (
+                      <MuiLink
+                        href={Header.link}
+                        target="_blank"
+                        underline="hover"
+                        sx={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          color: "#3898FC",
+                          fontSize: 14,
+                          fontFamily: "Nunito Sans",
+                          ml: 1,
+                        }}
+                      >
+                        Learn more&nbsp;
+                        <OpenInNewIcon sx={{ fontSize: 16 }} />
+                      </MuiLink>
+                    )}
+                  </Typography>
                 </Box>
               )}
               <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
@@ -129,8 +131,16 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
                     textTransform: "none",
                     padding: "10px 24px",
                     color: "#fff !important",
-                    ":hover": { backgroundColor: "rgba(48,149,250,1)" },
-                    ":disabled": { backgroundColor: "rgba(56,152,252,0.5)" },
+                    "&:hover": {
+                      backgroundColor: "rgba(30,136,229,1)",
+                    },
+                    "&:active": {
+                      backgroundColor: "rgba(116,183,253,1)",
+                    },
+                    "&.Mui-disabled": {
+                      backgroundColor: "rgba(56,152,252,1)",
+                      color: "#fff !important",
+                    },
                   }}
                 >
                   Request a Demo

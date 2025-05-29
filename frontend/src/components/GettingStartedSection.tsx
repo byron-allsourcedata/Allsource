@@ -50,6 +50,23 @@ const GettingStartedSection: React.FC = () => {
   ]);
 
   useEffect(() => {
+    const handleRedirect = async () => {
+      const query = new URLSearchParams(window.location.search);
+      const authorizationGoogleCode = query.get("code");
+      const installBigcommerce = query.get("install_bigcommerce");
+      const googleScope = query.get("scope");
+      if ((authorizationGoogleCode && googleScope) || installBigcommerce) {
+        let currentDomain = sessionStorage.getItem("current_domain");
+        if (currentDomain) {
+          setSelectedDomain(currentDomain);
+        }
+      }
+    };
+
+    handleRedirect();
+  }, []);
+
+  useEffect(() => {
     if (selectedDomain !== "") {
       setStepData((prev) => [
         { ...prev[0], status: "completed" },
@@ -140,7 +157,7 @@ const GettingStartedSection: React.FC = () => {
           <VerticalStepper steps={stepData} />
           <DomainSelector
             onDomainSelected={(domain) => {
-              setSelectedDomain(domain.domain);
+              setSelectedDomain(domain? domain.domain: "");
             }}
           />
           {selectedDomain !== "" && (
@@ -168,7 +185,7 @@ const GettingStartedSection: React.FC = () => {
           <Box sx={{}}>
             <DomainSelector
               onDomainSelected={(domain) => {
-                setSelectedDomain(domain.domain);
+                setSelectedDomain(domain? domain.domain: "");
               }}
             />
             {selectedDomain !== "" && (
@@ -195,7 +212,7 @@ const GettingStartedSection: React.FC = () => {
           item
           xs={12}
           lg={4}
-          sx={{ display: { xs: "none", md: "block" },}}
+          sx={{ display: { xs: "none", md: "block" }, }}
         >
           <VerticalStepper steps={stepData} />
         </Grid>

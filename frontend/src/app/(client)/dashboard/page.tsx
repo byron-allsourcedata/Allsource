@@ -100,7 +100,6 @@ const Dashboard: React.FC = () => {
   const [selectedDateLabel, setSelectedDateLabel] = useState<string>("");
   const [typeBusiness, setTypeBusiness] = useState("");
   const searchParams = useSearchParams();
-  let statusIntegrate = searchParams.get("message");
   const [welcomePopup, setWelcomePopup] = useState<string | null>(null);
 
   useEffect(() => {
@@ -108,22 +107,6 @@ const Dashboard: React.FC = () => {
     setWelcomePopup(storedPopup);
   }, []);
 
-  useEffect(() => {
-    if (statusIntegrate) {
-      if (statusIntegrate == "Successfully") {
-        showToast("Connect to Bigcommerce Successfully. Pixel Installed");
-        statusIntegrate = null;
-      } else {
-        showErrorToast(
-          "Failed to connect to BigCommerce. Your domain does not match the domain registered on BigCommerce."
-        );
-        statusIntegrate = null;
-      }
-      const newSearchParams = new URLSearchParams(searchParams.toString());
-      newSearchParams.delete("message");
-      router.replace(`?${newSearchParams.toString()}`);
-    }
-  }, [statusIntegrate]);
   const handleDateLabelChange = (label: string) => {
     setSelectedDateLabel(label);
   };
@@ -609,7 +592,7 @@ const Dashboard: React.FC = () => {
             Content={
               <GettingStartedSection />
             }
-            customStyleSX={{
+            ContentStyleSX={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "center",

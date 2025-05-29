@@ -1699,7 +1699,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                                         textTransform: "none",
                                         padding: "0.75em 2.5em",
                                         '&:hover': {
-                                            backgroundColor: 'transparent'
+                                            backgroundColor: 'rgba(80, 82, 178, 0.1)'
                                         }
                                     }}
                                 >

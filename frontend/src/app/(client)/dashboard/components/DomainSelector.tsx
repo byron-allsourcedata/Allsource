@@ -33,7 +33,7 @@ interface HintCardInterface {
 }
 
 interface DomainSelectorProps {
-  onDomainSelected: (domain: Domain) => void;
+  onDomainSelected: (domain: Domain | null) => void;
 }
 
 const DomainSelector: React.FC<DomainSelectorProps> = ({
@@ -65,6 +65,28 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
     const savedDomains: Domain[] = me ? JSON.parse(me).domains || [] : [];
     return savedDomains;
   };
+
+  useEffect(() => {
+    const handleRedirect = async () => {
+      const query = new URLSearchParams(window.location.search);
+      const authorizationGoogleCode = query.get("code");
+      const installBigcommerce = query.get("install_bigcommerce");
+      const googleScope = query.get("scope");
+      if ((authorizationGoogleCode && googleScope) || installBigcommerce) {
+        const savedCurrentDomain = sessionStorage.getItem("current_domain");
+        if (savedCurrentDomain) {
+          const matchedDomain = domains.find(
+            (domain) => domain.domain === savedCurrentDomain
+          );
+          if (matchedDomain) {
+            setSelectedDomain(matchedDomain);
+          }
+        }
+      }
+    };
+
+    handleRedirect();
+  }, [domains]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -319,7 +341,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               setSelectedDomain(newDomain);
               onDomainSelected(newDomain);
               setDomains((prev) => {
-                if (!prev.find((d) => d.id === newDomain.id)) {
+                if (newDomain && !prev.find((d) => d.id === newDomain.id)) {
                   return [...prev, newDomain];
                 }
                 return prev;

@@ -18,7 +18,7 @@ const FirstTimeScreenCommon2: React.FC<TimeScreenProps> = ({
     },
     Content,
     HelpCard,
-    customStyleSX,
+    ContentStyleSX,
     LeftMenu
 }) => {
     const [bannerVisible, setBannerVisible] = useState(true);
@@ -48,7 +48,7 @@ const FirstTimeScreenCommon2: React.FC<TimeScreenProps> = ({
             )}
             <Box
                 sx={{
-                    ...customStyleSX,
+                    ...ContentStyleSX,
                 }}
             >
 

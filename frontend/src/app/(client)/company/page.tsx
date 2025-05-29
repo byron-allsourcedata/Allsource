@@ -26,7 +26,7 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
 import CalendarPopup from '@/components/CustomCalendar';
-import CustomTablePagination from '@/components/CustomTablePagination';
+import PaginationComponent from "@/components/PaginationComponent";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
@@ -34,6 +34,9 @@ import CompanyFilterPopup from './CompanyFilters';
 import CompanyEmployees from './CompanyEmployees';
 import GettingStartedSection from '@/components/GettingStartedSection';
 import { FirstTimeScreenCommonVariant2 } from '@/components/first-time-screens';
+import HintCard from "../components/HintCard";
+import { useCompanyHints } from "./context/CompanyHintsContext";
+import { companyTableCards } from "./context/hintsCardsContent";
 
 
 interface FetchDataParams {
@@ -60,7 +63,7 @@ const Leads: React.FC = () => {
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(15);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [activeFilter, setActiveFilter] = useState<string>('');
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -80,6 +83,7 @@ const Leads: React.FC = () => {
     const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
     const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
     const [industry, setIndustry] = React.useState<string[]>([]);
+    const { changeCompanyTableHint, companyTableHints, resetCompanyTableHints } = useCompanyHints();
 
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
@@ -273,7 +277,7 @@ const Leads: React.FC = () => {
             setCount(count || 0);
             setStatus(response.data.status);
 
-            const options = [15, 30, 50, 100, 200, 500];
+            const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
                 RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
@@ -781,7 +785,7 @@ const Leads: React.FC = () => {
                                         <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
                                     </Box>
                                     <Box sx={{
-                                        display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
+                                        display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
                                         '@media (max-width: 900px)': {
                                             gap: '8px'
                                         }
@@ -816,6 +820,27 @@ const Leads: React.FC = () => {
                                         >
                                             <DownloadIcon fontSize='medium' />
                                         </Button>
+
+                                        <HintCard
+                                            card={companyTableCards["download"]}
+                                            positionLeft={-420}
+                                            positionTop={20}
+                                            rightSide={true}
+                                            isOpenBody={companyTableHints["download"].showBody}
+                                            toggleClick={() => {
+                                            if (companyTableHints["overview"].showBody) {
+                                                changeCompanyTableHint("overview", "showBody", "close")
+                                            }
+                                            if (companyTableHints["employees"].showBody) {
+                                                changeCompanyTableHint("employees", "showBody", "close")
+                                            }
+                                            changeCompanyTableHint("download", "showBody", "toggle")
+                                            }}
+                                            closeClick={() => {
+                                                changeCompanyTableHint("download", "showBody", "close")
+                                            }}
+                                        />
+
                                         <Button
                                             onClick={handleFilterPopupOpen}
                                             disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
@@ -997,7 +1022,7 @@ const Leads: React.FC = () => {
                                      Content={
                                          <GettingStartedSection />
                                      }
-                                     customStyleSX={{
+                                     ContentStyleSX={{
                                          display: "flex",
                                          flexDirection: "column",
                                          justifyContent: "center",
@@ -1036,28 +1061,46 @@ const Leads: React.FC = () => {
                             ) : (
                                 <Grid container spacing={1} sx={{ flex: 1 }}>
                                     <Grid item xs={12}>
-                                        <TableContainer
-                                            component={Paper}
-                                            sx={{
-                                                border: '1px solid rgba(235, 235, 235, 1)',
-                                                maxHeight: selectedFilters.length > 0
-                                                    ? (hasNotification ? '63vh' : '68vh')
-                                                    : '72vh',
-                                                overflowY: 'auto',
-                                                "@media (max-height: 800px)": {
-                                                    maxHeight: selectedFilters.length > 0
-                                                        ? (hasNotification ? '53vh' : '57vh')
-                                                        : '70vh',
-                                                },
-                                                "@media (max-width: 400px)": {
-                                                    maxHeight: selectedFilters.length > 0
-                                                        ? (hasNotification ? '53vh' : '60vh')
-                                                        : '67vh',
-                                                },
-                                            }}
+                                    <TableContainer                                
+                                        sx={{
+                                        height: "70vh",
+                                        overflowX: "scroll",
+                                        maxHeight:
+                                            selectedFilters.length > 0
+                                            ? hasNotification
+                                                ? "63vh"
+                                                : "70vh"
+                                            : "70vh",
+                                        "@media (max-height: 800px)": {
+                                            height: "60vh",
+                                            maxHeight:
+                                            selectedFilters.length > 0
+                                                ? hasNotification
+                                                ? "53vh"
+                                                : "60vh"
+                                                : "70vh",
+                                        },
+                                        "@media (max-width: 400px)": {
+                                            height: "50vh",
+                                            maxHeight:
+                                            selectedFilters.length > 0
+                                                ? hasNotification
+                                                ? "53vh"
+                                                : "50vh"
+                                                : "70vh",
+                                        },
+                                        }}
                                         >
-                                            <Table stickyHeader aria-label="leads table">
-                                                <TableHead>
+                                            <Table
+                                                stickyHeader
+                                                component={Paper}
+                                                aria-label="leads table"
+                                                sx={{ 
+                                                    tableLayout: "fixed", 
+                                                    border: "1px solid rgba(235, 235, 235, 1)",
+                                                }}
+                                                >
+                                                <TableHead sx={{ position: "relative" }}>
                                                     <TableRow>
                                                         {[
                                                             { key: 'company_name', label: 'Company', sortable: true },
@@ -1083,13 +1126,12 @@ const Leads: React.FC = () => {
                                                                         "::after": { content: 'none' }
                                                                     })
                                                                 }}
-                                                                onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                                style={{ cursor: sortable ? 'pointer' : 'default' }}
                                                             >
                                                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
                                                                     <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
                                                                     {sortable && (
-                                                                        <IconButton size="small">
+                                                                        <IconButton size="small" onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                                        style={{ cursor: sortable ? 'pointer' : 'default' }}>
                                                                             {orderBy === key ? (
                                                                                 order === 'asc' ? (
                                                                                     <NorthOutlinedIcon fontSize="inherit" />
@@ -1102,6 +1144,47 @@ const Leads: React.FC = () => {
                                                                         </IconButton>
                                                                     )}
                                                                 </Box>
+                                                            {key === "number_of_employees" && (
+                                                                <HintCard
+                                                                    card={companyTableCards["employees"]}
+                                                                    positionLeft={-300}
+                                                                    positionTop={80}
+                                                                    rightSide={true}
+                                                                    isOpenBody={companyTableHints["employees"].showBody}
+                                                                    toggleClick={() => {
+                                                                    if (companyTableHints["download"].showBody) {
+                                                                        changeCompanyTableHint("download", "showBody", "close")
+                                                                    }
+                                                                    if (companyTableHints["overview"].showBody) {
+                                                                        changeCompanyTableHint("overview", "showBody", "close")
+                                                                    }
+                                                                    changeCompanyTableHint("employees", "showBody", "toggle")
+                                                                    }}
+                                                                    closeClick={() => {
+                                                                        changeCompanyTableHint("employees", "showBody", "close")
+                                                                    }}
+                                                                />
+                                                            )}
+                                                            {key === "company_name" && (
+                                                                <HintCard
+                                                                    card={companyTableCards["overview"]}
+                                                                    positionLeft={110}
+                                                                    positionTop={100}
+                                                                    isOpenBody={companyTableHints["overview"].showBody}
+                                                                    toggleClick={() => {
+                                                                    if (companyTableHints["download"].showBody) {
+                                                                        changeCompanyTableHint("download", "showBody", "close")
+                                                                    }
+                                                                    if (companyTableHints["employees"].showBody) {
+                                                                        changeCompanyTableHint("employees", "showBody", "close")
+                                                                    }
+                                                                    changeCompanyTableHint("overview", "showBody", "toggle")
+                                                                    }}
+                                                                    closeClick={() => {
+                                                                        changeCompanyTableHint("overview", "showBody", "close")
+                                                                    }}
+                                                                />
+                                                            )}
                                                             </TableCell>
                                                         ))}
                                                     </TableRow>
@@ -1208,16 +1291,14 @@ const Leads: React.FC = () => {
                                                 </TableBody>
                                             </Table>
                                         </TableContainer>
-                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
-                                            <CustomTablePagination
-                                                count={count_companies ?? 0}
-                                                page={page}
-                                                rowsPerPage={rowsPerPage}
-                                                onPageChange={handleChangePage}
-                                                onRowsPerPageChange={handleChangeRowsPerPage}
-                                                rowsPerPageOptions={rowsPerPageOptions}
-                                            />
-                                        </Box>
+                                        <PaginationComponent 
+                                            countRows={count_companies ?? 0}
+                                            page={page}
+                                            rowsPerPage={rowsPerPage}
+                                            onPageChange={handleChangePage}
+                                            onRowsPerPageChange={handleChangeRowsPerPage}
+                                            rowsPerPageOptions={rowsPerPageOptions}
+                                        />
                                     </Grid>
                                 </Grid>
 

@@ -42,7 +42,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import dayjs from "dayjs";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import CustomToolTip from "@/components/customToolTip";
-import CustomTablePagination from "@/components/CustomTablePagination";
+import PaginationComponent from "@/components/PaginationComponent";
 import { useNotification } from "@/context/NotificationContext";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ThreeDotsLoader from "./components/ThreeDotsLoader";
@@ -893,19 +893,19 @@ const Sources: React.FC = () => {
 
 
                   <HintCard
-                    card={tableHintCards[1]}
+                    card={tableHintCards["builder"]}
                     positionLeft={-420}
                     positionTop={20}
                     rightSide={true}
-                    isOpenBody={sourcesTableHints[1].showBody}
+                    isOpenBody={sourcesTableHints["builder"].showBody}
                     toggleClick={() => {
-                      if (sourcesTableHints[0].showBody) {
-                        changeSourcesTableHint(0, "showBody", "close")
+                      if (sourcesTableHints["actions"].showBody) {
+                        changeSourcesTableHint("actions", "showBody", "close")
                       }
-                      changeSourcesTableHint(1, "showBody", "toggle")
+                      changeSourcesTableHint("builder", "showBody", "toggle")
                     }}
                     closeClick={() => {
-                      changeSourcesTableHint(1, "showBody", "close")
+                      changeSourcesTableHint("builder", "showBody", "close")
                     }}
                   />
                 </Box>
@@ -1090,12 +1090,12 @@ const Sources: React.FC = () => {
                               },
                             ],
                           }}
-                          customStyleSX={{
+                          ContentStyleSX={{
                             display: "flex",
                             flexDirection: "column",
                             justifyContent: "center",
                             alignItems: "center",
-                            width: "70%",
+                            maxWidth: "850px",
                             margin: "0 auto",
                             mt: 2
                           }}
@@ -1230,19 +1230,19 @@ const Sources: React.FC = () => {
                                         </Box>
                                         {label === "Actions" && (
                                           <HintCard
-                                            card={tableHintCards[0]}
+                                            card={tableHintCards["actions"]}
                                             positionLeft={-380}
                                             positionTop={100}
                                             rightSide={true}
-                                            isOpenBody={sourcesTableHints[0].showBody}
+                                            isOpenBody={sourcesTableHints["actions"].showBody}
                                             toggleClick={() => {
-                                              if (sourcesTableHints[1].showBody) {
-                                                changeSourcesTableHint(1, "showBody", "close")
+                                              if (sourcesTableHints["builder"].showBody) {
+                                                changeSourcesTableHint("builder", "showBody", "close")
                                               }
-                                              changeSourcesTableHint(0, "showBody", "toggle")
+                                              changeSourcesTableHint("actions", "showBody", "toggle")
                                             }}
                                             closeClick={() => {
-                                              changeSourcesTableHint(0, "showBody", "close")
+                                              changeSourcesTableHint("actions", "showBody", "close")
                                             }}
                                           />
                                         )}
@@ -1672,53 +1672,14 @@ const Sources: React.FC = () => {
                               </TableBody>
                             </Table>
                           </TableContainer>
-                          {count_sources && count_sources > 10 ? (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                justifyContent: "flex-end",
-                                padding: "24px 0 0",
-                                "@media (max-width: 600px)": {
-                                  padding: "12px 0 0",
-                                },
-                              }}
-                            >
-                              <CustomTablePagination
-                                count={count_sources ?? 0}
-                                page={page}
-                                rowsPerPage={rowsPerPage}
-                                onPageChange={handleChangePage}
-                                onRowsPerPageChange={handleChangeRowsPerPage}
-                                rowsPerPageOptions={rowsPerPageOptions}
-                              />
-                            </Box>
-                          ) : (
-                            <Box
-                              display="flex"
-                              justifyContent="flex-end"
-                              alignItems="center"
-                              sx={{
-                                padding: "16px",
-                                backgroundColor: "#fff",
-                                borderRadius: "4px",
-                                "@media (max-width: 600px)": {
-                                  padding: "12px",
-                                },
-                              }}
-                            >
-                              <Typography
-                                sx={{
-                                  fontFamily: "Nunito Sans",
-                                  fontWeight: "400",
-                                  fontSize: "12px",
-                                  lineHeight: "16px",
-                                  marginRight: "16px",
-                                }}
-                              >
-                                {`1 - ${count_sources} of ${count_sources}`}
-                              </Typography>
-                            </Box>
-                          )}
+                          <PaginationComponent 
+                              countRows={count_sources ?? 0}
+                              page={page}
+                              rowsPerPage={rowsPerPage}
+                              onPageChange={handleChangePage}
+                              onRowsPerPageChange={handleChangeRowsPerPage}
+                              rowsPerPageOptions={rowsPerPageOptions}
+                          />
                         </Grid>
                       </Grid>
                     )}

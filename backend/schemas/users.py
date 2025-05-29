@@ -141,6 +141,11 @@ class StripeConnectResponse(BaseModel):
     status: StripeConnectStatus
 
 
+class GetStartedResponse(BaseModel):
+    is_pixel_installed: bool
+    is_source_imported: bool
+
+
 class UpdateUserRequest(BaseModel):
     user_id: int
     is_partner: bool | None = None

@@ -2,19 +2,22 @@ import hashlib
 import logging
 import os
 import re
+from typing import Optional
 
 from fastapi import HTTPException, status
 from ffmpeg import run_async
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from bs4 import BeautifulSoup
 import requests
 
 from enums import BaseEnum, SendgridTemplate, PixelStatus, DomainStatus
 from models.subscriptions import UserSubscriptions
-from models.users import Users
+from models.users import Users, User
 from models.users_domains import UserDomains
 from datetime import datetime, timedelta
+
+from schemas.pixel_installation import PixelInstallationResponse
 from utils import normalize_url
 from persistence.sendgrid_persistence import SendgridPersistence
 from services.sendgrid import SendgridHandler
@@ -130,6 +133,27 @@ class PixelInstallationService:
             user = self.db.query(Users).filter(Users.id == domain.user_id).first()
             result['user_id'] = user.id
         return result
+
+    def check_pixel_installation_status(
+        self,
+        user: dict,
+        select_domain: str
+    ) -> Optional[PixelInstallationResponse]:
+        row = (
+            self.db
+            .query(UserDomains.is_pixel_installed)
+            .filter(
+                UserDomains.user_id == user["id"],
+                UserDomains.domain  == select_domain,
+            )
+            .first()
+        )
+
+        if row is None:
+            return None
+
+        installed_flag = bool(row[0])
+        return PixelInstallationResponse(pixel_installation=installed_flag)
     
     
 

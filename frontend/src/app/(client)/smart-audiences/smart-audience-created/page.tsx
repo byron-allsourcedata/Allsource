@@ -374,19 +374,19 @@ const SourcesList: React.FC = () => {
                                             <MoreVert sx={{ color: "rgba(32, 33, 36, 1)" }} height={8} width={24} />
                                         </IconButton>
                                         <HintCard
-                                            card={createdHintCards[0]}
+                                            card={createdHintCards["actions"]}
                                             positionLeft={-420}
                                             positionTop={20}
                                             rightSide={true}
-                                            isOpenBody={createdSmartsHints[0].showBody}
+                                            isOpenBody={createdSmartsHints["actions"].showBody}
                                             toggleClick={() => {
-                                                if (createdSmartsHints[1].showBody) {
-                                                    changeCreatedSmartHint(1, "showBody", "close")
+                                                if (createdSmartsHints["builder"].showBody) {
+                                                    changeCreatedSmartHint("builder", "showBody", "close")
                                                 }
-                                                changeCreatedSmartHint(0, "showBody", "toggle")
+                                                changeCreatedSmartHint("actions", "showBody", "toggle")
                                             }}
                                             closeClick={() => {
-                                                changeCreatedSmartHint(0, "showBody", "close")
+                                                changeCreatedSmartHint("actions", "showBody", "close")
                                             }}
                                         />
                                     </Box>
@@ -428,7 +428,7 @@ const SourcesList: React.FC = () => {
                                             padding: '10px 24px',
                                             color: '#fff !important',
                                             ":hover": {
-                                                backgroundColor: "rgba(62, 64, 142, 1)"
+                                                backgroundColor: "rgba(30, 136, 229, 1)"
                                             },
                                             ":active": {
                                                 backgroundColor: "rgba(56, 152, 252, 1)"
@@ -442,19 +442,19 @@ const SourcesList: React.FC = () => {
                                         Generate Smart Audience
                                     </Button>
                                     <HintCard
-                                        card={createdHintCards[1]}
+                                        card={createdHintCards["builder"]}
                                         positionLeft={-410}
                                         positionTop={20}
                                         rightSide={true}
-                                        isOpenBody={createdSmartsHints[1].showBody}
+                                        isOpenBody={createdSmartsHints["builder"].showBody}
                                         toggleClick={() => {
-                                            if (createdSmartsHints[0].showBody) {
-                                                changeCreatedSmartHint(0, "showBody", "close")
+                                            if (createdSmartsHints["actions"].showBody) {
+                                                changeCreatedSmartHint("actions", "showBody", "close")
                                             }
-                                            changeCreatedSmartHint(1, "showBody", "toggle")
+                                            changeCreatedSmartHint("builder", "showBody", "toggle")
                                         }}
                                         closeClick={() => {
-                                            changeCreatedSmartHint(1, "showBody", "close")
+                                            changeCreatedSmartHint("builder", "showBody", "close")
                                         }}
                                         />
                                 </Box>

@@ -25,3 +25,5 @@ export { default as ReportProblemOutlinedIcon } from "@mui/icons-material/Report
 export { default as SettingsIcon } from'@mui/icons-material/Settings';
 export { default as SpeedIcon } from'@mui/icons-material/Speed';
 export { default as MovingIcon } from'@mui/icons-material/Moving';
+export { default as DeleteIcon } from'@mui/icons-material/Delete';
+export { default as DeleteOutlinedIcon } from'@mui/icons-material/DeleteOutlined';

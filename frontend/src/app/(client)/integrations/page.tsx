@@ -24,6 +24,8 @@ import {
   Drawer,
   Backdrop,
   LinearProgress,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
 import Image from "next/image";
 import CustomTooltip from "@/components/customToolTip";
@@ -70,6 +72,8 @@ import { hasIn } from "lodash";
 import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
+import HintCard from "../components/HintCard";
+import { useIntegrationHints } from "./context/IntegrationsHintsContext";
 
 interface IntegrationBoxProps {
   image: string;
@@ -666,6 +670,7 @@ const UserIntegrationsList = ({
   const [search, setSearch] = useState<string>("");
   const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { hints, cards, changeIntegrationHint, resetIntegrationHints } = useIntegrationHints();
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -756,6 +761,13 @@ const UserIntegrationsList = ({
     (cred) => cred.service_name
   );
 
+  useEffect(() => {
+    resetIntegrationHints();
+  }, []);
+
+  const theme = useTheme();
+  const isNarrow = useMediaQuery('(max-width:900px)');
+
   return (
     <Box
       sx={{
@@ -777,35 +789,61 @@ const UserIntegrationsList = ({
         limitName={"domain"}
         handleClose={() => setUpgradePlanPopup(false)}
       />
-      <Box sx={{ overflowX: "hidden" }}>
-        <TextField
-          fullWidth
-          placeholder="Search integrations"
-          value={search}
-          onChange={handleSearch}
-          id="outlined-start-adornment"
+      <Box
+        sx={{
+          position: "relative",
+          overflow: "visible",
+        }}
+      >
+        <Box
           sx={{
+            overflowX: "hidden",
             mb: 3.75,
             maxWidth: "500px",
-            "@media(max-width: 900px)": {
-              width: "100%",
-            },
+            "@media(max-width: 900px)": { width: "100%" },
           }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Image
-                  src="/ic_round-search.svg"
-                  width={24}
-                  height={24}
-                  alt="search"
-                />
-              </InputAdornment>
-            ),
-          }}
-          variant="outlined"
+        >
+          <TextField
+            fullWidth
+            placeholder="Search integrations"
+            value={search}
+            onChange={handleSearch}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Image
+                    src="/ic_round-search.svg"
+                    width={24}
+                    height={24}
+                    alt="search"
+                  />
+                </InputAdornment>
+              ),
+            }}
+            variant="outlined"
+          />
+        </Box>
+
+        {/* HintCard */}
+        <HintCard
+          card={cards.search}
+          positionLeft={530}
+          positionTop={20}
+          rightSide={false}
+          isOpenBody={hints.search.showBody}
+          toggleClick={() => {
+            if (hints.integration.showBody) {
+              changeIntegrationHint("integration", "showBody", "close")
+            }
+            changeIntegrationHint("search", "showBody", "toggle")
+          }
+          }
+          closeClick={() =>
+            changeIntegrationHint("search", "showBody", "close")
+          }
         />
       </Box>
+
       <Box
         sx={{
           display: "flex",
@@ -835,47 +873,58 @@ const UserIntegrationsList = ({
             }
             return isAIntegrated ? -1 : 1;
           })
-          .map((integration) => {
-            const isIntegrated = integratedServices.includes(
-              integration.service_name
-            );
+          .map((integration, idx) => {
+            const isFirst = idx === 0;
+            const isIntegrated = integratedServices.includes(integration.service_name);
             const integrationCred = integrationsCredentials.find(
-              (cred) => cred.service_name === integration.service_name
+              cred => cred.service_name === integration.service_name
             );
-
-            if (isIntegrated) {
-              return (
-                <Box
-                  key={integration.service_name}
-                  onClick={() => handleActive(integration.service_name)}
-                >
-                  <IntegrationBox
-                    image={`/${integration.image}`}
-                    service_name={integration.service_name}
-                    active={activeService === integration.service_name}
-                    handleClick={() => setOpenModal(integration.service_name)}
-                    is_integrated={true}
-                    handleDelete={handleDeleteOpen}
-                    is_failed={integrationCred?.is_failed}
-                  />
-                </Box>
-              );
-            }
 
             return (
               <Box
                 key={integration.service_name}
-                onClick={() => handleAddIntegration(integration.service_name)}
+                onClick={() =>
+                  isIntegrated
+                    ? handleActive(integration.service_name)
+                    : handleAddIntegration(integration.service_name)
+                }
+                sx={{
+                  position: "relative",
+                  flexShrink: 0,
+                }}
               >
+                {isFirst && (
+                  <HintCard
+                    card={cards.integration}
+                    positionLeft={isNarrow ? 150 : 125}
+                    positionTop={125}
+                    rightSide={false}
+                    isOpenBody={hints.integration.showBody}
+                    toggleClick={() => {
+                      if (hints.search.showBody) {
+                        changeIntegrationHint("search", "showBody", "close")
+                      }
+                      changeIntegrationHint("integration", "showBody", "toggle")
+                    }}
+                    closeClick={() =>
+                      changeIntegrationHint("integration", "showBody", "close")
+                    }
+                  />
+                )}
+      
                 <IntegrationBox
                   image={`/${integration.image}`}
                   service_name={integration.service_name}
-                  is_avalible={true}
-                  is_integrated={false}
+                  active={activeService === integration.service_name}
+                  is_avalible={!isIntegrated}
+                  is_integrated={isIntegrated}
+                  handleClick={() => setOpenModal(integration.service_name)}
+                  handleDelete={handleDeleteOpen}
+                  is_failed={integrationCred?.is_failed}
                 />
               </Box>
             );
-          })}
+          })}   
       </Box>
 
       {openModal === "klaviyo" && (
@@ -1297,24 +1346,6 @@ const Integrations = () => {
   }, []);
 
   useEffect(() => {
-    if (statusIntegrate) {
-      if (statusIntegrate == "Successfully") {
-        showToast("Connect to Bigcommerce Successfully");
-      } else {
-        showErrorToast(
-          `Connect to Bigcommerce Failed ${statusIntegrate && statusIntegrate != "Failed"
-            ? statusIntegrate
-            : ""
-          }`
-        );
-      }
-    }
-    const newSearchParams = new URLSearchParams(searchParams.toString());
-    newSearchParams.delete("message");
-    router.replace(`?${newSearchParams.toString()}`);
-  }, [statusIntegrate]);
-
-  useEffect(() => {
     const fetchIntegrationCredentials = async () => {
       try {
         setLoading(true);
@@ -1468,12 +1499,12 @@ const Integrations = () => {
                     },
                   ],
                 }}
-                customStyleSX={{
+                ContentStyleSX={{
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
                   alignItems: "center",
-                  width: "70%",
+                  maxWidth: "840px",
                   margin: "0 auto",
                   mt: 2,
                 }}

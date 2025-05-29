@@ -10,7 +10,6 @@ import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import DataSyncList from "./components/DataSyncList";
 import { useRouter } from "next/navigation";
-import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 
 const centerContainerStyles = {
@@ -353,12 +352,12 @@ const DataSync = () => {
                         },
                       ],
                     }}
-                    customStyleSX={{
+                    ContentStyleSX={{
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
                       alignItems: "center",
-                      width: "70%",
+                      maxWidth: "840px",
                       margin: "0 auto",
                       mt: 2,
                     }}

@@ -177,8 +177,18 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                         fullWidth
                         onClick={navigateToSourcePage}
                         sx={{
-                          backgroundColor: "#3898FC",
+                          backgroundColor: "rgba(56,152,252,1)",
                           dropShadow: "#00000040",
+                          "&:hover": {
+                            backgroundColor: "rgba(30,136,229,1)",
+                          },
+                          "&:active": {
+                            backgroundColor: "rgba(116,183,253,1)",
+                          },
+                          "&.Mui-disabled": {
+                            backgroundColor: "rgba(56,152,252,1)",
+                            color: "#fff !important",
+                          },
                         }}
                       >
                         <IconButton
@@ -431,6 +441,11 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                     variant="outlined"
                     fullWidth
                     onClick={navigateToExamplePage}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "rgba(246, 250, 253, 1)",
+                      },
+                    }}
                   >
                     <Typography
                       className="description"
@@ -449,12 +464,21 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                     variant="contained"
                     fullWidth
                     onClick={navigateToSmartAudiencePage}
-                    sx={{ backgroundColor: "#3898FC", dropShadow: "#00000040" }}
+                    sx={{
+                      dropShadow: "#00000040",
+                      backgroundColor: "rgba(56,152,252,1)",
+                      "&:hover": {
+                        backgroundColor: "rgba(30,136,229,1)",
+                      },
+                      "&:active": {
+                        backgroundColor: "rgba(116,183,253,1)",
+                      },
+                      "&.Mui-disabled": {
+                        backgroundColor: "rgba(56,152,252,1)",
+                        color: "#fff !important",
+                      },
+                    }}
                   >
-                    <IconButton
-                      sx={{ width: "30px", height: "30px", color: "#fff" }}
-                      onClick={() => { }}
-                    ></IconButton>
                     <Typography
                       className="description"
                       style={{ color: "#fff" }}
