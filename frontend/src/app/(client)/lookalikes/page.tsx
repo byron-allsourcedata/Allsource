@@ -43,6 +43,8 @@ import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSyne
 import BuilderIntro from "@/components/first-time-screens/BuilderIntro";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import { width } from "@mui/system";
+import { useLookalikesHints } from "./context/LookalikesHintsContext";
+import HintCard from "../components/HintCard";
 
 const cardData: CardData[] = [
   {
@@ -103,7 +105,7 @@ interface TableRowData {
 
 const CreateLookalikePage: React.FC = () => {
   const router = useRouter();
-
+  const { lookalikesTableHints: lookalikesTableHints, cardsLookalikeTable, changeLookalikesTableHint, resetLookalikesTableHints } = useLookalikesHints();
   const [isLookalikeGenerated, setIsLookalikeGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loaderForTable, setLoaderForTable] = useState(false);
@@ -386,6 +388,10 @@ const CreateLookalikePage: React.FC = () => {
   };
 
   useEffect(() => {
+    resetLookalikesTableHints();
+  }, [])
+
+  useEffect(() => {
     handleFetchLookalikes({
       sortBy: orderBy,
       sortOrder: order,
@@ -548,11 +554,26 @@ const CreateLookalikePage: React.FC = () => {
                 alignItems: "center",
                 gap: "15px",
                 pt: "16px",
+                position: "relative",
+                overflow: "visible",
                 "@media (max-width: 900px)": {
                   gap: "8px",
                 },
               }}
             >
+              <HintCard
+                card={cardsLookalikeTable.builder}
+                positionTop={30}
+                positionLeft={-425}
+                rightSide={true}
+                isOpenBody={lookalikesTableHints.builder.showBody}
+                toggleClick={() =>
+                  changeLookalikesTableHint("builder", "showBody", "toggle")
+                }
+                closeClick={() =>
+                  changeLookalikesTableHint("builder", "showBody", "close")
+                }
+              />
               {isLookalikeGenerated && (
                 <Box
                   sx={{
@@ -563,6 +584,7 @@ const CreateLookalikePage: React.FC = () => {
                     width: "100%",
                   }}
                 >
+
                   <Button
                     onClick={() => router.push("/lookalikes/builder")}
                     variant="outlined"
@@ -714,7 +736,7 @@ const CreateLookalikePage: React.FC = () => {
             display: "flex",
             flexDirection: "row",
             gap: 1,
-            overflowX: "auto",
+            overflow: "visible",
             "@media (max-width: 600px)": { mb: 1 },
           }}
         >
@@ -837,122 +859,122 @@ const CreateLookalikePage: React.FC = () => {
             </Box>
           ) : (
             <>
-            <Box sx={{width: "100%"}}>
-            <FirstTimeScreenCommonVariant1
-                Header={{
-                  TextTitle: "Create Your First Lookalike",
-                  TextSubtitle:
-                    "This tool helps you expand your reach by finding new users who closely resemble your existing high-value audiences",
-                  link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes",
-                }}
-                InfoNotification={{
-                  Text: "This page shows all your lookalike audiences with performance analytics for each. Compare effectiveness, expansion potential, and conversion rates to optimize your targeting strategy.",
-                }}
-                WarningNotification={{
-                  condition: sourceCount === 0 && showNotification,
-                  ctaUrl: "/sources",
-                  ctaLabel: "Import Source",
-                  message:
-                    "You need to import at least one source to create a lookalike",
-                }}
-                Content={
-                  <>
-                    <BuilderIntro
-                      steps={[
-                        {
-                          title: "Select Source",
-                          subtitle:
-                            "Choose a source that represents your ideal customer profile.",
-                        },
-                        {
-                          title: "Choose Lookalike Size",
-                          subtitle:
-                            "Specify how closely your lookalike should match the source.",
-                        },
-                        {
-                          title: "Select Fields",
-                          subtitle:
-                            "Choose which user attributes should carry the most weight.",
-                        },
-                        {
-                          title: "Order Fields",
-                          subtitle:
-                            "Arrange fields in order of importance to fine-tune audience.",
-                        },
-                      ]}
-                      previewProps={{
-                        tableSrc: "/lookalike-screen.svg",
-                        headerTitle: "Grow Your Audience with AI-Powered Lookalikes",
-                        caption:
-                          "Go beyond conversions – build lookalikes from both your best customers AND failed leads. These audience models become your powerful building blocks – later combine them in Smart Audiences to create perfectly tuned targeting groups by mixing and excluding different segments.",
-                        onOpenPopup: handleOpenPopup,      
-                        onBegin: () => router.push("/lookalikes/builder"),        
-                        beginDisabled: sourceCount === 0,
-                        buttonLabel: "Create Lookalike",
-                        sx: {
-                          
-                        },
-                      }}
-                    />
-                  </>
-                }
-                HelpCard={{
-                  headline: "Need Help with Your Lookalike Audiences?",
-                  description:
-                    "Let our experts help you refine, troubleshoot or scale your lookalike audiences in a free 30-minute call.",
-                  helpPoints: [
-                    {
-                      title: "Lookalike Setup Review",
-                      description: "Perfect your audience creation",
+              <Box sx={{ width: "100%" }}>
+                <FirstTimeScreenCommonVariant1
+                  Header={{
+                    TextTitle: "Create Your First Lookalike",
+                    TextSubtitle:
+                      "This tool helps you expand your reach by finding new users who closely resemble your existing high-value audiences",
+                    link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/lookalikes",
+                  }}
+                  InfoNotification={{
+                    Text: "This page shows all your lookalike audiences with performance analytics for each. Compare effectiveness, expansion potential, and conversion rates to optimize your targeting strategy.",
+                  }}
+                  WarningNotification={{
+                    condition: sourceCount === 0 && showNotification,
+                    ctaUrl: "/sources",
+                    ctaLabel: "Import Source",
+                    message:
+                      "You need to import at least one source to create a lookalike",
+                  }}
+                  Content={
+                    <>
+                      <BuilderIntro
+                        steps={[
+                          {
+                            title: "Select Source",
+                            subtitle:
+                              "Choose a source that represents your ideal customer profile.",
+                          },
+                          {
+                            title: "Choose Lookalike Size",
+                            subtitle:
+                              "Specify how closely your lookalike should match the source.",
+                          },
+                          {
+                            title: "Select Fields",
+                            subtitle:
+                              "Choose which user attributes should carry the most weight.",
+                          },
+                          {
+                            title: "Order Fields",
+                            subtitle:
+                              "Arrange fields in order of importance to fine-tune audience.",
+                          },
+                        ]}
+                        previewProps={{
+                          tableSrc: "/lookalike-screen.svg",
+                          headerTitle: "Grow Your Audience with AI-Powered Lookalikes",
+                          caption:
+                            "Go beyond conversions – build lookalikes from both your best customers AND failed leads. These audience models become your powerful building blocks – later combine them in Smart Audiences to create perfectly tuned targeting groups by mixing and excluding different segments.",
+                          onOpenPopup: handleOpenPopup,
+                          onBegin: () => router.push("/lookalikes/builder"),
+                          beginDisabled: sourceCount === 0,
+                          buttonLabel: "Create Lookalike",
+                          sx: {
+
+                          },
+                        }}
+                      />
+                    </>
+                  }
+                  HelpCard={{
+                    headline: "Need Help with Your Lookalike Audiences?",
+                    description:
+                      "Let our experts help you refine, troubleshoot or scale your lookalike audiences in a free 30-minute call.",
+                    helpPoints: [
+                      {
+                        title: "Lookalike Setup Review",
+                        description: "Perfect your audience creation",
+                      },
+                      {
+                        title: "Performance Optimization",
+                        description: " Improve your lookalike results",
+                      },
+                      {
+                        title: "Advanced Scaling Strategies ",
+                        description: "Grow your best audiences",
+                      },
+                    ],
+                  }}
+                  LeftMenu={{
+                    header: "Get Your Lookalike Settings Perfect",
+                    subtitle: "30-minute consultation on audience modeling best practices",
+                    image: {
+                      url: "/lookalike-screen.svg",
+                      width: 600,
+                      height: 300
                     },
-                    {
-                      title: "Performance Optimization",
-                      description: " Improve your lookalike results",
-                    },
-                    {
-                      title: "Advanced Scaling Strategies ",
-                      description: "Grow your best audiences",
-                    },
-                  ],
-                }}
-                LeftMenu={{
-                  header: "Get Your Lookalike Settings Perfect",
-                  subtitle: "30-minute consultation on audience modeling best practices",
-                  image:{
-                    url: "/lookalike-screen.svg",
-                    width: 600,
-                    height: 300
-                  },
-                  items: [
-                    {
-                      Icon: SettingsIcon,
-                      title: "Lookalike Setup Review",
-                      subtitle: `Get expert feedback on your audience settings to maximize conversions`,
-                    },
-                    {
-                      Icon: SpeedIcon,
-                      title: "Performance Optimization",
-                      subtitle: `Unlock your lookalikes full potential – get data-driven tweaks to boost conversions`,
-                    },
-                    {
-                      Icon: MovingIcon,
-                      title: "Advanced Scaling Strategies",
-                      subtitle: "Turn your high-performers into scalable growth engines with AI",
-                    },
-                  ],
-                }}
-                ContentStyleSX={{
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  maxWidth: "850px",
-                  margin: "0 auto",
-                  mt: 2,
-                }}
-              />
-            </Box>
-            {popupOpen && sourceCount === 0 && (
+                    items: [
+                      {
+                        Icon: SettingsIcon,
+                        title: "Lookalike Setup Review",
+                        subtitle: `Get expert feedback on your audience settings to maximize conversions`,
+                      },
+                      {
+                        Icon: SpeedIcon,
+                        title: "Performance Optimization",
+                        subtitle: `Unlock your lookalikes full potential – get data-driven tweaks to boost conversions`,
+                      },
+                      {
+                        Icon: MovingIcon,
+                        title: "Advanced Scaling Strategies",
+                        subtitle: "Turn your high-performers into scalable growth engines with AI",
+                      },
+                    ],
+                  }}
+                  ContentStyleSX={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    maxWidth: "850px",
+                    margin: "0 auto",
+                    mt: 2,
+                  }}
+                />
+              </Box>
+              {popupOpen && sourceCount === 0 && (
                 <WelcomePopup
                   open={popupOpen}
                   onClose={() => setPopupOpen(false)}

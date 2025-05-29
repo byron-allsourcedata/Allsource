@@ -14,6 +14,8 @@ import StaticticsTab from "./components/StaticticsTab";
 import CustomTooltip from "@/components/customToolTip";
 import PredictableFields from "./components/PredictableFields";
 import { AudienceInsightsStatisticsResponse, B2BData, B2CData, FieldRankMap, SignificantFields } from "@/types/insights";
+import { useInsightsHints } from "../../context/IntegrationsHintsContext";
+import HintCard from "@/app/(client)/components/HintCard";
 
 const getFieldRankMap = (significantFields: Record<string, number>): FieldRankMap => {
   const entries = Object.entries(significantFields)
@@ -39,7 +41,7 @@ const Insights = () => {
   const [audience_type, setType] = useState("");
   const [predictableFields, setPredictableFields] = useState<SignificantFields>({});
   const [fieldRanks, setFieldRanks] = useState<FieldRankMap>({});
-
+  const { insightsHints, cardsInsights, changeInsightsHint, resetInsightsHints } = useInsightsHints();
 
   const [b2cData, setB2CData] = useState<B2CData>({
     personal_info: {
@@ -139,7 +141,7 @@ const Insights = () => {
   }
 
   return (
-    <Box>
+    <Box sx={{overflow: "visible"}}>
       <Box
         sx={{
           display: "flex",
@@ -245,12 +247,15 @@ const Insights = () => {
             width: "100%",
             justifyContent: "center",
             alignItems: "start",
+            position: "relative",
+            overflow: "visible",
             "@media (max-width: 600px)": {
               width: "100%",
               mt: hasNotification ? 1 : 2,
-            },
+            }
           }}
         >
+          
           <Tabs
             value={tabIndex}
             onChange={handleTabChange}
@@ -328,20 +333,25 @@ const Insights = () => {
             />
           </Tabs>
         </Box>
+        
       </Box>
       <Box
         sx={{
           display: "flex",
           flexDirection: "column",
           flexGrow: 1,
+          position: "relative"
         }}
       >
         <TabPanel value={tabIndex} index={0}>
+        
           <StaticticsTab type={audience_type} b2bData={b2bData} b2cData={b2cData} fieldRanks={fieldRanks} />
+          
         </TabPanel>
         <TabPanel value={tabIndex} index={1}>
           <PredictableFields data={predictableFields} />
         </TabPanel>
+        
       </Box>
     </Box>
   );

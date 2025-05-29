@@ -111,7 +111,7 @@ const CreateLookalikePage: React.FC = () => {
       setLoading(false);
     }
   };
-
+  
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSourceName(event.target.value);
   };
@@ -524,6 +524,7 @@ const CreateLookalikePage: React.FC = () => {
                           rightSide={false}
                           isOpenBody={lookalikesBuilderHints.size.showBody}
                           toggleClick={() =>
+                            
                             changeLookalikesBuilderHint("size", "showBody", "toggle")
                           }
                           closeClick={() =>
@@ -630,18 +631,18 @@ const CreateLookalikePage: React.FC = () => {
                       Create Name
                     </Typography>
                     <HintCard
-                          card={cardsLookalikeBuilder.create_name}
-                          positionTop={40}
-                          positionLeft={500}
-                          rightSide={false}
-                          isOpenBody={lookalikesBuilderHints.create_name.showBody}
-                          toggleClick={() =>
-                            changeLookalikesBuilderHint("create_name", "showBody", "toggle")
-                          }
-                          closeClick={() =>
-                            changeLookalikesBuilderHint("create_name", "showBody", "close")
-                          }
-                        />
+                      card={cardsLookalikeBuilder.create_name}
+                      positionTop={40}
+                      positionLeft={500}
+                      rightSide={false}
+                      isOpenBody={lookalikesBuilderHints.create_name.showBody}
+                      toggleClick={() =>
+                        changeLookalikesBuilderHint("create_name", "showBody", "toggle")
+                      }
+                      closeClick={() =>
+                        changeLookalikesBuilderHint("create_name", "showBody", "close")
+                      }
+                    />
                     <TextField
                       fullWidth
                       variant="outlined"
@@ -866,24 +867,49 @@ const CreateLookalikePage: React.FC = () => {
                 >
                   All Lookalikes
                 </Button>
-                <Button
-                  variant="contained"
-                  onClick={() => router.push("/smart-audiences/builder")}
-                  sx={{
-                    backgroundColor: "rgba(56, 152, 252, 1)",
-                    textTransform: "none",
-                    padding: "10px 24px",
-                    color: "#fff !important",
-                    ":hover": { backgroundColor: "rgba(56, 152, 252, 1)" },
-                    ":active": { backgroundColor: "rgba(56, 152, 252, 1)" },
-                    ":disabled": {
+
+                <Box sx={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                  <Button
+                    variant="contained"
+                    onClick={() => router.push("/smart-audiences/builder")}
+                    sx={{
                       backgroundColor: "rgba(56, 152, 252, 1)",
-                      opacity: 0.6,
-                    },
-                  }}
-                >
-                  Generate Smart Audience
-                </Button>
+                      textTransform: "none",
+                      padding: "8px 24px",
+                      color: "#fff !important",
+                      ":hover": { backgroundColor: "rgba(56, 152, 252, 1)" },
+                      ":active": { backgroundColor: "rgba(56, 152, 252, 1)" },
+                      ":disabled": {
+                        backgroundColor: "rgba(56, 152, 252, 1)",
+                        opacity: 0.6,
+                      },
+                    }}
+                  >
+                    Generate Smart Audience
+                  </Button>
+
+                  <HintCard
+                    card={cardsLookalikeBuilder.generate_smart_audience}
+                    positionTop={35}
+                    positionLeft={-405}
+                    rightSide={true}
+                    isOpenBody={lookalikesBuilderHints.generate_smart_audience.showBody}
+                    toggleClick={() =>
+                      changeLookalikesBuilderHint(
+                        "generate_smart_audience",
+                        "showBody",
+                        "toggle"
+                      )
+                    }
+                    closeClick={() =>
+                      changeLookalikesBuilderHint(
+                        "generate_smart_audience",
+                        "showBody",
+                        "close"
+                      )
+                    }
+                  />
+                </Box>
               </Box>
             </Box>
           </Box>

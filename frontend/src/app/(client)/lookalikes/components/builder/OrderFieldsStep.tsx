@@ -75,7 +75,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
 
             <Grid container sx={{ mb: 2, }}>
                 <Grid container xs={12} md={4}>
-                    <Grid item sx={{ borderBottom: "1px solid rgba(233, 233, 233, 1)",}}>
+                    <Grid item sx={{ borderBottom: "1px solid rgba(233, 233, 233, 1)", }}>
                         {/* «Recommended fields» */}
                         <Button
                             onClick={handleStep(0)}
@@ -98,43 +98,43 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                     </Grid>
                     <Grid item sx={{ borderRight: "1px solid rgba(233, 233, 233, 1)", borderLeft: "1px solid rgba(233, 233, 233, 1)", borderTopRightRadius: 3, borderTopLeftRadius: 3 }}>
                         {/* «Order fields» */}
-                                    <Box
-                                      sx={{
-                                        position: "relative",
-                                        display: "inline-flex",
-                                        alignItems: "center",
-                                      }}
-                                    >
-                                      <HintCard
-                                        card={cardsLookalikeBuilder.order}
-                                        positionTop={15}
-                                        positionLeft={130}
-                                        rightSide={false}
-                                        isOpenBody={lookalikesBuilderHints.order.showBody}
-                                        toggleClick={() =>
-                                          changeLookalikesBuilderHint("order", "showBody", "toggle")
-                                        }
-                                        closeClick={() =>
-                                          changeLookalikesBuilderHint("order", "showBody", "close")
-                                        }
-                                      />
-                        <Button
-                            onClick={handleStep(1)}
-                            disableRipple
+                        <Box
                             sx={{
-                                minWidth: 0,
-                                textTransform: "none",
-                                fontFamily: "Nunito Sans",
-                                fontWeight: 500,
-                                fontSize: "14px",
-                                color: "rgba(56, 152, 252, 1)",
-                                borderTop: "2px solid rgba(56, 152, 252, 1)",
-                                mb: 0.5,
-                                "&:hover": { backgroundColor: "transparent" },
+                                position: "relative",
+                                display: "inline-flex",
+                                alignItems: "center",
                             }}
                         >
-                            Order fields
-                        </Button>
+                            <HintCard
+                                card={cardsLookalikeBuilder.order}
+                                positionTop={15}
+                                positionLeft={130}
+                                rightSide={false}
+                                isOpenBody={lookalikesBuilderHints.order.showBody}
+                                toggleClick={() =>
+                                    changeLookalikesBuilderHint("order", "showBody", "toggle")
+                                }
+                                closeClick={() =>
+                                    changeLookalikesBuilderHint("order", "showBody", "close")
+                                }
+                            />
+                            <Button
+                                onClick={handleStep(1)}
+                                disableRipple
+                                sx={{
+                                    minWidth: 0,
+                                    textTransform: "none",
+                                    fontFamily: "Nunito Sans",
+                                    fontWeight: 500,
+                                    fontSize: "14px",
+                                    color: "rgba(56, 152, 252, 1)",
+                                    borderTop: "2px solid rgba(56, 152, 252, 1)",
+                                    mb: 0.5,
+                                    "&:hover": { backgroundColor: "transparent" },
+                                }}
+                            >
+                                Order fields
+                            </Button>
                         </Box>
                     </Grid>
                     <Grid item sx={{ flexGrow: 1, borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
@@ -143,8 +143,8 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                 </Grid>
                 <Grid item md={2} sx={{ textAlign: "right", borderBottom: "1px solid rgba(233, 233, 233, 1)" }}>
                     <Button
-                         onClick={onResetOrder}
-                         disabled={disableResetOrder}
+                        onClick={onResetOrder}
+                        disabled={disableResetOrder}
                         sx={{
                             border: "1px rgba(56, 152, 252, 1) solid",
                             color: "rgba(56, 152, 252, 1)",
