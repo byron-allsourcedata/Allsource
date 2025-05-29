@@ -23,12 +23,16 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
 import CalendarPopup from '@/components/CustomCalendar';
-import CustomTablePagination from '@/components/CustomTablePagination';
+import PaginationComponent from "@/components/PaginationComponent";
 import UnlockButton from './UnlockButton';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import GettingStartedSection from '@/components/GettingStartedSection';
 import { FirstTimeScreenCommonVariant2 } from '@/components/first-time-screens';
+import HintCard from "../components/HintCard";
+import { useLeadsHints } from "./context/LeadsHintsContext";
+import { tableHintCards } from "./context/hintsCardsContent";
+import TableCustomCell from "../sources/components/table/TableCustomCell";
 
 
 interface FetchDataParams {
@@ -56,7 +60,7 @@ const Leads: React.FC = () => {
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(15);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [activeFilter, setActiveFilter] = useState<string>('');
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -69,6 +73,7 @@ const Leads: React.FC = () => {
     const [openPopup, setOpenPopup] = React.useState(false);
     const [popupData, setPopupData] = React.useState<any>(null);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
+    const { changeLeadsTableHint, leadsTableHints, resetLeadsTableHints } = useLeadsHints();
 
     const handleOpenPopup = (row: any) => {
         setPopupData(row);
@@ -362,7 +367,7 @@ const Leads: React.FC = () => {
             setData(Array.isArray(leads) ? leads : []);
             setCount(count || 0);
             setStatus(response.data.status);
-            const options = [15, 30, 50, 100, 200, 500];
+            const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
                 RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
@@ -977,7 +982,7 @@ const Leads: React.FC = () => {
                                     <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/contacts' />
                                 </Box>
                                 <Box sx={{
-                                    display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '15px', pt: '4px',
+                                    display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
                                     '@media (max-width: 900px)': {
                                         gap: '8px'
                                     }
@@ -1039,6 +1044,22 @@ const Leads: React.FC = () => {
                                     >
                                         <DownloadIcon fontSize='medium' />
                                     </Button>
+                                    <HintCard
+                                            card={tableHintCards["download"]}
+                                            positionLeft={-420}
+                                            positionTop={20}
+                                            rightSide={true}
+                                            isOpenBody={leadsTableHints["download"].showBody}
+                                            toggleClick={() => {
+                                            if (leadsTableHints["overview"].showBody) {
+                                                changeLeadsTableHint("overview", "showBody", "close")
+                                            }
+                                            changeLeadsTableHint("download", "showBody", "toggle")
+                                            }}
+                                            closeClick={() => {
+                                                changeLeadsTableHint("download", "showBody", "close")
+                                            }}
+                                        />
                                     <Button
                                         onClick={handleFilterPopupOpen}
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
@@ -1278,27 +1299,45 @@ const Leads: React.FC = () => {
                         ) : (
                             <Grid container spacing={1} sx={{}}>
                                 <Grid item xs={12}>
-                                    <TableContainer
-                                        component={Paper}
-                                        sx={{
-                                            border: '1px solid rgba(235, 235, 235, 1)',
-                                            maxHeight: selectedFilters.length > 0
-                                                ? (hasNotification ? '63vh' : '68vh')
-                                                : '72vh',
-                                            overflow: 'auto',
-                                            "@media (max-height: 800px)": {
-                                                maxHeight: selectedFilters.length > 0
-                                                    ? (hasNotification ? '53vh' : '57vh')
-                                                    : '70vh',
-                                            },
-                                            "@media (max-width: 400px)": {
-                                                maxHeight: selectedFilters.length > 0
-                                                    ? (hasNotification ? '53vh' : '60vh')
-                                                    : '67vh',
-                                            },
-                                        }}
+                                <TableContainer                                
+                                    sx={{
+                                    height: "70vh",
+                                    overflowX: "scroll",
+                                    maxHeight:
+                                        selectedFilters.length > 0
+                                        ? hasNotification
+                                            ? "63vh"
+                                            : "70vh"
+                                        : "70vh",
+                                    "@media (max-height: 800px)": {
+                                        height: "60vh",
+                                        maxHeight:
+                                        selectedFilters.length > 0
+                                            ? hasNotification
+                                            ? "53vh"
+                                            : "60vh"
+                                            : "70vh",
+                                    },
+                                    "@media (max-width: 400px)": {
+                                        height: "50vh",
+                                        maxHeight:
+                                        selectedFilters.length > 0
+                                            ? hasNotification
+                                            ? "53vh"
+                                            : "50vh"
+                                            : "70vh",
+                                    },
+                                    }}
                                     >
-                                        <Table stickyHeader aria-label="leads table">
+                                        <Table
+                                            stickyHeader
+                                            component={Paper}
+                                            aria-label="leads table"
+                                            sx={{ 
+                                                tableLayout: "fixed", 
+                                                border: "1px solid rgba(235, 235, 235, 1)",
+                                            }}
+                                            >
                                             <TableHead>
                                                 <TableRow>
                                                     {[
@@ -1343,6 +1382,24 @@ const Leads: React.FC = () => {
                                                                     </IconButton>
                                                                 )}
                                                             </Box>
+
+                                                            {key === "name" && (
+                                                                <HintCard
+                                                                    card={tableHintCards["overview"]}
+                                                                    positionLeft={140}
+                                                                    positionTop={80}
+                                                                    isOpenBody={leadsTableHints["overview"].showBody}
+                                                                    toggleClick={() => {
+                                                                    if (leadsTableHints["download"].showBody) {
+                                                                        changeLeadsTableHint("download", "showBody", "close")
+                                                                    }
+                                                                    changeLeadsTableHint("overview", "showBody", "toggle")
+                                                                    }}
+                                                                    closeClick={() => {
+                                                                        changeLeadsTableHint("overview", "showBody", "close")
+                                                                    }}
+                                                                />
+                                                            )}
                                                         </TableCell>
                                                     ))}
                                                 </TableRow>
@@ -1371,21 +1428,22 @@ const Leads: React.FC = () => {
                                                                 handleOpenPopup(row);
 
                                                             }}>{row.first_name} {row.last_name}</TableCell>
-                                                        <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
-                                                            {row.is_active ? (
-                                                                row.personal_emails ? (
-                                                                    <Tooltip title={row.personal_emails.split(',')[0]}>
-                                                                        <span className="truncate-email">
-                                                                            {truncateText(row.personal_emails.split(',')[0], 24)}
-                                                                        </span>
-                                                                    </Tooltip>
+                                                        <TableCustomCell
+                                                            children={
+                                                                row.is_active ? (
+                                                                    row.personal_emails ? (
+                                                                        <Tooltip title={row.personal_emails.split(',')[0]}>
+                                                                            <span className="truncate-email">
+                                                                                {truncateText(row.personal_emails.split(',')[0], 24)}
+                                                                            </span>
+                                                                        </Tooltip>
+                                                                    ) : (
+                                                                        <span className="truncate-email">--</span>
+                                                                    )
                                                                 ) : (
-                                                                    <span className="truncate-email">--</span>
+                                                                    <UnlockButton onClick={() => handleUnlock()} label="Unlock email" />
                                                                 )
-                                                            ) : (
-                                                                <UnlockButton onClick={() => handleUnlock()} label="Unlock email" />
-                                                            )}
-                                                        </TableCell>
+                                                            }/>
 
                                                         {/* Business Email Column */}
                                                         <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
@@ -1405,8 +1463,8 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         {/* Mobile Phone Column */}
-                                                        <TableCell sx={leadsStyles.table_array_phone}>
-                                                            {row.is_active ? (
+                                                        <TableCustomCell
+                                                            rowExample={row.is_active ? (
                                                                 row.mobile_phone
                                                                     ? row.mobile_phone.split(',')[0]
                                                                     : row.personal_phone
@@ -1416,8 +1474,8 @@ const Leads: React.FC = () => {
                                                                             : '--'
                                                             ) : (
                                                                 <UnlockButton onClick={() => handleUnlock()} label="Unlock mobile number" />
-                                                            )}
-                                                        </TableCell>
+                                                            )}>
+                                                        </TableCustomCell>
 
                                                         <TableCell
                                                             sx={{ ...leadsStyles.table_array, position: 'relative' }}>{row.first_visited_date
@@ -1428,10 +1486,8 @@ const Leads: React.FC = () => {
                                                                 : '--'}
                                                         </TableCell>
 
-                                                        <TableCell
-                                                            sx={{ ...leadsStyles.table_column, position: 'relative' }}
-                                                        >
-                                                            <Box
+                                                        <TableCustomCell
+                                                            children={<Box
                                                                 sx={{
                                                                     display: 'flex',
                                                                     padding: '2px 8px',
@@ -1448,12 +1504,11 @@ const Leads: React.FC = () => {
                                                                 }}
                                                             >
                                                                 {formatFunnelText(row.behavior_type) || '--'}
-                                                            </Box>
-                                                        </TableCell>
-                                                        <TableCell
-                                                            sx={{ ...leadsStyles.table_column, position: 'relative' }}
-                                                        >
-                                                            <Box
+                                                            </Box>}>
+                                                        </TableCustomCell>
+
+                                                        <TableCustomCell
+                                                            children={<Box
                                                                 sx={{
                                                                     display: 'flex',
                                                                     padding: '2px 8px',
@@ -1470,8 +1525,8 @@ const Leads: React.FC = () => {
                                                                 }}
                                                             >
                                                                 {formatFunnelText(row.visitor_type) || '--'}
-                                                            </Box>
-                                                        </TableCell>
+                                                            </Box>}> 
+                                                            </TableCustomCell>
 
                                                         <TableCell onClick={(e) => {
                                                             e.stopPropagation();
@@ -1563,16 +1618,14 @@ const Leads: React.FC = () => {
                                             </TableBody>
                                         </Table>
                                     </TableContainer>
-                                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
-                                        <CustomTablePagination
-                                            count={count_leads ?? 0}
-                                            page={page}
-                                            rowsPerPage={rowsPerPage}
-                                            onPageChange={handleChangePage}
-                                            onRowsPerPageChange={handleChangeRowsPerPage}
-                                            rowsPerPageOptions={rowsPerPageOptions}
-                                        />
-                                    </Box>
+                                    <PaginationComponent
+                                        countRows={count_leads ?? 0}
+                                        page={page}
+                                        rowsPerPage={rowsPerPage}
+                                        onPageChange={handleChangePage}
+                                        onRowsPerPageChange={handleChangeRowsPerPage}
+                                        rowsPerPageOptions={rowsPerPageOptions}
+                                    />
                                 </Grid>
                             </Grid>
 
