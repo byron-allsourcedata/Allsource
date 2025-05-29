@@ -73,25 +73,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
   const [checkedFiltersLastLoginDate, setCheckedFiltersLastLoginDate] = useState<Record<string, boolean>>({});
   const [checkedFiltersJoinDate, setCheckedFiltersJoinDate] = useState<Record<string, boolean>>({});
 
-  const handleAddTag = (e: { key: string }) => {
-    if (e.key === "Enter" && region.trim()) {
-      setTags([...regions, region.trim()]);
-      setRegions("");
-    }
-  };
-
   // Industry
   const [checkedJoinDate, setCheckedJoinDate] = useState<Record<string, boolean>>({});
   const [checkedLastLoginDate, setLastLoginDate] = useState<Record<string, boolean>>({});
 
-  const handleDepartmentChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = event.target;
-
-    setCheckedFiltersDepartment((prev) => ({
-      ...prev,
-      [value]: checked
-    }));
-  };
 
   const handleJoinDateChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = event.target;
@@ -112,48 +97,40 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
   };
 
 
-  const handleMenuSeniorityClick = (item: string) => {
+  const handleLastLoginDateClick = (item: string) => {
     setCheckedFiltersLastLoginDate((prevState) => ({
       ...prevState,
       [item]: !prevState[item],
     }));
 
     handleSeniorityChange({
-      target: { value: item, checked: !checkedFiltersSeniority[item] },
+      target: { value: item, checked: !checkedFiltersLastLoginDate[item] },
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-  const handleMenuDepartmentClick = (item: string) => {
-    setCheckedFiltersDepartment((prevState) => ({
+  const handleJoinDateClick = (item: string) => {
+    setCheckedFiltersLastLoginDate((prevState) => ({
       ...prevState,
       [item]: !prevState[item],
     }));
 
-    handleDepartmentChange({
-      target: { value: item, checked: !checkedFiltersDepartment[item] },
+    handleJoinDateChange({
+      target: { value: item, checked: !checkedFiltersJoinDate[item] },
     } as React.ChangeEvent<HTMLInputElement>);
   };
 
-  const handleMenuJobTitlesClick = (item: string) => {
-    setCheckedFiltersJobTitles((prevState) => ({
-      ...prevState,
-      [item]: !prevState[item],
-    }));
+  const isLastLoginDateFilterActive = () => {
+    return Object.values(checkedFiltersLastLoginDate).some(value => value);
+  };
 
-    handleJobTitlesChange({
-      target: { value: item, checked: !checkedFiltersJobTitles[item] },
-    } as React.ChangeEvent<HTMLInputElement>);
+  const isJoinDateFilterActive = () => {
+    return Object.values(checkedFiltersJoinDate).some(value => value);
   };
 
   const handleFilters = () => {
-
-    // Составление объекта с фильтрами
     const filters = {
-      jobTitle: checkedFiltersJobTitles,
-      department: checkedFiltersDepartment,
-      seniority: checkedFiltersSeniority,
-      regions,
-      searchQuery,
+      lastLoginDate: checkedFiltersLastLoginDate,
+      joinDate: checkedFiltersJoinDate,
     };
 
     saveFiltersToSessionStorage(filters);
@@ -164,40 +141,30 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
 
 
   const saveFiltersToSessionStorage = (filters: {
-    regions: string[];
-    jobTitle: typeof checkedFiltersJobTitles,
-    department: typeof checkedFiltersDepartment,
-    seniority: typeof checkedFiltersSeniority,
-    searchQuery: string; dateRange?: { fromDate: number | null; toDate: number | null; } | undefined;
+    lastLoginDate: typeof checkedFiltersLastLoginDate,
+    joinDate: typeof checkedFiltersJoinDate,
   }) => {
-    sessionStorage.setItem('filters-employee', JSON.stringify(filters));
+    sessionStorage.setItem('filters-admin', JSON.stringify(filters));
   };
 
   useEffect(() => {
     if (open) {
-      if (joinDate) {
-        const initialState = joinDate.reduce((acc, item) => {
+      if (lastLoginDate) {
+        const initialState = lastLoginDate.reduce((acc, item) => {
           acc[item] = false;
           return acc;
         }, {} as Record<string, boolean>);
-        setCheckedFiltersDepartment(initialState);
+        setCheckedFiltersLastLoginDate(initialState);
       }
       if (joinDate) {
         const initialState = joinDate.reduce((acc, item) => {
           acc[item] = false;
           return acc;
         }, {} as Record<string, boolean>);
-        setCheckedFiltersSeniority(initialState);
-      }
-      if (joinDate) {
-        const initialState = joinDate.reduce((acc, item) => {
-          acc[item] = false;
-          return acc;
-        }, {} as Record<string, boolean>);
-        setCheckedFiltersJobTitles(initialState);
+        setCheckedFiltersJoinDate(initialState);
       }
     }
-  }, [open, joinDate, seniorities]);
+  }, [open, joinDate, lastLoginDate]);
 
 
   const handleApply = () => {
@@ -206,90 +173,21 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
     onClose();
   };
 
-  // Check active filters
-  const isDepartmentFilterActive = () => {
-    return Object.values(checkedFiltersDepartment).some(value => value);
-  };
-
-  const isSeniorityFilterActive = () => {
-    return Object.values(checkedFiltersSeniority).some(value => value);
-  };
-
-  const isJobTitlesFilterActive = () => {
-    return Object.values(checkedFiltersJobTitles).some(value => value);
-  };
 
   const handleClearFilters = () => {
-    setIsDepartmentOpen(false)
-    setIsSeniorityOpen(false)
-    setIsJobTitleOpen(false)
-    setCheckedFiltersDepartment({})
-    setCheckedFiltersSeniority({})
-    setCheckedFiltersJobTitles({})
-
-
-    // Reset filter values
-    setRegions("");
-    setSelectedTags({
-      region: [],
-    });
-    setTags([]);
+    setIsLastLoginDateOpen(false)
+    setIsJoinDateOpen(false)
+    setCheckedFiltersLastLoginDate({})
+    setCheckedFiltersJoinDate({})
     setSearchQuery("");
 
-    sessionStorage.removeItem('filters-employee')
+    sessionStorage.removeItem('filters-admin')
   };
 
-  const fetchCities = debounce(async (searchValue: string) => {
-    if (searchValue.length >= 3) {
-      try {
-        const response = await axiosInstance.get('company/search-location', {
-          params: { start_letter: searchValue },
-        });
-        setCities(response.data);
-      } catch {
-      }
-    } else {
-      setCities([]);
-    }
-  }, 300);
-
-
-  const handleRegionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setRegions(value);
-    fetchCities(value);
-  };
-
-  const handleSelectCity = (city: { city: string, state: string }) => {
-    setTags((prevTags) => [...prevTags, `${city.city}-${city.state}`]);
-    setRegions('');
-    setCities([]);
-  };
-
-
-  const fetchContacts = debounce(async (query: string) => {
-    if (query.length >= 3) {
-      try {
-        const response = await axiosInstance.get('/company/search-contact', {
-          params: { start_letter: query },
-        });
-        const formattedContacts = response.data.map((contact: string) => ({ name: contact }));
-        setContacts(formattedContacts);
-      } catch {
-      }
-    } else {
-      setContacts([]);
-    }
-  }, 300);
 
   const handleSearchQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-  };
-
-  const handleSelectContact = (contact: { name: string }) => {
-    setSearchQuery(contact.name);
-    setContacts([]);
   };
 
   return (
@@ -357,74 +255,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
             width: '100%'
           }}
         >
-          <Box sx={{ display: 'flex', width: '100%', flexDirection: 'column', pb: 2 }}>
-            <TextField
-              placeholder="Search by name, email, phone number and linkedIn."
-              variant="outlined"
-              fullWidth
-              value={searchQuery}
-              onChange={handleSearchQueryChange}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Button
-                      disabled={true}
-                      sx={{ textTransform: "none", textDecoration: "none", padding: 0, minWidth: 0, height: 'auto', width: 'auto' }}
-                    >
-                      <SearchIcon
-                        sx={{ color: "rgba(101, 101, 101, 1)" }}
-                        fontSize="medium"
-                      />
-                    </Button>
-                  </InputAdornment>
-                ),
-                sx: {
-                  fontFamily: 'Roboto',
-                  fontSize: '0.875rem',
-                  fontWeight: 400,
-                  lineHeight: '19.6px',
-                  textAlign: 'left',
-                  color: 'rgba(112, 112, 113, 1)',
-                },
-              }}
-              sx={{
-                padding: "1em 1em 0em 1em",
-                '& input': {
-                  paddingLeft: 0,
-                },
-                '& .MuiInputBase-input::placeholder': {
-                  fontFamily: 'Roboto',
-                  fontSize: '0.875rem',
-                  fontWeight: 400,
-                  lineHeight: '19.6px',
-                  textAlign: 'left',
-                  color: 'rgba(112, 112, 113, 1)',
-                },
-              }}
-            />
-            <Box sx={{ paddingLeft: 2, paddingRight: 2, pt: '3px' }}>
-              {contacts?.length > 0 && (
-                <List sx={{ maxHeight: 200, overflow: 'auto', border: '1px solid #ccc', borderRadius: '4px', display: 'flex', flexDirection: 'column', padding: 0 }}>
-                  {contacts.map((contact, index) => (
-                    <ListItem button key={index} onClick={() => handleSelectContact(contact)} sx={{ pl: 1 }}>
-                      <ListItemText
-                        primaryTypographyProps={{
-                          sx: {
-                            fontFamily: 'Nunito Sans',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            lineHeight: '16.8px',
-                            textAlign: 'left',
-                          },
-                        }}
-                        primary={`${contact.name}`}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              )}
-            </Box>
-          </Box>
 
           {/* join Date */}
           <Box sx={filterStyles.main_filter_form}>
@@ -435,7 +265,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
               <Box
                 sx={{
                   ...filterStyles.active_filter_dote,
-                  visibility: isJobTitlesFilterActive() ? "visible" : "hidden",
+                  visibility: isJoinDateFilterActive() ? "visible" : "hidden",
                 }}
               />
               <WorkOutlineOutlinedIcon sx={{ color: "rgba(95, 99, 104, 1)" }} width={18} height={18} />
@@ -458,7 +288,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                     <CustomChip
                       key={index}
                       label={tag}
-                      onDelete={() => handleMenuJobTitlesClick(tag)}
+                      onDelete={() => handleJoinDateClick(tag)}
                     />
                   ))}
               </Box>
@@ -497,7 +327,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                           key={item}
                           value={item}
                           sx={{ maxHeight: '40px', pl: 0, padding: 0, marginTop: 0, marginBottom: 0 }}
-                          onClick={() => handleMenuJobTitlesClick(item)}
+                          onClick={() => handleJoinDateClick(item)}
                         >
                           <Checkbox
                             checked={checkedFiltersJoinDate[item] || false}
@@ -539,7 +369,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
               <Box
                 sx={{
                   ...filterStyles.active_filter_dote,
-                  visibility: isSeniorityFilterActive() ? "visible" : "hidden",
+                  visibility: isLastLoginDateFilterActive() ? "visible" : "hidden",
                 }}
               />
               <LineWeightIcon sx={{ color: "rgba(95, 99, 104, 1)" }} width={18} height={18} />
@@ -562,7 +392,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                     <CustomChip
                       key={index}
                       label={tag}
-                      onDelete={() => handleMenuSeniorityClick(tag)}
+                      onDelete={() => handleLastLoginDateClick(tag)}
                     />
                   ))}
               </Box>
@@ -601,7 +431,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                           key={item}
                           value={item}
                           sx={{ maxHeight: '40px', pl: 0, padding: 0, marginTop: 0, marginBottom: 0 }}
-                          onClick={() => handleMenuSeniorityClick(item)}
+                          onClick={() => handleLastLoginDateClick(item)}
                         >
                           <Checkbox
                             checked={checkedFiltersLastLoginDate[item] || false}

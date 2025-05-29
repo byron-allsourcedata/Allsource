@@ -5,6 +5,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import func
 from sqlalchemy.orm import Session
+
+from persistence.admin import AdminPersistence
 from schemas.users import UpdateUserRequest
 from enums import UserAuthorizationStatus, UpdateUserStatus, SendgridTemplate, SettingStatus, AdminStatus
 from models.plans import SubscriptionPlan
@@ -29,7 +31,8 @@ class AdminCustomersService:
 
     def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
                  plans_persistence: PlansPersistence, users_auth_service: UsersAuth, send_grid_persistence: SendgridPersistence,
-                 partners_persistence: PartnersPersistence, dashboard_audience_persistence: DashboardAudiencePersistence):
+                 partners_persistence: PartnersPersistence, dashboard_audience_persistence: DashboardAudiencePersistence,
+                 admin_persistence: AdminPersistence):
         self.db = db
         self.subscription_service = subscription_service
         self.user_persistence = user_persistence
@@ -38,6 +41,7 @@ class AdminCustomersService:
         self.send_grid_persistence = send_grid_persistence
         self.partners_persistence = partners_persistence
         self.dashboard_audience_persistence = dashboard_audience_persistence
+        self.admin_persistence = admin_persistence
 
     def get_admin_users(self, page, per_page):
         admin_users, total_count = self.user_persistence.get_admin_users(page, per_page)
@@ -74,7 +78,7 @@ class AdminCustomersService:
                 'status': AdminStatus.ALREADY_EXISTS
             }
         template_id = self.send_grid_persistence.get_template_by_alias(
-            SendgridTemplate.TEAM_MEMBERS_TEMPLATE.value)
+            SendgridTemplate.ADMIN_INVITATION_TEMPLATE.value)
         if not template_id:
             logger.info("template_id is None")
             return {
@@ -96,8 +100,8 @@ class AdminCustomersService:
             template_placeholder={"full_name": name, "link": confirm_email_url}
         )
         invited_by_id = user.get('id')
-        self.user_persistence.save_pending_invations_admin(team_owner_id=user.get('id'), email=email,
-                                                                   invited_by_id=invited_by_id, md5_hash=md5_hash)
+        self.admin_persistence.save_pending_invitations_admin(team_owner_id=user.get('id'), email=email,
+                                                              invited_by_id=invited_by_id, md5_hash=md5_hash)
         return {
             'status': AdminStatus.SUCCESS
         }

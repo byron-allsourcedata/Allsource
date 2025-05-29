@@ -74,6 +74,7 @@ from .audience_linkedin_verification import AudienceLinkedinVerification
 from .audience_smarts_validations import AudienceSmartValidation
 from .usa_zip_codes import UsaZipCode
 from .audience_postals_verification import AudiencePostalVerification
+from .admin_invitations import AdminInvitation
 
 
 __all__ = [
@@ -155,9 +156,8 @@ __all__ = [
     "UserDomains",
     "UsersUnlockedFiveXFiveUser",
     "EnrichmentUsersEmails",
-    "EnrichmentPersonalProfiles"
-    "PersonalProfiles",
     "AudienceLinkedinVerification",
     "AudiencePostalVerification",
-    "EnrichmentPersonalProfiles"
+    "EnrichmentPersonalProfiles",
+    "AdminInvitation"
 ]

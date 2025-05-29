@@ -9,6 +9,7 @@ import dayjs from "dayjs";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import Image from "next/image";
+import FilterListIcon from '@mui/icons-material/FilterList';
 import CustomTablePagination from "@/components/CustomTablePagination";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import InviteAdmin from "./InviteAdmin";
@@ -913,7 +914,55 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                                 Add Admin
                             </Button>
                         )}
-                        <FilterPopup open={filterPopupOpen} 
+                        <Button
+                                onClick={handleFilterPopupOpen}
+                                aria-controls={undefined}
+                                aria-haspopup="true"
+                                aria-expanded={undefined}
+                                sx={{
+                                    textTransform: 'none',
+                                    color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                    border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                    borderRadius: '4px',
+                                    padding: '8px',
+                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
+                                    minWidth: 'auto',
+                                    position: 'relative',
+                                    '@media (max-width: 900px)': {
+                                        border: 'none',
+                                        padding: 0
+                                    },
+                                    '&:hover': {
+                                        backgroundColor: 'transparent',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
+                                        color: 'rgba(56, 152, 252, 1)',
+                                        '& .MuiSvgIcon-root': {
+                                            color: 'rgba(56, 152, 252, 1)'
+                                        }
+                                    }
+                                }}
+                            >
+                                <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
+
+                                {selectedFilters.length > 0 && (
+                                    <Box
+                                        sx={{
+                                            position: 'absolute',
+                                            top: 6,
+                                            right: 8,
+                                            width: '10px',
+                                            height: '10px',
+                                            backgroundColor: 'red',
+                                            borderRadius: '50%',
+                                            '@media (max-width: 900px)': {
+                                                top: -1,
+                                                right: 1
+                                            }
+                                        }}
+                                    />
+                                )}
+                            </Button>
+                            <FilterPopup open={filterPopupOpen} 
                         onClose={handleFilterPopupClose} 
                         onApply={handleApplyFilters} 
                         joinDate={joinDate || []} 

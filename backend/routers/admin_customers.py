@@ -78,7 +78,7 @@ async def generate_token(user_account_id: int,
         detail="Access denied"
     )
 
-@router.get("/invite-user")
+@router.post("/invite-user")
 async def invite_user(invite_details: InviteDetailsRequest,
                       admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
                       user: dict = Depends(check_user_admin)):
