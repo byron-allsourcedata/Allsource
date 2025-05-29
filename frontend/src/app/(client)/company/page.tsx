@@ -1061,27 +1061,45 @@ const Leads: React.FC = () => {
                             ) : (
                                 <Grid container spacing={1} sx={{ flex: 1 }}>
                                     <Grid item xs={12}>
-                                        <TableContainer
-                                            component={Paper}
-                                            sx={{
-                                                border: '1px solid rgba(235, 235, 235, 1)',
-                                                maxHeight: selectedFilters.length > 0
-                                                    ? (hasNotification ? '63vh' : '68vh')
-                                                    : '72vh',
-                                                overflowY: 'auto',
-                                                "@media (max-height: 800px)": {
-                                                    maxHeight: selectedFilters.length > 0
-                                                        ? (hasNotification ? '53vh' : '57vh')
-                                                        : '70vh',
-                                                },
-                                                "@media (max-width: 400px)": {
-                                                    maxHeight: selectedFilters.length > 0
-                                                        ? (hasNotification ? '53vh' : '60vh')
-                                                        : '67vh',
-                                                },
-                                            }}
+                                    <TableContainer                                
+                                        sx={{
+                                        height: "70vh",
+                                        overflowX: "scroll",
+                                        maxHeight:
+                                            selectedFilters.length > 0
+                                            ? hasNotification
+                                                ? "63vh"
+                                                : "70vh"
+                                            : "70vh",
+                                        "@media (max-height: 800px)": {
+                                            height: "60vh",
+                                            maxHeight:
+                                            selectedFilters.length > 0
+                                                ? hasNotification
+                                                ? "53vh"
+                                                : "60vh"
+                                                : "70vh",
+                                        },
+                                        "@media (max-width: 400px)": {
+                                            height: "50vh",
+                                            maxHeight:
+                                            selectedFilters.length > 0
+                                                ? hasNotification
+                                                ? "53vh"
+                                                : "50vh"
+                                                : "70vh",
+                                        },
+                                        }}
                                         >
-                                            <Table stickyHeader aria-label="leads table">
+                                            <Table
+                                                stickyHeader
+                                                component={Paper}
+                                                aria-label="leads table"
+                                                sx={{ 
+                                                    tableLayout: "fixed", 
+                                                    border: "1px solid rgba(235, 235, 235, 1)",
+                                                }}
+                                                >
                                                 <TableHead sx={{ position: "relative" }}>
                                                     <TableRow>
                                                         {[
