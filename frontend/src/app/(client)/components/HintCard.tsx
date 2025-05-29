@@ -46,7 +46,7 @@ const HintCard: React.FC<HintCardProps> = ({ card, positionLeft, positionTop, to
                   position: "relative",
                   right: 0,
                   maxWidth: 400,
-                  zIndex: 9999,
+                  zIndex: 2600,
                   p: 2,
                   border: "1px solid #e0e0e0",
                   borderRadius: 2,

@@ -58,6 +58,7 @@ const VerifyToken = () => {
             ) {
               if (typeof window !== "undefined") {
                 if (response.data.status === "EMAIL_ALREADY_VERIFIED") {
+                  localStorage.setItem("welcome_popup", "true");
                   showInfoToast("Email has already been verified");
                 } else if (response.data.status === "SUCCESS") {
                   localStorage.setItem("welcome_popup", "true");
