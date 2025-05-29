@@ -9,6 +9,7 @@ import React, {
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomNotification from "@/components/CustomNotification";
 import PixelPopup from "@/components/PixelPopup";
+import { useRouter } from "next/navigation";
 
 interface Data {
   num: number;
@@ -34,6 +35,7 @@ interface SSEProviderProps {
 const SSEContext = createContext<SSEContextType | undefined>(undefined);
 
 export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
+  const router = useRouter();
   const [data, setData] = useState<Data | null>(null);
   const [newNotification, setNewNotifications] = useState(false);
   const [showPixel, setShowPixel] = useState(false);
@@ -193,8 +195,23 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
   }, [url]);
 
   const handleClosePixel = () => {
-    setShowPixel(false);
-    window.location.reload();
+    try {
+      const meData = sessionStorage.getItem("me");
+      if (!meData) return;
+
+      const parsed = JSON.parse(meData);
+      const getStarted = parsed?.get_started;
+
+      if (getStarted?.is_source_imported === false) {
+        router.push("/get-started?source=true");
+      } else if (getStarted?.is_source_imported === true) {
+        window.location.href = "/audience-dashboard";
+      }
+    } catch (error) {
+      console.error("Failed to parse sessionStorage 'me':", error);
+    } finally {
+      setShowPixel(false);
+    }
   };
 
   return (

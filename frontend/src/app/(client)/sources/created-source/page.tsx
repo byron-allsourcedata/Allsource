@@ -28,6 +28,8 @@ import { showToast, showErrorToast } from "@/components/ToastNotification";
 import HintCard from "../../components/HintCard";
 import { useSourcesHints } from "../context/SourcesHintsContext";
 import { createdHintCards } from "../context/hintsCardsContent";
+import { fetchUserData } from "@/services/meService";
+import { useSidebar } from "@/context/SidebarContext";
 
 interface Source {
   id: string;
@@ -45,6 +47,7 @@ interface Source {
 }
 
 const SourcesList: React.FC = () => {
+  const { setIsGetStartedPage, setInstalledResources } = useSidebar();
   const router = useRouter();
   const searchParams = useSearchParams();
   const data = searchParams.get("data");
@@ -147,6 +150,7 @@ const SourcesList: React.FC = () => {
           `/audience-sources/${createdData.id}`
         );
         if (response.status === 200 && response.data) {
+          await fetchUserData(setIsGetStartedPage, setInstalledResources)
           showToast("Source successfully deleted!");
           router.push("/sources");
         }
@@ -252,7 +256,7 @@ const SourcesList: React.FC = () => {
                 },
               }}
             >
-              <Box sx={{display: "block", position: "relative"}}>
+              <Box sx={{ display: "block", position: "relative" }}>
                 <Button
                   variant="outlined"
                   sx={{
@@ -579,7 +583,7 @@ const SourcesList: React.FC = () => {
                     </Typography>
                   </Box>
                   {/* need chnage < on !== */}
-                  <Box sx={{position: "relative"}}>
+                  <Box sx={{ position: "relative" }}>
                     <IconButton
                       onClick={(event) => handleOpenPopover(event)}
                       sx={{
@@ -660,7 +664,7 @@ const SourcesList: React.FC = () => {
                 >
                   All Sources
                 </Button>
-                <Box sx={{position: "relative"}}>
+                <Box sx={{ position: "relative" }}>
                   <Button
                     variant="contained" /* need chnage < on !== */
                     disabled={false}
