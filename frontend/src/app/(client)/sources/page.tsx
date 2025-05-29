@@ -59,6 +59,8 @@ import { CardsSection, FirstTimeScreenCommonVariant1 } from "@/components/first-
 import { useSourcesHints } from "./context/SourcesHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
+import { fetchUserData } from "@/services/meService";
+import { useSidebar } from "@/context/SidebarContext";
 
 interface Source {
   id: string;
@@ -110,6 +112,7 @@ type CardData = {
 
 const Sources: React.FC = () => {
   const router = useRouter();
+  const { setIsGetStartedPage, setInstalledResources } = useSidebar();
   const { hasNotification } = useNotification();
   const [data, setData] = useState<Source[]>([]);
   const [page, setPage] = useState(0);
@@ -434,6 +437,7 @@ const Sources: React.FC = () => {
           `/audience-sources/${selectedRowData.id}`
         );
         if (response.status === 200 && response.data) {
+          await fetchUserData(setIsGetStartedPage, setInstalledResources)
           showToast("Source successfully deleted!");
           setCount((prev) => (prev ? prev - 1 : 0));
           setData((prevAccounts: Source[]) =>
@@ -1105,8 +1109,8 @@ const Sources: React.FC = () => {
                     {data.length === 0 &&
                       selectedFilters.length > 0 &&
                       !loaderForTable && (
-                        <TableWithEmptyData columns={columns} loaderForTable={loaderForTable} selectedFiltersLength={selectedFilters.length} isScrolledX={isScrolledX}/>
-                    )}
+                        <TableWithEmptyData columns={columns} loaderForTable={loaderForTable} selectedFiltersLength={selectedFilters.length} isScrolledX={isScrolledX} />
+                      )}
 
                     {data.length !== 0 && (
                       <Grid container spacing={1} sx={{ flex: 1 }}>
@@ -1146,8 +1150,8 @@ const Sources: React.FC = () => {
                               stickyHeader
                               component={Paper}
                               aria-label="leads table"
-                              sx={{ 
-                                tableLayout: "fixed", 
+                              sx={{
+                                tableLayout: "fixed",
                                 border: "1px solid rgba(235, 235, 235, 1)",
                               }}
                             >

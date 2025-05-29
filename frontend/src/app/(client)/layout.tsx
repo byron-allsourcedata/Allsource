@@ -22,7 +22,7 @@ interface ClientLayoutProps {
 
 export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const pathname = usePathname(); // Get the current path
-  const { isGetStartedPage, setIsGetStartedPage } = useSidebar();
+  const { isGetStartedPage, setIsGetStartedPage, setInstalledResources } = useSidebar();
   const excludedPaths = ['/signin', '/signup', '/email-verificate', '/account-setup', '/reset-password', '/reset-password/confirm-send', '/choose-plan', '/authentication/verify-token', '/forgot-password',];
   const isAuthenticated = !excludedPaths.includes(pathname);
   const [showSlider, setSlider] = useState(false);
@@ -53,7 +53,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
         const fetchData = async () => {
           try {
             const response = await axiosInstance.get("/notification");
-            await fetchUserData(setIsGetStartedPage);
+            await fetchUserData(setIsGetStartedPage, setInstalledResources);
             const notifications = response.data;
 
             const unreadNotifications = notifications.filter((notification: { is_checked: boolean }) => !notification.is_checked);

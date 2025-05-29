@@ -2,7 +2,11 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { useSidebar } from "@/context/SidebarContext";
 
 export const fetchUserData = async (
-  setIsGetStartedPage?: (val: boolean) => void
+  setIsGetStartedPage?: (val: boolean) => void,
+  setInstalledResources?: (resources: {
+    pixel: boolean;
+    source: boolean;
+  }) => void
 ) => {
   try {
     const accessToken = localStorage.getItem("token");
@@ -19,9 +23,15 @@ export const fetchUserData = async (
         const userDomains = responseData.user_domains;
         const getStartedInfo = responseData.get_started;
 
-        const isGetStartedComplete =
-          Boolean(getStartedInfo?.is_pixel_installed) &&
-          Boolean(getStartedInfo?.is_source_imported);
+        const isPixelInstalled = Boolean(getStartedInfo?.is_pixel_installed);
+        const isSourceImported = Boolean(getStartedInfo?.is_source_imported);
+
+        const isGetStartedComplete = isPixelInstalled && isSourceImported;
+
+        setInstalledResources?.({
+          pixel: isPixelInstalled,
+          source: isSourceImported,
+        });
 
         if (setIsGetStartedPage) {
           setIsGetStartedPage(isGetStartedComplete);

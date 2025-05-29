@@ -95,7 +95,7 @@ const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const SourcesImport: React.FC = () => {
   const { changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useSourcesHints();
-  const { setIsGetStartedPage } = useSidebar();
+  const { setIsGetStartedPage, setInstalledResources } = useSidebar();
   const router = useRouter();
   const [isChatGPTProcessing, setIsChatGPTProcessing] = useState(false);
   const [isDomainSearchProcessing, setIsDomainSearchProcessing] =
@@ -461,7 +461,7 @@ const SourcesImport: React.FC = () => {
         }
       );
       if (response.status === 200) {
-        await fetchUserData(setIsGetStartedPage);
+        await fetchUserData(setIsGetStartedPage, setInstalledResources);
         const dataString = encodeURIComponent(JSON.stringify(response.data));
         router.push(`/sources/created-source?data=${dataString}`);
       }
@@ -892,7 +892,7 @@ const SourcesImport: React.FC = () => {
                         isOpenBody={sourcesBuilderHints["sourceType"].showBody}
                         toggleClick={() => changeSourcesBuilderHint("sourceType", "showBody", "toggle")}
                         closeClick={() => changeSourcesBuilderHint("sourceType", "showBody", "close")}
-                      
+
                       />
                     )}
                   </FormControl>

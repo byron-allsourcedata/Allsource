@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -8,12 +8,10 @@ import {
   Button,
   Box,
   Backdrop,
-  Divider,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { margin } from "@mui/system";
 
 type WelcomePopupProps = {
   open: boolean;
@@ -21,12 +19,6 @@ type WelcomePopupProps = {
 };
 
 const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
-  const router = useRouter();
-
-  const handleContinue = () => {
-    onClose();
-    window.location.reload();
-  };
 
   return (
     <>
@@ -102,7 +94,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
 
           <Button
             variant="contained"
-            onClick={handleContinue}
+            onClick={onClose}
             fullWidth
             sx={{
               backgroundColor: "#3898FC",

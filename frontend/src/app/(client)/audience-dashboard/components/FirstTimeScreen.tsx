@@ -34,8 +34,8 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
   const navigateToSourcePage = () => {
     router.push("./sources");
   };
-  const navigateToAnaliticPage = () => {
-    router.push("./dashboard");
+  const navigateToGetStartedPage = () => {
+    router.push("./get-started?pixel=true");
   };
   return (
     <Box>
@@ -43,13 +43,13 @@ const FirstTimeScreen = ({ cardData }: ClickableCardsProps) => {
         container
         alignItems="center"
         justifyContent="center"
-        sx={{  gap: 2, mt: 2, width: "100%" }}
+        sx={{ gap: 2, mt: 2, width: "100%" }}
       >
         {/* Left Section */}
         <Grid item xs={12} md={5.9} padding={0}>
           <Card
             variant="outlined"
-            onClick={navigateToAnaliticPage}
+            onClick={navigateToGetStartedPage}
             sx={{
               backgroundColor: "transparent",
               boxShadow: "none",
