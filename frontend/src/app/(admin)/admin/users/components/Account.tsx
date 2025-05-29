@@ -193,42 +193,44 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders }) =
 
     const renderCellContent = (key: string, row: any) => {
         switch (key) {
-            case 'account_name':
+            case 'name':
                 return row.full_name || '--';
             case 'email':
                 return row.email || '--';
             case 'join_date':
                 return formatDate(row.created_at);
-            case 'status':
-                return (
-                    <Typography
-                        className="paragraph"
-                        sx={{
-                            display: 'flex',
-                            padding: '2px 8px',
-                            borderRadius: '2px',
-                            fontFamily: 'Roboto',
-                            fontSize: '12px',
-                            fontWeight: '400',
-                            lineHeight: 'normal',
-                            backgroundColor: getStatusStyle(row.payment_status).background,
-                            color: getStatusStyle(row.payment_status).color,
-                            justifyContent: 'center',
-                            minWidth: '130px',
-                            textTransform: 'capitalize'
-                        }}
-                    >
-                        {formatFunnelText(row.payment_status) || "--"}
-                    </Typography>
-                );
-            // case 'status':
-            //     return (
-            //         <IOSSwitch
-            //             onChange={() => onSwitchChange(row)}
-            //             checked={!!row.is_trial}
-            //             disabled={['SUBSCRIPTION_ACTIVE', 'NEED_CONFIRM_EMAIL', 'FILL_COMPANY_DETAILS'].includes(row.payment_status)}
-            //         />
-            //     );
+            case 'plan_amount':
+                return row.email || '--';
+            case 'last_payment_date':
+                return row.email || '--';
+            case 'reward_status':
+                return row.email || '--';
+            case 'reward_payout_date':
+                return row.email || '--';
+            case 'sources':
+                return row.email || '--';
+                case 'status':
+                    return (
+                        <Typography
+                            className="paragraph"
+                            sx={{
+                                display: 'flex',
+                                padding: '2px 8px',
+                                borderRadius: '2px',
+                                fontFamily: 'Roboto',
+                                fontSize: '12px',
+                                fontWeight: '400',
+                                lineHeight: 'normal',
+                                backgroundColor: getStatusStyle(row.payment_status).background,
+                                color: getStatusStyle(row.payment_status).color,
+                                justifyContent: 'center',
+                                minWidth: '130px',
+                                textTransform: 'capitalize'
+                            }}
+                        >
+                            {formatFunnelText(row.payment_status) || "--"}
+                        </Typography>
+                    );
             case 'actions':
                 return (
                     <>
@@ -440,7 +442,7 @@ interface AccountData {
 const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, onBack, is_admin, fromMain, loading, setLoading, tabIndex, handleTabChange }) => {
     const tableHeaders = is_admin
         ? [
-            { key: 'account_name', label: 'Name', sortable: false },
+            { key: 'name', label: 'Name', sortable: false },
             { key: 'email', label: 'Email ID', sortable: false },
             { key: 'join_date', label: 'Join date', sortable: true },
             { key: 'last_signed_in', label: 'Last signed-in', sortable: false },
@@ -449,7 +451,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
             { key: 'actions', label: 'Actions', sortable: false },
         ]
         : [
-            { key: 'account_name', label: 'Account name', sortable: false },
+            { key: 'name', label: 'Name', sortable: false },
             { key: 'email', label: 'Email', sortable: false },
             { key: 'join_date', label: 'Join date', sortable: true },
             { key: 'plan_amount', label: 'Plan amount', sortable: false },
@@ -476,7 +478,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain ?? { start: null, end: null });
     const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     const allowedRowsPerPage = [10, 25, 50, 100];
-    const [paginatedData, setPaginatedData] = useState<UserData[]>([]);
+    const [userData, setUserData] = useState<UserData[]>([]);
     const [search, setSearch] = useState("");
     const [errorResponse, setErrosResponse] = useState(false);
 
@@ -491,15 +493,14 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
             try {
                 let url = '/admin'
                 if (tabIndex === 0) {
-                    console.log()
+                    url += `/users?page=${currentPage}&per_page=${rowsPerPage}`;
+                } else if (tabIndex === 1) {
+                    url += `/users?page=${currentPage}&per_page=${rowsPerPage}`;
                 }
-                if else (tabIndex === 1) {
-                    url += `/admin/users?page=${currentPage}&per_page=${rowsPerPage}`;
-                }
+                
                 const response = await axiosInstance.get(url);
                 if (response.status === 200) {
-                    setPaginatedData(response.data.users);
-                    setTotalItems(response.data.count || 0);
+                    setUserData(response.data.users);
                 }
             }
             catch {
@@ -819,7 +820,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                         <TableContainer component={Paper}>
                             <Table>
                                 <TableHeader onSort={handleSortRequest} tableHeaders={tableHeaders} sortField={orderBy} sortOrder={order} />
-                                <TableBodyClient data={paginatedData} tableHeaders={tableHeaders} />
+                                <TableBodyClient data={userData} tableHeaders={tableHeaders} />
                             </Table>
                         </TableContainer>
                     </Grid>

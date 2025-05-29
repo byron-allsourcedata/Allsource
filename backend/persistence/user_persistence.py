@@ -234,6 +234,36 @@ class UserPersistence:
             for user in users
         ]
 
+    def get_users(self, page, per_page):
+        query = self.db.query(
+            Users.id,
+            Users.email,
+            Users.full_name,
+            Users.created_at,
+            Users.is_with_card,
+            Users.company_name,
+            Users.is_email_confirmed,
+            Users.is_book_call_passed,
+            Users.stripe_payment_url
+        )
+        total_count = query.count()
+        users = query.order_by(desc(Users.id)).offset((page - 1) * per_page).limit(per_page).all()
+        users_dict = [
+            dict(
+                id=user.id,
+                email=user.email,
+                full_name=user.full_name,
+                created_at=user.created_at,
+                is_with_card=user.is_with_card,
+                company_name=user.company_name,
+                is_email_confirmed=user.is_email_confirmed,
+                is_book_call_passed=user.is_book_call_passed,
+                stripe_payment_url=user.stripe_payment_url
+            )
+            for user in users
+        ]
+        return users_dict, total_count
+
     def get_not_partner_users(self, page, per_page):
         query = self.db.query(
             Users.id,
