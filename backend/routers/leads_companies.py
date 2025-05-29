@@ -13,7 +13,7 @@ router = APIRouter()
 async def get_companies(
         user=Depends(check_user_authorization),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
-        per_page: int = Query(15, alias="per_page", ge=1, le=500, description="Items per page"),
+        per_page: int = Query(10, alias="per_page", ge=1, le=500, description="Items per page"),
         from_date: int = Query(None, description="Start date in integer format"),
         to_date: int = Query(None, description="End date in integer format"),
         regions: str = Query(None, description="Comma-separated list of regions"),
@@ -47,7 +47,7 @@ async def get_companies(
 @router.get("/employess")
 async def get_employees(
         page: int = Query(1, alias="page", ge=1, description="Page number"),
-        per_page: int = Query(15, alias="per_page", ge=1, le=500, description="Items per page"),
+        per_page: int = Query(10, alias="per_page", ge=1, le=500, description="Items per page"),
         sort_by: str = Query(None, description="Field"),
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         search_query: str = Query(None, description="Search for email, first name, lastname and phone number"),

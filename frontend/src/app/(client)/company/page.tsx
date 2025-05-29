@@ -26,7 +26,7 @@ import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 import Tooltip from '@mui/material/Tooltip';
 import CustomToolTip from '@/components/customToolTip';
 import CalendarPopup from '@/components/CustomCalendar';
-import CustomTablePagination from '@/components/CustomTablePagination';
+import PaginationComponent from "@/components/PaginationComponent";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import { showErrorToast } from '@/components/ToastNotification';
@@ -63,7 +63,7 @@ const Leads: React.FC = () => {
     const dropdownOpen = Boolean(dropdownEl);
     const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(15);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [activeFilter, setActiveFilter] = useState<string>('');
     const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedDates, setSelectedDates] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
@@ -277,7 +277,7 @@ const Leads: React.FC = () => {
             setCount(count || 0);
             setStatus(response.data.status);
 
-            const options = [15, 30, 50, 100, 200, 500];
+            const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
                 RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
@@ -1291,16 +1291,14 @@ const Leads: React.FC = () => {
                                                 </TableBody>
                                             </Table>
                                         </TableContainer>
-                                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '24px 0 0', "@media (max-width: 600px)": { padding: '12px 0 0' } }}>
-                                            <CustomTablePagination
-                                                count={count_companies ?? 0}
-                                                page={page}
-                                                rowsPerPage={rowsPerPage}
-                                                onPageChange={handleChangePage}
-                                                onRowsPerPageChange={handleChangeRowsPerPage}
-                                                rowsPerPageOptions={rowsPerPageOptions}
-                                            />
-                                        </Box>
+                                        <PaginationComponent 
+                                            countRows={count_companies ?? 0}
+                                            page={page}
+                                            rowsPerPage={rowsPerPage}
+                                            onPageChange={handleChangePage}
+                                            onRowsPerPageChange={handleChangeRowsPerPage}
+                                            rowsPerPageOptions={rowsPerPageOptions}
+                                        />
                                     </Grid>
                                 </Grid>
 
