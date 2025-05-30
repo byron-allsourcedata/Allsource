@@ -211,15 +211,6 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
     }
   };
 
-  const hintCards: HintCardInterface[] = [
-    {
-      description:
-        "Choose the installation method that works best for your website. You can use Google Tag Manager, upload the code manually, or install it through a CMS like Shopify, WordPress, or BigCommerce.",
-      title: "Choose the installation method",
-      linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-pixel-installation",
-    },
-  ];
 
   return (
     <Box
