@@ -23,7 +23,8 @@ import {
   showToast,
 } from "../../../../components/ToastNotification";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { useHints } from "@/context/HintsContext";
+import { cmsHintCards } from "./context/hintsCardsContent";
+import { useGetStartedHints } from "./context/PixelInstallHintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
 import { useRef } from "react";
 
@@ -135,9 +136,7 @@ interface PopupProps {
 }
 
 const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
-  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
-    useHints();
-
+  const { cmsHints, changeCMSHint, resetCMSHints } = useGetStartedHints();
   const shopifyRef = useRef<HTMLDivElement | null>(null);
   const wordpressRef = useRef<HTMLDivElement | null>(null);
   const bigcommerceRef = useRef<HTMLDivElement | null>(null);
@@ -445,16 +444,17 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
           >
             Choose CMS
           </Typography>
-          {/* {pixelSetupHints[5].show && showHint && (
+          {cmsHints["chooseCMS"]?.show && showHint && (
             <HintCard
-              card={hintCards[0]}
-              positionLeft={350}
+              card={cmsHintCards["chooseCMS"]}
+              positionLeft={360}
               positionTop={50}
-              isOpenBody={pixelSetupHints[5].showBody}
-              toggleClick={() => changePixelSetupHint(5, "showBody", "toggle")}
-              closeClick={() => changePixelSetupHint(5, "showBody", "close")}
+              isOpenBody={cmsHints["chooseCMS"].showBody}
+              toggleClick={() => changeCMSHint("chooseCMS", "showBody", "toggle")}
+              closeClick={() => changeCMSHint("chooseCMS", "showBody", "close")}
             />
-          )} */}
+          )}
+
         </Box>
         <Box
           sx={{
@@ -716,20 +716,16 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         InputLabelProps={{ sx: styles.inputLabel }}
                         disabled={sourcePlatform === "shopify"}
                       />
-                      {/* {pixelSetupHints[6].show && (
+                      {cmsHints["enterShopDomain"]?.show && (
                         <HintCard
-                          card={hintCards[1]}
+                          card={cmsHintCards["enterShopDomain"]}
                           positionLeft={420}
                           positionTop={35}
-                          isOpenBody={pixelSetupHints[6].showBody}
-                          toggleClick={() =>
-                            changePixelSetupHint(6, "showBody", "toggle")
-                          }
-                          closeClick={() =>
-                            changePixelSetupHint(6, "showBody", "close")
-                          }
+                          isOpenBody={cmsHints["enterShopDomain"].showBody}
+                          toggleClick={() => changeCMSHint("enterShopDomain", "showBody", "toggle")}
+                          closeClick={() => changeCMSHint("enterShopDomain", "showBody", "close")}
                         />
-                      )} */}
+                      )}
                     </Box>
                     <Box
                       sx={{
@@ -782,20 +778,16 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           sourcePlatform === "shopify" && accessTokenExists
                         }
                       />
-                      {/* {pixelSetupHints[7].show && (
+                      {cmsHints["enterShopifyAccessToken"]?.show && (
                         <HintCard
-                          card={hintCards[2]}
+                          card={cmsHintCards["enterShopifyAccessToken"]}
                           positionLeft={660}
                           positionTop={35}
-                          isOpenBody={pixelSetupHints[7].showBody}
-                          toggleClick={() =>
-                            changePixelSetupHint(7, "showBody", "toggle")
-                          }
-                          closeClick={() =>
-                            changePixelSetupHint(7, "showBody", "close")
-                          }
+                          isOpenBody={cmsHints["enterShopifyAccessToken"].showBody}
+                          toggleClick={() => changeCMSHint("enterShopifyAccessToken", "showBody", "toggle")}
+                          closeClick={() => changeCMSHint("enterShopifyAccessToken", "showBody", "close")}
                         />
-                      )} */}
+                      )}
                     </Box>
                     {sourcePlatform !== "shopify" && (
                       <Box
@@ -873,20 +865,16 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           >
                             Install
                           </Button>
-                          {/* {pixelSetupHints[8].show && (
+                          {cmsHints["installScript"]?.show && (
                             <HintCard
-                              card={hintCards[3]}
+                              card={cmsHintCards["installScript"]}
                               positionLeft={110}
                               positionTop={15}
-                              isOpenBody={pixelSetupHints[8].showBody}
-                              toggleClick={() =>
-                                changePixelSetupHint(8, "showBody", "toggle")
-                              }
-                              closeClick={() =>
-                                changePixelSetupHint(8, "showBody", "close")
-                              }
+                              isOpenBody={cmsHints["installScript"].showBody}
+                              toggleClick={() => changeCMSHint("installScript", "showBody", "toggle")}
+                              closeClick={() => changeCMSHint("installScript", "showBody", "close")}
                             />
-                          )} */}
+                          )}
                         </Box>
                       )}
                     </Box>
@@ -957,20 +945,16 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           Get plugin
                         </Typography>
                       </Button>
-                      {/* {pixelSetupHints[9].show && (
+                      {cmsHints["installPlugin"]?.show && (
                         <HintCard
-                          card={hintCards[4]}
+                          card={cmsHintCards["installPlugin"]}
                           positionLeft={190}
                           positionTop={20}
-                          isOpenBody={pixelSetupHints[9].showBody}
-                          toggleClick={() =>
-                            changePixelSetupHint(9, "showBody", "toggle")
-                          }
-                          closeClick={() =>
-                            changePixelSetupHint(9, "showBody", "close")
-                          }
+                          isOpenBody={cmsHints["installPlugin"].showBody}
+                          toggleClick={() => changeCMSHint("installPlugin", "showBody", "toggle")}
+                          closeClick={() => changeCMSHint("installPlugin", "showBody", "close")}
                         />
-                      )} */}
+                      )}
                     </Box>
                     <Box
                       sx={{
@@ -1049,20 +1033,16 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                               <ContentCopyIcon />
                             </IconButton>
                           </Box>
-                          {/* {pixelSetupHints[10].show && (
+                          {cmsHints["enterSiteID"]?.show && (
                             <HintCard
-                              card={hintCards[5]}
+                              card={cmsHintCards["enterSiteID"]}
                               positionLeft={540}
                               positionTop={35}
-                              isOpenBody={pixelSetupHints[10].showBody}
-                              toggleClick={() =>
-                                changePixelSetupHint(10, "showBody", "toggle")
-                              }
-                              closeClick={() =>
-                                changePixelSetupHint(10, "showBody", "close")
-                              }
+                              isOpenBody={cmsHints["enterSiteID"].showBody}
+                              toggleClick={() => changeCMSHint("enterSiteID", "showBody", "toggle")}
+                              closeClick={() => changeCMSHint("enterSiteID", "showBody", "close")}
                             />
-                          )} */}
+                          )}
                         </Box>
                         during the checkout process
                       </Typography>
@@ -1114,20 +1094,16 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           View installation
                         </Typography>
                       </Button>
-                      {/* {pixelSetupHints[11].show && (
+                      {cmsHints["scriptInstallation"]?.show && (
                         <HintCard
-                          card={hintCards[6]}
+                          card={cmsHintCards["scriptInstallation"]}
                           positionLeft={235}
                           positionTop={20}
-                          isOpenBody={pixelSetupHints[11].showBody}
-                          toggleClick={() =>
-                            changePixelSetupHint(11, "showBody", "toggle")
-                          }
-                          closeClick={() =>
-                            changePixelSetupHint(11, "showBody", "close")
-                          }
+                          isOpenBody={cmsHints["scriptInstallation"].showBody}
+                          toggleClick={() => changeCMSHint("scriptInstallation", "showBody", "toggle")}
+                          closeClick={() => changeCMSHint("scriptInstallation", "showBody", "close")}
                         />
-                      )} */}
+                      )}
                     </Box>
                   </Box>
                 </>
@@ -1199,20 +1175,16 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         onChange={handleStoreHashChange}
                         InputLabelProps={{ sx: styles.inputLabel }}
                       />
-                      {/* {pixelSetupHints[12].show && (
+                      {cmsHints["enterStoreHash"]?.show && (
                         <HintCard
-                          card={hintCards[7]}
+                          card={cmsHintCards["enterStoreHash"]}
                           positionLeft={660}
                           positionTop={35}
-                          isOpenBody={pixelSetupHints[12].showBody}
-                          toggleClick={() =>
-                            changePixelSetupHint(12, "showBody", "toggle")
-                          }
-                          closeClick={() =>
-                            changePixelSetupHint(12, "showBody", "close")
-                          }
+                          isOpenBody={cmsHints["enterStoreHash"].showBody}
+                          toggleClick={() => changeCMSHint("enterStoreHash", "showBody", "toggle")}
+                          closeClick={() => changeCMSHint("enterStoreHash", "showBody", "close")}
                         />
-                      )} */}
+                      )}
                     </Box>
                     {(sourcePlatform !== "big_commerce" ||
                       !accessTokenExists) && (
@@ -1290,20 +1262,16 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           >
                             Install
                           </Button>
-                          {/* {pixelSetupHints[13]?.show && (
+                          {cmsHints["scriptInstallation"]?.show && (
                             <HintCard
-                              card={hintCards[8]}
+                              card={cmsHintCards["scriptInstallation"]}
                               positionLeft={110}
                               positionTop={15}
-                              isOpenBody={pixelSetupHints[13].showBody}
-                              toggleClick={() =>
-                                changePixelSetupHint(13, "showBody", "toggle")
-                              }
-                              closeClick={() =>
-                                changePixelSetupHint(13, "showBody", "close")
-                              }
+                              isOpenBody={cmsHints["scriptInstallation"].showBody}
+                              toggleClick={() => changeCMSHint("scriptInstallation", "showBody", "toggle")}
+                              closeClick={() => changeCMSHint("scriptInstallation", "showBody", "close")}
                             />
-                          )} */}
+                          )}
                         </Box>
                       )}
                     </Box>
