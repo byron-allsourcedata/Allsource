@@ -82,10 +82,4 @@ async def generate_token(user_account_id: int,
 async def invite_user(invite_details: InviteDetailsRequest,
                       admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service),
                       user: dict = Depends(check_user_admin)):
-    token = admin_customers_service.invite_user(user=user, email=invite_details.email, name=invite_details.name)
-    if token:
-        return {"token": token}
-    raise HTTPException(
-        status_code=403,
-        detail="Access denied"
-    )
+    return admin_customers_service.invite_user(user=user, email=invite_details.email, name=invite_details.name)

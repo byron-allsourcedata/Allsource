@@ -17,20 +17,20 @@ class AdminInvitation(Base):
     )
     email = Column(
         VARCHAR(64),
-        nullable=True
+        nullable=False,
+        unique=True
     )
     date_invited_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     invited_by_id = Column(
         BigInteger,
         ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=True
+        nullable=False
     )
     token = Column(
         VARCHAR(64),
-        nullable=True
+        nullable=False
     )
-    # __table_args__ = (
-    #     Index('teams_invitations_mail_team_owner_id_idx', mail, team_owner_id),
-    #     Index('teams_invitations_md5_hash_idx', 'token'),
-    # )
+    __table_args__ = (
+        Index('admin_invitations_md5_hash_idx', token),
+    )
 

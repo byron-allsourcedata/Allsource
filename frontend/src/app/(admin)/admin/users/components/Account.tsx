@@ -549,7 +549,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
             { key: 'name', label: 'Account name', sortable: false },
             { key: 'email', label: 'Email', sortable: false },
             { key: 'join_date', label: 'Join date', sortable: true },
-            { key: 'last_signed_in', label: 'Last Login Date', sortable: false },
+            { key: 'last_login_date', label: 'Last Login Date', sortable: false },
             { key: 'invited_by', label: 'Invited by', sortable: false },
             { key: 'access_level', label: 'Access level', sortable: true },
             { key: 'actions', label: 'Actions', sortable: false },
@@ -925,7 +925,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                                     border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                     borderRadius: '4px',
                                     padding: '8px',
-                                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
+                                    opacity: '1',
                                     minWidth: 'auto',
                                     position: 'relative',
                                     '@media (max-width: 900px)': {

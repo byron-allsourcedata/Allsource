@@ -430,12 +430,14 @@ def get_users_auth_service(db: Session = Depends(get_db),
                                get_referral_discount_codes_persistence),
                            subscription_service: SubscriptionService = Depends(get_subscription_service),
                            partners_service: PartnersService = Depends(
-                               get_partners_service)):
+                               get_partners_service),
+                           admin_persistence: AdminPersistence = Depends(
+                               get_admin_persistence)):
     return UsersAuth(db=db, payments_service=payments_plans, user_persistence_service=user_persistence_service,
                      send_grid_persistence_service=send_grid_persistence_service,
                      subscription_service=subscription_service,
                      plans_persistence=plans_persistence, integration_service=integration_service,
-                     partners_service=partners_service,
+                     partners_service=partners_service, admin_persistence=admin_persistence,
                      domain_persistence=domain_persistence, referral_persistence_service=referral_persistence_service
                      )
 

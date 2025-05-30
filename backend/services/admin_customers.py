@@ -99,9 +99,8 @@ class AdminCustomersService:
             template_id=template_id,
             template_placeholder={"full_name": name, "link": confirm_email_url}
         )
-        invited_by_id = user.get('id')
-        self.admin_persistence.save_pending_invitations_admin(team_owner_id=user.get('id'), email=email,
-                                                              invited_by_id=invited_by_id, md5_hash=md5_hash)
+        self.admin_persistence.save_pending_invitations_admin(email=email,
+                                                              invited_by_id=user.get('id'), md5_hash=md5_hash)
         return {
             'status': AdminStatus.SUCCESS
         }
