@@ -192,6 +192,7 @@ class AdminCustomersService:
                 'pixel_installed_count': user.get('pixel_installed_count'),
                 'sources_count': user.get('sources_count'),
                 'lookalikes_count': user.get('lookalikes_count'),
+                'type': 'user',
                 'credits_count': user.get('credits_count')
             })
         return {

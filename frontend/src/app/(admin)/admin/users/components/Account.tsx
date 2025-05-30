@@ -274,10 +274,19 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
-                                    color: (isCurrentUser || row.type != 'user') ? "#000" : "rgba(56, 152, 252, 1)",
+                                    color: (isCurrentUser || row.type !== 'user') ? "#000" : "rgba(56, 152, 252, 1)",
                                 }}
                             >
-                                {row.full_name}
+                                <Box
+                                    sx={{
+                                        maxWidth: "150px",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                    }}
+                                >
+                                    {row.full_name}
+                                </Box>
                                 {row.type === 'invitation' && (
                                     <Chip
                                         label="Invitation"
@@ -292,6 +301,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                     />
                                 )}
                             </Box>
+
                             {(!isCurrentUser && row.type == 'user') && (
                                 <IconButton
                                     onClick={(e) => {
