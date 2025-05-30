@@ -233,8 +233,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
         allTime: false,
       });
 
-
-
       const isAnyFilterActive = Object.values(savedFilters.checkedFilters || {}).some(value => value === true);
       if (isAnyFilterActive) {
         setButtonFilters(savedFilters.button);
@@ -338,7 +336,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
       setSelectedTags((prevTags) => {
         const updatedTags = {
           ...prevTags,
-          visitedDate: newTag ? [newTag] : [],
+          lastLoginDate: newTag ? [newTag] : [],
         };
 
         // If a new label exists, add it
@@ -347,7 +345,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
         }
 
         // If the label has been replaced or removed, clear the date range
-        if (!newTag && prevTags.visitedDate.length > 0) {
+        if (!newTag && prevTags.lastLoginDate.length > 0) {
           setDateRangeJoinDate({ fromDate: null, toDate: null });
         } else if (newTag && oldFromDate && oldToDate) {
           removeTag("lastLoginDate", `From ${oldFromDate} to ${oldToDate}`);
@@ -394,16 +392,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
       setSelectedTags((prevTags) => {
         const updatedTags = {
           ...prevTags,
-          visitedDate: newTag ? [newTag] : [],
+          joinDate: newTag ? [newTag] : [],
         };
 
-        // If a new label exists, add it
         if (newTag) {
           addTag("joinDate", newTag);
         }
 
-        // If the label has been replaced or removed, clear the date range
-        if (!newTag && prevTags.visitedDate.length > 0) {
+        if (!newTag && prevTags.joinDate.length > 0) {
           setDateRangeJoinDate({ fromDate: null, toDate: null });
         } else if (newTag && oldFromDate && oldToDate) {
           removeTag("joinDate", `From ${oldFromDate} to ${oldToDate}`);

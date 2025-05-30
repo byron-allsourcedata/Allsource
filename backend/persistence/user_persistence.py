@@ -286,7 +286,9 @@ class UserPersistence:
             .group_by(Users.id)
 
         total_count = query.count()
-        users = query.order_by(desc(Users.id)).offset((page - 1) * per_page).limit(per_page).all()
+        offset = (page - 1) * per_page
+
+        users = query.order_by(desc(Users.id)).limit(per_page).offset(offset).all()
         return users, total_count
 
     def get_not_partner_users(self, page, per_page):

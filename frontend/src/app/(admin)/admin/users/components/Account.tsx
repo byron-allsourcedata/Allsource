@@ -548,7 +548,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     const [accounts, setAccounts] = useState<AccountData[]>([]);
     const router = useRouter();
     const [page, setPage] = useState(0);
-    const [rowsPerPage, setRowsPerPage] = useState(10);
+    const [rowsPerPage, setRowsPerPage] = useState(50);
     const [totalCount, setTotalCount] = useState(0);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
@@ -559,9 +559,39 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [lastLoginDate, setLastLoginDate] = useState<string[]>([]);
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain ?? { start: null, end: null });
-    const allowedRowsPerPage = [10, 25, 50, 100];
     const [userData, setUserData] = useState<UserData[]>([]);
+    const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const [search, setSearch] = useState("");
+
+    const fetchData = async () => {
+        try {
+            let url = '/admin'
+            if (tabIndex === 0) {
+                url += `/admins?page=${page + 1}&per_page=${rowsPerPage}`;
+            } else if (tabIndex === 1) {
+                url += `/users?page=${page + 1}&per_page=${rowsPerPage}`;
+            }
+
+            const response = await axiosInstance.get(url);
+            if (response.status === 200) {
+                setUserData(response.data.users);
+                setTotalCount(response.data.count)
+                const options = [10, 20, 50, 100, 300, 500];
+                let RowsPerPageOptions = options.filter(option => option <= response.data.count);
+                if (RowsPerPageOptions.length < options.length) {
+                    RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
+                }
+                setRowsPerPageOptions(RowsPerPageOptions);
+                const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
+                setRowsPerPage(selectedValue);
+            }
+        }
+        catch {
+        }
+        finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         const accessToken = localStorage.getItem('token');
@@ -569,30 +599,8 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
             router.push('/signin');
             return;
         }
-
-        const fetchData = async () => {
-            try {
-                let url = '/admin'
-                if (tabIndex === 0) {
-                    url += `/admins?page=${currentPage}&per_page=${rowsPerPage}`;
-                } else if (tabIndex === 1) {
-                    url += `/users?page=${currentPage}&per_page=${rowsPerPage}`;
-                }
-
-                const response = await axiosInstance.get(url);
-                if (response.status === 200) {
-                    setUserData(response.data.users);
-                    setTotalCount(response.data.count)
-                }
-            }
-            catch {
-            }
-            finally {
-                setLoading(false);
-            }
-        };
         fetchData();
-    }, [currentPage]);
+    }, [currentPage, page, rowsPerPage]);
 
     const handleSearchChange = (event: any) => {
         setSearch(event.target.value);
@@ -603,6 +611,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     };
 
     const handleFormClosePopup = () => {
+        fetchData()
         setSliderOpen(false);
     };
 
@@ -655,6 +664,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
 
     const handleRowsPerPageChange = (event: React.ChangeEvent<{ value: unknown }>) => {
         setRowsPerPage(parseInt(event.target.value as string, 10));
+        setPage(0);
     };
 
     const handleFilterPopupOpen = () => {
@@ -906,7 +916,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                         <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }}>
                             <Table stickyHeader>
                                 <TableHeader onSort={handleSortRequest} tableHeaders={tableHeaders} sortField={orderBy} sortOrder={order} />
-                                <TableBodyClient data={userData} tableHeaders={tableHeaders} setLoading={setLoading} currentPage={currentPage} />
+                                <TableBodyClient data={userData} tableHeaders={tableHeaders} setLoading={setLoading} currentPage={page} />
                             </Table>
 
                         </TableContainer>
@@ -914,10 +924,10 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                             <CustomTablePagination
                                 count={totalCount}
                                 page={page}
-                                rowsPerPage={allowedRowsPerPage.includes(rowsPerPage) ? rowsPerPage : 10}
+                                rowsPerPage={rowsPerPage}
                                 onPageChange={handlePageChange}
                                 onRowsPerPageChange={handleRowsPerPageChange}
-                                rowsPerPageOptions={[10, 25, 50, 100]}
+                                rowsPerPageOptions={rowsPerPageOptions}
                             />
                         </Box>
 
