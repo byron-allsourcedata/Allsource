@@ -295,7 +295,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                 Send
               </Typography>
             </Button>
-            {pixelSetupHints[14].show && (
+            {/* {pixelSetupHints[14].show && (
               <HintCard
                 card={hintCards[0]}
                 positionLeft={670}
@@ -306,7 +306,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                 }
                 closeClick={() => changePixelSetupHint(14, "showBody", "close")}
               />
-            )}
+            )} */}
           </Box>
         </Box>
       </Box>

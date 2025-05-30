@@ -219,20 +219,6 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
       linkToLoadMore:
         "https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-pixel-installation",
     },
-    {
-      description:
-        'Enter your website domain in the input field and click "Save". We’ll store it and use it to set up the tracking pixel.',
-      title: "Enter domain",
-      linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-create-a-domain",
-    },
-    {
-      description:
-        'Select a domain from the list to link the tracking pixel to the correct website. If your domain is missing, click "Add new domain" to enter it manually. Make sure the domain is valid — the pixel will be installed on the selected one.',
-      title: "Select a domain",
-      linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/create-or-select-your-domain",
-    },
   ];
 
   return (
@@ -297,7 +283,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         >
           Select how you would like to install the pixel
         </Typography>
-        {pixelSetupHints[4].show && !showHint && (
+        {/* {pixelSetupHints[4].show && !showHint && (
           <HintCard
             card={hintCards[0]}
             positionLeft={350}
@@ -305,7 +291,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
             toggleClick={() => changePixelSetupHint(4, "showBody", "toggle")}
             closeClick={() => changePixelSetupHint(4, "showBody", "close")}
           />
-        )}
+        )} */}
       </Box>
       <Grid container md={12}>
         <Box
