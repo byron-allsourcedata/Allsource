@@ -34,20 +34,24 @@ async def verify_token(admin_customers_service: AdminCustomersService = Depends(
 @router.get('/users')
 async def get_users(
         user: dict = Depends(check_user_admin),
+        sort_by: str = Query(None, description="Field"),
+        sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
         per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
-    users = admin_customers_service.get_customer_users(page, per_page)
+    users = admin_customers_service.get_customer_users(page, per_page, sort_by, sort_order)
     return users
 
 
 @router.get('/admins')
 async def get_admins(
         user: dict = Depends(check_user_admin),
+        sort_by: str = Query(None, description="Field"),
+        sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
         per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
-    users = admin_customers_service.get_admin_users(page, per_page)
+    users = admin_customers_service.get_admin_users(page, per_page, sort_by, sort_order)
     return users
 
 

@@ -35,6 +35,7 @@ class AdminInvitation(Base):
         nullable=False
     )
     __table_args__ = (
-        Index('admin_invitations_md5_hash_idx', token),
+        Index('admin_invitations_token_idx', token),
+        Index('admin_invitations_email_idx', email),
     )
 

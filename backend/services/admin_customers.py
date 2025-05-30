@@ -43,9 +43,16 @@ class AdminCustomersService:
         self.dashboard_audience_persistence = dashboard_audience_persistence
         self.admin_persistence = admin_persistence
 
-    def get_admin_users(self, page, per_page):
+    def get_admin_users(self, page, per_page, sort_by, sort_order):
+        allowed_sort_fields = ['created_at', 'last_login']
+        allowed_sort_orders = ['asc', 'desc']
+
+        sort_by = sort_by if sort_by in allowed_sort_fields else 'created_at'
+        sort_order = sort_order if sort_order in allowed_sort_orders else 'desc'
+
         admin_users = self.user_persistence.get_admin_users()
         invitations_admin = self.admin_persistence.get_pending_invitations_admin()
+
         users_dict = [
             {
                 'id': user.id,
@@ -59,22 +66,32 @@ class AdminCustomersService:
             }
             for user in admin_users
         ]
+
         invitations_admin_dicts = [
             {
                 'id': inv.id,
                 'email': inv.email,
                 'full_name': inv.full_name,
                 'created_at': inv.date_invited_at,
+                'last_login': None,
                 'invited_by_email': inv.invited_by_email,
+                'role': None,
                 'type': 'invitation'
             }
             for inv in invitations_admin
         ]
+
         combined = users_dict + invitations_admin_dicts
-        combined.sort(key=lambda x: x.get('created_at'), reverse=True)
+
+        combined.sort(
+            key=lambda x: x.get(sort_by) or datetime.min,
+            reverse=(sort_order == 'desc')
+        )
+
         start = (page - 1) * per_page
         end = start + per_page
         paginated = combined[start:end]
+
         return {
             'users': paginated,
             'count': len(combined)
@@ -90,8 +107,9 @@ class AdminCustomersService:
         return None
 
     def invite_user(self, user: dict, email: str, name: str):
-        exists_team_member = self.user_persistence.get_user_by_email(email=email)
-        if exists_team_member:
+        exists_user = self.user_persistence.get_user_by_email(email=email)
+        exist_invite = self.admin_persistence.get_pending_invitation_by_email(email=email)
+        if exists_user or exist_invite:
             return {
                 'status': AdminStatus.ALREADY_EXISTS
             }
@@ -123,8 +141,8 @@ class AdminCustomersService:
             'status': AdminStatus.SUCCESS
         }
 
-    def get_customer_users(self, page, per_page):
-        users, total_count = self.user_persistence.get_customer_users(page, per_page)
+    def get_customer_users(self, page, per_page, sort_by, sort_order):
+        users, total_count = self.user_persistence.get_customer_users(page, per_page, sort_by, sort_order)
         result = []
         users_dict = [
             dict(

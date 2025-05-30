@@ -76,6 +76,9 @@ class AdminPersistence:
         self.db.delete(admin_invitation)
         self.db.commit()
 
+    def get_pending_invitation_by_email(self, email: str):
+        return  self.db.query(AdminInvitation).filter(AdminInvitation.email == email).first()
+
     def get_pending_invitations_admin(self):
         Inviter = aliased(Users)
         return (
