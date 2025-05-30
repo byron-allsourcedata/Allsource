@@ -40,6 +40,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InsightsIcon from "@mui/icons-material/Insights";
 import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import FastForward from "@mui/icons-material/FastForward";
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import { useSidebar } from "@/context/SidebarContext";
 
 
@@ -243,6 +244,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [currentDomain, setCurrentDomain] = useState<string | null>(null);
   const [activatePercent, setActivatePercent] = useState<number>(0);
   const [isPartnerAvailable, setIsPartnerAvailable] = useState(false);
+  const [isAdminAvailable, setIsAdminAvailable] = useState(false);
   const isAuthorized = useRef(false);
   useEffect(() => {
     const storedDomain = sessionStorage.getItem("current_domain");
@@ -263,6 +265,18 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+  const checkAdmin = () => {
+    const storedMe = sessionStorage.getItem("admin");
+    let admin = false;
+    if (storedMe) {
+      const storedData = JSON.parse(storedMe);
+      admin = storedData;
+      setIsAdminAvailable(admin);
+    } else {
+      setIsAdminAvailable(false);
+    }
+  };
+
   useEffect(() => {
     if (currentDomain) {
       const domain = domains?.find((d) => d.domain === currentDomain);
@@ -273,7 +287,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   }, [currentDomain]);
 
   useEffect(() => {
-    checkPartner();
+    checkAdmin();
   }, [backButton]);
 
   const handleNavigation = async (route: string) => {
@@ -353,6 +367,22 @@ const Sidebar: React.FC<SidebarProps> = ({
           overflowX: "hidden",
         }}
       >
+        {isAdminAvailable && (
+          <ListItem
+            button
+            onClick={() => handleNavigation("/admin")}
+            sx={
+              isActive("/admin")
+                ? sidebarStyles.activeItem
+                : sidebarStyles.ListItem
+            }
+          >
+            <ListItemIcon sx={sidebarStyles.listItemIcon}>
+              <SupervisorAccountIcon />
+            </ListItemIcon>
+            <ListItemText primary="Admin" />
+          </ListItem>
+        )}
         {isGetStartedPage && !loading &&
           <ListItem
             button

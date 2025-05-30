@@ -637,10 +637,16 @@ class UsersAuth:
         if all(conditions):
             return self._send_email_verification(user_object, token)
 
-        if teams_token or admin_token:
+        if teams_token:
             return {
                 'is_success': True,
                 'status': SignUpStatus.SUCCESS,
+                'token': token
+            }
+        if admin_token:
+            return {
+                'is_success': True,
+                'status': SignUpStatus.SUCCESS_ADMIN,
                 'token': token
             }
 
@@ -805,7 +811,7 @@ class UsersAuth:
             return result
 
         result = {
-            'status': LoginStatus.SUCCESS,
+            'status': LoginStatus.SUCCESS_ADMIN if "admin" in user_object.role else LoginStatus.SUCCESS,
             'token': token,
             'is_partner': user_object.is_partner,
         }
@@ -813,6 +819,7 @@ class UsersAuth:
             result['shopify_status'] = shopify_status
 
         return result
+
 
     def verify_token(self, token):
         try:

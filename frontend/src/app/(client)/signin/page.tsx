@@ -151,6 +151,13 @@ const Signin: React.FC = () => {
               await fetchUserData();
               router.push("/audience-dashboard");
               break;
+
+            case "SUCCESS_ADMIN":
+              await fetchUserData();
+              sessionStorage.setItem("admin", "true")
+              router.push('/admin');
+              break;
+
             case "NON_SHOPIFY_ACCOUNT":
               showErrorToast("non shopify account");
               break;
@@ -275,6 +282,11 @@ const Signin: React.FC = () => {
                 switch (response.data.status) {
                   case "SUCCESS":
                     router.push(partner ? "/partners" : "/audience-dashboard");
+                    break;
+                  case "SUCCESS_ADMIN":
+                    await fetchUserData();
+                    sessionStorage.setItem("admin", "true")
+                    router.push('/admin');
                     break;
                   case "NEED_CHOOSE_PLAN":
                     router.push("/settings?section=subscription");
