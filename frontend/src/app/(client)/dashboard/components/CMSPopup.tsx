@@ -178,7 +178,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
     const fetchCredentials = async () => {
       const query = new URLSearchParams(window.location.search);
       const installBigcommerce = query.get("install_bigcommerce");
-      if (installBigcommerce){
+      if (installBigcommerce) {
         setSelectedCMS("Bigcommerce");
       }
       try {
@@ -445,7 +445,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
           >
             Choose CMS
           </Typography>
-          {pixelSetupHints[5].show && showHint && (
+          {/* {pixelSetupHints[5].show && showHint && (
             <HintCard
               card={hintCards[0]}
               positionLeft={350}
@@ -454,7 +454,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
               toggleClick={() => changePixelSetupHint(5, "showBody", "toggle")}
               closeClick={() => changePixelSetupHint(5, "showBody", "close")}
             />
-          )}
+          )} */}
         </Box>
         <Box
           sx={{
@@ -716,7 +716,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         InputLabelProps={{ sx: styles.inputLabel }}
                         disabled={sourcePlatform === "shopify"}
                       />
-                      {pixelSetupHints[6].show && (
+                      {/* {pixelSetupHints[6].show && (
                         <HintCard
                           card={hintCards[1]}
                           positionLeft={420}
@@ -729,7 +729,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                             changePixelSetupHint(6, "showBody", "close")
                           }
                         />
-                      )}
+                      )} */}
                     </Box>
                     <Box
                       sx={{
@@ -782,7 +782,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           sourcePlatform === "shopify" && accessTokenExists
                         }
                       />
-                      {pixelSetupHints[7].show && (
+                      {/* {pixelSetupHints[7].show && (
                         <HintCard
                           card={hintCards[2]}
                           positionLeft={660}
@@ -795,7 +795,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                             changePixelSetupHint(7, "showBody", "close")
                           }
                         />
-                      )}
+                      )} */}
                     </Box>
                     {sourcePlatform !== "shopify" && (
                       <Box
@@ -873,7 +873,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           >
                             Install
                           </Button>
-                          {pixelSetupHints[8].show && (
+                          {/* {pixelSetupHints[8].show && (
                             <HintCard
                               card={hintCards[3]}
                               positionLeft={110}
@@ -886,7 +886,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                                 changePixelSetupHint(8, "showBody", "close")
                               }
                             />
-                          )}
+                          )} */}
                         </Box>
                       )}
                     </Box>
@@ -957,7 +957,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           Get plugin
                         </Typography>
                       </Button>
-                      {pixelSetupHints[9].show && (
+                      {/* {pixelSetupHints[9].show && (
                         <HintCard
                           card={hintCards[4]}
                           positionLeft={190}
@@ -970,7 +970,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                             changePixelSetupHint(9, "showBody", "close")
                           }
                         />
-                      )}
+                      )} */}
                     </Box>
                     <Box
                       sx={{
@@ -1049,7 +1049,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                               <ContentCopyIcon />
                             </IconButton>
                           </Box>
-                          {pixelSetupHints[10].show && (
+                          {/* {pixelSetupHints[10].show && (
                             <HintCard
                               card={hintCards[5]}
                               positionLeft={540}
@@ -1062,7 +1062,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                                 changePixelSetupHint(10, "showBody", "close")
                               }
                             />
-                          )}
+                          )} */}
                         </Box>
                         during the checkout process
                       </Typography>
@@ -1114,7 +1114,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           View installation
                         </Typography>
                       </Button>
-                      {pixelSetupHints[11].show && (
+                      {/* {pixelSetupHints[11].show && (
                         <HintCard
                           card={hintCards[6]}
                           positionLeft={235}
@@ -1127,7 +1127,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                             changePixelSetupHint(11, "showBody", "close")
                           }
                         />
-                      )}
+                      )} */}
                     </Box>
                   </Box>
                 </>
@@ -1199,7 +1199,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                         onChange={handleStoreHashChange}
                         InputLabelProps={{ sx: styles.inputLabel }}
                       />
-                      {pixelSetupHints[12].show && (
+                      {/* {pixelSetupHints[12].show && (
                         <HintCard
                           card={hintCards[7]}
                           positionLeft={660}
@@ -1212,7 +1212,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                             changePixelSetupHint(12, "showBody", "close")
                           }
                         />
-                      )}
+                      )} */}
                     </Box>
                     {(sourcePlatform !== "big_commerce" ||
                       !accessTokenExists) && (
@@ -1290,7 +1290,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                           >
                             Install
                           </Button>
-                          {pixelSetupHints[13]?.show && (
+                          {/* {pixelSetupHints[13]?.show && (
                             <HintCard
                               card={hintCards[8]}
                               positionLeft={110}
@@ -1303,7 +1303,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
                                 changePixelSetupHint(13, "showBody", "close")
                               }
                             />
-                          )}
+                          )} */}
                         </Box>
                       )}
                     </Box>

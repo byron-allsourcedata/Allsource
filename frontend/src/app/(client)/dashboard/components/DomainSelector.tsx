@@ -231,7 +231,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
           >
             Add domain
           </Button>
-          {pixelSetupHints[0].show && domains.length === 0 && !addingNew && (
+          {/* {pixelSetupHints[0].show && domains.length === 0 && !addingNew && (
             <HintCard
               card={hintCards[0]}
               positionLeft={150}
@@ -240,7 +240,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               toggleClick={() => changePixelSetupHint(0, "showBody", "toggle")}
               closeClick={() => changePixelSetupHint(0, "showBody", "close")}
             />
-          )}
+          )} */}
         </Box>
       ) : addingNew ? (
         <Box
@@ -304,7 +304,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               ),
             }}
           />
-          {pixelSetupHints[1].show && addingNew && (
+          {/* {pixelSetupHints[1].show && addingNew && (
             <HintCard
               card={hintCards[1]}
               positionLeft={263}
@@ -313,7 +313,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               toggleClick={() => changePixelSetupHint(1, "showBody", "toggle")}
               closeClick={() => changePixelSetupHint(1, "showBody", "close")}
             />
-          )}
+          )} */}
           <Button
             variant="contained"
             sx={{
@@ -348,7 +348,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               });
             }}
           />
-          {pixelSetupHints[2]?.show && !selectedDomain && (
+          {/* {pixelSetupHints[2]?.show && !selectedDomain && (
             <HintCard
               card={hintCards[2]}
               positionLeft={400}
@@ -357,7 +357,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               toggleClick={() => changePixelSetupHint(2, "showBody", "toggle")}
               closeClick={() => changePixelSetupHint(2, "showBody", "close")}
             />
-          )}
+          )} */}
         </Box>
       )}
     </Box>

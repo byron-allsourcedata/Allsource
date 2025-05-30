@@ -135,7 +135,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
         >
           Verify
         </Button>
-        {pixelSetupHints[3].show && showHint && (
+        {/* {pixelSetupHints[3].show && showHint && (
           <HintCard
             card={hintCards[0]}
             positionLeft={710}
@@ -144,7 +144,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
             toggleClick={() => changePixelSetupHint(3, "showBody", "toggle")}
             closeClick={() => changePixelSetupHint(3, "showBody", "close")}
           />
-        )}
+        )} */}
       </Box>
     </Box>
   );
