@@ -40,6 +40,8 @@ import {
   FirstTimeScreenCommonVariant1,
 } from "@/components/first-time-screens";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
+import { useInsightsHints } from "./context/IntegrationsHintsContext";
+import HintCard from "../components/HintCard";
 
 type TableData = {
   id: string;
@@ -60,6 +62,7 @@ type CardData = {
 
 const Insights = () => {
   const router = useRouter();
+  const { insightsHints, cardsInsights, changeInsightsHint, resetInsightsHints } = useInsightsHints();
   const { hasNotification } = useNotification();
   const [tabIndex, setTabIndex] = useState(0);
   const [search, setSearch] = useState("");
@@ -191,6 +194,7 @@ const Insights = () => {
   const dataToShow = search.trim() ? filteredData : allData;
 
   useEffect(() => {
+    resetInsightsHints();
     handleSourceData();
   }, []);
 
@@ -208,8 +212,10 @@ const Insights = () => {
     return <CustomizedProgressBar />;
   }
 
+  
+
   return (
-    <Box sx={{ width: "100%", pr: 3, flexGrow: 1, pt: 2 }}>
+    <Box sx={{ width: "100%", height: "calc(100vh - 4.25rem)", pr: 3, flexGrow: 1, pt: 2 }}>
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
         {sourceData.length > 0 || lookalikeData.length > 0 ? (
           <Box>
@@ -276,7 +282,8 @@ const Insights = () => {
                   your targeting and maximize results.
                 </Typography>
               </Box>
-              <Box>
+              <Box sx={{ position: "relative" }}>
+
                 <Box
                   sx={{
                     display: "flex",
@@ -284,9 +291,23 @@ const Insights = () => {
                     flexDirection: "column",
                     pt: 2,
                     gap: 2,
+                    position: "relative"
                   }}
                 >
-                  <Box sx={{ width: "100%" }}>
+                  <Box sx={{ width: "100%", position: "relative" }}>
+                    <HintCard
+                      card={cardsInsights.select_audience}
+                      positionTop={20}
+                      positionLeft={230}
+                      rightSide={false}
+                      isOpenBody={insightsHints.select_audience.showBody}
+                      toggleClick={() =>
+                        changeInsightsHint("select_audience", "showBody", "toggle")
+                      }
+                      closeClick={() =>
+                        changeInsightsHint("select_audience", "showBody", "close")
+                      }
+                    />
                     <Box
                       sx={{
                         width: "100%",
