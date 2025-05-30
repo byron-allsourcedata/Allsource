@@ -33,6 +33,7 @@ import HintCard from "../components/HintCard";
 import { useLeadsHints } from "./context/LeadsHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
 import TableCustomCell from "../sources/components/table/TableCustomCell";
+import DomainButtonSelect from "../components/NavigationDomainButton";
 
 
 interface FetchDataParams {
@@ -975,11 +976,14 @@ const Leads: React.FC = () => {
                                         marginTop: hasNotification ? '2rem' : '0rem',
                                     },
                                 }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                                    <Typography className='first-sub-title'>
-                                        Resolved Contacts {data.length === 0 ? '' : `(${count_leads})`}
-                                    </Typography>
-                                    <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/contacts' />
+                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                        <Typography className='first-sub-title' sx={{textWrap: "nowrap"}}>
+                                            Resolved Contacts {data.length === 0 ? '' : `(${count_leads})`}
+                                        </Typography>
+                                        <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
+                                    </Box>
+                                    <DomainButtonSelect />
                                 </Box>
                                 <Box sx={{
                                     display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',

@@ -35,6 +35,9 @@ interface UserData {
     invited_by_email?: string;
     role: string[];
     pixel_installed_count?: number;
+    sources_count?: number;
+    lookalikes_count?: number;
+    credits_count?: number
 }
 
 
@@ -314,11 +317,11 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
             case 'join_date':
                 return formatDate(row.created_at);
             case 'sources_count':
-                return row.pixel_installed_count || '0';
+                return row.sources_count || '0';
             case 'lookalikes_count':
-                return row.pixel_installed_count || '0';
+                return row.lookalikes_count || '0';
             case 'credits_count':
-                return row.pixel_installed_count || '0';
+                return row.credits_count || '0';
             case 'status':
                 return (
                     <Typography

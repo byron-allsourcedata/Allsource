@@ -37,6 +37,7 @@ import { FirstTimeScreenCommonVariant2 } from '@/components/first-time-screens';
 import HintCard from "../components/HintCard";
 import { useCompanyHints } from "./context/CompanyHintsContext";
 import { companyTableCards } from "./context/hintsCardsContent";
+import DomainButtonSelect from "../components/NavigationDomainButton";
 
 
 interface FetchDataParams {
@@ -778,11 +779,14 @@ const Leads: React.FC = () => {
                                             marginTop: hasNotification ? '2rem' : '0rem',
                                         },
                                     }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                                        <Typography className='first-sub-title'>
-                                            Company list {data.length === 0 ? '' : `(${count_companies})`}
-                                        </Typography>
-                                        <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                            <Typography className='first-sub-title' style={{textWrap: "nowrap"}}>
+                                                Company list {data.length === 0 ? '' : `(${count_companies})`}
+                                            </Typography>
+                                            <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
+                                        </Box>
+                                        <DomainButtonSelect />
                                     </Box>
                                     <Box sx={{
                                         display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',

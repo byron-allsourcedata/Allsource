@@ -246,9 +246,6 @@ const CustomCards: React.FC<CustomCardsProps> = ({
         <HintCard
           card={audienceDashboardCards["audience"]}
           positionTop={95}
-          sx={{
-            left: "calc(100% / 5)",
-        }}
           isOpenBody={audienceDashboardHints["audience"].showBody}
           toggleClick={() => {
             if (audienceDashboardHints["pixel"].showBody) {
