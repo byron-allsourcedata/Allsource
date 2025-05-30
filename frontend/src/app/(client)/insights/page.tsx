@@ -212,13 +212,17 @@ const Insights = () => {
     return <CustomizedProgressBar />;
   }
 
-  
+
 
   return (
     <Box sx={{ width: "100%", height: "calc(100vh - 4.25rem)", pr: 3, flexGrow: 1, pt: 2 }}>
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
         {sourceData.length > 0 || lookalikeData.length > 0 ? (
-          <Box>
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
             <Box
               sx={{
                 display: "flex",
