@@ -34,6 +34,7 @@ import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
 import HintCard from "../components/HintCard";
 import { useCompanyHints } from "./context/CompanyHintsContext";
 import { employeesTableCards } from "./context/hintsCardsContent";
+import DomainButtonSelect from "../components/NavigationDomainButton";
 
 
 interface FetchDataParams {
@@ -618,14 +619,17 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                 marginTop: hasNotification ? '2rem' : '0rem',
                             },
                         }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                            <IconButton onClick={onBack}>
-                                <ArrowBackIcon sx={{color: 'rgba(56, 152, 252, 1)'}}/>
-                            </IconButton>
-                            <Typography className='first-sub-title'>
-                                Employee - {companyName}
-                            </Typography>
-                            <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
+                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                <IconButton onClick={onBack}>
+                                    <ArrowBackIcon sx={{color: 'rgba(56, 152, 252, 1)'}}/>
+                                </IconButton>
+                                <Typography className='first-sub-title' sx={{textWrap: "nowrap"}}>
+                                    Employee - {companyName}
+                                </Typography>
+                                <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
+                            </Box>
+                            <DomainButtonSelect />
                         </Box>
                         <Box sx={{
                             display: 'flex', flexDirection: 'row',  position: "relative", alignItems: 'center', gap: '15px', pt: '4px',

@@ -15,6 +15,7 @@ import { showErrorToast } from "@/components/ToastNotification";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { SliderProvider } from "@/context/SliderContext";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
+import DomainButtonSelect from "../components/NavigationDomainButton";
 
 const centerContainerStyles = {
     display: "flex",
@@ -186,6 +187,16 @@ const Suppressions: React.FC = () => {
                                     linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/suppressions"
                                 />
                             </Box>
+
+                            {/* <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}> */}
+                                    {/* <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                        <Typography className='first-sub-title' sx={{textWrap: "nowrap"}}>
+                                            Suppressions
+                                        </Typography>
+                                        <CustomTooltip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
+                                    </Box>
+                                    <DomainButtonSelect /> */}
+                            {/* </Box> */}
                         </Box>
                         <Box
                             sx={{

@@ -36,6 +36,7 @@ import RevenueTracking from "@/components/RevenueTracking";
 import WelcomePopup from "./components/WelcomePopup";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
+import DomainButtonSelect from "../components/NavigationDomainButton";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -280,45 +281,29 @@ const Dashboard: React.FC = () => {
               },
             }}
           >
-            <Typography
-              variant="h4"
-              component="h1"
-              className="first-sub-title"
-              sx={{
-                ...dashboardStyles.title,
-                "@media (max-width: 600px)": {
-                  display: "none",
-                },
-              }}
-            >
-              Analytics{" "}
-              <CustomTooltip
-                title={
-                  "Indicates the count of resolved identities and revenue figures for the specified time"
-                }
-                linkText="Learn More"
-                linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main"
-              />
-            </Typography>
+
             <Box
               sx={{
-                display: "none",
                 width: "100%",
+                display: "flex",
                 justifyContent: "space-between",
-                alignItems: "start",
-                "@media (max-width: 600px)": {
-                  display: "flex",
-                },
+                alignItems: "center",
               }}
             >
-              <Typography
-                variant="h4"
-                component="h1"
-                className="first-sub-title"
-                sx={dashboardStyles.title}
-              >
-                Dashboard
-              </Typography>
+              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                  <Typography
+                    variant="h4"
+                    component="h1"
+                    className="first-sub-title"
+                    sx={dashboardStyles.title}
+                  >
+                    Analytics
+                  </Typography>
+                  <CustomTooltip title={"Indicates the count of resolved identities and revenue figures for the specified time"} linkText='Learn more' linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main" />
+                </Box>
+                <DomainButtonSelect />
+              </Box>
 
               <Box
                 sx={{
@@ -353,7 +338,9 @@ const Dashboard: React.FC = () => {
                   <DateRangeIcon fontSize="small" />
                 </Button>
               </Box>
+
             </Box>
+            
             {typeBusiness == "d2c" && (
               <Box
                 sx={{
