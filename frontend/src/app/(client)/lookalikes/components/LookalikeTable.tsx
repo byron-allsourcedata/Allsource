@@ -41,6 +41,8 @@ import { useSSE } from "@/context/SSEContext";
 import { padding } from "@mui/system";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { QrCodeScannerOutlined } from "@mui/icons-material";
+import { useLookalikesHints } from "../context/LookalikesHintsContext";
+import HintCard from "../../components/HintCard";
 
 interface TableRowData {
   id: string;
@@ -120,7 +122,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
   refreshData,
   loader_for_table,
 }) => {
-  
+  const { lookalikesTableHints: lookalikesTableHints, cardsLookalikeTable, changeLookalikesTableHint, resetLookalikesTableHints } = useLookalikesHints();
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [editedName, setEditedName] = useState<string>("");
   const [editPopoverAnchorEl, setEditPopoverAnchorEl] =
@@ -209,7 +211,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
       }
       setEditingRowId(null);
       setIsEditPopoverOpen(false);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   const handleDelete = async (rowId: string) => {
@@ -323,7 +325,6 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                     top: 0,
                     boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
                   }),
-
                   ...(key === "lookalike_size" && {
                     minWidth: "60px",
                     maxWidth: "60px",
@@ -343,7 +344,54 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   borderBottom: "none",
                 }}
               >
-                <Box sx={{ display: "flex", alignItems: "center" }}>
+                <Box sx={{ display: "flex", alignItems: "center", position: "relative" }}>
+                  {key === "actions" && (
+                    <HintCard
+                      card={cardsLookalikeTable.actions}
+                      positionTop={55}
+                      positionLeft={-425}
+                      rightSide={true}
+                      isOpenBody={lookalikesTableHints.actions.showBody}
+                      toggleClick={() => {
+                        changeLookalikesTableHint("insights", "showBody", "close")
+                        changeLookalikesTableHint("builder", "showBody", "close")
+                        changeLookalikesTableHint("actions", "showBody", "toggle")
+                      }
+
+                      }
+                      closeClick={() =>
+                        changeLookalikesTableHint("actions", "showBody", "close")
+                      }
+                    />
+                  )}
+                  {key === "name" && (
+                    <Box
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                      }}
+                      onClick={e => e.stopPropagation()}
+                    >
+                      <HintCard
+                        card={cardsLookalikeTable.insights}
+                        positionTop={65}
+                        positionLeft={90}
+                        rightSide={false}
+                        isOpenBody={lookalikesTableHints.insights.showBody}
+                        toggleClick={() => {
+                          changeLookalikesTableHint("actions", "showBody", "close")
+                          changeLookalikesTableHint("builder", "showBody", "close")
+                          changeLookalikesTableHint("insights", "showBody", "toggle")
+                        }
+
+                        }
+                        closeClick={() =>
+                          changeLookalikesTableHint("insights", "showBody", "close")
+                        }
+                      />
+                    </Box>
+                  )}
                   <Typography
                     variant="body2"
                     sx={{ ...lookalikesStyles.table_column, borderRight: "0" }}
@@ -462,15 +510,15 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                           )}
                           <Link
                             href={`/insights/lookalikes/${row.id}`}
-                            underline="none"                            
+                            underline="none"
                             sx={{
                               display: 'inline-block',
-                              width: '100%',     
+                              width: '100%',
                             }}
                           >
                             {row.name}
-                            </Link>
-                          
+                          </Link>
+
                         </Typography>
                         <IconButton
                           className="edit-icon action-icon"
@@ -754,9 +802,9 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                     }}
                   >
                     {((row.processed_size + row.processed_train_model_size) === (row.size + row.train_model_size))
-                    && ((row.size + row.train_model_size) !== 0) ? (
+                      && ((row.size + row.train_model_size) !== 0) ? (
                       row.size.toLocaleString("en-US")
-                    ) :  (
+                    ) : (
                       <ProgressBar
                         progress={{
                           total: (row?.size + row?.train_model_size) || 0,
@@ -772,6 +820,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                       minWidth: "40px",
                       padding: "8px",
                       textAlign: "center",
+                      position: "relative",
                     }}
                   >
                     <IconButton

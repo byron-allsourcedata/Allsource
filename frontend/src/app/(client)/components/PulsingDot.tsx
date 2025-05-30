@@ -79,11 +79,12 @@ const PulsingDotComponent: React.FC<PulsingDotComponentProps> = ({
       justifyContent="center"
       sx={{
         cursor: "pointer",
+        pointerEvents: "all",
         position: "absolute",
         left: !rightSide ? -7 : "auto",
         right: rightSide ? -7 : "auto",
         top: -5,
-        zIndex: 2599,
+        zIndex: 2600,
       }}
     >
       <PulsingDot onClick={toggleClick} />

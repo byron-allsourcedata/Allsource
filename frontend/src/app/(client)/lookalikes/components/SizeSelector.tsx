@@ -1,13 +1,7 @@
 import React from "react";
 import { Box, Typography, Button, Slider } from "@mui/material";
-import { useHints } from "@/context/HintsContext";
-import HintCard from "../../components/HintCard"; 
-
-interface HintCardInterface {
-    description: string;
-    title: string;
-    linkToLoadMore: string;
-}
+import { useLookalikesHints } from "../context/LookalikesHintsContext";
+import HintCard from "../../components/HintCard";
 
 const audienceSize = [
     {
@@ -52,20 +46,13 @@ const RECOMMENDED_SIZE = "extremely";
 interface AudienceSizeSelectorProps {
     onSelectSize: (id: string, min: number, max: number, label: string) => void;
     selectedSize: string;
-    hintCard: HintCardInterface
-    toggleDotHintClickBlock1: () => void
-    isOpenSelect: boolean
 }
 
 const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
     onSelectSize,
     selectedSize,
-    hintCard,
-    toggleDotHintClickBlock1,
-    isOpenSelect
 }) => {
-
-  const { showHints } = useHints();
+    const { lookalikesBuilderHints, cardsLookalikeBuilder, changeLookalikesBuilderHint, resetSourcesBuilderHints } = useLookalikesHints();
     return (
         <Box
             sx={{
@@ -106,6 +93,7 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                         pt: 2,
                         width: "100%",
                         flexWrap: "wrap",
+                        position: "relative",
                     }}
                 >
                     {audienceSize.map((source) => {
@@ -193,19 +181,11 @@ const AudienceSizeSelector: React.FC<AudienceSizeSelectorProps> = ({
                                         </Typography>
                                     </Box>
                                 </Button>
+
                             </Box>
                         );
                     })}
                 </Box>
-
-                {showHints && isOpenSelect && (
-                    <HintCard
-                        card={hintCard}
-                        positionTop={100}
-                        positionLeft={1070}
-                        toggleClick={toggleDotHintClickBlock1}
-                    />
-                )}
             </Box>
         </Box>
     );

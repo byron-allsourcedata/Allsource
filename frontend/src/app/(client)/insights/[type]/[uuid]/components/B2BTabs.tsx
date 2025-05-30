@@ -7,6 +7,8 @@ import B2BProfessional from "./B2BTabComponents/B2BProfessional";
 import B2BEmployment from "./B2BTabComponents/B2BEmployment";
 import B2BEducation from "./B2BTabComponents/B2BEducation";
 import { B2BData, FieldRankMap } from "@/types/insights";
+import HintCard from "@/app/(client)/components/HintCard";
+import { useInsightsHints } from "../../../context/IntegrationsHintsContext";
 
 type B2BTabsProps = {
   data: B2BData;
@@ -18,6 +20,8 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
     setIndex(newIndex);
   };
+
+  const { insightsHints, cardsInsights, changeInsightsHint, resetInsightsHints } = useInsightsHints();
 
   return (
     <Box>
@@ -50,7 +54,7 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
             mt: 2,
             width: "100%",
             padding: "0rem 5rem 0rem",
-            justifyContent: "start",
+            justifyContent: "center",
             alignItems: "start",
           }}
         >
@@ -62,6 +66,7 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
               minHeight: 0,
               display: "flex",
               alignItems: "center",
+
               padding: "2px",
               "& .MuiTabs-flexContainer": {
                 gap: "4px",
@@ -108,6 +113,62 @@ const B2BTabs: React.FC<B2BTabsProps> = ({ data, fieldRanks }) => {
               }}
             />
           </Tabs>
+        </Box>
+        <Box
+          onClick={e => e.stopPropagation()}
+          sx={{
+            position: "absolute",
+            top: 0,
+            right: "50%",
+            pointerEvents: "auto",
+            overflow: "visible",
+          }}
+        >
+          <HintCard
+    card={cardsInsights.type_statistic}
+    positionTop={-70}
+    positionLeft={160}
+    rightSide={false}
+    isOpenBody={insightsHints.type_statistic.showBody}
+    toggleClick={() => {
+      changeInsightsHint("type_lead",     "showBody","close");
+      changeInsightsHint("category_b2b",  "showBody","close");
+      changeInsightsHint("type_statistic","showBody","toggle");
+    }}
+    closeClick={() =>
+      changeInsightsHint("type_statistic", "showBody", "close")
+    }
+  />
+  <HintCard
+    card={cardsInsights.type_lead}
+    positionTop={-20}
+    positionLeft={-200}
+    rightSide={false}
+    isOpenBody={insightsHints.type_lead.showBody}
+    toggleClick={() => {
+      changeInsightsHint("type_statistic","showBody","close");
+      changeInsightsHint("category_b2b",   "showBody","close");
+      changeInsightsHint("type_lead",      "showBody","toggle");
+    }}
+    closeClick={() =>
+      changeInsightsHint("type_lead", "showBody", "close")
+    }
+  />
+  <HintCard
+    card={cardsInsights.category_b2b}
+    positionTop={70}
+    positionLeft={200}
+    rightSide={false}
+    isOpenBody={insightsHints.category_b2b.showBody}
+    toggleClick={() => {
+      changeInsightsHint("type_statistic","showBody","close");
+      changeInsightsHint("type_lead",     "showBody","close");
+      changeInsightsHint("category_b2b",  "showBody","toggle");
+    }}
+    closeClick={() =>
+      changeInsightsHint("category_b2b", "showBody", "close")
+    }
+  />
         </Box>
       </Box>
 

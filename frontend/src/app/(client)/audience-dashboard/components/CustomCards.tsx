@@ -6,6 +6,9 @@ import ContactsIcon from "@mui/icons-material/Contacts";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import CategoryIcon from "@mui/icons-material/Category";
 import Image from "next/image";
+import HintCard from "../../components/HintCard";
+import { useAudienceDashboardHints } from "../context/AudienceDashboardHintsContext";
+import {  audienceDashboardCards } from "../context/hintsCardsContent";
 
 interface StatCardProps {
   value: number;
@@ -201,8 +204,9 @@ const CustomCards: React.FC<CustomCardsProps> = ({
   pixelCardActive,
   disabledCards
 }) => {
+  const { changeAudienceDashboardHint, audienceDashboardHints, resetAudienceDashboardHints } = useAudienceDashboardHints();
   return (
-    <Grid container wrap="nowrap" sx={{ flexWrap: 'nowrap', }} spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
+    <Grid container wrap="nowrap" sx={{ flexWrap: 'nowrap'}} spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
       <Grid item sx={{ 
         "@media (max-width: 600px)": { minWidth: 320 }, 
         pointerEvents: disabledCards.pixel ? "none" : "auto", 
@@ -213,8 +217,23 @@ const CustomCards: React.FC<CustomCardsProps> = ({
           onClick={() => onCardClick("Pixel Contacts")}
           isActive={selectedCard === "Pixel Contacts" || pixelCardActive}
         />
+          <HintCard
+              card={audienceDashboardCards["pixel"]}
+              positionLeft={0}
+              positionTop={95}
+              isOpenBody={audienceDashboardHints["pixel"].showBody}
+              toggleClick={() => {
+                if (audienceDashboardHints["audience"].showBody) {
+                  changeAudienceDashboardHint("audience", "showBody", "close")
+                }
+                changeAudienceDashboardHint("pixel", "showBody", "toggle")
+              }}
+              closeClick={() => {
+                changeAudienceDashboardHint("pixel", "showBody", "close")
+              }}
+            />
       </Grid>
-      <Grid item sx={{ 
+      <Grid item sx={{
         "@media (max-width: 600px)": { minWidth: 320 }, 
         pointerEvents: disabledCards.audience ? "none" : "auto", 
         opacity: disabledCards.audience ? 0.5 : 1 }} 
@@ -223,6 +242,23 @@ const CustomCards: React.FC<CustomCardsProps> = ({
           value={values.sources}
           onClick={() => onCardClick("Sources")}
           isActive={selectedCard === "Sources"}
+        />
+        <HintCard
+          card={audienceDashboardCards["audience"]}
+          positionTop={95}
+          sx={{
+            left: "calc(100% / 5)",
+        }}
+          isOpenBody={audienceDashboardHints["audience"].showBody}
+          toggleClick={() => {
+            if (audienceDashboardHints["pixel"].showBody) {
+              changeAudienceDashboardHint("pixel", "showBody", "close")
+            }
+            changeAudienceDashboardHint("audience", "showBody", "toggle")
+          }}
+          closeClick={() => {
+            changeAudienceDashboardHint("audience", "showBody", "close")
+          }}
         />
       </Grid>
       <Grid item sx={{ 

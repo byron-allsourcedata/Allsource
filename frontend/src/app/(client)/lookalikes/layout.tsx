@@ -1,13 +1,13 @@
 "use client";
-import { SourcesHintsProvider } from "./context/LookalikesHintsContext";
+import { LookalikeHintsProvider } from "./context/LookalikesHintsContext";
 
 
 export default function Layout({children}: {
   children: React.ReactNode;
 }) {
   return (
-    <SourcesHintsProvider>
+    <LookalikeHintsProvider>
         {children}
-    </SourcesHintsProvider>
+    </LookalikeHintsProvider>
   );
 }
