@@ -11,22 +11,17 @@ import PulsingDotComponent from "./PulsingDot";
 import { CloseIcon } from "@/icon";
 import { useHints } from "@/context/HintsContext";
 import { useTimeout } from "usehooks-ts";
-
-interface HintCardInterface {
-  description: string;
-  title: string;
-  linkToLoadMore: string;
-}
+import { HintCardInterface } from '@/utils/hintsUtils';
 
 interface HintCardProps {
   card: HintCardInterface;
   positionLeft?: number;
   positionTop?: number;
   rightSide?: boolean;
-  isOpenBody?: boolean;
+  isOpenBody: boolean;
   sx?: SxProps;
   toggleClick: () => void;
-  closeClick?: () => void;
+  closeClick: () => void;
 }
 
 const HintCard: React.FC<HintCardProps> = ({
@@ -54,7 +49,7 @@ const HintCard: React.FC<HintCardProps> = ({
       {showHints && (
         <>
           <Backdrop
-            open={isOpenBody ?? true}
+            open={isOpenBody}
             onClick={closeClick}
             sx={{
               zIndex: 1,
@@ -68,6 +63,8 @@ const HintCard: React.FC<HintCardProps> = ({
               left: positionLeft,
               top: positionTop ?? 10,
               width: 400,
+              pointerEvents: isOpenBody? undefined: "none",
+              ...sx,
             }}
           >
             {showHint && (
@@ -95,7 +92,7 @@ const HintCard: React.FC<HintCardProps> = ({
                   <Typography className="first-sub-title" mb={1}>
                     {card.title}
                   </Typography>
-                  <IconButton size="small" onClick={closeClick ?? toggleClick}>
+                  <IconButton size="small" onClick={closeClick}>
                     <CloseIcon />
                   </IconButton>
                 </Box>

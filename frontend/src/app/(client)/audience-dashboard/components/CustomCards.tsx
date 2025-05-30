@@ -217,7 +217,7 @@ const CustomCards: React.FC<CustomCardsProps> = ({
           onClick={() => onCardClick("Pixel Contacts")}
           isActive={selectedCard === "Pixel Contacts" || pixelCardActive}
         />
-            <HintCard
+          <HintCard
               card={audienceDashboardCards["pixel"]}
               positionLeft={0}
               positionTop={95}
@@ -232,7 +232,6 @@ const CustomCards: React.FC<CustomCardsProps> = ({
                 changeAudienceDashboardHint("pixel", "showBody", "close")
               }}
             />
-
       </Grid>
       <Grid item sx={{
         "@media (max-width: 600px)": { minWidth: 320 }, 
@@ -248,7 +247,7 @@ const CustomCards: React.FC<CustomCardsProps> = ({
           card={audienceDashboardCards["audience"]}
           positionTop={95}
           sx={{
-            left: "calc(100%)",
+            left: "calc(100% / 5)",
         }}
           isOpenBody={audienceDashboardHints["audience"].showBody}
           toggleClick={() => {
