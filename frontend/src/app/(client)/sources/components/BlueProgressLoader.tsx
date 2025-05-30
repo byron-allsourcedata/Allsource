@@ -5,6 +5,7 @@ type Progress = {
   total: number;
   processed: number;
   matched?: number;
+  reversed?: boolean;
 };
 
 interface ProgressBarProps {
@@ -17,7 +18,7 @@ const ProgressBar = ({ progress }: ProgressBarProps) => {
     : 0;
 
   return (
-    <div>
+    <div style={{ position: 'relative', width: '100%' }}>
       <LinearProgress
         variant="determinate"
         value={percentage}
@@ -27,9 +28,9 @@ const ProgressBar = ({ progress }: ProgressBarProps) => {
           backgroundColor: "rgba(56, 152, 252, 1)",
           borderRadius: "54px",
           overflow: 'hidden',
+          transform: progress.reversed ? 'rotate(180deg)' : 'none',
           "& .MuiLinearProgress-bar": {
             backgroundColor: "rgba(207, 216, 226, 1)",
-            borderRadius: "54px",
           },
         }}
       />

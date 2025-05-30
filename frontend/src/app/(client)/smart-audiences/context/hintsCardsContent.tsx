@@ -8,7 +8,7 @@ export type CreatedKey = "actions" | "builder";
 const builderHintCards: Record<BuilderKey, HintCardInterface> = {
   useCase: {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+      "Select the use case that aligns with your goals, such as marketing, sales, customer support, or data analysis. Choosing the right use case ensures tailored features and recommendations for a seamless experience.",
     title: "Use case",
     linkToLoadMore:
       "https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-use-case",
@@ -36,14 +36,14 @@ const builderHintCards: Record<BuilderKey, HintCardInterface> = {
   },
   calculate: {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+      "Use the calculation tool to automatically compute results based on your input data. This feature simplifies workflows by delivering accurate sums, averages, or custom formulas efficiently.",
     title: "Calculate",
     linkToLoadMore:
       "https://allsourceio.zohodesk.com/portal/en/kb/articles/calculate",
   },
   name: {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+      "Provide a clear and descriptive name for your item to make it easy to identify later.",
     title: "Name",
     linkToLoadMore:
       "https://allsourceio.zohodesk.com/portal/en/kb/articles/enter-name",

@@ -160,11 +160,12 @@ class SubscriptionService:
         }
         result = self.plans_persistence.get_user_subscription_with_trial_status(user_id)
         if result:
-            user_subscription, is_free_trial, trail_days, currency, price, alias = result
+            user_subscription, is_free_trial, trail_days, currency, price, alias, lead_credits = result
             result_dict['subscription'] = user_subscription
             result_dict['artificial_trial_days'] = trail_days
             result_dict['is_artificial_status'] = is_free_trial
             result_dict['alias'] = alias
+            result_dict['lead_credits'] = lead_credits
 
         return result_dict
 

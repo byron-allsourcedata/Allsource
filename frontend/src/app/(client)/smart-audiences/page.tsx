@@ -170,7 +170,7 @@ const columns = [
   {
     key: "created_date",
     label: "Created",
-    widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+    widths: { width: "12vw", minWidth: "190px", maxWidth: "20vw" },
     sortable: true,
   },
   {
@@ -1884,7 +1884,14 @@ const SmartAudiences: React.FC = () => {
                                           )}
                                         </TableCell>
                                         {/* Created Column */}
-                                        <TableCell
+                                        <TableCustomCell 
+                                          rowExample={
+                                            dayjs(row.created_at).format(
+                                              "MMM D, YYYY"
+                                            )
+                                          }
+                                        />
+                                        {/* <TableCell
                                           sx={{
                                             ...smartAudiences.table_array,
                                             position: "relative",
@@ -1896,7 +1903,7 @@ const SmartAudiences: React.FC = () => {
                                             )}
                                           </Box>
                                           <Box>{row.created_by}</Box>
-                                        </TableCell>
+                                        </TableCell> */}
 
                                         {/* Total Universe Column */}
                                         <TableCell
