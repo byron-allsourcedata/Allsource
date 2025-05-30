@@ -212,6 +212,8 @@ const IntegrationBox = ({
   return (
     <Box
       sx={{
+        height: "calc(100vh - 4.25rem)",
+        overflow: "auto",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -824,7 +826,6 @@ const UserIntegrationsList = ({
           />
         </Box>
 
-        {/* HintCard */}
         <HintCard
           card={cards.search}
           positionLeft={530}
