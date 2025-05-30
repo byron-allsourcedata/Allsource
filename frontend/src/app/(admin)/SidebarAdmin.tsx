@@ -7,8 +7,8 @@ import {
     ListItemText,
     ListItemButton
 } from '@mui/material';
-import {useRouter} from 'next/navigation';
-import {usePathname} from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import LeadsIcon from '@mui/icons-material/People';
 import CategoryIcon from '@mui/icons-material/Category';
 import FeaturedPlayListIcon from '@mui/icons-material/FeaturedPlayList';
@@ -26,7 +26,7 @@ const sidebarStyles = {
         backgroundColor: 'rgba(255, 255, 255, 1)',
         borderRight: '1px solid rgba(228, 228, 228, 1)',
         height: 'calc(100vh - 4.25rem)',
-        maxWidth: '146px',
+        maxWidth: '168px',
         display: 'flex',
         overflow: 'hidden',
         flexDirection: 'column',
@@ -101,7 +101,7 @@ const sidebarStyles = {
     },
     ListItem: {
         minHeight: '4.5em',
-        color:'rgba(59, 59, 59, 1)',
+        color: 'rgba(59, 59, 59, 1)',
         ml: '3px'
     },
     activeItem: {
@@ -151,9 +151,9 @@ const SidebarAdmin: React.FC = () => {
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <LeadsIcon />
                     </ListItemIcon>
-                    <ListItemText primary="Users" />
+                    <ListItemText primary="Admin" sx={{ pr: 5 }} />
                 </ListItemButton>
-                <ListItemButton
+                {/* <ListItemButton
                     onClick={() => handleNavigation('/admin/partners')}
                     sx={isActive('/admin/partners') ? sidebarStyles.activeItem : sidebarStyles.ListItem}
                 >
@@ -188,7 +188,7 @@ const SidebarAdmin: React.FC = () => {
                         <FeaturedPlayListIcon />
                     </ListItemIcon>
                     <ListItemText primary="Payouts" />
-                </ListItemButton>
+                </ListItemButton> */}
             </List>
         </Box>
     );

@@ -894,6 +894,10 @@ const UserIntegrationsList = ({
                 }}
               >
                 {isFirst && (
+                  <Box
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{}}
+                >
                   <HintCard
                     card={cards.integration}
                     positionLeft={isNarrow ? 150 : 125}
@@ -910,6 +914,8 @@ const UserIntegrationsList = ({
                       changeIntegrationHint("integration", "showBody", "close")
                     }
                   />
+                </Box>
+                  
                 )}
       
                 <IntegrationBox
