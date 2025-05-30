@@ -15,6 +15,7 @@ import { showErrorToast } from "@/components/ToastNotification";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { SliderProvider } from "@/context/SliderContext";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
+import DomainButtonSelect from "../components/NavigationDomainButton";
 
 const centerContainerStyles = {
     display: "flex",
@@ -162,29 +163,19 @@ const Suppressions: React.FC = () => {
                                 display: "flex",
                                 flexDirection: "row",
                                 alignItems: "center",
-                                width: "10%",
                                 gap: 1,
                                 "@media (max-width: 600px)": { mb: 2 },
                                 "@media (max-width: 440px)": { mb: 1 },
                             }}
                         >
-                            <Typography className="first-sub-title">
-                                Suppressions
-                            </Typography>
-                            <Box
-                                sx={{
-                                    "@media (max-width: 600px)": {
-                                        display: "none",
-                                    },
-                                }}
-                            >
-                                <CustomTooltip
-                                    title={
-                                        "Suppressions help manage and filter out contacts or data points that should not receive communications or updates."
-                                    }
-                                    linkText="Learn more"
-                                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/suppressions"
-                                />
+                            <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                        <Typography className='first-sub-title' sx={{textWrap: "nowrap"}}>
+                                            Suppressions
+                                        </Typography>
+                                        <CustomTooltip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
+                                    </Box>
+                                    <DomainButtonSelect />
                             </Box>
                         </Box>
                         <Box
