@@ -27,6 +27,8 @@ from services.partners import PartnersService
 from schemas.integrations.integrations import ShopifyOrBigcommerceCredentials
 from services.payments_plans import PaymentsPlans
 from . import stripe_service
+from .crm.hubspot.api import HubspotAPI, NewContactCRM
+from .crm.service import CrmService
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
 from .sendgrid import SendgridHandler
 from .stripe_service import get_stripe_payment_url
@@ -41,7 +43,8 @@ class UsersAuth:
     def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
                  send_grid_persistence_service: SendgridPersistence, subscription_service: SubscriptionService,
                  plans_persistence: PlansPersistence, integration_service: IntegrationService, partners_service: PartnersService,
-                 domain_persistence: UserDomainsPersistence, referral_persistence_service: ReferralDiscountCodesPersistence
+                 domain_persistence: UserDomainsPersistence, referral_persistence_service: ReferralDiscountCodesPersistence,
+                 crm: CrmService
                  ):
         self.db = db
         self.payments_service = payments_service
@@ -53,6 +56,7 @@ class UsersAuth:
         self.partners_service = partners_service
         self.domain_persistence = domain_persistence
         self.referral_persistence_service = referral_persistence_service
+        self.crm = crm
         self.UNLIMITED = -1
         self.FREE_TRIAL_DAYS = 14
 
@@ -790,7 +794,10 @@ class UsersAuth:
                     'status': VerifyToken.EMAIL_ALREADY_VERIFIED,
                     'user_token': user_token
                 }
-            self.user_persistence_service.email_confirmed(check_user_object.get('id'))
+
+
+            self.__confirm_email(check_user_object)
+
             if check_user_object.get('team_owner_id'):
                 token_info = {
                     "id": check_user_object.get('team_owner_id'),
@@ -806,6 +813,17 @@ class UsersAuth:
                 'user_token': user_token
             }
         return {'status': VerifyToken.INCORRECT_TOKEN}
+
+
+    def __confirm_email(self, check_user_object: dict):
+        self.user_persistence_service.email_confirmed(check_user_object.get('id'))
+        self.crm.add_contact(
+            NewContactCRM(
+                email=check_user_object.get('email'),
+                lastname=check_user_object.get('full_name')
+            )
+        )
+
 
     def reset_password(self, reset_password_form: ResetPasswordForm):
         if reset_password_form:
