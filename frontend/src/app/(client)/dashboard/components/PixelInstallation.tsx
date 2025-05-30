@@ -11,9 +11,10 @@ import GoogleTagPopup from "../components/GoogleTagPopup";
 import CRMPopup from "./CMSPopup";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
-import { useHints } from "@/context/HintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
 import { useRef } from "react";
+import { pixelInstallationHintCards } from "./context/hintsCardsContent";
+import { useGetStartedHints } from "./context/PixelInstallHintsContext";
 
 interface HintCardInterface {
   description: string;
@@ -32,8 +33,7 @@ interface PixelInstallationProps {
 const PixelInstallation: React.FC<PixelInstallationProps> = ({
   onInstallSelected,
 }) => {
-  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
-    useHints();
+  const { pixelInstallationHints, resetPixelInstallationHints, changePixelInstallationHint } = useGetStartedHints();
   const { setShowSlider } = useSlider();
   const [showHint, setShowHint] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -211,15 +211,6 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
     }
   };
 
-  const hintCards: HintCardInterface[] = [
-    {
-      description:
-        "Choose the installation method that works best for your website. You can use Google Tag Manager, upload the code manually, or install it through a CMS like Shopify, WordPress, or BigCommerce.",
-      title: "Choose the installation method",
-      linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/what-is-pixel-installation",
-    },
-  ];
 
   return (
     <Box
@@ -283,15 +274,15 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         >
           Select how you would like to install the pixel
         </Typography>
-        {/* {pixelSetupHints[4].show && !showHint && (
+        {pixelInstallationHints["chooseInstallationMethod"]?.show && !showHint && (
           <HintCard
-            card={hintCards[0]}
+            card={pixelInstallationHintCards["chooseInstallationMethod"]}
             positionLeft={350}
-            isOpenBody={pixelSetupHints[4].showBody}
-            toggleClick={() => changePixelSetupHint(4, "showBody", "toggle")}
-            closeClick={() => changePixelSetupHint(4, "showBody", "close")}
+            isOpenBody={pixelInstallationHints["chooseInstallationMethod"].showBody}
+            toggleClick={() => changePixelInstallationHint("chooseInstallationMethod", "showBody", "toggle")}
+            closeClick={() => changePixelInstallationHint("chooseInstallationMethod", "showBody", "close")}
           />
-        )} */}
+        )}
       </Box>
       <Grid container md={12}>
         <Box
