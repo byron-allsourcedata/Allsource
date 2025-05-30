@@ -29,6 +29,7 @@ import {
   LinearProgress,
   Chip,
   Tooltip,
+  Link,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
@@ -61,6 +62,7 @@ import { tableHintCards } from "./context/hintsCardsContent";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
+import SmartCell from "@/components/table/SmartCell";
 
 interface Source {
   id: string;
@@ -745,6 +747,7 @@ const Sources: React.FC = () => {
 
   return (
     <>
+    
       {loading && <CustomizedProgressBar />}
       <Box
         sx={{
@@ -1310,8 +1313,31 @@ const Sources: React.FC = () => {
                                         },
                                       }}
                                     >
+                                      <SmartCell
+                                        loading={loaderForTable}
+                                        sticky={true}
+                                        tooltip="auto"
+                                        sx={{
+                                          zIndex: 9,
+                                          position: "sticky",
+                                          left: "0",
+                                          backgroundColor: '#fff',
+                                          boxShadow: isScrolledX ? '3px 0px 3px #00000033' : 'none',
+                                        }}
+                                      >
+                                        <Link
+                                          href={url}
+                                          underline="none"
+                                          sx={{ 
+                                            color: isDisabled? 'rgba(95, 99, 104, 1)': 'rgba(56, 152, 252, 1)',
+                                            cursor: isDisabled? 'inherit': 'pointer',
+                                          }}
+                                        >
+                                          {row.name}
+                                        </Link>
+                                      </SmartCell>
                                       {/* Name Column */}
-                                      <TableCustomCell
+                                      {/* <TableCustomCell
                                         rowExample={row.name}
                                         loaderForTable={loaderForTable}
                                         customCellStyles={{
@@ -1326,7 +1352,7 @@ const Sources: React.FC = () => {
                                             : "none",
                                         }}
                                         href={url}
-                                      />
+                                      /> */}
 
                                       {/* Target Type Column */}
                                       <TableCell

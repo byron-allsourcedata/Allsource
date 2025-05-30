@@ -220,24 +220,26 @@ const Insights = () => {
         {sourceData.length > 0 || lookalikeData.length > 0 ? (
           <Box sx={{
             display: 'flex',
-            justifyContent: 'center',
             alignItems: 'center',
+            // justifyContent: "flex-start",
+            flexDirection: 'column',
           }}>
             <Box
               sx={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                width: '100%',
                 flexWrap: "wrap",
                 gap: "15px",
               }}
             >
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
+                  width: '55%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
                   gap: 1,
                   "@media (max-width: 900px)": {
                     paddingLeft: 1,
