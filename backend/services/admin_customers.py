@@ -44,22 +44,40 @@ class AdminCustomersService:
         self.admin_persistence = admin_persistence
 
     def get_admin_users(self, page, per_page):
-        admin_users, total_count = self.user_persistence.get_admin_users(page, per_page)
+        admin_users = self.user_persistence.get_admin_users()
+        invitations_admin = self.admin_persistence.get_pending_invitations_admin()
         users_dict = [
-            dict(
-                id=user.id,
-                email=user.email,
-                full_name=user.full_name,
-                created_at=user.created_at,
-                last_login=user.last_login,
-                invited_by_email=user.invited_by_email,
-                role=user.role,
-            )
+            {
+                'id': user.id,
+                'email': user.email,
+                'full_name': user.full_name,
+                'created_at': user.created_at,
+                'last_login': user.last_login,
+                'invited_by_email': user.invited_by_email,
+                'role': user.role,
+                'type': 'user'
+            }
             for user in admin_users
         ]
+        invitations_admin_dicts = [
+            {
+                'id': inv.id,
+                'email': inv.email,
+                'full_name': inv.full_name,
+                'created_at': inv.date_invited_at,
+                'invited_by_email': inv.invited_by_email,
+                'type': 'invitation'
+            }
+            for inv in invitations_admin
+        ]
+        combined = users_dict + invitations_admin_dicts
+        combined.sort(key=lambda x: x.get('created_at'), reverse=True)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated = combined[start:end]
         return {
-            'users': users_dict,
-            'count': total_count
+            'users': paginated,
+            'count': len(combined)
         }
 
     def generate_access_token(self, user: dict, user_account_id: int):
@@ -99,7 +117,7 @@ class AdminCustomersService:
             template_id=template_id,
             template_placeholder={"full_name": name, "link": confirm_email_url}
         )
-        self.admin_persistence.save_pending_invitations_admin(email=email,
+        self.admin_persistence.save_pending_invitations_admin(email=email, full_name=name,
                                                               invited_by_id=user.get('id'), md5_hash=md5_hash)
         return {
             'status': AdminStatus.SUCCESS

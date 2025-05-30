@@ -97,14 +97,6 @@ const Signin: React.FC = () => {
     validateField(name, value);
   };
 
-  const checkPartner = (isPartner: boolean) => {
-    if (isPartner) {
-      //router.push("/partners");
-    } else {
-      //router.push("/audience-dashboard");
-    }
-  };
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const newErrors: { [key: string]: string } = {};
@@ -157,7 +149,7 @@ const Signin: React.FC = () => {
           switch (responseData.status) {
             case "SUCCESS":
               await fetchUserData();
-              checkPartner(response.data.is_partner);
+              router.push("/audience-dashboard");
               break;
             case "NON_SHOPIFY_ACCOUNT":
               showErrorToast("non shopify account");

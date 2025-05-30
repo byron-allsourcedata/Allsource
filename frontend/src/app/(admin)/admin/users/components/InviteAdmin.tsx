@@ -61,9 +61,9 @@ const InviteAdmin: React.FC<FormUploadPopupProps> = ({ open, onClose }) => {
                 if (response.data.status) {
                     if (response.data.status === "SUCCESS") {
                         showToast("Admin successfully submitted!");
-                    }else if (response.data.status === "ALREADY_EXISTS"){
+                    } else if (response.data.status === "ALREADY_EXISTS") {
                         showErrorToast("Admin already exists!")
-                    }else{
+                    } else {
                         showErrorToast("Failed to submit the invite. Please try again.");
                     }
                 }

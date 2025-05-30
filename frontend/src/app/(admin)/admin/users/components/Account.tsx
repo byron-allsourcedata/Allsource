@@ -1,6 +1,6 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
-import { Box, Typography, TextField, Button, Tabs, Tab, Grid, Pagination, Popover, Paper, IconButton, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { Box, Typography, TextField, Button, Tabs, Tab, Grid, Chip, Popover, Paper, IconButton, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { useEffect, useState } from "react";
 import { MoreHoriz } from "@mui/icons-material";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -11,15 +11,11 @@ import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import Image from "next/image";
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CustomTablePagination from "@/components/CustomTablePagination";
-import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import InviteAdmin from "./InviteAdmin";
 import SearchIcon from '@mui/icons-material/Search';
-import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
-import CustomCards from "./CustomCards";
 import { useRouter } from "next/navigation";
 import { useUser } from '@/context/UserContext';
-import { Solitreo } from "next/font/google";
 import { fetchUserData } from "@/services/meService";
 import FilterPopup from "./FilterPopup";
 
@@ -38,6 +34,7 @@ interface UserData {
     sources_count?: number;
     lookalikes_count?: number;
     credits_count?: number
+    type?: string
 }
 
 
@@ -49,6 +46,7 @@ interface tableHeaders {
 
 interface TableBodyUserProps {
     data: UserData[],
+    currentPage: number
     tableHeaders: tableHeaders[],
     setLoading: (state: boolean) => void;
 }
@@ -105,7 +103,7 @@ const TableHeader: React.FC<{ onSort: (field: string) => void, sortField?: strin
     );
 };
 
-const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, setLoading }) => {
+const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, setLoading, currentPage }) => {
     const router = useRouter();
     const { setBackButton, triggerBackButton } = useUser();
 
@@ -252,14 +250,14 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                             justifyContent: "space-between",
                             left: 0,
                             zIndex: 1,
-                            cursor: isCurrentUser ? "default" : "pointer",
+                            cursor: (isCurrentUser || row.type != 'user') ? "default" : "pointer",
                             backgroundColor: "#fff",
                             "&:hover .icon-button": {
-                                display: isCurrentUser ? "none" : "flex",
+                                display: (isCurrentUser || row.type != 'user') ? "none" : "flex",
                             },
                         }}
                         onClick={() => {
-                            if (!isCurrentUser) {
+                            if ((!isCurrentUser && row.type == 'user')) {
                                 handleLogin(row.id);
                             }
                         }}
@@ -275,11 +273,29 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                 width: "100%",
                             }}
                         >
-                            <Box sx={{ color: isCurrentUser ? "#000" : "rgba(56, 152, 252, 1)" }}>
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    color: (isCurrentUser || row.type != 'user') ? "#000" : "rgba(56, 152, 252, 1)",
+                                }}
+                            >
                                 {row.full_name}
+                                {row.type === 'invitation' && (
+                                    <Chip
+                                        label="Invitation"
+                                        size="small"
+                                        sx={{
+                                            fontSize: "0.7rem",
+                                            height: "20px",
+                                            backgroundColor: "#FFE0B2",
+                                            color: "#BF360C",
+                                            ml: 1,
+                                        }}
+                                    />
+                                )}
                             </Box>
-
-                            {!isCurrentUser && (
+                            {(!isCurrentUser && row.type == 'user') && (
                                 <IconButton
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -345,7 +361,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                     </Typography>
                 );
             case 'actions':
-                if (row.role.includes('admin')) {
+                if (currentPage == 0) {
                     return (
                         <>
                             <IconButton
@@ -397,7 +413,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                             </Popover>
                         </>
                     );
-                } else if (row.role.includes('customer')) {
+                } else if (currentPage == 1) {
                     return (
                         <>
                             <IconButton
@@ -450,7 +466,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                         </>
                     );
                 } else {
-                    return null; // или какой-то дефолтный UI
+                    return null;
                 }
 
         }
@@ -469,46 +485,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
             ))}
         </TableBody>
     );
-};
-
-const getStatusStyle = (status: string) => {
-    switch (status) {
-        case 'Paid':
-            return {
-                background: 'rgba(234, 248, 221, 1)',
-                color: 'rgba(43, 91, 0, 1)',
-            };
-        case 'Active':
-            return {
-                background: 'rgba(234, 248, 221, 1)',
-                color: 'rgba(43, 91, 0, 1)',
-            };
-        case 'Inactive':
-            return {
-                background: 'rgba(236, 236, 236, 1)',
-                color: 'rgba(74, 74, 74, 1)',
-            };
-        case 'Pending':
-            return {
-                background: 'rgba(236, 236, 236, 1)',
-                color: 'rgba(74, 74, 74, 1)',
-            };
-        case 'Signup':
-            return {
-                background: 'rgba(241, 241, 249, 1)',
-                color: 'rgba(56, 152, 252, 1)',
-            };
-        case 'Free trial':
-            return {
-                background: 'rgba(235, 243, 254, 1)',
-                color: 'rgba(20, 110, 246, 1)',
-            };
-        default:
-            return {
-                background: 'transparent',
-                color: 'inherit',
-            };
-    }
 };
 
 interface PartnersAccountsProps {
@@ -546,7 +522,7 @@ interface FilterParams {
 }
 
 
-const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, onBack, is_admin, fromMain, loading, setLoading, tabIndex, handleTabChange }) => {
+const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, onBack, is_admin, setLoading, tabIndex, handleTabChange }) => {
     const tableHeaders = is_admin
         ? [
             { key: 'name', label: 'Account name', sortable: false },
@@ -572,27 +548,20 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     const [accounts, setAccounts] = useState<AccountData[]>([]);
     const router = useRouter();
     const [page, setPage] = useState(0);
-    const { setBackButton, triggerBackButton } = useUser();
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
     const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
     const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
-    const [calendarAnchorEl, setCalendarAnchorEl] = useState<null | HTMLElement>(null);
-    const isCalendarOpen = Boolean(calendarAnchorEl);
     const [currentPage, setCurrentPage] = useState(1);
     const [isSliderOpen, setSliderOpen] = useState(false);
-    const [totalPages, setTotalPage] = useState(1);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-    const [formattedDates, setFormattedDates] = useState<string>('');
     const [joinDate, setJoinDate] = useState<string[]>([]);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
     const [lastLoginDate, setLastLoginDate] = useState<string[]>([]);
     const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain ?? { start: null, end: null });
-    const [selectedDateLabel, setSelectedDateLabel] = useState<string>('');
     const allowedRowsPerPage = [10, 25, 50, 100];
     const [userData, setUserData] = useState<UserData[]>([]);
     const [search, setSearch] = useState("");
-    const [errorResponse, setErrosResponse] = useState(false);
 
     useEffect(() => {
         const accessToken = localStorage.getItem('token');
@@ -636,47 +605,6 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     const handleFormClosePopup = () => {
         setSliderOpen(false);
     };
-
-    const handleCalendarClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setCalendarAnchorEl(event.currentTarget);
-    };
-
-    const handleCalendarClose = () => {
-        setCalendarAnchorEl(null);
-    };
-    const handleDateLabelChange = (label: string) => {
-        setSelectedDateLabel(label);
-    };
-
-    const handleDateChange = (dates: { start: Date | null; end: Date | null }) => {
-        const { start, end } = dates;
-        if (start && end) {
-            const formattedStart = dayjs(start).format('MMM D');
-            const formattedEnd = dayjs(end).format('MMM D, YYYY');
-
-            setFormattedDates(`${formattedStart} - ${formattedEnd}`);
-        } else if (start) {
-            const formattedStart = dayjs(start).format('MMM D, YYYY');
-            setFormattedDates(formattedStart);
-        } else if (end) {
-            const formattedEnd = dayjs(end).format('MMM D, YYYY');
-            setFormattedDates(formattedEnd);
-        } else {
-            setFormattedDates('');
-        }
-    };
-
-    const handleApply = (dates: { start: Date | null; end: Date | null }) => {
-        if (dates.start && dates.end) {
-            setAppliedDates(dates);
-            setCalendarAnchorEl(null);
-            handleCalendarClose();
-        }
-        else {
-            setAppliedDates({ start: null, end: null })
-        }
-    };
-
 
     const handlePageChange = (event: React.MouseEvent<HTMLButtonElement> | null, newPage: number) => {
         setPage(newPage);
@@ -918,59 +846,59 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                             </Button>
                         )}
                         <Button
-                                onClick={handleFilterPopupOpen}
-                                aria-controls={undefined}
-                                aria-haspopup="true"
-                                aria-expanded={undefined}
-                                sx={{
-                                    textTransform: 'none',
-                                    color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
-                                    border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                    borderRadius: '4px',
-                                    padding: '8px',
-                                    opacity: '1',
-                                    minWidth: 'auto',
-                                    position: 'relative',
-                                    '@media (max-width: 900px)': {
-                                        border: 'none',
-                                        padding: 0
-                                    },
-                                    '&:hover': {
-                                        backgroundColor: 'transparent',
-                                        border: '1px solid rgba(56, 152, 252, 1)',
-                                        color: 'rgba(56, 152, 252, 1)',
-                                        '& .MuiSvgIcon-root': {
-                                            color: 'rgba(56, 152, 252, 1)'
-                                        }
+                            onClick={handleFilterPopupOpen}
+                            aria-controls={undefined}
+                            aria-haspopup="true"
+                            aria-expanded={undefined}
+                            sx={{
+                                textTransform: 'none',
+                                color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
+                                border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                borderRadius: '4px',
+                                padding: '8px',
+                                opacity: '1',
+                                minWidth: 'auto',
+                                position: 'relative',
+                                '@media (max-width: 900px)': {
+                                    border: 'none',
+                                    padding: 0
+                                },
+                                '&:hover': {
+                                    backgroundColor: 'transparent',
+                                    border: '1px solid rgba(56, 152, 252, 1)',
+                                    color: 'rgba(56, 152, 252, 1)',
+                                    '& .MuiSvgIcon-root': {
+                                        color: 'rgba(56, 152, 252, 1)'
                                     }
-                                }}
-                            >
-                                <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
+                                }
+                            }}
+                        >
+                            <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
 
-                                {selectedFilters.length > 0 && (
-                                    <Box
-                                        sx={{
-                                            position: 'absolute',
-                                            top: 6,
-                                            right: 8,
-                                            width: '10px',
-                                            height: '10px',
-                                            backgroundColor: 'red',
-                                            borderRadius: '50%',
-                                            '@media (max-width: 900px)': {
-                                                top: -1,
-                                                right: 1
-                                            }
-                                        }}
-                                    />
-                                )}
-                            </Button>
-                            <FilterPopup open={filterPopupOpen} 
-                        onClose={handleFilterPopupClose} 
-                        onApply={handleApplyFilters} 
-                        joinDate={joinDate || []} 
-                        lastLoginDate={lastLoginDate || []} />
-                            
+                            {selectedFilters.length > 0 && (
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        top: 6,
+                                        right: 8,
+                                        width: '10px',
+                                        height: '10px',
+                                        backgroundColor: 'red',
+                                        borderRadius: '50%',
+                                        '@media (max-width: 900px)': {
+                                            top: -1,
+                                            right: 1
+                                        }
+                                    }}
+                                />
+                            )}
+                        </Button>
+                        <FilterPopup open={filterPopupOpen}
+                            onClose={handleFilterPopupClose}
+                            onApply={handleApplyFilters}
+                            joinDate={joinDate || []}
+                            lastLoginDate={lastLoginDate || []} />
+
                     </Box>
                 </Box>
                 <Grid container direction="column" justifyContent="flex-start" spacing={2} sx={{ minHeight: '100vh' }}>
@@ -978,7 +906,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                         <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }}>
                             <Table stickyHeader>
                                 <TableHeader onSort={handleSortRequest} tableHeaders={tableHeaders} sortField={orderBy} sortOrder={order} />
-                                <TableBodyClient data={userData} tableHeaders={tableHeaders} setLoading={setLoading} />
+                                <TableBodyClient data={userData} tableHeaders={tableHeaders} setLoading={setLoading} currentPage={currentPage} />
                             </Table>
 
                         </TableContainer>

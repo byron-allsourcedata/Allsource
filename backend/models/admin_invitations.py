@@ -15,6 +15,10 @@ class AdminInvitation(Base):
         primary_key=True,
         nullable=False,
     )
+    full_name = Column(
+        VARCHAR(64),
+        nullable=False,
+    )
     email = Column(
         VARCHAR(64),
         nullable=False,

@@ -237,7 +237,7 @@ class UserPersistence:
             for user in users
         ]
 
-    def get_admin_users(self, page, per_page):
+    def get_admin_users(self):
         Inviter = aliased(Users)
         query = self.db.query(
             Users.id,
@@ -249,9 +249,8 @@ class UserPersistence:
             Users.role
         ) .outerjoin(Inviter, Users.invited_by_id == Inviter.id)\
             .filter(Users.role.contains(['admin']))
-        total_count = query.count()
-        users = query.order_by(desc(Users.id)).offset((page - 1) * per_page).limit(per_page).all()
-        return users, total_count
+        users = query.order_by(desc(Users.id)).limit(100).all()
+        return users
 
     def get_customer_users(self, page, per_page):
         query = self.db.query(

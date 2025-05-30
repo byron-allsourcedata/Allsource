@@ -29,6 +29,7 @@ class AdminPersistence:
             self,
             email: str,
             invited_by_id: int,
+            full_name: str,
             md5_hash: str,
     ):
         existing_invitation = self.db.query(AdminInvitation).filter(
@@ -42,6 +43,7 @@ class AdminPersistence:
         new_invitation = AdminInvitation(
             email=email,
             invited_by_id=invited_by_id,
+            full_name=full_name,
             token=md5_hash
         )
         self.db.add(new_invitation)
@@ -73,3 +75,19 @@ class AdminPersistence:
         self.db.flush()
         self.db.delete(admin_invitation)
         self.db.commit()
+
+    def get_pending_invitations_admin(self):
+        Inviter = aliased(Users)
+        return (
+            self.db.query(
+                AdminInvitation.id,
+                AdminInvitation.email,
+                AdminInvitation.full_name,
+                AdminInvitation.date_invited_at,
+                Inviter.email.label("invited_by_email"),
+                AdminInvitation.invited_by_id
+            )
+            .outerjoin(Inviter, AdminInvitation.invited_by_id == Inviter.id)
+            .limit(100)
+            .all()
+        )
