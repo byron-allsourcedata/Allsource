@@ -1,3 +1,4 @@
+// SmartCell.tsx
 import React, {
     ReactNode,
     useRef,
@@ -14,10 +15,12 @@ import {
     Skeleton,
     SxProps,
     TooltipProps,
+    Theme,
 } from '@mui/material';
+import { height } from '@mui/system';
 
 export const table_array = {
-    position: 'relative', 
+    position: 'relative',
     fontFamily: 'Roboto',
     fontSize: '12px',
     fontWeight: 400,
@@ -25,18 +28,28 @@ export const table_array = {
     textAlign: 'left',
     color: 'rgba(95, 99, 104, 1)',
     '&::after': {
-      content: '""',
-      display: 'block',
-      position: 'absolute',
-      top: 15,
-      bottom: 15,
-      right: 0,
-      width: '1px',
-      height: 'calc(100% - 30px)',
-      backgroundColor: 'rgba(235, 235, 235, 1)',
+        content: '""',
+        display: 'block',
+        position: 'absolute',
+        top: 15,
+        bottom: 15,
+        right: 0,
+        width: '1px',
+        height: 'calc(100% - 30px)',
+        backgroundColor: 'rgba(235, 235, 235, 1)',
     },
-  } as const;
-  
+    '&.sticky-cell': {
+        '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            left: 0,
+            width: '1px',
+            backgroundColor: 'rgba(235, 235, 235, 1)',
+        },
+    },
+} as const;
 
 export const baseCellStyles = {
     overflow: 'hidden',
@@ -44,78 +57,125 @@ export const baseCellStyles = {
     whiteSpace: 'nowrap',
 } as const;
 
-export interface SmartCellProps<V = unknown> {
-    value?: V;
-    children?: ReactNode;
-    render?: (value: V) => ReactNode;
-
+export interface TooltipOptions {
+    content: React.ReactNode;
+    always?: boolean;
+    props?: Omit<TooltipProps, 'title' | 'children'>;
+}
+export interface CellOptions {
+    key?: React.Key;
+    sx?: SxProps<Theme>;
+    className?: string;
+    onClick?: (e: MouseEvent) => void;
+    style?: React.CSSProperties;
+}
+export interface ContentOptions {
+    sx?: SxProps<Theme>;
+    onClick?: (e: MouseEvent) => void;
     loading?: boolean | ReactNode;
+}
 
-    tooltip?: 'auto' | 'always' | 'never';
-    tooltipProps?: Omit<TooltipProps, 'title' | 'children'>;
-
-    onCellClick?: (e: MouseEvent, value: V | undefined) => void;
-    onContentClick?: (e: MouseEvent, value: V | undefined) => void;
-
-    sticky?: boolean;
-
-    sx?: SxProps;
-    contentSx?: SxProps;
+export interface SmartCellProps {
+    children?: ReactNode;
+    render?: () => ReactNode;
+    tooltipOptions?: TooltipOptions;
+    cellOptions?: CellOptions;
+    contentOptions?: ContentOptions;
 }
 
 const SmartCell: FC<SmartCellProps> = ({
-    value,
     children,
     render,
-    loading,
-    tooltip = 'auto',
-    tooltipProps,
-    onCellClick,
-    onContentClick,
-    sticky,
-    sx,
-    contentSx,
+    tooltipOptions,
+    cellOptions = {},
+    contentOptions = {},
 }) => {
-    const rawContent =
-        children ?? (render ? render(value as any) : (value as ReactNode));
+    const rawContent = children ?? (render ? render() : "");
+    const isString = typeof rawContent === "string";
 
-    const isString = typeof rawContent === 'string';
-
-    const ref = useRef<HTMLElement | null>(null);
-    const [overflow, setOverflow] = useState(false);
-
+    const textRef = useRef<HTMLDivElement>(null);
+    const [isOverflow, setIsOverflow] = useState(false);
     useLayoutEffect(() => {
-        if (!ref.current) return;
-        const el = ref.current;
-        const check = () =>
-            setOverflow(el.scrollWidth > el.clientWidth && isString);
+        if (!textRef.current) return;
+        const el = textRef.current;
+        const check = () => setIsOverflow(el.scrollWidth > el.clientWidth);
         check();
-
-        const ro = new ResizeObserver(check);
-        ro.observe(el);
-        return () => ro.disconnect();
-    }, [rawContent, isString]);
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, [rawContent]);
 
     const contentNode = isString ? (
         <Typography
-            ref={ref as React.RefObject<HTMLSpanElement>}
-            component="span"
-            onClick={(e) => onContentClick?.(e, value)}
-            sx={{ ...baseCellStyles, ...contentSx }}
+            ref={textRef}
+            component="div"
+            sx={{ display: 'inline-block', width: '100%', ...table_array, ...baseCellStyles, ...contentOptions.sx }}
+            onClick={contentOptions.onClick}
         >
             {rawContent as string}
         </Typography>
     ) : (
-        <Box ref={ref} sx={contentSx} onClick={(e) => onContentClick?.(e, value)}>
+        <Box
+            ref={textRef}
+            sx={{ display: 'inline-block', width: '100%', ...baseCellStyles, ...contentOptions.sx }}
+            onClick={contentOptions.onClick}
+        >
             {rawContent}
         </Box>
     );
 
-    const needTooltip =
-        tooltip === 'always' || (tooltip === 'auto' && overflow && isString);
+    let needTooltip = false;
+    let tooltipContent: React.ReactNode = null;
+    let tooltipPropsFinal: Omit<TooltipProps, 'title' | 'children'> | undefined;
+
+    if (tooltipOptions) {
+        needTooltip = tooltipOptions.always ?? isOverflow;
+        tooltipContent = tooltipOptions.content;
+        tooltipPropsFinal = tooltipOptions.props;
+    } else {
+        needTooltip = false;
+    }
 
     const maybeTooltip = needTooltip ? (
-        <Tooltip title={rawContent as string} {...tooltipProps}>
+        <Tooltip
+            title={
+                <Box
+                    sx={{
+                        backgroundColor: '#fff',
+                        m: 0,
+                        p: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                    }}
+                >
+                    <Typography
+                        className="table-data"
+                        component="div"
+                        color="inherit"
+                        sx={{ fontSize: '12px !important' }}
+                    >
+                        {tooltipContent!}
+                    </Typography>
+                </Box>
+            }
+            sx={{ marginLeft: '0.5rem !important' }}
+            componentsProps={{
+                tooltip: {
+                    sx: {
+                        backgroundColor: '#fff',
+                        color: '#000',
+                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                        border: '0.2px solid rgba(255, 255, 255, 1)',
+                        borderRadius: '4px',
+                        maxHeight: '100%',
+                        maxWidth: '500px',
+                        padding: '11px 10px',
+                        marginLeft: '0.5rem !important',
+                    },
+                },
+            }}
+            placement="right"
+            {...tooltipPropsFinal}
+        >
             {contentNode}
         </Tooltip>
     ) : (
@@ -123,23 +183,24 @@ const SmartCell: FC<SmartCellProps> = ({
     );
 
     const body =
-        loading === true ? (
+        contentOptions.loading === true ? (
             <Skeleton width="100%" />
-        ) : loading ? (
-            loading
+        ) : contentOptions.loading ? (
+            contentOptions.loading
         ) : (
             maybeTooltip
         );
 
     return (
         <TableCell
-            onClick={(e) => onCellClick?.(e, value)}
+            key={cellOptions.key}
+            onClick={cellOptions.onClick}
             sx={{
                 ...table_array,
                 ...baseCellStyles,
-                ...sx,
+                ...cellOptions.sx
             }}
-            className={sticky ? 'sticky-cell' : undefined}
+            className={cellOptions.className}
         >
             {body}
         </TableCell>
