@@ -344,7 +344,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
             case 'lookalikes_count':
                 return row.lookalikes_count || '0';
             case 'credits_count':
-                return row.credits_count || '0';
+                return row.credits_count === -1 ? 'unlimited' : (row.credits_count || '0');
             case 'status':
                 return (
                     <Typography
@@ -557,7 +557,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     const [rowsPerPage, setRowsPerPage] = useState<number>(50);
     const [totalCount, setTotalCount] = useState(0);
     const [order, setOrder] = useState<'asc' | 'desc'>('desc');
-    const [orderBy, setOrderBy] = useState<string>('id');
+    const [orderBy, setOrderBy] = useState<string>('');
     const [currentPage, setCurrentPage] = useState(1);
     const [isSliderOpen, setSliderOpen] = useState(false);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
