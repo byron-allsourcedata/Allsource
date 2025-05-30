@@ -336,7 +336,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
         (hasQuery ? "&" : "?") +
         "mff=true" +
         `&api=${process.env.NEXT_PUBLIC_API_DOMAIN}` +
-        `&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/audience-dashboard?pixel_installed=true`;
+        `&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/leads?pixel_installed=true`;
       window.open(newUrl, "_blank");
     }
   };
