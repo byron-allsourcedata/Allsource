@@ -10,12 +10,12 @@ import {
 } from "@mui/material";
 import CustomTooltip from "@/components/customToolTip";
 import AddIcon from "@mui/icons-material/Add";
-import CloseIcon from "@mui/icons-material/Close";
 import { SimpleDomainSelector } from "./SimpleDomainSelector";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
-import { useHints } from "@/context/HintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
+import { domainSelectorHintCards } from "./context/hintsCardsContent";
+import { useGetStartedHints } from "./context/PixelInstallHintsContext";
 
 interface Domain {
   id: number;
@@ -26,11 +26,6 @@ interface Domain {
   enable: boolean;
 }
 
-interface HintCardInterface {
-  description: string;
-  title: string;
-  linkToLoadMore: string;
-}
 
 interface DomainSelectorProps {
   onDomainSelected: (domain: Domain | null) => void;
@@ -39,8 +34,7 @@ interface DomainSelectorProps {
 const DomainSelector: React.FC<DomainSelectorProps> = ({
   onDomainSelected,
 }) => {
-  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
-    useHints();
+  const { domainSelectorHints, resetDomainSelectorHints, changeDomainSelectorHint } = useGetStartedHints();
   const [domains, setDomains] = useState<Domain[]>([]);
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [addingNew, setAddingNew] = useState(false);
@@ -161,29 +155,6 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
     }
   };
 
-  const hintCards: HintCardInterface[] = [
-    {
-      description:
-        "Click to add your website domain. After entering the domain, you’ll be able to install the tracking pixel.",
-      title: "Add domain",
-      linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/create-or-select-your-domain",
-    },
-    {
-      description:
-        'Enter your website domain in the input field and click "Save". We’ll store it and use it to set up the tracking pixel.',
-      title: "Enter domain",
-      linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-create-a-domain",
-    },
-    {
-      description:
-        'Select a domain from the list to link the tracking pixel to the correct website. If your domain is missing, click "Add new domain" to enter it manually. Make sure the domain is valid — the pixel will be installed on the selected one.',
-      title: "Select a domain",
-      linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/create-or-select-your-domain",
-    },
-  ];
 
   return (
     <Box
@@ -219,7 +190,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
       </Typography>
 
       {domains.length === 0 && !addingNew ? (
-        <Box sx={{ position: "relative" }}>
+        <Box sx={{ position: "relative", }}>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
@@ -231,16 +202,16 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
           >
             Add domain
           </Button>
-          {/* {pixelSetupHints[0].show && domains.length === 0 && !addingNew && (
+          {domainSelectorHints["addDomain"]?.show && !addingNew && (
             <HintCard
-              card={hintCards[0]}
+              card={domainSelectorHintCards["addDomain"]}
               positionLeft={150}
               positionTop={-3}
-              isOpenBody={pixelSetupHints[0].showBody}
-              toggleClick={() => changePixelSetupHint(0, "showBody", "toggle")}
-              closeClick={() => changePixelSetupHint(0, "showBody", "close")}
+              isOpenBody={domainSelectorHints["addDomain"].showBody}
+              toggleClick={() => changeDomainSelectorHint("addDomain", "showBody", "toggle")}
+              closeClick={() => changeDomainSelectorHint("addDomain", "showBody", "close")}
             />
-          )} */}
+          )}
         </Box>
       ) : addingNew ? (
         <Box
@@ -304,16 +275,16 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               ),
             }}
           />
-          {/* {pixelSetupHints[1].show && addingNew && (
+          {domainSelectorHints["enterDomain"]?.show && addingNew && (
             <HintCard
-              card={hintCards[1]}
+              card={domainSelectorHintCards["enterDomain"]}
               positionLeft={263}
               positionTop={-10}
-              isOpenBody={pixelSetupHints[1].showBody}
-              toggleClick={() => changePixelSetupHint(1, "showBody", "toggle")}
-              closeClick={() => changePixelSetupHint(1, "showBody", "close")}
+              isOpenBody={domainSelectorHints["enterDomain"].showBody}
+              toggleClick={() => changeDomainSelectorHint("enterDomain", "showBody", "toggle")}
+              closeClick={() => changeDomainSelectorHint("enterDomain", "showBody", "close")}
             />
-          )} */}
+          )}
           <Button
             variant="contained"
             sx={{
@@ -348,16 +319,16 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
               });
             }}
           />
-          {/* {pixelSetupHints[2]?.show && !selectedDomain && (
+          {domainSelectorHints["selectDomain"]?.show && !selectedDomain && (
             <HintCard
-              card={hintCards[2]}
+              card={domainSelectorHintCards["selectDomain"]}
               positionLeft={400}
               positionTop={15}
-              isOpenBody={pixelSetupHints[2].showBody}
-              toggleClick={() => changePixelSetupHint(2, "showBody", "toggle")}
-              closeClick={() => changePixelSetupHint(2, "showBody", "close")}
+              isOpenBody={domainSelectorHints["selectDomain"].showBody}
+              toggleClick={() => changeDomainSelectorHint("selectDomain", "showBody", "toggle")}
+              closeClick={() => changeDomainSelectorHint("selectDomain", "showBody", "close")}
             />
-          )} */}
+          )}
         </Box>
       )}
     </Box>
