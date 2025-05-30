@@ -283,8 +283,8 @@ const DomainButton: React.FC = () => {
           borderRadius: '4px',
           padding: '0px',
           width: '100%',
-          paddingTop: '0.725rem',
-          paddingBottom: '0.725rem',
+          paddingTop: '0.25rem',
+          paddingBottom: '0.25rem',
           pr: 1,
           justifyContent: 'space-between'
         }}
