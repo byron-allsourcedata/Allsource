@@ -90,7 +90,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
 
   // Industry
   const [checkedFiltersLastLoginDate, setCheckedFiltersLastLoginDate] = useState<Record<string, boolean>>({});
-  const [checkedFilters, setCheckedFilters] = useState({
+  const [checkedJoinDateFilters, setCheckedJoinDateFilters] = useState({
+    lastWeek: false,
+    last30Days: false,
+    last6Months: false,
+    allTime: false,
+  });
+  const [checkedLastLoginDateFilters, setCheckedLastLoginDateFilters] = useState({
     lastWeek: false,
     last30Days: false,
     last6Months: false,
@@ -111,12 +117,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
   });
   const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>(
     {
-      visitedDate: [],
-      visitedTime: [],
-      region: [],
-      pageUrl: [],
-      pageVisits: [],
-      timeSpents: [],
+      joinDate: [],
+      lastLoginDate: [],
     }
   );
 
@@ -140,7 +142,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
 
         const filterName = tagMap[tag];
         if (filterName) {
-          setCheckedFilters((prevFilters) => ({
+          setCheckedJoinDateFilters((prevFilters) => ({
             ...prevFilters,
             [filterName]: false,
           }));
@@ -161,7 +163,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
 
         const filterName = tagMap[tag];
         if (filterName) {
-          setCheckedFilters((prevFilters) => ({
+          setCheckedLastLoginDateFilters((prevFilters) => ({
             ...prevFilters,
             [filterName]: false,
           }));
@@ -183,24 +185,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
       "All time": "allTime",
     };
 
-    const tagMapTime: TagMap = {
-      "Morning 12AM - 11AM": "morning",
-      "Afternoon 11AM - 5PM": "afternoon",
-      "Evening 5PM - 9PM": "evening",
-      "All day": "all_day",
-    };
-
-    const mapToUse = category === "visitedDate" ? tagMap : tagMapTime;
-    const filterName = mapToUse[tag];
+    const filterName = tagMap[tag];
 
     if (filterName) {
-      if (category === "visitedDate") {
-        setCheckedFilters((prevFilters) => ({
+      if (category === "lastLoginDate") {
+        setCheckedJoinDateFilters((prevFilters) => ({
           ...prevFilters,
           [filterName]: isChecked,
         }));
-      } else if (category === "visitedTime") {
-        setCheckedFiltersTime((prevFiltersTime) => ({
+      } else if (category === "joinDate") {
+        setCheckedLastLoginDateFilters((prevFiltersTime) => ({
           ...prevFiltersTime,
           [filterName]: isChecked,
         }));
@@ -232,14 +226,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
     const savedFilters = loadFiltersFromSessionStorage();
     if (savedFilters) {
       setSearchQuery(savedFilters.searchQuery || '');
-      setCheckedFilters(savedFilters.checkedFilters || {
+      setCheckedLastLoginDateFilters(savedFilters.checkedFilters || {
         lastWeek: false,
         last30Days: false,
         last6Months: false,
         allTime: false,
       });
-
-
 
       const isAnyFilterActive = Object.values(savedFilters.checkedFilters || {}).some(value => value === true);
       if (isAnyFilterActive) {
@@ -298,14 +290,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
     }));
   };
 
-  const [checkedFiltersTime, setCheckedFiltersTime] = useState({
-    morning: false,
-    evening: false,
-    afternoon: false,
-    all_day: false,
-  });
-
-
   const handleFilters = () => {
     const filters = {
       lastLoginDate: checkedFiltersLastLoginDate,
@@ -325,7 +309,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
         [name]: newValue,
       };
 
-      setCheckedFilters({
+      setCheckedLastLoginDateFilters({
         lastWeek: false,
         last30Days: false,
         last6Months: false,
@@ -352,16 +336,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
       setSelectedTags((prevTags) => {
         const updatedTags = {
           ...prevTags,
-          visitedDate: newTag ? [newTag] : [],
+          lastJoinDate: newTag ? [newTag] : [],
         };
 
         // If a new label exists, add it
         if (newTag) {
-          addTag("lastLoginDate", newTag);
+          addTag("lastJoinDate", newTag);
         }
 
         // If the label has been replaced or removed, clear the date range
-        if (!newTag && prevTags.visitedDate.length > 0) {
+        if (!newTag && prevTags.lastJoinDate.length > 0) {
           setDateRangeJoinDate({ fromDate: null, toDate: null });
         } else if (newTag && oldFromDate && oldToDate) {
           removeTag("lastLoginDate", `From ${oldFromDate} to ${oldToDate}`);
@@ -381,7 +365,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
         [name]: newValue,
       };
 
-      setCheckedFilters({
+      setCheckedLastLoginDateFilters({
         lastWeek: false,
         last30Days: false,
         last6Months: false,
@@ -408,16 +392,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
       setSelectedTags((prevTags) => {
         const updatedTags = {
           ...prevTags,
-          visitedDate: newTag ? [newTag] : [],
+          joinDate: newTag ? [newTag] : [],
         };
 
-        // If a new label exists, add it
         if (newTag) {
           addTag("joinDate", newTag);
         }
 
-        // If the label has been replaced or removed, clear the date range
-        if (!newTag && prevTags.visitedDate.length > 0) {
+        if (!newTag && prevTags.joinDate.length > 0) {
           setDateRangeJoinDate({ fromDate: null, toDate: null });
         } else if (newTag && oldFromDate && oldToDate) {
           removeTag("joinDate", `From ${oldFromDate} to ${oldToDate}`);
@@ -432,7 +414,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
 
   const isDateFilterActive = () => {
     return (
-      Object.values(checkedFilters).some(value => value) || // Checking checkboxes for dates
+      Object.values(checkedFiltersJoinDate).some(value => value) || // Checking checkboxes for dates
       (dateRangeJoinDate.fromDate && dateRangeJoinDate.toDate) // Validate user's date range selection
     );
   };
@@ -440,14 +422,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
   const handleRadioChangeJoinDate = (event: { target: { name: string } }) => {
     const { name } = event.target;
 
-    setCheckedFilters((prevFilters) => {
-      // Explicitly type `prevFilters` for better TypeScript support
+    setCheckedJoinDateFilters((prevFilters) => {
       const prevFiltersTyped = prevFilters as Record<string, boolean>;
-
-      // Find the previously selected radio button
       const previouslySelected = Object.keys(prevFiltersTyped).find((key) => prevFiltersTyped[key]);
-
-      // Reset all filters and select the new one
       const newFilters = {
         lastWeek: false,
         last30Days: false,
@@ -463,14 +440,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
         allTime: "All time",
       };
 
-      // Remove the tag for the previously selected radio button, if any
       if (previouslySelected && previouslySelected !== name) {
         removeTag("joinDate", tagMap[previouslySelected]);
       }
 
       setDateRangeJoinDate({ fromDate: null, toDate: null });
 
-      // Add the tag for the currently selected radio button
+ 
       addTag("joinDate", tagMap[name]);
 
       return newFilters;
@@ -480,7 +456,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
   const handleRadioChangeLastLoginDate = (event: { target: { name: string } }) => {
     const { name } = event.target;
 
-    setCheckedFilters((prevFilters) => {
+    setCheckedLastLoginDateFilters((prevFilters) => {
       // Explicitly type `prevFilters` for better TypeScript support
       const prevFiltersTyped = prevFilters as Record<string, boolean>;
 
@@ -516,7 +492,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
       return newFilters;
     });
   };
-
 
   const saveFiltersToSessionStorage = (filters: {
     lastLoginDate: typeof checkedFiltersLastLoginDate,
@@ -673,11 +648,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
               >
                 Join Date
               </Typography>
-              {selectedTags.visitedDate.map((tag, index) => (
+              {selectedTags.joinDate.map((tag, index) => (
                 <CustomChip
                   key={index}
                   label={tag}
-                  onDelete={() => removeTag("visitedDate", tag)}
+                  onDelete={() => removeTag("joinDate", tag)}
                 />
               ))}
               <IconButton
@@ -697,7 +672,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                   <FormControlLabel
                     control={
                       <Radio
-                        checked={checkedFilters.lastWeek}
+                        checked={checkedJoinDateFilters.lastWeek}
                         onChange={handleRadioChangeJoinDate}
                         name="lastWeek"
                         size='small'
@@ -708,12 +683,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.lastWeek ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedJoinDateFilters.lastWeek ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
                   />
                   <FormControlLabel
                     control={
                       <Radio
-                        checked={checkedFilters.last30Days}
+                        checked={checkedJoinDateFilters.last30Days}
                         onChange={handleRadioChangeJoinDate}
                         name="last30Days"
                         size='small'
@@ -724,14 +699,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.last30Days ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedJoinDateFilters.last30Days ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <FormControlLabel
                     control={
                       <Radio
-                        checked={checkedFilters.last6Months}
+                        checked={checkedJoinDateFilters.last6Months}
                         onChange={handleRadioChangeJoinDate}
                         name="last6Months"
                         size='small'
@@ -742,12 +717,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.last6Months ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedJoinDateFilters.last6Months ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
                   />
                   <FormControlLabel
                     control={
                       <Radio
-                        checked={checkedFilters.allTime}
+                        checked={checkedJoinDateFilters.allTime}
                         onChange={handleRadioChangeJoinDate}
                         name="allTime"
                         size='small'
@@ -758,7 +733,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.allTime ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedJoinDateFilters.allTime ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
                   />
                 </Box>
               </Box>
@@ -877,11 +852,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
               >
                 Last Login Date
               </Typography>
-              {selectedTags.visitedDate.map((tag, index) => (
+              {selectedTags.lastLoginDate.map((tag, index) => (
                 <CustomChip
                   key={index}
                   label={tag}
-                  onDelete={() => removeTag("visitedDate", tag)}
+                  onDelete={() => removeTag("lastLoginDate", tag)}
                 />
               ))}
               <IconButton
@@ -901,7 +876,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                   <FormControlLabel
                     control={
                       <Radio
-                        checked={checkedFilters.lastWeek}
+                        checked={checkedLastLoginDateFilters.lastWeek}
                         onChange={handleRadioChangeLastLoginDate}
                         name="lastWeek"
                         size='small'
@@ -912,12 +887,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.lastWeek ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedLastLoginDateFilters.lastWeek ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
                   />
                   <FormControlLabel
                     control={
                       <Radio
-                        checked={checkedFilters.last30Days}
+                        checked={checkedLastLoginDateFilters.last30Days}
                         onChange={handleRadioChangeLastLoginDate}
                         name="last30Days"
                         size='small'
@@ -928,14 +903,14 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.last30Days ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedLastLoginDateFilters.last30Days ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
                   />
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
                   <FormControlLabel
                     control={
                       <Radio
-                        checked={checkedFilters.last6Months}
+                        checked={checkedLastLoginDateFilters.last6Months}
                         onChange={handleRadioChangeLastLoginDate}
                         name="last6Months"
                         size='small'
@@ -946,12 +921,12 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.last6Months ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedLastLoginDateFilters.last6Months ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
                   />
                   <FormControlLabel
                     control={
                       <Radio
-                        checked={checkedFilters.allTime}
+                        checked={checkedLastLoginDateFilters.allTime}
                         onChange={handleRadioChangeLastLoginDate}
                         name="allTime"
                         size='small'
@@ -962,7 +937,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                         }}
                       />
                     }
-                    label={<Typography className='table-data' sx={{ color: checkedFilters.allTime ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
+                    label={<Typography className='table-data' sx={{ color: checkedLastLoginDateFilters.allTime ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
                   />
                 </Box>
               </Box>

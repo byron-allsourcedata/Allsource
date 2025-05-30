@@ -101,9 +101,9 @@ const Signup: React.FC = () => {
     if (Object.keys(utmParams).length > 0) {
       localStorage.setItem(UTM_STORAGE_KEY, JSON.stringify(utmParams));
     }
-    if (slack_status){
+    if (slack_status) {
       showErrorToast(slack_status);
-    } 
+    }
   }, []);
 
   const validateField = (name: string, value: string) => {
@@ -232,6 +232,11 @@ const Signup: React.FC = () => {
               break;
             case "PASSWORD_NOT_VALID":
               showErrorToast('Password not valid');
+              break;
+            case "SUCCESS_ADMIN":
+              await fetchUserData();
+              sessionStorage.setItem("admin", "true")
+              router.push('/admin');
               break;
             case "INCORRECT_FULL_NAME":
               showErrorToast('Full name not valid');
@@ -363,6 +368,11 @@ const Signup: React.FC = () => {
                   case 'SUCCESS':
                     get_me()
                     router.push(partner ? '/partners' : '/dashboard');
+                    break;
+                  case "SUCCESS_ADMIN":
+                    await fetchUserData();
+                    sessionStorage.setItem("admin", "true")
+                    router.push('/admin');
                     break;
                   case 'NEED_CHOOSE_PLAN':
                     get_me()

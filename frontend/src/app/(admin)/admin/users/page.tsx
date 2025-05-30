@@ -1,40 +1,14 @@
 'use client'
 import React, { useEffect, useState } from "react";
 import { usersStyle } from "./userStyle";
-import {
-    Box, Button, Grid, Typography, TableHead, TableRow, TableCell,
-    TableBody, TableContainer, Paper, Table,
-    Switch, Pagination,
-    SwitchProps,
-    IconButton,
-    Popover,
-} from "@mui/material";
+import {Box, Typography} from "@mui/material";
 import axios from 'axios';
-import { useUser } from "@/context/UserContext";
-import { useTrial } from '@/context/TrialProvider';
-import { styled } from '@mui/material/styles';
 import axiosInstance from '../../../../axios/axiosInterceptorInstance';
 import { useRouter } from "next/navigation";
 import Account from "./components/Account";
 import CustomCards from "./components/CustomCards";
 import CustomizedProgressBar from '@/components/ProgressBar'
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
-
-import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import { showErrorToast } from "@/components/ToastNotification";
-
-
-
-interface UserData {
-    id: number
-    full_name: string
-    email: string
-    created_at: string
-    payment_status: string
-    is_trial: boolean
-}
 
 interface CustomCardsProps {
     users: number;
@@ -53,16 +27,7 @@ interface TabPanelProps {
 
 const Users: React.FC = () => {
     const router = useRouter();
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [rowsPerPage] = useState(9);
-    const [data, setData] = useState<UserData[]>([]);
-    const [paginatedData, setPaginatedData] = useState<UserData[]>([]);
-    const [totalItems, setTotalItems] = useState(0);
     const [loading, setLoading] = useState(false);
-    const [sortedData, setSortedData] = useState<UserData[]>([]);
-    const [sortField, setSortField] = useState<string>('');
     const [tabIndex, setTabIndex] = useState(0);
     const [valuesMetrics, setValueMetrics] = useState<CustomCardsProps>({
         users: 0,
@@ -72,28 +37,6 @@ const Users: React.FC = () => {
         smart_audience: 0,
         data_sync: 0,
     });
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-    const { full_name: userFullName, email: userEmail, resetUserData, } = useUser();
-    const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
-    const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
-    const full_name = userFullName || meData.full_name;
-    const email = userEmail || meData.email;
-    const { resetTrialData } = useTrial();
-    const handleSignOut = () => {
-        localStorage.clear();
-        sessionStorage.clear();
-        resetUserData();
-        resetTrialData();
-        window.location.href = "/signin";
-    };
-
-    const handleProfileMenuClose = () => {
-        setAnchorEl(null);
-    };
-    const handleSettingsClick = () => {
-        handleProfileMenuClose();
-        router.push("/settings");
-    };
 
     useEffect(() => {
         const accessToken = localStorage.getItem('token');
@@ -134,15 +77,7 @@ const Users: React.FC = () => {
             }
         };
         fetchData();
-    }, [currentPage]);
-
-    const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
-        setCurrentPage(page);
-    };
-
-    const handleProfileMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
+    }, []);
 
     const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
         return (
@@ -158,18 +93,10 @@ const Users: React.FC = () => {
         );
     };
 
-    const handleSort = (field: string) => {
-        const isAsc = sortField === field && sortOrder === 'asc';
-        setSortOrder(isAsc ? 'desc' : 'asc');
-        setSortField(field);
-    };
-
     const handleTabChange = (event: React.SyntheticEvent | null, newIndex: number) => {
         setTabIndex(newIndex);
     };
 
-
-    const totalPages = Math.ceil(totalItems / rowsPerPage);
 
     if (loading) {
         return <CustomizedProgressBar />;

@@ -237,7 +237,7 @@ class UserPersistence:
             for user in users
         ]
 
-    def get_admin_users(self, page, per_page):
+    def get_admin_users(self):
         Inviter = aliased(Users)
         query = self.db.query(
             Users.id,
@@ -249,11 +249,10 @@ class UserPersistence:
             Users.role
         ) .outerjoin(Inviter, Users.invited_by_id == Inviter.id)\
             .filter(Users.role.contains(['admin']))
-        total_count = query.count()
-        users = query.order_by(desc(Users.id)).offset((page - 1) * per_page).limit(per_page).all()
-        return users, total_count
+        users = query.order_by(desc(Users.id)).limit(100).all()
+        return users
 
-    def get_customer_users(self, page, per_page):
+    def get_customer_users(self, page, per_page, sort_by, sort_order):
         query = self.db.query(
             Users.id,
             Users.email,
@@ -287,7 +286,17 @@ class UserPersistence:
             .group_by(Users.id)
 
         total_count = query.count()
-        users = query.order_by(desc(Users.id)).offset((page - 1) * per_page).limit(per_page).all()
+        offset = (page - 1) * per_page
+        sort_options = {
+            'id': Users.id,
+            'join_date': Users.created_at,
+            'last_login_date': Users.last_login,
+        }
+        if sort_by in sort_options:
+            sort_column = sort_options[sort_by]
+            query = query.order_by(asc(sort_column) if sort_order == 'asc' else desc(sort_column))
+
+        users = query.order_by(desc(Users.id)).limit(per_page).offset(offset).all()
         return users, total_count
 
     def get_not_partner_users(self, page, per_page):

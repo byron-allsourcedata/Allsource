@@ -202,56 +202,62 @@ const CustomCards: React.FC<CustomCardsProps> = ({
 }) => {
   return (
     <Grid container wrap="nowrap" sx={{ flexWrap: 'nowrap', }} spacing={{ xs: 2, sm: 2, md: 2, lg: 2 }}>
-      <Grid item sx={{ 
-        "@media (max-width: 600px)": { minWidth: 320 }, 
-        pointerEvents: "auto", 
-        opacity: 1 }} 
+      <Grid item sx={{
+        "@media (max-width: 600px)": { minWidth: 320 },
+        pointerEvents: "auto",
+        opacity: 1
+      }}
         xs={12} md={2.4}>
         <UsersCard
           value={values.users}
         />
       </Grid>
-      <Grid item sx={{ 
-        "@media (max-width: 600px)": { minWidth: 320 }, 
-        pointerEvents: "auto", 
-        opacity: 1 }} 
+      <Grid item sx={{
+        "@media (max-width: 600px)": { minWidth: 320 },
+        pointerEvents: "auto",
+        opacity: 1
+      }}
         xs={12} md={2.4}>
         <PixelContactsCard
           value={values.pixel_contacts}
         />
       </Grid>
-      <Grid item sx={{ 
-        "@media (max-width: 600px)": { minWidth: 320 }, 
-        pointerEvents: "auto", 
-        opacity: 1 }} 
+      <Grid item sx={{
+        "@media (max-width: 600px)": { minWidth: 320 },
+        pointerEvents: "auto",
+        opacity: 1
+      }}
         xs={12} md={2.4}>
         <SourcesCard
           value={values.sources}
         />
       </Grid>
-      <Grid item sx={{ 
-        "@media (max-width: 600px)": { minWidth: 320 }, 
-        pointerEvents: "auto", 
-        opacity: 1 }} 
+      <Grid item sx={{
+        "@media (max-width: 600px)": { minWidth: 320 },
+        pointerEvents: "auto",
+        opacity: 1
+      }}
         xs={12} md={2.4}>
         <LookalikesCard
           value={values.lookalikes}
         />
       </Grid>
-      <Grid item sx={{ 
-        "@media (max-width: 600px)": { minWidth: 320 }, 
-        pointerEvents: "auto", 
-        opacity: 1 }} 
+      <Grid item sx={{
+        "@media (max-width: 600px)": { minWidth: 320 },
+        pointerEvents: "auto",
+        opacity: 1
+      }}
         xs={12} md={2.4}>
         <SmartAudienceCard
           value={values.smart_audience}
         />
       </Grid>
-      <Grid item sx={{ 
-          "@media (max-width: 600px)": { minWidth: 320 }, 
-          pointerEvents: "auto", 
-          opacity: 1 }} 
-          xs={12} md={2.4}>
+      <Grid item sx={{
+        "@media (max-width: 600px)": { minWidth: 320 },
+        pointerEvents: "auto",
+        opacity: 1
+      }}
+        xs={12} md={2.4}>
         <DataSyncCard
           value={values.data_sync}
         />
