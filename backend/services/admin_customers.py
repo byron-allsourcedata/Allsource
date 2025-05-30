@@ -116,7 +116,12 @@ class AdminCustomersService:
                 created_at=user.created_at,
                 last_login=user.last_login,
                 role=user.role,
-                pixel_installed_count=user.pixel_installed_count
+                pixel_installed_count=user.pixel_installed_count,
+                sources_count=user.sources_count,
+                lookalikes_count=user.lookalikes_count,
+                credits_count=user.credits_count,
+                is_email_confirmed=user.is_email_confirmed,
+                is_book_call_passed=user.is_book_call_passed
             )
             for user in users
         ]
@@ -148,7 +153,10 @@ class AdminCustomersService:
                 "is_trial": self.plans_persistence.get_trial_status_by_user_id(user.get('id')),
                 'last_login': user.get('last_login'),
                 'role': user.get('role'),
-                'pixel_installed_count': user.get('pixel_installed_count')
+                'pixel_installed_count': user.get('pixel_installed_count'),
+                'sources_count': user.get('sources_count'),
+                'lookalikes_count': user.get('lookalikes_count'),
+                'credits_count': user.get('credits_count')
             })
         return {
             'users': result,

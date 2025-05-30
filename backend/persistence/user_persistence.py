@@ -7,6 +7,7 @@ from sqlalchemy import func, desc, asc, case
 from sqlalchemy.orm import Session, aliased
 
 from enums import TeamsInvitationStatus, SignUpStatus
+from models import AudienceLookalikes
 from models.partner import Partner
 from models.referral_payouts import ReferralPayouts
 from models.referral_users import ReferralUser
@@ -260,15 +261,31 @@ class UserPersistence:
             Users.created_at,
             Users.last_login,
             Users.role,
+            Users.is_email_confirmed,
+            Users.is_book_call_passed,
+            Users.leads_credits.label('credits_count'),
             func.count(
                 case(
                     (UserDomains.is_pixel_installed == True, 1)
                 )
-            ).label('pixel_installed_count')
+            ).label('pixel_installed_count'),
+            func.count(
+                case(
+                    (func.coalesce(AudienceSource.id, None) != None, 1)
+                )
+            ).label('sources_count'),
+            func.count(
+                case(
+                    (func.coalesce(AudienceLookalikes.id, None) != None, 1)
+                )
+            ).label('lookalikes_count')
         ) \
-        .outerjoin(UserDomains, UserDomains.user_id == Users.id)\
-        .filter(Users.role.contains(['customer']))\
-        .group_by(Users.id)
+            .outerjoin(AudienceLookalikes, AudienceLookalikes.user_id == Users.id) \
+            .outerjoin(AudienceSource, AudienceSource.user_id == Users.id) \
+            .outerjoin(UserDomains, UserDomains.user_id == Users.id) \
+            .filter(Users.role.contains(['customer'])) \
+            .group_by(Users.id)
+
         total_count = query.count()
         users = query.order_by(desc(Users.id)).offset((page - 1) * per_page).limit(per_page).all()
         return users, total_count
