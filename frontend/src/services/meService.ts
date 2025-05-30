@@ -72,7 +72,11 @@ export const fetchUserData = async (
           })
         );
 
-        if (!currentDomain) {
+        if (
+          !currentDomain &&
+          Array.isArray(responseData.user_domains) &&
+          responseData.user_domains.length > 0
+        ) {
           sessionStorage.setItem(
             "current_domain",
             responseData.user_domains[0].domain

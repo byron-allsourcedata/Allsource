@@ -141,10 +141,12 @@ const GetStarted: React.FC = () => {
                     }
                 }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: 1 }}>
-                    <Typography className="first-sub-title" sx={{ fontSize: '24px !important', fontWeight: "500 !important" }}>Get Started</Typography>
-                    <Typography className="description">To begin building your audience, you&apos;ll need to provide a data source</Typography>
-                </Box>
+                {!(pixel || source) && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: 1 }}>
+                        <Typography className="first-sub-title" sx={{ fontSize: '24px !important', fontWeight: "500 !important" }}>Get Started</Typography>
+                        <Typography className="description">To begin building your audience, you&apos;ll need to provide a data source</Typography>
+                    </Box>
+                )}
             </Box>}
             {tabIndex === 0 ? (
                 <FirstTimeScreenCommonVariant1
@@ -166,7 +168,7 @@ const GetStarted: React.FC = () => {
                             title: 'Import Source',
                             subtitle: `To begin building your audience, you'll first need to provide a data source. `,
                             imageSrc: '/import_source.svg',
-                            onClick: sourceImported ? undefined : 
+                            onClick: sourceImported ? undefined :
                                 () => {
                                     setTabIndex(2)
                                     setShowHeading(false);
