@@ -28,7 +28,3 @@ class AudienceSmartsDataSources(Base):
         ForeignKey('audience_lookalikes.id', ondelete='CASCADE'),
         nullable=True
     )
-
-    __table_args__ = (
-        Index('audience_smarts_data_sources_pkey', id, unique=True),
-    )

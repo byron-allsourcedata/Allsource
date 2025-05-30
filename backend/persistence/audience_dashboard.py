@@ -44,6 +44,58 @@ class DashboardAudiencePersistence:
         )
         return source_rows, installed_domains_count
 
+    def get_audience_metrics(self):
+        queries = [
+            {
+                'query': self.db.query(
+                    func.count(Users.id).label("count"))
+                    .filter(Users.role.contains(['customer'])),
+                'key': 'users_count'
+            },
+            {
+                'query': self.db.query(
+                    func.count(UserDomains.id).label("count")
+                )
+                .join(Users, Users.id == UserDomains.user_id)\
+                .filter(UserDomains.is_pixel_installed == True, Users.role.contains(['customer'])),
+                'key': 'pixel_contacts'
+            },
+            {
+                'query': self.db.query(
+                    func.count(AudienceSource.id).label("count")
+                )
+                .join(Users, Users.id == AudienceSource.user_id) \
+                .filter(Users.role.contains(['customer'])),
+                'key': 'sources_count'
+            },
+            {
+                'query': self.db.query(
+                    func.count(AudienceLookalikes.id).label("count")
+                )
+                .join(Users, Users.id == AudienceLookalikes.user_id) \
+                .filter(Users.role.contains(['customer'])),
+                'key': 'lookalike_count'
+            },
+            {
+                'query': self.db.query(
+                    func.count(AudienceSmart.id).label("count")
+                )
+                .join(Users, Users.id == AudienceSmart.user_id) \
+                .filter(Users.role.contains(['customer'])),
+                'key': 'smart_count'
+            },
+            {
+                'query': self.db.query(
+                    func.count(IntegrationUserSync.id).label("count")
+                )
+                .join(UserDomains, UserDomains.id == IntegrationUserSync.domain_id) \
+                .join(Users, Users.id == UserDomains.user_id) \
+                .filter(Users.role.contains(['customer'])),
+                'key': 'sync_count'
+            }
+        ]
+        return queries
+
     def get_dashboard_audience_data(self, *, from_date: int, to_date: int, user_id: int):
         from_dt = datetime.fromtimestamp(from_date, tz=timezone.utc)
         to_dt = datetime.fromtimestamp(to_date, tz=timezone.utc)

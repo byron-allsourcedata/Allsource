@@ -23,6 +23,7 @@ const Signup: React.FC = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const user_mail = searchParams.get('user_mail');
   const teams_token = searchParams.get('teams_token');
+  const admin_token = searchParams.get('admin_token');
   const referral_token = searchParams.get('referral_token');
   const spi = searchParams.get('spi');
   const awin_awc = searchParams.get('awc')
@@ -49,6 +50,7 @@ const Signup: React.FC = () => {
     ...{ awc: awin_awc },
     ...{ coupon: coupon },
     ...{ teams_token: teams_token },
+    ...{ admin_token: admin_token },
     ...{ referral_token: referral_token },
     ...{ spi: spi },
     ...{ ift: ift },
@@ -334,6 +336,7 @@ const Signup: React.FC = () => {
                   token: credentialResponse.credential,
                   ...(spi && { spi }),
                   ...(teams_token && { teams_token }),
+                  ...(admin_token && { admin_token }),
                   ...(referral_token && { referral_token }),
                   ...(is_with_card && { is_with_card }),
                   awc: awin_awc,
