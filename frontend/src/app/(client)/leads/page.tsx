@@ -2,7 +2,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip } from '@mui/material';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { leadsStyles } from './leadsStyles';
@@ -34,6 +34,7 @@ import { useLeadsHints } from "./context/LeadsHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
 import TableCustomCell from "../sources/components/table/TableCustomCell";
 import DomainButtonSelect from "../components/NavigationDomainButton";
+import PixelPopup from "@/components/PixelPopup";
 
 
 interface FetchDataParams {
@@ -75,6 +76,17 @@ const Leads: React.FC = () => {
     const [popupData, setPopupData] = React.useState<any>(null);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const { changeLeadsTableHint, leadsTableHints, resetLeadsTableHints } = useLeadsHints();
+    const searchParams = useSearchParams();
+    const [showPixel, setPixelPopup] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        if (searchParams.get('pixel_installed')) setPixelPopup(true);
+    }, []);
+
+    const handleClosePixel = () => {
+        window.location.href = "/leads"
+        setPixelPopup(false);
+    };
 
     const handleOpenPopup = (row: any) => {
         setPopupData(row);
@@ -945,6 +957,7 @@ const Leads: React.FC = () => {
                     />
                 </Box>
             )}
+            {showPixel && <PixelPopup open={showPixel} onClose={handleClosePixel} />}
             <Box sx={{
                 display: 'flex', flexDirection: 'column', height: '100%', pr: '16px',
                 '@media (max-width: 900px)': {
@@ -1438,12 +1451,12 @@ const Leads: React.FC = () => {
                                                                 handleOpenPopup(row);
 
                                                             }}>{row.first_name} {row.last_name}</TableCell>
-                                                        <TableCell>
+                                                        <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
                                                             {row.is_active ? (
                                                                 row.personal_emails ? (
                                                                     <Tooltip title={row.personal_emails.split(',')[0]}>
                                                                         <span className="truncate-email">
-                                                                            {truncateText(row.personal_emails.split(',')[0], 24)}
+                                                                            {truncateText(row.personal_emails.split(',')[0], 16)}
                                                                         </span>
                                                                     </Tooltip>
                                                                 ) : (
@@ -1461,7 +1474,7 @@ const Leads: React.FC = () => {
                                                                 row.business_email ? (
                                                                     <Tooltip title={row.business_email.split(',')[0]}>
                                                                         <span className="truncate-email">
-                                                                            {truncateText(row.business_email.split(',')[0], 24)}
+                                                                            {truncateText(row.business_email.split(',')[0], 16)}
                                                                         </span>
                                                                     </Tooltip>
                                                                 ) : (
@@ -1473,7 +1486,7 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         {/* Mobile Phone Column */}
-                                                        <TableCell>
+                                                        <TableCell sx={{ ...leadsStyles.table_array_phone, position: 'relative' }}>
                                                             {row.is_active ? (
                                                                 row.mobile_phone
                                                                     ? row.mobile_phone.split(',')[0]
@@ -1496,7 +1509,7 @@ const Leads: React.FC = () => {
                                                                 : '--'}
                                                         </TableCell>
 
-                                                        <TableCell>
+                                                        <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
                                                             <Box
                                                                 sx={{
                                                                     display: 'flex',
@@ -1517,7 +1530,7 @@ const Leads: React.FC = () => {
                                                             </Box>
                                                         </TableCell>
 
-                                                        <TableCell>
+                                                        <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
                                                             <Box
                                                                 sx={{
                                                                     display: 'flex',

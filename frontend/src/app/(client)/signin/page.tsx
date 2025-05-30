@@ -308,6 +308,7 @@ const Signin: React.FC = () => {
                     router.push(partner ? "/partners" : "/audience-dashboard");
                     break;
                   case "FILL_COMPANY_DETAILS":
+                    console.log('1234')
                     let data = await fetchUserData();
                     const { is_pixel_installed, is_source_imported } = data?.get_started;
                     if (is_pixel_installed && is_source_imported) {

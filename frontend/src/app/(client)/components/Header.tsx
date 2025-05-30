@@ -245,15 +245,15 @@ const Header: React.FC<HeaderProps> = ({
               </Button>
 
             )}
-            <Box sx={{ display: "flex", ml: 3 }}>
+            {/* <Box sx={{ display: "flex", ml: 1 }}>
               {!pathname.includes("audience-dashboard") &&
                 (pathname.includes("dashboard") ||
                   pathname.includes("leads") ||
                   pathname.includes("company") ||
                   pathname.includes("suppressions"))}
-            </Box>
+            </Box> */}
           </Box>
-          <Box sx={{ padding: 3, width: "100%", px: 3.5 }}>
+          <Box sx={{ padding: 1, width: "100%", px: 3.5 }}>
             <FreeTrialLabel />
           </Box>
 
