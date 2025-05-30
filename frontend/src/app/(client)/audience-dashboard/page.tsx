@@ -14,6 +14,7 @@ import BlurAudience from "./components/BlurAudience";
 import MainSectionCard from "./components/MainSectionCards";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import SmartAudienceCard from "./components/SmartAudienceCard";
+import WelcomePopup from "@/app/(client)/dashboard/components/WelcomePopup";
 import { showErrorToast } from "@/components/ToastNotification";
 import { TableData } from "@/types/lookalike";
 import { useRouter } from "next/navigation";
@@ -89,6 +90,7 @@ const cardData: FirstTimeScreenCardData[] = [
 ];
 
 const AudienceDashboard: React.FC = () => {
+  const [welcomePopup, setWelcomePopup] = useState<string | null>(null);
   const [values, setValues] = useState({
     pixel_contacts: 0,
     sources: 0,
@@ -593,6 +595,12 @@ const AudienceDashboard: React.FC = () => {
     selectedCard && tabMap[selectedCard]
       ? chainedCards[tabMap[selectedCard]]
       : [];
+
+
+  useEffect(() => {
+    const storedPopup = localStorage.getItem("welcome_popup");
+    setWelcomePopup(storedPopup);
+  }, []);
   return (
     <Box>
       <Grid

@@ -8,6 +8,8 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import React from "react";
 import { B2BData, B2CData, FieldRankMap } from "@/types/insights";
+import HintCard from "@/app/(client)/components/HintCard";
+import { useInsightsHints } from "../../../context/IntegrationsHintsContext";
 
 type StatisticsTabProps = {
   type: string;
@@ -18,6 +20,7 @@ type StatisticsTabProps = {
 
 const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, fieldRanks }) => {
   const [targetIndex, setTargetIndex] = useState(0);
+  const { insightsHints, cardsInsights, changeInsightsHint, resetInsightsHints } = useInsightsHints();
   const handleTargetChange = (
     event: React.SyntheticEvent,
     newIndex: number
@@ -26,26 +29,27 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
   };
   const tabs = type.toLowerCase() === "b2c"
     ? [
-        {
-          key: "b2c",
-          label: "B2C",
-          content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
-        },
-      ]
+      {
+        key: "b2c",
+        label: "B2C",
+        content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
+      },
+    ]
     : [
-        {
-          key: "b2b",
-          label: "B2B",
-          content: <B2BTabs data={b2bData} fieldRanks={fieldRanks} />,
-        },
-        {
-          key: "b2c",
-          label: "B2C",
-          content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
-        },
-      ];
+      {
+        key: "b2b",
+        label: "B2B",
+        content: <B2BTabs data={b2bData} fieldRanks={fieldRanks} />,
+      },
+      {
+        key: "b2c",
+        label: "B2C",
+        content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
+      },
+    ];
   return (
     <Box>
+
       <Box
         sx={{
           display: "flex",
@@ -76,6 +80,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
             alignItems: "start",
           }}
         >
+
           <Tabs
             value={targetIndex}
             onChange={handleTargetChange}
@@ -101,8 +106,8 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
             }}
             aria-label="insights tabs"
           >
-            { type.toUpperCase() !== "B2C" && (
-                <Tab
+            {type.toUpperCase() !== "B2C" && (
+              <Tab
                 className="main-text"
                 sx={{
                   textTransform: "none",
@@ -129,7 +134,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
                 label="B2B"
               />
             )}
-            
+
             <Tab
               className="main-text"
               sx={{
@@ -158,6 +163,7 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
             />
           </Tabs>
         </Box>
+        
       </Box>
 
       <Box
@@ -168,11 +174,14 @@ const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, f
         }}
       >
         {tabs.map((tab, idx) => (
+          
           <TabPanel key={tab.key} value={targetIndex} index={idx}>
+            
             {tab.content}
           </TabPanel>
         ))}
       </Box>
+      
     </Box>
   );
 };

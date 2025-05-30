@@ -9,6 +9,7 @@ import GettingStartedSection from '@/components/GettingStartedSection';
 import { SliderProvider } from "@/context/SliderContext";
 import SourcesImport from "@/app/(client)/sources/builder/page";
 import { SourcesHintsProvider } from "../sources/context/SourcesHintsContext";
+import WelcomePopup from "@/app/(client)/dashboard/components/WelcomePopup";
 import {
     CardsSection,
     FirstTimeScreenCommonVariant1,
@@ -49,11 +50,8 @@ const GetStarted: React.FC = () => {
     const [sourceImported, setSourceImported] = useState(false);
     const [pixelBannerVisible, setPixelBannerVisible] = useState(true);
     const [sourceBannerVisible, setSourceBannerVisible] = useState(true);
-    const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
-        setTabIndex(newIndex);
-    };
+    const [welcomePopup, setWelcomePopup] = useState<string | null>(null);
     const [loading, setLoading] = useState(true)
-    const [status, setStatus] = useState('');
 
 
     const checkPixel = async () => {
@@ -63,6 +61,9 @@ const GetStarted: React.FC = () => {
 
             setPixelInstalled(Boolean(is_pixel_installed));
             setSourceImported(Boolean(is_source_imported));
+            if (Boolean(is_pixel_installed) && Boolean(is_source_imported)) {
+                router.push('/audience-dashboard')
+            }
         }
         catch (error) {
             console.error(error)
@@ -72,13 +73,24 @@ const GetStarted: React.FC = () => {
 
     }
     useEffect(() => {
-        checkPixel()
-        if (pixel) {
-            setTabIndex(1);
-        } else if (source) {
-            setTabIndex(2);
-        }
-    }, [pixel, source])
+        const fetchData = async () => {
+            await checkPixel();
+
+            if (pixel) {
+                setTabIndex(1);
+            } else if (source) {
+                setTabIndex(2);
+            }
+        };
+
+        fetchData();
+
+    }, [pixel, source]);
+
+    useEffect(() => {
+        const storedPopup = localStorage.getItem("welcome_popup");
+        setWelcomePopup(storedPopup);
+    }, []);
 
 
     const handleClick = () => {
@@ -97,6 +109,7 @@ const GetStarted: React.FC = () => {
         <Box sx={{
             pb: 3
         }}>
+            {welcomePopup && <WelcomePopup />}
             <Box
                 sx={{
                     display: 'flex',

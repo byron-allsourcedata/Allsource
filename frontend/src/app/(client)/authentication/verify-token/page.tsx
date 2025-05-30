@@ -58,6 +58,7 @@ const VerifyToken = () => {
             ) {
               if (typeof window !== "undefined") {
                 if (response.data.status === "EMAIL_ALREADY_VERIFIED") {
+                  localStorage.setItem("welcome_popup", "true");
                   showInfoToast("Email has already been verified");
                 } else if (response.data.status === "SUCCESS") {
                   localStorage.setItem("welcome_popup", "true");
@@ -69,14 +70,14 @@ const VerifyToken = () => {
 
                 setTimeout(() => {
                   // router.push('/account-setup');
-                  router.push("/dashboard");
+                  router.push("/get-started");
                 }, 2500);
               }
             } else if (response.data.status === "INCORRECT_TOKEN") {
               showErrorToast("The link is incorrect or outdated");
               const localtoken = localStorage.getItem("token");
               if (localtoken) {
-                router.push(partner ? "/partners" : "/dashboard");
+                router.push(partner ? "/partners" : "/get-started");
               } else {
                 router.push("/signin");
               }

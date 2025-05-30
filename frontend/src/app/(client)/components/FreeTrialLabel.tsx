@@ -143,40 +143,33 @@ const FreeTrialLabel: React.FC = () => {
               </Box>
             </Box>
 
-            <Box sx={{ display: "flex", gap: 5 }}>
-              <Box sx={{ display: "flex", alignItems: "flex-end", gap: "8px" }}>
+            <Box sx={{ display: "flex", alignItems: 'flex-end', gap: 2 }}>
+              <Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
                 <DomainVerificationIcon
                   fontSize="small"
-                  sx={{ color: "#3898FC", alignSelf: 'flex-end', fontSize: "18px" }}
+                  sx={{ color: "#3898FC", alignSelf: 'flex-end', fontSize: "17px" }}
                 />
-                <Typography
-                  sx={{
-                    fontFamily: 'Nunito Sans',
-                    fontWeight: 400,
-                    fontSize: '12px',
-                    letterSpacing: '0%',
-                    color: 'inherit',
-                  }}
-                >
-                  <Box
-                    component="span"
-                    sx={{ color: 'rgba(50, 54, 62, 0.5)', fontFamily: 'Nunito Sans' }}
-                  >
-                    {domainCount}
-                  </Box>
-                  /1 Domains
-                </Typography>
+                <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
+                  <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 0.5)" }}>
+                    {domainCount}/
+                  </Typography>
+                  <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 1)" }}>
+                    1 Domains
+                  </Typography>
+                </Box>
               </Box>
 
-              {/* <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <AllInboxIcon fontSize="small" sx={{ color: "#3898FC" }} />
-                <Typography variant="body2" sx={{ fontSize: "13px" }}>
-                  <Box component="span" sx={{ color: "rgba(0, 0, 0, 0.5)" }}>
-                    {(creditsLimitCount - creditsCount).toLocaleString()}
-                  </Box>
-                  /{creditsLimitCount.toLocaleString()} Credits
-                </Typography>
-              </Box> */}
+              <Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
+                <AllInboxIcon fontSize="small" sx={{ color: "#3898FC", fontSize: '17px' }} />
+                <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
+                  <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 0.5)" }}>
+                    {(creditsCount)?.toLocaleString()}/
+                  </Typography>
+                  <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 1)" }}>
+                    {creditsLimitCount?.toLocaleString()} Contacts
+                  </Typography>
+                </Box>
+              </Box>
 
               <Button
                 onClick={handleChoosePlanSlider}
@@ -206,7 +199,7 @@ const FreeTrialLabel: React.FC = () => {
 
           <Box sx={{ width: "100%", mb: "8px" }}>
             <ProgressBar
-              progress={{ total: creditsLimitCount, processed: creditsCount }}
+              progress={{ total: creditsLimitCount, processed: creditsLimitCount - creditsCount, reversed: true }}
             />
           </Box>
         </Box>

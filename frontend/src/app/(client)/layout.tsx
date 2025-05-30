@@ -31,6 +31,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [latestNotification, setLatestNotification] = useState<{ text: string; id: number } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -68,7 +69,10 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
             if (newNotification) {
               setLatestNotification(newNotification);
             }
+            setLoading(false);
           } catch (error) {
+          } finally {
+            setLoading(false);
           }
         };
 
@@ -125,7 +129,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
               top: latestNotification || newNotification ? 'calc(7.125rem)' : '4.25rem',
             }}>
               <SliderProvider>
-                <Sidebar setShowSlider={setSlider} isGetStartedPage={shouldShowGetStarted} setLoading={setIsLoading} hasNotification={Boolean(latestNotification || newNotification)} />
+                <Sidebar setShowSlider={setSlider} isGetStartedPage={shouldShowGetStarted} loading={loading} setLoading={setIsLoading} hasNotification={Boolean(latestNotification || newNotification)} />
               </SliderProvider>
             </Grid>
             <NotificationProvider hasNotification={Boolean(latestNotification || newNotification)}>

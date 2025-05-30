@@ -6,6 +6,8 @@ import B2CLifestyle from "./B2CTabComponents/B2CLifestyle";
 import B2CVoter from "./B2CTabComponents/B2CVoter";
 import B2CFinancial from "./B2CTabComponents/B2CFinancial";
 import { FieldRankMap, FinancialInfo, PersonalInfo, VoterInfo } from "@/types/insights";
+import { useInsightsHints } from "../../../context/IntegrationsHintsContext";
+import HintCard from "@/app/(client)/components/HintCard";
 
 interface B2CData {
   personal_info: PersonalInfo;
@@ -20,7 +22,7 @@ interface B2CTabsProps {
 }
 const B2CTabs: React.FC<B2CTabsProps> = ({ data, fieldRanks }) => {
   const [tabIndex, setIndex] = useState(0);
-
+  const { insightsHints, cardsInsights, changeInsightsHint, resetInsightsHints } = useInsightsHints();
   const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
     setIndex(newIndex);
   };
@@ -124,6 +126,62 @@ const B2CTabs: React.FC<B2CTabsProps> = ({ data, fieldRanks }) => {
               }}
             />
           </Tabs>
+        </Box>
+        <Box
+          onClick={e => e.stopPropagation()}
+          sx={{
+            position: "absolute",
+            top: 0,
+            right: "50%",
+            pointerEvents: "auto",
+            overflow: "visible",
+          }}
+        >
+          <HintCard
+    card={cardsInsights.type_statistic}
+    positionTop={-80}
+    positionLeft={145}
+    rightSide={false}
+    isOpenBody={insightsHints.type_statistic.showBody}
+    toggleClick={() => {
+      changeInsightsHint("type_lead",     "showBody", "close");
+      changeInsightsHint("category_b2c",  "showBody", "close");
+      changeInsightsHint("type_statistic","showBody","toggle");
+    }}
+    closeClick={() =>
+      changeInsightsHint("type_statistic", "showBody", "close")
+    }
+  />
+  <HintCard
+    card={cardsInsights.type_lead}
+    positionTop={-20}
+    positionLeft={-145}
+    rightSide={false}
+    isOpenBody={insightsHints.type_lead.showBody}
+    toggleClick={() => {
+      changeInsightsHint("type_statistic","showBody", "close");
+      changeInsightsHint("category_b2c",   "showBody", "close");
+      changeInsightsHint("type_lead",     "showBody","toggle");
+    }}
+    closeClick={() =>
+      changeInsightsHint("type_lead", "showBody", "close")
+    }
+  />
+  <HintCard
+    card={cardsInsights.category_b2c}
+    positionTop={50}
+    positionLeft={260}
+    rightSide={false}
+    isOpenBody={insightsHints.category_b2c.showBody}
+    toggleClick={() => {
+      changeInsightsHint("type_statistic","showBody","close");
+      changeInsightsHint("type_lead",     "showBody","close");
+      changeInsightsHint("category_b2c",  "showBody","toggle");
+    }}
+    closeClick={() =>
+      changeInsightsHint("category_b2c", "showBody", "close")
+    }
+  />
         </Box>
       </Box>
 

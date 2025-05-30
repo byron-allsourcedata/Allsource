@@ -5,7 +5,7 @@ from .base import Base
 class BigcommerceConfig(Base):
     client_id = os.getenv('BIGCOMMERCE_CLIENT_ID')
     client_secret = os.getenv('BIGCOMMERCE_CLIENT_SECRET')
-    redirect_uri = f"{os.getenv("API_SITE_HOST_URL")}/api/integrations/bigcommerce/auth/callback"
+    redirect_uri = f"{os.getenv('API_SITE_HOST_URL')}/api/integrations/bigcommerce/auth/callback"
     frontend_redirect = f'{os.getenv("SITE_HOST_URL")}/{os.getenv("INTEGRATIONS_PART_URL")}'
     frontend_dashboard_redirect = f'{os.getenv("SITE_HOST_URL")}/dashboard'
     frontend_get_started_redirect = f'{os.getenv("SITE_HOST_URL")}/get-started?pixel=true'
