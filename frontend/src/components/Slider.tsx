@@ -8,6 +8,7 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from './ToastNotification';
 import CustomizedProgressBar from './CustomizedProgressBar';
+import { getCalendlyPopupUrl } from '@/services/booking';
 
 
 interface SliderProps {
@@ -36,30 +37,8 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
     email: email || '',
   };
 
-  const calendlyPopupUrl = () => {
-    const baseUrl = "https://calendly.com/validateapi-allforce/30min";
-    const searchParams = new URLSearchParams();
+  const calendlyPopupUrl = () => getCalendlyPopupUrl(utmParams);
   
-    if (utmParams) {
-      try {
-        const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
-  
-        if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
-          Object.entries(parsedUtmParams).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) {
-              searchParams.append(key, value as string);
-            }
-          });
-        }
-      } catch (error) {
-        console.error("Error parsing utmParams:", error);
-      }
-    }
-  
-    const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-    return finalUrl;
-  };
-
   const fetchPrefillData = async () => {
     try {
       const response = await axiosInstance.get('/calendly');
