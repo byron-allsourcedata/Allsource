@@ -10,6 +10,7 @@ import Image from 'next/image';
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from '../../../../components/ToastNotification';
 import axios from 'axios';
+import { getCalendlyPopupUrl } from '@/services/booking';
 
 
 
@@ -224,29 +225,7 @@ export const SettingsSubscription: React.FC = () => {
         }
     };
 
-    const calendlyPopupUrl = () => {
-        const baseUrl = "https://calendly.com/validateapi-allforce/30min";
-        const searchParams = new URLSearchParams();
-
-        if (utmParams) {
-            try {
-                const parsedUtmParams = typeof utmParams === 'string' ? JSON.parse(utmParams) : utmParams;
-
-                if (typeof parsedUtmParams === 'object' && parsedUtmParams !== null) {
-                    Object.entries(parsedUtmParams).forEach(([key, value]) => {
-                        if (value !== null && value !== undefined) {
-                            searchParams.append(key, value as string);
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error("Error parsing utmParams:", error);
-            }
-        }
-
-        const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
-        return finalUrl;
-    };
+    const calendlyPopupUrl = () => getCalendlyPopupUrl(utmParams);
 
 
     const handleChoosePlan = async (alias: string) => {
