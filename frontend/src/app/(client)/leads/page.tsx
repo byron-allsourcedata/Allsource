@@ -1658,7 +1658,9 @@ const Leads: React.FC = () => {
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         rowData={popupData} />
+
                     <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
+
                     <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
                         selectedLeads={Array.from(selectedRows)} />
 

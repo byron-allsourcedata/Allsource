@@ -6,6 +6,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../ToastNotification";
 import DemoFeedbackCard from "./DemoFeedbackCard";
 import DemoFollowup, { FollowupLink } from "./DemoFollowup";
+import { getBookingUrlWithParams } from "@/services/booking";
 
 interface HelpPoint {
   title: string;
@@ -81,47 +82,8 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
     } finally {
     }
   };
-  const calendlyPopupUrl = () => {
-    const baseUrl = "https://calendly.com/validateapi-allforce/30min";
-    const searchParams = new URLSearchParams();
 
-    if (utmParams) {
-      try {
-        const parsedUtmParams =
-          typeof utmParams === "string" ? JSON.parse(utmParams) : utmParams;
-
-        if (typeof parsedUtmParams === "object" && parsedUtmParams !== null) {
-          Object.entries(parsedUtmParams).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) {
-              searchParams.append(key, value as string);
-            }
-          });
-        }
-      } catch (error) {
-        console.error("Error parsing utmParams:", error);
-      }
-    }
-
-    const finalUrl = `${baseUrl}${searchParams.toString() ? `?${searchParams.toString()}` : ""
-      }`;
-    return finalUrl;
-
-  };
-  const calendlyUrl = React.useMemo(() => {
-    const baseUrl = "https://calendly.com/validateapi-allforce/30min";
-    if (!utmParams) return baseUrl;
-    const params = new URLSearchParams();
-    try {
-      const parsed = typeof utmParams === "string" ? JSON.parse(utmParams) : utmParams;
-      if (parsed && typeof parsed === "object") {
-        Object.entries(parsed).forEach(([k, v]) => {
-          if (v != null) params.append(k, String(v));
-        });
-      }
-    } catch {
-    }
-    return `${baseUrl}?${params.toString()}`;
-  }, [utmParams]);
+  const calendlyUrl = React.useMemo(() => getBookingUrlWithParams(utmParams), [utmParams])
 
   const handleSchedule = () => {
     // showToast("Opening Calendly in a new tab…");
