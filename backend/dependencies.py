@@ -56,6 +56,7 @@ from services.audience_sources import AudienceSourceService
 from services.aws import AWSService
 from services.companies import CompanyService
 from services.company_info import CompanyInfoService
+from services.crm.service import CrmService
 from services.dashboard import DashboardService
 from services.domains import UserDomainsService
 from services.integrations.base import IntegrationService
@@ -416,29 +417,27 @@ def get_partners_service(
     )
 
 
-def get_users_auth_service(db: Session = Depends(get_db),
-                           payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
-                           user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
-                           send_grid_persistence_service: SendgridPersistence = Depends(
-                               get_send_grid_persistence_service),
-                           plans_persistence: PlansPersistence = Depends(
-                               get_plans_persistence),
-                           integration_service: IntegrationService = Depends(
-                               get_integration_service),
-                           domain_persistence=Depends(get_user_domain_persistence),
-                           referral_persistence_service: ReferralDiscountCodesPersistence = Depends(
-                               get_referral_discount_codes_persistence),
-                           subscription_service: SubscriptionService = Depends(get_subscription_service),
-                           partners_service: PartnersService = Depends(
-                               get_partners_service),
-                           admin_persistence: AdminPersistence = Depends(
-                               get_admin_persistence)):
+def get_users_auth_service(
+    crm: CrmService,
+    db: Session = Depends(get_db),
+    payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
+    user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
+    send_grid_persistence_service: SendgridPersistence = Depends(get_send_grid_persistence_service),
+    plans_persistence: PlansPersistence = Depends(get_plans_persistence),
+    integration_service: IntegrationService = Depends(get_integration_service),
+    domain_persistence=Depends(get_user_domain_persistence),
+    referral_persistence_service: ReferralDiscountCodesPersistence = Depends(get_referral_discount_codes_persistence),
+    subscription_service: SubscriptionService = Depends(get_subscription_service),
+    partners_service: PartnersService = Depends(get_partners_service),
+    admin_persistence: AdminPersistence = Depends(get_admin_persistence)
+):
     return UsersAuth(db=db, payments_service=payments_plans, user_persistence_service=user_persistence_service,
                      send_grid_persistence_service=send_grid_persistence_service,
                      subscription_service=subscription_service,
                      plans_persistence=plans_persistence, integration_service=integration_service,
                      partners_service=partners_service, admin_persistence=admin_persistence,
-                     domain_persistence=domain_persistence, referral_persistence_service=referral_persistence_service
+                     domain_persistence=domain_persistence, referral_persistence_service=referral_persistence_service,
+                    crm=crm
                      )
 
 

@@ -698,7 +698,7 @@ class LeadsPersistence:
                 func.sum(LeadsRequests.spent_time_sec).label("total_spent_time")
             )
             .filter(LeadsRequests.lead_id.in_(lead_user_ids))
-            .group_by(LeadsRequests.lead_id, LeadsRequests.page)
+            .group_by(LeadsRequests.lead_id, LeadsRequests.page, LeadsRequests.page_parameters)
             .subquery()
         )
         
@@ -706,6 +706,7 @@ class LeadsPersistence:
             self.db.query(
                 latest_page_time_subquery.c.lead_id,
                 latest_page_time_subquery.c.page,
+                latest_page_time_subquery.c.page_parameters,
                 latest_page_time_subquery.c.total_spent_time
             )
             .all()
