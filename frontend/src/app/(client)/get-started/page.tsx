@@ -156,7 +156,7 @@ const GetStarted: React.FC = () => {
                     }}
                     Content={<CardsSection items={[
                         {
-                            title: 'Install Tracking Pixel',
+                            title: 'Install Pixel',
                             subtitle: 'It will automatically collect visitor information from your website.',
                             imageSrc: '/pixel.svg',
                             onClick: pixelInstalled ? undefined : () => handleClick(),

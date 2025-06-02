@@ -210,7 +210,7 @@ const AudienceFieldsSelector: React.FC<AudienceFieldsSelectorProps> = ({
             variant="outlined"
           >
             <Typography fontSize="0.8rem">
-              {disableResetSelection ? `Recommended` : `Set recommended`}
+              {disableResetSelection ? `Recomended` : `Set recommended`}
             </Typography>
           </Button>
         </Grid>
