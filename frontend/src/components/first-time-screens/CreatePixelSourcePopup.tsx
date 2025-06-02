@@ -275,7 +275,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({
                         Import Source from CSV file
                       </Typography>
                       <Typography className="description">
-                        Otherwise, you can upload a CSV file containing your
+                        Alternatively, you can upload a CSV file containing your
                         existing customer data.
                       </Typography>
                       <Box

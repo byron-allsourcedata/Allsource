@@ -2,6 +2,9 @@ from config.util import getenv
 
 
 class HubspotConfig:
+    api_key: str = None
+    base_url: str = None
+    
     @classmethod
     def init(cls):
         cls.api_key = getenv("HUBSPOT_API_KEY")

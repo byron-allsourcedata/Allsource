@@ -56,7 +56,10 @@ import TableCustomCell from "./components/table/TableCustomCell";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import TableWithEmptyData from "./components/table/TableWIthEmptyData";
 import HintCard from "../components/HintCard";
-import { CardsSection, FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
+import {
+  CardsSection,
+  FirstTimeScreenCommonVariant1,
+} from "@/components/first-time-screens";
 import { useSourcesHints } from "./context/SourcesHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
@@ -154,45 +157,53 @@ const Sources: React.FC = () => {
   const searchParams = useSearchParams();
   const isDebug = searchParams.get("is_debug") === "true";
   const tableContainerRef = useRef<HTMLDivElement>(null);
-  const { isScrolledX, isScrolledY } = useScrollShadow(tableContainerRef, data.length);
-  const { changeSourcesTableHint, sourcesTableHints, resetSourcesTableHints } = useSourcesHints();
+  const { isScrolledX, isScrolledY } = useScrollShadow(
+    tableContainerRef,
+    data.length
+  );
+  const { changeSourcesTableHint, sourcesTableHints, resetSourcesTableHints } =
+    useSourcesHints();
 
   const cardData: CardData[] = [
     {
       title: "Pixel",
-      description: "Install Pixel on your website to automatically collect visitor information in real-time.",
+      description:
+        "Install Pixel on your website to automatically collect visitor information in real-time.",
       icon: "/pixel-website.svg",
       onClick: () => {
         router.push("/sources/builder?type=pixel");
       },
-      isClickable: true
+      isClickable: true,
     },
     {
       title: "Customer Conversions (CSV)",
-      description: "This file should contain users who successfully completed valuable actions.",
+      description:
+        "This file should contain users who successfully completed valuable actions.",
       icon: "/converted-sale.svg",
       onClick: () => {
         router.push("/sources/builder?type=customer-conversions");
       },
-      isClickable: true
+      isClickable: true,
     },
     {
       title: "Failed Leads (CSV)",
-      description: "This file should contain users who engaged but didn't convert, so you can exclude them later.",
+      description:
+        "This file should contain users who engaged but didn't convert, so you can exclude them later.",
       icon: "/failed-leads.svg",
       onClick: () => {
         router.push("/sources/builder?type=failed-leads");
       },
-      isClickable: true
+      isClickable: true,
     },
     {
       title: "Interests (CSV)",
-      description: "This file should contain users who recently engaged with specific topics.",
+      description:
+        "This file should contain users who recently engaged with specific topics.",
       icon: "/interests.svg",
       onClick: () => {
         router.push("/sources/builder?type=interests");
       },
-      isClickable: true
+      isClickable: true,
     },
   ];
 
@@ -253,7 +264,7 @@ const Sources: React.FC = () => {
   ];
 
   useEffect(() => {
-    resetSourcesTableHints()
+    resetSourcesTableHints();
   }, []);
 
   useEffect(() => {
@@ -319,7 +330,7 @@ const Sources: React.FC = () => {
         ? isFirstLoad
           ? setLoading(true)
           : setLoaderForTable(true)
-        : () => { };
+        : () => {};
       const accessToken = localStorage.getItem("token");
       if (!accessToken) {
         router.push("/signin");
@@ -333,8 +344,9 @@ const Sources: React.FC = () => {
       let url = `/audience-sources?&page=${page + 1}&per_page=${rowsPerPage}`;
 
       if (filters.from_date || filters.to_date) {
-        url += `&created_date_start=${filters.from_date || ""
-          }&created_date_end=${filters.to_date || ""}`;
+        url += `&created_date_start=${
+          filters.from_date || ""
+        }&created_date_end=${filters.to_date || ""}`;
       }
       if (filters.selectedSource?.length > 0) {
         url += `&source_origin=${filters.selectedSource
@@ -439,7 +451,7 @@ const Sources: React.FC = () => {
           `/audience-sources/${selectedRowData.id}`
         );
         if (response.status === 200 && response.data) {
-          await fetchUserData(setIsGetStartedPage, setInstalledResources)
+          await fetchUserData(setIsGetStartedPage, setInstalledResources);
           showToast("Source successfully deleted!");
           setCount((prev) => (prev ? prev - 1 : 0));
           setData((prevAccounts: Source[]) =>
@@ -536,53 +548,53 @@ const Sources: React.FC = () => {
       label: string;
       value: string | ((f: any) => string);
     }[] = [
-        {
-          condition: filters.from_date,
-          label: "From Date",
-          value: () => dayjs.unix(filters.from_date!).format(dateFormat),
+      {
+        condition: filters.from_date,
+        label: "From Date",
+        value: () => dayjs.unix(filters.from_date!).format(dateFormat),
+      },
+      {
+        condition: filters.to_date,
+        label: "To Date",
+        value: () => dayjs.unix(filters.to_date!).format(dateFormat),
+      },
+      {
+        condition: filters.searchQuery,
+        label: "Search",
+        value: filters.searchQuery!,
+      },
+      {
+        condition: filters.selectedSource?.length > 0,
+        label: "Source",
+        value: () => filters.selectedSource.join(", "),
+      },
+      {
+        condition: filters.selectedTypes?.length > 0,
+        label: "Types",
+        value: () => filters.selectedTypes.join(", "),
+      },
+      {
+        condition: filters.selectedDomains?.length > 0,
+        label: "Domains",
+        value: () => filters.selectedDomains.join(", "),
+      },
+      {
+        condition: filters.createdDate?.length > 0,
+        label: "Created Date",
+        value: () => filters.createdDate.join(", "),
+      },
+      {
+        condition: filters.dateRange?.fromDate || filters.dateRange?.toDate,
+        label: "Date Range",
+        value: () => {
+          const from = dayjs
+            .unix(filters.dateRange.fromDate!)
+            .format(dateFormat);
+          const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
+          return `${from} to ${to}`;
         },
-        {
-          condition: filters.to_date,
-          label: "To Date",
-          value: () => dayjs.unix(filters.to_date!).format(dateFormat),
-        },
-        {
-          condition: filters.searchQuery,
-          label: "Search",
-          value: filters.searchQuery!,
-        },
-        {
-          condition: filters.selectedSource?.length > 0,
-          label: "Source",
-          value: () => filters.selectedSource.join(", "),
-        },
-        {
-          condition: filters.selectedTypes?.length > 0,
-          label: "Types",
-          value: () => filters.selectedTypes.join(", "),
-        },
-        {
-          condition: filters.selectedDomains?.length > 0,
-          label: "Domains",
-          value: () => filters.selectedDomains.join(", "),
-        },
-        {
-          condition: filters.createdDate?.length > 0,
-          label: "Created Date",
-          value: () => filters.createdDate.join(", "),
-        },
-        {
-          condition: filters.dateRange?.fromDate || filters.dateRange?.toDate,
-          label: "Date Range",
-          value: () => {
-            const from = dayjs
-              .unix(filters.dateRange.fromDate!)
-              .format(dateFormat);
-            const to = dayjs.unix(filters.dateRange.toDate!).format(dateFormat);
-            return `${from} to ${to}`;
-          },
-        },
-      ];
+      },
+    ];
 
     filterMappings.forEach(({ condition, label, value }) => {
       if (condition) {
@@ -685,8 +697,8 @@ const Sources: React.FC = () => {
     const newFilters: FilterParams = {
       from_date: updatedFilters.find((f) => f.label === "From Date")
         ? dayjs(
-          updatedFilters.find((f) => f.label === "From Date")!.value
-        ).unix()
+            updatedFilters.find((f) => f.label === "From Date")!.value
+          ).unix()
         : null,
       to_date: updatedFilters.find((f) => f.label === "To Date")
         ? dayjs(updatedFilters.find((f) => f.label === "To Date")!.value).unix()
@@ -705,23 +717,23 @@ const Sources: React.FC = () => {
         : [],
       createdDate: updatedFilters.find((f) => f.label === "Created Date")
         ? updatedFilters
-          .find((f) => f.label === "Created Date")!
-          .value.split(", ")
+            .find((f) => f.label === "Created Date")!
+            .value.split(", ")
         : [],
       dateRange: {
         fromDate: updatedFilters.find((f) => f.label === "Date Range")
           ? dayjs(
-            updatedFilters
-              .find((f) => f.label === "Date Range")!
-              .value.split(", ")[0]
-          ).unix()
+              updatedFilters
+                .find((f) => f.label === "Date Range")!
+                .value.split(", ")[0]
+            ).unix()
           : null,
         toDate: updatedFilters.find((f) => f.label === "Date Range")
           ? dayjs(
-            updatedFilters
-              .find((f) => f.label === "Date Range")!
-              .value.split(", ")[1]
-          ).unix()
+              updatedFilters
+                .find((f) => f.label === "Date Range")!
+                .value.split(", ")[1]
+            ).unix()
           : null,
       },
     };
@@ -762,7 +774,7 @@ const Sources: React.FC = () => {
       >
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <Box>
-            {(data.length !== 0 || selectedFilters.length > 0) &&
+            {(data.length !== 0 || selectedFilters.length > 0) && (
               <Box
                 sx={{
                   display: "flex",
@@ -835,7 +847,9 @@ const Sources: React.FC = () => {
                   <Button
                     onClick={handleFilterPopupOpen}
                     disabled={data?.length === 0}
-                    aria-controls={dropdownOpen ? "account-dropdown" : undefined}
+                    aria-controls={
+                      dropdownOpen ? "account-dropdown" : undefined
+                    }
                     aria-haspopup="true"
                     aria-expanded={dropdownOpen ? "true" : undefined}
                     sx={{
@@ -898,7 +912,6 @@ const Sources: React.FC = () => {
                     )}
                   </Button>
 
-
                   <HintCard
                     card={tableHintCards["builder"]}
                     positionLeft={-420}
@@ -907,17 +920,17 @@ const Sources: React.FC = () => {
                     isOpenBody={sourcesTableHints["builder"].showBody}
                     toggleClick={() => {
                       if (sourcesTableHints["actions"].showBody) {
-                        changeSourcesTableHint("actions", "showBody", "close")
+                        changeSourcesTableHint("actions", "showBody", "close");
                       }
-                      changeSourcesTableHint("builder", "showBody", "toggle")
+                      changeSourcesTableHint("builder", "showBody", "toggle");
                     }}
                     closeClick={() => {
-                      changeSourcesTableHint("builder", "showBody", "close")
+                      changeSourcesTableHint("builder", "showBody", "close");
                     }}
                   />
                 </Box>
               </Box>
-            }
+            )}
 
             <Box
               sx={{
@@ -987,9 +1000,10 @@ const Sources: React.FC = () => {
                         <Chip
                           className="paragraph"
                           key={filter.label}
-                          label={`${filter.label}: ${displayValue.charAt(0).toUpperCase() +
+                          label={`${filter.label}: ${
+                            displayValue.charAt(0).toUpperCase() +
                             displayValue.slice(1)
-                            }`}
+                          }`}
                           onDelete={() => handleDeleteFilter(filter)}
                           deleteIcon={
                             <CloseIcon
@@ -1030,50 +1044,78 @@ const Sources: React.FC = () => {
                       !(selectedFilters.length > 0) && (
                         <FirstTimeScreenCommonVariant1
                           Header={{
-                            TextTitle: 'Import Your First Source',
-                            TextSubtitle: "To begin building your audience, you'll first need to provide a data source. Create a source based on one of this types:",
-                            link: 'https://allsourceio.zohodesk.com/portal/en/kb/articles/sources',
+                            TextTitle: "Import Your First Source",
+                            TextSubtitle:
+                              "To begin building your audience, you'll first need to provide a data source. Create a source based on one of this types:",
+                            link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/sources",
                           }}
                           InfoNotification={{
-                            Text: 'This page displays all your created sources with key performance metrics for each. Track traffic quality, conversion rates, and ROI to identify your best-performing customer acquisition channels.',
+                            Text: "This page displays all your created sources with key performance metrics for each. Track traffic quality, conversion rates, and ROI to identify your best-performing customer acquisition channels.",
                           }}
-                          Content={<CardsSection items={[
-                            {
-                              title: 'Pixel',
-                              subtitle: 'Install Pixel on your website to automatically collect visitor information in real-time.',
-                              imageSrc: '/pixel.svg',
-                              onClick: () => router.push('/sources/builder?type=pixel'),
-                              showRecommended: false,
-                            },
-                            {
-                              title: 'Customer Conversions (CSV)',
-                              subtitle: 'This file should contains users who succesfully completed valuable actions.',
-                              imageSrc: '/converted-sale.svg',
-                              onClick: () => router.push('/sources/builder?type=customer-conversions'),
-                              showRecommended: false,
-                            },
-                            {
-                              title: 'Failed Leads (CSV)',
-                              subtitle: `This file should contains users who engaged but didn't convert, so you can exclude them later.`,
-                              imageSrc: '/failed-leads.svg',
-                              onClick: () => router.push('/sources/builder?type=failed-leads'),
-                              showRecommended: false,
-                            },
-                            {
-                              title: 'Interests (CSV)',
-                              subtitle: 'This file should contain users who recently engaged with specific topics. ',
-                              imageSrc: '/interests.svg',
-                              onClick: () => router.push('/sources/builder?type=interests'),
-                              showRecommended: false,
-                            },
-                          ]} />}
+                          Content={
+                            <CardsSection
+                              items={[
+                                {
+                                  title: "Pixel",
+                                  subtitle:
+                                    "Install Pixel on your website to automatically collect visitor information in real-time.",
+                                  imageSrc: "/pixel.svg",
+                                  onClick: () =>
+                                    router.push("/sources/builder?type=pixel"),
+                                  showRecommended: false,
+                                },
+                                {
+                                  title: "Customer Conversions (CSV)",
+                                  subtitle:
+                                    "This file should contains users who succesfully completed target actions.",
+                                  imageSrc: "/converted-sale.svg",
+                                  onClick: () =>
+                                    router.push(
+                                      "/sources/builder?type=customer-conversions"
+                                    ),
+                                  showRecommended: false,
+                                },
+                                {
+                                  title: "Failed Leads (CSV)",
+                                  subtitle: `This file should contains users who engaged but didn't convert, so you can exclude them later.`,
+                                  imageSrc: "/failed-leads.svg",
+                                  onClick: () =>
+                                    router.push(
+                                      "/sources/builder?type=failed-leads"
+                                    ),
+                                  showRecommended: false,
+                                },
+                                {
+                                  title: "Interests (CSV)",
+                                  subtitle:
+                                    "This file should contain users who recently engaged with specific topics. ",
+                                  imageSrc: "/interests.svg",
+                                  onClick: () =>
+                                    router.push(
+                                      "/sources/builder?type=interests"
+                                    ),
+                                  showRecommended: false,
+                                },
+                              ]}
+                            />
+                          }
                           HelpCard={{
-                            headline: 'Need Help with Your Source?',
-                            description: 'Book a free 30-minute call to optimize your source settings, troubleshoot issues, or boost performance.',
+                            headline: "Need Help with Your Source?",
+                            description:
+                              "Book a free 30-minute call to optimize your source settings, troubleshoot issues, or boost performance.",
                             helpPoints: [
-                              { title: 'Source Setup Review', description: 'Ensure correct configuration' },
-                              { title: 'Performance Audit', description: 'Diagnose and improve results' },
-                              { title: 'Advanced Strategies', description: 'Unlock hidden potential' },
+                              {
+                                title: "Source Setup Review",
+                                description: "Ensure correct configuration",
+                              },
+                              {
+                                title: "Performance Audit",
+                                description: "Diagnose and improve results",
+                              },
+                              {
+                                title: "Advanced Strategies",
+                                description: "Unlock hidden potential",
+                              },
                             ],
                           }}
                           LeftMenu={{
@@ -1088,12 +1130,14 @@ const Sources: React.FC = () => {
                               {
                                 Icon: SpeedIcon,
                                 title: "Performance Audit",
-                                subtitle: "Identify what's working (and what’s not) to prioritize high-value sources.",
+                                subtitle:
+                                  "Identify what's working (and what’s not) to prioritize high-value sources.",
                               },
                               {
                                 Icon: MovingIcon,
                                 title: "Advanced Strategies",
-                                subtitle: "Unlock pro techniques to transform raw data into high-performing audiences.",
+                                subtitle:
+                                  "Unlock pro techniques to transform raw data into high-performing audiences.",
                               },
                             ],
                           }}
@@ -1104,15 +1148,19 @@ const Sources: React.FC = () => {
                             alignItems: "center",
                             maxWidth: "850px",
                             margin: "0 auto",
-                            mt: 2
+                            mt: 2,
                           }}
                         />
-                      )
-                    }
+                      )}
                     {data.length === 0 &&
                       selectedFilters.length > 0 &&
                       !loaderForTable && (
-                        <TableWithEmptyData columns={columns} loaderForTable={loaderForTable} selectedFiltersLength={selectedFilters.length} isScrolledX={isScrolledX} />
+                        <TableWithEmptyData
+                          columns={columns}
+                          loaderForTable={loaderForTable}
+                          selectedFiltersLength={selectedFilters.length}
+                          isScrolledX={isScrolledX}
+                        />
                       )}
 
                     {data.length !== 0 && (
@@ -1330,15 +1378,33 @@ const Sources: React.FC = () => {
                                             positionLeft={-400}
                                             positionTop={85}
                                             rightSide={true}
-                                            isOpenBody={sourcesTableHints["actions"].showBody}
+                                            isOpenBody={
+                                              sourcesTableHints["actions"]
+                                                .showBody
+                                            }
                                             toggleClick={() => {
-                                              if (sourcesTableHints["builder"].showBody) {
-                                                changeSourcesTableHint("builder", "showBody", "close")
+                                              if (
+                                                sourcesTableHints["builder"]
+                                                  .showBody
+                                              ) {
+                                                changeSourcesTableHint(
+                                                  "builder",
+                                                  "showBody",
+                                                  "close"
+                                                );
                                               }
-                                              changeSourcesTableHint("actions", "showBody", "toggle")
+                                              changeSourcesTableHint(
+                                                "actions",
+                                                "showBody",
+                                                "toggle"
+                                              );
                                             }}
                                             closeClick={() => {
-                                              changeSourcesTableHint("actions", "showBody", "close")
+                                              changeSourcesTableHint(
+                                                "actions",
+                                                "showBody",
+                                                "close"
+                                              );
                                             }}
                                           />
                                         )}
@@ -1380,8 +1446,14 @@ const Sources: React.FC = () => {
                               <TableBody>
                                 {data.map((row: Source) => {
                                   const progress = sourceProgress[row.id];
-                                  const isDisabled = row.matched_records === 0 || row.matched_records_status === "pending";
-                                  const url = `${isDisabled ? "#" : '/insights/sources/' + String(row.id)}`
+                                  const isDisabled =
+                                    row.matched_records === 0 ||
+                                    row.matched_records_status === "pending";
+                                  const url = `${
+                                    isDisabled
+                                      ? "#"
+                                      : "/insights/sources/" + String(row.id)
+                                  }`;
                                   return (
                                     <TableRow
                                       key={row.id}
@@ -1389,7 +1461,7 @@ const Sources: React.FC = () => {
                                       sx={{
                                         backgroundColor:
                                           selectedRows.has(row.id) &&
-                                            !loaderForTable
+                                          !loaderForTable
                                             ? "rgba(247, 247, 247, 1)"
                                             : "#fff",
                                         "&:hover": {
@@ -1495,6 +1567,7 @@ const Sources: React.FC = () => {
 
 
                                       {/* Created date Column */}
+
                                       {(() => {
                                         const created = dayjs(row.created_at).isValid()
                                           ? dayjs(row.created_at).format("MMM D, YYYY")
@@ -1517,7 +1590,6 @@ const Sources: React.FC = () => {
                                           </SmartCell>
                                         );
                                       })()}
-
                                       {/* Created By Column */}
                                       <SmartCell
                                         contentOptions={{
@@ -1672,7 +1744,10 @@ const Sources: React.FC = () => {
                                             }}
                                           >
                                             <ListItemButton
-                                              disabled={selectedRowData?.matched_records === 0}
+                                              disabled={
+                                                selectedRowData?.matched_records ===
+                                                0
+                                              }
                                               sx={{
                                                 padding: "4px 16px",
                                                 ":hover": {

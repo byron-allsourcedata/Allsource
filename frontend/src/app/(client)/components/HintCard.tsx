@@ -37,14 +37,62 @@ const HintCard: React.FC<HintCardProps> = ({
   sx,
 }) => {
   const [showHint, setShowHint] = useState(false);
+  const { showHints } = useHints();
+  const [hintTimeout, setHintTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isFirstOpen, setIsFirstOpen] = useState(false);
+  const [isSecondOpen, setIsSecondOpen] = useState(false);
 
-  const hideBody = () => {
+
+  // const showBody = () => {
+  //   setShowHint(true);
+  //   const closeTimeout = setTimeout(hideBody, 3000);
+  //   return () => clearTimeout(closeTimeout);
+  // };
+
+  // const hideBody = () => {
+  //   setShowHint(false)
+  // }
+
+  // useTimeout(showBody, 2000);
+
+  const showBody = () => {
+    if (hintTimeout) {
+      clearTimeout(hintTimeout);
+    }
+
     setShowHint(true);
+
+    const closeTimeout = setTimeout(() => {
+      setShowHint(false);
+    }, 3000);
+
+    setHintTimeout(closeTimeout);
   };
 
-  useTimeout(hideBody, 2000);
+  React.useEffect(() => {
+    if(isFirstOpen && isSecondOpen){
+      showBody();
+    }
+    else { 
+      const openTimeout = setTimeout(() => {
+        showBody();
+      }, 2000);
 
-  const { showHints } = useHints();
+      return () => {
+        clearTimeout(openTimeout);
+        setIsFirstOpen(true);
+        if (hintTimeout) {
+          clearTimeout(hintTimeout);
+        }
+      };
+    }
+
+    if (!isSecondOpen){
+      setIsSecondOpen(true);
+    }
+
+  }, [toggleClick]);
+
 
   return (
     <>
@@ -65,7 +113,7 @@ const HintCard: React.FC<HintCardProps> = ({
               left: positionLeft,
               top: positionTop ?? 10,
               width: 400,
-              pointerEvents: isOpenBody? undefined: "none",
+              pointerEvents: isOpenBody ? undefined : "none",
               ...sx,
             }}
           >
@@ -125,7 +173,9 @@ const HintCard: React.FC<HintCardProps> = ({
               </Box>
             )}
             <PulsingDotComponent
-              toggleClick={toggleClick}
+              toggleClick={() => {
+                toggleClick()
+              }}
               rightSide={rightSide}
             />
           </Box>
