@@ -212,28 +212,34 @@ const Insights = () => {
     return <CustomizedProgressBar />;
   }
 
-  
+
 
   return (
     <Box sx={{ width: "100%", height: "calc(100vh - 4.25rem)", pr: 3, flexGrow: 1, pt: 2 }}>
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
         {sourceData.length > 0 || lookalikeData.length > 0 ? (
-          <Box>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            // justifyContent: "flex-start",
+            flexDirection: 'column',
+          }}>
             <Box
               sx={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "space-between",
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                width: '100%',
                 flexWrap: "wrap",
                 gap: "15px",
               }}
             >
               <Box
                 sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
+                  width: '55%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-start',
                   gap: 1,
                   "@media (max-width: 900px)": {
                     paddingLeft: 1,
