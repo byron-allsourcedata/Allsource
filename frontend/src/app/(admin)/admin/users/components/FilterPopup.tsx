@@ -254,26 +254,30 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
       const newTag =
         fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
 
+
       setSelectedTags((prevTags) => {
-        const updatedTags = {
-          ...prevTags,
-          createdDate: newTag ? [newTag] : [],
-        };
+        let updatedJoinTags = prevTags.createdDate;
+
+        const oldTag =
+          oldFromDate && oldToDate
+            ? `From ${oldFromDate} to ${oldToDate}`
+            : null;
+
+        if (oldTag && updatedJoinTags.includes(oldTag)) {
+          updatedJoinTags = updatedJoinTags.filter((tag) => tag !== oldTag);
+        }
+
+        const newTag =
+          fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
 
         if (newTag) {
-          addTag("createdDate", newTag);
+          updatedJoinTags = [newTag];
         }
 
-        if (!newTag && prevTags.createdDate.length > 0) {
-          setDateRange({ fromDate: null, toDate: null });
-        } else if (newTag && oldFromDate && oldToDate) {
-          removeTag(
-            "createdDate",
-            `From ${oldFromDate} to ${oldToDate}`
-          );
-        }
-
-        return updatedTags;
+        return {
+          ...prevTags,
+          createdDate: updatedJoinTags,
+        };
       });
 
       return updatedRange;
@@ -313,26 +317,31 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
         fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
 
       setSelectedTags((prevTags) => {
-        const updatedTags = {
-          ...prevTags,
-          joinDate: newTag ? [newTag] : [],
-        };
+        let updatedJoinTags = prevTags.joinDate;
+
+        const oldTag =
+          oldFromDate && oldToDate
+            ? `From ${oldFromDate} to ${oldToDate}`
+            : null;
+
+        if (oldTag && updatedJoinTags.includes(oldTag)) {
+          updatedJoinTags = updatedJoinTags.filter((tag) => tag !== oldTag);
+        }
+
+        const newTag =
+          fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
 
         if (newTag) {
-          addTag("joinDate", newTag);
+          updatedJoinTags = [newTag];
         }
 
-        if (!newTag && prevTags.createdDate.length > 0) {
-          setJoinDateRange({ fromDate: null, toDate: null });
-        } else if (newTag && oldFromDate && oldToDate) {
-          removeTag(
-            "joinDate",
-            `From ${oldFromDate} to ${oldToDate}`
-          );
-        }
-
-        return updatedTags;
+        return {
+          ...prevTags,
+          joinDate: updatedJoinTags,
+        };
       });
+
+
 
       return updatedRange;
     });

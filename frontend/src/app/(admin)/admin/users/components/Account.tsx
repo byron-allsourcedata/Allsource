@@ -275,8 +275,10 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                             <Box
                                 sx={{
                                     display: "flex",
+                                    flexWrap: "wrap",
                                     alignItems: "center",
                                     color: (isCurrentUser || row.type !== 'user') ? "#000" : "rgba(56, 152, 252, 1)",
+                                    gap: 0.5,
                                 }}
                             >
                                 <Box
@@ -298,11 +300,12 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                             height: "20px",
                                             backgroundColor: "#FFE0B2",
                                             color: "#BF360C",
-                                            ml: 1,
+                                            ml: 0,
                                         }}
                                     />
                                 )}
                             </Box>
+
 
                             {(!isCurrentUser && row.type == 'user') && (
                                 <IconButton
