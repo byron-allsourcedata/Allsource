@@ -3,6 +3,8 @@ import json
 import logging
 import os
 from datetime import datetime, timedelta, timezone
+
+import pytz
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -30,8 +32,10 @@ logger = logging.getLogger(__name__)
 class AdminCustomersService:
 
     def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
-                 plans_persistence: PlansPersistence, users_auth_service: UsersAuth, send_grid_persistence: SendgridPersistence,
-                 partners_persistence: PartnersPersistence, dashboard_audience_persistence: DashboardAudiencePersistence,
+                 plans_persistence: PlansPersistence, users_auth_service: UsersAuth,
+                 send_grid_persistence: SendgridPersistence,
+                 partners_persistence: PartnersPersistence,
+                 dashboard_audience_persistence: DashboardAudiencePersistence,
                  admin_persistence: AdminPersistence):
         self.db = db
         self.subscription_service = subscription_service
@@ -43,15 +47,17 @@ class AdminCustomersService:
         self.dashboard_audience_persistence = dashboard_audience_persistence
         self.admin_persistence = admin_persistence
 
-    def get_admin_users(self, page, per_page, sort_by, sort_order):
-        allowed_sort_fields = ['created_at', 'last_login']
-        allowed_sort_orders = ['asc', 'desc']
-
-        sort_by = sort_by if sort_by in allowed_sort_fields else 'created_at'
-        sort_order = sort_order if sort_order in allowed_sort_orders else 'desc'
-
-        admin_users = self.user_persistence.get_admin_users()
-        invitations_admin = self.admin_persistence.get_pending_invitations_admin()
+    def get_admin_users(self, *, search_query: str, page: int, per_page: int, sort_by: str, sort_order: str,
+                        last_login_date_start: int,
+                        last_login_date_end: int, join_date_start: int, join_date_end: int):
+        admin_users = self.user_persistence.get_admin_users(search_query=search_query,
+                                                            last_login_date_start=last_login_date_start,
+                                                            last_login_date_end=last_login_date_end,
+                                                            join_date_start=join_date_start,
+                                                            join_date_end=join_date_end)
+        invitations_admin = self.admin_persistence.get_pending_invitations_admin(search_query=search_query,
+                                                                                 join_date_start=join_date_start,
+                                                                                 join_date_end=join_date_end) if not last_login_date_start else []
 
         users_dict = [
             {
@@ -72,7 +78,7 @@ class AdminCustomersService:
                 'id': inv.id,
                 'email': inv.email,
                 'full_name': inv.full_name,
-                'created_at': inv.date_invited_at,
+                'created_at': inv.created_at,
                 'last_login': None,
                 'invited_by_email': inv.invited_by_email,
                 'role': None,
@@ -83,9 +89,25 @@ class AdminCustomersService:
 
         combined = users_dict + invitations_admin_dicts
 
+        def normalize_sort_value(value):
+            if isinstance(value, datetime):
+                return value
+            if isinstance(value, int):
+                return datetime.fromtimestamp(value)
+            return datetime.min
+
+        sort_key_mapping = {
+            'id': 'id',
+            'join_date': 'created_at',
+            'last_login_date': 'last_login'
+        }
+
+        sort_key = sort_key_mapping.get(sort_by, 'created_at')
+        reverse_order = sort_order == 'desc'
+
         combined.sort(
-            key=lambda x: x.get(sort_by) or datetime.min,
-            reverse=(sort_order == 'desc')
+            key=lambda x: normalize_sort_value(x.get(sort_key)),
+            reverse=reverse_order
         )
 
         start = (page - 1) * per_page
@@ -141,8 +163,16 @@ class AdminCustomersService:
             'status': AdminStatus.SUCCESS
         }
 
-    def get_customer_users(self, page, per_page, sort_by, sort_order):
-        users, total_count = self.user_persistence.get_customer_users(page, per_page, sort_by, sort_order)
+    def get_customer_users(self, *, search_query: str, page: int, per_page: int, sort_by: str, sort_order: str,
+                           last_login_date_start: int, last_login_date_end: int, join_date_start: int,
+                           join_date_end: int):
+        users, total_count = self.user_persistence.get_customer_users(search_query=search_query, page=page,
+                                                                      per_page=per_page, sort_by=sort_by,
+                                                                      sort_order=sort_order,
+                                                                      last_login_date_start=last_login_date_start,
+                                                                      last_login_date_end=last_login_date_end,
+                                                                      join_date_start=join_date_start,
+                                                                      join_date_end=join_date_end)
         result = []
         users_dict = [
             dict(
@@ -179,7 +209,7 @@ class AdminCustomersService:
                         payment_status = 'TRIAL_ACTIVE'
                     else:
                         payment_status = 'SUBSCRIPTION_ACTIVE'
-                
+
             result.append({
                 "id": user.get('id'),
                 "email": user.get('email'),
@@ -215,22 +245,23 @@ class AdminCustomersService:
         }
 
     def get_user_by_email(self, email):
-            user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
-            return user_object
-    
+        user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
+        return user_object
+
     def create_subscription_for_partner(self, user: Users):
         if not user.current_subscription_id:
-                    self.subscription_service.create_subscription_from_partners(user_id=user.id)
+            self.subscription_service.create_subscription_from_partners(user_id=user.id)
         else:
             user_subscription = self.subscription_service.get_user_subscription(user_id=user.id)
-            if user_subscription.is_trial or user_subscription.plan_end.replace(tzinfo=timezone.utc) < get_utc_aware_date():
+            if user_subscription.is_trial or user_subscription.plan_end.replace(
+                    tzinfo=timezone.utc) < get_utc_aware_date():
                 self.subscription_service.create_subscription_from_partners(user_id=user.id)
 
     def update_user(self, update_data: UpdateUserRequest):
         user = self.db.query(Users).filter(Users.id == update_data.user_id).first()
         if not user:
             return UpdateUserStatus.USER_NOT_FOUND
-        
+
         if update_data.is_partner:
             if update_data.is_partner == True:
                 self.create_subscription_for_partner(user=user)
@@ -249,7 +280,7 @@ class AdminCustomersService:
                 self.partners_persistence.create_partner(creating_data)
             user.is_partner = update_data.is_partner
             self.db.commit()
-        
+
         return UpdateUserStatus.SUCCESS
 
     def get_user_subscription(self, user_id):
@@ -281,6 +312,5 @@ class AdminCustomersService:
             self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
         else:
             self.subscription_service.remove_trial(user_data.id)
-        
+
         return user_data
-    

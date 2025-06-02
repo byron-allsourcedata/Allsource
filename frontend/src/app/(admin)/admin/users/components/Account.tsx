@@ -1,6 +1,6 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box, Typography, TextField, Button, Tabs, Tab, Grid, Chip, Popover, Paper, IconButton, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MoreHoriz } from "@mui/icons-material";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
@@ -9,6 +9,8 @@ import dayjs from "dayjs";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import Image from "next/image";
+import { throttle } from 'lodash';
+import CloseIcon from '@mui/icons-material/Close';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import CustomTablePagination from "@/components/CustomTablePagination";
 import InviteAdmin from "./InviteAdmin";
@@ -523,12 +525,12 @@ interface AccountData {
 }
 
 interface FilterParams {
-    joinDate: string[];
-    lastLoginDate: string | null;
+    joinDate: { fromDate: number | null; toDate: number | null };
+    lastLoginDate: { fromDate: number | null; toDate: number | null };
 }
 
 
-const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFromMain, is_admin, setLoading, tabIndex, handleTabChange }) => {
+const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabIndex, handleTabChange }) => {
     const tableHeaders = is_admin
         ? [
             { key: 'name', label: 'Account name', sortable: false },
@@ -561,22 +563,39 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     const [currentPage, setCurrentPage] = useState(1);
     const [isSliderOpen, setSliderOpen] = useState(false);
     const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-    const [joinDate, setJoinDate] = useState<string[]>([]);
     const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
-    const [lastLoginDate, setLastLoginDate] = useState<string[]>([]);
-    const [appliedDates, setAppliedDates] = useState<{ start: Date | null; end: Date | null }>(appliedDatesFromMain ?? { start: null, end: null });
     const [userData, setUserData] = useState<UserData[]>([]);
+
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>();
     const [search, setSearch] = useState("");
 
     const fetchData = async () => {
         try {
             let url = '/admin'
+
             if (tabIndex === 0) {
                 url += `/admins?page=${page + 1}&per_page=${rowsPerPage}` + `&sort_by=${orderBy}&sort_order=${order}`;
             } else if (tabIndex === 1) {
                 url += `/users?page=${page + 1}&per_page=${rowsPerPage}` + `&sort_by=${orderBy}&sort_order=${order}`;
             }
+
+            selectedFilters.forEach(filter => {
+                if (filter.label === "Last login date" || filter.label === "Join date") {
+                    const [start, end] = filter.value.split(" to ");
+                    const paramKeyStart = `${filter.label.toLowerCase().replace(/\s+/g, "_")}_start`;
+                    const paramKeyEnd = `${filter.label.toLowerCase().replace(/\s+/g, "_")}_end`;
+
+                    const startUnix = Math.floor(new Date(start).getTime() / 1000);
+                    const endUnix = Math.floor(new Date(end).getTime() / 1000);
+
+                    url += `&${paramKeyStart}=${startUnix}&${paramKeyEnd}=${endUnix}`;
+                }
+            });
+
+            if (search.trim() !== "") {
+                url += `&search_query=${encodeURIComponent(search.trim())}`;
+            }
+
 
             const response = await axiosInstance.get(url);
             if (response.status === 200) {
@@ -606,11 +625,13 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
             return;
         }
         fetchData();
-    }, [currentPage, page, rowsPerPage, order]);
+    }, [currentPage, page, rowsPerPage, order, selectedFilters]);
 
-    const handleSearchChange = (event: any) => {
+
+    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         setSearch(event.target.value);
     };
+
 
     const handleFormOpenPopup = () => {
         setSliderOpen(true);
@@ -626,44 +647,97 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
     };
 
     const handleApplyFilters = (filters: FilterParams) => {
-        // const newSelectedFilters: { label: string; value: string }[] = [];
+        const newSelectedFilters: { label: string; value: string }[] = [];
+        const dateFormat = "YYYY-MM-DD";
 
-        // const getSelectedValues = (obj: Record<string, boolean>): string => {
-        //     return Object.entries(obj)
-        //         .filter(([_, value]) => value)
-        //         .map(([key]) => key)
-        //         .join(', ');
-        // };
+        const filterMappings: {
+            condition: boolean | string | string[] | number | null;
+            label: string;
+            value: string | ((f: any) => string);
+        }[] = [
+                {
+                    condition: filters.lastLoginDate?.fromDate || filters.lastLoginDate?.toDate,
+                    label: "Last login date",
+                    value: () => {
+                        const from = dayjs
+                            .unix(filters.lastLoginDate.fromDate!)
+                            .format(dateFormat);
+                        const to = dayjs.unix(filters.lastLoginDate.toDate!).format(dateFormat);
+                        return `${from} to ${to}`;
+                    },
+                },
+                {
+                    condition: filters.joinDate?.fromDate || filters.joinDate?.toDate,
+                    label: "Join date",
+                    value: () => {
+                        const from = dayjs
+                            .unix(filters.joinDate.fromDate!)
+                            .format(dateFormat);
+                        const to = dayjs.unix(filters.joinDate.toDate!).format(dateFormat);
+                        return `${from} to ${to}`;
+                    },
+                },
+            ];
 
-        // // Map of filter conditions to their labels
-        // const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
-        //     { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
-        //     { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
-        //     { 
-        //         condition: filters.seniority && Object.values(filters.seniority).some(Boolean), 
-        //         label: 'Seniority', 
-        //         value: () => getSelectedValues(filters.seniority!) 
-        //     },
-        //     { 
-        //         condition: filters.jobTitle && Object.values(filters.jobTitle).some(Boolean), 
-        //         label: 'Job Title', 
-        //         value: () => getSelectedValues(filters.jobTitle!) 
-        //     },
-        //     { 
-        //         condition: filters.department && Object.values(filters.department).some(Boolean), 
-        //         label: 'Department', 
-        //         value: () => getSelectedValues(filters.department!) 
-        //     },
-        // ];
+        filterMappings.forEach(({ condition, label, value }) => {
+            if (condition) {
+                newSelectedFilters.push({
+                    label,
+                    value: typeof value === "function" ? value(filters) : value,
+                });
+            }
+        });
 
+        setSelectedFilters(newSelectedFilters);
+    };
 
-        // filterMappings.forEach(({ condition, label, value }) => {
-        //     if (condition) {
-        //         newSelectedFilters.push({ label, value: typeof value === 'function' ? value(filters) : value });
-        //     }
-        // });
+    const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
+        const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
 
-        // setSelectedFilters(newSelectedFilters);
+        setSelectedFilters(updatedFilters);
+
+        const filters = JSON.parse(sessionStorage.getItem('filtersByAdmin') || '{}');
+
+        switch (filterToDelete.label) {
+            case 'From Date':
+                filters.from_date = null;
+                break;
+            case 'To Date':
+                filters.to_date = null;
+                break;
+            default:
+                break;
+        }
+
+        sessionStorage.setItem('filtersByAdmin', JSON.stringify(filters));
+    };
+
+    const handleResetFilters = async () => {
+        const url = `/admin/admins?page=${page + 1}&per_page=${rowsPerPage}` + `&sort_by=${orderBy}&sort_order=${order}`
+
+        try {
+            setLoading(true)
+            sessionStorage.removeItem('filtersByAdmin')
+            const response = await axiosInstance.get(url);
+            if (response.status === 200) {
+                setUserData(response.data.users);
+                setTotalCount(response.data.count)
+                const options = [50, 100, 300, 500];
+                let RowsPerPageOptions = options.filter(option => option <= response.data.count);
+                if (RowsPerPageOptions.length < options.length) {
+                    RowsPerPageOptions = [...RowsPerPageOptions, options[RowsPerPageOptions.length]];
+                }
+                setRowsPerPageOptions(RowsPerPageOptions);
+                const selectedValue = RowsPerPageOptions.includes(rowsPerPage) ? rowsPerPage : 15;
+                setRowsPerPage(selectedValue);
+            }
+            setSelectedFilters([]);
+        } catch (error) {
+            console.error('Error fetching leads:', error);
+        }
+        finally {
+            setLoading(false)
+        }
     };
 
 
@@ -707,18 +781,6 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
         setAccounts(sortedAccounts);
     };
 
-    useEffect(() => {
-        if (
-            appliedDatesFromMain?.start instanceof Date || appliedDatesFromMain?.start === null &&
-            appliedDatesFromMain?.end instanceof Date || appliedDatesFromMain?.end === null
-        ) {
-            setAppliedDates(appliedDatesFromMain);
-        }
-
-    }, [appliedDatesFromMain]);
-
-
-
     const tabs = [
         { label: "Admins", visible: true },
         { label: "Accounts", visible: true }
@@ -740,62 +802,123 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                 '@media (max-width: 600px)': { margin: '0rem auto 0rem' }
             }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', pb: "24px", }}>
-
-                    <Tabs
-                        value={tabIndex}
-                        onChange={handleTabChange}
-                        aria-label="partners role tabs"
-                        TabIndicatorProps={{
-                            sx: {
-                                backgroundColor: '#5052B2',
-                                height: '2px',
-                                bottom: 15,
-                            },
-                        }}
-                        sx={{
-                            minHeight: 0,
-                            '@media (max-width: 600px)': {
-                                border: '1px solid rgba(228, 228, 228, 1)',
-                                borderRadius: '4px',
-                                width: '100%',
-                                '& .MuiTabs-indicator': {
-                                    height: '1.4px',
+                    <Box>
+                        <Tabs
+                            value={tabIndex}
+                            onChange={handleTabChange}
+                            aria-label="admin tabs"
+                            TabIndicatorProps={{
+                                sx: {
+                                    backgroundColor: '#5052B2',
+                                    height: '2px',
+                                    bottom: 5,
                                 },
-                            },
-                        }}
-                    >
-                        {tabs.filter(t => t.visible).map((tab, index) => (
-                            <Tab
-                                key={index}
-                                label={tab.label}
-                                sx={{
-                                    textTransform: 'none',
-                                    padding: '4px 1px',
-                                    minHeight: 'auto',
-                                    flexGrow: 1,
-                                    pb: '10px',
-                                    textAlign: 'center',
-                                    fontSize: '14px',
-                                    fontWeight: 700,
-                                    lineHeight: '19.1px',
-                                    minWidth: 'auto',
-                                    mr: 2,
-                                    '&.Mui-selected': {
-                                        color: '#5052B2',
+                            }}
+                            sx={{
+                                maxWidth: 200,
+                                minHeight: 0,
+                                justifyContent: 'flex-start',
+                                alignItems: 'left',
+                                '@media (max-width: 600px)': {
+                                    border: '1px solid rgba(228, 228, 228, 1)',
+                                    borderRadius: '4px',
+                                    width: '100%',
+                                    '& .MuiTabs-indicator': {
+                                        height: '1.4px',
                                     },
-                                    '@media (max-width: 600px)': {
-                                        mr: 1,
-                                        borderRadius: '4px',
+                                },
+                            }}
+                        >
+                            {tabs.filter(t => t.visible).map((tab, index) => (
+                                <Tab
+                                    key={index}
+                                    label={tab.label}
+                                    sx={{
+                                        textTransform: 'none',
+                                        padding: '4px 1px',
+                                        minHeight: 'auto',
+                                        flexGrow: 1,
+                                        pb: '10px',
+                                        textAlign: 'center',
+                                        fontSize: '14px',
+                                        fontWeight: 700,
+                                        lineHeight: '19.1px',
+                                        minWidth: 'auto',
+                                        mr: 2,
                                         '&.Mui-selected': {
-                                            backgroundColor: 'rgba(249, 249, 253, 1)',
-                                            border: '1px solid rgba(220, 220, 239, 1)',
+                                            color: '#5052B2',
                                         },
-                                    },
-                                }}
-                            />
-                        ))}
-                    </Tabs>
+                                        '@media (max-width: 600px)': {
+                                            mr: 1,
+                                            borderRadius: '4px',
+                                            '&.Mui-selected': {
+                                                backgroundColor: 'rgba(249, 249, 253, 1)',
+                                                border: '1px solid rgba(220, 220, 239, 1)',
+                                            },
+                                        },
+                                    }}
+                                />
+                            ))}
+                        </Tabs>
 
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                flexDirection: 'row',
+                                flexWrap: 'wrap',
+                                gap: 1,
+                                mt: 2,
+                                mb: 2,
+                                overflowX: 'auto',
+                                '@media (max-width: 600px)': {
+                                    mb: 1,
+                                },
+                            }}
+                        >
+                            {selectedFilters.length > 0 && (
+                                <Chip
+                                    className='second-sub-title'
+                                    label="Clear all"
+                                    onClick={handleResetFilters}
+                                    sx={{
+                                        color: 'rgba(56, 152, 252, 1) !important',
+                                        backgroundColor: 'transparent',
+                                        lineHeight: '20px !important',
+                                        fontWeight: '400 !important',
+                                        borderRadius: '4px',
+                                    }}
+                                />
+                            )}
+                            {selectedFilters.map(filter => {
+                                const displayValue =
+                                    filter.value.charAt(0).toUpperCase() + filter.value.slice(1);
+                                return (
+                                    <Chip
+                                        className='paragraph'
+                                        key={filter.label}
+                                        label={`${filter.label}: ${displayValue}`}
+                                        onDelete={() => handleDeleteFilter(filter)}
+                                        deleteIcon={
+                                            <CloseIcon
+                                                sx={{
+                                                    backgroundColor: 'transparent',
+                                                    color: '#828282 !important',
+                                                    fontSize: '14px !important',
+                                                }}
+                                            />
+                                        }
+                                        sx={{
+                                            borderRadius: '4.5px',
+                                            backgroundColor: 'rgba(80, 82, 178, 0.10)',
+                                            color: '#5F6368 !important',
+                                            lineHeight: '16px !important',
+                                        }}
+                                    />
+                                );
+                            })}
+                        </Box>
+                    </Box>
 
                     <Box sx={{ display: 'flex', gap: "16px" }}>
                         <TextField
@@ -803,15 +926,13 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                             placeholder="Search by account name, emails"
                             value={search}
                             onChange={(e) => {
-                                const value = e.target.value;
                                 handleSearchChange(e);
-                                if (value === "") {
-                                    //   fetchRules();
-                                }
+                                fetchData();
                             }}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') {
-                                    // fetchRules();
+                                    e.preventDefault();
+                                    fetchData();
                                 }
                             }}
                             InputProps={{
@@ -868,6 +989,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                             aria-expanded={undefined}
                             sx={{
                                 textTransform: 'none',
+                                height: '40px',
                                 color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
                                 border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
                                 borderRadius: '4px',
@@ -911,9 +1033,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ appliedDates: appliedDatesFr
                         </Button>
                         <FilterPopup open={filterPopupOpen}
                             onClose={handleFilterPopupClose}
-                            onApply={handleApplyFilters}
-                            joinDate={joinDate || []}
-                            lastLoginDate={lastLoginDate || []} />
+                            onApply={handleApplyFilters} />
 
                     </Box>
                 </Box>
