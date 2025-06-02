@@ -9,3 +9,6 @@ class AddingCRMContact(Exception):
     ):
         self.contact = contact
         self.exception = exception
+
+class UpdateContactStatusException(Exception):
+    pass

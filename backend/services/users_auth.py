@@ -27,7 +27,9 @@ from services.partners import PartnersService
 from schemas.integrations.integrations import ShopifyOrBigcommerceCredentials
 from services.payments_plans import PaymentsPlans
 from . import stripe_service
-from .crm.hubspot.api import HubspotAPI, NewContactCRM
+from .crm.hubspot.api import NewContactCRM
+from .crm.hubspot.exceptions import AddingCRMContact, UpdateContactStatusException
+from .crm.hubspot.schemas import HubspotLeadStatus
 from .crm.service import CrmService
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
 from .sendgrid import SendgridHandler
@@ -298,8 +300,10 @@ class UsersAuth:
                 referral_token is None,
             ]
         if all(conditions):
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)    
-            
+            self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
+
+        self.__on_create_account(email=user_object.email, full_name=user_object.full_name)
+
         if not user_object.is_with_card:
             return {
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,
@@ -599,6 +603,7 @@ class UsersAuth:
             shop_hash is None
         ]
         if all(conditions):
+            self.__on_create_account(email=user_object.email, full_name=user_object.full_name)
             return self._send_email_verification(user_object, token)
             
         if teams_token:
@@ -815,14 +820,37 @@ class UsersAuth:
         return {'status': VerifyToken.INCORRECT_TOKEN}
 
 
+    def __on_create_account(self, full_name: str, email: str):
+        first_name, last_name = self.__split_name(full_name)
+
+        try:
+            self.crm.add_contact(
+                NewContactCRM(
+                    email=email,
+                    firstname=first_name,
+                    lastname=last_name
+                )
+            )
+        except AddingCRMContact as e:
+            logger.error(e.exception)
+
     def __confirm_email(self, check_user_object: dict):
         self.user_persistence_service.email_confirmed(check_user_object.get('id'))
-        self.crm.add_contact(
-            NewContactCRM(
-                email=check_user_object.get('email'),
-                lastname=check_user_object.get('full_name')
-            )
-        )
+        email = check_user_object.get('email')
+
+        try:
+            self.crm.update_status(email, HubspotLeadStatus.NEW)
+        except UpdateContactStatusException as e:
+            logger.error(e)
+
+
+    def __split_name(self, full_name: str):
+        names = full_name.split(' ')
+        if len(names) == 1:
+            names.append('')
+        first_name = names[0]
+        last_name = names[1]
+        return first_name, last_name
 
 
     def reset_password(self, reset_password_form: ResetPasswordForm):

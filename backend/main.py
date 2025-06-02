@@ -3,7 +3,9 @@ import logging
 from h11._abnf import status_code
 
 from config.base import Base
+from config.hubspot import HubspotConfig
 from config.sentry import SentryConfig
+from config.util import EnvVarError
 from routers import main_router
 from external_api_routers import subapi_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +31,13 @@ if SentryConfig.SENTRY_DSN is not None:
     )
 else:
     logger.warning("Error alerts are disabled")
+
+
+try:
+    HubspotConfig.init()
+    logger.warning("Hubspot CRM integration is enabled")
+except EnvVarError as e:
+    logger.warning(f"Error initializing Hubspot: {e}\n\t\tHubspot CRM integration is disabled")
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 external_api = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
