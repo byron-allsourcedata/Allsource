@@ -28,6 +28,10 @@ from services.partners import PartnersService
 from schemas.integrations.integrations import ShopifyOrBigcommerceCredentials
 from services.payments_plans import PaymentsPlans
 from . import stripe_service
+from .crm.hubspot.api import NewContactCRM
+from .crm.hubspot.exceptions import AddingCRMContact, UpdateContactStatusException
+from .crm.hubspot.schemas import HubspotLeadStatus
+from .crm.service import CrmService
 from .jwt_service import get_password_hash, create_access_token, verify_password, decode_jwt_data
 from .sendgrid import SendgridHandler
 from .stripe_service import get_stripe_payment_url
@@ -41,11 +45,10 @@ logger = logging.getLogger(__name__)
 class UsersAuth:
     def __init__(self, db: Session, payments_service: PaymentsPlans, user_persistence_service: UserPersistence,
                  send_grid_persistence_service: SendgridPersistence, subscription_service: SubscriptionService,
-                 plans_persistence: PlansPersistence, integration_service: IntegrationService,
-                 partners_service: PartnersService,
-                 domain_persistence: UserDomainsPersistence,
-                 referral_persistence_service: ReferralDiscountCodesPersistence,
-                 admin_persistence: AdminPersistence
+                 plans_persistence: PlansPersistence, integration_service: IntegrationService, partners_service: PartnersService,
+                 domain_persistence: UserDomainsPersistence, referral_persistence_service: ReferralDiscountCodesPersistence,
+                 admin_persistence: AdminPersistence,
+                 crm: CrmService,
                  ):
         self.db = db
         self.payments_service = payments_service
@@ -58,6 +61,7 @@ class UsersAuth:
         self.partners_service = partners_service
         self.domain_persistence = domain_persistence
         self.referral_persistence_service = referral_persistence_service
+        self.crm = crm
         self.UNLIMITED = -1
         self.FREE_TRIAL_DAYS = 14
 
@@ -318,6 +322,7 @@ class UsersAuth:
         if all(conditions):
             self.subscription_service.create_subscription_from_free_trial(user_id=user_object.id, ftd=ftd)
 
+        self.__on_create_account(email=user_object.email, full_name=user_object.full_name)
         if not user_object.is_with_card:
             return {
                 'status': SignUpStatus.FILL_COMPANY_DETAILS,
@@ -635,6 +640,7 @@ class UsersAuth:
             shop_hash is None
         ]
         if all(conditions):
+            self.__on_create_account(email=user_object.email, full_name=user_object.full_name)
             return self._send_email_verification(user_object, token)
 
         if teams_token:
@@ -843,7 +849,10 @@ class UsersAuth:
                     'status': VerifyToken.EMAIL_ALREADY_VERIFIED,
                     'user_token': user_token
                 }
-            self.user_persistence_service.email_confirmed(check_user_object.get('id'))
+
+
+            self.__confirm_email(check_user_object)
+
             if check_user_object.get('team_owner_id'):
                 token_info = {
                     "id": check_user_object.get('team_owner_id'),
@@ -859,6 +868,40 @@ class UsersAuth:
                 'user_token': user_token
             }
         return {'status': VerifyToken.INCORRECT_TOKEN}
+
+
+    def __on_create_account(self, full_name: str, email: str):
+        first_name, last_name = self.__split_name(full_name)
+
+        try:
+            self.crm.add_contact(
+                NewContactCRM(
+                    email=email,
+                    firstname=first_name,
+                    lastname=last_name
+                )
+            )
+        except AddingCRMContact as e:
+            logger.error(e.exception)
+
+    def __confirm_email(self, check_user_object: dict):
+        self.user_persistence_service.email_confirmed(check_user_object.get('id'))
+        email = check_user_object.get('email')
+
+        try:
+            self.crm.update_status(email, HubspotLeadStatus.NEW)
+        except UpdateContactStatusException as e:
+            logger.error(e)
+
+
+    def __split_name(self, full_name: str):
+        names = full_name.split(' ')
+        if len(names) == 1:
+            names.append('')
+        first_name = names[0]
+        last_name = names[1]
+        return first_name, last_name
+
 
     def reset_password(self, reset_password_form: ResetPasswordForm):
         if reset_password_form:
