@@ -38,11 +38,17 @@ const HintCard: React.FC<HintCardProps> = ({
 }) => {
   const [showHint, setShowHint] = useState(false);
 
+  const showBody = () => {
+    setShowHint(true);
+  };
+
   const hideBody = () => {
     setShowHint(true);
   };
 
-  useTimeout(hideBody, 2000);
+  useTimeout(showBody, 2000);
+
+  useTimeout(hideBody, 5000);
 
   const { showHints } = useHints();
 
