@@ -1617,16 +1617,20 @@ const Sources: React.FC = () => {
                                           },
                                         }}
                                       >
-                                        {row.matched_records_status ===
-                                          "complete" &&
-                                        row?.total_records === 0 ? (
-                                          "0"
-                                        ) : (progress?.total &&
+                                        {row.matched_records_status === "complete" && row?.total_records === 0 ?
+                                          (
+                                            "0"
+                                          ) : (progress?.total &&
                                             progress?.total > 0) ||
-                                          row?.total_records > 0 ? (
-                                          progress?.total > 0 ? (
-                                            progress?.total.toLocaleString(
-                                              "en-US"
+                                            row?.total_records > 0 ? (
+                                            progress?.total > 0 ? (
+                                              progress?.total.toLocaleString(
+                                                "en-US"
+                                              )
+                                            ) : (
+                                              row?.total_records?.toLocaleString(
+                                                "en-US"
+                                              )
                                             )
                                           ) : (
                                             <ThreeDotsLoader />
@@ -1645,21 +1649,33 @@ const Sources: React.FC = () => {
                                           },
                                         }}
                                       >
-                                        {row.matched_records_status ===
-                                          "complete" &&
-                                        row?.total_records === 0 ? (
-                                          "0"
-                                        ) : (progress?.processed &&
+                                        {row.matched_records_status === "complete" && row?.total_records === 0 ?
+                                          (
+                                            "0"
+                                          ) : (progress?.processed &&
                                             progress?.processed ==
-                                              progress?.total) ||
-                                          (row?.processed_records ==
-                                            row?.total_records &&
-                                            row?.processed_records !== 0) ? (
-                                          progress?.matched >
-                                          row?.matched_records ? (
-                                            progress?.matched.toLocaleString(
-                                              "en-US"
+                                            progress?.total) ||
+                                            (row?.processed_records ==
+                                              row?.total_records &&
+                                              row?.processed_records !== 0) ? (
+                                            progress?.matched >
+                                              row?.matched_records ? (
+                                              progress?.matched.toLocaleString(
+                                                "en-US"
+                                              )
+                                            ) : (
+                                              row.matched_records.toLocaleString(
+                                                "en-US"
+                                              )
                                             )
+                                          ) : row?.processed_records !== 0 ? (
+                                            <ProgressBar
+                                              progress={{
+                                                total: row?.total_records,
+                                                processed: row?.processed_records,
+                                                matched: row?.matched_records,
+                                              }}
+                                            />
                                           ) : (
                                             <ProgressBar progress={progress} />
                                           )}
