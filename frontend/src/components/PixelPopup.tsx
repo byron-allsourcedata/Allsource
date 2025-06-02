@@ -26,7 +26,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         open={open}
         onClick={onClose}
         sx={{
-          zIndex: 1200,
+          zIndex: 3200,
           color: "#fff",
           backdropFilter: "blur(12px)",
           backgroundColor: "#0000001A",
@@ -38,6 +38,7 @@ const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
         maxWidth="sm"
         fullWidth
         sx={{
+          zIndex: 3300,
           "& .MuiPaper-root": {
             borderRadius: "6px",
             padding: "24px 32px 12px",

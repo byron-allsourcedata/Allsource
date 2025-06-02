@@ -1103,23 +1103,23 @@ const SmartAudiences: React.FC = () => {
                         />
                       )}
                     </Button>
-                    
+
                     <HintCard
-                    card={tableHintCards["builder"]}
-                    positionLeft={-420}
-                    positionTop={20}
-                    rightSide={true}
-                    isOpenBody={smartsTableHints["builder"].showBody}
-                    toggleClick={() => {
-                      if (smartsTableHints["actions"].showBody) {
-                        changeSmartsTableHint("actions", "showBody", "close")
-                      }
-                      changeSmartsTableHint("builder", "showBody", "toggle")
-                    }}
-                    closeClick={() => {
-                      changeSmartsTableHint("builder", "showBody", "close")
-                    }}
-                  />
+                      card={tableHintCards["builder"]}
+                      positionLeft={-420}
+                      positionTop={20}
+                      rightSide={true}
+                      isOpenBody={smartsTableHints["builder"].showBody}
+                      toggleClick={() => {
+                        if (smartsTableHints["actions"].showBody) {
+                          changeSmartsTableHint("actions", "showBody", "close")
+                        }
+                        changeSmartsTableHint("builder", "showBody", "toggle")
+                      }}
+                      closeClick={() => {
+                        changeSmartsTableHint("builder", "showBody", "close")
+                      }}
+                    />
                     <Button
                       disabled={data?.length === 0}
                       aria-controls={
@@ -1331,12 +1331,12 @@ const SmartAudiences: React.FC = () => {
                                     headerTitle: "Next-Level Audience Synergy",
                                     caption:
                                       "Combine your highest-performing sources and lookalikes into powerful audience stacks, then strategically trim low-quality segments. This is where smarter targeting begins.",
-                                    onOpenPopup: handleOpenPopup,      
-                                    onBegin: () => router.push("/smart-audiences/builder"),        
+                                    onOpenPopup: handleOpenPopup,
+                                    onBegin: () => router.push("/smart-audiences/builder"),
                                     beginDisabled: !hasSource,
                                     buttonLabel: "Create Smart Audience",
                                     sx: {
-                                      
+
                                     },
                                   }}
                                 />
@@ -1411,7 +1411,7 @@ const SmartAudiences: React.FC = () => {
                           )}
                         </>
                       )}
-                      
+
                       {data.length !== 0 && (
                         <Grid container spacing={1} sx={{ flex: 1 }}>
                           <Grid
@@ -1423,45 +1423,45 @@ const SmartAudiences: React.FC = () => {
                               justifyContent: "space-between",
                             }}
                           >
-                          <TableContainer
-                            ref={tableContainerRef}
-                            sx={{
-                              height: "70vh",
-                              overflowX: "scroll",
-                              maxHeight:
-                                selectedFilters.length > 0
-                                  ? hasNotification
-                                    ? "63vh"
-                                    : "70vh"
-                                  : "70vh",
-                              "@media (max-height: 800px)": {
-                                height: "60vh",
+                            <TableContainer
+                              ref={tableContainerRef}
+                              sx={{
+                                height: "70vh",
+                                overflowX: "scroll",
                                 maxHeight:
                                   selectedFilters.length > 0
                                     ? hasNotification
-                                      ? "53vh"
-                                      : "60vh"
+                                      ? "63vh"
+                                      : "70vh"
                                     : "70vh",
-                              },
-                              "@media (max-width: 400px)": {
-                                height: "50vh",
-                                maxHeight:
-                                  selectedFilters.length > 0
-                                    ? hasNotification
-                                      ? "53vh"
-                                      : "50vh"
-                                    : "70vh",
-                              },
-                            }}
-                          >
-                            <Table
-                              stickyHeader
-                              component={Paper}
-                              sx={{ 
-                                tableLayout: "fixed", 
-                                border: "1px solid rgba(235, 235, 235, 1)",
+                                "@media (max-height: 800px)": {
+                                  height: "60vh",
+                                  maxHeight:
+                                    selectedFilters.length > 0
+                                      ? hasNotification
+                                        ? "53vh"
+                                        : "60vh"
+                                      : "70vh",
+                                },
+                                "@media (max-width: 400px)": {
+                                  height: "50vh",
+                                  maxHeight:
+                                    selectedFilters.length > 0
+                                      ? hasNotification
+                                        ? "53vh"
+                                        : "50vh"
+                                      : "70vh",
+                                },
                               }}
                             >
+                              <Table
+                                stickyHeader
+                                component={Paper}
+                                sx={{
+                                  tableLayout: "fixed",
+                                  border: "1px solid rgba(235, 235, 235, 1)",
+                                }}
+                              >
                                 <TableHead sx={{ position: "relative" }}>
                                   <TableRow>
                                     {columns.map(
@@ -1529,23 +1529,23 @@ const SmartAudiences: React.FC = () => {
                                             )}
                                           </Box>
                                           {label === "Actions" && (
-                                          <HintCard
-                                            card={tableHintCards["actions"]}
-                                            positionLeft={-380}
-                                            positionTop={100}
-                                            rightSide={true}
-                                            isOpenBody={smartsTableHints["actions"].showBody}
-                                            toggleClick={() => {
-                                              if (smartsTableHints["builder"].showBody) {
-                                                changeSmartsTableHint("builder", "showBody", "close")
-                                              }
-                                              changeSmartsTableHint("actions", "showBody", "toggle")
-                                            }}
-                                            closeClick={() => {
-                                              changeSmartsTableHint("actions", "showBody", "close")
-                                            }}
-                                          />
-                                        )}
+                                            <HintCard
+                                              card={tableHintCards["actions"]}
+                                              positionLeft={-380}
+                                              positionTop={100}
+                                              rightSide={true}
+                                              isOpenBody={smartsTableHints["actions"].showBody}
+                                              toggleClick={() => {
+                                                if (smartsTableHints["builder"].showBody) {
+                                                  changeSmartsTableHint("builder", "showBody", "close")
+                                                }
+                                                changeSmartsTableHint("actions", "showBody", "toggle")
+                                              }}
+                                              closeClick={() => {
+                                                changeSmartsTableHint("actions", "showBody", "close")
+                                              }}
+                                            />
+                                          )}
                                         </TableCell>
                                       )
                                     )}
@@ -1884,7 +1884,7 @@ const SmartAudiences: React.FC = () => {
                                           )}
                                         </TableCell>
                                         {/* Created Column */}
-                                        <TableCustomCell 
+                                        <TableCustomCell
                                           rowExample={
                                             dayjs(row.created_at).format(
                                               "MMM D, YYYY"

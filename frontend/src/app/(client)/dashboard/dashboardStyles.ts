@@ -48,10 +48,10 @@ export const dashboardStyles: { [key: string]: SxProps<Theme> } = {
     whiteSpace: 'nowrap',
     textAlign: 'start',
     lineHeight: '22px !important',
-    mb: '8px',
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
+    textWrap: "nowrap",
     gap: 1
   },
   formContainer: {

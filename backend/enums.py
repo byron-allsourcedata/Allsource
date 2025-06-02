@@ -162,6 +162,11 @@ class SettingStatus(Enum):
     INVALID_ACCESS_LEVEL = 'INVALID_ACCESS_LEVEL'
     OWNER_ROLE_CHANGE_NOT_ALLOWED = 'OWNER_ROLE_CHANGE_NOT_ALLOWED'
 
+class AdminStatus(Enum):
+    SUCCESS = "SUCCESS"
+    ALREADY_EXISTS = 'ALREADY_EXISTS'
+    SENDGRID_TEMPLATE_NOT_FAILED = 'SENDGRID_TEMPLATE_NOT_FAILED'
+
 
 class VerificationEmail(Enum):
     EMAIL_ALREADY_VERIFIED = 'EMAIL_ALREADY_VERIFIED'
@@ -199,6 +204,7 @@ class SignUpStatus(Enum):
     INCORRECT_FULL_NAME = 'INCORRECT_FULL_NAME'
     INCORRECT_REFERRAL_CODE = 'INCORRECT_REFERRAL_CODE'
     SUCCESS = 'SUCCESS'
+    SUCCESS_ADMIN = "SUCCESS_ADMIN"
 
 
 class TeamsInvitationStatus(Enum):
@@ -222,6 +228,7 @@ class LoginStatus(Enum):
     NEED_BOOK_CALL = 'NEED_BOOK_CALL'
     PAYMENT_NEEDED = 'PAYMENT_NEEDED'
     PIXEL_INSTALLATION_NEEDED = 'PIXEL_INSTALLATION_NEEDED'
+    SUCCESS_ADMIN = "SUCCESS_ADMIN"
 
 
 class PixelStatus(Enum):
@@ -244,6 +251,7 @@ class SendgridTemplate(Enum):
     SEND_PIXEL_CODE_TEMPLATE = 'send_pixel_code_template'
     CHANGE_EMAIL_TEMPLATE = 'change_email_template'
     TEAM_MEMBERS_TEMPLATE = 'team_members_template'
+    ADMIN_INVITATION_TEMPLATE = 'admin_invitation_template'
     PAYMENT_INVOICE_TEMPLATE = 'payment_invoice_template'
     PAYMENT_FAILURE_NOTIFICATION = 'payment_failure_notification'
     PARTNER_INVITE_TEMPLATE='partner_invite_template'

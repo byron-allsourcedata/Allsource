@@ -280,11 +280,11 @@ const DomainButton: React.FC = () => {
           textTransform: 'none',
           color: 'rgba(128, 128, 128, 1)',
           border: '1px solid rgba(184, 184, 184, 1)',
-          borderRadius: '0px',
+          borderRadius: '4px',
           padding: '0px',
           width: '100%',
-          paddingTop: '0.725rem',
-          paddingBottom: '0.725rem',
+          paddingTop: '0.25rem',
+          paddingBottom: '0.25rem',
           pr: 1,
           justifyContent: 'space-between'
         }}

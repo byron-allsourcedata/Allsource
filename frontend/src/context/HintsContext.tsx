@@ -5,26 +5,10 @@ import React, {
   ReactNode,
   useContext,
 } from "react";
-import {
-  initialPixelSetupHints,
-} from "./hintsStates";
 
 interface HintsContextType {
   showHints: boolean;
   toggleHints: () => void;
-  changePixelSetupHint: (
-    id: number,
-    key: "show" | "showBody",
-    action: "toggle" | "close" | "open"
-  ) => void;
-  pixelSetupHints: StateHint[];
-  resetPixelSetupHints: () => void;
-}
-
-interface StateHint {
-  id: number;
-  show: boolean;
-  showBody?: boolean;
 }
 
 interface HintsProviderProps {
@@ -51,48 +35,14 @@ export const HintsProvider: React.FC<HintsProviderProps> = ({ children }) => {
   }, [showHints]);
 
 
-  const [pixelSetupHints, setPixelSetupHints] = useState<StateHint[]>(
-    initialPixelSetupHints
-  );
 
-  const actionMap = {
-    toggle: (currentState: boolean) => !currentState,
-    open: () => true,
-    close: () => false,
-  };
 
-  const changeHintState = (
-    id: number,
-    key: "show" | "showBody",
-    action: "toggle" | "close" | "open",
-    setStateFunction: React.Dispatch<React.SetStateAction<StateHint[]>>
-  ) => {
-    setStateFunction((prev) =>
-      prev.map((hint) => {
-        return hint.id === id
-          ? { ...hint, [key]: actionMap[action](hint[key] as boolean) }
-          : hint;
-      })
-    );
-  };
-
-  const resetHintsState = (
-    setStateFunction: React.Dispatch<React.SetStateAction<StateHint[]>>,
-    initialState: StateHint[]
-  ) => {
-    setStateFunction(initialState);
-  };
 
   return (
     <HintsContext.Provider
       value={{
         showHints,
         toggleHints: () => setShowHints((prev) => !prev),
-        changePixelSetupHint: (id, key, action) =>
-          changeHintState(id, key, action, setPixelSetupHints),
-        resetPixelSetupHints: () =>
-          resetHintsState(setPixelSetupHints, initialPixelSetupHints),
-        pixelSetupHints,
       }}
     >
       {children}

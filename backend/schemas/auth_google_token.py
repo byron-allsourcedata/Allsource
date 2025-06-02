@@ -6,6 +6,7 @@ class AuthGoogleData(BaseModel):
     token: str
     is_with_card: bool = Field(default=False)
     teams_token: Optional[str] = None
+    admin_token: Optional[str] = None
     referral_token: Optional[str] = None
     spi: Optional[str] = None
     awc: Optional[str] = None

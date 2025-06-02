@@ -94,7 +94,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
 
     return (
         <>
-            <Backdrop open={open} onClick={onClose} sx={{ zIndex: 1200, color: '#fff' }} />
+            <Backdrop open={open} onClick={onClose} sx={{ zIndex: 3200, color: '#fff' }} />
             <Drawer
                 anchor="right"
                 open={open}
@@ -104,7 +104,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({ open, onClose, rowData }) =
                     sx: {
                         width: '48%',
                         position: 'fixed',
-                        zIndex: 1301,
+                        zIndex: 3301,
                         top: 0,
                         bottom: 0,
                         '@media (max-width: 600px)': {

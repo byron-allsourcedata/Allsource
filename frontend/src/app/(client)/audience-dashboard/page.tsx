@@ -626,7 +626,7 @@ const AudienceDashboard: React.FC = () => {
                     top: 0,
                     pt: "12px",
                     pr: "1rem",
-                    zIndex: 100,
+                    zIndex: 9,
                     backgroundColor: "#fff",
                     justifyContent: "space-between",
                     width: "100%",

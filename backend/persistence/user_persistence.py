@@ -1,11 +1,13 @@
 import json
 import logging
 from datetime import datetime, timedelta
+from urllib.parse import uses_query
 
-from sqlalchemy import func, desc, asc
+from sqlalchemy import func, desc, asc, case
 from sqlalchemy.orm import Session, aliased
 
 from enums import TeamsInvitationStatus, SignUpStatus
+from models import AudienceLookalikes
 from models.partner import Partner
 from models.referral_payouts import ReferralPayouts
 from models.referral_users import ReferralUser
@@ -68,11 +70,11 @@ class UserPersistence:
         user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
         return user_object
 
-    def check_status_invitations(self, teams_token, user_mail):
+    def check_status_invitations(self, admin_token, user_mail):
         result = {
             'success': False
         }
-        teams_invitation = self.db.query(TeamInvitation).filter(TeamInvitation.token == teams_token).first()
+        teams_invitation = self.db.query(TeamInvitation).filter(TeamInvitation.token == admin_token).first()
         if teams_invitation:
             if teams_invitation.mail != user_mail:
                 result['error'] = SignUpStatus.NOT_VALID_EMAIL
@@ -234,6 +236,69 @@ class UserPersistence:
             }
             for user in users
         ]
+
+    def get_admin_users(self):
+        Inviter = aliased(Users)
+        query = self.db.query(
+            Users.id,
+            Users.email,
+            Users.full_name,
+            Users.created_at,
+            Users.last_login,
+            Inviter.email.label("invited_by_email"),
+            Users.role
+        ) .outerjoin(Inviter, Users.invited_by_id == Inviter.id)\
+            .filter(Users.role.contains(['admin']))
+        users = query.order_by(desc(Users.id)).limit(100).all()
+        return users
+
+    def get_customer_users(self, page, per_page, sort_by, sort_order):
+        query = self.db.query(
+            Users.id,
+            Users.email,
+            Users.full_name,
+            Users.created_at,
+            Users.last_login,
+            Users.role,
+            Users.is_email_confirmed,
+            Users.is_book_call_passed,
+            Users.leads_credits.label('credits_count'),
+            func.count(
+                case(
+                    (UserDomains.is_pixel_installed == True, 1)
+                )
+            ).label('pixel_installed_count'),
+            func.count(
+                case(
+                    (func.coalesce(AudienceSource.id, None) != None, 1)
+                )
+            ).label('sources_count'),
+            func.count(
+                case(
+                    (func.coalesce(AudienceLookalikes.id, None) != None, 1)
+                )
+            ).label('lookalikes_count')
+        ) \
+            .outerjoin(AudienceLookalikes, AudienceLookalikes.user_id == Users.id) \
+            .outerjoin(AudienceSource, AudienceSource.user_id == Users.id) \
+            .outerjoin(UserDomains, UserDomains.user_id == Users.id) \
+            .filter(Users.role.contains(['customer'])) \
+            .group_by(Users.id)
+
+        total_count = query.count()
+        offset = (page - 1) * per_page
+        sort_options = {
+            'id': Users.id,
+            'join_date': Users.created_at,
+            'last_login_date': Users.last_login,
+        }
+        if sort_by in sort_options:
+            sort_column = sort_options[sort_by]
+            query = query.order_by(asc(sort_column) if sort_order == 'asc' else desc(sort_column))
+        else:
+            query = query.order_by(Users.created_at.desc())
+        users = query.order_by(desc(Users.id)).limit(per_page).offset(offset).all()
+        return users, total_count
 
     def get_not_partner_users(self, page, per_page):
         query = self.db.query(

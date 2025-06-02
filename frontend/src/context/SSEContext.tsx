@@ -203,9 +203,10 @@ export const SSEProvider: React.FC<SSEProviderProps> = ({ children }) => {
       const getStarted = parsed?.get_started;
 
       if (getStarted?.is_source_imported === false) {
-        router.push("/get-started?source=true");
+        //router.push("/get-started?source=true");
+        window.location.href = "/leads";
       } else if (getStarted?.is_source_imported === true) {
-        window.location.href = "/audience-dashboard";
+        window.location.href = "/leads";
       }
     } catch (error) {
       console.error("Failed to parse sessionStorage 'me':", error);

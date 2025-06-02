@@ -98,53 +98,42 @@ const FreeTrialLabel: React.FC = () => {
               justifyContent: "space-between",
               color: "#323232",
               alignItems: "flex-end",
+              "@media (max-width: 1400px)": {
+                alignItems: "center",
+              },
             }}
           >
             <Box>
-              <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}>
-                <Typography
-                  sx={{
-                    fontFamily: "Nunito Sans",
-                    fontWeight: 600,
-                    fontSize: "12px",
-                    letterSpacing: "0%",
-                  }}
-                >
+              <Typography
+                sx={{
+                  fontFamily: 'Nunito Sans',
+                  fontWeight: 400,
+                  fontSize: '12px',
+                  color: 'rgba(50, 50, 50, 0.6)',
+                  lineHeight: '1.5',
+                }}
+              >
+                <Box component="span" sx={{ fontWeight: 600, color: 'rgba(50, 50, 50, 1)' }}>
                   You are on Free Trial:
-                </Typography>
-                <Typography
-                  sx={{
-                    fontFamily: "Nunito Sans",
-                    fontWeight: 400,
-                    fontSize: "12px",
-                    letterSpacing: "0%",
-                    color: "rgba(50, 50, 50, 0.6)",
-                  }}
-                >
-                  To upgrade or unlock features, please
-                </Typography>
-                <Typography
+                </Box>{' '}
+                To upgrade or unlock features, please
+                <Box
+                  component="span"
                   onClick={handleContactSales}
                   sx={{
-                    fontFamily: "Nunito Sans",
                     fontWeight: 400,
-                    fontSize: "12px",
-                    letterSpacing: "0%",
-                    verticalAlign: "middle",
-                    color: "rgba(50, 50, 50, 1)",
-                    textDecoration: "underline",
-                    textDecorationStyle: "solid",
-                    textDecorationOffset: "0%",
-                    textDecorationThickness: "0%",
-                    cursor: "pointer",
+                    color: 'rgba(50, 50, 50, 1)',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
                   }}
                 >
                   Contact sales
-                </Typography>
-              </Box>
-            </Box>
+                </Box>
+              </Typography>
 
-            <Box sx={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: 'flex-end', gap: 2, textWrap: 'nowrap' }}>
               <Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
                 <DomainVerificationIcon
                   fontSize="small"
@@ -154,27 +143,12 @@ const FreeTrialLabel: React.FC = () => {
                     fontSize: "17px",
                   }}
                 />
-                <Box
-                  sx={{ display: "flex", width: "100%", alignItems: "center" }}
-                >
-                  <Typography
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      fontWeight: "400",
-                      fontSize: "12px",
-                      color: "rgba(50, 54, 62, 0.5)",
-                    }}
-                  >
+                <Box sx={{ display: 'flex', width: '100%', alignItems: 'center', textWrap: 'nowrap' }}>
+                  <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 0.5)" }}>
                     {domainCount}/
                   </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      fontWeight: "400",
-                      fontSize: "12px",
-                      color: "rgba(50, 54, 62, 1)",
-                    }}
-                  >
+                  <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 1)", textWrap: 'nowrap' }}>
+
                     1 Domains
                   </Typography>
                 </Box>

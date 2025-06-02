@@ -725,7 +725,7 @@ const SourcesImport: React.FC = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          height: "calc(100vh - 4.25rem)",
+          height: isGetStartedPage ? '100%' : "calc(100vh - 4.25rem)",
           overflow: "auto",
           "@media (max-width: 1024px)": {
             pr: 2,

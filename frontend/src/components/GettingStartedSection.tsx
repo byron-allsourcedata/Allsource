@@ -14,6 +14,7 @@ import DomainVerificationOutlinedIcon from "@mui/icons-material/DomainVerificati
 import OpenInBrowserOutlinedIcon from "@mui/icons-material/OpenInBrowserOutlined";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import DomainSelector from "@/app/(client)/dashboard/components/DomainSelector";
+import { GetStartedHintsProvider } from "@/app/(client)/dashboard/components/context/PixelInstallHintsContext";
 
 const GettingStartedSection: React.FC = () => {
   const [selectedDomain, setSelectedDomain] = useState("");
@@ -140,83 +141,85 @@ const GettingStartedSection: React.FC = () => {
 
   return (
     <>
-      <Grid container sx={{ height: "100%", pr: 2 }}>
-        <Grid
-          item
-          xs={12}
-          sx={{ display: { md: "none" }, overflow: "hidden" }}
-        >
-          <Typography
-            variant="h4"
-            component="h1"
-            className="first-sub-title"
-            sx={dashboardStyles.title}
+      <GetStartedHintsProvider>
+        <Grid container sx={{ height: "100%", pr: 2 }}>
+          <Grid
+            item
+            xs={12}
+            sx={{ display: { md: "none" }, overflow: "hidden" }}
           >
-            Install Your Pixel
-          </Typography>
-          <VerticalStepper steps={stepData} />
-          <DomainSelector
-            onDomainSelected={(domain) => {
-              setSelectedDomain(domain? domain.domain: "");
-            }}
-          />
-          {selectedDomain !== "" && (
-            <PixelInstallation
-              onInstallSelected={(method) => {
-                handleInstallSelected(method);
-                setShowHintVerify(true);
-              }}
-            />
-          )}
-
-          <VerifyPixelIntegration
-            domain={selectedDomain}
-            showHint={showHintVerify}
-          />
-        </Grid>
-        <Grid
-          item
-          xs={12}
-          lg={8}
-          sx={{
-            display: { xs: "none", md: "block" },
-          }}
-        >
-          <Box sx={{}}>
+            <Typography
+              variant="h4"
+              component="h1"
+              className="first-sub-title"
+              sx={dashboardStyles.title}
+            >
+              Install Your Pixel
+            </Typography>
+            <VerticalStepper steps={stepData} />
             <DomainSelector
               onDomainSelected={(domain) => {
-                setSelectedDomain(domain? domain.domain: "");
+                setSelectedDomain(domain ? domain.domain : "");
               }}
             />
             {selectedDomain !== "" && (
               <PixelInstallation
                 onInstallSelected={(method) => {
                   handleInstallSelected(method);
-                  setSelectedMethod(method);
                   setShowHintVerify(true);
                 }}
               />
             )}
-            {selectedDomain !== "" &&
-              selectedMethod !== "" &&
-              selectedMethod !== null && (
-                <VerifyPixelIntegration
-                  domain={selectedDomain}
-                  showHint={showHintVerify}
+
+            <VerifyPixelIntegration
+              domain={selectedDomain}
+              showHint={showHintVerify}
+            />
+          </Grid>
+          <Grid
+            item
+            xs={12}
+            lg={8}
+            sx={{
+              display: { xs: "none", md: "block" },
+            }}
+          >
+            <Box sx={{ overflow: 'visible' }}>
+              <DomainSelector
+                onDomainSelected={(domain) => {
+                  setSelectedDomain(domain ? domain.domain : "");
+                }}
+              />
+              {selectedDomain !== "" && (
+                <PixelInstallation
+                  onInstallSelected={(method) => {
+                    handleInstallSelected(method);
+                    setSelectedMethod(method);
+                    setShowHintVerify(true);
+                  }}
                 />
               )}
-          </Box>
-        </Grid>
+              {selectedDomain !== "" &&
+                selectedMethod !== "" &&
+                selectedMethod !== null && (
+                  <VerifyPixelIntegration
+                    domain={selectedDomain}
+                    showHint={showHintVerify}
+                  />
+                )}
+            </Box>
+          </Grid>
 
-        <Grid
-          item
-          xs={12}
-          lg={4}
-          sx={{ display: { xs: "none", md: "block" }, }}
-        >
-          <VerticalStepper steps={stepData} />
+          <Grid
+            item
+            xs={12}
+            lg={4}
+            sx={{ display: { xs: "none", md: "block" }, }}
+          >
+            <VerticalStepper steps={stepData} />
+          </Grid>
         </Grid>
-      </Grid>
+      </GetStartedHintsProvider>
     </>
   );
 };

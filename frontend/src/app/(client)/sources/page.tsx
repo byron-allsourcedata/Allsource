@@ -29,6 +29,7 @@ import {
   LinearProgress,
   Chip,
   Tooltip,
+  Link,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
@@ -64,6 +65,7 @@ import { tableHintCards } from "./context/hintsCardsContent";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
+import SmartCell from "@/components/table/SmartCell";
 
 interface Source {
   id: string;
@@ -757,6 +759,7 @@ const Sources: React.FC = () => {
 
   return (
     <>
+
       {loading && <CustomizedProgressBar />}
       <Box
         sx={{
@@ -1212,6 +1215,95 @@ const Sources: React.FC = () => {
                                       sortable = false,
                                       widths,
                                     }) => (
+                                      // <SmartCell
+                                      //   cellOptions={{
+                                      //     key,
+                                      //     className: key === "name" ? "sticky-cell" : undefined,
+                                      //     onClick: sortable ? () => handleSortRequest(key) : undefined,
+                                      //     style: {
+                                      //           cursor: sortable
+                                      //             ? "pointer"
+                                      //             : "default",
+                                      //         },
+                                      //     sx: {
+                                      //       ...widths,
+                                      //     ...sourcesStyles.table_column,
+                                      //     ...(key === "name" && {
+                                      //       position: "sticky",
+                                      //       left: 0,
+                                      //       zIndex: 98,
+                                      //       top: 0,
+                                      //       boxShadow:
+                                      //         //   isScrolledX && isScrolledY ? "3px 3px 3px #00000033"
+                                      //         // : isScrolledX ? "3px 0px 3px #00000033"
+                                      //         // : isScrolledY ? "0px 3px 3px #00000033"
+                                      //         // : "none",
+                                      //         isScrolledX
+                                      //           ? "3px 0px 3px #00000033"
+                                      //           : "none",
+                                      //     }),
+
+                                      //     right: "none",
+                                      //     ...(key === "average_time_sec" && {
+                                      //       "::after": { content: "none" },
+                                      //     }),
+                                      //     borderBottom: "none",
+                                      //     },
+                                      //   }}
+                                      //   contentOptions={{
+                                      //   }}
+                                      // >
+                                      //   <Box
+                                      //     sx={{
+                                      //       display: "flex",
+                                      //       alignItems: "center",
+                                      //       position: "relative",
+                                      //       justifyContent: "space-between",
+                                      //     }}
+                                      //   >
+                                      //     <Typography
+                                      //       variant="body2"
+                                      //       sx={{
+                                      //         ...sourcesStyles.table_column,
+                                      //         borderRight: "0",
+                                      //       }}
+                                      //     >
+                                      //       {label}
+                                      //     </Typography>
+                                      //     {sortable && (
+                                      //       <IconButton size="small">
+                                      //         {orderBy === key ? (
+                                      //           order === "asc" ? (
+                                      //             <ArrowUpwardRoundedIcon fontSize="inherit" />
+                                      //           ) : (
+                                      //             <ArrowDownwardRoundedIcon fontSize="inherit" />
+                                      //           )
+                                      //         ) : (
+                                      //           <SwapVertIcon fontSize="inherit" />
+                                      //         )}
+                                      //       </IconButton>
+                                      //     )}
+                                      //   </Box>
+                                      //   {label === "Actions" && (
+                                      //     <HintCard
+                                      //       card={tableHintCards["actions"]}
+                                      //       positionLeft={-400}
+                                      //       positionTop={85}
+                                      //       rightSide={true}
+                                      //       isOpenBody={sourcesTableHints["actions"].showBody}
+                                      //       toggleClick={() => {
+                                      //         if (sourcesTableHints["builder"].showBody) {
+                                      //           changeSourcesTableHint("builder", "showBody", "close")
+                                      //         }
+                                      //         changeSourcesTableHint("actions", "showBody", "toggle")
+                                      //       }}
+                                      //       closeClick={() => {
+                                      //         changeSourcesTableHint("actions", "showBody", "close")
+                                      //       }}
+                                      //     />
+                                      //   )}
+                                      // </SmartCell>
+
                                       <TableCell
                                         key={key}
                                         sx={{
@@ -1283,8 +1375,8 @@ const Sources: React.FC = () => {
                                         {label === "Actions" && (
                                           <HintCard
                                             card={tableHintCards["actions"]}
-                                            positionLeft={-380}
-                                            positionTop={100}
+                                            positionLeft={-400}
+                                            positionTop={85}
                                             rightSide={true}
                                             isOpenBody={
                                               sourcesTableHints["actions"]
@@ -1383,87 +1475,146 @@ const Sources: React.FC = () => {
                                       }}
                                     >
                                       {/* Name Column */}
-                                      <TableCustomCell
-                                        rowExample={row.name}
-                                        loaderForTable={loaderForTable}
-                                        customCellStyles={{
-                                          position: "sticky",
-                                          left: "0",
-                                          zIndex: 9,
-                                          backgroundColor: loaderForTable
-                                            ? "#fff"
-                                            : "#fff",
-                                          boxShadow: isScrolledX
-                                            ? "3px 0px 3px #00000033"
-                                            : "none",
+                                      <SmartCell
+                                        cellOptions={{
+                                          className: "sticky-cell",
+                                          sx: {
+                                            zIndex: 9,
+                                            position: "sticky",
+                                            left: 0,
+                                            backgroundColor: "#fff",
+                                            boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
+                                          },
                                         }}
-                                        href={url}
-                                      />
+                                        contentOptions={{
+                                          loading: loaderForTable,
+                                        }}
+                                        tooltipOptions={{ content: row.name }}
+                                      >
+                                        <Link
+                                          href={url}
+                                          underline="none"
+                                          sx={{
+                                            color: isDisabled
+                                              ? 'rgba(95, 99, 104, 1)'
+                                              : 'rgba(56, 152, 252, 1)',
+                                            cursor: isDisabled ? 'inherit' : 'pointer',
+                                          }}
+                                        >
+                                          {row.name}
+                                        </Link>
+                                      </SmartCell>
 
                                       {/* Target Type Column */}
-                                      <TableCell
-                                        sx={{
-                                          ...sourcesStyles.table_array,
-                                          position: "relative",
-                                          minWidth: "80px",
-                                          maxWidth: "80px",
-                                          width: "80px",
+                                      <SmartCell
+                                        cellOptions={{
+                                          sx: {
+                                            position: "relative",
+                                            minWidth: "80px",
+                                            maxWidth: "80px",
+                                            width: "80px",
+                                          },
                                         }}
+                                        tooltipOptions={{ content: row.target_schema.toUpperCase() }}
                                       >
                                         {row.target_schema.toUpperCase()}
-                                      </TableCell>
+                                      </SmartCell>
 
                                       {/* Source Column */}
-                                      <TableCell
-                                        sx={{
-                                          ...sourcesStyles.table_array,
-                                          position: "relative",
-                                          minWidth: "80px",
-                                          maxWidth: "80px",
-                                          width: "80px",
+                                      <SmartCell
+                                        cellOptions={{
+                                          sx: {
+                                            position: "relative",
+                                            minWidth: "80px",
+                                            maxWidth: "80px",
+                                            width: "80px",
+                                          },
                                         }}
+                                        tooltipOptions={{ content: setSourceOrigin(row.source_type) }}
                                       >
                                         {setSourceOrigin(row.source_type)}
-                                      </TableCell>
-                                      {/* <CustomCell rowExample={setSourceOrigin(row.source_type)} cellWidth="60px" loaderForTable={loaderForTable}/> */}
+                                      </SmartCell>
 
                                       {/* Domain Column */}
-                                      <TableCustomCell
-                                        rowExample={row.domain ?? "--"}
-                                        loaderForTable={loaderForTable}
-                                      />
+                                      <SmartCell
+                                        cellOptions={{
+                                          sx: {
+                                            position: "relative",
+                                          },
+                                        }}
+                                        contentOptions={{
+                                          loading: loaderForTable,
+                                        }}
+                                        tooltipOptions={{ content: row.domain ?? "--" }}
+                                      >
+                                        {row.domain ?? "--"}
+                                      </SmartCell>
 
                                       {/* Type Column */}
-                                      <TableCustomCell
-                                        rowExample={setSourceType(
-                                          row.source_origin
-                                        )}
-                                        loaderForTable={loaderForTable}
-                                      />
+                                      <SmartCell
+                                        cellOptions={{
+                                          sx: {
+                                            position: "relative",
+                                          },
+                                        }}
+                                        contentOptions={{
+                                          loading: loaderForTable,
+                                        }}
+                                        tooltipOptions={{ content: setSourceType(row.source_origin) }}
+                                      >
+                                        {setSourceType(row.source_origin)}
+                                      </SmartCell>
+
 
                                       {/* Created date Column */}
-                                      <TableCustomCell
-                                        rowExample={
-                                          dayjs(row.created_at).isValid()
-                                            ? dayjs(row.created_at).format(
-                                                "MMM D, YYYY"
-                                              )
-                                            : "--"
-                                        }
-                                        loaderForTable={loaderForTable}
-                                      />
 
+                                      {(() => {
+                                        const created = dayjs(row.created_at).isValid()
+                                          ? dayjs(row.created_at).format("MMM D, YYYY")
+                                          : "--";
+                                        return (
+                                          <SmartCell
+                                            contentOptions={{
+                                              loading: loaderForTable,
+                                            }}
+                                            tooltipOptions={{
+                                              content: created,
+                                            }}
+                                            cellOptions={{
+                                              sx: {
+                                                position: "relative",
+                                              },
+                                            }}
+                                          >
+                                            {created}
+                                          </SmartCell>
+                                        );
+                                      })()}
                                       {/* Created By Column */}
-                                      <TableCustomCell
-                                        rowExample={row.created_by}
-                                        loaderForTable={loaderForTable}
-                                      />
+                                      <SmartCell
+                                        contentOptions={{
+                                          loading: loaderForTable,
+                                        }}
+                                        tooltipOptions={{ content: row.created_by }}
+                                        cellOptions={{
+                                          sx: {
+                                            position: "relative",
+                                          },
+                                        }}
+                                      >
+                                        {row.created_by}
+                                      </SmartCell>
 
                                       {/* Number of Customers Column */}
-                                      <TableCell
-                                        sx={{
-                                          ...sourcesStyles.table_array,
-                                          position: "relative",
+                                      <SmartCell
+                                        contentOptions={{
+                                          loading: loaderForTable,
+                                        }}
+                                        tooltipOptions={{ content: row.created_by }}
+                                        cellOptions={{
+                                          sx: {
+                                            position: "relative",
+                                          },
                                         }}
                                       >
                                         {row.matched_records_status ===
@@ -1478,20 +1629,20 @@ const Sources: React.FC = () => {
                                               "en-US"
                                             )
                                           ) : (
-                                            row?.total_records?.toLocaleString(
-                                              "en-US"
-                                            )
-                                          )
-                                        ) : (
-                                          <ThreeDotsLoader />
-                                        )}
-                                      </TableCell>
+                                            <ThreeDotsLoader />
+                                          )}
+                                      </SmartCell>
 
                                       {/* Matched Records  Column */}
-                                      <TableCell
-                                        sx={{
-                                          ...sourcesStyles.table_array,
-                                          position: "relative",
+                                      <SmartCell
+                                        contentOptions={{
+                                          loading: loaderForTable,
+                                        }}
+                                        tooltipOptions={{ content: row.created_by }}
+                                        cellOptions={{
+                                          sx: {
+                                            position: "relative",
+                                          },
                                         }}
                                       >
                                         {row.matched_records_status ===
@@ -1510,28 +1661,19 @@ const Sources: React.FC = () => {
                                               "en-US"
                                             )
                                           ) : (
-                                            row.matched_records.toLocaleString(
-                                              "en-US"
-                                            )
-                                          )
-                                        ) : row?.processed_records !== 0 ? (
-                                          <ProgressBar
-                                            progress={{
-                                              total: row?.total_records,
-                                              processed: row?.processed_records,
-                                              matched: row?.matched_records,
-                                            }}
-                                          />
-                                        ) : (
-                                          <ProgressBar progress={progress} />
-                                        )}
-                                      </TableCell>
+                                            <ProgressBar progress={progress} />
+                                          )}
+                                      </SmartCell>
 
-                                      <TableCell
-                                        sx={{
-                                          ...sourcesStyles.tableBodyColumn,
-                                          paddingLeft: "16px",
-                                          textAlign: "center",
+                                      <SmartCell
+                                        contentOptions={{
+                                          loading: loaderForTable,
+                                        }}
+                                        cellOptions={{
+                                          sx: {
+                                            p: 0,
+                                            textAlign: "center",
+                                          },
                                         }}
                                       >
                                         <IconButton
@@ -1541,15 +1683,17 @@ const Sources: React.FC = () => {
                                           sx={{
                                             ":hover": {
                                               backgroundColor: "transparent",
+                                              px: 0
                                             },
                                           }}
                                         >
                                           <MoreVert
+                                            fontSize="small"
                                             sx={{
                                               color: "rgba(32, 33, 36, 1)",
                                             }}
-                                            height={8}
-                                            width={24}
+                                          // height={8}
+                                          // width={24}
                                           />
                                         </IconButton>
 
@@ -1746,7 +1890,7 @@ const Sources: React.FC = () => {
                                             </Popover>
                                           </List>
                                         </Popover>
-                                      </TableCell>
+                                      </SmartCell>
                                     </TableRow>
                                   );
                                 })}

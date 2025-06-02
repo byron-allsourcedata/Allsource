@@ -40,8 +40,4 @@ class AudienceSmartsUseCase(Base):
         nullable=True
     )
 
-    __table_args__ = (
-        Index('audience_smarts_use_cases_pkey', id, unique=True),
-    )
-
 event.listen(AudienceSmartsUseCase, "before_update", update_timestamps)
