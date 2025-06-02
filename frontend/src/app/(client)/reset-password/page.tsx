@@ -92,8 +92,7 @@ const ResetPassword: React.FC = () => {
             Forgot your password?
           </Typography>
           <Typography className='second-sub-title' sx={resetStyles.text}>
-            No worries! Let&apos;s get you back on track soon. 
-            Enter your email, and we will send you instructions to recover your password.
+          No worries! Let&apos;s get you back on track with a new password, pronto! Just follow the steps sent to your email
           </Typography>
           <Box component="form" onSubmit={handleSubmit} sx={resetStyles.form}>
             <TextField sx={resetStyles.formField}

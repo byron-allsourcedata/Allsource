@@ -947,7 +947,7 @@ const AudienceDashboard: React.FC = () => {
                     },
                     {
                       title: 'Import Source from CSV file',
-                      subtitle: 'Alternatively, you can upload a CSV file containing your existing customer data.',
+                      subtitle: 'Otherwise, you can upload a CSV file containing your existing customer data.',
                       imageSrc: '/audience.svg',
                       onClick: () => router.push('/sources'),
                       showRecommended: false,
