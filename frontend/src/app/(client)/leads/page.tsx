@@ -2,7 +2,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip } from '@mui/material';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
 import { AxiosError } from 'axios';
 import { leadsStyles } from './leadsStyles';
@@ -33,6 +33,8 @@ import HintCard from "../components/HintCard";
 import { useLeadsHints } from "./context/LeadsHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
 import TableCustomCell from "../sources/components/table/TableCustomCell";
+import DomainButtonSelect from "../components/NavigationDomainButton";
+import PixelPopup from "@/components/PixelPopup";
 
 
 interface FetchDataParams {
@@ -74,6 +76,17 @@ const Leads: React.FC = () => {
     const [popupData, setPopupData] = React.useState<any>(null);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
     const { changeLeadsTableHint, leadsTableHints, resetLeadsTableHints } = useLeadsHints();
+    const searchParams = useSearchParams();
+    const [showPixel, setPixelPopup] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        if (searchParams.get('pixel_installed')) setPixelPopup(true);
+    }, []);
+
+    const handleClosePixel = () => {
+        window.location.href = "/leads"
+        setPixelPopup(false);
+    };
 
     const handleOpenPopup = (row: any) => {
         setPopupData(row);
@@ -944,6 +957,7 @@ const Leads: React.FC = () => {
                     />
                 </Box>
             )}
+            {showPixel && <PixelPopup open={showPixel} onClose={handleClosePixel} />}
             <Box sx={{
                 display: 'flex', flexDirection: 'column', height: '100%', pr: '16px',
                 '@media (max-width: 900px)': {
@@ -975,11 +989,14 @@ const Leads: React.FC = () => {
                                         marginTop: hasNotification ? '2rem' : '0rem',
                                     },
                                 }}>
-                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                                    <Typography className='first-sub-title'>
-                                        Resolved Contacts {data.length === 0 ? '' : `(${count_leads})`}
-                                    </Typography>
-                                    <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/contacts' />
+                                <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
+                                        <Typography className='first-sub-title' sx={{ textWrap: "nowrap" }}>
+                                            Resolved Contacts {data.length === 0 ? '' : `(${count_leads})`}
+                                        </Typography>
+                                        <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
+                                    </Box>
+                                    <DomainButtonSelect />
                                 </Box>
                                 <Box sx={{
                                     display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
@@ -1045,21 +1062,21 @@ const Leads: React.FC = () => {
                                         <DownloadIcon fontSize='medium' />
                                     </Button>
                                     <HintCard
-                                            card={tableHintCards["download"]}
-                                            positionLeft={-420}
-                                            positionTop={20}
-                                            rightSide={true}
-                                            isOpenBody={leadsTableHints["download"].showBody}
-                                            toggleClick={() => {
+                                        card={tableHintCards["download"]}
+                                        positionLeft={-420}
+                                        positionTop={20}
+                                        rightSide={true}
+                                        isOpenBody={leadsTableHints["download"].showBody}
+                                        toggleClick={() => {
                                             if (leadsTableHints["overview"].showBody) {
                                                 changeLeadsTableHint("overview", "showBody", "close")
                                             }
                                             changeLeadsTableHint("download", "showBody", "toggle")
-                                            }}
-                                            closeClick={() => {
-                                                changeLeadsTableHint("download", "showBody", "close")
-                                            }}
-                                        />
+                                        }}
+                                        closeClick={() => {
+                                            changeLeadsTableHint("download", "showBody", "close")
+                                        }}
+                                    />
                                     <Button
                                         onClick={handleFilterPopupOpen}
                                         disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
@@ -1299,45 +1316,45 @@ const Leads: React.FC = () => {
                         ) : (
                             <Grid container spacing={1} sx={{}}>
                                 <Grid item xs={12}>
-                                <TableContainer                                
-                                    sx={{
-                                    height: "70vh",
-                                    overflowX: "scroll",
-                                    maxHeight:
-                                        selectedFilters.length > 0
-                                        ? hasNotification
-                                            ? "63vh"
-                                            : "70vh"
-                                        : "70vh",
-                                    "@media (max-height: 800px)": {
-                                        height: "60vh",
-                                        maxHeight:
-                                        selectedFilters.length > 0
-                                            ? hasNotification
-                                            ? "53vh"
-                                            : "60vh"
-                                            : "70vh",
-                                    },
-                                    "@media (max-width: 400px)": {
-                                        height: "50vh",
-                                        maxHeight:
-                                        selectedFilters.length > 0
-                                            ? hasNotification
-                                            ? "53vh"
-                                            : "50vh"
-                                            : "70vh",
-                                    },
-                                    }}
+                                    <TableContainer
+                                        sx={{
+                                            height: "70vh",
+                                            overflowX: "scroll",
+                                            maxHeight:
+                                                selectedFilters.length > 0
+                                                    ? hasNotification
+                                                        ? "63vh"
+                                                        : "70vh"
+                                                    : "70vh",
+                                            "@media (max-height: 800px)": {
+                                                height: "60vh",
+                                                maxHeight:
+                                                    selectedFilters.length > 0
+                                                        ? hasNotification
+                                                            ? "53vh"
+                                                            : "60vh"
+                                                        : "70vh",
+                                            },
+                                            "@media (max-width: 400px)": {
+                                                height: "50vh",
+                                                maxHeight:
+                                                    selectedFilters.length > 0
+                                                        ? hasNotification
+                                                            ? "53vh"
+                                                            : "50vh"
+                                                        : "70vh",
+                                            },
+                                        }}
                                     >
                                         <Table
                                             stickyHeader
                                             component={Paper}
                                             aria-label="leads table"
-                                            sx={{ 
-                                                tableLayout: "fixed", 
+                                            sx={{
+                                                tableLayout: "fixed",
                                                 border: "1px solid rgba(235, 235, 235, 1)",
                                             }}
-                                            >
+                                        >
                                             <TableHead>
                                                 <TableRow>
                                                     {[
@@ -1384,22 +1401,28 @@ const Leads: React.FC = () => {
                                                             </Box>
 
                                                             {key === "name" && (
-                                                                <HintCard
-                                                                    card={tableHintCards["overview"]}
-                                                                    positionLeft={140}
-                                                                    positionTop={80}
-                                                                    isOpenBody={leadsTableHints["overview"].showBody}
-                                                                    toggleClick={() => {
-                                                                    if (leadsTableHints["download"].showBody) {
-                                                                        changeLeadsTableHint("download", "showBody", "close")
-                                                                    }
-                                                                    changeLeadsTableHint("overview", "showBody", "toggle")
-                                                                    }}
-                                                                    closeClick={() => {
-                                                                        changeLeadsTableHint("overview", "showBody", "close")
-                                                                    }}
-                                                                />
+                                                                <Box
+                                                                    onClick={(e) => e.stopPropagation()}
+                                                                    sx={{ position: 'absolute', top: 0, left: 0, }}
+                                                                >
+                                                                    <HintCard
+                                                                        card={tableHintCards["overview"]}
+                                                                        positionLeft={135}
+                                                                        positionTop={73}
+                                                                        isOpenBody={leadsTableHints["overview"].showBody}
+                                                                        toggleClick={() => {
+                                                                            if (leadsTableHints["download"].showBody) {
+                                                                                changeLeadsTableHint("download", "showBody", "close")
+                                                                            }
+                                                                            changeLeadsTableHint("overview", "showBody", "toggle")
+                                                                        }}
+                                                                        closeClick={() => {
+                                                                            changeLeadsTableHint("overview", "showBody", "close")
+                                                                        }}
+                                                                    />
+                                                                </Box>
                                                             )}
+
                                                         </TableCell>
                                                     ))}
                                                 </TableRow>
@@ -1428,20 +1451,20 @@ const Leads: React.FC = () => {
                                                                 handleOpenPopup(row);
 
                                                             }}>{row.first_name} {row.last_name}</TableCell>
-                                                        <TableCell>
-                                                                {row.is_active ? (
-                                                                    row.personal_emails ? (
-                                                                        <Tooltip title={row.personal_emails.split(',')[0]}>
-                                                                            <span className="truncate-email">
-                                                                                {truncateText(row.personal_emails.split(',')[0], 24)}
-                                                                            </span>
-                                                                        </Tooltip>
-                                                                    ) : (
-                                                                        <span className="truncate-email">--</span>
-                                                                    )
+                                                        <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
+                                                            {row.is_active ? (
+                                                                row.personal_emails ? (
+                                                                    <Tooltip title={row.personal_emails.split(',')[0]}>
+                                                                        <span className="truncate-email">
+                                                                            {truncateText(row.personal_emails.split(',')[0], 16)}
+                                                                        </span>
+                                                                    </Tooltip>
                                                                 ) : (
-                                                                    <UnlockButton onClick={() => handleUnlock()} label="Unlock email" />
+                                                                    <span className="truncate-email">--</span>
                                                                 )
+                                                            ) : (
+                                                                <UnlockButton onClick={() => handleUnlock()} label="Unlock email" />
+                                                            )
                                                             }
                                                         </TableCell>
 
@@ -1451,7 +1474,7 @@ const Leads: React.FC = () => {
                                                                 row.business_email ? (
                                                                     <Tooltip title={row.business_email.split(',')[0]}>
                                                                         <span className="truncate-email">
-                                                                            {truncateText(row.business_email.split(',')[0], 24)}
+                                                                            {truncateText(row.business_email.split(',')[0], 16)}
                                                                         </span>
                                                                     </Tooltip>
                                                                 ) : (
@@ -1463,7 +1486,7 @@ const Leads: React.FC = () => {
                                                         </TableCell>
 
                                                         {/* Mobile Phone Column */}
-                                                        <TableCell>
+                                                        <TableCell sx={{ ...leadsStyles.table_array_phone, position: 'relative' }}>
                                                             {row.is_active ? (
                                                                 row.mobile_phone
                                                                     ? row.mobile_phone.split(',')[0]
@@ -1486,7 +1509,7 @@ const Leads: React.FC = () => {
                                                                 : '--'}
                                                         </TableCell>
 
-                                                        <TableCell>
+                                                        <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
                                                             <Box
                                                                 sx={{
                                                                     display: 'flex',
@@ -1507,7 +1530,7 @@ const Leads: React.FC = () => {
                                                             </Box>
                                                         </TableCell>
 
-                                                        <TableCell>
+                                                        <TableCell sx={{ ...leadsStyles.table_array, position: 'relative' }}>
                                                             <Box
                                                                 sx={{
                                                                     display: 'flex',
@@ -1525,8 +1548,8 @@ const Leads: React.FC = () => {
                                                                 }}
                                                             >
                                                                 {formatFunnelText(row.visitor_type) || '--'}
-                                                            </Box> 
-                                                            </TableCell>
+                                                            </Box>
+                                                        </TableCell>
 
                                                         <TableCell onClick={(e) => {
                                                             e.stopPropagation();
@@ -1635,7 +1658,9 @@ const Leads: React.FC = () => {
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
                         rowData={popupData} />
+
                     <FilterPopup open={filterPopupOpen} onClose={handleFilterPopupClose} onApply={handleApplyFilters} />
+
                     <AudiencePopup open={audiencePopupOpen} onClose={handleAudiencePopupClose}
                         selectedLeads={Array.from(selectedRows)} />
 

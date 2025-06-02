@@ -20,6 +20,7 @@ import {
   LinearProgress,
   Collapse,
   Link,
+  Paper,
 } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
@@ -292,10 +293,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
     <TableContainer
       ref={tableContainerRef}
       sx={{
-        border: "1px solid rgba(235, 235, 235, 1)",
-        borderRadius: "4px",
-        maxHeight: "67vh",
-        overflow: "auto",
+        height: "70vh",
+        overflowX: "scroll",
         "@media (max-height: 800px)": {
           maxHeight: "70vh",
         },
@@ -304,7 +303,11 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
         },
       }}
     >
-      <Table stickyHeader>
+      <Table stickyHeader component={Paper}
+        sx={{
+          tableLayout: "fixed",
+          border: "1px solid rgba(235, 235, 235, 1)",
+        }}>
         <TableHead sx={{ position: "relative" }}>
           <TableRow sx={{ height: "60px" }}>
             {columns(isDebug).map(({ key, label, sortable = false }) => (

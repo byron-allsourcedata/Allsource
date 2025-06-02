@@ -17,6 +17,8 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../../../../components/ToastNotification";
 import { useHints } from "@/context/HintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
+import { useGetStartedHints } from "./context/PixelInstallHintsContext";
+import { ManualInstallHintCards } from "./context/hintsCardsContent";
 
 interface HintCardInterface {
   description: string;
@@ -48,8 +50,7 @@ interface PopupProps {
 }
 
 const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
-  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
-    useHints();
+  const { manualInstallHints, resetManualInstall, changeManualInstallHint } = useGetStartedHints();
   const [email, setEmail] = useState("");
   const handleCopy = () => {
     navigator.clipboard.writeText(pixelCode);
@@ -65,14 +66,6 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
       .catch((error) => { });
   };
 
-  const hintCards: HintCardInterface[] = [
-    {
-      description: `Enter your developer’s email address in the input field and click "Send". We’ll send installation instructions for setting up the pixel manually to the provided email.`,
-      title: "Enter your developer's email address",
-      linkToLoadMore:
-        "https://allsourceio.zohodesk.com/portal/en/kb/articles/send-pixel-installation-instructions",
-    },
-  ];
 
   return (
     <>
@@ -295,18 +288,16 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
                 Send
               </Typography>
             </Button>
-            {/* {pixelSetupHints[14].show && (
+            {manualInstallHints["SendButton"]?.show && (
               <HintCard
-                card={hintCards[0]}
+                card={ManualInstallHintCards["SendButton"]}
                 positionLeft={670}
                 positionTop={-30}
-                isOpenBody={pixelSetupHints[14].showBody}
-                toggleClick={() =>
-                  changePixelSetupHint(14, "showBody", "toggle")
-                }
-                closeClick={() => changePixelSetupHint(14, "showBody", "close")}
+                isOpenBody={manualInstallHints["SendButton"].showBody}
+                toggleClick={() => changeManualInstallHint("SendButton", "showBody", "toggle")}
+                closeClick={() => changeManualInstallHint("SendButton", "showBody", "close")}
               />
-            )} */}
+            )}
           </Box>
         </Box>
       </Box>

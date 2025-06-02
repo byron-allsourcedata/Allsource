@@ -39,7 +39,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     null
   );
   const [cities, setCities] = useState<{ city: string, state: string }[]>([]);
-  const [pageUrls, setUrls] = useState<{page_url: string}[]>([]);
+  const [pageUrls, setUrls] = useState<{ page_url: string }[]>([]);
   const [contacts, setContacts] = useState<{ name: string }[]>([]);
   const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>(
     {
@@ -1230,8 +1230,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
     setPageUrls('');
     setUrls([]);
   };
-  
-  
+
+
 
   const fetchContacts = debounce(async (query: string) => {
     if (query.length >= 3) {
@@ -1261,16 +1261,17 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
 
   return (
     <>
-      <Backdrop open={open} sx={{ zIndex: 1200, color: "#fff" }} />
+      <Backdrop open={open} sx={{ zIndex: 2600, color: "#fff" }} />
       <Drawer
         anchor="right"
         open={open}
         onClose={onClose}
+        sx={{ zIndex: 3600 }}
         PaperProps={{
           sx: {
             width: "40%",
             position: "fixed",
-            zIndex: 2602,
+            zIndex: 3600,
             top: 0,
             bottom: 0,
             "@media (max-width: 600px)": {
@@ -1291,7 +1292,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => 
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            padding: "0.75em 1em 0.25em 1em",
+            padding: "1em 1em 0.7em 1em",
             borderBottom: "1px solid #e4e4e4",
             position: "sticky",
             top: 0,

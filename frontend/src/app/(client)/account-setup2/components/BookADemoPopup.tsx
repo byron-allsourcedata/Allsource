@@ -16,6 +16,8 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import { showToast } from "@/components/ToastNotification";
+import { get } from "lodash";
+import { getCalendlyPopupUrl } from "@/services/booking";
 
 interface PopupProps {
   endSetup: () => void;
@@ -101,32 +103,7 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
     }
   };
 
-  const calendlyPopupUrl = () => {
-    const baseUrl = "https://calendly.com/validateapi-allforce/30min";
-    const searchParams = new URLSearchParams();
-
-    if (utmParams) {
-      try {
-        const parsedUtmParams =
-          typeof utmParams === "string" ? JSON.parse(utmParams) : utmParams;
-
-        if (typeof parsedUtmParams === "object" && parsedUtmParams !== null) {
-          Object.entries(parsedUtmParams).forEach(([key, value]) => {
-            if (value !== null && value !== undefined) {
-              searchParams.append(key, value as string);
-            }
-          });
-        }
-      } catch (error) {
-        console.error("Error parsing utmParams:", error);
-      }
-    }
-
-    const finalUrl = `${baseUrl}${
-      searchParams.toString() ? `?${searchParams.toString()}` : ""
-    }`;
-    return finalUrl;
-  };
+  const calendlyPopupUrl = () => getCalendlyPopupUrl(utmParams);
 
   return (
     <>

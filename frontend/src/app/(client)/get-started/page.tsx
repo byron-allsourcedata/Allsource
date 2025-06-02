@@ -52,6 +52,7 @@ const GetStarted: React.FC = () => {
     const [sourceBannerVisible, setSourceBannerVisible] = useState(true);
     const [welcomePopup, setWelcomePopup] = useState<string | null>(null);
     const [loading, setLoading] = useState(true)
+    const [showHeading, setShowHeading] = useState(true)
 
 
     const checkPixel = async () => {
@@ -94,6 +95,7 @@ const GetStarted: React.FC = () => {
 
 
     const handleClick = () => {
+        setShowHeading(false);
         const params = new URLSearchParams(searchParams.toString());
         params.set('pixel', 'true');
 
@@ -110,7 +112,7 @@ const GetStarted: React.FC = () => {
             pb: 3
         }}>
             {welcomePopup && <WelcomePopup />}
-            <Box
+            {showHeading && <Box
                 sx={{
                     display: 'flex',
                     flexDirection: 'row',
@@ -139,11 +141,13 @@ const GetStarted: React.FC = () => {
                     }
                 }}
             >
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: 1 }}>
-                    <Typography className="first-sub-title" sx={{ fontSize: '24px !important', fontWeight: "500 !important" }}>Get Started</Typography>
-                    <Typography className="description">To begin building your audience, you&apos;ll need to provide a data source</Typography>
-                </Box>
-            </Box>
+                {!(pixel || source) && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'start', gap: 1 }}>
+                        <Typography className="first-sub-title" sx={{ fontSize: '24px !important', fontWeight: "500 !important" }}>Get Started</Typography>
+                        <Typography className="description">To begin building your audience, you&apos;ll need to provide a data source</Typography>
+                    </Box>
+                )}
+            </Box>}
             {tabIndex === 0 ? (
                 <FirstTimeScreenCommonVariant1
                     InfoNotification={{
@@ -164,7 +168,11 @@ const GetStarted: React.FC = () => {
                             title: 'Import Source',
                             subtitle: `To begin building your audience, you'll first need to provide a data source. `,
                             imageSrc: '/import_source.svg',
-                            onClick: sourceImported ? undefined : () => setTabIndex(2),
+                            onClick: sourceImported ? undefined :
+                                () => {
+                                    setTabIndex(2)
+                                    setShowHeading(false);
+                                },
                             showRecommended: false,
                             showInstalled: sourceImported,
                             img_height: 120

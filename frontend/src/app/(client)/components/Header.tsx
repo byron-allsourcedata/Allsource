@@ -123,6 +123,7 @@ const Header: React.FC<HeaderProps> = ({
     if (parent_token) {
       await new Promise<void>(async (resolve) => {
         sessionStorage.clear();
+        sessionStorage.setItem("admin", "true")
         localStorage.removeItem("parent_token");
         sessionStorage.removeItem("parent_domain");
         localStorage.setItem("token", parent_token);
@@ -136,7 +137,7 @@ const Header: React.FC<HeaderProps> = ({
       });
     }
 
-    router.push("/partners");
+    router.push("/admin");
     router.refresh();
   };
 
@@ -221,30 +222,38 @@ const Header: React.FC<HeaderProps> = ({
             {visibleButton && (
               <Button
                 onClick={handleReturnToMain}
+                variant="contained"
                 sx={{
                   fontFamily: "Nunito Sans",
                   fontSize: "14px",
                   fontWeight: 600,
-                  lineHeight: "19.1px",
-                  textAlign: "left",
-                  textDecoration: "underline",
                   textTransform: "none",
-                  color: "rgba(56, 152, 252, 1)",
-                  marginRight: "1.5rem",
+                  backgroundColor: "#3898FC",
+                  textWrap: 'nowrap',
+                  color: "#fff",
+                  borderRadius: "8px",
+                  boxShadow: "none",
+                  padding: "6px 16px",
+                  marginLeft: "1.5rem",
+                  '&:hover': {
+                    backgroundColor: "#2277cc",
+                    boxShadow: "none",
+                  },
                 }}
               >
                 Return to main
               </Button>
+
             )}
-            <Box sx={{ display: "flex", ml: 3 }}>
+            {/* <Box sx={{ display: "flex", ml: 1 }}>
               {!pathname.includes("audience-dashboard") &&
                 (pathname.includes("dashboard") ||
                   pathname.includes("leads") ||
                   pathname.includes("company") ||
                   pathname.includes("suppressions"))}
-            </Box>
+            </Box> */}
           </Box>
-          <Box sx={{ padding: 3, width: "100%", px: 3.5 }}>
+          <Box sx={{ padding: 1, width: "100%", px: 3.5 }}>
             <FreeTrialLabel />
           </Box>
 

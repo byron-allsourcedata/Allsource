@@ -1,8 +1,9 @@
 "use client";
 import { Box, Typography, Button, BoxClassKey } from "@mui/material";
 import React, { useState, useEffect } from "react";
-import { useHints } from "@/context/HintsContext";
 import HintCard from "@/app/(client)/components/HintCard";
+import { verifyPixelIntegrationHintCards } from "@/app/(client)/dashboard/components/context/hintsCardsContent";
+import { useGetStartedHints } from "@/app/(client)/dashboard/components/context/PixelInstallHintsContext";
 
 type VerifyPixelIntegrationProps = {
   domain: string;
@@ -18,8 +19,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
   domain,
   showHint,
 }) => {
-  const { changePixelSetupHint, pixelSetupHints, resetPixelSetupHints } =
-    useHints();
+  const { verifyPixelIntegrationHints, resetVerifyPixelIntegrationHints, changeVerifyPixelIntegrationHint } = useGetStartedHints();
   const [inputValue, setInputValue] = useState<string>("");
 
   const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN;
@@ -45,7 +45,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 
       const hasQuery = url.includes("?");
       const newUrl =
-        url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}` + `&domain_url=${process.env.NEXT_PUBLIC_API_DASHBOARD_URL}`;
+        url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}` + `&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/leads?pixel_installed=true`;
       window.open(newUrl, "_blank");
     }
   };
@@ -64,9 +64,9 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
     <Box
       sx={{
         padding: "1rem",
+        mb: 5,
         border: "1px solid #e4e4e4",
         borderRadius: "8px",
-        zIndex: 100,
         position: "relative",
         backgroundColor: "rgba(255, 255, 255, 1)",
         boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.08)",
@@ -135,16 +135,16 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
         >
           Verify
         </Button>
-        {/* {pixelSetupHints[3].show && showHint && (
+        {verifyPixelIntegrationHints["verifyPixelIntegration"]?.show && showHint && (
           <HintCard
-            card={hintCards[0]}
+            card={verifyPixelIntegrationHintCards["verifyPixelIntegration"]}
             positionLeft={710}
-            positionTop={-20}
-            isOpenBody={pixelSetupHints[3].showBody}
-            toggleClick={() => changePixelSetupHint(3, "showBody", "toggle")}
-            closeClick={() => changePixelSetupHint(3, "showBody", "close")}
+            positionTop={-25}
+            isOpenBody={verifyPixelIntegrationHints["verifyPixelIntegration"].showBody}
+            toggleClick={() => changeVerifyPixelIntegrationHint("verifyPixelIntegration", "showBody", "toggle")}
+            closeClick={() => changeVerifyPixelIntegrationHint("verifyPixelIntegration", "showBody", "close")}
           />
-        )} */}
+        )}
       </Box>
     </Box>
   );

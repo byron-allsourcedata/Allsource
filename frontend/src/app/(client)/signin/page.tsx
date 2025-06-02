@@ -97,14 +97,6 @@ const Signin: React.FC = () => {
     validateField(name, value);
   };
 
-  const checkPartner = (isPartner: boolean) => {
-    if (isPartner) {
-      //router.push("/partners");
-    } else {
-      //router.push("/audience-dashboard");
-    }
-  };
-
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const newErrors: { [key: string]: string } = {};
@@ -157,8 +149,15 @@ const Signin: React.FC = () => {
           switch (responseData.status) {
             case "SUCCESS":
               await fetchUserData();
-              checkPartner(response.data.is_partner);
+              router.push("/audience-dashboard");
               break;
+
+            case "SUCCESS_ADMIN":
+              await fetchUserData();
+              sessionStorage.setItem("admin", "true")
+              router.push('/admin');
+              break;
+
             case "NON_SHOPIFY_ACCOUNT":
               showErrorToast("non shopify account");
               break;
@@ -284,6 +283,11 @@ const Signin: React.FC = () => {
                   case "SUCCESS":
                     router.push(partner ? "/partners" : "/audience-dashboard");
                     break;
+                  case "SUCCESS_ADMIN":
+                    await fetchUserData();
+                    sessionStorage.setItem("admin", "true")
+                    router.push('/admin');
+                    break;
                   case "NEED_CHOOSE_PLAN":
                     router.push("/settings?section=subscription");
                     break;
@@ -304,6 +308,7 @@ const Signin: React.FC = () => {
                     router.push(partner ? "/partners" : "/audience-dashboard");
                     break;
                   case "FILL_COMPANY_DETAILS":
+                    console.log('1234')
                     let data = await fetchUserData();
                     const { is_pixel_installed, is_source_imported } = data?.get_started;
                     if (is_pixel_installed && is_source_imported) {
