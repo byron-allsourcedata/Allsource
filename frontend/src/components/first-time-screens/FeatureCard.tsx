@@ -86,7 +86,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
                                     borderRadius: "4px",
                                 }}
                             >
-                                Completed
+                                Complited
                             </Typography>
                         </Box>
                     )}

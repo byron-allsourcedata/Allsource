@@ -167,7 +167,7 @@ const OrderFieldsStep: React.FC<OrderFieldsStepProps> = ({
                         variant="outlined"
                     >
                         <Typography fontSize="0.8rem">
-                            {disableResetOrder ? `Recommended` : `Set recommended`}
+                            {disableResetOrder ? `Recomended` : `Set recommended`}
                         </Typography>
                     </Button>
                 </Grid>
