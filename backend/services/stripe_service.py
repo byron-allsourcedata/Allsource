@@ -1,8 +1,11 @@
 import math
+import os
+import certifi
 from typing import List
 
 import stripe
 import logging
+os.environ['SSL_CERT_FILE'] = certifi.where()
 
 from config.stripe import StripeConfig
 from schemas.users import UserSignUpForm
