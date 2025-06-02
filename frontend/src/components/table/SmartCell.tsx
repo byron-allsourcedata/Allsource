@@ -1,4 +1,3 @@
-// SmartCell.tsx
 import React, {
     ReactNode,
     useRef,
@@ -17,7 +16,6 @@ import {
     TooltipProps,
     Theme,
 } from '@mui/material';
-import { height } from '@mui/system';
 
 export const table_array = {
     position: 'relative',
@@ -37,6 +35,9 @@ export const table_array = {
         width: '1px',
         height: 'calc(100% - 30px)',
         backgroundColor: 'rgba(235, 235, 235, 1)',
+    },
+    "&:last-of-type::after": {
+        display: "none",
     },
     '&.sticky-cell': {
         '&::before': {
@@ -66,6 +67,7 @@ export interface CellOptions {
     key?: React.Key;
     sx?: SxProps<Theme>;
     className?: string;
+    hideDivider?: boolean;
     onClick?: (e: MouseEvent) => void;
     style?: React.CSSProperties;
 }
@@ -198,7 +200,12 @@ const SmartCell: FC<SmartCellProps> = ({
             sx={{
                 ...table_array,
                 ...baseCellStyles,
-                ...cellOptions.sx
+                ...cellOptions.sx,
+                ...(cellOptions.hideDivider && {
+                    "&::after": {
+                      display: "none",
+                    },
+                  }),
             }}
             className={cellOptions.className}
         >

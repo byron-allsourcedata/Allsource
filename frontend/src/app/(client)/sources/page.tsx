@@ -30,6 +30,8 @@ import {
   Chip,
   Tooltip,
   Link,
+  SxProps,
+  Theme,
 } from "@mui/material";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
@@ -236,13 +238,13 @@ const Sources: React.FC = () => {
     {
       key: "number_of_customers",
       label: "No of Customers",
-      widths: { width: "140px", minWidth: "140px", maxWidth: "140px" },
+      widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
       sortable: true,
     },
     {
       key: "matched_records",
       label: "Matched Records",
-      widths: { width: "145px", minWidth: "145px", maxWidth: "145px" },
+      widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
       sortable: true,
     },
     {
@@ -1155,142 +1157,49 @@ const Sources: React.FC = () => {
                               aria-label="leads table"
                               sx={{
                                 tableLayout: "fixed",
-                                border: "1px solid rgba(235, 235, 235, 1)",
                               }}
                             >
                               <TableHead sx={{ position: "relative" }}>
                                 <TableRow>
-                                  {columns.map(
-                                    ({
-                                      key,
-                                      label,
-                                      sortable = false,
-                                      widths,
-                                    }) => (
-                                      // <SmartCell
-                                      //   cellOptions={{
-                                      //     key,
-                                      //     className: key === "name" ? "sticky-cell" : undefined,
-                                      //     onClick: sortable ? () => handleSortRequest(key) : undefined,
-                                      //     style: {
-                                      //           cursor: sortable
-                                      //             ? "pointer"
-                                      //             : "default",
-                                      //         },
-                                      //     sx: {
-                                      //       ...widths,
-                                      //     ...sourcesStyles.table_column,
-                                      //     ...(key === "name" && {
-                                      //       position: "sticky",
-                                      //       left: 0,
-                                      //       zIndex: 98,
-                                      //       top: 0,
-                                      //       boxShadow:
-                                      //         //   isScrolledX && isScrolledY ? "3px 3px 3px #00000033"
-                                      //         // : isScrolledX ? "3px 0px 3px #00000033"
-                                      //         // : isScrolledY ? "0px 3px 3px #00000033"
-                                      //         // : "none",
-                                      //         isScrolledX
-                                      //           ? "3px 0px 3px #00000033"
-                                      //           : "none",
-                                      //     }),
+                                  {columns.map((column) => {
+                                    const { key, label, sortable = false, widths } = column;
+                                    const isNameColumn = key === "name";
+                                    const isActionsColumn = key === "actions";
+                                    const hideDivider = (isNameColumn && isScrolledX) || isActionsColumn;
+                                    const baseCellSX: SxProps<Theme> = {
+                                      ...widths,
+                                      position: "sticky",
+                                      top: 0,
+                                      zIndex: 97,
+                                      borderBottom: "none",
+                                      borderTop: "1px solid rgba(235,235,235,1)",
+                                      cursor: sortable ? "pointer" : "default",
+                                      borderRight: isActionsColumn ? "1px solid rgba(235,235,235,1)" : "none",
+                                      whiteSpace: isActionsColumn ? "normal" : "wrap",
+                                      overflow: isActionsColumn ? "visible" : "hidden",
+                                    };
 
-                                      //     right: "none",
-                                      //     ...(key === "average_time_sec" && {
-                                      //       "::after": { content: "none" },
-                                      //     }),
-                                      //     borderBottom: "none",
-                                      //     },
-                                      //   }}
-                                      //   contentOptions={{
-                                      //   }}
-                                      // >
-                                      //   <Box
-                                      //     sx={{
-                                      //       display: "flex",
-                                      //       alignItems: "center",
-                                      //       position: "relative",
-                                      //       justifyContent: "space-between",
-                                      //     }}
-                                      //   >
-                                      //     <Typography
-                                      //       variant="body2"
-                                      //       sx={{
-                                      //         ...sourcesStyles.table_column,
-                                      //         borderRight: "0",
-                                      //       }}
-                                      //     >
-                                      //       {label}
-                                      //     </Typography>
-                                      //     {sortable && (
-                                      //       <IconButton size="small">
-                                      //         {orderBy === key ? (
-                                      //           order === "asc" ? (
-                                      //             <ArrowUpwardRoundedIcon fontSize="inherit" />
-                                      //           ) : (
-                                      //             <ArrowDownwardRoundedIcon fontSize="inherit" />
-                                      //           )
-                                      //         ) : (
-                                      //           <SwapVertIcon fontSize="inherit" />
-                                      //         )}
-                                      //       </IconButton>
-                                      //     )}
-                                      //   </Box>
-                                      //   {label === "Actions" && (
-                                      //     <HintCard
-                                      //       card={tableHintCards["actions"]}
-                                      //       positionLeft={-400}
-                                      //       positionTop={85}
-                                      //       rightSide={true}
-                                      //       isOpenBody={sourcesTableHints["actions"].showBody}
-                                      //       toggleClick={() => {
-                                      //         if (sourcesTableHints["builder"].showBody) {
-                                      //           changeSourcesTableHint("builder", "showBody", "close")
-                                      //         }
-                                      //         changeSourcesTableHint("actions", "showBody", "toggle")
-                                      //       }}
-                                      //       closeClick={() => {
-                                      //         changeSourcesTableHint("actions", "showBody", "close")
-                                      //       }}
-                                      //     />
-                                      //   )}
-                                      // </SmartCell>
+                                    if (isNameColumn) {
+                                      baseCellSX.left = 0;
+                                      baseCellSX.zIndex = 99;
+                                      baseCellSX.boxShadow = isScrolledX
+                                        ? "3px 0px 3px rgba(0,0,0,0.2)"
+                                        : "none";
+                                    }
 
-                                      <TableCell
+                                    const className = isNameColumn ? "sticky-cell" : undefined;
+                                    const onClickHandler = sortable ? () => handleSortRequest(key) : undefined;
+
+                                    return (
+                                      <SmartCell
                                         key={key}
-                                        sx={{
-                                          ...widths,
-                                          ...sourcesStyles.table_column,
-                                          ...(key === "name" && {
-                                            position: "sticky",
-                                            left: 0,
-                                            zIndex: 98,
-                                            top: 0,
-                                            boxShadow:
-                                              //   isScrolledX && isScrolledY ? "3px 3px 3px #00000033"
-                                              // : isScrolledX ? "3px 0px 3px #00000033"
-                                              // : isScrolledY ? "0px 3px 3px #00000033"
-                                              // : "none",
-                                              isScrolledX
-                                                ? "3px 0px 3px #00000033"
-                                                : "none",
-                                          }),
-
-                                          right: "none",
-                                          ...(key === "average_time_sec" && {
-                                            "::after": { content: "none" },
-                                          }),
-                                          borderBottom: "none",
+                                        cellOptions={{
+                                          sx: baseCellSX,
+                                          hideDivider,
+                                          onClick: onClickHandler,
+                                          className,
                                         }}
-                                        onClick={
-                                          sortable
-                                            ? () => handleSortRequest(key)
-                                            : undefined
-                                        }
-                                        style={{
-                                          cursor: sortable
-                                            ? "pointer"
-                                            : "default",
+                                        contentOptions={{
                                         }}
                                       >
                                         <Box
@@ -1324,7 +1233,8 @@ const Sources: React.FC = () => {
                                             </IconButton>
                                           )}
                                         </Box>
-                                        {label === "Actions" && (
+
+                                        {key === "actions" && (
                                           <HintCard
                                             card={tableHintCards["actions"]}
                                             positionLeft={-400}
@@ -1342,14 +1252,14 @@ const Sources: React.FC = () => {
                                             }}
                                           />
                                         )}
-                                      </TableCell>
+                                      </SmartCell>
                                     )
-                                  )}
+                                  })}
                                 </TableRow>
                                 <TableRow
                                   sx={{
                                     position: "sticky",
-                                    top: "60px",
+                                    top: "65px",
                                     zIndex: 99,
                                     borderTop: "none",
                                   }}
@@ -1412,7 +1322,11 @@ const Sources: React.FC = () => {
                                             left: 0,
                                             backgroundColor: "#fff",
                                             boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
+                                            color: isDisabled
+                                              ? "rgba(95, 99, 104, 1)"
+                                              : "rgba(56, 152, 252, 1)",
                                           },
+                                          hideDivider: isScrolledX,
                                         }}
                                         contentOptions={{
                                           loading: loaderForTable,
@@ -1438,9 +1352,6 @@ const Sources: React.FC = () => {
                                         cellOptions={{
                                           sx: {
                                             position: "relative",
-                                            minWidth: "80px",
-                                            maxWidth: "80px",
-                                            width: "80px",
                                           },
                                         }}
                                         tooltipOptions={{ content: row.target_schema.toUpperCase() }}
@@ -1453,9 +1364,6 @@ const Sources: React.FC = () => {
                                         cellOptions={{
                                           sx: {
                                             position: "relative",
-                                            minWidth: "80px",
-                                            maxWidth: "80px",
-                                            width: "80px",
                                           },
                                         }}
                                         tooltipOptions={{ content: setSourceOrigin(row.source_type) }}
@@ -1609,15 +1517,19 @@ const Sources: React.FC = () => {
                                           )}
                                       </SmartCell>
 
+                                      {/* Action Column */}
                                       <SmartCell
                                         contentOptions={{
                                           loading: loaderForTable,
                                         }}
                                         cellOptions={{
                                           sx: {
+                                            position: "relative",
                                             p: 0,
                                             textAlign: "center",
+                                            borderRight: "1px solid rgba(235,235,235,1)",
                                           },
+                                          hideDivider: true
                                         }}
                                       >
                                         <IconButton
@@ -1625,6 +1537,7 @@ const Sources: React.FC = () => {
                                             handleOpenPopover(event, row)
                                           }
                                           sx={{
+                                            fontSize: '16px',
                                             ":hover": {
                                               backgroundColor: "transparent",
                                               px: 0
@@ -1632,12 +1545,10 @@ const Sources: React.FC = () => {
                                           }}
                                         >
                                           <MoreVert
-                                            fontSize="small"
                                             sx={{
+
                                               color: "rgba(32, 33, 36, 1)",
                                             }}
-                                          // height={8}
-                                          // width={24}
                                           />
                                         </IconButton>
 
