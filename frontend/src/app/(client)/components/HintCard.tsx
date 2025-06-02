@@ -18,6 +18,7 @@ interface HintCardProps {
   positionLeft?: number;
   positionTop?: number;
   rightSide?: boolean;
+  onDrawer?: boolean;
   isOpenBody: boolean;
   sx?: SxProps;
   toggleClick: () => void;
@@ -32,6 +33,7 @@ const HintCard: React.FC<HintCardProps> = ({
   closeClick,
   isOpenBody,
   rightSide,
+  onDrawer,
   sx,
 }) => {
   const [showHint, setShowHint] = useState(false);
@@ -74,7 +76,7 @@ const HintCard: React.FC<HintCardProps> = ({
                   position: "relative",
                   right: 0,
                   maxWidth: 400,
-                  zIndex: 2600,
+                  zIndex: onDrawer ? 2600 : 1200,
                   p: 2,
                   border: "1px solid #e0e0e0",
                   borderRadius: 2,

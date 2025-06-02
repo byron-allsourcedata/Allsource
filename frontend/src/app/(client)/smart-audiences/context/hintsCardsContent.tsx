@@ -15,21 +15,21 @@ const builderHintCards: Record<BuilderKey, HintCardInterface> = {
   },
   selectContacts1: {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+      "Select contacts to include in your list or workflow for accurate targeting and efficient communication.",
     title: "Select your Contacts1",
     linkToLoadMore:
       "https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-contacts1",
   },
   selectContacts2: {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+      "Refine contact selection using filters like tags, engagement, or location to create precise audience segments.",
     title: "Select your Contacts2",
     linkToLoadMore:
       "https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-contacts2",
   },
   chooseSourceLookalike: {
     description:
-      "This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
+      "Create lookalike audiences to find new users similar to your original contacts, improving reach and ad performance.",
     title: "Choose your Source/lOOk",
     linkToLoadMore:
       "https://allsourceio.zohodesk.com/portal/en/kb/articles/choose-your-source-lookalike",
