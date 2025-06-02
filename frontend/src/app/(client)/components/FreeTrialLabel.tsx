@@ -36,8 +36,7 @@ const FreeTrialLabel: React.FC = () => {
     const fetch = async () => {
       try {
         const response = await refetch();
-      } catch (err: any) {
-      }
+      } catch (err: any) {}
     };
 
     fetch();
@@ -73,7 +72,7 @@ const FreeTrialLabel: React.FC = () => {
       {is_artificial_status && (
         <Box
           sx={{
-            width: '100%',
+            width: "100%",
             display: "flex",
             alignItems: "flex-end",
             px: 2,
@@ -98,44 +97,46 @@ const FreeTrialLabel: React.FC = () => {
               flexGrow: 1,
               justifyContent: "space-between",
               color: "#323232",
-              alignItems: "flex-end"
+              alignItems: "flex-end",
             }}
           >
             <Box>
               <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}>
-                <Typography sx={{
-                  fontFamily: 'Nunito Sans',
-                  fontWeight: 600,
-                  fontSize: '12px',
-                  letterSpacing: '0%',
-                }}>
+                <Typography
+                  sx={{
+                    fontFamily: "Nunito Sans",
+                    fontWeight: 600,
+                    fontSize: "12px",
+                    letterSpacing: "0%",
+                  }}
+                >
                   You are on Free Trial:
                 </Typography>
                 <Typography
                   sx={{
-                    fontFamily: 'Nunito Sans',
+                    fontFamily: "Nunito Sans",
                     fontWeight: 400,
-                    fontSize: '12px',
-                    letterSpacing: '0%',
-                    color: 'rgba(50, 50, 50, 0.6)',
+                    fontSize: "12px",
+                    letterSpacing: "0%",
+                    color: "rgba(50, 50, 50, 0.6)",
                   }}
                 >
-                  To upgrade, unlock or schedule demo, please
+                  To upgrade or unlock features, please
                 </Typography>
                 <Typography
                   onClick={handleContactSales}
                   sx={{
-                    fontFamily: 'Nunito Sans',
+                    fontFamily: "Nunito Sans",
                     fontWeight: 400,
-                    fontSize: '12px',
-                    letterSpacing: '0%',
-                    verticalAlign: 'middle',
-                    color: 'rgba(50, 50, 50, 1)',
-                    textDecoration: 'underline',
-                    textDecorationStyle: 'solid',
-                    textDecorationOffset: '0%',
-                    textDecorationThickness: '0%',
-                    cursor: 'pointer',
+                    fontSize: "12px",
+                    letterSpacing: "0%",
+                    verticalAlign: "middle",
+                    color: "rgba(50, 50, 50, 1)",
+                    textDecoration: "underline",
+                    textDecorationStyle: "solid",
+                    textDecorationOffset: "0%",
+                    textDecorationThickness: "0%",
+                    cursor: "pointer",
                   }}
                 >
                   Contact sales
@@ -143,29 +144,68 @@ const FreeTrialLabel: React.FC = () => {
               </Box>
             </Box>
 
-            <Box sx={{ display: "flex", alignItems: 'flex-end', gap: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
               <Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
                 <DomainVerificationIcon
                   fontSize="small"
-                  sx={{ color: "#3898FC", alignSelf: 'flex-end', fontSize: "17px" }}
+                  sx={{
+                    color: "#3898FC",
+                    alignSelf: "flex-end",
+                    fontSize: "17px",
+                  }}
                 />
-                <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
-                  <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 0.5)" }}>
+                <Box
+                  sx={{ display: "flex", width: "100%", alignItems: "center" }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: "Nunito Sans",
+                      fontWeight: "400",
+                      fontSize: "12px",
+                      color: "rgba(50, 54, 62, 0.5)",
+                    }}
+                  >
                     {domainCount}/
                   </Typography>
-                  <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 1)" }}>
+                  <Typography
+                    sx={{
+                      fontFamily: "Nunito Sans",
+                      fontWeight: "400",
+                      fontSize: "12px",
+                      color: "rgba(50, 54, 62, 1)",
+                    }}
+                  >
                     1 Domains
                   </Typography>
                 </Box>
               </Box>
 
               <Box sx={{ display: "flex", alignItems: "start", gap: "8px" }}>
-                <AllInboxIcon fontSize="small" sx={{ color: "#3898FC", fontSize: '17px' }} />
-                <Box sx={{ display: 'flex', width: '100%', alignItems: 'center' }}>
-                  <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 0.5)" }}>
-                    {(creditsCount)?.toLocaleString()}/
+                <AllInboxIcon
+                  fontSize="small"
+                  sx={{ color: "#3898FC", fontSize: "17px" }}
+                />
+                <Box
+                  sx={{ display: "flex", width: "100%", alignItems: "center" }}
+                >
+                  <Typography
+                    sx={{
+                      fontFamily: "Nunito Sans",
+                      fontWeight: "400",
+                      fontSize: "12px",
+                      color: "rgba(50, 54, 62, 0.5)",
+                    }}
+                  >
+                    {creditsCount?.toLocaleString()}/
                   </Typography>
-                  <Typography sx={{ fontFamily: 'Nunito Sans', fontWeight: '400', fontSize: '12px', color: "rgba(50, 54, 62, 1)" }}>
+                  <Typography
+                    sx={{
+                      fontFamily: "Nunito Sans",
+                      fontWeight: "400",
+                      fontSize: "12px",
+                      color: "rgba(50, 54, 62, 1)",
+                    }}
+                  >
                     {creditsLimitCount?.toLocaleString()} Contacts
                   </Typography>
                 </Box>
@@ -174,21 +214,21 @@ const FreeTrialLabel: React.FC = () => {
               <Button
                 onClick={handleChoosePlanSlider}
                 sx={{
-                  fontFamily: 'Nunito Sans',
+                  fontFamily: "Nunito Sans",
                   fontWeight: 600,
-                  fontSize: '12px',
-                  lineHeight: '22px',
-                  letterSpacing: '0%',
-                  verticalAlign: 'middle',
-                  textTransform: 'none',
-                  px: '9px',
+                  fontSize: "12px",
+                  lineHeight: "22px",
+                  letterSpacing: "0%",
+                  verticalAlign: "middle",
+                  textTransform: "none",
+                  px: "9px",
                   py: 0,
-                  borderRadius: '4px',
-                  bgcolor: 'rgba(56, 152, 252, 1)',
-                  color: '#FFFFFF',
-                  textAlign: 'right',
-                  '&:hover': {
-                    backgroundColor: 'rgba(30, 136, 229, 1)',
+                  borderRadius: "4px",
+                  bgcolor: "rgba(56, 152, 252, 1)",
+                  color: "#FFFFFF",
+                  textAlign: "right",
+                  "&:hover": {
+                    backgroundColor: "rgba(30, 136, 229, 1)",
                   },
                 }}
               >
@@ -199,7 +239,11 @@ const FreeTrialLabel: React.FC = () => {
 
           <Box sx={{ width: "100%", mb: "8px" }}>
             <ProgressBar
-              progress={{ total: creditsLimitCount, processed: creditsLimitCount - creditsCount, reversed: true }}
+              progress={{
+                total: creditsLimitCount,
+                processed: creditsLimitCount - creditsCount,
+                reversed: true,
+              }}
             />
           </Box>
         </Box>
