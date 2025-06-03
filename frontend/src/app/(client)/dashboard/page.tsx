@@ -367,9 +367,19 @@ const Dashboard: React.FC = () => {
                     minHeight: 0,
                     alignItems: "start",
                     textAlign: 'left',
+                    ml: "-6.25rem",
                     "& .MuiTabs-indicator": {
                       backgroundColor: "rgba(56, 152, 252, 1)",
                       height: "1.4px",
+                    },
+                    "@media (max-width: 1200px)": {
+                      ml: "-4.25rem"
+                    },
+                    "@media (max-width: 1000px)": {
+                      ml: "-2.25rem"
+                    },
+                    "@media (max-width: 800px)": {
+                      ml: "0"
                     },
                     "@media (max-width: 600px)": {
                       border: "1px solid rgba(228, 228, 228, 1)",
