@@ -37,9 +37,16 @@ async def get_users(
         sort_by: str = Query(None, description="Field"),
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
+        last_login_date_start: int = Query(None, description="Start date in integer format"),
+        search_query: str = Query(None, description="Search for email, account name"),
+        last_login_date_end: int = Query(None, description="End date in integer format"),
+        join_date_start: int = Query(None, description="Start date in integer format"),
+        join_date_end: int = Query(None, description="End date in integer format"),
         per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
-    users = admin_customers_service.get_customer_users(page, per_page, sort_by, sort_order)
+    users = admin_customers_service.get_customer_users(search_query=search_query, page=page, per_page=per_page, sort_by=sort_by, sort_order=sort_order,
+                                                       last_login_date_start=last_login_date_start, last_login_date_end=last_login_date_end, join_date_start=join_date_start,
+                                                       join_date_end=join_date_end)
     return users
 
 
@@ -49,9 +56,15 @@ async def get_admins(
         sort_by: str = Query(None, description="Field"),
         sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
         page: int = Query(1, alias="page", ge=1, description="Page number"),
+        search_query: str = Query(None, description="Search for email, account name"),
         per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
+        last_login_date_start: int = Query(None, description="Start date in integer format"),
+        last_login_date_end: int = Query(None, description="End date in integer format"),
+        join_date_start: int = Query(None, description="Start date in integer format"),
+        join_date_end: int = Query(None, description="End date in integer format"),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
-    users = admin_customers_service.get_admin_users(page, per_page, sort_by, sort_order)
+    users = admin_customers_service.get_admin_users(search_query=search_query, page=page, per_page=per_page, sort_by=sort_by, sort_order=sort_order, last_login_date_start=last_login_date_start,
+                                                    last_login_date_end=last_login_date_end, join_date_start=join_date_start, join_date_end=join_date_end)
     return users
 
 
@@ -81,6 +94,7 @@ async def generate_token(user_account_id: int,
         status_code=403,
         detail="Access denied"
     )
+
 
 @router.post("/invite-user")
 async def invite_user(invite_details: InviteDetailsRequest,

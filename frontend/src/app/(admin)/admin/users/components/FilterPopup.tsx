@@ -1,28 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { Drawer, Box, Typography, Button, IconButton, Backdrop, TextField, InputAdornment, Collapse, Divider, FormControlLabel, Checkbox, Radio, List, ListItem, ListItemText, RadioGroup, Grid, InputLabel, FormControl, MenuItem, Select } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { Drawer, Box, Typography, Button, IconButton, Collapse, FormControlLabel, Radio, Grid } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import LineWeightIcon from '@mui/icons-material/LineWeight';
-import TimelineIcon from '@mui/icons-material/Timeline';
-import WorkOutlineOutlinedIcon from '@mui/icons-material/WorkOutlineOutlined';
-import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import InsertInvitationIcon from "@mui/icons-material/InsertInvitation";
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { LocalizationProvider, DatePicker, TimePicker } from '@mui/x-date-pickers';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import dayjs, { Dayjs } from 'dayjs';
-import Image from 'next/image';
 import { filterStyles } from '@/css/filterSlider';
-import debounce from 'lodash/debounce';
-import axiosInstance from '@/axios/axiosInterceptorInstance';
 
+
+interface FilterParams {
+  joinDate: { fromDate: number | null; toDate: number | null };
+  lastLoginDate: { fromDate: number | null; toDate: number | null };
+}
 
 interface FilterPopupProps {
   open: boolean;
   onClose: () => void;
-  onApply: (filters: any) => void;
-  joinDate: string[];
-  lastLoginDate: string[];
+  onApply: (filters: FilterParams) => void;
 }
 
 interface CustomChipProps {
@@ -61,83 +57,331 @@ const CustomChip: React.FC<CustomChipProps> = ({ label, onDelete }) => (
   </Box>
 );
 
-type TimeRange = {
-  fromTime: dayjs.Dayjs | null;
-  toTime: dayjs.Dayjs | null;
-};
-
 interface DateRange {
   fromDate: Dayjs | null;
   toDate: Dayjs | null;
 }
 
-type ButtonFilters = {
-  button: string;
-  dateRange: {
-    fromDate: number;
-    toDate: number;
-  };
-  selectedFunnels: string[];
-} | null;
-
 interface TagMap {
   [key: string]: string;
 }
 
-const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinDate, lastLoginDate }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [pageUrlTags, setPageUrlTags] = useState<string[]>([]);
+const dateTypes: Record<string, string> = {
+  today: "Today",
+  last7Days: "Last 7 days",
+  last30Days: "Last 30 days",
+  last6Months: "Last 6 months",
+}
 
-  // Industry
-  const [checkedFiltersLastLoginDate, setCheckedFiltersLastLoginDate] = useState<Record<string, boolean>>({});
+const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply }) => {
+  const [isCreatedDateOpen, setIsCreatedDateOpen] = useState(false);
+
+  const [dateRange, setDateRange] = useState<DateRange>({
+    fromDate: null,
+    toDate: null,
+  });
+  const [joinDateRange, setJoinDateRange] = useState<DateRange>({
+    fromDate: null,
+    toDate: null,
+  });
+
+  const [checkedFilters, setCheckedFilters] = useState({
+    today: false,
+    last7Days: false,
+    last30Days: false,
+    last6Months: false,
+  });
+
   const [checkedJoinDateFilters, setCheckedJoinDateFilters] = useState({
-    lastWeek: false,
+    today: false,
+    last7Days: false,
     last30Days: false,
     last6Months: false,
-    allTime: false,
   });
-  const [checkedLastLoginDateFilters, setCheckedLastLoginDateFilters] = useState({
-    lastWeek: false,
-    last30Days: false,
-    last6Months: false,
-    allTime: false,
-  });
-  const [checkedFiltersJoinDate, setCheckedFiltersJoinDate] = useState<Record<string, boolean>>({});
-  const [regions, setTags] = useState<string[]>([]);
-  const [buttonFilters, setButtonFilters] = useState<ButtonFilters>(null);
   const [isJoinDateOpen, setIsJoinDateOpen] = useState(false);
-  const [isLastLoginDateOpen, setIsLastLoginDateOpen] = useState(false);
-  const [dateRangeJoinDate, setDateRangeJoinDate] = useState<DateRange>({
-    fromDate: null,
-    toDate: null,
-  });
-  const [dateRangeLastLoginDate, setDateRangeLastLoginDate] = useState<DateRange>({
-    fromDate: null,
-    toDate: null,
-  });
+
   const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>(
     {
       joinDate: [],
-      lastLoginDate: [],
+      createdDate: [],
     }
   );
+
+  const handleRadioChange = (event: { target: { name: string } }) => {
+    const { name } = event.target;
+
+    setCheckedFilters((prevFilters) => {
+      const prevFiltersTyped = prevFilters as Record<string, boolean>;
+
+      const previouslySelected = Object.keys(prevFiltersTyped).find(
+        (key) => prevFiltersTyped[key]
+      );
+
+      const newFilters = {
+        today: false,
+        last7Days: false,
+        last30Days: false,
+        last6Months: false,
+        [name]: true,
+      };
+
+
+      const tagMap: { [key: string]: string } = {
+        today: dateTypes.today,
+        last7Days: dateTypes.last7Days,
+        last30Days: dateTypes.last30Days,
+        last6Months: dateTypes.last6Months,
+      };
+
+      if (previouslySelected && previouslySelected !== name) {
+        removeTag("createdDate", tagMap[previouslySelected]);
+      }
+
+      setDateRange({ fromDate: null, toDate: null });
+
+      addTag("createdDate", tagMap[name]);
+
+      return newFilters;
+    });
+  };
+
+  const formatFilterLabel = (key: keyof typeof checkedFilters) => {
+    const labels: Record<keyof typeof checkedFilters, string> = {
+      today: dateTypes.today,
+      last7Days: dateTypes.last7Days,
+      last30Days: dateTypes.last30Days,
+      last6Months: dateTypes.last6Months,
+    };
+    return labels[key];
+  };
+
+  const getSelectedDateChip = () => {
+
+    if (dateRange.fromDate && dateRange.toDate) {
+      return `${dayjs(dateRange.fromDate).format("YYYY-MM-DD")} - ${dayjs(
+        dateRange.toDate
+      ).format("YYYY-MM-DD")}`;
+    }
+
+    const activeFilter = Object.keys(checkedFilters).find(
+      (key) => checkedFilters[key as keyof typeof checkedFilters]
+    );
+
+    return activeFilter
+      ? formatFilterLabel(activeFilter as keyof typeof checkedFilters)
+      : null;
+  };
+
+  const getSelectedJoinDateChip = () => {
+
+    if (joinDateRange.fromDate && joinDateRange.toDate) {
+      return `${dayjs(joinDateRange.fromDate).format("YYYY-MM-DD")} - ${dayjs(
+        joinDateRange.toDate
+      ).format("YYYY-MM-DD")}`;
+    }
+
+    const activeFilter = Object.keys(checkedJoinDateFilters).find(
+      (key) => checkedJoinDateFilters[key as keyof typeof checkedJoinDateFilters]
+    );
+
+    return activeFilter
+      ? formatFilterLabel(activeFilter as keyof typeof checkedJoinDateFilters)
+      : null;
+  };
+
+  const clearDateFilter = () => {
+    setSelectedTags((prev) => ({
+      ...prev,
+      createdDate: [],
+    }));
+
+
+    setCheckedFilters({
+      today: false,
+      last7Days: false,
+      last30Days: false,
+      last6Months: false,
+    });
+
+    setDateRange({ fromDate: null, toDate: null });
+  };
+
+  const clearJoinDateFilter = () => {
+    setSelectedTags((prev) => ({
+      ...prev,
+      joinDate: [],
+    }));
+
+
+    setCheckedJoinDateFilters({
+      today: false,
+      last7Days: false,
+      last30Days: false,
+      last6Months: false,
+    });
+
+    setJoinDateRange({ fromDate: null, toDate: null });
+  };
+
+  const handleDateChange = (name: string) => (newValue: any) => {
+    setDateRange((prevRange) => {
+      const updatedRange = {
+        ...prevRange,
+        [name]: newValue,
+      };
+
+      setCheckedFilters({
+        today: false,
+        last7Days: false,
+        last30Days: false,
+        last6Months: false,
+      });
+
+      const oldFromDate = prevRange.fromDate
+        ? dayjs(prevRange.fromDate).format("MMM DD, YYYY")
+        : "";
+      const oldToDate = prevRange.toDate
+        ? dayjs(prevRange.toDate).format("MMM DD, YYYY")
+        : "";
+
+      const fromDate = updatedRange.fromDate
+        ? dayjs(updatedRange.fromDate).format("MMM DD, YYYY")
+        : "";
+      const toDate = updatedRange.toDate
+        ? dayjs(updatedRange.toDate).format("MMM DD, YYYY")
+        : "";
+
+      const newTag =
+        fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
+
+
+      setSelectedTags((prevTags) => {
+        let updatedJoinTags = prevTags.createdDate;
+
+        const oldTag =
+          oldFromDate && oldToDate
+            ? `From ${oldFromDate} to ${oldToDate}`
+            : null;
+
+        if (oldTag && updatedJoinTags.includes(oldTag)) {
+          updatedJoinTags = updatedJoinTags.filter((tag) => tag !== oldTag);
+        }
+
+        const newTag =
+          fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
+
+        if (newTag) {
+          updatedJoinTags = [newTag];
+        }
+
+        return {
+          ...prevTags,
+          createdDate: updatedJoinTags,
+        };
+      });
+
+      return updatedRange;
+    });
+  };
+
+  const handleJoinDateChange = (name: string) => (newValue: any) => {
+
+    setJoinDateRange((prevRange) => {
+      const updatedRange = {
+        ...prevRange,
+        [name]: newValue,
+      };
+
+      setCheckedJoinDateFilters({
+        today: false,
+        last7Days: false,
+        last30Days: false,
+        last6Months: false,
+      });
+
+      const oldFromDate = prevRange.fromDate
+        ? dayjs(prevRange.fromDate).format("MMM DD, YYYY")
+        : "";
+      const oldToDate = prevRange.toDate
+        ? dayjs(prevRange.toDate).format("MMM DD, YYYY")
+        : "";
+
+      const fromDate = updatedRange.fromDate
+        ? dayjs(updatedRange.fromDate).format("MMM DD, YYYY")
+        : "";
+      const toDate = updatedRange.toDate
+        ? dayjs(updatedRange.toDate).format("MMM DD, YYYY")
+        : "";
+
+      const newTag =
+        fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
+
+      setSelectedTags((prevTags) => {
+        let updatedJoinTags = prevTags.joinDate;
+
+        const oldTag =
+          oldFromDate && oldToDate
+            ? `From ${oldFromDate} to ${oldToDate}`
+            : null;
+
+        if (oldTag && updatedJoinTags.includes(oldTag)) {
+          updatedJoinTags = updatedJoinTags.filter((tag) => tag !== oldTag);
+        }
+
+        const newTag =
+          fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
+
+        if (newTag) {
+          updatedJoinTags = [newTag];
+        }
+
+        return {
+          ...prevTags,
+          joinDate: updatedJoinTags,
+        };
+      });
+
+
+
+      return updatedRange;
+    });
+  };
 
   const removeTag = (category: string, tag: string) => {
     setSelectedTags((prevTags) => {
       const updatedTags = prevTags[category].filter((t) => t !== tag);
 
-      const isLastTagRemoved = updatedTags.length === 0;
+      if (category === "createdDate") {
+        setDateRange({ fromDate: null, toDate: null });
+      }
 
-      if (category === "joinDate" && isLastTagRemoved) {
-        setDateRangeJoinDate({ fromDate: null, toDate: null });
+      if (category === "createdDate") {
+        const tagMap: { [key: string]: string } = {
+          [dateTypes.today]: "today",
+          [dateTypes.last7Days]: "last7Days",
+          [dateTypes.last30Days]: "last30Days",
+          [dateTypes.last6Months]: "last6Months",
+        };
+
+        const filterName = tagMap[tag];
+        if (filterName) {
+          setCheckedFilters((prevFilters) => ({
+            ...prevFilters,
+            [filterName]: false,
+          }));
+        }
+      }
+
+      if (category === "joinDate") {
+        setJoinDateRange({ fromDate: null, toDate: null });
       }
 
       if (category === "joinDate") {
         const tagMap: { [key: string]: string } = {
-          "Last week": "lastWeek",
-          "Last 30 days": "last30Days",
-          "Last 6 months": "last6Months",
-          "All time": "allTime",
+          [dateTypes.today]: "today",
+          [dateTypes.last7Days]: "last7Days",
+          [dateTypes.last30Days]: "last30Days",
+          [dateTypes.last6Months]: "last6Months",
         };
 
         const filterName = tagMap[tag];
@@ -149,52 +393,32 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
         }
       }
 
-      if (category === "lastLoginDate" && isLastTagRemoved) {
-        setDateRangeJoinDate({ fromDate: null, toDate: null });
-      }
-
-      if (category === "lastLoginDate") {
-        const tagMap: { [key: string]: string } = {
-          "Last week": "lastWeek",
-          "Last 30 days": "last30Days",
-          "Last 6 months": "last6Months",
-          "All time": "allTime",
-        };
-
-        const filterName = tagMap[tag];
-        if (filterName) {
-          setCheckedLastLoginDateFilters((prevFilters) => ({
-            ...prevFilters,
-            [filterName]: false,
-          }));
-        }
-      }
-
       return { ...prevTags, [category]: updatedTags };
     });
   };
+
   const updateCheckedFilters = (
     category: string,
     tag: string,
     isChecked: boolean
   ) => {
     const tagMap: TagMap = {
-      "Last week": "lastWeek",
-      "Last 30 days": "last30Days",
-      "Last 6 months": "last6Months",
-      "All time": "allTime",
+      [dateTypes.today]: "today",
+      [dateTypes.last7Days]: "last7Days",
+      [dateTypes.last30Days]: "last30Days",
+      [dateTypes.last6Months]: "last6Months",
     };
 
     const filterName = tagMap[tag];
 
     if (filterName) {
       if (category === "lastLoginDate") {
-        setCheckedJoinDateFilters((prevFilters) => ({
+        setCheckedFilters((prevFilters) => ({
           ...prevFilters,
           [filterName]: isChecked,
         }));
       } else if (category === "joinDate") {
-        setCheckedLastLoginDateFilters((prevFiltersTime) => ({
+        setCheckedJoinDateFilters((prevFiltersTime) => ({
           ...prevFiltersTime,
           [filterName]: isChecked,
         }));
@@ -214,209 +438,118 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
     updateCheckedFilters(category, tag, true);
   };
 
-  const loadFiltersFromSessionStorage = () => {
-    const savedFilters = sessionStorage.getItem('filters');
-    if (savedFilters) {
-      return JSON.parse(savedFilters);
-    }
-    return null;
+  const isDateFilterActive = () => {
+    return (
+      Object.values(checkedFilters).some((value) => value) ||
+      (dateRange.fromDate && dateRange.toDate)
+    );
   };
 
-  const initializeFilters = () => {
-    const savedFilters = loadFiltersFromSessionStorage();
-    if (savedFilters) {
-      setSearchQuery(savedFilters.searchQuery || '');
-      setCheckedLastLoginDateFilters(savedFilters.checkedFilters || {
-        lastWeek: false,
-        last30Days: false,
-        last6Months: false,
-        allTime: false,
-      });
-
-      const isAnyFilterActive = Object.values(savedFilters.checkedFilters || {}).some(value => value === true);
-      if (isAnyFilterActive) {
-        setButtonFilters(savedFilters.button);
-        const tagMap: { [key: string]: string } = {
-          lastWeek: "Last week",
-          last30Days: "Last 30 days",
-          last6Months: "Last 6 months",
-          allTime: "All time",
-        };
-        const activeFilter = Object.keys(savedFilters.checkedFilters).find(key => savedFilters.checkedFilters[key]);
-
-        if (activeFilter) {
-          addTag("visitedDate", tagMap[activeFilter]);
-        }
-      } else {
-        const fromDate = savedFilters.from_date ? dayjs.unix(savedFilters.from_date).format('MMM DD, YYYY') : null;
-        const toDate = savedFilters.to_date ? dayjs.unix(savedFilters.to_date).format('MMM DD, YYYY') : null;
-        const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
-        if (newTag) {
-          addTag("visitedDate", newTag);
-        }
-      }
-      setButtonFilters(savedFilters.button)
-      if (savedFilters.regions) {
-        setTags((prevTags) => {
-          const uniqueTags = new Set(prevTags);
-          savedFilters.regions.forEach((cityTag: string) => {
-            uniqueTags.add(cityTag);
-          });
-          return Array.from(uniqueTags);
-        });
-      }
-      if (savedFilters.pageUrlTags) {
-        setPageUrlTags((prevTags) => {
-          const uniqueTags = new Set(prevTags);
-          savedFilters.pageUrlTags.forEach((urlPageUrlTag: string) => {
-            uniqueTags.add(urlPageUrlTag);
-          });
-          return Array.from(uniqueTags);
-        });
-      }
-    }
+  const isDateFilterJoinDaActive = () => {
+    return (
+      Object.values(checkedJoinDateFilters).some((value) => value) ||
+      (joinDateRange.fromDate && joinDateRange.toDate)
+    );
   };
 
-  useEffect(() => {
-    initializeFilters();
-  }, [open]);
+  const getFilterDates = () => {
+    const today = dayjs();
 
-  const handleSeniorityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = event.target;
-
-    setCheckedFiltersLastLoginDate((prev) => ({
-      ...prev,
-      [value]: checked
-    }));
+    return {
+      today: {
+        from: today.startOf("day").unix(),
+        to: today.endOf("day").unix(),
+      },
+      last7Days: {
+        from: today.subtract(7, "day").startOf("day").unix(),
+        to: today.endOf("day").unix(),
+      },
+      last30Days: {
+        from: today.subtract(30, "day").startOf("day").unix(),
+        to: today.endOf("day").unix(),
+      },
+      last6Months: {
+        from: today.subtract(6, "month").startOf("day").unix(),
+        to: today.endOf("day").unix(),
+      },
+    };
   };
 
   const handleFilters = () => {
+    const filterDates = getFilterDates();
+    const isDateFilterChecked = Object.values(checkedFilters).some(
+      (value) => value
+    );
+
+    let fromDateTime = null;
+    let toDateTime = null;
+    let fromJoinDateTime = null;
+    let toJoinDateTime = null;
+
+    if (isDateFilterChecked) {
+      if (checkedFilters.today) {
+        fromDateTime = filterDates.today.from;
+        toDateTime = filterDates.today.to;
+      } else if (checkedFilters.last7Days) {
+        fromDateTime = filterDates.last7Days.from;
+        toDateTime = filterDates.last7Days.to;
+      } else if (checkedFilters.last30Days) {
+        fromDateTime = filterDates.last30Days.from;
+        toDateTime = filterDates.last30Days.to;
+      } else if (checkedFilters.last6Months) {
+        fromDateTime = filterDates.last6Months.from;
+        toDateTime = filterDates.last6Months.to;
+      }
+    } else {
+      fromDateTime = dateRange.fromDate
+        ? dayjs(dateRange.fromDate).startOf("day").unix()
+        : null;
+      toDateTime = dateRange.toDate
+        ? dayjs(dateRange.toDate).endOf("day").unix()
+        : null;
+    }
+    const isJoinDateFilterChecked = Object.values(checkedJoinDateFilters).some(
+      (value) => value
+    );
+
+    if (isJoinDateFilterChecked) {
+      if (checkedJoinDateFilters.today) {
+        fromJoinDateTime = filterDates.today.from;
+        toJoinDateTime = filterDates.today.to;
+      } else if (checkedJoinDateFilters.last7Days) {
+        fromJoinDateTime = filterDates.last7Days.from;
+        toJoinDateTime = filterDates.last7Days.to;
+      } else if (checkedJoinDateFilters.last30Days) {
+        fromJoinDateTime = filterDates.last30Days.from;
+        toJoinDateTime = filterDates.last30Days.to;
+      } else if (checkedJoinDateFilters.last6Months) {
+        fromJoinDateTime = filterDates.last6Months.from;
+        toJoinDateTime = filterDates.last6Months.to;
+      }
+    } else {
+      fromJoinDateTime = joinDateRange.fromDate
+        ? dayjs(joinDateRange.fromDate).startOf("day").unix()
+        : null;
+      toJoinDateTime = joinDateRange.toDate
+        ? dayjs(joinDateRange.toDate).endOf("day").unix()
+        : null;
+    }
+
+
     const filters = {
-      lastLoginDate: checkedFiltersLastLoginDate,
-      joinDate: checkedFiltersJoinDate,
+      lastLoginDate: {
+        fromDate: fromDateTime,
+        toDate: toDateTime
+      },
+      joinDate: {
+        fromDate: fromJoinDateTime,
+        toDate: toJoinDateTime
+      }
     };
 
     saveFiltersToSessionStorage(filters);
 
-
     return filters;
-  };
-
-  const handleLastLoginDateChange = (name: string) => (newValue: any) => {
-    setDateRangeJoinDate((prevRange) => {
-      const updatedRange = {
-        ...prevRange,
-        [name]: newValue,
-      };
-
-      setCheckedLastLoginDateFilters({
-        lastWeek: false,
-        last30Days: false,
-        last6Months: false,
-        allTime: false,
-      });
-
-      const oldFromDate = prevRange.fromDate
-        ? dayjs(prevRange.fromDate).format('MMM DD, YYYY')
-        : '';
-      const oldToDate = prevRange.toDate
-        ? dayjs(prevRange.toDate).format('MMM DD, YYYY')
-        : '';
-
-      const fromDate = updatedRange.fromDate
-        ? dayjs(updatedRange.fromDate).format('MMM DD, YYYY')
-        : '';
-      const toDate = updatedRange.toDate
-        ? dayjs(updatedRange.toDate).format('MMM DD, YYYY')
-        : '';
-
-      const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
-
-
-      setSelectedTags((prevTags) => {
-        const updatedTags = {
-          ...prevTags,
-          lastJoinDate: newTag ? [newTag] : [],
-        };
-
-        // If a new label exists, add it
-        if (newTag) {
-          addTag("lastJoinDate", newTag);
-        }
-
-        // If the label has been replaced or removed, clear the date range
-        if (!newTag && prevTags.lastJoinDate.length > 0) {
-          setDateRangeJoinDate({ fromDate: null, toDate: null });
-        } else if (newTag && oldFromDate && oldToDate) {
-          removeTag("lastLoginDate", `From ${oldFromDate} to ${oldToDate}`);
-        }
-
-        return updatedTags;
-      });
-
-      return updatedRange;
-    });
-  };
-
-  const handleJoinDateChange = (name: string) => (newValue: any) => {
-    setDateRangeJoinDate((prevRange) => {
-      const updatedRange = {
-        ...prevRange,
-        [name]: newValue,
-      };
-
-      setCheckedLastLoginDateFilters({
-        lastWeek: false,
-        last30Days: false,
-        last6Months: false,
-        allTime: false,
-      });
-
-      const oldFromDate = prevRange.fromDate
-        ? dayjs(prevRange.fromDate).format('MMM DD, YYYY')
-        : '';
-      const oldToDate = prevRange.toDate
-        ? dayjs(prevRange.toDate).format('MMM DD, YYYY')
-        : '';
-
-      const fromDate = updatedRange.fromDate
-        ? dayjs(updatedRange.fromDate).format('MMM DD, YYYY')
-        : '';
-      const toDate = updatedRange.toDate
-        ? dayjs(updatedRange.toDate).format('MMM DD, YYYY')
-        : '';
-
-      const newTag = fromDate && toDate ? `From ${fromDate} to ${toDate}` : null;
-
-
-      setSelectedTags((prevTags) => {
-        const updatedTags = {
-          ...prevTags,
-          joinDate: newTag ? [newTag] : [],
-        };
-
-        if (newTag) {
-          addTag("joinDate", newTag);
-        }
-
-        if (!newTag && prevTags.joinDate.length > 0) {
-          setDateRangeJoinDate({ fromDate: null, toDate: null });
-        } else if (newTag && oldFromDate && oldToDate) {
-          removeTag("joinDate", `From ${oldFromDate} to ${oldToDate}`);
-        }
-
-        return updatedTags;
-      });
-
-      return updatedRange;
-    });
-  };
-
-  const isDateFilterActive = () => {
-    return (
-      Object.values(checkedFiltersJoinDate).some(value => value) || // Checking checkboxes for dates
-      (dateRangeJoinDate.fromDate && dateRangeJoinDate.toDate) // Validate user's date range selection
-    );
   };
 
   const handleRadioChangeJoinDate = (event: { target: { name: string } }) => {
@@ -426,99 +559,35 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
       const prevFiltersTyped = prevFilters as Record<string, boolean>;
       const previouslySelected = Object.keys(prevFiltersTyped).find((key) => prevFiltersTyped[key]);
       const newFilters = {
-        lastWeek: false,
+        today: false,
+        last7Days: false,
         last30Days: false,
         last6Months: false,
-        allTime: false,
         [name]: true,
       };
 
-      const tagMap: { [key: string]: string } = {
-        lastWeek: "Last week",
-        last30Days: "Last 30 days",
-        last6Months: "Last 6 months",
-        allTime: "All time",
+      const tagMap: TagMap = {
+        [dateTypes.today]: "today",
+        [dateTypes.last7Days]: "last7Days",
+        [dateTypes.last30Days]: "last30Days",
+        [dateTypes.last6Months]: "last6Months",
       };
 
       if (previouslySelected && previouslySelected !== name) {
         removeTag("joinDate", tagMap[previouslySelected]);
       }
 
-      setDateRangeJoinDate({ fromDate: null, toDate: null });
+      setJoinDateRange({ fromDate: null, toDate: null });
 
- 
       addTag("joinDate", tagMap[name]);
 
       return newFilters;
     });
   };
 
-  const handleRadioChangeLastLoginDate = (event: { target: { name: string } }) => {
-    const { name } = event.target;
-
-    setCheckedLastLoginDateFilters((prevFilters) => {
-      // Explicitly type `prevFilters` for better TypeScript support
-      const prevFiltersTyped = prevFilters as Record<string, boolean>;
-
-      // Find the previously selected radio button
-      const previouslySelected = Object.keys(prevFiltersTyped).find((key) => prevFiltersTyped[key]);
-
-      // Reset all filters and select the new one
-      const newFilters = {
-        lastWeek: false,
-        last30Days: false,
-        last6Months: false,
-        allTime: false,
-        [name]: true,
-      };
-
-      const tagMap: { [key: string]: string } = {
-        lastWeek: "Last week",
-        last30Days: "Last 30 days",
-        last6Months: "Last 6 months",
-        allTime: "All time",
-      };
-
-      // Remove the tag for the previously selected radio button, if any
-      if (previouslySelected && previouslySelected !== name) {
-        removeTag("lastLoginDate", tagMap[previouslySelected]);
-      }
-
-      setDateRangeJoinDate({ fromDate: null, toDate: null });
-
-      // Add the tag for the currently selected radio button
-      addTag("lastLoginDate", tagMap[name]);
-
-      return newFilters;
-    });
+  const saveFiltersToSessionStorage = (filters: any) => {
+    sessionStorage.setItem("filtersByAdmin", JSON.stringify(filters));
   };
-
-  const saveFiltersToSessionStorage = (filters: {
-    lastLoginDate: typeof checkedFiltersLastLoginDate,
-    joinDate: typeof checkedFiltersJoinDate,
-  }) => {
-    sessionStorage.setItem('filters-admin', JSON.stringify(filters));
-  };
-
-  useEffect(() => {
-    if (open) {
-      if (lastLoginDate) {
-        const initialState = lastLoginDate.reduce((acc, item) => {
-          acc[item] = false;
-          return acc;
-        }, {} as Record<string, boolean>);
-        setCheckedFiltersLastLoginDate(initialState);
-      }
-      if (joinDate) {
-        const initialState = joinDate.reduce((acc, item) => {
-          acc[item] = false;
-          return acc;
-        }, {} as Record<string, boolean>);
-        setCheckedFiltersJoinDate(initialState);
-      }
-    }
-  }, [open, joinDate, lastLoginDate]);
-
 
   const handleApply = () => {
     const filters = handleFilters();
@@ -528,19 +597,37 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
 
 
   const handleClearFilters = () => {
-    setIsLastLoginDateOpen(false)
+    setIsCreatedDateOpen(false)
     setIsJoinDateOpen(false)
-    setCheckedFiltersLastLoginDate({})
-    setCheckedFiltersJoinDate({})
-    setSearchQuery("");
 
-    sessionStorage.removeItem('filters-admin')
-  };
+    setDateRange({
+      fromDate: null,
+      toDate: null,
+    });
+    setJoinDateRange({
+      fromDate: null,
+      toDate: null,
+    });
+    setCheckedFilters({
+      today: false,
+      last7Days: false,
+      last30Days: false,
+      last6Months: false,
+    });
 
+    setCheckedJoinDateFilters({
+      today: false,
+      last7Days: false,
+      last30Days: false,
+      last6Months: false,
+    });
 
-  const handleSearchQueryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
+    setSelectedTags({
+      joinDate: [],
+      createdDate: [],
+    })
+
+    sessionStorage.removeItem('filtersByAdmin')
   };
 
   return (
@@ -625,187 +712,329 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                 width: "100%",
                 mb: 0,
                 gap: 1,
-                cursor: 'pointer'
+                cursor: "pointer",
               }}
-              onClick={() => setIsJoinDateOpen(!isJoinDateOpen)}
+              onClick={() =>
+                setIsJoinDateOpen(!isJoinDateOpen)
+              }
             >
               <Box
                 sx={{
                   ...filterStyles.active_filter_dote,
-                  visibility: isDateFilterActive() ? "visible" : "hidden"
+                  visibility: isDateFilterJoinDaActive()
+                    ? "visible"
+                    : "hidden",
                 }}
               />
-              <Image
-                src="/calendar-2.svg"
-                alt="calendar"
-                width={18}
-                height={18}
+              <InsertInvitationIcon
+                sx={{ fontSize: 20, color: "#5F6368" }}
               />
               <Typography
                 sx={{
-                  ...filterStyles.filter_name
+                  ...filterStyles.filter_name,
                 }}
               >
                 Join Date
               </Typography>
-              {selectedTags.joinDate.map((tag, index) => (
+              {getSelectedJoinDateChip() && (
                 <CustomChip
-                  key={index}
-                  label={tag}
-                  onDelete={() => removeTag("joinDate", tag)}
+                  label={getSelectedJoinDateChip()!}
+                  onDelete={clearJoinDateFilter}
                 />
-              ))}
+              )}
               <IconButton
-                onClick={() => setIsJoinDateOpen(!isJoinDateOpen)}
+                onClick={() =>
+                  setIsJoinDateOpen(!isJoinDateOpen)
+                }
                 aria-label="toggle-content"
               >
-                {isJoinDateOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                {isJoinDateOpen ? (
+                  <ExpandLessIcon />
+                ) : (
+                  <ExpandMoreIcon />
+                )}
               </IconButton>
             </Box>
             <Collapse in={isJoinDateOpen}>
               <Box
                 sx={{
-                  ...filterStyles.filter_dropdown
+                  ...filterStyles.filter_dropdown,
                 }}
               >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedJoinDateFilters.lastWeek}
-                        onChange={handleRadioChangeJoinDate}
-                        name="lastWeek"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(56, 152, 252, 1)",
-                          },
-                        }}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0,
+                  }}
+                >
+                  <Grid container spacing={0}>
+                    <Grid item xs={4}>
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            checked={
+                              checkedJoinDateFilters.today
+                            }
+                            onChange={
+                              handleRadioChangeJoinDate
+                            }
+                            name="today"
+                            size="small"
+                            sx={{
+                              "&.Mui-checked":
+                              {
+                                color: "rgba(56, 152, 252, 1)",
+                              },
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            className="table-data"
+                            sx={{
+                              color: checkedJoinDateFilters.today
+                                ? "rgba(56, 152, 252, 1) !important"
+                                : "rgba(74, 74, 74, 1)",
+                            }}
+                          >
+                            Today
+                          </Typography>
+                        }
                       />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedJoinDateFilters.lastWeek ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedJoinDateFilters.last30Days}
-                        onChange={handleRadioChangeJoinDate}
-                        name="last30Days"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(56, 152, 252, 1)",
-                          },
-                        }}
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            checked={
+                              checkedJoinDateFilters.last7Days
+                            }
+                            onChange={
+                              handleRadioChangeJoinDate
+                            }
+                            name="last7Days"
+                            size="small"
+                            sx={{
+                              "&.Mui-checked":
+                              {
+                                color: "rgba(56, 152, 252, 1)",
+                              },
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            className="table-data"
+                            sx={{
+                              color: filterStyles.last7Days
+                                ? "rgba(56, 152, 252, 1) !important"
+                                : "rgba(74, 74, 74, 1)",
+                            }}
+                          >
+                            Last 7 days
+                          </Typography>
+                        }
                       />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedJoinDateFilters.last30Days ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
-                  />
-                </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedJoinDateFilters.last6Months}
-                        onChange={handleRadioChangeJoinDate}
-                        name="last6Months"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(56, 152, 252, 1)",
-                          },
-                        }}
+                    </Grid>
+
+                    <Grid item xs={4}>
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            checked={
+                              checkedJoinDateFilters.last30Days
+                            }
+                            onChange={
+                              handleRadioChangeJoinDate
+                            }
+                            name="last30Days"
+                            size="small"
+                            sx={{
+                              "&.Mui-checked":
+                              {
+                                color: "rgba(56, 152, 252, 1)",
+                              },
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            className="table-data"
+                            sx={{
+                              color: checkedJoinDateFilters.last30Days
+                                ? "rgba(56, 152, 252, 1) !important"
+                                : "rgba(74, 74, 74, 1)",
+                            }}
+                          >
+                            Last 30 days
+                          </Typography>
+                        }
                       />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedJoinDateFilters.last6Months ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedJoinDateFilters.allTime}
-                        onChange={handleRadioChangeJoinDate}
-                        name="allTime"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(56, 152, 252, 1)",
-                          },
-                        }}
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            checked={
+                              checkedJoinDateFilters.last6Months
+                            }
+                            onChange={
+                              handleRadioChangeJoinDate
+                            }
+                            name="last6Months"
+                            size="small"
+                            sx={{
+                              "&.Mui-checked":
+                              {
+                                color: "rgba(56, 152, 252, 1)",
+                              },
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            className="table-data"
+                            sx={{
+                              color: checkedJoinDateFilters.last6Months
+                                ? "rgba(56, 152, 252, 1) !important"
+                                : "rgba(74, 74, 74, 1)",
+                            }}
+                          >
+                            Last 6 months
+                          </Typography>
+                        }
                       />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedJoinDateFilters.allTime ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
-                  />
+                    </Grid>
+                  </Grid>
                 </Box>
               </Box>
               <Box sx={filterStyles.date_time_formatted}>
-                <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
-                <Typography variant="body1"
+                <Box
+                  sx={{
+                    borderBottom: "1px solid #e4e4e4",
+                    flexGrow: 1,
+                  }}
+                />
+                <Typography
+                  variant="body1"
                   sx={filterStyles.or_text}
                 >
                   OR
                 </Typography>
-                <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
+                <Box
+                  sx={{
+                    borderBottom: "1px solid #e4e4e4",
+                    flexGrow: 1,
+                  }}
+                />
               </Box>
               <Box
-                sx={{ display: "flex", gap: 2, justifyContent: "flex-start" }}
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  justifyContent: "flex-start",
+                }}
               >
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <LocalizationProvider
+                  dateAdapter={AdapterDayjs}
+                >
                   <DatePicker
                     label="From date"
-                    value={dateRangeJoinDate.fromDate}
-                    onChange={(newValue) => handleJoinDateChange("fromDate")(newValue)}
-                    sx={{ width: '100%' }}
+                    value={joinDateRange.fromDate}
+                    onChange={(newValue) =>
+                      handleJoinDateChange("fromDate")(
+                        newValue
+                      )
+                    }
+                    sx={{ width: "100%" }}
+                    slots={{
+                      openPickerIcon:
+                        InsertInvitationIcon,
+                    }}
                     slotProps={{
+                      openPickerButton: {
+                        sx: { color: "#5F636880" },
+                      },
                       textField: {
                         variant: "outlined",
                         fullWidth: true,
                         sx: {
-                          '& .MuiInputBase-input': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
+                          "& .MuiInputBase-input":
+                          {
+                            fontFamily:
+                              "Roboto",
+                            fontSize:
+                              "14px",
                             fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
+                            lineHeight:
+                              "19.6px",
+                            textAlign:
+                              "left",
                           },
-                          '& .MuiInputLabel-root': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
+                          "& .MuiInputLabel-root":
+                          {
+                            fontFamily:
+                              "Roboto",
+                            fontSize:
+                              "14px",
                             fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
-                          }
-                        }
-                      }
+                            lineHeight:
+                              "19.6px",
+                            textAlign:
+                              "left",
+                          },
+                        },
+                      },
                     }}
                   />
                   <DatePicker
                     label="To date"
-                    value={dateRangeJoinDate.toDate}
+                    value={joinDateRange.toDate}
                     onChange={(newValue) =>
-                      handleJoinDateChange("toDate")(newValue)
+                      handleJoinDateChange("toDate")(
+                        newValue
+                      )
                     }
                     sx={{ width: "100%" }}
+                    slots={{
+                      openPickerIcon:
+                        InsertInvitationIcon,
+                    }}
                     slotProps={{
+                      openPickerButton: {
+                        sx: { color: "#5F636880" },
+                      },
                       textField: {
                         variant: "outlined",
                         fullWidth: true,
                         sx: {
-                          '& .MuiInputBase-input': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
+                          "& .MuiInputBase-input":
+                          {
+                            fontFamily:
+                              "Roboto",
+                            fontSize:
+                              "14px",
                             fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
+                            lineHeight:
+                              "19.6px",
+                            textAlign:
+                              "left",
                           },
-                          '& .MuiInputLabel-root': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
+                          "& .MuiInputLabel-root":
+                          {
+                            fontFamily:
+                              "Roboto",
+                            fontSize:
+                              "14px",
                             fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
-                          }
-                        }
-                      }
+                            lineHeight:
+                              "19.6px",
+                            textAlign:
+                              "left",
+                          },
+                        },
+                      },
                     }}
                   />
                 </LocalizationProvider>
@@ -829,187 +1058,329 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ open, onClose, onApply, joinD
                 width: "100%",
                 mb: 0,
                 gap: 1,
-                cursor: 'pointer'
+                cursor: "pointer",
               }}
-              onClick={() => setIsLastLoginDateOpen(!isLastLoginDateOpen)}
+              onClick={() =>
+                setIsCreatedDateOpen(!isCreatedDateOpen)
+              }
             >
               <Box
                 sx={{
                   ...filterStyles.active_filter_dote,
-                  visibility: isDateFilterActive() ? "visible" : "hidden"
+                  visibility: isDateFilterActive()
+                    ? "visible"
+                    : "hidden",
                 }}
               />
-              <Image
-                src="/calendar-2.svg"
-                alt="calendar"
-                width={18}
-                height={18}
+              <InsertInvitationIcon
+                sx={{ fontSize: 20, color: "#5F6368" }}
               />
               <Typography
                 sx={{
-                  ...filterStyles.filter_name
+                  ...filterStyles.filter_name,
                 }}
               >
                 Last Login Date
               </Typography>
-              {selectedTags.lastLoginDate.map((tag, index) => (
+              {getSelectedDateChip() && (
                 <CustomChip
-                  key={index}
-                  label={tag}
-                  onDelete={() => removeTag("lastLoginDate", tag)}
+                  label={getSelectedDateChip()!}
+                  onDelete={clearDateFilter}
                 />
-              ))}
+              )}
               <IconButton
-                onClick={() => setIsLastLoginDateOpen(!isLastLoginDateOpen)}
+                onClick={() =>
+                  setIsCreatedDateOpen(!isCreatedDateOpen)
+                }
                 aria-label="toggle-content"
               >
-                {isLastLoginDateOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                {isCreatedDateOpen ? (
+                  <ExpandLessIcon />
+                ) : (
+                  <ExpandMoreIcon />
+                )}
               </IconButton>
             </Box>
-            <Collapse in={isLastLoginDateOpen}>
+            <Collapse in={isCreatedDateOpen}>
               <Box
                 sx={{
-                  ...filterStyles.filter_dropdown
+                  ...filterStyles.filter_dropdown,
                 }}
               >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedLastLoginDateFilters.lastWeek}
-                        onChange={handleRadioChangeLastLoginDate}
-                        name="lastWeek"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(56, 152, 252, 1)",
-                          },
-                        }}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 0,
+                  }}
+                >
+                  <Grid container spacing={0}>
+                    <Grid item xs={4}>
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            checked={
+                              checkedFilters.today
+                            }
+                            onChange={
+                              handleRadioChange
+                            }
+                            name="today"
+                            size="small"
+                            sx={{
+                              "&.Mui-checked":
+                              {
+                                color: "rgba(56, 152, 252, 1)",
+                              },
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            className="table-data"
+                            sx={{
+                              color: checkedFilters.today
+                                ? "rgba(56, 152, 252, 1) !important"
+                                : "rgba(74, 74, 74, 1)",
+                            }}
+                          >
+                            Today
+                          </Typography>
+                        }
                       />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedLastLoginDateFilters.lastWeek ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last week</Typography>}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedLastLoginDateFilters.last30Days}
-                        onChange={handleRadioChangeLastLoginDate}
-                        name="last30Days"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(56, 152, 252, 1)",
-                          },
-                        }}
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            checked={
+                              checkedFilters.last7Days
+                            }
+                            onChange={
+                              handleRadioChange
+                            }
+                            name="last7Days"
+                            size="small"
+                            sx={{
+                              "&.Mui-checked":
+                              {
+                                color: "rgba(56, 152, 252, 1)",
+                              },
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            className="table-data"
+                            sx={{
+                              color: checkedFilters.last7Days
+                                ? "rgba(56, 152, 252, 1) !important"
+                                : "rgba(74, 74, 74, 1)",
+                            }}
+                          >
+                            Last 7 days
+                          </Typography>
+                        }
                       />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedLastLoginDateFilters.last30Days ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 30 days</Typography>}
-                  />
-                </Box>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedLastLoginDateFilters.last6Months}
-                        onChange={handleRadioChangeLastLoginDate}
-                        name="last6Months"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(56, 152, 252, 1)",
-                          },
-                        }}
+                    </Grid>
+
+                    <Grid item xs={4}>
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            checked={
+                              checkedFilters.last30Days
+                            }
+                            onChange={
+                              handleRadioChange
+                            }
+                            name="last30Days"
+                            size="small"
+                            sx={{
+                              "&.Mui-checked":
+                              {
+                                color: "rgba(56, 152, 252, 1)",
+                              },
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            className="table-data"
+                            sx={{
+                              color: checkedFilters.last30Days
+                                ? "rgba(56, 152, 252, 1) !important"
+                                : "rgba(74, 74, 74, 1)",
+                            }}
+                          >
+                            Last 30 days
+                          </Typography>
+                        }
                       />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedLastLoginDateFilters.last6Months ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>Last 6 months</Typography>}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Radio
-                        checked={checkedLastLoginDateFilters.allTime}
-                        onChange={handleRadioChangeLastLoginDate}
-                        name="allTime"
-                        size='small'
-                        sx={{
-                          '&.Mui-checked': {
-                            color: "rgba(56, 152, 252, 1)",
-                          },
-                        }}
+                    </Grid>
+                    <Grid item xs={6}>
+                      <FormControlLabel
+                        control={
+                          <Radio
+                            checked={
+                              checkedFilters.last6Months
+                            }
+                            onChange={
+                              handleRadioChange
+                            }
+                            name="last6Months"
+                            size="small"
+                            sx={{
+                              "&.Mui-checked":
+                              {
+                                color: "rgba(56, 152, 252, 1)",
+                              },
+                            }}
+                          />
+                        }
+                        label={
+                          <Typography
+                            className="table-data"
+                            sx={{
+                              color: checkedFilters.last6Months
+                                ? "rgba(56, 152, 252, 1) !important"
+                                : "rgba(74, 74, 74, 1)",
+                            }}
+                          >
+                            Last 6 months
+                          </Typography>
+                        }
                       />
-                    }
-                    label={<Typography className='table-data' sx={{ color: checkedLastLoginDateFilters.allTime ? "rgba(56, 152, 252, 1) !important" : "rgba(74, 74, 74, 1)" }}>All time</Typography>}
-                  />
+                    </Grid>
+                  </Grid>
                 </Box>
               </Box>
               <Box sx={filterStyles.date_time_formatted}>
-                <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
-                <Typography variant="body1"
+                <Box
+                  sx={{
+                    borderBottom: "1px solid #e4e4e4",
+                    flexGrow: 1,
+                  }}
+                />
+                <Typography
+                  variant="body1"
                   sx={filterStyles.or_text}
                 >
                   OR
                 </Typography>
-                <Box sx={{ borderBottom: '1px solid #e4e4e4', flexGrow: 1 }} />
+                <Box
+                  sx={{
+                    borderBottom: "1px solid #e4e4e4",
+                    flexGrow: 1,
+                  }}
+                />
               </Box>
               <Box
-                sx={{ display: "flex", gap: 2, justifyContent: "flex-start" }}
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  justifyContent: "flex-start",
+                }}
               >
-                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <LocalizationProvider
+                  dateAdapter={AdapterDayjs}
+                >
                   <DatePicker
                     label="From date"
-                    value={dateRangeJoinDate.fromDate}
-                    onChange={(newValue) => handleLastLoginDateChange("fromDate")(newValue)}
-                    sx={{ width: '100%' }}
+                    value={dateRange.fromDate}
+                    onChange={(newValue) =>
+                      handleDateChange("fromDate")(
+                        newValue
+                      )
+                    }
+                    sx={{ width: "100%" }}
+                    slots={{
+                      openPickerIcon:
+                        InsertInvitationIcon,
+                    }}
                     slotProps={{
+                      openPickerButton: {
+                        sx: { color: "#5F636880" },
+                      },
                       textField: {
                         variant: "outlined",
                         fullWidth: true,
                         sx: {
-                          '& .MuiInputBase-input': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
+                          "& .MuiInputBase-input":
+                          {
+                            fontFamily:
+                              "Roboto",
+                            fontSize:
+                              "14px",
                             fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
+                            lineHeight:
+                              "19.6px",
+                            textAlign:
+                              "left",
                           },
-                          '& .MuiInputLabel-root': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
+                          "& .MuiInputLabel-root":
+                          {
+                            fontFamily:
+                              "Roboto",
+                            fontSize:
+                              "14px",
                             fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
-                          }
-                        }
-                      }
+                            lineHeight:
+                              "19.6px",
+                            textAlign:
+                              "left",
+                          },
+                        },
+                      },
                     }}
                   />
                   <DatePicker
                     label="To date"
-                    value={dateRangeJoinDate.toDate}
+                    value={dateRange.toDate}
                     onChange={(newValue) =>
-                      handleLastLoginDateChange("toDate")(newValue)
+                      handleDateChange("toDate")(
+                        newValue
+                      )
                     }
                     sx={{ width: "100%" }}
+                    slots={{
+                      openPickerIcon:
+                        InsertInvitationIcon,
+                    }}
                     slotProps={{
+                      openPickerButton: {
+                        sx: { color: "#5F636880" },
+                      },
                       textField: {
                         variant: "outlined",
                         fullWidth: true,
                         sx: {
-                          '& .MuiInputBase-input': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
+                          "& .MuiInputBase-input":
+                          {
+                            fontFamily:
+                              "Roboto",
+                            fontSize:
+                              "14px",
                             fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
+                            lineHeight:
+                              "19.6px",
+                            textAlign:
+                              "left",
                           },
-                          '& .MuiInputLabel-root': {
-                            fontFamily: 'Roboto',
-                            fontSize: '14px',
+                          "& .MuiInputLabel-root":
+                          {
+                            fontFamily:
+                              "Roboto",
+                            fontSize:
+                              "14px",
                             fontWeight: 400,
-                            lineHeight: '19.6px',
-                            textAlign: 'left',
-                          }
-                        }
-                      }
+                            lineHeight:
+                              "19.6px",
+                            textAlign:
+                              "left",
+                          },
+                        },
+                      },
                     }}
                   />
                 </LocalizationProvider>

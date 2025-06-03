@@ -51,6 +51,26 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
   const [openConfirm, setOpenConfirm] = useState(false);
   const [tagIdToDelete, setTagIdToDelete] = useState<string | null>(null);
 
+  const fetchUserInfo = async (accessToken: string) => {
+    try {
+      const response = await axios.get(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      console.log(response.data)
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        showErrorToast(e.message);
+      } else if (e instanceof Error) {
+        showErrorToast(e.message);
+      } else {
+        showErrorToast("An unknown error occurred.");
+      }
+    }
+  };
+
   useEffect(() => {
     const handleRedirect = async () => {
       const query = new URLSearchParams(window.location.search);
@@ -429,6 +449,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
   const redirectToGoogleAuth = async () => {
     try {
       const scope = [
+        "https://www.googleapis.com/auth/userinfo.email",
+        "https://www.googleapis.com/auth/userinfo.profile",
         "https://www.googleapis.com/auth/tagmanager.edit.containers",
         "https://www.googleapis.com/auth/tagmanager.manage.accounts",
         "https://www.googleapis.com/auth/tagmanager.publish",
@@ -805,23 +827,22 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                     !selectedAccount || !selectedContainer || !selectedWorkspace
                   }
                   sx={{
-                    width: "92px",
-                    height: "40px",
-                    borderRadius: "8px",
-                    fontSize: "16px",
-                    fontWeight: "600",
                     textTransform: "none",
-                    backgroundColor: "#0853C4",
-                    color: "#ffffff",
-                    boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                    transition: "background-color 0.3s, box-shadow 0.3s",
-                    "&:hover": {
-                      backgroundColor: "#06479F",
-                      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.15)",
+                    background: "rgba(56, 152, 252, 1)",
+                    color: "#fff",
+                    fontFamily: "Nunito Sans",
+                    fontWeight: 400,
+                    fontSize: "14px",
+                    padding: "0.75em 1.5em",
+                    lineHeight: "normal",
+                    "@media (max-width: 600px)": {
+                      padding: "0.625rem 1.5rem",
+                      marginLeft: 0,
+                      fontSize: "16px",
                     },
-                    "&:focus": {
-                      outline: "none",
-                      boxShadow: "0 0 0 2px rgba(8, 83, 196, 0.3)",
+                    "&:hover": {
+                      backgroundColor: "rgba(56, 152, 252, 1)",
+                      boxShadow: 2,
                     },
                   }}
                 >

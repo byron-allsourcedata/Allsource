@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 
+import pytz
+
 from enums import SignUpStatus
 from models import AdminInvitation
 from models.five_x_five_users import FiveXFiveUser
@@ -9,7 +11,7 @@ from models.users import Users
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from sqlalchemy.orm import Session, aliased
-from sqlalchemy import func, case, and_, or_, distinct
+from sqlalchemy import func, case, and_, or_, distinct, asc, desc
 from fastapi import HTTPException
 import re
 
@@ -77,20 +79,31 @@ class AdminPersistence:
         self.db.commit()
 
     def get_pending_invitation_by_email(self, email: str):
-        return  self.db.query(AdminInvitation).filter(AdminInvitation.email == email).first()
+        return self.db.query(AdminInvitation).filter(AdminInvitation.email == email).first()
 
-    def get_pending_invitations_admin(self):
+    def get_pending_invitations_admin(self, search_query: str, join_date_start=None, join_date_end=None):
         Inviter = aliased(Users)
-        return (
-            self.db.query(
-                AdminInvitation.id,
-                AdminInvitation.email,
-                AdminInvitation.full_name,
-                AdminInvitation.date_invited_at,
-                Inviter.email.label("invited_by_email"),
-                AdminInvitation.invited_by_id
+        query = self.db.query(
+            AdminInvitation.id,
+            AdminInvitation.email,
+            AdminInvitation.full_name,
+            AdminInvitation.date_invited_at.label("created_at"),
+            Inviter.email.label("invited_by_email"),
+            AdminInvitation.invited_by_id
+        ).outerjoin(Inviter, AdminInvitation.invited_by_id == Inviter.id)
+
+        if search_query:
+            query = query.filter(or_(
+                AdminInvitation.email.ilike(f'{search_query}%'),
+                AdminInvitation.full_name.ilike(f'{search_query}%')
+            ))
+
+        if join_date_start and join_date_end:
+            start_date = datetime.fromtimestamp(join_date_start, tz=pytz.UTC).date()
+            end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
+            query = query.filter(
+                func.DATE(AdminInvitation.date_invited_at) >= start_date,
+                func.DATE(AdminInvitation.date_invited_at) <= end_date
             )
-            .outerjoin(Inviter, AdminInvitation.invited_by_id == Inviter.id)
-            .limit(100)
-            .all()
-        )
+
+        return query.all()

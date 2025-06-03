@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -37,14 +37,57 @@ const HintCard: React.FC<HintCardProps> = ({
   sx,
 }) => {
   const [showHint, setShowHint] = useState(false);
+  const { showHints } = useHints();
+  const [hintTimeout, setHintTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [autoOpenTimeout, setAutoOpenTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isManualClick, setIsManualClick] = useState(false);
 
-  const hideBody = () => {
+  const showBody = (isManual = false) => {
+    if (hintTimeout) {
+      clearTimeout(hintTimeout);
+    }
     setShowHint(true);
+
+    if (!isManual) {
+      const closeTimeout = setTimeout(() => {
+        setShowHint(false);
+        closeClick()
+      }, 3000);
+  
+      setHintTimeout(closeTimeout);
+    }
   };
 
-  useTimeout(hideBody, 2000);
+  const handleDotClick = () => {
+    setIsManualClick(true);
+    if (autoOpenTimeout) {
+      clearTimeout(autoOpenTimeout);
+    }
+    showBody(true);
+    toggleClick();
+  };
 
-  const { showHints } = useHints();
+  useEffect(() => {
+    if (showHints && !isManualClick) {
+      const openTimeout = setTimeout(() => {
+        showBody();
+      }, 2000);
+      
+      setAutoOpenTimeout(openTimeout);
+
+      return () => {
+        if (openTimeout) {
+          clearTimeout(openTimeout);
+        }
+      };
+    }
+  }, [showHints, isManualClick]);
+
+  useEffect(() => {
+    if (!isOpenBody) {
+      setIsManualClick(false);
+    }
+  }, [isOpenBody]);
 
   return (
     <>
@@ -65,7 +108,7 @@ const HintCard: React.FC<HintCardProps> = ({
               left: positionLeft,
               top: positionTop ?? 10,
               width: 400,
-              pointerEvents: isOpenBody? undefined: "none",
+              pointerEvents: isOpenBody ? undefined : "none",
               ...sx,
             }}
           >
@@ -125,7 +168,7 @@ const HintCard: React.FC<HintCardProps> = ({
               </Box>
             )}
             <PulsingDotComponent
-              toggleClick={toggleClick}
+              toggleClick={handleDotClick}
               rightSide={rightSide}
             />
           </Box>

@@ -259,8 +259,8 @@ const EmailVerificate: React.FC = () => {
           </Box>
           <Box component="form" sx={emailStyles.form}>
             <Typography className="second-sub-title" sx={emailStyles.text}>
-              To complete setup and login, click the verification link in the
-              email we’ve sent to <strong>{email}</strong>
+              To complete account registration, click the verification link in
+              the email we’ve sent to <strong>{email}</strong>
             </Typography>
           </Box>
           <Typography className="hyperlink-blue" sx={emailStyles.resetPassword}>

@@ -7,6 +7,8 @@ from config.hubspot import HubspotConfig
 
 
 def get_hubspot_client():
+    if not HubspotConfig.is_enabled():
+        return httpx.Client()
     token = HubspotConfig.api_key
     client = httpx.Client()
     client.headers["Authorization"] = f"Bearer {token}"

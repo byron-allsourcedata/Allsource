@@ -3,7 +3,8 @@ import logging
 from datetime import datetime, timedelta
 from urllib.parse import uses_query
 
-from sqlalchemy import func, desc, asc, case
+import pytz
+from sqlalchemy import func, desc, asc, case, or_
 from sqlalchemy.orm import Session, aliased
 
 from enums import TeamsInvitationStatus, SignUpStatus
@@ -237,22 +238,50 @@ class UserPersistence:
             for user in users
         ]
 
-    def get_admin_users(self):
+    def get_admin_users(self, search_query: str, last_login_date_start=None, last_login_date_end=None,
+                        join_date_start=None,
+                        join_date_end=None):
         Inviter = aliased(Users)
         query = self.db.query(
             Users.id,
             Users.email,
             Users.full_name,
-            Users.created_at,
-            Users.last_login,
+            Users.created_at.label("created_at"),
+            Users.last_login.label("last_login"),
             Inviter.email.label("invited_by_email"),
             Users.role
-        ) .outerjoin(Inviter, Users.invited_by_id == Inviter.id)\
-            .filter(Users.role.contains(['admin']))
-        users = query.order_by(desc(Users.id)).limit(100).all()
-        return users
+        ).outerjoin(Inviter, Users.invited_by_id == Inviter.id)
 
-    def get_customer_users(self, page, per_page, sort_by, sort_order):
+        query = query.filter(Users.role.contains(['admin']))
+
+        if search_query:
+            query = query.filter(or_(
+                Users.email.ilike(f'{search_query}%'),
+                Users.full_name.ilike(f'{search_query}%')
+            ))
+
+        if last_login_date_start and last_login_date_end:
+            start_date = datetime.fromtimestamp(last_login_date_start, tz=pytz.UTC).date()
+            end_date = datetime.fromtimestamp(last_login_date_end, tz=pytz.UTC).date()
+            query = query.filter(
+                func.DATE(Users.last_login) >= start_date,
+                func.DATE(Users.last_login) <= end_date
+            )
+
+        if join_date_start and join_date_end:
+            start_date = datetime.fromtimestamp(join_date_start, tz=pytz.UTC).date()
+            end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
+            query = query.filter(
+                func.DATE(Users.created_at) >= start_date,
+                func.DATE(Users.created_at) <= end_date
+            )
+
+        return query.all()
+
+    def get_customer_users(self, search_query: str, page: int, per_page: int, sort_by: str, sort_order: str,
+                           last_login_date_start=None,
+                           last_login_date_end=None, join_date_start=None, join_date_end=None):
+
         query = self.db.query(
             Users.id,
             Users.email,
@@ -282,22 +311,47 @@ class UserPersistence:
             .outerjoin(AudienceLookalikes, AudienceLookalikes.user_id == Users.id) \
             .outerjoin(AudienceSource, AudienceSource.user_id == Users.id) \
             .outerjoin(UserDomains, UserDomains.user_id == Users.id) \
-            .filter(Users.role.contains(['customer'])) \
+            .filter(Users.role.any('customer')) \
             .group_by(Users.id)
+
+        if last_login_date_start and last_login_date_end:
+            start_date = datetime.fromtimestamp(last_login_date_start, tz=pytz.UTC).date()
+            end_date = datetime.fromtimestamp(last_login_date_end, tz=pytz.UTC).date()
+            query = query.filter(
+                func.DATE(Users.last_login) >= start_date,
+                func.DATE(Users.last_login) <= end_date
+            )
+
+        if join_date_start and join_date_end:
+            start_date = datetime.fromtimestamp(join_date_start, tz=pytz.UTC).date()
+            end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
+            query = query.filter(
+                func.DATE(Users.created_at) >= start_date,
+                func.DATE(Users.created_at) <= end_date
+            )
+
+        if search_query:
+            query = query.filter(or_(
+                Users.email.ilike(f'{search_query}%'),
+                Users.full_name.ilike(f'{search_query}%')
+            ))
 
         total_count = query.count()
         offset = (page - 1) * per_page
+
         sort_options = {
             'id': Users.id,
             'join_date': Users.created_at,
             'last_login_date': Users.last_login,
         }
+
         if sort_by in sort_options:
             sort_column = sort_options[sort_by]
             query = query.order_by(asc(sort_column) if sort_order == 'asc' else desc(sort_column))
         else:
-            query = query.order_by(Users.created_at.desc())
-        users = query.order_by(desc(Users.id)).limit(per_page).offset(offset).all()
+            query = query.order_by(desc(Users.created_at))
+
+        users = query.limit(per_page).offset(offset).all()
         return users, total_count
 
     def get_not_partner_users(self, page, per_page):
@@ -446,7 +500,7 @@ class UserPersistence:
                 "will_pay": True if account[12] else False,
                 "paid_at": False if account[6] else True,
                 "reward_payout_date": account[6] if account[6] else (
-                            datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1).strftime('%Y-%m-%d'),
+                        datetime.now().replace(day=1) + timedelta(days=32)).replace(day=1).strftime('%Y-%m-%d'),
                 "last_payment_date": account[13],
             }
             for account in accounts
