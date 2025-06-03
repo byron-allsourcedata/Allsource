@@ -1,4 +1,4 @@
-(function() {{
+(function() {
     let cartEventCalled = false;
     let productViewedEventCalled = false;
 
@@ -6,33 +6,33 @@
         return document.querySelector('.productView') !== null; 
     }}
 
-    addedToCartHandler = function() {{
-        if (!cartEventCalled) {{
-            if (typeof addToCart === 'function') {{
-                addToCart(); 
-                cartEventCalled = true; 
-            }}
-        }}
-    }};
+    addedToCartHandler = function(item) {
+    if (!cartEventCalled) {
+        if (typeof addToCart === 'function') {
+            addToCart(item);
+            cartEventCalled = true;
+        }
+    }
+};
 
     viewedProductHandler = function() {{
         if (isProductPage() && !productViewedEventCalled) {{
             if (typeof viewedProduct === 'function') {{
-                viewedProduct(); 
+                viewedProduct();
                 productViewedEventCalled = true; 
             }}
         }}
     }};
 
     setTimeout(viewedProductHandler, 6000);
-}})();
+})();
 
 (function(ns, fetch) {{
     ns.fetch = function() {{
         const response = fetch.apply(this, arguments);
         response.then(async (res) => {{
             const clonedResponse = res.clone();  
-            if (clonedResponse.ok && clonedResponse.url && (window.location.origin + '/remote/v1/cart/add').includes(clonedResponse.url)) {{
+            if (clonedResponse.ok && clonedResponse.url && clonedResponse.url.includes(window.location.origin + '/remote/v1/cart/add')) {{
                 if (!location.pathname.includes("/cart")) {{
                     try {{
                         const data = await clonedResponse.json();
