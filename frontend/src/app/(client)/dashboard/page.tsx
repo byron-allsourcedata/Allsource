@@ -37,6 +37,7 @@ import WelcomePopup from "./components/WelcomePopup";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import DomainButtonSelect from "../components/NavigationDomainButton";
+import useMediaQuery from "@mui/system/useMediaQuery/useMediaQuery";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -151,6 +152,7 @@ const Dashboard: React.FC = () => {
       setAppliedDates({ start: null, end: null });
     }
   };
+  const isMobile = useMediaQuery('(max-width:600px)');
 
   useEffect(() => {
     const accessToken = localStorage.getItem("token");
@@ -290,7 +292,7 @@ const Dashboard: React.FC = () => {
                 alignItems: "center",
               }}
             >
-              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 2 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                   <Typography
                     variant="h4"
@@ -308,39 +310,38 @@ const Dashboard: React.FC = () => {
 
               </Box>
 
-              <Box
-                sx={{
-                  display: "none",
-                  justifyContent: "flex-end",
-                  alignItems: "start",
-                  pt: 0.5,
-                  gap: 1,
-                  "@media (max-width: 600px)": {
-                    display: "flex",
-                  },
-                }}
-              >
-                {/* Calendary picker*/}
-                <Typography className="second-sub-title">
-                  {selectedDateLabel}
-                </Typography>
-                <Button
-                  aria-controls={isCalendarOpen ? "calendar-popup" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={isCalendarOpen ? "true" : undefined}
-                  onClick={handleCalendarClick}
+              {isMobile && (
+                <Box
                   sx={{
-                    textTransform: "none",
-                    color: "rgba(128, 128, 128, 1)",
-                    border: "1px solid rgba(184, 184, 184, 1)",
-                    borderRadius: "4px",
-                    padding: "8px",
-                    minWidth: "auto",
+                    justifyContent: "flex-end",
+                    alignItems: "start",
+                    pt: 0.5,
+                    gap: 1,
+                    display: "flex",
                   }}
                 >
-                  <DateRangeIcon fontSize="small" />
-                </Button>
-              </Box>
+                  <Typography className="second-sub-title">
+                    {selectedDateLabel}
+                  </Typography>
+                  <Button
+                    aria-controls={isCalendarOpen ? "calendar-popup" : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={isCalendarOpen ? "true" : undefined}
+                    onClick={handleCalendarClick}
+                    sx={{
+                      textTransform: "none",
+                      color: "rgba(128, 128, 128, 1)",
+                      border: "1px solid rgba(184, 184, 184, 1)",
+                      borderRadius: "4px",
+                      padding: "8px",
+                      minWidth: "auto",
+                    }}
+                  >
+                    <DateRangeIcon fontSize="small" />
+                  </Button>
+                </Box>
+              )}
+
 
             </Box>
 
@@ -365,6 +366,7 @@ const Dashboard: React.FC = () => {
                     textTransform: "none",
                     minHeight: 0,
                     alignItems: "start",
+                    textAlign: 'left',
                     "& .MuiTabs-indicator": {
                       backgroundColor: "rgba(56, 152, 252, 1)",
                       height: "1.4px",
@@ -386,7 +388,6 @@ const Dashboard: React.FC = () => {
                       textTransform: "none",
                       padding: "4px 10px",
                       flexGrow: 1,
-                      marginRight: "3em",
                       minHeight: "auto",
                       minWidth: "auto",
                       fontSize: "14px",

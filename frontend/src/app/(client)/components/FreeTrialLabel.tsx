@@ -36,7 +36,7 @@ const FreeTrialLabel: React.FC = () => {
     const fetch = async () => {
       try {
         const response = await refetch();
-      } catch (err: any) {}
+      } catch (err: any) { }
     };
 
     fetch();
@@ -170,7 +170,7 @@ const FreeTrialLabel: React.FC = () => {
                       color: "rgba(50, 54, 62, 0.5)",
                     }}
                   >
-                    {creditsCount?.toLocaleString()}/
+                    {((creditsLimitCount ?? 0) - (creditsCount ?? 0)).toLocaleString()}/
                   </Typography>
                   <Typography
                     sx={{
@@ -206,7 +206,7 @@ const FreeTrialLabel: React.FC = () => {
                   },
                 }}
               >
-                Request pricing
+                Upgrade
               </Button>
             </Box>
           </Box>

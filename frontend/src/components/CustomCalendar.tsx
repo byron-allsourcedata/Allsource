@@ -16,6 +16,7 @@ import {
   startOfWeek,
   startOfMonth,
   subQuarters,
+  format
 } from "date-fns";
 import "../css/CustomDatePicker.css";
 
@@ -112,8 +113,8 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
     onDateChange({ start, end });
     setStartDate(start);
     setEndDate(end);
-    setStartDateString(start ? start.toLocaleDateString() : "");
-    setEndDateString(end ? end.toLocaleDateString() : "");
+    setStartDateString(start ? format(start, "MM/dd/yyyy") : "");
+    setEndDateString(end ? format(end, "MM/dd/yyyy") : "");
     onDateLabelChange("");
   };
 
@@ -603,22 +604,22 @@ const CalendarPopup: React.FC<CalendarPopupProps> = ({
                   background: "rgba(80, 82, 178, 0.04)!important",
                 },
                 "& .react-datepicker__day.in-range.react-datepicker__day--outside-month:before":
-                  {
-                    content: '""',
-                    width: 0,
-                    background: "none",
-                  },
+                {
+                  content: '""',
+                  width: 0,
+                  background: "none",
+                },
                 "& .react-datepicker__day.end-date.react-datepicker__day--outside-month:before":
-                  {
-                    content: '""',
-                    width: 0,
-                    background: "none",
-                  },
+                {
+                  content: '""',
+                  width: 0,
+                  background: "none",
+                },
                 "& .react-datepicker__day--in-selecting-range:not(.react-datepicker__day--in-range, .react-datepicker__month-text--in-range, .react-datepicker__quarter-text--in-range, .react-datepicker__year-text--in-range)":
-                  {
-                    background: "rgba(80, 82, 178, 0.04) !important",
-                    color: "rgba(74, 74, 74, 0.40) !important",
-                  },
+                {
+                  background: "rgba(80, 82, 178, 0.04) !important",
+                  color: "rgba(74, 74, 74, 0.40) !important",
+                },
                 "& .react-datepicker__day--disabled": {
                   fontFamily: "Roboto",
                   fontSize: "12px",
