@@ -156,8 +156,8 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
 
     const formatDate = (dateString: string | null): string => {
         if (!dateString) return '--';
-        const date = new Date(dateString);
-        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+        const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: 'short', day: 'numeric' };
+        return new Date(dateString).toLocaleDateString('en-US', options);
     };
     const getStatusStyle = (behavior_type: any) => {
         switch (behavior_type) {
