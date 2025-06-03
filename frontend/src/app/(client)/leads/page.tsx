@@ -25,16 +25,15 @@ import CustomToolTip from '@/components/customToolTip';
 import CalendarPopup from '@/components/CustomCalendar';
 import PaginationComponent from "@/components/PaginationComponent";
 import UnlockButton from './UnlockButton';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNotification } from '@/context/NotificationContext';
 import GettingStartedSection from '@/components/GettingStartedSection';
 import { FirstTimeScreenCommonVariant2 } from '@/components/first-time-screens';
 import HintCard from "../components/HintCard";
 import { useLeadsHints } from "./context/LeadsHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
-import TableCustomCell from "../sources/components/table/TableCustomCell";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 import PixelPopup from "@/components/PixelPopup";
+import { EmptyAnalyticsPlaceholder } from '../dashboard/components/placeholders/EmptyPlaceholder';
 
 
 interface FetchDataParams {
@@ -922,6 +921,13 @@ const Leads: React.FC = () => {
     const handleUnlock = () => {
         router.push('settings?section=subscription')
     }
+
+    const noDataAvailable = data.length === 0;
+
+    if (noDataAvailable) {
+        return <EmptyAnalyticsPlaceholder />
+    }
+
 
     return (
         <>

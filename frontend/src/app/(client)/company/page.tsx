@@ -38,6 +38,7 @@ import HintCard from "../components/HintCard";
 import { useCompanyHints } from "./context/CompanyHintsContext";
 import { companyTableCards } from "./context/hintsCardsContent";
 import DomainButtonSelect from "../components/NavigationDomainButton";
+import { EmptyAnalyticsPlaceholder } from '../dashboard/components/placeholders/EmptyPlaceholder';
 
 
 interface FetchDataParams {
@@ -737,6 +738,12 @@ const Leads: React.FC = () => {
         handleApplyFilters(newFilters);
     };
 
+
+    const noDataAvailable = data.length === 0;
+
+    if (noDataAvailable) {
+        return <EmptyAnalyticsPlaceholder />
+    }
 
     return (
         <>

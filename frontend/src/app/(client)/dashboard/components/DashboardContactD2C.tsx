@@ -8,6 +8,7 @@ import { LineChart } from '@mui/x-charts/LineChart';
 import { BarChart } from '@mui/x-charts/BarChart';
 import StatsCard from "./StatCardContact";
 import dayjs from "dayjs";
+import { EmptyAnalyticsPlaceholder } from "./placeholders/EmptyPlaceholder";
 
 
 const CustomIcon = () => (
@@ -15,7 +16,7 @@ const CustomIcon = () => (
 );
 
 
-interface AppliedDates {
+export interface AppliedDates {
     start: Date | null;
     end: Date | null;
 }
@@ -373,6 +374,12 @@ const DashboardContact: React.FC<DashboardContactProps> = ({ appliedDates, typeB
 
     const periodInDays = dayjs(formattedData[formattedData.length - 1]).diff(dayjs(formattedData[0]), 'day');
     const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, filteredSeries, periodInDays);
+
+    const isContactDataEmpty = values.total_contacts_collected === 0;
+
+    if (isContactDataEmpty) {
+        return <EmptyAnalyticsPlaceholder />
+    }
 
     return (
         <Box sx={{ width: '100%', '@media (max-width: 900px)': { mt: 0, mb: 2, } }}>
