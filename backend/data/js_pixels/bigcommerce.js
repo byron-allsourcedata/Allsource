@@ -99,7 +99,7 @@ function sendPixelClientId(clientId, apiUrl) {
     });
 }
 
-function createPopup({ success, message }) {
+function createPopup({ success, message, domain_url }) {
     const popup = document.createElement("div");
     popup.className = "popup";
 
@@ -124,7 +124,15 @@ function createPopup({ success, message }) {
             </tr>
         </table>
         ${!success ? `<div style="color: #d00; margin-top: 16px; font-size: 14px; text-align: center;">${message}</div>` : ""}
+        ${domain_url ? `
+            <div style="text-align:right; margin-top:30px;">
+                <a href="${domain_url}" style="background-color:#002868; color:#fff; text-decoration:none; padding:8px 16px; font-size:14px; border-radius:4px; display:inline-block; min-height:25px; line-height:25px;">
+                    Go back
+                </a>
+            </div>
+        ` : ""}
     `;
+
 
     Object.assign(popup.style, {
         position: "fixed",
@@ -142,7 +150,6 @@ function createPopup({ success, message }) {
         cursor: "pointer"
     });
 
-    popup.addEventListener("click", () => popup.remove());
     document.body.appendChild(popup);
 }
 
@@ -165,6 +172,7 @@ function PixelSendFunction(params) {
     const urlParams = new URLSearchParams(window.location.search);
     const apiUrl = urlParams.get('api');
     const checkPixel = urlParams.get("mff");
+    const domain_url = new URLSearchParams(window.location.search).get('domain_url');
     if (!checkPixel || !apiUrl || checkPixel !== "true") return;
 
     sendPixelClientId(window.pixelClientId, apiUrl).then(res => {
@@ -174,7 +182,8 @@ function PixelSendFunction(params) {
             message: {
                 'PIXEL_MISMATCH': 'You installed a pixel from another domain!',
                 'INCORRECT_PROVIDER_ID': 'Provider id not found'
-            }[res.status] || ''
+            }[res.status] || '',
+            domain_url: domain_url
         };
         createPopup(popupOptions);
     });
