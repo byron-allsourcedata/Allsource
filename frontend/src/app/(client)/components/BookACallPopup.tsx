@@ -292,15 +292,24 @@ export const BookACallPopup: React.FC<Props> = ({
                       sx={{
                         textTransform: "none",
                         fontFamily: "Nunito Sans",
-                        fontSize: "12px",
+                        fontSize: "14px",
                         fontWeight: 600,
                         width: "100%",
                         px: "16px",
                         py: "8px",
-                        borderColor: "#3898FC",
                         borderRadius: "4px",
-                        bgcolor: "#3898FC",
-                        color: "#FFFFFF",
+                        bgcolor: "rgba(56, 152, 252, 1)",
+                        color: "rgba(255, 255, 255, 1)",
+                        ":hover": {
+                            backgroundColor: "rgba(30, 136, 229, 1)",
+                          },
+                          ":active": {
+                            backgroundColor: "rgba(116, 183, 253, 1)",
+                          },
+                          ":disabled": {
+                            backgroundColor: "rgba(56, 152, 252, 1)",
+                            opacity: 0.6,
+                          },
                       }}
                     >
                       Book a demo call
