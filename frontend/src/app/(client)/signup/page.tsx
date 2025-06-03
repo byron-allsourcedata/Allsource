@@ -111,7 +111,7 @@ const Signup: React.FC = () => {
 
     switch (name) {
       case 'full_name':
-        const isValid = /^[а-яА-Яa-zA-Z0-9.\s]+$/.test(value.trim());
+        const isValid = /^[а-яА-Яa-zA-Z0-9.\s#[\]_-]+$/.test(value.trim());
 
         const hasLetter = /[a-zA-Zа-яА-Я]/.test(value);
 

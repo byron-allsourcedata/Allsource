@@ -284,13 +284,41 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                 <Box
                                     sx={{
                                         maxWidth: "150px",
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap",
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        alignItems: "center",
+                                        gap: 0.5,
                                     }}
                                 >
-                                    {row.full_name}
+                                    <Box
+                                        sx={{
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                            minWidth: 0,
+                                            flexShrink: 1,
+                                            pr: "10px",
+                                        }}
+                                    >
+                                        {row.full_name.replace("#test_allsource", "").trim()}
+                                    </Box>
+
+                                    {row.full_name.includes("#test_allsource") && (
+                                        <Chip
+                                            label="Test"
+                                            size="small"
+                                            sx={{
+                                                fontSize: "0.7rem",
+                                                height: "20px",
+                                                backgroundColor: "#E8F5E9",
+                                                color: "#388E3C",
+                                                flexShrink: 0,
+                                            }}
+                                        />
+
+                                    )}
                                 </Box>
+
                                 {row.type === 'invitation' && (
                                     <Chip
                                         label="Invitation"
