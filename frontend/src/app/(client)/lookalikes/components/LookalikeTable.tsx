@@ -417,21 +417,30 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   )}
 
                   {isNameColumn && (
-                    <HintCard
-                    card={cardsLookalikeTable.insights}
-                    positionTop={90}
-                    positionLeft={90}
-                    rightSide={false}
-                    isOpenBody={lookalikesTableHints.insights.showBody}
-                    toggleClick={() => {
-                      changeLookalikesTableHint("actions", "showBody", "close");
-                      changeLookalikesTableHint("builder", "showBody", "close");
-                      changeLookalikesTableHint("insights", "showBody", "toggle");
-                    }}
-                    closeClick={() =>
-                      changeLookalikesTableHint("insights", "showBody", "close")
-                    }
-                  />
+                    <Box
+                      onClick={e => e.stopPropagation()}
+                      sx={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                      }}
+                    >
+                      <HintCard
+                        card={cardsLookalikeTable.insights}
+                        positionTop={90}
+                        positionLeft={90}
+                        rightSide={false}
+                        isOpenBody={lookalikesTableHints.insights.showBody}
+                        toggleClick={() => {
+                          changeLookalikesTableHint("actions", "showBody", "close");
+                          changeLookalikesTableHint("builder", "showBody", "close");
+                          changeLookalikesTableHint("insights", "showBody", "toggle");
+                        }}
+                        closeClick={() =>
+                          changeLookalikesTableHint("insights", "showBody", "close")
+                        }
+                      />
+                    </Box>
                   )}
                   <Box
                     sx={{
@@ -546,6 +555,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                         color: isRowDisabled ? 'rgba(95,99,104,0.5)' : 'inherit',
                         cursor: isRowDisabled ? 'default' : 'pointer',
                       },
+                      hideDivider: isScrolledX,
                     }}
                     tooltipOptions={{
                       content: row.name,
@@ -799,7 +809,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                   >
                     {lookalikeText}
                   </SmartCell>
-
+                  
+                  {/* Created By Column */}
                   <SmartCell
                     cellOptions={{
                       sx: {
@@ -845,7 +856,8 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
                       />
                     )}
                   </SmartCell>
-
+                  
+                  {/* Action Column */}
                   <SmartCell
                     cellOptions={{
                       sx: {

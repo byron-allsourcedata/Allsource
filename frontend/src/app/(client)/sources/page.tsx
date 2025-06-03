@@ -1618,7 +1618,6 @@ const Sources: React.FC = () => {
                                         >
                                           <MoreVert
                                             sx={{
-
                                               color: "rgba(32, 33, 36, 1)",
                                             }}
                                           />
