@@ -125,6 +125,7 @@ const FreeTrialLabel: React.FC = () => {
                     color: 'rgba(50, 50, 50, 1)',
                     textDecoration: 'underline',
                     cursor: 'pointer',
+                    pl: 0.5,
                     whiteSpace: 'nowrap',
                   }}
                 >
