@@ -629,7 +629,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 2,
-                  pl: "24px",
+                  pl: "8px",
                 }}
               >
                 <img

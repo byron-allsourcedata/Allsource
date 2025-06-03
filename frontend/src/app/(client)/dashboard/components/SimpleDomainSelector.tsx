@@ -284,6 +284,9 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
           padding: "6px 12px",
           width: "50%",
           justifyContent: "space-between",
+          "@media (max-width: 600px)": {
+            width: "75%"
+          }
         }}
       >
         <Typography variant="body2">
@@ -297,6 +300,13 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
+        slotProps={{
+          paper: {
+            sx: {
+              width: anchorEl?.clientWidth || "auto",
+            },
+          },
+        }}
         sx={{ "& .MuiMenu-list": { padding: "2px", pr: 0, pl: 0, pb: 0 } }}
       >
         <Box>
