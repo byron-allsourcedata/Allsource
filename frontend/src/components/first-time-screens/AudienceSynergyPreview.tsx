@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import React, { FC, useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import Image from "next/image";
 import { getInteractiveSx } from "../utils";
+import { motion } from "framer-motion";
 
 export interface AudienceSynergyPreviewProps {
   headerTitle: string;
@@ -31,6 +32,27 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
   buttonLabel = "Begin",
   sx,
 }) => {
+
+  const [activeLogo, setActiveLogo] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveLogo((prev) => (prev + 1) % logos.length);
+    }, 2000); // Change logo every 2 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const logos = [
+    "/bing-ads.svg",
+    "/google-ads.svg",
+    "/linkedIn.svg",
+    "/s3.svg",
+    "/logos_meta-icon.svg",
+    "/hubspot.svg",
+    "/mailchimp-icon.svg",
+    "/salesforce-icon.svg",
+  ];
+
   return (
     <Box
       onClick={(e) => {
@@ -77,6 +99,20 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
             height={160}
             style={{ maxWidth: "100%", height: "auto" }}
           />
+
+          <motion.div
+              key={activeLogo}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Box
+                component="img"
+                src={logos[activeLogo]}
+                alt={Logo ${activeLogo + 1}}
+                sx={{ width: "100px", height: "100px", mt: 4 }}
+              />
+          </motion.div>
         </Box>
 
         <Typography variant="body2" sx={{ color: "#7E7E7E" }}>
