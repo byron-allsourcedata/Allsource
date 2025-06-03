@@ -109,6 +109,11 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [integrationsCredentials, setIntegrationsCredentials] = useState<
     IntegrationsCredentials[]
   >([]);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const { isScrolledX, isScrolledY } = useScrollShadow(
+    tableContainerRef,
+    data.length
+  );
 
   const [openMetaConnect, setOpenMetaConnect] = useState(false);
   const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false);
@@ -824,12 +829,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
       widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
     },
   ]
-
-  const tableContainerRef = useRef<HTMLDivElement>(null);
-  const { isScrolledX, isScrolledY } = useScrollShadow(
-    tableContainerRef,
-    data.length
-  );
 
   return (
     <>
