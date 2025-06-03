@@ -35,12 +35,12 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
 
   const [activeLogo, setActiveLogo] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveLogo((prev) => (prev + 1) % logos.length);
-    }, 2000); // Change logo every 2 seconds
-    return () => clearInterval(interval);
-  }, []);
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     setActiveLogo((prev) => (prev + 1) % logos.length);
+  //   }, 2000); // Change logo every 2 seconds
+  //   return () => clearInterval(interval);
+  // }, []);
 
   const logos = [
     "/bing-ads.svg",
@@ -100,7 +100,7 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
             style={{ maxWidth: "100%", height: "auto" }}
           />
 
-          <motion.div
+          {/* <motion.div
               key={activeLogo}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -112,7 +112,7 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
                 alt={Logo ${activeLogo + 1}}
                 sx={{ width: "100px", height: "100px", mt: 4 }}
               />
-          </motion.div>
+          </motion.div> */}
         </Box>
 
         <Typography variant="body2" sx={{ color: "#7E7E7E" }}>
