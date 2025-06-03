@@ -131,6 +131,7 @@ const AccountSetup = () => {
   const { full_name: userFullName, email: userEmail, partner } = useUser();
   const [openConfirm, setOpenConfirm] = useState(false);
   const [tagIdToDelete, setTagIdToDelete] = useState<string | null>(null);
+  const apiUrl = process.env.NEXT_PUBLIC_API_DOMAIN;
 
   interface CmsData {
     manual?: string;
@@ -1085,7 +1086,7 @@ const AccountSetup = () => {
       }
 
       const hasQuery = url.includes("?");
-      const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + "&api=https://api-dev.maximiz.ai" + `&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/leads?pixel_installed=true`;
+      const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}` + `&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/leads?pixel_installed=true`;
       window.open(newUrl, "_blank");
     }
   };

@@ -38,6 +38,10 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
         borderRadius: "4px",
         ml: 2,
         backgroundColor: "rgba(255, 255, 255, 1)",
+        "@media (max-width: 900px)": {
+          ml: 0,
+          mb: 4,
+        }
       }}
     >
       <Typography className="second-sub-title" mb={2}>
@@ -72,8 +76,8 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
                   step.status === "active"
                     ? "rgba(56, 152, 252, 1) !important"
                     : step.status === "completed"
-                    ? "rgba(0, 0, 0, 1) !important"
-                    : "rgba(82, 82, 82, 1) !important",
+                      ? "rgba(0, 0, 0, 1) !important"
+                      : "rgba(82, 82, 82, 1) !important",
                 "& .MuiStepLabel-label": {
                   fontFamily: "Nunito Sans",
                   fontSize: "14px",
@@ -82,8 +86,8 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
                     step.status === "active"
                       ? "rgba(56, 152, 252, 1) !important"
                       : step.status === "completed"
-                      ? "rgba(0, 0, 0, 1) !important" // Black
-                      : "rgba(82, 82, 82, 1) !important", // Gray
+                        ? "rgba(0, 0, 0, 1) !important" // Black
+                        : "rgba(82, 82, 82, 1) !important", // Gray
                 },
               }}
             >
