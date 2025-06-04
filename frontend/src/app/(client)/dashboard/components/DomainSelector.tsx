@@ -16,6 +16,7 @@ import { AxiosError } from "axios";
 import HintCard from "@/app/(client)/components/HintCard";
 import { domainSelectorHintCards } from "./context/hintsCardsContent";
 import { useGetStartedHints } from "./context/PixelInstallHintsContext";
+import { showErrorToast } from "@/components/ToastNotification";
 
 interface Domain {
   id: number;
@@ -148,7 +149,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
         err instanceof AxiosError &&
         err.response?.data?.status === "NEED_UPGRADE_PLAN"
       ) {
-        alert("Upgrade your plan to add more domains.");
+        showErrorToast("Upgrade your plan to add more domains.");
       } else {
         setError("Failed to add domain");
       }

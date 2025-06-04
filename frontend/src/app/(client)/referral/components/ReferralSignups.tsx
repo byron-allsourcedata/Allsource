@@ -10,6 +10,7 @@ import CustomTablePagination from "../../../../components/CustomTablePagination"
 import Image from "next/image";
 import CalendarPopup from "../../../../components/CustomCalendar";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
+import { showToast } from "@/components/ToastNotification";
 
 const tableHeaders = [
     { key: 'personal_email', label: 'Personal Email', sortable: false },
@@ -189,7 +190,7 @@ const ReferralSignups: React.FC = () => {
 
     const handleCopyClick = () => {
         navigator.clipboard.writeText(referralLink).then(() => {
-            alert('Referral link copied!');
+            showToast('Referral link copied')
         }).catch(err => {
         });
     };

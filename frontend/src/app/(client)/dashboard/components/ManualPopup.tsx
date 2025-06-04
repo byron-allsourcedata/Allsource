@@ -54,7 +54,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
   const [email, setEmail] = useState("");
   const handleCopy = () => {
     navigator.clipboard.writeText(pixelCode);
-    alert("Copied to clipboard");
+    showToast("Copied to clipboard");
   };
 
   const handleButtonClick = () => {

@@ -1093,7 +1093,7 @@ const AccountSetup = () => {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(pixelCode);
-    alert('Copied to clipboard');
+    showToast('Copied to clipboard');
   };
 
   const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
