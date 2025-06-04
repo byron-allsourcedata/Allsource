@@ -79,9 +79,9 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       setUserInfo(response.data);
     } catch (e) {
       if (axios.isAxiosError(e)) {
-        showErrorToast(e.message);
+        console.log(e.message);
       } else if (e instanceof Error) {
-        showErrorToast(e.message);
+        console.log(e.message);
       } else {
         showErrorToast("An unknown error occurred.");
       }
@@ -96,9 +96,17 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         try {
           const tokenResponse = await exchangeCodeForToken(authorizationCode);
           const accessToken = tokenResponse.access_token;
-          setSession({ token: accessToken });
-          fetchAccounts(accessToken);
-          fetchUserInfo(accessToken);
+          const url = new URL(window.location.href);
+          url.searchParams.delete("code");
+          url.searchParams.delete("scope");
+          url.searchParams.delete("authuser");
+          url.searchParams.delete("prompt");
+          window.history.replaceState({}, document.title, url.toString());
+          if (accessToken) {
+            setSession({ token: accessToken });
+            fetchAccounts(accessToken);
+            fetchUserInfo(accessToken);
+          }
         } catch (error) {
           console.log(error)
         }
