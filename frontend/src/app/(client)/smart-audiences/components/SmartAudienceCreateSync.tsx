@@ -533,17 +533,22 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
             if (activeService === "meta") {
                 setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-meta')
                 if (optionAdAccountMeta?.id && selectedOptionMeta?.list_name && selectedOptionMeta?.id) {
-                    requestObj.customer_id = String(optionAdAccountMeta?.id)
-                    requestObj.list_id = String(selectedOptionMeta?.id),
-                        requestObj.list_name = selectedOptionMeta?.list_name
-                    requestObj.campaign = {
-                        campaign_id: selectedOptionCampaignMeta?.id,
-                        campaign_name: formValuesMeta?.campaignName,
-                        campaign_objective: formValuesMeta?.campaignObjective,
-                        bid_amount: formValuesMeta?.bidAmount,
-                        daily_budget: formValuesMeta?.dailyBudget
+                    requestObj.customer_id = String(optionAdAccountMeta?.id);
+                    requestObj.list_id = String(selectedOptionMeta?.id);
+                    requestObj.list_name = selectedOptionMeta?.list_name;
+                
+                    const campaignName = formValuesMeta?.campaignName?.trim();
+                    if (campaignName) {
+                        requestObj.campaign = {
+                            campaign_id: selectedOptionCampaignMeta?.id,
+                            campaign_name: campaignName,
+                            campaign_objective: formValuesMeta?.campaignObjective,
+                            bid_amount: formValuesMeta?.bidAmount,
+                            daily_budget: formValuesMeta?.dailyBudget
+                        };
                     }
                 }
+                
                 else {
                     showErrorToast("You have selected incorrect data!")
                     return
