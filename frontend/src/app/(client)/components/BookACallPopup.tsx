@@ -323,8 +323,6 @@ export const BookACallPopup: React.FC<Props> = ({
                     }}
                   >
                     You can pick date and time in the next step
-
-                    {bookingUrl}
                   </Typography>
                 </Box>
               </Box>
