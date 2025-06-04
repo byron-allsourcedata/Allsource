@@ -59,7 +59,7 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
-            router.push("/audience-dashboard");
+            router.push("/dashboard");
             break;
           default:
             console.error("Unknown status:", status);
@@ -579,8 +579,8 @@ const AccountSetup = () => {
                     websiteLink
                       ? websiteLink.replace(/^https?:\/\//, "")
                       : isFocused
-                      ? websiteLink.replace(/^https?:\/\//, "")
-                      : `https://${websiteLink.replace(/^https?:\/\//, "")}`
+                        ? websiteLink.replace(/^https?:\/\//, "")
+                        : `https://${websiteLink.replace(/^https?:\/\//, "")}`
                   }
                   onChange={domainLink ? undefined : handleWebsiteLink}
                   onFocus={domainLink ? undefined : handleFocus}

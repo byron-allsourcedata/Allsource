@@ -14,6 +14,7 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 interface GTMContainer {
   containerId: string;
@@ -28,6 +29,7 @@ interface GTMAccount {
 interface PopupProps {
   open: boolean;
   handleClose: () => void;
+  onInstallStatusChange: (status: "success" | "failed") => void;
 }
 
 const inputLabelStyles = {
@@ -52,10 +54,11 @@ type GoogleUser = {
   sub: string;
 };
 
-const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
+const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose, onInstallStatusChange }) => {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const clientSecret = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET;
   const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [session, setSession] = useState<{ token: string } | null>(null);
   const [accounts, setAccounts] = useState<GTMAccount[]>([]);
   const [containers, setContainers] = useState<GTMContainer[]>([]);
@@ -66,10 +69,12 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
   const [openConfirm, setOpenConfirm] = useState(false);
   const [tagIdToDelete, setTagIdToDelete] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<GoogleUser | null>(null);
+  const [isInstallComplete, setInstallComplited] = useState(false);
 
 
   const fetchUserInfo = async (accessToken: string) => {
     try {
+      setIsLoading(true)
       const response = await axios.get(
         "https://www.googleapis.com/oauth2/v3/userinfo",
         {
@@ -85,6 +90,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       } else {
         showErrorToast("An unknown error occurred.");
       }
+    } finally {
+      setIsLoading(false)
     }
   };
 
@@ -130,6 +137,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     const workspaceId = selectedWorkspace;
 
     try {
+      setIsLoading(true)
       await axios.delete(
         `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${tagIdToDelete}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -140,6 +148,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       console.error('Error when deleting a tag:', error);
       showErrorToast(`Failed to delete tag: ${error}`);
     } finally {
+      setIsLoading(false)
       setOpenConfirm(false);
       setTagIdToDelete(null);
     }
@@ -185,6 +194,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     };
 
     try {
+      setIsLoading(true)
       const response = await axios.post(
         `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/triggers`,
         triggerData,
@@ -199,6 +209,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       } else {
         showErrorToast("An unknown error occurred.");
       }
+    } finally {
+      setIsLoading(false)
     }
   };
 
@@ -206,6 +218,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     const fetchContainers = async () => {
       if (selectedAccount && session?.token) {
         try {
+          setIsLoading(true)
           const response = await axios.get(
             `https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers`,
             { headers: { Authorization: `Bearer ${session.token}` } }
@@ -219,6 +232,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
           } else {
             showErrorToast("An unknown error occurred.");
           }
+        } finally {
+          setIsLoading(false)
         }
       }
     };
@@ -230,6 +245,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     const fetchWorkspaces = async () => {
       if (selectedAccount && selectedContainer && session?.token) {
         try {
+          setIsLoading(true);
           const response = await axios.get(
             `https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers/${selectedContainer}/workspaces`,
             { headers: { Authorization: `Bearer ${session.token}` } }
@@ -243,6 +259,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
           } else {
             showErrorToast("An unknown error occurred.");
           }
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -252,6 +270,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
 
   const fetchAccounts = async (accessToken: string) => {
     try {
+      setIsLoading(true)
       const response = await axios.get(
         "https://www.googleapis.com/tagmanager/v2/accounts",
         {
@@ -267,6 +286,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       } else {
         showErrorToast("An unknown error occurred.");
       }
+    } finally {
+      setIsLoading(false)
     }
   };
 
@@ -326,7 +347,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         {},
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-
       showToast("Changes submitted and published successfully!");
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -431,6 +451,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       }
       handleClose();
       setSession(null)
+      setInstallComplited(true);
+      onInstallStatusChange("success");
       setAccounts([])
       setContainers([])
       setSelectedAccount("")
@@ -507,6 +529,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
 
   return (
     <>
+      {isLoading && <CustomizedProgressBar />}
       {loading && (
         <Box
           sx={{
@@ -540,8 +563,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       )}
       <ConfirmDialog
         open={openConfirm}
-        title="Confirmation of googleTag deletion"
-        description="A pixel script has been detected in your Google Tag Manager container. Do you really want to delete this tag?"
+        title="Confirmation of Google Tag deletion"
+        description="This Google Tag already has an active pixel. Reinstalling will remove the existing configuration and require event re-setup. Are you sure you want to proceed?"
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />
@@ -567,42 +590,44 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         }}
       >
         <Box>
-          <Box
-            sx={{
-              display: "flex",
-              width: "100%",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 2,
-              pb: 1,
-              justifyContent: "start",
-              "@media (max-width: 600px)": {
-                flexDirection: "column",
-              },
-            }}
-          >
-            <Image src="/1.svg" alt="1" width={20} height={20} />
-            <Typography
-              variant="h6"
+          {!isInstallComplete &&
+            <Box
               sx={{
-                fontFamily: "'Nunito Sans', sans-serif",
-                fontSize: "16px",
+                display: "flex",
                 width: "100%",
-                fontWeight: 600,
-                color: "#202124",
-                lineHeight: "21.82px",
-                letterSpacing: "0.5px",
-                textShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-                alignSelf: "flex-start",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 2,
+                pb: 1,
+                justifyContent: "start",
                 "@media (max-width: 600px)": {
-                  fontSize: "14px",
-                  textAlign: "left",
+                  flexDirection: "column",
                 },
               }}
             >
-              Connect Google
-            </Typography>
-          </Box>
+              <Image src="/1.svg" alt="1" width={20} height={20} />
+              <Typography
+                variant="h6"
+                sx={{
+                  fontFamily: "'Nunito Sans', sans-serif",
+                  fontSize: "16px",
+                  width: "100%",
+                  fontWeight: 600,
+                  color: "#202124",
+                  lineHeight: "21.82px",
+                  letterSpacing: "0.5px",
+                  textShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                  alignSelf: "flex-start",
+                  "@media (max-width: 600px)": {
+                    fontSize: "14px",
+                    textAlign: "left",
+                  },
+                }}
+              >
+                Connect Google
+              </Typography>
+            </Box>
+          }
           {userInfo ? (
             <Box
               sx={{
@@ -614,8 +639,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                 borderRadius: "4px",
                 width: "100%",
                 maxWidth: "45%",
-                marginBottom: "24px",
-                marginTop: "15px",
+                marginBottom: isInstallComplete ? "16px" : "24px",
+                marginTop: isInstallComplete ? "0px" : "15px",
                 "@media (max-width: 600px)": {
                   maxWidth: "100%",
                   width: "100%",
@@ -914,7 +939,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                   </Typography>
                 )}
 
-                {containers.length === 0 && selectedAccount && (
+                {(containers.length === 0 && selectedAccount !== "" && !isLoading) && (
                   <Typography color="error" variant="body2">
                     No containers available for the selected account. Please try another account.
                   </Typography>
@@ -967,6 +992,22 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
               )}
             </Box>
           )}
+
+          {isInstallComplete &&
+            <Box>
+              <Typography sx={{
+                fontFamily: 'Roboto',
+                fontWeight: 400,
+                fontSize: '12px',
+                lineHeight: "170%",
+                letterSpacing: "0.5%",
+                color: "rgba(74, 158, 79, 1)"
+              }}
+              >
+                ✓ The script has been successfully installed on your website via Google Tag Manager.
+              </Typography>
+            </Box>
+          }
         </Box>
       </Box>
     </>
