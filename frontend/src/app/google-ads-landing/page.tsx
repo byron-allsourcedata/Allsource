@@ -53,11 +53,10 @@ const GoogleAdsLanding = () => {
 
   return (
     <Box sx={shopifyLandingStyle.mainContent}>
-      <Link display={'flex'} sx={{ alignItems: 'center', textDecoration: 'none' }} href='https://maximiz.ai'>
-        <Image src={'/logo.svg'} width={61} height={39} alt="Maximiz" />
-        <Typography variant="h1" color={'#F8464B'} fontSize={'51.21px'} fontWeight={400}>Maximiz</Typography>
+      <Link display={'flex'} sx={{ alignItems: 'center', textDecoration: 'none' }}>
+        <Image src={'/logo.svg'} width={100} height={200} alt="Allsource" />
       </Link>
-      <Image src={'/app_intalled.svg'} width={330} height={246} alt="Maximiz installed" />
+      <Image src={'/app_intalled.svg'} width={330} height={246} alt="Allsource installed" />
       <Typography variant="h6" fontSize={'16px'} fontWeight={400} mt={2}>
         Wait for GoogleAds token verification
       </Typography>
