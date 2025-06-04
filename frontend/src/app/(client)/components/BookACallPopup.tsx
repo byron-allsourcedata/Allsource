@@ -37,8 +37,13 @@ export const BookACallPopup: React.FC<Props> = ({
   handleClose,
   leftMenu
 }) => {
+  const router = useRouter();
   const handleBookACall = () => {
     window.open(getBookingUrl(), "_blank");
+  };
+
+  const handleInstallUpgrade = () => {
+    router.push('/settings?section=subscription');
   };
 
   if (!open) return null;
@@ -230,7 +235,7 @@ export const BookACallPopup: React.FC<Props> = ({
                   gap: 2,
                 }}
               >
-                <Box sx={{ width: "100%", maxWidth: 400 }}>
+                <Box sx={{ width: "100%", px: 2, minWidth: 430 }}>
                   <Box sx={{ mb: 2 }}>
                     <Typography
                       variant="subtitle1"
@@ -286,16 +291,26 @@ export const BookACallPopup: React.FC<Props> = ({
                     ))}
                   </Box>
 
-                  <Box sx={{ textAlign: "left", mb: 2 }}>
+                  <Box sx={{ display: "flex", textAlign: "left", mb: 2,  gap: 2 }}>
                     <CustomButton
-                     onClick={handleBookACall}
-                      variant="contained"
+                      onClick={handleInstallUpgrade}
+                      variant="outlined"
                       sx={{
-                        width: "100%",
-                        py: 1.5
+                        width: "50%",
+                        py: 1.5,
                       }}
                     >
-                       Book a consultations
+                      Install Upgrade
+                    </CustomButton>
+                    <CustomButton
+                      onClick={handleBookACall}
+                      variant="contained"
+                      sx={{
+                        width: "50%",
+                        py: 1.5,
+                      }}
+                    >
+                      Book a consultations
                     </CustomButton>
                   </Box>
 

@@ -54,17 +54,25 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     outlined: {
       border: "1px solid rgba(56, 152, 252, 1)",
       color: "rgba(56, 152, 252, 1)",
+      boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
       backgroundColor: "transparent",
       "&:hover": {
-        backgroundColor: "rgba(235, 245, 255, 1)",
+        backgroundColor: "rgba(30, 136, 229, 1)",
+        boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+        color: "rgba(255, 255, 255, 1)",
+        border: "1px solid rgba(30, 136, 229, 1)",
       },
       "&:active": {
-        backgroundColor: "rgba(210, 235, 255, 1)",
+        backgroundColor: "rgba(116, 183, 253, 1)",
+        color: "rgba(255, 255, 255, 1)",
+        boxShadow: "none",
+        border: "1px solid rgba(116, 183, 253, 1)",
       },
       "&:disabled": {
-        border: "1px solid rgba(56, 152, 252, 0.6)",
-        color: "rgba(56, 152, 252, 0.6)",
+        backgroundColor: "rgba(56, 152, 252, 1)",
         opacity: 0.6,
+        boxShadow: "none",
+        border: "1px solid rgba(56, 152, 252, 1)",
       },
     },
   };
