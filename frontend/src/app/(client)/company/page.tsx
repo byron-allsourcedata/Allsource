@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, Popover } from '@mui/material';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, Popover, SxProps, Theme } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
@@ -38,6 +38,8 @@ import HintCard from "../components/HintCard";
 import { useCompanyHints } from "./context/CompanyHintsContext";
 import { companyTableCards } from "./context/hintsCardsContent";
 import DomainButtonSelect from "../components/NavigationDomainButton";
+import { useScrollShadow } from '@/hooks/useScrollShadow';
+import { SmartCell } from '@/components/table';
 
 
 interface FetchDataParams {
@@ -85,7 +87,11 @@ const Leads: React.FC = () => {
     const [selectedIndustry, setSelectedIndustry] = React.useState<string | null>(null);
     const [industry, setIndustry] = React.useState<string[]>([]);
     const { changeCompanyTableHint, companyTableHints, resetCompanyTableHints } = useCompanyHints();
-
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const { isScrolledX, isScrolledY } = useScrollShadow(
+        tableContainerRef,
+        data.length
+    );
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, industry: string) => {
         setSelectedIndustry(industry);
@@ -737,6 +743,58 @@ const Leads: React.FC = () => {
         handleApplyFilters(newFilters);
     };
 
+    const columns = [
+        {
+            key: 'company_name',
+            label: 'Company',
+            sortable: true,
+            widths: { width: "15vw", minWidth: "15vw", maxWidth: "15vw" },
+        },
+        {
+            key: 'phone_number',
+            label: 'Phone Number',
+            widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
+        },
+        {
+            key: 'linkedin',
+            label: 'LinkedIn',
+            widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+        },
+        {
+            key: 'employees_visited',
+            label: 'Visitors',
+            sortable: true,
+            widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
+        },
+        {
+            key: 'visited_date',
+            label: 'Visited date',
+            sortable: true,
+            widths: { width: "150px", minWidth: "13vw", maxWidth: "20vw" },
+        },
+        {
+            key: 'revenue',
+            label: 'Revenue',
+            sortable: true,
+            widths: { width: "125px", minWidth: "125px", maxWidth: "125px" },
+        },
+        {
+            key: 'number_of_employees',
+            label: 'No. of Employees',
+            sortable: true,
+            widths: { width: "11vw", minWidth: "11vw", maxWidth: "11vw" },
+        },
+        {
+            key: 'location',
+            label: 'Location',
+            widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
+        },
+        {
+            key: 'average_time_sec',
+            label: 'Industry',
+            widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
+        },
+    ];
 
     return (
         <>
@@ -781,7 +839,7 @@ const Leads: React.FC = () => {
                                     }}>
                                     <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
-                                            <Typography className='first-sub-title' style={{textWrap: "nowrap"}}>
+                                            <Typography className='first-sub-title' style={{ textWrap: "nowrap" }}>
                                                 Company list {data.length === 0 ? '' : `(${count_companies})`}
                                             </Typography>
                                             <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
@@ -832,13 +890,13 @@ const Leads: React.FC = () => {
                                             rightSide={true}
                                             isOpenBody={companyTableHints["download"].showBody}
                                             toggleClick={() => {
-                                            if (companyTableHints["overview"].showBody) {
-                                                changeCompanyTableHint("overview", "showBody", "close")
-                                            }
-                                            if (companyTableHints["employees"].showBody) {
-                                                changeCompanyTableHint("employees", "showBody", "close")
-                                            }
-                                            changeCompanyTableHint("download", "showBody", "toggle")
+                                                if (companyTableHints["overview"].showBody) {
+                                                    changeCompanyTableHint("overview", "showBody", "close")
+                                                }
+                                                if (companyTableHints["employees"].showBody) {
+                                                    changeCompanyTableHint("employees", "showBody", "close")
+                                                }
+                                                changeCompanyTableHint("download", "showBody", "toggle")
                                             }}
                                             closeClick={() => {
                                                 changeCompanyTableHint("download", "showBody", "close")
@@ -996,47 +1054,47 @@ const Leads: React.FC = () => {
                             }
                         }}>
                             {status === 'PIXEL_INSTALLATION_NEEDED' ? (
-                                 <Box sx={{ mr: 2 }}>
-                                 <FirstTimeScreenCommonVariant2
-                                     Header={{
-                                         TextTitle: "Install Pixel",
-                                     }}
-                                     InfoNotification={{
-                                         Text: "Company page will be available after pixel installation",
-                                     }}
-                                     HelpCard={{
-                                         headline: "Need Help with Pixel Setup?",
-                                         description:
-                                             "Book a 30-minute call, and our expert will guide you through the platform and troubleshoot any pixel issues.",
-                                         helpPoints: [
-                                             {
-                                                 title: "Quick Setup Walkthrough",
-                                                 description: "Step-by-step pixel installation help",
-                                             },
-                                             {
-                                                 title: "Troubleshooting Session",
-                                                 description: "Fix errors and verify your pixel",
-                                             },
-                                             {
-                                                 title: "Platform Demo",
-                                                 description: "See how everything works in action",
-                                             },
-                                         ],
-                                     }}
-                                     Content={
-                                         <GettingStartedSection />
-                                     }
-                                     ContentStyleSX={{
-                                         display: "flex",
-                                         flexDirection: "column",
-                                         justifyContent: "center",
-                                         alignItems: "center",
-                                         width: "100%",
-                                         pb: 2,
-                                         mt: 2,
-                                     }}
-                                 />
-                             </Box>
+                                <Box sx={{ mr: 2 }}>
+                                    <FirstTimeScreenCommonVariant2
+                                        Header={{
+                                            TextTitle: "Install Pixel",
+                                        }}
+                                        InfoNotification={{
+                                            Text: "Company page will be available after pixel installation",
+                                        }}
+                                        HelpCard={{
+                                            headline: "Need Help with Pixel Setup?",
+                                            description:
+                                                "Book a 30-minute call, and our expert will guide you through the platform and troubleshoot any pixel issues.",
+                                            helpPoints: [
+                                                {
+                                                    title: "Quick Setup Walkthrough",
+                                                    description: "Step-by-step pixel installation help",
+                                                },
+                                                {
+                                                    title: "Troubleshooting Session",
+                                                    description: "Fix errors and verify your pixel",
+                                                },
+                                                {
+                                                    title: "Platform Demo",
+                                                    description: "See how everything works in action",
+                                                },
+                                            ],
+                                        }}
+                                        Content={
+                                            <GettingStartedSection />
+                                        }
+                                        ContentStyleSX={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            justifyContent: "center",
+                                            alignItems: "center",
+                                            width: "100%",
+                                            pb: 2,
+                                            mt: 2,
+                                        }}
+                                    />
+                                </Box>
                             ) : data.length === 0 ? (
                                 <Box sx={centerContainerStyles}>
                                     <Typography variant="h5" sx={{
@@ -1065,132 +1123,154 @@ const Leads: React.FC = () => {
                             ) : (
                                 <Grid container spacing={1} sx={{ flex: 1 }}>
                                     <Grid item xs={12}>
-                                    <TableContainer                                
-                                        sx={{
-                                        height: "70vh",
-                                        overflowX: "scroll",
-                                        maxHeight:
-                                            selectedFilters.length > 0
-                                            ? hasNotification
-                                                ? "63vh"
-                                                : "70vh"
-                                            : "70vh",
-                                        "@media (max-height: 800px)": {
-                                            height: "60vh",
-                                            maxHeight:
-                                            selectedFilters.length > 0
-                                                ? hasNotification
-                                                ? "53vh"
-                                                : "60vh"
-                                                : "70vh",
-                                        },
-                                        "@media (max-width: 400px)": {
-                                            height: "50vh",
-                                            maxHeight:
-                                            selectedFilters.length > 0
-                                                ? hasNotification
-                                                ? "53vh"
-                                                : "50vh"
-                                                : "70vh",
-                                        },
-                                        }}
+                                        <TableContainer
+                                            ref={tableContainerRef}
+                                            sx={{
+                                                height: "70vh",
+                                                overflowX: "scroll",
+                                                maxHeight:
+                                                    selectedFilters.length > 0
+                                                        ? hasNotification
+                                                            ? "63vh"
+                                                            : "70vh"
+                                                        : "70vh",
+                                                "@media (max-height: 800px)": {
+                                                    height: "60vh",
+                                                    maxHeight:
+                                                        selectedFilters.length > 0
+                                                            ? hasNotification
+                                                                ? "53vh"
+                                                                : "60vh"
+                                                            : "70vh",
+                                                },
+                                                "@media (max-width: 400px)": {
+                                                    height: "50vh",
+                                                    maxHeight:
+                                                        selectedFilters.length > 0
+                                                            ? hasNotification
+                                                                ? "53vh"
+                                                                : "50vh"
+                                                            : "70vh",
+                                                },
+                                            }}
                                         >
                                             <Table
                                                 stickyHeader
                                                 component={Paper}
                                                 aria-label="leads table"
-                                                sx={{ 
-                                                    tableLayout: "fixed", 
-                                                    border: "1px solid rgba(235, 235, 235, 1)",
+                                                sx={{
+                                                    tableLayout: "fixed",
                                                 }}
-                                                >
+                                            >
                                                 <TableHead sx={{ position: "relative" }}>
                                                     <TableRow>
-                                                        {[
-                                                            { key: 'company_name', label: 'Company', sortable: true },
-                                                            { key: 'phone_number', label: 'Phone Number' },
-                                                            { key: 'linkedin', label: 'LinkedIn' },
-                                                            { key: 'employees_visited', label: 'Visitors', sortable: true },
-                                                            { key: 'visited_date', label: 'Visited date', sortable: true },
-                                                            { key: 'revenue', label: 'Revenue', sortable: true },
-                                                            { key: 'number_of_employees', label: 'No. of Employees', sortable: true },
-                                                            { key: 'location', label: 'Location', },
-                                                            { key: 'average_time_sec', label: 'Industry', },
-                                                        ].map(({ key, label, sortable = false }) => (
-                                                            <TableCell
-                                                                key={key}
-                                                                sx={{
-                                                                    ...companyStyles.table_column,
-                                                                    ...(key === 'company_name' && {
-                                                                        position: 'sticky',
-                                                                        left: 0,
-                                                                        zIndex: 10
-                                                                    }),
-                                                                    ...(key === 'average_time_sec' && {
-                                                                        "::after": { content: 'none' }
-                                                                    })
-                                                                }}
-                                                            >
-                                                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between" }}>
-                                                                    <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
-                                                                    {sortable && (
-                                                                        <IconButton size="small" onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                                        style={{ cursor: sortable ? 'pointer' : 'default' }}>
-                                                                            {orderBy === key ? (
-                                                                                order === 'asc' ? (
-                                                                                    <NorthOutlinedIcon fontSize="inherit" />
+                                                        {columns.map((column) => {
+                                                            const { key, label, sortable = false, widths } = column;
+                                                            const isNameColumn = key === "company_name";
+                                                            const isActionsColumn = key === "average_time_sec";
+                                                            const hideDivider = (isNameColumn && isScrolledX) || isActionsColumn;
+                                                            const baseCellSX: SxProps<Theme> = {
+                                                                ...widths,
+                                                                position: "sticky",
+                                                                top: 0,
+                                                                zIndex: 97,
+                                                                borderBottom: "1px solid rgba(235,235,235,1)",
+                                                                borderTop: "1px solid rgba(235,235,235,1)",
+                                                                cursor: sortable ? "pointer" : "default",
+                                                                borderRight: isActionsColumn ? "1px solid rgba(235,235,235,1)" : "none",
+                                                                whiteSpace: isActionsColumn ? "normal" : "wrap",
+                                                                overflow: isActionsColumn ? "visible" : "hidden",
+                                                            };
+
+                                                            if (isNameColumn) {
+                                                                baseCellSX.left = 0;
+                                                                baseCellSX.zIndex = 99;
+                                                                baseCellSX.boxShadow = isScrolledX
+                                                                    ? "3px 0px 3px rgba(0,0,0,0.2)"
+                                                                    : "none";
+                                                            }
+
+                                                            const className = isNameColumn ? "sticky-cell" : undefined;
+                                                            const onClickHandler = sortable ? () => handleSortRequest(key) : undefined;
+
+                                                            return (
+                                                                <SmartCell
+                                                                    key={key}
+                                                                    cellOptions={{
+                                                                        sx: baseCellSX,
+                                                                        hideDivider,
+                                                                        onClick: onClickHandler,
+                                                                        className,
+                                                                    }}
+                                                                    contentOptions={{
+                                                                    }}
+                                                                >
+                                                                    <Box sx={{
+                                                                        display: "flex",
+                                                                        alignItems: "center",
+                                                                        position: "relative",
+                                                                        justifyContent: "space-between",
+                                                                    }}>
+                                                                        <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
+                                                                        {sortable && (
+                                                                            <IconButton size="small" onClick={sortable ? () => handleSortRequest(key) : undefined}
+                                                                                style={{ cursor: sortable ? 'pointer' : 'default' }}>
+                                                                                {orderBy === key ? (
+                                                                                    order === 'asc' ? (
+                                                                                        <NorthOutlinedIcon fontSize="inherit" />
+                                                                                    ) : (
+                                                                                        <SouthOutlinedIcon fontSize="inherit" />
+                                                                                    )
                                                                                 ) : (
-                                                                                    <SouthOutlinedIcon fontSize="inherit" />
-                                                                                )
-                                                                            ) : (
-                                                                                <SwapVertIcon fontSize="inherit" />
-                                                                            )}
-                                                                        </IconButton>
+                                                                                    <SwapVertIcon fontSize="inherit" />
+                                                                                )}
+                                                                            </IconButton>
+                                                                        )}
+                                                                    </Box>
+                                                                    {key === "number_of_employees" && (
+                                                                        <HintCard
+                                                                            card={companyTableCards["employees"]}
+                                                                            positionLeft={-300}
+                                                                            positionTop={80}
+                                                                            rightSide={true}
+                                                                            isOpenBody={companyTableHints["employees"].showBody}
+                                                                            toggleClick={() => {
+                                                                                if (companyTableHints["download"].showBody) {
+                                                                                    changeCompanyTableHint("download", "showBody", "close")
+                                                                                }
+                                                                                if (companyTableHints["overview"].showBody) {
+                                                                                    changeCompanyTableHint("overview", "showBody", "close")
+                                                                                }
+                                                                                changeCompanyTableHint("employees", "showBody", "toggle")
+                                                                            }}
+                                                                            closeClick={() => {
+                                                                                changeCompanyTableHint("employees", "showBody", "close")
+                                                                            }}
+                                                                        />
                                                                     )}
-                                                                </Box>
-                                                            {key === "number_of_employees" && (
-                                                                <HintCard
-                                                                    card={companyTableCards["employees"]}
-                                                                    positionLeft={-300}
-                                                                    positionTop={80}
-                                                                    rightSide={true}
-                                                                    isOpenBody={companyTableHints["employees"].showBody}
-                                                                    toggleClick={() => {
-                                                                    if (companyTableHints["download"].showBody) {
-                                                                        changeCompanyTableHint("download", "showBody", "close")
-                                                                    }
-                                                                    if (companyTableHints["overview"].showBody) {
-                                                                        changeCompanyTableHint("overview", "showBody", "close")
-                                                                    }
-                                                                    changeCompanyTableHint("employees", "showBody", "toggle")
-                                                                    }}
-                                                                    closeClick={() => {
-                                                                        changeCompanyTableHint("employees", "showBody", "close")
-                                                                    }}
-                                                                />
-                                                            )}
-                                                            {key === "company_name" && (
-                                                                <HintCard
-                                                                    card={companyTableCards["overview"]}
-                                                                    positionLeft={110}
-                                                                    positionTop={100}
-                                                                    isOpenBody={companyTableHints["overview"].showBody}
-                                                                    toggleClick={() => {
-                                                                    if (companyTableHints["download"].showBody) {
-                                                                        changeCompanyTableHint("download", "showBody", "close")
-                                                                    }
-                                                                    if (companyTableHints["employees"].showBody) {
-                                                                        changeCompanyTableHint("employees", "showBody", "close")
-                                                                    }
-                                                                    changeCompanyTableHint("overview", "showBody", "toggle")
-                                                                    }}
-                                                                    closeClick={() => {
-                                                                        changeCompanyTableHint("overview", "showBody", "close")
-                                                                    }}
-                                                                />
-                                                            )}
-                                                            </TableCell>
-                                                        ))}
+                                                                    {key === "company_name" && (
+                                                                        <HintCard
+                                                                            card={companyTableCards["overview"]}
+                                                                            positionLeft={110}
+                                                                            positionTop={100}
+                                                                            isOpenBody={companyTableHints["overview"].showBody}
+                                                                            toggleClick={() => {
+                                                                                if (companyTableHints["download"].showBody) {
+                                                                                    changeCompanyTableHint("download", "showBody", "close")
+                                                                                }
+                                                                                if (companyTableHints["employees"].showBody) {
+                                                                                    changeCompanyTableHint("employees", "showBody", "close")
+                                                                                }
+                                                                                changeCompanyTableHint("overview", "showBody", "toggle")
+                                                                            }}
+                                                                            closeClick={() => {
+                                                                                changeCompanyTableHint("overview", "showBody", "close")
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                </SmartCell>
+                                                            )
+                                                        })}
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
@@ -1209,93 +1289,212 @@ const Leads: React.FC = () => {
                                                             }}
                                                         >
                                                             {/* Company name Column */}
-                                                            <TableCell className="sticky-cell"
-                                                                sx={{
-                                                                    ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(56, 152, 252, 1)', backgroundColor: '#fff'
-
-                                                                }} onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleOpenPopup(row);
-
-                                                                }}>{row.name ? truncateText(row.name, 20) : '--'}</TableCell>
+                                                            <SmartCell
+                                                                tooltipOptions={{
+                                                                    content: row.name,
+                                                                    always: false
+                                                                }}
+                                                                cellOptions={{
+                                                                    className: "sticky-cell",
+                                                                    onClick: (e) => {
+                                                                        e.stopPropagation();
+                                                                        handleOpenPopup(row);
+                                                                    },
+                                                                    sx: {
+                                                                        zIndex: 9,
+                                                                        position: "sticky",
+                                                                        left: 0,
+                                                                        backgroundColor: "#fff",
+                                                                        boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
+                                                                    },
+                                                                    hideDivider: isScrolledX,
+                                                                }}
+                                                                contentOptions={{
+                                                                    sx: {
+                                                                        cursor: 'pointer',
+                                                                        color: 'rgba(56, 152, 252, 1)',
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {row.name ? row.name : "--"}
+                                                            </SmartCell>
 
                                                             {/* Company phone Column */}
-                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                                {row.phone?.split(',')[0] || '--'}
-                                                            </TableCell>
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{ content: row.phone?.split(",")[0] || "--" }}
+                                                            >
+                                                                {row.phone?.split(",")[0] || "--"}
+                                                            </SmartCell>
 
                                                             {/* Company linkedIn Column */}
-                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url ? 'rgba(56, 152, 252, 1)' : '', cursor: row.linkedin_url ? 'pointer' : 'default' }} onClick={() => { window.open(`https://${row.linkedin_url}`, '_blank') }}>
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                    },
+                                                                    onClick: () => {
+                                                                        if (row.linkedin_url) {
+                                                                            window.open(`https://${row.linkedin_url}`, "_blank");
+                                                                        }
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{ content: row.linkedin_url ? row.linkedin_url.replace("linkedin.com/company/", "") : "--" }}
+                                                                contentOptions={{
+                                                                    sx: {
+                                                                        color: row.linkedin_url ? "rgba(56, 152, 252, 1)" : "",
+                                                                        cursor: row.linkedin_url ? "pointer" : "default",
+                                                                    }
+                                                                }}
+                                                            >
                                                                 {row.linkedin_url ? (
                                                                     <>
-                                                                        <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
-                                                                        /{truncateText(row.linkedin_url.replace('linkedin.com/company/', ''), 20)}
+                                                                        <Image
+                                                                            src="/linkedIn.svg"
+                                                                            alt="linkedIn"
+                                                                            width={16}
+                                                                            height={16}
+                                                                            style={{ marginRight: "2px" }}
+                                                                        />
+                                                                        /{row.linkedin_url.replace("linkedin.com/company/", "")}
                                                                     </>
                                                                 ) : (
-                                                                    '--'
+                                                                    "--"
                                                                 )}
-                                                            </TableCell>
+                                                            </SmartCell>
+
 
                                                             {/* Employess Visited  Column */}
-                                                            <TableCell sx={{ ...companyStyles.table_array, position: 'relative' }}>
-                                                                {row.employees_visited || '--'}
-                                                            </TableCell>
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        ...companyStyles.table_array,
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: row.employees_visited || "--",
+                                                                }}
+                                                            >
+                                                                {row.employees_visited || "--"}
+                                                            </SmartCell>
 
                                                             {/* Employess Visited date  Column */}
-                                                            <TableCell
-                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}>
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: row.visited_date
+                                                                        ? (() => {
+                                                                            const [day, month, year] = row.visited_date.split(".");
+                                                                            return `${month}/${day}/${year}`;
+                                                                        })()
+                                                                        : "--",
+                                                                }}
+                                                            >
                                                                 {row.visited_date
                                                                     ? (() => {
-                                                                        const [day, month, year] = row.visited_date.split('.');
+                                                                        const [day, month, year] = row.visited_date.split(".");
                                                                         return `${month}/${day}/${year}`;
                                                                     })()
-                                                                    : '--'}
-                                                            </TableCell>
+                                                                    : "--"}
+                                                            </SmartCell>
 
                                                             {/* Company revenue  Column */}
-                                                            <TableCell
-                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: row.company_revenue || "--",
+                                                                }}
                                                             >
-                                                                {row.company_revenue || '--'}
-                                                            </TableCell>
+                                                                {row.company_revenue || "--"}
+                                                            </SmartCell>
 
                                                             {/* Company employee count  Column */}
-                                                            <TableCell
-                                                                onClick={() => {
-                                                                    setCompanyEmployeesOpen(true)
-                                                                    setCompanyName(row.name)
-                                                                    setCompanyId(row.id)
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                    },
+                                                                    onClick: () => {
+                                                                        setCompanyEmployeesOpen(true);
+                                                                        setCompanyName(row.name);
+                                                                        setCompanyId(row.id);
+                                                                    },
                                                                 }}
-
-                                                                sx={{
-                                                                    ...companyStyles.table_array, position: 'relative', cursor: "pointer", color: 'rgba(56, 152, 252, 1) !important'
+                                                                tooltipOptions={{
+                                                                    content: row.employee_count || "--",
+                                                                }}
+                                                                contentOptions={{
+                                                                    sx: {
+                                                                        cursor: "pointer",
+                                                                        color: "rgba(56, 152, 252, 1)",
+                                                                    }
                                                                 }}
                                                             >
-                                                                {row.employee_count || '--'}
-                                                            </TableCell>
+                                                                {row.employee_count || "--"}
+                                                            </SmartCell>
 
                                                             {/* Company location  Column */}
-                                                            <TableCell
-                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content:
+                                                                        row.city || row.state
+                                                                            ? [capitalizeCity(row.city), row.state].filter(Boolean).join(", ")
+                                                                            : "--",
+                                                                }}
                                                             >
-                                                                {(row.city || row.state)
-                                                                    ? [capitalizeCity(row.city), row.state].filter(Boolean).join(', ')
-                                                                    : '--'}
-                                                            </TableCell>
+                                                                {row.city || row.state
+                                                                    ? [capitalizeCity(row.city), row.state].filter(Boolean).join(", ")
+                                                                    : "--"}
+                                                            </SmartCell>
+
 
                                                             {/* Company industry  Column */}
-                                                            <TableCell sx={{ ...companyStyles.table_array, "::after": { content: 'none' }, cursor: row.industry ? "pointer" : "default", }} onClick={(e) => row.industry ? handleOpenPopover(e, row.industry || "--") : ''}>
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        "::after": { content: "none" },
+                                                                        // cursor: row.industry ? "pointer" : "default",
+                                                                        borderRight: "1px solid rgba(235,235,235,1)",
+                                                                    },
+                                                                    // onClick: (e) => {
+                                                                    //     if (row.industry) {
+                                                                    //         handleOpenPopover(e, row.industry);
+                                                                    //     }
+                                                                    // },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: row.industry || "--",
+                                                                }}
+                                                            >
                                                                 {row.industry && row.industry.length > 30
                                                                     ? `${row.industry.slice(0, 20)}...`
                                                                     : row.industry || "--"}
-                                                            </TableCell>
+                                                            </SmartCell>
 
                                                         </TableRow>
                                                     ))}
                                                 </TableBody>
                                             </Table>
                                         </TableContainer>
-                                        <PaginationComponent 
+                                        <PaginationComponent
                                             countRows={count_companies ?? 0}
                                             page={page}
                                             rowsPerPage={rowsPerPage}

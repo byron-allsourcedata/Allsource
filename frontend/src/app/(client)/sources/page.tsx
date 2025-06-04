@@ -233,7 +233,7 @@ const Sources: React.FC = () => {
     {
       key: "type",
       label: "Type",
-      widths: { width: "13vw", minWidth: "13vw", maxWidth: "20vw" },
+      widths: { width: "150px", minWidth: "13vw", maxWidth: "20vw" },
     },
     {
       key: "created_date",

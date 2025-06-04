@@ -111,8 +111,7 @@ const SmartCell: FC<SmartCellProps> = ({
     const contentNode = isString ? (
         <Typography
             ref={textRef}
-            component="div"
-            sx={{ display: 'inline-block', width: '100%', ...table_array, ...baseCellStyles, ...contentOptions.sx }}
+            sx={{ ...table_array, display: "inline-block", width: '100%', ...baseCellStyles, ...contentOptions.sx }}
             onClick={contentOptions.onClick}
         >
             {rawContent as string}
@@ -162,6 +161,10 @@ const SmartCell: FC<SmartCellProps> = ({
                 ...table_array,
                 ...baseCellStyles,
                 ...cellOptions.sx,
+                "& > span": {
+                    display: "block",
+                    width: "100%",
+                },
                 ...(cellOptions.hideDivider && {
                     "&::after": {
                         display: "none",

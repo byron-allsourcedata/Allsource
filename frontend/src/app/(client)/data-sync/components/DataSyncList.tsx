@@ -790,7 +790,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     {
       key: "smart_audience_name",
       label: "Smart Audience Name",
-      widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
+      widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
     },
     {
       key: "created",
@@ -918,23 +918,22 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           >
             <Table stickyHeader aria-label="datasync table" component={Paper} sx={{
               tableLayout: "fixed",
-              border: "1px solid rgba(235, 235, 235, 1)",
             }}>
               <TableHead sx={{ position: "relative" }}>
                 <TableRow>
                   {columns.map((col) => {
                     const { key, label, sortable = false, widths } = col;
 
-                    const isNameColumn = key === "name";
-                    const isActionsColumn = key === "actions";
+                    const isNameColumn = key === "smart_audience_name";
+                    const isActionsColumn = key === "action";
                     const hideDivider = (isNameColumn && isScrolledX) || isActionsColumn;
                     const baseCellSX: SxProps<Theme> = {
                       ...widths,
                       position: "sticky",
                       top: 0,
                       zIndex: 97,
-                      borderBottom: "none",
                       borderTop: "1px solid rgba(235,235,235,1)",
+                      borderBottom: "1px solid rgba(235,235,235,1)",
                       cursor: sortable ? "pointer" : "default",
                       borderRight: isActionsColumn ? "1px solid rgba(235,235,235,1)" : "none",
                       whiteSpace: isActionsColumn || isNameColumn ? "normal" : "wrap",
@@ -961,7 +960,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                           className,
                         }}
                       >
-                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            position: "relative",
+                            justifyContent: "space-between",
+                          }}
+                        >
                           <Typography
                             variant="body2"
                             sx={{ ...leadsStyles.table_column, borderRight: "0" }}
@@ -1048,21 +1054,26 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                         cellOptions={{
                           sx: {
                             position: "relative",
-                            display: "flex",
-                            flexDirection: "column",
                             pr: 0,
                           },
                         }}
                         tooltipOptions={{
-                          content:
-                            <>
+                          content: (
+                            <Box sx={{ display: "flex", flexDirection: "column" }}>
                               <span>{row.createdBy || "--"}</span>
                               <span>{row.createdDate || "--"}</span>
-                            </>
+                            </Box>
+                          ),
                         }}
                       >
-                        <span>{row.createdBy || "--"}</span>
-                        <span>{row.createdDate || "--"}</span>
+                        <Box sx={{ display: "flex", flexDirection: "column", lineHeight: 1.4 }}>
+                          <Typography sx={{ ...datasyncStyle.table_array }}>
+                            {row.createdBy || "--"}
+                          </Typography>
+                          <Typography sx={{ ...datasyncStyle.table_array }}>
+                            {row.createdDate || "--"}
+                          </Typography>
+                        </Box>
                       </SmartCell>
 
                       <SmartCell
@@ -1182,16 +1193,21 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                           hideDivider: true
                         }}>
                         <IconButton
-                          sx={{ fontSize: '16px',
+                          sx={{
+                            fontSize: '16px',
                             ":hover": {
                               backgroundColor: "transparent",
                               px: 0
-                            }, }}
+                            },
+                          }}
                           onClick={(event) => {
                             handleClick(event, row.id);
                           }}
                         >
-                          <MoreVertIcon />
+                          <MoreVertIcon sx={{
+                            color: "rgba(32, 33, 36, 1)",
+                          }}
+                          />
                         </IconButton>
                       </SmartCell>
                     </TableRow>
