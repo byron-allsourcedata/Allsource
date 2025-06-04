@@ -780,7 +780,6 @@ const Leads: React.FC = () => {
     const ButtonGroup = (
         <Box sx={{
             display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
-            bgcolor: 'red',
             '@media (max-width: 900px)': {
                 gap: '8px'
             }
@@ -862,7 +861,7 @@ const Leads: React.FC = () => {
                                             marginTop: hasNotification ? '2rem' : '0rem',
                                         },
                                     }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3, height: "46px" }}>
                                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                                             <Typography className='first-sub-title' style={{textWrap: "nowrap"}}>
                                                 Company list {data.length === 0 ? '' : `(${count_companies})`}

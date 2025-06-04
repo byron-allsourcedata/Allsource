@@ -1,43 +1,16 @@
 "use client";
-import {
-  Box,
-  Grid,
-  Typography,
-  Button,
-  Menu,
-  MenuItem,
-  Modal,
-  Tab,
-  Tabs,
-} from "@mui/material";
-import Image from "next/image";
+import { Box } from "@mui/material";
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "../../../axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
-import { dashboardStyles } from "./dashboardStyles";
-import PixelInstallation from "./components/PixelInstallation";
-import Slider from "../../../components/Slider";
 import { SliderProvider, useSlider } from "../../../context/SliderContext";
-import { PopupButton } from "react-calendly";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { showErrorToast, showToast } from "@/components/ToastNotification";
-import axiosInterceptorInstance from "../../../axios/axiosInterceptorInstance";
-import ManualPopup from "./components/ManualPopup";
-import DashboardRevenue from "./components/DashboardRevenue";
-import DashboardContactB2B from "./components/DashboardContactB2B";
-import DashboardContactD2C from "./components/DashboardContactD2C";
-import CustomTooltip from "@/components/customToolTip";
-import { DateRangeIcon } from "@mui/x-date-pickers/icons";
-import CalendarPopup from "@/components/CustomCalendar";
 import dayjs from "dayjs";
 import { useNotification } from "../../../context/NotificationContext";
-import RevenueTracking from "@/components/RevenueTracking";
-import WelcomePopup from "./components/WelcomePopup";
-import GettingStartedSection from "@/components/GettingStartedSection";
-import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
-import DomainButtonSelect from "../components/NavigationDomainButton";
-import { PixelAnalytics } from "./components/analytics";
+
+import { PixelAnalytics } from "./components/Analytics";
+import { DashboardContacts } from "./components/DashboardContactB2B";
 
 const Dashboard: React.FC = () => {
   const router = useRouter();
@@ -59,6 +32,12 @@ const Dashboard: React.FC = () => {
   const [typeBusiness, setTypeBusiness] = useState<"d2c" | "b2b" | "">("");
   const searchParams = useSearchParams();
   const [welcomePopup, setWelcomePopup] = useState<string | null>(null);
+  const [values, setValues] = useState<DashboardContacts>({
+    total_contacts_collected: 0,
+    total_new_leads: 0,
+    total_page_views: 0,
+    total_returning_visitors: 0,
+  });
 
   useEffect(() => {
     const storedPopup = localStorage.getItem("welcome_popup");
@@ -193,7 +172,27 @@ const Dashboard: React.FC = () => {
 
   return (
     <Box>
-      <PixelAnalytics typeBusiness={typeBusiness} />
+      <PixelAnalytics
+        typeBusiness={typeBusiness}
+        values={values}
+        setValues={setValues}
+        showCharts={showCharts}
+        showSlider={showSlider}
+        welcomePopup={welcomePopup}
+        hasNotification={hasNotification}
+        isCalendarOpen={isCalendarOpen}
+        tabIndex={tabIndex}
+        selectedDateLabel={selectedDateLabel}
+        formattedDates={formattedDates}
+        appliedDates={appliedDates}
+        calendarAnchorEl={calendarAnchorEl}
+        handleCalendarClose={handleCalendarClose}
+        handleDateChange={handleDateChange}
+        handleApply={handleApply}
+        handleDateLabelChange={handleDateLabelChange}
+        handleTabChange={handleTabChange}
+        handleCalendarClick={handleCalendarClick}
+      />
     </Box>
   );
 };

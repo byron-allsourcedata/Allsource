@@ -1,41 +1,16 @@
 "use client";
-import {
-  Box,
-  Grid,
-  Typography,
-  Button,
-  Menu,
-  MenuItem,
-  Modal,
-  Tab,
-  Tabs,
-} from "@mui/material";
+import { Box, Grid, Typography, Button, Tab, Tabs } from "@mui/material";
 import Image from "next/image";
-import React, { useState, useEffect, Suspense, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import axiosInstance from "../../../../axios/axiosInterceptorInstance";
-import { AxiosError } from "axios";
+import React, { useState } from "react";
 import { dashboardStyles } from "../dashboardStyles";
-import PixelInstallation from "../components/PixelInstallation";
 import Slider from "../../../../components/Slider";
-import { SliderProvider, useSlider } from "../../../../context/SliderContext";
-import { PopupButton } from "react-calendly";
-import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { showErrorToast, showToast } from "@/components/ToastNotification";
-import axiosInterceptorInstance from "../../../../axios/axiosInterceptorInstance";
-import ManualPopup from "../components/ManualPopup";
-import DashboardRevenue from "../components/DashboardRevenue";
-import DashboardContactB2B from "../components/DashboardContactB2B";
-import DashboardContactD2C, {
-  AppliedDates,
-} from "../components/DashboardContactD2C";
+import DashboardRevenue from "./DashboardRevenue";
+import DashboardContactB2B, { DashboardContacts } from "./DashboardContactB2B";
 import CustomTooltip from "@/components/customToolTip";
 import { DateRangeIcon } from "@mui/x-date-pickers/icons";
 import CalendarPopup from "@/components/CustomCalendar";
-import dayjs from "dayjs";
-import { useNotification } from "../../../../context/NotificationContext";
-import RevenueTracking from "@/components/RevenueTracking";
-import WelcomePopup from "../components/WelcomePopup";
+
+import WelcomePopup from "./WelcomePopup";
 import GettingStartedSection from "@/components/GettingStartedSection";
 import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
 import DomainButtonSelect from "../../components/NavigationDomainButton";
@@ -43,35 +18,183 @@ import { TabPanel } from "./analytics/TabPanel";
 
 type Props = {
   typeBusiness: "d2c" | "b2b" | "";
+  values: DashboardContacts;
+  showCharts: boolean;
+  showSlider: boolean;
+  welcomePopup: string | null;
+  hasNotification: boolean | undefined;
+  isCalendarOpen: boolean;
+  tabIndex: number;
+  selectedDateLabel: string;
+  formattedDates: string;
+  appliedDates: AppliedDates;
+  calendarAnchorEl: null | HTMLElement;
+  setValues: (values: DashboardContacts) => void;
+  handleCalendarClose: () => void;
+  handleDateChange: (dates: AppliedDates) => void;
+  handleApply: (dates: AppliedDates) => void;
+  handleDateLabelChange: (label: string) => void;
+  handleTabChange: (event: React.SyntheticEvent, newIndex: number) => void;
+  handleCalendarClick: (event: React.MouseEvent<HTMLButtonElement>) => void;
+};
+
+export type AppliedDates = {
+  start: Date | null;
+  end: Date | null;
 };
 
 export const PixelAnalytics: React.FC<Props> = (props) => {
-  // TODO: properely pass and use all props here
-  const { typeBusiness } = props;
-  const showCharts = true;
-  const hasNotification = true;
-  const isCalendarOpen = false;
+  const { typeBusiness, values, setValues } = props;
+  const [loading, setLoading] = useState(true);
 
-  const tabIndex = 0;
-  const selectedDateLabel: string = "";
-  const formattedDates: string = "";
-  const appliedDates: AppliedDates = {
-    end: null,
-    start: null,
-  };
+  const {
+    showCharts,
+    showSlider,
+    welcomePopup,
+    hasNotification,
+    isCalendarOpen,
+    tabIndex,
+    selectedDateLabel,
+    formattedDates,
+    appliedDates,
+    calendarAnchorEl,
+  } = props;
 
-  const showSlider = false;
-  const welcomePopup = false;
+  const {
+    handleCalendarClose,
+    handleDateChange,
+    handleApply,
+    handleDateLabelChange,
+    handleTabChange,
+    handleCalendarClick,
+  } = props;
 
-  const calendarAnchorEl = null;
+  const noDataLoaded = values.total_contacts_collected === 0 &&
+    appliedDates.start == null &&
+    appliedDates.end == null;
 
-  const handleCalendarClose = () => {};
-  const handleDateChange = () => {};
-  const handleApply = () => {};
-  const handleDateLabelChange = () => {};
+  const noContactsYet =
+    !loading &&
+    values.total_contacts_collected === 0 &&
+    appliedDates.start == null &&
+    appliedDates.end == null;
 
-  const handleTabChange = () => {};
-  const handleCalendarClick = () => {};
+  const ButtonGroup = (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        gap: 2,
+        width: typeBusiness == "d2c" ? "" : "100%",
+        "@media (max-width: 600px)": {
+          display: "none",
+        },
+      }}
+    >
+      {String(loading)}
+      {/* Calendary picker*/}
+      <Typography className="second-sub-title">
+        {selectedDateLabel ? selectedDateLabel : ""}
+      </Typography>
+      <Button
+        aria-controls={isCalendarOpen ? "calendar-popup" : undefined}
+        aria-haspopup="true"
+        aria-expanded={isCalendarOpen ? "true" : undefined}
+        onClick={handleCalendarClick}
+        sx={{
+          textTransform: "none",
+          color: formattedDates
+            ? "rgba(56, 152, 252, 1)"
+            : "rgba(128, 128, 128, 1)",
+          border: formattedDates
+            ? "1.5px solid rgba(56, 152, 252, 1)"
+            : "1.5px solid rgba(184, 184, 184, 1)",
+          borderRadius: "4px",
+          padding: "8px",
+          minWidth: "auto",
+          "@media (max-width: 900px)": {
+            border: "none",
+            padding: 0,
+          },
+          "&:hover": {
+            border: "1.5px solid rgba(56, 152, 252, 1)",
+            "& .MuiSvgIcon-root": {
+              color: "rgba(56, 152, 252, 1)",
+            },
+          },
+        }}
+      >
+        <DateRangeIcon
+          fontSize="medium"
+          sx={{
+            color: formattedDates
+              ? "rgba(56, 152, 252, 1)"
+              : "rgba(128, 128, 128, 1)",
+          }}
+        />
+        <Typography
+          variant="body1"
+          sx={{
+            fontFamily: "Roboto",
+            fontSize: "14px",
+            fontWeight: "400",
+            color: "rgba(32, 33, 36, 1)",
+            lineHeight: "19.6px",
+            textAlign: "left",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {formattedDates}
+        </Typography>
+        {formattedDates && (
+          <Box sx={{ pl: 2, display: "flex", alignItems: "center" }}>
+            <Image
+              src="/arrow_down.svg"
+              alt="arrow down"
+              width={16}
+              height={16}
+            />
+          </Box>
+        )}
+      </Button>
+    </Box>
+  );
+
+  const CalendarButton = (
+    <Box
+      sx={{
+        display: "none",
+        justifyContent: "flex-end",
+        alignItems: "start",
+        pt: 0.5,
+        gap: 1,
+        "@media (max-width: 600px)": {
+          display: "flex",
+        },
+      }}
+    >
+      {/* Calendary picker*/}
+      <Typography className="second-sub-title">{selectedDateLabel}</Typography>
+      <Button
+        aria-controls={isCalendarOpen ? "calendar-popup" : undefined}
+        aria-haspopup="true"
+        aria-expanded={isCalendarOpen ? "true" : undefined}
+        onClick={handleCalendarClick}
+        sx={{
+          textTransform: "none",
+          color: "rgba(128, 128, 128, 1)",
+          border: "1px solid rgba(184, 184, 184, 1)",
+          borderRadius: "4px",
+          padding: "8px",
+          minWidth: "auto",
+        }}
+      >
+        <DateRangeIcon fontSize="small" />
+      </Button>
+    </Box>
+  );
+
   return (
     <>
       {showCharts ? (
@@ -95,6 +218,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
               pb: "12px",
               pl: "8px",
               pr: "1.5rem",
+              maxHeight: "46px",
               zIndex: 1,
               backgroundColor: "#fff",
               justifyContent: "space-between",
@@ -165,39 +289,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
                 </Box>
               </Box>
 
-              <Box
-                sx={{
-                  display: "none",
-                  justifyContent: "flex-end",
-                  alignItems: "start",
-                  pt: 0.5,
-                  gap: 1,
-                  "@media (max-width: 600px)": {
-                    display: "flex",
-                  },
-                }}
-              >
-                {/* Calendary picker*/}
-                <Typography className="second-sub-title">
-                  {selectedDateLabel}
-                </Typography>
-                <Button
-                  aria-controls={isCalendarOpen ? "calendar-popup" : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={isCalendarOpen ? "true" : undefined}
-                  onClick={handleCalendarClick}
-                  sx={{
-                    textTransform: "none",
-                    color: "rgba(128, 128, 128, 1)",
-                    border: "1px solid rgba(184, 184, 184, 1)",
-                    borderRadius: "4px",
-                    padding: "8px",
-                    minWidth: "auto",
-                  }}
-                >
-                  <DateRangeIcon fontSize="small" />
-                </Button>
-              </Box>
+              {!noContactsYet && CalendarButton}
             </Box>
 
             {typeBusiness == "d2c" && (
@@ -293,84 +385,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
                 </Tabs>
               </Box>
             )}
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "flex-end",
-                alignItems: "center",
-                gap: 2,
-                width: typeBusiness == "d2c" ? "" : "100%",
-                "@media (max-width: 600px)": {
-                  display: "none",
-                },
-              }}
-            >
-              {/* Calendary picker*/}
-              <Typography className="second-sub-title">
-                {selectedDateLabel ? selectedDateLabel : ""}
-              </Typography>
-              <Button
-                aria-controls={isCalendarOpen ? "calendar-popup" : undefined}
-                aria-haspopup="true"
-                aria-expanded={isCalendarOpen ? "true" : undefined}
-                onClick={handleCalendarClick}
-                sx={{
-                  textTransform: "none",
-                  color: formattedDates
-                    ? "rgba(56, 152, 252, 1)"
-                    : "rgba(128, 128, 128, 1)",
-                  border: formattedDates
-                    ? "1.5px solid rgba(56, 152, 252, 1)"
-                    : "1.5px solid rgba(184, 184, 184, 1)",
-                  borderRadius: "4px",
-                  padding: "8px",
-                  minWidth: "auto",
-                  "@media (max-width: 900px)": {
-                    border: "none",
-                    padding: 0,
-                  },
-                  "&:hover": {
-                    border: "1.5px solid rgba(56, 152, 252, 1)",
-                    "& .MuiSvgIcon-root": {
-                      color: "rgba(56, 152, 252, 1)",
-                    },
-                  },
-                }}
-              >
-                <DateRangeIcon
-                  fontSize="medium"
-                  sx={{
-                    color: formattedDates
-                      ? "rgba(56, 152, 252, 1)"
-                      : "rgba(128, 128, 128, 1)",
-                  }}
-                />
-                <Typography
-                  variant="body1"
-                  sx={{
-                    fontFamily: "Roboto",
-                    fontSize: "14px",
-                    fontWeight: "400",
-                    color: "rgba(32, 33, 36, 1)",
-                    lineHeight: "19.6px",
-                    textAlign: "left",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {formattedDates}
-                </Typography>
-                {formattedDates && (
-                  <Box sx={{ pl: 2, display: "flex", alignItems: "center" }}>
-                    <Image
-                      src="/arrow_down.svg"
-                      alt="arrow down"
-                      width={16}
-                      height={16}
-                    />
-                  </Box>
-                )}
-              </Button>
-            </Box>
+            {!noDataLoaded && ButtonGroup}
           </Box>
           <Box
             sx={{
@@ -384,12 +399,15 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
               <DashboardRevenue appliedDates={appliedDates} />
             </TabPanel>
             <TabPanel value={tabIndex} index={1}>
-              {typeBusiness === "d2c" ? //   typeBusiness={typeBusiness} //   appliedDates={appliedDates} // <DashboardContactD2C
-              // />
+              {typeBusiness === "d2c" ? // /> //   typeBusiness={typeBusiness} //   appliedDates={appliedDates} // <DashboardContactD2C
               null : (
                 <DashboardContactB2B
                   appliedDates={appliedDates}
                   typeBusiness={typeBusiness}
+                  values={values}
+                  setValues={setValues}
+                  loading={loading}
+                  setLoading={setLoading}
                 />
               )}
             </TabPanel>
