@@ -1656,7 +1656,7 @@ export const SettingsBilling: React.FC = () => {
                     </Box>
                 </Drawer>
             </Box >}
-            {true && <BlurBilling/>}
+            {true && <Box sx={{ pr: 2, pt: 1 }}><BlurBilling/></Box > }
          </>
     );
 };
