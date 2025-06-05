@@ -123,6 +123,7 @@ class UserPersistence:
                 'activate_steps_percent': user.activate_steps_percent,
                 'leads_credits': user.leads_credits,
                 'prospect_credits': user.prospect_credits,
+                'validation_funds': user.validation_funds,
                 'is_leads_auto_charging': user.is_leads_auto_charging,
                 'team_access_level': user.team_access_level,
                 'current_subscription_id': user.current_subscription_id,

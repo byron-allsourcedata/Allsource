@@ -201,17 +201,18 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
     setNumberToValidate(value);
     setEstimatedContacts(value * persentsData);
 
-    console.log({validationFilters})
-
-    console.log(Object.entries(validationFilters!))
-
     const selectedValidations = Object.entries(validationFilters!).flatMap(([key, validations]) =>
       validations.map((validation: Record<string, any>) =>
         Object.keys(validation).map((param) => `${key}-${param}`)
       ).flat()
     );
 
-    console.log(selectedValidations)
+    const responseFunds = await axiosInstance.get('/count-validation-funds');
+    if (responseFunds.status === 200) {
+      setAvailableCredits(responseFunds.data);
+    }
+
+
 
     const response = await axiosInstance.post('/audience-smarts/validation-cost-calculate', {
         count_active_segment: value,
@@ -220,7 +221,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
     );
 
     if (response.status === 200) {
-      console.log(response.data)
       setValidationCost(response.data);
     }
 
@@ -415,8 +415,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
           ([_, v]) => v !== null && v !== undefined
         )
       );
-
-      console.log(requestData.validation_params)
 
       const response = await axiosInstance.post(
         "/audience-smarts/builder",
@@ -1248,9 +1246,9 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
                 <Box sx={{ flex: 1, textAlign: "left" }}>
                   <Typography className="form-input">
-                    Available Credits
+                    Available Funds
                   </Typography>
-                  <Typography>{availableCredits} Credits</Typography>
+                  <Typography>{availableCredits} Funds</Typography>
                 </Box>
               </Box>
 
@@ -1324,7 +1322,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   <Typography className="form-input">
                     Validation Cost
                   </Typography>
-                  <Typography>{validationCost?.toLocaleString('en-US')} Credits</Typography>
+                  <Typography>{validationCost?.toLocaleString('en-US')} Funds</Typography>
                   {typeof availableCredits === "number" &&
                     typeof validationCost === "number" ? (
                     availableCredits >= validationCost ? (
@@ -1336,7 +1334,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                           mb: 1,
                         }}
                       >
-                        ✓ You have enough credits to proceed.
+                        ✓ You have enough funds to proceed.
                       </Typography>
                     ) : (
                       <Typography
@@ -1348,7 +1346,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                         }}
                       >
                         ✗ You need {(validationCost - availableCredits).toLocaleString('en-US')} more
-                        credits to proceed.
+                        funds to proceed.
                       </Typography>
                     )
                   ) : null}

@@ -131,6 +131,11 @@ async def check_verification_status(
     return CheckVerificationStatusResponse(status=result_status)
 
 
+@router.get("/count-validation-funds", response_model=float)
+async def check_verification_status(user=Depends(check_user_authentication)):
+    return user.get('validation_funds')
+
+
 @router.post("/connect-stripe", response_model=StripeConnectResponse)
 async def connect_stripe(connect_account_id: StripeAccountID,
                          user: UsersService = Depends(get_users_service)):
