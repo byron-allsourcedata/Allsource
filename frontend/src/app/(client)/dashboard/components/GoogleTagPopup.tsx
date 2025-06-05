@@ -69,7 +69,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose, onInstallStat
   const [openConfirm, setOpenConfirm] = useState(false);
   const [tagIdToDelete, setTagIdToDelete] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<GoogleUser | null>(null);
-  const [isInstallComplete, setInstallComplited] = useState(false);
+  const [isInstallComplete, setInstallCompleted] = useState(false);
 
 
   const fetchUserInfo = async (accessToken: string) => {
@@ -451,7 +451,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose, onInstallStat
       }
       handleClose();
       setSession(null)
-      setInstallComplited(true);
+      setInstallCompleted(true);
       onInstallStatusChange("success");
       setAccounts([])
       setContainers([])
