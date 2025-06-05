@@ -1,26 +1,26 @@
-import json
-import os
 import hashlib
+import json
 import logging
-from urllib.parse import urlencode
+import os
+
+import httpx
 from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
 from fastapi.responses import RedirectResponse
-from enums import CreateDataSync, SubscriptionStatus
-from utils import normalize_url
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
-from persistence.settings_persistence import SettingsPersistence
-from dependencies import get_integration_service, IntegrationService, IntegrationsPresistence, \
-            get_user_integrations_presistence, check_user_authorization, check_domain, check_user_authorization_without_pixel, \
-            check_pixel_install_domain, check_user_authentication, get_user_persistence_service, \
-            UserPersistence, get_user_domain_persistence, UserDomainsPersistence, check_api_key, get_settings_persistence
-from schemas.integrations.integrations import *
-from persistence.domains import UserDomains
-from enums import TeamAccessLevel
-from schemas.integrations.shopify import ShopifyLandingResponse, GenericEcommerceResponse
-import httpx
 from typing_extensions import Annotated
-from config.bigcommerce import BigcommerceConfig
 
+from config.bigcommerce import BigcommerceConfig
+from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from dependencies import (
+    get_integration_service, IntegrationService, IntegrationsPresistence,
+    get_user_integrations_presistence, check_user_authorization, check_domain, check_user_authorization_without_pixel,
+    check_pixel_install_domain, check_user_authentication, UserPersistence, get_user_domain_persistence,
+    UserDomainsPersistence, check_api_key, get_settings_persistence
+)
+from enums import CreateDataSync, TeamAccessLevel
+from persistence.domains import UserDomains
+from persistence.settings_persistence import SettingsPersistence
+from schemas.integrations.integrations import *
+from schemas.integrations.shopify import ShopifyLandingResponse, GenericEcommerceResponse
 
 router = APIRouter()
 
@@ -236,9 +236,9 @@ async def remove_user_callback(request: Request):
 @router.get("/bigcommerce/auth/callback")
 def bigcommerce_auth(
     code: Optional[str],
+    user_persistence: UserPersistence,
     state: str = Query(None),
     integration_service: IntegrationService = Depends(get_integration_service),
-    user_persistence: UserPersistence = Depends(get_user_persistence_service),
     domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence)
 ):
     
@@ -322,8 +322,13 @@ def oauth_bigcommerce_uninstall(signed_payload: Annotated[str, Query()], signed_
         return service.bigcommerce.oauth_bigcommerce_uninstall(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
 
 @router.get("/bigcommerce/load", status_code=status.HTTP_200_OK)
-def oauth_bigcommerce_load(signed_payload: Annotated[str, Query()], signed_payload_jwt: Annotated[str, Query()], integration_service: IntegrationService = Depends(get_integration_service),
-                           user_persistence: UserPersistence = Depends(get_user_persistence_service), settings_persistence: SettingsPersistence = Depends(get_settings_persistence)):
+def oauth_bigcommerce_load(
+    user_persistence: UserPersistence,
+    signed_payload: Annotated[str, Query()],
+    signed_payload_jwt: Annotated[str, Query()],
+    integration_service: IntegrationService = Depends(get_integration_service),
+    settings_persistence: SettingsPersistence = Depends(get_settings_persistence)
+):
     with integration_service as service:
         result = service.bigcommerce.oauth_bigcommerce_load(signed_payload=signed_payload, signed_payload_jwt=signed_payload_jwt)
     
@@ -365,8 +370,12 @@ async def auth(domain = Depends(check_api_key), integration_service: Integration
     
 
 @router.post('/zapier/webhook', status_code=201)
-async def subscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service), 
-                                   user_persistence: UserPersistence = Depends(get_user_persistence_service)):
+async def subscribe_zapier_webhook(
+    user_persistence: UserPersistence,
+    hook_data = Body(...),
+    domain = Depends(check_api_key),
+    integrations_service: IntegrationService = Depends(get_integration_service),
+):
     with integrations_service as service:
         
         user = user_persistence.get_user_by_id(domain.user_id)
@@ -389,7 +398,11 @@ async def subscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check
 
 
 @router.delete('/zapier/webhook')
-async def unsubscribe_zapier_webhook(hook_data = Body(...), domain = Depends(check_api_key), integrations_service: IntegrationService = Depends(get_integration_service)):
+async def unsubscribe_zapier_webhook(
+    hook_data = Body(...),
+    domain = Depends(check_api_key),
+    integrations_service: IntegrationService = Depends(get_integration_service)
+):
     hook_url=hook_data.get('hookUrl')
     sync = integrations_service.get_sync_by_hook_url(hook_url)
     return integrations_service.delete_sync_domain(domain_id=domain.id, list_id=sync[0].id)

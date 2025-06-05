@@ -3,8 +3,8 @@ import React from "react";
 import { Box, Button, Typography, Drawer, Backdrop } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { getBookingUrl } from "@/services/booking";
+import {  useBookingUrl } from "@/services/booking";
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 export interface LeftMenuItem {
   Icon: React.ElementType;
@@ -36,8 +36,11 @@ export const BookACallPopup: React.FC<Props> = ({
   handleClose,
   leftMenu
 }) => {
+
+  const bookingUrl = useBookingUrl(axiosInstance)
+
   const handleBookACall = () => {
-    window.open(getBookingUrl(), "_blank");
+    window.open(bookingUrl, "_blank");
   };
 
   if (!open) return null;
