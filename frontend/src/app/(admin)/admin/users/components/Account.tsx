@@ -1,7 +1,7 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box, Typography, TextField, Button, Tabs, Tab, Grid, Chip, Popover, Paper, IconButton, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { MoreHoriz } from "@mui/icons-material";
+import { MoreHoriz, MoreVert } from "@mui/icons-material";
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { suppressionsStyles } from "@/css/suppressions";
@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from '@/context/UserContext';
 import { fetchUserData } from "@/services/meService";
 import FilterPopup from "./FilterPopup";
+import { color } from "framer-motion";
 
 
 interface UserData {
@@ -79,7 +80,7 @@ const TableHeader: React.FC<{ onSort: (field: string) => void, sortField?: strin
                         }}
                         onClick={sortable ? () => onSort(key) : undefined}
                     >
-                        <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "email" || key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "email" || key === "status" || key === "actions" ? { justifyContent: "left" } : {}}>
                             <Typography variant="body2" className='table-heading'>{label}</Typography>
                             {sortable && (
                                 <IconButton size="small" sx={{ ml: 1 }}>
@@ -243,16 +244,24 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                         sx={{
                             ...suppressionsStyles.tableBodyColumn,
                             paddingLeft: "16px",
-                            minWidth: "155px",
-                            maxWidth: "155px",
                             position: "sticky",
-                            justifyContent: "space-between",
+                            justifyContent: "left",
                             left: 0,
                             zIndex: 1,
                             cursor: (isCurrentUser || row.type != 'user') ? "default" : "pointer",
                             backgroundColor: "#fff",
+                            "& .icon-button": {
+                                opacity: 0,
+                                pointerEvents: "none",
+                                transition: "opacity 0.2s",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                mr: 2,
+                            },
                             "&:hover .icon-button": {
-                                display: (isCurrentUser || row.type != 'user') ? "none" : "flex",
+                                opacity: 1,
+                                pointerEvents: "auto",
                             },
                         }}
                         onClick={() => {
@@ -292,7 +301,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                 >
                                     <Box
                                         sx={{
-                                            overflow: "hidden",
+                                            overflow: "scroll",
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",
                                             minWidth: 0,
@@ -406,9 +415,20 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                         <>
                             <IconButton
                                 onClick={(event) => handleOpenMenu(event, row.id)}
-                                sx={{ ':hover': { backgroundColor: 'transparent' } }}
+                                sx={{
+                                    fontSize: '16px',
+                                    ":hover": {
+                                        backgroundColor: "transparent",
+                                        px: 0
+                                    },
+                                }}
                             >
-                                <MoreHoriz />
+                                <MoreVert
+                                    sx={{
+
+                                        color: "rgba(32, 33, 36, 1)",
+                                    }}
+                                />
                             </IconButton>
                             <Popover
                                 open={Boolean(menuAnchor) && activeRow === row.id}
@@ -458,9 +478,20 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                         <>
                             <IconButton
                                 onClick={(event) => handleOpenMenu(event, row.id)}
-                                sx={{ ':hover': { backgroundColor: 'transparent' } }}
+                                sx={{
+                                    fontSize: '16px',
+                                    ":hover": {
+                                        backgroundColor: "transparent",
+                                        px: 0
+                                    },
+                                }}
                             >
-                                <MoreHoriz />
+                                <MoreVert
+                                    sx={{
+
+                                        color: "rgba(32, 33, 36, 1)",
+                                    }}
+                                />
                             </IconButton>
                             <Popover
                                 open={Boolean(menuAnchor) && activeRow === row.id}
@@ -840,7 +871,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                             aria-label="admin tabs"
                             TabIndicatorProps={{
                                 sx: {
-                                    backgroundColor: '#5052B2',
+                                    backgroundColor: 'rgba(56, 152, 252, 1)',
                                     height: '2px',
                                     bottom: 5,
                                 },
@@ -875,9 +906,14 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                                         fontWeight: 700,
                                         lineHeight: '19.1px',
                                         minWidth: 'auto',
+                                        color: "rgba(56, 152, 252, 1)",
+
                                         mr: 2,
                                         '&.Mui-selected': {
-                                            color: '#5052B2',
+                                            color: "rgba(56, 152, 252, 1)",
+                                        },
+                                        '&.MuiTabs-indicator': {
+                                            backgroundColor: 'rgba(56, 152, 252, 1)',
                                         },
                                         '@media (max-width: 600px)': {
                                             mr: 1,
@@ -1069,8 +1105,11 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                     </Box>
                 </Box>
                 <Grid container direction="column" justifyContent="flex-start" spacing={2} sx={{ minHeight: '100vh' }}>
-                    <Grid item xs={12} sx={{ pl: 1, pr: 3, mt: 0 }}>
-                        <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }}>
+                    <Grid item xs={12} sx={{ pl: 1, mt: 0 }}>
+                        <TableContainer component={Paper} sx={{
+                            maxHeight: 'calc(100vh - 400px)', overflowY: 'auto',
+                            overflowX: 'auto',
+                        }}>
                             <Table stickyHeader>
                                 <TableHeader onSort={handleSortRequest} tableHeaders={tableHeaders} sortField={orderBy} sortOrder={order} />
                                 <TableBodyClient data={userData} tableHeaders={tableHeaders} setLoading={setLoading} currentPage={page} />
