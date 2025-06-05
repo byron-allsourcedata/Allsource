@@ -344,7 +344,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     isActive("/leads") ||
     isActive("/company") ||
     isActive("/suppressions") ||
-    isActive("/analytics");
+    isActive("/dashboard");
   const handleClick = () => {
     setOpen(!open);
   };

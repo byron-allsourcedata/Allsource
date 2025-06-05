@@ -63,7 +63,7 @@ const GetStarted: React.FC = () => {
             setPixelInstalled(Boolean(is_pixel_installed));
             setSourceImported(Boolean(is_source_imported));
             if (Boolean(is_pixel_installed) && Boolean(is_source_imported)) {
-                router.push('/dashboard')
+                router.push('/audience-dashboard')
             }
         }
         catch (error) {
