@@ -15,6 +15,7 @@ import { useMediaQuery } from '@mui/material';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { ShowChart, BarChart as IconBarChart } from "@mui/icons-material";
 import dayjs from "dayjs";
+import { EmptyAnalyticsPlaceholder } from "./placeholders/EmptyPlaceholder";
 
 
 const CustomIcon = () => (
@@ -481,6 +482,12 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
         data: [300, 900, 600, 1200, 1500, 1800, 2400, 2100, 2700, 3000, 1800, 3300,
             3600, 3900, 4200, 4500, 3900, 4800, 5100, 5400, 4800, 5700, 6000,
             6300, 6600, 6900, 7200, 7500, 7800, 8100, 8400],
+    }
+
+    const isAnalyticsEmpty = values.totalRevenue === 0;
+
+    if (isAnalyticsEmpty) {
+        return <EmptyAnalyticsPlaceholder />;
     }
 
     return (

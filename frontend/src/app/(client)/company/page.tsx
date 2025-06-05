@@ -38,6 +38,10 @@ import HintCard from "../components/HintCard";
 import { useCompanyHints } from "./context/CompanyHintsContext";
 import { companyTableCards } from "./context/hintsCardsContent";
 import DomainButtonSelect from "../components/NavigationDomainButton";
+import { EmptyAnalyticsPlaceholder } from '../dashboard/components/placeholders/EmptyPlaceholder';
+import { CalendarButton } from './CalendarButton';
+import { FilterButton } from './FilterButton';
+import { SelectedFilter } from './schemas';
 
 
 interface FetchDataParams {
@@ -76,7 +80,7 @@ const Leads: React.FC = () => {
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
     const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
+    const [selectedFilters, setSelectedFilters] = useState<SelectedFilter[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
     const [popupData, setPopupData] = React.useState<any>(null);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
@@ -738,6 +742,84 @@ const Leads: React.FC = () => {
     };
 
 
+    const noContactsYet = data.length === 0 && selectedFilters.length === 0;
+
+    const DownloadButton = (
+        <Button
+            aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+            aria-haspopup="true"
+            aria-expanded={dropdownOpen ? 'true' : undefined}
+            disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+            sx={{
+                textTransform: 'none',
+                color: 'rgba(128, 128, 128, 1)',
+                opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
+                border: '1px solid rgba(184, 184, 184, 1)',
+                borderRadius: '4px',
+                padding: '8px',
+                minWidth: 'auto',
+                '@media (max-width: 900px)': {
+                    border: 'none',
+                    padding: 0
+                },
+                '&:hover': {
+                    backgroundColor: 'transparent',
+                    border: '1px solid rgba(56, 152, 252, 1)',
+                    color: 'rgba(56, 152, 252, 1)',
+                    '& .MuiSvgIcon-root': {
+                        color: 'rgba(56, 152, 252, 1)'
+                    }
+                }
+            }}
+            onClick={handleDownload}
+        >
+            <DownloadIcon fontSize='medium' />
+        </Button>
+    )
+    
+    const ButtonGroup = (
+        <Box sx={{
+            display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
+            '@media (max-width: 900px)': {
+                gap: '8px'
+            }
+        }}>
+            { DownloadButton }
+            <HintCard
+                card={companyTableCards["download"]}
+                positionLeft={-420}
+                positionTop={20}
+                rightSide={true}
+                isOpenBody={companyTableHints["download"].showBody}
+                toggleClick={() => {
+                if (companyTableHints["overview"].showBody) {
+                    changeCompanyTableHint("overview", "showBody", "close")
+                }
+                if (companyTableHints["employees"].showBody) {
+                    changeCompanyTableHint("employees", "showBody", "close")
+                }
+                changeCompanyTableHint("download", "showBody", "toggle")
+                }}
+                closeClick={() => {
+                    changeCompanyTableHint("download", "showBody", "close")
+                }}
+            />
+
+            <FilterButton 
+                dropdownOpen={dropdownOpen} 
+                handleFilterPopupOpen={handleFilterPopupOpen} 
+                selectedFilters={selectedFilters} 
+                status={status}                                            
+            />
+            <CalendarButton 
+                isCalendarOpen={isCalendarOpen} 
+                handleCalendarClick={handleCalendarClick} 
+                formattedDates={formattedDates} 
+                status={status}
+            />
+        </Box>
+    )
+
     return (
         <>
             {loading && (
@@ -759,7 +841,7 @@ const Leads: React.FC = () => {
                         marginLeft: 0,
                     }
                 }}>
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', gap: noContactsYet ? 2 : undefined }}>
                         {status !== 'PIXEL_INSTALLATION_NEEDED' && (
                             <>
                                 <Box
@@ -779,7 +861,7 @@ const Leads: React.FC = () => {
                                             marginTop: hasNotification ? '2rem' : '0rem',
                                         },
                                     }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3, height: "46px" }}>
                                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                                             <Typography className='first-sub-title' style={{textWrap: "nowrap"}}>
                                                 Company list {data.length === 0 ? '' : `(${count_companies})`}
@@ -788,157 +870,7 @@ const Leads: React.FC = () => {
                                         </Box>
                                         <DomainButtonSelect />
                                     </Box>
-                                    <Box sx={{
-                                        display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
-                                        '@media (max-width: 900px)': {
-                                            gap: '8px'
-                                        }
-                                    }}>
-                                        <Button
-                                            aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                            aria-haspopup="true"
-                                            aria-expanded={dropdownOpen ? 'true' : undefined}
-                                            disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                            sx={{
-                                                textTransform: 'none',
-                                                color: 'rgba(128, 128, 128, 1)',
-                                                opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
-                                                border: '1px solid rgba(184, 184, 184, 1)',
-                                                borderRadius: '4px',
-                                                padding: '8px',
-                                                minWidth: 'auto',
-                                                '@media (max-width: 900px)': {
-                                                    border: 'none',
-                                                    padding: 0
-                                                },
-                                                '&:hover': {
-                                                    backgroundColor: 'transparent',
-                                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                                    color: 'rgba(56, 152, 252, 1)',
-                                                    '& .MuiSvgIcon-root': {
-                                                        color: 'rgba(56, 152, 252, 1)'
-                                                    }
-                                                }
-                                            }}
-                                            onClick={handleDownload}
-                                        >
-                                            <DownloadIcon fontSize='medium' />
-                                        </Button>
-
-                                        <HintCard
-                                            card={companyTableCards["download"]}
-                                            positionLeft={-420}
-                                            positionTop={20}
-                                            rightSide={true}
-                                            isOpenBody={companyTableHints["download"].showBody}
-                                            toggleClick={() => {
-                                            if (companyTableHints["overview"].showBody) {
-                                                changeCompanyTableHint("overview", "showBody", "close")
-                                            }
-                                            if (companyTableHints["employees"].showBody) {
-                                                changeCompanyTableHint("employees", "showBody", "close")
-                                            }
-                                            changeCompanyTableHint("download", "showBody", "toggle")
-                                            }}
-                                            closeClick={() => {
-                                                changeCompanyTableHint("download", "showBody", "close")
-                                            }}
-                                        />
-
-                                        <Button
-                                            onClick={handleFilterPopupOpen}
-                                            disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                            aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
-                                            aria-haspopup="true"
-                                            aria-expanded={dropdownOpen ? 'true' : undefined}
-                                            sx={{
-                                                textTransform: 'none',
-                                                color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
-                                                border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                                borderRadius: '4px',
-                                                padding: '8px',
-                                                opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
-                                                minWidth: 'auto',
-                                                position: 'relative',
-                                                '@media (max-width: 900px)': {
-                                                    border: 'none',
-                                                    padding: 0
-                                                },
-                                                '&:hover': {
-                                                    backgroundColor: 'transparent',
-                                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                                    color: 'rgba(56, 152, 252, 1)',
-                                                    '& .MuiSvgIcon-root': {
-                                                        color: 'rgba(56, 152, 252, 1)'
-                                                    }
-                                                }
-                                            }}
-                                        >
-                                            <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
-
-                                            {selectedFilters.length > 0 && (
-                                                <Box
-                                                    sx={{
-                                                        position: 'absolute',
-                                                        top: 6,
-                                                        right: 8,
-                                                        width: '10px',
-                                                        height: '10px',
-                                                        backgroundColor: 'red',
-                                                        borderRadius: '50%',
-                                                        '@media (max-width: 900px)': {
-                                                            top: -1,
-                                                            right: 1
-                                                        }
-                                                    }}
-                                                />
-                                            )}
-                                        </Button>
-
-                                        <Button
-                                            aria-controls={isCalendarOpen ? 'calendar-popup' : undefined}
-                                            aria-haspopup="true"
-                                            disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-                                            aria-expanded={isCalendarOpen ? 'true' : undefined}
-                                            onClick={handleCalendarClick}
-                                            sx={{
-                                                textTransform: 'none',
-                                                color: 'rgba(128, 128, 128, 1)',
-                                                border: formattedDates ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
-                                                borderRadius: '4px',
-                                                opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
-                                                padding: '8px',
-                                                minWidth: 'auto',
-                                                '@media (max-width: 900px)': {
-                                                    border: 'none',
-                                                    padding: 0
-                                                },
-                                                '&:hover': {
-                                                    backgroundColor: 'transparent',
-                                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                                    color: 'rgba(56, 152, 252, 1)',
-                                                    '& .MuiSvgIcon-root': {
-                                                        color: 'rgba(56, 152, 252, 1)'
-                                                    }
-                                                }
-                                            }}
-                                        >
-                                            <DateRangeIcon fontSize='medium' sx={{ color: formattedDates ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)', }} />
-                                            <Typography variant="body1" sx={{
-                                                fontFamily: 'Nunito Sans',
-                                                fontSize: '14px',
-                                                fontWeight: '600',
-                                                lineHeight: '19.6px',
-                                                textAlign: 'left',
-
-                                                "@media (max-width: 600px)": {
-                                                    display: 'none'
-                                                },
-                                            }}>
-                                                {formattedDates}
-                                            </Typography>
-                                        </Button>
-                                    </Box>
+                                    { !noContactsYet && ButtonGroup }
                                 </Box>
                                 <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
                                     {selectedFilters.length > 0 && (
@@ -1037,31 +969,9 @@ const Leads: React.FC = () => {
                                      }}
                                  />
                              </Box>
-                            ) : data.length === 0 ? (
-                                <Box sx={centerContainerStyles}>
-                                    <Typography variant="h5" sx={{
-                                        mb: 3,
-                                        fontFamily: 'Nunito Sans',
-                                        fontSize: "20px",
-                                        color: "#4a4a4a",
-                                        fontWeight: "600",
-                                        lineHeight: "28px"
-                                    }}>
-                                        Data not matched yet!
-                                    </Typography>
-                                    <Image src='/no-data.svg' alt='No Data' height={250} width={300} />
-                                    <Typography variant="body1" color="textSecondary"
-                                        sx={{
-                                            mt: 3,
-                                            fontFamily: 'Nunito Sans',
-                                            fontSize: "14px",
-                                            color: "#808080",
-                                            fontWeight: "600",
-                                            lineHeight: "20px"
-                                        }}>
-                                        Please check back later.
-                                    </Typography>
-                                </Box>
+                            ) : 
+                            data.length === 0 ? (
+                                <EmptyAnalyticsPlaceholder />
                             ) : (
                                 <Grid container spacing={1} sx={{ flex: 1 }}>
                                     <Grid item xs={12}>

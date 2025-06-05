@@ -8,7 +8,7 @@ import { LineChart } from '@mui/x-charts/LineChart';
 import { BarChart } from '@mui/x-charts/BarChart';
 import StatsCard from "@/app/(client)/dashboard/components/StatCardContact";
 import dayjs from "dayjs";
-
+import { EmptyAnalyticsPlaceholder } from "./placeholders/EmptyPlaceholder";
 
 const CustomIcon = () => (
     <Image src="/arrow_down.svg" alt="arrow down" width={16} height={16} />
@@ -20,20 +20,24 @@ interface AppliedDates {
     end: Date | null;
 }
 
-interface DashboardContactProps {
-    appliedDates: AppliedDates;
-    typeBusiness: string
+export type DashboardContacts = {
+    total_contacts_collected: number,
+    total_new_leads: number,
+    total_returning_visitors: number,
+    total_page_views: number,
 }
 
-const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, typeBusiness }) => {
+interface DashboardContactProps {
+    appliedDates: AppliedDates;
+    typeBusiness: string,
+    values: DashboardContacts,
+    setValues: (values: DashboardContacts) => void,
+    loading: boolean,
+    setLoading: (loading: boolean) => void
+}
+
+const DashboardContactB2B: React.FC<DashboardContactProps> = ({ values, setValues, appliedDates, typeBusiness, loading, setLoading }) => {
     const [chartType, setChartType] = useState<'line' | 'bar'>('line');
-    const [loading, setLoading] = useState(true)
-    const [values, setValues] = useState({
-        total_contacts_collected: 0,
-        total_new_leads: 0,
-        total_returning_visitors: 0,
-        total_page_views: 0,
-    });
 
     const isLargeScreen = useMediaQuery('(min-width:1200px)');
     const isMediumScreen = useMediaQuery('(min-width:768px)');
@@ -341,6 +345,16 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
     const periodInDays = dayjs(formattedData[formattedData.length - 1]).diff(dayjs(formattedData[0]), 'day');
     const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, filteredSeries, periodInDays);
 
+    const isContactDataEmpty = !loading && values.total_contacts_collected === 0;
+    
+    if (isContactDataEmpty) {
+        return <EmptyAnalyticsPlaceholder />
+    }
+
+    if (loading) {
+        return <></>
+    }
+        
     return (
         <>
             <Box sx={{ width: '100%', mt: 1, mb: 1, '@media (max-width: 900px)': { mt: 0, mb: 0, } }}>
