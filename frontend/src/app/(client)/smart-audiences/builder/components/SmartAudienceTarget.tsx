@@ -169,15 +169,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   const [openConfirmValidatePopup, setOpenConfrimValidatePopup] =
     useState(false);
 
-  const handleCalculateActiveSegments = (value: number) => {
-    closeDotHintClick("calculate")
-    openDotHintClick("validate")
-    setNumberToValidate(value);
-    setEstimatedContacts(value * persentsData);
-    setValidationCost(10);
-    setIsCalculateActiveSegments(true);
-  };
-
   const handleOpenConfirmValidatePopup = () => {
     setOpenConfrimValidatePopup(true);
   };
@@ -201,6 +192,39 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
   const openDotHintClick = (key: BuilderKey) => {
     changeSmartsBuilderHint(key, "show", "open")
+  };
+
+  const handleCalculateActiveSegments = async (value: number) => {
+    closeDotHintClick("calculate")
+    openDotHintClick("validate")
+
+    setNumberToValidate(value);
+    setEstimatedContacts(value * persentsData);
+
+    console.log({validationFilters})
+
+    console.log(Object.entries(validationFilters!))
+
+    const selectedValidations = Object.entries(validationFilters!).flatMap(([key, validations]) =>
+      validations.map((validation: Record<string, any>) =>
+        Object.keys(validation).map((param) => `${key}-${param}`)
+      ).flat()
+    );
+
+    console.log(selectedValidations)
+
+    const response = await axiosInstance.post('/audience-smarts/validation-cost-calculate', {
+        count_active_segment: value,
+        validations: selectedValidations
+      },
+    );
+
+    if (response.status === 200) {
+      console.log(response.data)
+      setValidationCost(response.data);
+    }
+
+    setIsCalculateActiveSegments(true);
   };
 
   const handleInputNumberChange = (
@@ -369,7 +393,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
     setValue(newValue as number);
     closeDotHintClick("generateActiveSegment")
     openDotHintClick("calculate")
-    // console.log(initialSmartsBuilderHints)
   };
 
   const handleGenerateSmartAudience = async () => {
@@ -392,6 +415,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
           ([_, v]) => v !== null && v !== undefined
         )
       );
+
+      console.log(requestData.validation_params)
 
       const response = await axiosInstance.post(
         "/audience-smarts/builder",
@@ -1297,7 +1322,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   <Typography className="form-input">
                     Validation Cost
                   </Typography>
-                  <Typography>{validationCost} Credits</Typography>
+                  <Typography>{validationCost?.toLocaleString('en-US')} Credits</Typography>
                   {typeof availableCredits === "number" &&
                     typeof validationCost === "number" ? (
                     availableCredits >= validationCost ? (
@@ -1320,7 +1345,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                           mb: 1,
                         }}
                       >
-                        ✗ You need {validationCost - availableCredits} more
+                        ✗ You need {(validationCost - availableCredits).toLocaleString('en-US')} more
                         credits to proceed.
                       </Typography>
                     )

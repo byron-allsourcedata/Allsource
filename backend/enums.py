@@ -64,6 +64,7 @@ class BusinessType(Enum):
 class AudienceSettingAlias(Enum):
     AVERAGE_SUCCESS_VALIDATIONS = 'average_success_validations'
     VALIDATION_PRIORITY = 'validation_priority'
+    VALIDATION_COST = 'validation_cost'
 
 class LeadStatus(Enum):
     ABANDONED_CART = 'abandoned_cart'

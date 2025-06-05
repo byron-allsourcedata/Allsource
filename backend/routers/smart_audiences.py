@@ -52,6 +52,16 @@ def calculate_smart_audience(
         raw_data_sources=request
     )
 
+@router.post("/validation-cost-calculate", response_model=float)
+def calculate_validation_cost(
+        request = Body(...),
+        audience_smarts_service: AudienceSmartsService = Depends(get_audience_smarts_service)
+):
+    return audience_smarts_service.calculate_validation_cost(
+        count_active_segment=request["count_active_segment"],
+        validations=request["validations"]
+    )
+
 @router.get("/{id}/data-sources", response_model=DataSourcesResponse)
 def get_datasource_by_id(
         id: UUID,
