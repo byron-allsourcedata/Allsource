@@ -344,7 +344,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     isActive("/leads") ||
     isActive("/company") ||
     isActive("/suppressions") ||
-    isActive("/dashboard");
+    isActive("/analytics");
   const handleClick = () => {
     setOpen(!open);
   };
@@ -401,9 +401,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Audience-dashboard */}
         <ListItem
           button
-          onClick={() => handleNavigation("/audience-dashboard")}
+          onClick={() => handleNavigation("/dashboard")}
           sx={
-            isActive("/audience-dashboard")
+            isActive("/dashboard")
               ? sidebarStyles.activeItem
               : sidebarStyles.ListItem
           }
@@ -443,9 +443,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                   {/* Insights */}
                   <ListItem
                     button
-                    onClick={() => handleNavigation("/dashboard")}
+                    onClick={() => handleNavigation("/analytics")}
                     sx={
-                      isActive("/dashboard")
+                      isActive("/analytics")
                         ? { ...sidebarStyles.activeItem, pl: 4 }
                         : { ...sidebarStyles.ListItem, pl: 4 }
                     }

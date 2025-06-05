@@ -122,7 +122,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
 
         fetchData();
     }, [appliedDates]);
-    
+
     const toggleChartType = (type: 'line' | 'bar') => {
         setChartType(type);
     };
@@ -282,7 +282,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
     ): AggregatedResult {
         let aggregatedData: string[] = [];
         let aggregatedSeries: Series[] = [];
-    
+
         if (period <= 7) {
             return {
                 aggregatedData: formattedData,
@@ -295,13 +295,13 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
             formattedData.forEach((date, index) => {
                 const weekStart = dayjs(date).startOf('week').format('MMM DD');
                 if (!weeklyData[weekStart]) weeklyData[weekStart] = {};
-                
+
                 series.forEach((s) => {
                     if (!weeklyData[weekStart][s.id]) weeklyData[weekStart][s.id] = [];
                     weeklyData[weekStart][s.id].push(s.data[index]);
                 });
             });
-    
+
             aggregatedData = Object.keys(weeklyData);
             aggregatedSeries = series.map((s) => ({
                 ...s,
@@ -310,21 +310,21 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                     return weekData ? Math.max(...weekData) : 0;
                 }),
             }));
-        } 
-        
+        }
+
         else {
             const monthlyData: Record<string, Record<string, number[]>> = {};
             formattedData.forEach((date, index) => {
-                
+
                 const month = dayjs(date).format('MMM YYYY')
                 if (!monthlyData[month]) monthlyData[month] = {};
-                
+
                 series.forEach((s) => {
                     if (!monthlyData[month][s.id]) monthlyData[month][s.id] = [];
                     monthlyData[month][s.id].push(s.data[index]);
                 });
             });
-    
+
             aggregatedData = Object.keys(monthlyData);
             aggregatedSeries = series.map((s) => ({
                 ...s,
@@ -334,10 +334,10 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                 }),
             }));
         }
-    
+
         return { aggregatedData, aggregatedSeries };
     }
-    
+
     const periodInDays = dayjs(formattedData[formattedData.length - 1]).diff(dayjs(formattedData[0]), 'day');
     const { aggregatedData, aggregatedSeries } = aggregateData(formattedData, filteredSeries, periodInDays);
 
@@ -347,7 +347,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                 <StatsCard values={values} typeBusiness={typeBusiness} />
             </Box>
             <Card variant="outlined" sx={{ width: '100%', }}>
-                <CardContent sx={{paddingLeft: 0,}}>
+                <CardContent sx={{ paddingLeft: 0, }}>
                     <Stack sx={{ justifyContent: 'space-between', flexDirection: 'row', '@media (max-width: 900px)': { flexDirection: 'column', justifyContent: 'center', alignItems: 'start' } }}>
                         <Stack
                             direction="row"
@@ -355,10 +355,10 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                                 alignContent: { xs: 'center', sm: 'flex-start' },
                                 alignItems: 'center',
                                 gap: 2,
-                                '@media (max-width: 600px)': {width: '100%', justifyContent: 'flex-end', display: 'flex', alignItems: 'flex-end'} 
+                                '@media (max-width: 600px)': { width: '100%', justifyContent: 'flex-end', display: 'flex', alignItems: 'flex-end' }
                             }}
                         >
-                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5,  }}>
+                            <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1.5, }}>
                                 <IconButton
                                     onClick={() => toggleChartType('line')}
                                     sx={{
@@ -369,7 +369,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                                         border: `1.5px solid ${chartType === 'line' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)'}`,
                                         color: chartType === 'line' ? 'rgba(56, 152, 252, 1)' : 'rgba(115, 115, 115, 1)',
                                         '@media (max-width: 600px)': {
-                                            ml:2
+                                            ml: 2
                                         }
                                     }}
                                 >
@@ -437,7 +437,7 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                                     variant={visibleSeries[seriesId as keyof VisibleSeries] ? 'filled' : 'outlined'} />
                             ))}
 
-                            <Box sx={{ '@media (min-width: 900px)': { display: 'none' }, width: '100%', mt: 1, mb: 1, ml:2 }}>
+                            <Box sx={{ '@media (min-width: 900px)': { display: 'none' }, width: '100%', mt: 1, mb: 1, ml: 2 }}>
                                 <Select
                                     multiple
                                     value={selectedGraphs}
@@ -505,94 +505,94 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({ appliedDates, ty
                     </Stack>
 
                     {loading ? <Box
+                        sx={{
+                            position: 'relative',
+                            background: 'rgba(255, 255, 255, 0.8)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            zIndex: 1000,
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <Box
                             sx={{
-                                position: 'relative',
-                                background: 'rgba(255, 255, 255, 0.8)',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                zIndex: 1000,
-                                overflow: 'hidden'
+                                border: '8px solid #f3f3f3',
+                                borderTop: '8px solid #4285f4',
+                                borderRadius: '50%',
+                                width: '40px',
+                                height: '40px',
+                                animation: 'spin 1s linear infinite',
+                                '@keyframes spin': {
+                                    '0%': { transform: 'rotate(0deg)' },
+                                    '100%': { transform: 'rotate(360deg)' },
+                                },
                             }}
-                        >
-                            <Box
+                        />
+                    </Box> :
+                        (chartType === 'line' ? (
+                            <LineChart
+                                colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
+                                xAxis={[{ scaleType: 'point', data: formattedData, disableTicks: true, disableLine: true, min: 1 }]}
+                                yAxis={[
+                                    {
+                                        valueFormatter: (value) => {
+                                            if (value >= 1000 && value < 1000000) {
+                                                return `${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                            } else if (value >= 1000000) {
+                                                return `${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                            } else {
+                                                return value.toString(); // Return smaller numbers without formatting
+                                            }
+                                        },
+                                        disableTicks: true,
+                                        disableLine: true,
+                                        min: 1
+                                    }
+                                ]}
+                                series={filteredSeries}
+                                height={mainchartSize}
+                                margin={{ left: 45, right: 20, top: 20, bottom: 20 }}
+                                grid={{ horizontal: true }}
                                 sx={{
-                                    border: '8px solid #f3f3f3',
-                                    borderTop: '8px solid #4285f4',
-                                    borderRadius: '50%',
-                                    width: '40px',
-                                    height: '40px',
-                                    animation: 'spin 1s linear infinite',
-                                    '@keyframes spin': {
-                                        '0%': { transform: 'rotate(0deg)' },
-                                        '100%': { transform: 'rotate(360deg)' },
-                                    },
+                                    border: 'none',
                                 }}
-                            />
-                        </Box> : 
-                    (chartType === 'line' ? (
-                        <LineChart
-                            colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                            xAxis={[{ scaleType: 'point', data: formattedData, disableTicks: true, disableLine: true, min: 1 }]}
-                            yAxis={[
-                                {
-                                    valueFormatter: (value) => {
-                                        if (value >= 1000 && value < 1000000) {
-                                            return `${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
-                                        } else if (value >= 1000000) {
-                                            return `${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
-                                        } else {
-                                            return value.toString(); // Return smaller numbers without formatting
-                                        }
-                                        },
-                                        disableTicks: true, 
-                                        disableLine: true, 
-                                        min: 1
-                                }
-                            ]}
-                            series={filteredSeries}
-                            height={mainchartSize}
-                            margin={{ left: 45, right: 20, top: 20, bottom: 20 }}
-                            grid={{ horizontal: true }}
-                            sx={{
-                                border: 'none',
-                            }}
-                            slotProps={{
-                                legend: { hidden: true },
-                            }}
-                        >
+                                slotProps={{
+                                    legend: { hidden: true },
+                                }}
+                            >
 
-                        </LineChart>
-                    ) : (
-                        <BarChart
-                            height={mainchartSize}
-                            colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
-                            xAxis={[{ scaleType: 'band', data: aggregatedData, disableTicks: true, disableLine: true, min: 1 }]}
-                            yAxis={[
-                                {
-                                    valueFormatter: (value) => {
-                                        if (value >= 1000 && value < 1000000) {
-                                            return `${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
-                                        } else if (value >= 1000000) {
-                                            return `${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
-                                        } else {
-                                            return value.toString(); // Return smaller numbers without formatting
-                                        }
+                            </LineChart>
+                        ) : (
+                            <BarChart
+                                height={mainchartSize}
+                                colors={filteredSeriescolor.map(s => colorMapping[s.id as keyof typeof colorMapping])}
+                                xAxis={[{ scaleType: 'band', data: aggregatedData, disableTicks: true, disableLine: true, min: 1 }]}
+                                yAxis={[
+                                    {
+                                        valueFormatter: (value) => {
+                                            if (value >= 1000 && value < 1000000) {
+                                                return `${(value / 1000).toFixed(0)}k`; // Formats 10,000 as 10k
+                                            } else if (value >= 1000000) {
+                                                return `${(value / 1000000).toFixed(1)}M`; // Formats 1,000,000 as 1.0M
+                                            } else {
+                                                return value.toString(); // Return smaller numbers without formatting
+                                            }
                                         },
-                                        disableTicks: true, 
-                                        disableLine: true, 
+                                        disableTicks: true,
+                                        disableLine: true,
                                         min: 1
-                                }
-                            ]}
-                            series={aggregatedSeries.map((s) => ({ data: s.data, label: s.label }))}
-                            grid={{ horizontal: true }}
-                            margin={{ left: 45, right: 20, top: 20, bottom: 20 }}
-                            borderRadius={3}
-                            slotProps={{
-                                legend: { hidden: true },
-                            }} />
+                                    }
+                                ]}
+                                series={aggregatedSeries.map((s) => ({ data: s.data, label: s.label }))}
+                                grid={{ horizontal: true }}
+                                margin={{ left: 45, right: 20, top: 20, bottom: 20 }}
+                                borderRadius={3}
+                                slotProps={{
+                                    legend: { hidden: true },
+                                }} />
 
-                    )) }
+                        ))}
                 </CardContent>
             </Card>
             {loading && (<CustomizedProgressBar />)}

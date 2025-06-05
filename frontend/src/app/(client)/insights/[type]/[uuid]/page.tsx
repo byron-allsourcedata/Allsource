@@ -141,7 +141,7 @@ const Insights = () => {
   }
 
   return (
-    <Box sx={{overflow: "visible"}}>
+    <Box sx={{ overflow: "visible" }}>
       <Box
         sx={{
           display: "flex",
@@ -255,7 +255,7 @@ const Insights = () => {
             }
           }}
         >
-          
+
           <Tabs
             value={tabIndex}
             onChange={handleTabChange}
@@ -333,7 +333,7 @@ const Insights = () => {
             />
           </Tabs>
         </Box>
-        
+
       </Box>
       <Box
         sx={{
@@ -344,14 +344,14 @@ const Insights = () => {
         }}
       >
         <TabPanel value={tabIndex} index={0}>
-        
+
           <StaticticsTab type={audience_type} b2bData={b2bData} b2cData={b2cData} fieldRanks={fieldRanks} />
-          
+
         </TabPanel>
         <TabPanel value={tabIndex} index={1}>
           <PredictableFields data={predictableFields} />
         </TabPanel>
-        
+
       </Box>
     </Box>
   );
