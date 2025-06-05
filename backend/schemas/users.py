@@ -131,7 +131,7 @@ class MeetingData(BaseModel):
     utm_params: Optional[str] = None
 
 
-class CalendlyResponse(BaseModel):
+class MeetingBookingResponse(BaseModel):
     user: Optional[MeetingData] = None
 
 

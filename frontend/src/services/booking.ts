@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 
 export type PrefillData = {
   email: string;
-  first_name: string;
-  last_name: string;
+  firstname: string;
+  lastname: string;
 };
 
 export function getBookingUrl(): string {
@@ -23,11 +23,11 @@ export function usePrefillData(
   axios: AxiosInstance,
   setUtmParams: (utmParams: string | null) => void
 ) {
-  const initialPrefill = { email: "", first_name: "", last_name: "" };
+  const initialPrefill = { email: "", firstname: "", lastname: "" };
   const [prefillData, setPrefillData] = useState<{
     email: string;
-    first_name: string;
-    last_name: string;
+    firstname: string;
+    lastname: string;
   }>(initialPrefill);
   const [isPrefillLoaded, setIsPrefillLoaded] = useState(false);
 
@@ -41,8 +41,8 @@ export function usePrefillData(
         setUtmParams(utm_params);
         setPrefillData({
           email: email || "",
-          first_name: first_name || "",
-          last_name: last_name || "",
+          firstname: first_name || "",
+          lastname: last_name || "",
         });
       } else {
         setPrefillData(initialPrefill);

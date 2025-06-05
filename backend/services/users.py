@@ -118,11 +118,9 @@ class UsersService:
             enable=domain.is_enable
         ).model_dump()
 
-    def get_calendly_info(self) -> MeetingData:
+    def get_meeting_info(self) -> MeetingData:
         return self.meeting_schedule.get_meeting_info(self.user)
 
-    def update_calendly_info(self, uuid: str, invitees: str):
-        return self.meeting_schedule.update_calendly_info(self.user, uuid, invitees)
 
     def add_stripe_account(self, stripe_connected_account_id: str):
         self.user_persistence_service.add_stripe_account(self.user.get('id'), stripe_connected_account_id)
