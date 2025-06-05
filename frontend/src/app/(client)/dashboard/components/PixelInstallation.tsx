@@ -284,7 +284,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
           />
         )}
       </Box>
-      <Grid container md={12}>
+      <Grid container md={12} xs={12}>
         <Box
           sx={{
             display: "flex",

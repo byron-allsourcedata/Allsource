@@ -8,8 +8,15 @@ import { SliderProvider, useSlider } from "../../../context/SliderContext";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import dayjs from "dayjs";
 import { useNotification } from "../../../context/NotificationContext";
+import RevenueTracking from "@/components/RevenueTracking";
+import WelcomePopup from "./components/WelcomePopup";
+import GettingStartedSection from "@/components/GettingStartedSection";
+import { FirstTimeScreenCommonVariant2 } from "@/components/first-time-screens";
+import DomainButtonSelect from "../components/NavigationDomainButton";
 
-import { PixelAnalytics } from "./components/Analytics";
+import useMediaQuery from "@mui/system/useMediaQuery/useMediaQuery";
+
+import { PixelAnalytics } from "./components/analytics";
 import { DashboardContacts } from "./components/DashboardContactB2B";
 
 const Dashboard: React.FC = () => {
@@ -39,6 +46,8 @@ const Dashboard: React.FC = () => {
     total_returning_visitors: 0,
   });
 
+   const isMobile = useMediaQuery('(max-width:600px)');
+  
   useEffect(() => {
     const storedPopup = localStorage.getItem("welcome_popup");
     setWelcomePopup(storedPopup);
@@ -177,6 +186,7 @@ const Dashboard: React.FC = () => {
         values={values}
         setValues={setValues}
         showCharts={showCharts}
+        isMobile={isMobile}
         showSlider={showSlider}
         welcomePopup={welcomePopup}
         hasNotification={hasNotification}

@@ -21,6 +21,7 @@ type Props = {
   values: DashboardContacts;
   showCharts: boolean;
   showSlider: boolean;
+  isMobile: boolean;
   welcomePopup: string | null;
   hasNotification: boolean | undefined;
   isCalendarOpen: boolean;
@@ -50,6 +51,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
   const {
     showCharts,
     showSlider,
+    isMobile,
     welcomePopup,
     hasNotification,
     isCalendarOpen,
@@ -92,7 +94,6 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
         },
       }}
     >
-      {String(loading)}
       {/* Calendary picker*/}
       <Typography className="second-sub-title">
         {selectedDateLabel ? selectedDateLabel : ""}
@@ -164,14 +165,11 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
   const CalendarButton = (
     <Box
       sx={{
-        display: "none",
         justifyContent: "flex-end",
         alignItems: "start",
         pt: 0.5,
         gap: 1,
-        "@media (max-width: 600px)": {
-          display: "flex",
-        },
+        display: "flex",
       }}
     >
       {/* Calendary picker*/}
@@ -257,7 +255,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
                   display: "flex",
                   flexDirection: "row",
                   alignItems: "center",
-                  gap: 3,
+                  gap: 2,
                 }}
               >
                 <Box
@@ -289,7 +287,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
                 </Box>
               </Box>
 
-              {!noContactsYet && CalendarButton}
+              {!noContactsYet && isMobile && CalendarButton}
             </Box>
 
             {typeBusiness == "d2c" && (
@@ -313,6 +311,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
                     textTransform: "none",
                     minHeight: 0,
                     alignItems: "start",
+                    textAlign: 'left',
                     "& .MuiTabs-indicator": {
                       backgroundColor: "rgba(56, 152, 252, 1)",
                       height: "1.4px",
@@ -334,7 +333,6 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
                       textTransform: "none",
                       padding: "4px 10px",
                       flexGrow: 1,
-                      marginRight: "3em",
                       minHeight: "auto",
                       minWidth: "auto",
                       fontSize: "14px",
