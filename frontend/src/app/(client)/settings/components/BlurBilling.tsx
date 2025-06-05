@@ -52,7 +52,7 @@ const BlurBilling = ({
               }}
             >
               <CardContent sx={{ display: 'flex', flexDirection: 'column', bgcolor: "rgba(235, 245, 255, 1)", padding: "8px 16px",  gap: 2, "&:last-child":  {paddingBottom: "16px"}}}>
-                <Typography align="center" sx={{fontWeight: 600, fontSize: 20, fontFamily: "Nunito", lineHeight: "140%", letterSpacing: "0%", color: "rgba(56, 152, 252, 1)"}}>
+                <Typography align="center" sx={{fontWeight: 600, fontSize: 20, fontFamily: "Nunito Sans", lineHeight: "140%", letterSpacing: "0%", color: "rgba(56, 152, 252, 1)"}}>
                   Coming soon...
                 </Typography>
               </CardContent>
