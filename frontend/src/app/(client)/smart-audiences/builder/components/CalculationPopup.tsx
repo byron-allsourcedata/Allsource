@@ -28,25 +28,25 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCan
             <Divider sx={{ ml: 2.5, mr: 2.5 }} />
             <DialogContent sx={{ padding: "20px", pb: 0.5 }}>
                 <Typography variant="body1" className="form-input" sx={{ marginBottom: 2 }}>
-                    Proceeding will deduct {CalculationData.validationCost} credits from your account. Make sure you have enough credits to complete the transaction.
+                    Proceeding will deduct {CalculationData.validationCost.toLocaleString('en-US')} credits from your account. Make sure you have enough credits to complete the transaction.
                 </Typography>
                 <Typography variant="body1" className="form-input" sx={{ marginBottom: 1 }}>
                     Current Account Balance:
                 </Typography>
                 <Typography variant="body1" className="second-sub-title" sx={{ marginBottom: 0.5 }}>
-                    {CalculationData.availableCredits} Credits
+                    {CalculationData.availableCredits.toLocaleString('en-US')} Credits
                 </Typography>
 
                 {CalculationData.availableCredits >= CalculationData.validationCost ?
                     (<Typography className="form-input" sx={{ color: 'rgba(74, 158, 79, 1) !important', fontSize: '12px !important', gap: 0.25, mb: 1 }}>✓ You have enough credits to proceed.</Typography>)
-                    : (<Typography className="form-input" sx={{ color: 'rgba(205, 40, 43, 1) !important', fontSize: '12px !important', gap: 0.25, mb: 1 }}>✗ You need {CalculationData.validationCost - CalculationData.availableCredits} more credits to proceed.</Typography>)
+                    : (<Typography className="form-input" sx={{ color: 'rgba(205, 40, 43, 1) !important', fontSize: '12px !important', gap: 0.25, mb: 1 }}>✗ You need {(CalculationData.validationCost - CalculationData.availableCredits).toLocaleString('en-US')} more credits to proceed.</Typography>)
                 }
 
                 <Typography variant="body1" className="form-input" sx={{ marginBottom: 1 }}>
                     Validation Cost
                 </Typography>
                 <Typography variant="body1" className="second-sub-title" sx={{ marginBottom: 2 }}>
-                    {CalculationData.validationCost} Credits
+                    {CalculationData.validationCost.toLocaleString('en-US')} Credits
                 </Typography>
 
                 {CalculationData.availableCredits >= CalculationData.validationCost ?
@@ -56,7 +56,7 @@ const CalculationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCan
                 }
 
                 <Typography variant="body1" className="second-sub-title" sx={{ marginBottom: 2 }}>
-                    {Math.abs(CalculationData.availableCredits - CalculationData.validationCost)} Credits
+                    {Math.abs(CalculationData.availableCredits - CalculationData.validationCost).toLocaleString('en-US')} Credits
                 </Typography>
 
                 {CalculationData.availableCredits >= CalculationData.validationCost ?
