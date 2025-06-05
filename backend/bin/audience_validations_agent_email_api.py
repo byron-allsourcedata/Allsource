@@ -17,6 +17,7 @@ from utils import send_sse
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.million_verifier import MillionVerifierPersistence
 from models.audience_smarts_persons import AudienceSmartPerson
+from models.users import Users
 from models.audience_smarts_validations import AudienceSmartValidation
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
@@ -46,6 +47,7 @@ async def process_rmq_message(
         validation_type = body.get("validation_type")
         count_persons_before_validation = body.get("count_persons_before_validation")
         verified_emails = []
+        write_off_funds = 0 
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
@@ -55,6 +57,9 @@ async def process_rmq_message(
                 if not email:
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
+                
+                write_off_funds += 1
+
                 if not million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
@@ -71,6 +76,9 @@ async def process_rmq_message(
                 if not email:
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
+
+                write_off_funds += 1
+                
                 if not million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
@@ -81,6 +89,10 @@ async def process_rmq_message(
                             verified_business_email=email
                         )
                     )
+        if write_off_funds:
+            user = db_session.query(Users).filter(Users.id == user_id).first()
+            user.validation_funds = user.validation_funds - write_off_funds
+            db_session.flush()
             
         success_ids = [
             rec["audience_smart_person_id"]

@@ -23,6 +23,7 @@ from utils import send_sse
 from models.audience_smarts import AudienceSmart
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
+from models.users import Users
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_linkedin_verification import AudienceLinkedinVerification
@@ -70,6 +71,7 @@ async def process_rmq_message(
         logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
         verifications: list[AudienceLinkedinVerification] = []
+        write_off_funds = 0 
 
         for rec in batch:
             pid = rec.get("audience_smart_person_id")
@@ -81,6 +83,7 @@ async def process_rmq_message(
                 failed_ids.append(pid)
                 continue
             
+            write_off_funds += 1
             ev = (
                 db_session.query(AudienceLinkedinVerification)
                 .filter_by(linkedin_url=url)
@@ -125,6 +128,11 @@ async def process_rmq_message(
             if rec["audience_smart_person_id"] not in failed_ids
         ]
         logging.info(f"Success ids: len{len(success_ids)}")
+
+        if write_off_funds:
+            user = db_session.query(Users).filter(Users.id == user_id).first()
+            user.validation_funds = user.validation_funds - write_off_funds
+            db_session.flush()
         
         if verifications:
             db_session.bulk_save_objects(verifications)

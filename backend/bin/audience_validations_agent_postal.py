@@ -23,6 +23,7 @@ from sqlalchemy.dialects.postgresql import insert
 from models.audience_smarts import AudienceSmart
 from utils import send_sse
 from models.audience_smarts_persons import AudienceSmartPerson
+from models.users import Users
 from models.audience_postals_verification import AudiencePostalVerification
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
@@ -82,6 +83,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         logging.info(f"validation_type: {validation_type}")
         failed_ids = []
         verifications = []
+        write_off_funds = 0 
 
         for record in batch:
             person_id = record.get("audience_smart_person_id")            
@@ -94,6 +96,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
             if not postal_code or not city or not state_name:
                 failed_ids.append(person_id)
                 continue
+
+            write_off_funds += 1
             
             existing_verification = db_session.query(AudiencePostalVerification).filter(AudiencePostalVerification.postal_code == postal_code).first()
 
@@ -150,6 +154,11 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         ]
         
         logging.info(f"success_ids len: {len(success_ids)}")
+
+        if write_off_funds:
+            user = db_session.query(Users).filter(Users.id == user_id).first()
+            user.validation_funds = user.validation_funds - write_off_funds
+            db_session.flush()
         
         if verifications:
             stmt = insert(AudiencePostalVerification).values(verifications)

@@ -19,6 +19,7 @@ from models.audience_smarts import AudienceSmart
 from utils import send_sse
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_phones_verification import AudiencePhoneVerification
+from models.users import Users
 from models.audience_smarts_validations import AudienceSmartValidation
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
@@ -60,6 +61,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         failed_ids = []
         verifications = []
         verified_phones = []
+        write_off_funds = 0 
 
         for record in batch:
             person_id = record.get("audience_smart_person_id")
@@ -78,6 +80,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                 
                 if not phone_number:
                     continue
+
+                write_off_funds += 1
 
                 existing_verification = db_session.query(AudiencePhoneVerification).filter_by(phone=phone_number).first()
 
@@ -136,6 +140,11 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                     break
                 else:
                     continue
+        
+        if write_off_funds:
+            user = db_session.query(Users).filter(Users.id == user_id).first()
+            user.validation_funds = user.validation_funds - write_off_funds
+            db_session.flush()
 
         if len(verifications):
             verification_data = [

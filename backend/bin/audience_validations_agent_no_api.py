@@ -22,6 +22,7 @@ from models.audience_smarts import AudienceSmart
 from utils import send_sse
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
+from models.users import Users
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()
@@ -99,6 +100,7 @@ async def aud_validation_agent(
         recency_personal_days = body.get("recency_personal_days", 0)
         recency_business_days = body.get("recency_business_days", 0)
         validation_type = body.get("validation_type")
+        write_off_funds = 0 
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         validation_rules = {
@@ -121,6 +123,11 @@ async def aud_validation_agent(
             if rec["audience_smart_person_id"] not in failed_ids
         ]
         logging.info(f"Success ids len: {len(success_ids)}")
+
+        if write_off_funds:
+            user = db_session.query(Users).filter(Users.id == user_id).first()
+            user.validation_funds = user.validation_funds - write_off_funds
+            db_session.flush()
 
         if failed_ids:
             db_session.bulk_update_mappings(
