@@ -610,16 +610,18 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
             }}
           >
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <Typography
-                sx={{
-                  fontFamily: "Nunito Sans",
-                  fontSize: "16px",
-                  fontWeight: 500,
-                }}
-              >
-                Select your Contacts
-              </Typography>
-              <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-contacts" />
+              <Box sx={{ display: "flex", flexDirection: "space-between", alignItems: "center", gap: 1}}>
+                <Typography
+                  sx={{
+                    fontFamily: "Nunito Sans",
+                    fontSize: "16px",
+                    fontWeight: 500,
+                  }}
+                >
+                  Select your Contacts
+                </Typography>
+                <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-contacts" />
+              </Box>
               <Typography
                 sx={{
                   fontFamily: "Roboto",
