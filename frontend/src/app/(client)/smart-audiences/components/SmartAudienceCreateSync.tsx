@@ -316,7 +316,6 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
     const [openS3Connect, setOpenS3Connect] = useState(false);
     const [isInvalidApiKey, setIsInvalidApiKey] = useState(false);
     const [integratedServices, setIntegratedServices] = useState<string[]>([])
-
     const [mailchimpIconPopupOpen, setOpenMailchimpIconPopup] = useState(false)
     const [googleAdsIconPopupOpen, setOpenGoogleAdsIconPopup] = useState(false)
     const [openMailchimpConnect, setOpenmailchimpConnect] = useState(false)
@@ -347,6 +346,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
         setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/smart-audience-sync')
         setValueContactSync(0)
         setCustomFields([])
+        setOptionAdAccountMeta(null)
+        setSelectedOptionMeta(null)
     }
 
     useEffect(() => {
@@ -532,21 +533,27 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
 
             if (activeService === "meta") {
                 setActiveUrl('https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-meta')
-                if (optionAdAccountMeta?.id && selectedOptionMeta?.list_name && selectedOptionMeta?.id) {
+                if (optionAdAccountMeta && selectedOptionMeta && optionAdAccountMeta.id && selectedOptionMeta.list_name && selectedOptionMeta.id) {
                     requestObj.customer_id = String(optionAdAccountMeta?.id);
                     requestObj.list_id = String(selectedOptionMeta?.id);
                     requestObj.list_name = selectedOptionMeta?.list_name;
-                
-                    const campaignName = formValuesMeta?.campaignName?.trim();
-                    if (campaignName) {
-                        requestObj.campaign = {
-                            campaign_id: selectedOptionCampaignMeta?.id,
-                            campaign_name: campaignName,
-                            campaign_objective: formValuesMeta?.campaignObjective,
-                            bid_amount: formValuesMeta?.bidAmount,
-                            daily_budget: formValuesMeta?.dailyBudget
+                    if (selectedOptionCampaignMeta?.id) {
+                        const campaign: any = {
+                            campaign_id: String(selectedOptionCampaignMeta?.id),
+                            campaign_name: String(selectedOptionCampaignMeta?.list_name)
                         };
+                    
+                        if (formValuesMeta?.campaignObjective?.trim()) {
+                            campaign.campaign_objective = String(formValuesMeta.campaignObjective);
+                        }
+                    
+                        if (formValuesMeta?.bidAmount) {
+                            campaign.bid_amount = String(formValuesMeta.bidAmount);
+                        }
+                    
+                        requestObj.campaign = campaign;
                     }
+                    
                 }
                 
                 else {
@@ -942,7 +949,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
     const fetchAdAccount = async () => {
         setIsLoading(true);
         try {
-            const response = await axiosInstance.get('/integrations/sync/ad_accounts');
+            const response = await axiosInstance.get('/integrations/sync/ad_accounts', {
+                params: {
+                    service_name: 'meta'
+                }
+            })
             if (response.status === 200) {
                 setAdAccountsMeta(response.data);
             }
@@ -964,7 +975,11 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
     const getCustomersInfo = async () => {
         try {
             setIsLoading(true)
-            const response = await axiosInstance.get('integrations/google-ads/customers-info')
+            const response = await axiosInstance.get('/integrations/sync/ad_accounts', {
+                params: {
+                    service_name: 'google_ads'
+                }
+            })
             if (response.data.status === 'SUCCESS') {
                 setCustomersInfo(response.data.customers || [])
             }

@@ -52,8 +52,8 @@ const SourcesList: React.FC = () => {
     const isOpenFullName = Boolean(anchorElFullName);
 
     const { smartAudienceProgress, validationProgress } = useSSE();
-    const progress = smartAudienceProgress[createdData.id];
-    const progressValidation = validationProgress[createdData.id];
+    const progress = smartAudienceProgress[createdData?.id];
+    const progressValidation = validationProgress[createdData?.id];
 
     const handleClosePopoverFullName = () => {
         setAnchorElFullName(null);
@@ -61,19 +61,13 @@ const SourcesList: React.FC = () => {
     };
 
     useEffect(() => {
-        console.log("pooling");
-
         if (!intervalRef.current) {
-            console.log("pooling started");
             intervalRef.current = setInterval(() => {
                 const hasPending = createdData.active_segment_records !== createdData.processed_active_segment_records || createdData.status === "validating";
 
                 if (hasPending) {
-                    console.log("Fetching due to pending records");
-
                     fetchData();
                 } else {
-                    console.log("No pending records, stopping interval");
                     if (intervalRef.current) {
                         clearInterval(intervalRef.current);
                         intervalRef.current = null;
@@ -86,7 +80,6 @@ const SourcesList: React.FC = () => {
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
                 intervalRef.current = null;
-                console.log("interval cleared");
             }
         };
     }, [createdData]);
@@ -97,7 +90,10 @@ const SourcesList: React.FC = () => {
             if (createdData) {
                 const response = await axiosInstance.get(`/audience-smarts/get-processing-smart-source?&id=${createdData.id}`)
                 const updatedItem = response.data
-                console.log(updatedItem)
+                if (updatedItem === null) {
+                    router.push("/smart-audiences")
+                    return
+                }
                 setCreatedData(updatedItem);
             }
         } catch (error) {
