@@ -37,7 +37,7 @@ const GoogleAdsLanding = () => {
           router.push(`/integrations`);
         }
       } catch (error) {
-        showErrorToast(`Error connect to SalesForce ${error}`);
+        showErrorToast(`Error connect to SalesForce try again`);
         router.push(`/integrations`);
       }
     };

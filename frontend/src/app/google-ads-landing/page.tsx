@@ -39,7 +39,7 @@ const GoogleAdsLanding = () => {
           router.push(`/integrations`);
         } 
       } catch (error) {
-        showErrorToast(`Error connect to GoogleAds ${error}`);
+        showErrorToast(`Error connect to GoogleAds try again`);
         router.push(`/integrations`);
       }
     };

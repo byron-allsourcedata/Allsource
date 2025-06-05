@@ -306,7 +306,6 @@ const Signin: React.FC = () => {
                     router.push("/audience-dashboard");
                     break;
                   case "FILL_COMPANY_DETAILS":
-                    console.log('1234')
                     let data = await fetchUserData();
                     const { is_pixel_installed, is_source_imported } = data?.get_started;
                     if (is_pixel_installed && is_source_imported) {
@@ -317,10 +316,6 @@ const Signin: React.FC = () => {
                     break;
                   default:
                     router.push("/audience-dashboard");
-                    console.error(
-                      "Authorization failed:",
-                      response.data.status
-                    );
                 }
               } catch (error) {
                 console.error("Error during Google login:", error);

@@ -59,7 +59,7 @@ const AccountSetup = () => {
             router.push("/settings?section=subscription");
             break;
           case "DASHBOARD_ALLOWED":
-            router.push("/audience-dashboard");
+            router.push("/dashboard");
             break;
           default:
             console.error("Unknown status:", status);
