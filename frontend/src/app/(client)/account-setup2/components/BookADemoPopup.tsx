@@ -43,8 +43,8 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
       const meData = JSON.parse(meItem);
       setPrefillData({
         email: meData.email,
-        first_name: meData.full_name,
-        last_name: "",
+        firstname: meData.full_name,
+        lastname: "",
       });
     }
   }, []);
@@ -65,7 +65,7 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
             invitees: inviteesUUID,
           });
           response;
-        } catch (error) {}
+        } catch (error) { }
         handleClose();
         showToast("You have successfully signed up for a call");
       }
