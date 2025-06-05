@@ -132,7 +132,7 @@ const AudienceDashboard: React.FC = () => {
   const fetchData = async () => {
     try {
       const [countsRes, eventsRes] = await Promise.all([
-        axiosInterceptorInstance.get("/dashboard"),
+        axiosInterceptorInstance.get("/audience-dashboard"),
         axiosInterceptorInstance.get("/audience-dashboard/events"),
       ]);
 

@@ -103,31 +103,6 @@ const AccountSetup = () => {
     setIsFocused(false);
   };
 
-  useEffect(() => {
-    const parent_token = localStorage.getItem("parent_token");
-    setVisibleButton(!!parent_token);
-  }, []);
-
-  const handleReturnToMain = async () => {
-    const parent_token = localStorage.getItem("parent_token");
-    const parent_domain = sessionStorage.getItem("parent_domain");
-    if (parent_token) {
-      await new Promise<void>((resolve) => {
-        sessionStorage.clear;
-        localStorage.removeItem("parent_token");
-        localStorage.setItem("token", parent_token);
-        sessionStorage.setItem("current_domain", parent_domain || "");
-        fetchUserData();
-        setBackButton(false);
-        setTimeout(() => {
-          resolve();
-        }, 0);
-      });
-    }
-
-    router.push("/partners");
-  };
-
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -181,12 +156,8 @@ const AccountSetup = () => {
     if (stripeUrl) {
       router.push(stripeUrl);
     } else {
-      if (partner) {
-        router.push("/partners");
-      } else {
-        router.push("/dashboard");
-        localStorage.setItem("welcome_popup", "true");
-      }
+      router.push("/dashboard");
+      localStorage.setItem("welcome_popup", "true");
     }
   };
 
@@ -314,26 +285,6 @@ const AccountSetup = () => {
               width={130}
             />
           </Box>
-          {(visibleButton || backButton) && (
-            <Button
-              onClick={handleReturnToMain}
-              sx={{
-                fontFamily: "Nunito Sans",
-                fontSize: "14px",
-                fontWeight: 600,
-                mb: 2,
-                ml: 12,
-                lineHeight: "19.1px",
-                textAlign: "left",
-                textDecoration: "underline",
-                textTransform: "none",
-                color: "rgba(56, 152, 252, 1)",
-                position: "absolute",
-              }}
-            >
-              Return to main
-            </Button>
-          )}
           <Button
             aria-controls={open ? "profile-menu" : undefined}
             aria-haspopup="true"

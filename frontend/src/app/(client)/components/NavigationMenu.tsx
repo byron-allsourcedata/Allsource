@@ -141,7 +141,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
     useState<null | HTMLElement>(null);
   const router = useRouter();
   const pathname = usePathname();
-  const { full_name: userFullName, email: userEmail, partner } = useUser();
+  const { full_name: userFullName, email: userEmail } = useUser();
   const meItem =
     typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
   const meData = meItem ? JSON.parse(meItem) : { full_name: "", email: "" };
@@ -380,9 +380,9 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 
           <ListItem
             button
-            onClick={() => handleNavigation("/dashboard")}
+            onClick={() => handleNavigation("/audience-dashboard")}
             sx={{
-              ...(isActive("/dashboard")
+              ...(isActive("/audience-dashboard")
                 ? navigationmenuStyles.activeItem
                 : {}),
               ...navigationmenuStyles.mobileDrawerList,
@@ -398,7 +398,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
             onClick={handleTogglePixel}
             sx={{
               ...(isActive("/pixel") ||
-                isActive("/analytics") ||
+                isActive("/dashboard") ||
                 isActive("/leads") ||
                 isActive("/company") ||
                 isActive("/supression")
@@ -421,9 +421,9 @@ const NavigationMenu: React.FC<NavigationProps> = ({
             <List component="div" disablePadding>
               <ListItem
                 button
-                onClick={() => handleNavigation("/analytics")}
+                onClick={() => handleNavigation("/dashboard")}
                 sx={{
-                  ...(isActive("/analytics")
+                  ...(isActive("/dashboard")
                     ? navigationmenuStyles.activeItem
                     : {}),
                   ...navigationmenuStyles.mobileDrawerList,
@@ -598,23 +598,6 @@ const NavigationMenu: React.FC<NavigationProps> = ({
             <ListItemIcon><AnalyticsIcon /></ListItemIcon>
             <ListItemText primary="Analytics" />
           </ListItem> */}
-          {partner && (
-            <ListItem
-              button
-              onClick={() => handleNavigation("/partners")}
-              sx={{
-                ...(isActive("/partners")
-                  ? navigationmenuStyles.activeItem
-                  : {}),
-                ...navigationmenuStyles.mobileDrawerList,
-              }}
-            >
-              <ListItemIcon>
-                <AccountBoxIcon />
-              </ListItemIcon>
-              <ListItemText primary="Partners" />
-            </ListItem>
-          )}
           {/* <ListItem button onClick={() => handleNavigation('/rules')}
           sx={{
             ...(isActive('/rules') ? navigationmenuStyles.activeItem : {}),
@@ -622,15 +605,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
             }}>
             <ListItemIcon><RuleFolderIcon /></ListItemIcon>
             <ListItemText primary="Rules" />
-          </ListItem> */}
-          {/* <ListItem button onClick={() => handleNavigation('/partners')}
-            sx={{
-              ...(isActive('/partners') ? navigationmenuStyles.activeItem : {}),
-              ...navigationmenuStyles.mobileDrawerList
-              }}>
-            <ListItemIcon><AccountBoxIcon /></ListItemIcon>
-            <ListItemText primary="Partners" />
-          </ListItem> */}
+          </ListItem> */}s
           <ListItem
             button
             onClick={() => handleNavigation("/settings")}

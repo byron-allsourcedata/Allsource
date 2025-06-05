@@ -344,7 +344,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     isActive("/leads") ||
     isActive("/company") ||
     isActive("/suppressions") ||
-    isActive("/analytics");
+    isActive("/dashboard");
   const handleClick = () => {
     setOpen(!open);
   };
@@ -401,9 +401,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Audience-dashboard */}
         <ListItem
           button
-          onClick={() => handleNavigation("/dashboard")}
+          onClick={() => handleNavigation("/audience-dashboard")}
           sx={
-            isActive("/dashboard")
+            isActive("/audience-dashboard")
               ? sidebarStyles.activeItem
               : sidebarStyles.ListItem
           }
@@ -443,9 +443,9 @@ const Sidebar: React.FC<SidebarProps> = ({
                   {/* Insights */}
                   <ListItem
                     button
-                    onClick={() => handleNavigation("/analytics")}
+                    onClick={() => handleNavigation("/dashboard")}
                     sx={
-                      isActive("/analytics")
+                      isActive("/dashboard")
                         ? { ...sidebarStyles.activeItem, pl: 4 }
                         : { ...sidebarStyles.ListItem, pl: 4 }
                     }
@@ -681,23 +681,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
                 </ListItem> */}
-        {/* partners */}
-        {isPartnerAvailable && (
-          <ListItem
-            button
-            onClick={() => handleNavigation("/partners")}
-            sx={
-              isActive("/partners")
-                ? sidebarStyles.activeItem
-                : sidebarStyles.ListItem
-            }
-          >
-            <ListItemIcon sx={sidebarStyles.listItemIcon}>
-              <AccountBoxIcon />
-            </ListItemIcon>
-            <ListItemText primary="Partners" />
-          </ListItem>
-        )}
         {/* <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <RuleFolderIcon />

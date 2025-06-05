@@ -18,12 +18,10 @@ import { showErrorToast } from "@/components/ToastNotification";
 import { GoogleLogin } from "@react-oauth/google";
 import { fetchUserData } from "@/services/meService";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
-import { useUser } from "@/context/UserContext";
 
 const Signin: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { partner } = useUser();
   useEffect(() => {
     document.body.style.overflow = "hidden";
     return () => {
@@ -35,10 +33,10 @@ const Signin: React.FC = () => {
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
       if (token) {
-        router.push(partner ? "/partners" : "/audience-dashboard");
+        router.push("/audience-dashboard");
       }
     }
-  }, [router, partner]);
+  }, [router]);
 
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -149,7 +147,7 @@ const Signin: React.FC = () => {
           switch (responseData.status) {
             case "SUCCESS":
               await fetchUserData();
-              router.push("/dashboard");
+              router.push("/audience-dashboard");
               break;
 
             case "SUCCESS_ADMIN":
@@ -178,7 +176,7 @@ const Signin: React.FC = () => {
 
             case "NEED_BOOK_CALL":
               await fetchUserData();
-              router.push("/dashboard");
+              router.push("/audience-dashboard");
               break;
 
             case "PAYMENT_NEEDED":
@@ -188,14 +186,14 @@ const Signin: React.FC = () => {
 
             case "PIXEL_INSTALLATION_NEEDED":
               await fetchUserData();
-              router.push(partner ? "/partners" : "/get-started");
+              router.push("/get-started");
               break;
 
             case "FILL_COMPANY_DETAILS":
               let data = await fetchUserData();
               const { is_pixel_installed, is_source_imported } = data?.get_started;
               if (is_pixel_installed && is_source_imported) {
-                router.push('/dashboard');
+                router.push('/audience-dashboard');
               } else {
                 router.push('/get-started');
               }
@@ -203,7 +201,7 @@ const Signin: React.FC = () => {
 
             default:
               await fetchUserData();
-              router.push("/dashboard");
+              router.push("/audience-dashboard");
               break;
           }
         } else {
@@ -281,7 +279,7 @@ const Signin: React.FC = () => {
                 }
                 switch (response.data.status) {
                   case "SUCCESS":
-                    router.push(partner ? "/partners" : "/audience-dashboard");
+                    router.push("/audience-dashboard");
                     break;
                   case "SUCCESS_ADMIN":
                     await fetchUserData();
@@ -296,7 +294,7 @@ const Signin: React.FC = () => {
                     break;
                   case "NEED_BOOK_CALL":
                     sessionStorage.setItem("is_slider_opened", "true");
-                    router.push("/dashboard");
+                    router.push("/audience-dashboard");
                     break;
                   case "PAYMENT_NEEDED":
                     router.push(`${response.data.stripe_payment_url}`);
@@ -305,23 +303,19 @@ const Signin: React.FC = () => {
                     showErrorToast("User with this email does not exist");
                     break;
                   case "PIXEL_INSTALLATION_NEEDED":
-                    router.push(partner ? "/partners" : "/audience-dashboard");
+                    router.push("/audience-dashboard");
                     break;
                   case "FILL_COMPANY_DETAILS":
                     let data = await fetchUserData();
                     const { is_pixel_installed, is_source_imported } = data?.get_started;
                     if (is_pixel_installed && is_source_imported) {
-                      router.push('/dashboard');
+                      router.push('/audience-dashboard');
                     } else {
                       router.push('/get-started');
                     }
                     break;
                   default:
-                    router.push("/dashboard");
-                    console.error(
-                      "Authorization failed:",
-                      response.data.status
-                    );
+                    router.push("/audience-dashboard");
                 }
               } catch (error) {
                 console.error("Error during Google login:", error);
