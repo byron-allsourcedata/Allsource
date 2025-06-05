@@ -6,7 +6,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../ToastNotification";
 import DemoFeedbackCard from "./DemoFeedbackCard";
 import DemoFollowup, { FollowupLink } from "./DemoFollowup";
-import { getBookingUrlWithParams } from "@/services/booking";
+import { useBookingUrl } from "@/services/booking";
 
 interface HelpPoint {
   title: string;
@@ -39,7 +39,6 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
     }
   }, []);
 
-  const [utmParams, setUtmParams] = useState<string | null>(null);
   useCalendlyEventListener({
     onEventScheduled: async (e) => {
       const eventUri = e.data.payload.event.uri;
@@ -56,81 +55,62 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
             invitees: inviteesUUID,
           });
           response;
-        } catch (error) { }
+        } catch (error) {}
         showToast("You have successfully signed up for a call");
       }
     },
   });
 
-  const fetchPrefillData = async () => {
-    try {
-      const response = await axiosInstance.get("/calendly");
-      const user = response.data.user;
-
-      if (user) {
-        const { full_name, email, utm_params } = user;
-        setUtmParams(utm_params);
-        setPrefillData({
-          email: email || "",
-          name: full_name || "",
-        });
-      } else {
-        setPrefillData(initialPrefill);
-      }
-    } catch (error) {
-      setPrefillData(initialPrefill);
-    } finally {
-    }
-  };
-
-  const calendlyUrl = React.useMemo(() => getBookingUrlWithParams(utmParams), [utmParams])
+  const meetingUrl = useBookingUrl(axiosInstance);
 
   const handleSchedule = () => {
     // showToast("Opening Calendly in a new tab…");
-    window.open(calendlyUrl, "_blank", "noopener");
+    window.open(meetingUrl, "_blank", "noopener");
     setShowForm(true);
   };
 
   const [showForm, setShowForm] = useState(false);
   const [showDemoFeedback, setShowDemoFeedback] = useState(false);
-  const handleDemoSubmit = (answers: { purchaseLikelihood: string, aiStrategy: string }) => {
-    console.log('Submitted answers', answers);
-    setShowDemoFeedback(true)
+  const handleDemoSubmit = (answers: {
+    purchaseLikelihood: string;
+    aiStrategy: string;
+  }) => {
+    console.log("Submitted answers", answers);
+    setShowDemoFeedback(true);
   };
 
   const demoSections = [
     {
-      heading: 'Learn how AI targeting works',
-      description: 'Read our',
+      heading: "Learn how AI targeting works",
+      description: "Read our",
       links: [
         {
-          label: 'Beginner’s Guide to AI Audiences',
-          href: 'https://example.com/guide-ai-audiences',
+          label: "Beginner’s Guide to AI Audiences",
+          href: "https://example.com/guide-ai-audiences",
         },
       ] as FollowupLink[],
     },
     {
-      heading: 'Try our free tools',
-      description: 'Try our',
+      heading: "Try our free tools",
+      description: "Try our",
       links: [
         {
-          label: 'Free Audience Analyzer Tool',
-          href: 'https://example.com/audience-analyzer',
+          label: "Free Audience Analyzer Tool",
+          href: "https://example.com/audience-analyzer",
         },
       ] as FollowupLink[],
     },
     {
-      heading: 'Boost your knowledge',
-      description: 'Watch',
+      heading: "Boost your knowledge",
+      description: "Watch",
       links: [
         {
-          label: 'How AI Predicts Customer Behavior',
-          href: 'https://example.com/ai-predicts-behavior',
+          label: "How AI Predicts Customer Behavior",
+          href: "https://example.com/ai-predicts-behavior",
         },
       ] as FollowupLink[],
     },
   ];
-
 
   return (
     <>
