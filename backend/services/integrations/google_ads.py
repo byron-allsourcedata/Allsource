@@ -124,15 +124,17 @@ class GoogleAdsIntegrationsService:
             'status': IntegrationsStatus.SUCCESS.value
         }
 
-    async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+    async def create_sync(self, domain_id: int, customer_id: str, leads_type: str, list_id: str, list_name: str, created_by: str, user: dict, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(user_id=user.get('id'), domain_id=domain_id)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
-            'domain_id': domain_id,
+            'sent_contacts': -1,
+            'sync_type': DataSyncType.CONTACT.value,
             'leads_type': leads_type,
             'data_map': data_map,
+            'domain_id': domain_id,
             'created_by': created_by,
             'customer_id': customer_id
         })
@@ -154,7 +156,7 @@ class GoogleAdsIntegrationsService:
         })
         return sync
 
-    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict = {}):
         profiles = []
         for enrichment_user in enrichment_users:
             result = self.__mapped_googleads_profile(enrichment_user, target_schema, validations)

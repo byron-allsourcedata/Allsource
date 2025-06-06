@@ -1102,8 +1102,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                         >
                           {platformIcon(row.platform) || "--"}
                         </Box>
-                      </SmartCell>
 
+                      </SmartCell>
                       <SmartCell
                         cellOptions={{
                           sx: {
@@ -1111,11 +1111,13 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                           },
                         }}
                         tooltipOptions={{
-                          content: new Intl.NumberFormat("en-US").format(row.active_segments) || "--"
+                          content: row.active_segments === -1
+                          ? "unlimit"
+                          : new Intl.NumberFormat("en-US").format(row.active_segments) || "--"
                         }}>
-                        {new Intl.NumberFormat("en-US").format(
-                          row.active_segments
-                        ) || "--"}
+                       {row.active_segments === -1
+                          ? "unlimit"
+                          : new Intl.NumberFormat("en-US").format(row.active_segments) || "--"}
                       </SmartCell>
 
                       <SmartCell

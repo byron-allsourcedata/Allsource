@@ -10,7 +10,6 @@ class DataSyncImportedLead(Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     status = Column(VARCHAR(64), nullable=False)
-    five_x_five_up_id = Column(VARCHAR, nullable=False)
     service_name = Column(VARCHAR(128), nullable=False)
     data_sync_id = Column(
         BigInteger,
@@ -31,12 +30,10 @@ class DataSyncImportedLead(Base):
             'data_sync_id',
             'status'
         ),
-        UniqueConstraint(
-            'five_x_five_up_id',
-            'service_name',
-            'data_sync_id',
+        Index(
+            'data_sync_imported_leads_lead_users_id_data_sync_id_idx',
             'lead_users_id',
-            name='data_sync_imported_leads_five_x_five_up_id_service_name_data_sy'
+            'data_sync_id'
         ),
     )
 

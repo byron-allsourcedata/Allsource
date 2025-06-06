@@ -10,7 +10,7 @@ from sqlalchemy import create_engine, select
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, timezone
-from enums import DataSyncImportedStatus, ProccessDataSyncResult, AudienceSmartStatuses
+from enums import DataSyncImportedStatus, ProccessDataSyncResult, AudienceSmartStatuses, DataSyncType
 from utils import get_utc_aware_date
 from models.enrichment.enrichment_users import EnrichmentUser
 from typing import Optional
@@ -45,13 +45,16 @@ async def send_leads_to_queue(rmq_connection, msg):
     )
 
 def fetch_data_syncs(session):
-    results = session.query(UserIntegration, IntegrationUserSync)\
-            .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id)\
-            .all()
+    results = session.query(UserIntegration, IntegrationUserSync) \
+        .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id) \
+        .filter(IntegrationUserSync.sent_contacts > 0) \
+        .all()
+
     user_integrations = [res[0] for res in results]
     data_syncs = [res[1] for res in results]
 
     return user_integrations, data_syncs
+
 
 def get_no_of_imported_success_contacts(session, data_sync_id):
     return session.query(AudienceDataSyncImportedPersons).filter(
@@ -97,7 +100,7 @@ def fetch_enrichment_users_by_data_sync(
         .join(AudienceSmartPerson, AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id)
         .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id)
         .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id)
-        .filter(IntegrationUserSync.id == data_sync_id, AudienceSmartPerson.is_valid == True)
+        .filter(IntegrationUserSync.id == data_sync_id, AudienceSmartPerson.is_valid == True, IntegrationUserSync.sync_type != DataSyncType.CONTACT.value)
     )
     
     if last_sent_enrichment_id is not None:

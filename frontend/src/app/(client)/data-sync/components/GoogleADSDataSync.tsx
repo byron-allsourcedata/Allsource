@@ -37,7 +37,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             list_id: data?.list_id ?? '',
             list_name: data?.name ?? '',
         }
-        );
+    );
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
     const [newListName, setNewListName] = useState<string>(data?.name ?? '');
     const [isShrunk, setIsShrunk] = useState<boolean>(false);
@@ -138,7 +138,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
     const getCustomersInfo = async () => {
         try {
             setLoading(true)
-            const response = await axiosInstance.get('integrations/customers-info', {
+            const response = await axiosInstance.get('integrations/sync/ad_accounts', {
                 params: {
                     service_name: 'google_ads'
                 }
@@ -247,8 +247,12 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
             if (validateTab2()) {
                 setValue((prevValue) => String(Number(prevValue) + 1));
             }
-            setSavedList(list);
-            showToast('List saved successfully');
+            if (list) {
+                setSavedList(list);
+                setGoogleAdsList(prev => [...(prev || []), list]);
+                showToast('List saved successfully');
+            }
+
         } catch (error) {
             console.error('Error saving list:', error);
         } finally {
@@ -475,7 +479,7 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose
                     <Button
                         variant="contained"
                         onClick={handleSaveSync}
-                        disabled={!inputListName || !selectedRadioValue.trim()}
+                        disabled={!inputListName || !(selectedRadioValue?.trim())}
                         sx={{
                             backgroundColor: 'rgba(56, 152, 252, 1)',
                             fontFamily: "Nunito Sans",
