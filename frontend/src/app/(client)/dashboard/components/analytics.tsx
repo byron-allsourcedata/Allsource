@@ -313,16 +313,14 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
                             <DashboardRevenue appliedDates={appliedDates} />
                         </TabPanel>
                         <TabPanel value={tabIndex} index={1}>
-                            {typeBusiness === "d2c" ? null : ( // /> //   typeBusiness={typeBusiness} //   appliedDates={appliedDates} // <DashboardContactD2C
-                                <DashboardContactB2B
-                                    appliedDates={appliedDates}
-                                    typeBusiness={typeBusiness}
-                                    values={values}
-                                    setValues={setValues}
-                                    loading={loading}
-                                    setLoading={setLoading}
-                                />
-                            )}
+                          <DashboardContactB2B
+                              appliedDates={appliedDates}
+                              typeBusiness={typeBusiness}
+                              values={values}
+                              setValues={setValues}
+                              loading={loading}
+                              setLoading={setLoading}
+                          />
                         </TabPanel>
                     </Box>
 

@@ -605,7 +605,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
             }}>
             <ListItemIcon><RuleFolderIcon /></ListItemIcon>
             <ListItemText primary="Rules" />
-          </ListItem> */}s
+          </ListItem> */}
           <ListItem
             button
             onClick={() => handleNavigation("/settings")}

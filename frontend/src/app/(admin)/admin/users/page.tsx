@@ -28,9 +28,8 @@ interface TabPanelProps {
 const Users: React.FC = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [tabIndex, setTabIndex] = useState(0);
     const [dateRanges, setDateRanges] = useState<Record<string, number>>({});
-      
+    const [tabIndex, setTabIndex] = useState(1);
     const [valuesMetrics, setValueMetrics] = useState<CustomCardsProps>({
         users: 0,
         pixel_contacts: 0,

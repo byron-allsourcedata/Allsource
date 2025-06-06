@@ -629,6 +629,8 @@ const Sidebar: React.FC<SidebarProps> = ({
               </ListItemIcon>
               <ListItemText primary="Data Sync" />
             </ListItem>
+            
+            <PremiumSources />  
 
             {/* Integrations */}
             <ListItem
@@ -645,7 +647,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               </ListItemIcon>
               <ListItemText primary="Integrations" />
             </ListItem>
-            <PremiumSources />  
+            
           </List>
 
           {!isSourceInstalled && !loading && (
@@ -758,7 +760,17 @@ const PremiumSources = () => {
               },
             },
           }}
-          placement="right"
+          placement="bottom"
+          PopperProps={{
+            modifiers: [
+              {
+                name: 'offset',
+                options: {
+                  offset: [75, -15],
+                },
+              },
+            ],
+          }}
         >
           <Row gap="0px" alignItems="center">
             <ListItemIcon sx={{...sidebarStyles.listItemIcon, justifyContent: "center"}}>
