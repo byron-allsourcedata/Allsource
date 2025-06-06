@@ -86,10 +86,10 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
         <Box
             sx={{
                 display: "flex",
-                justifyContent: "flex-end",
+                justifyContent: "end",
                 alignItems: "center",
                 gap: 2,
-                width: typeBusiness == "d2c" ? "" : "100%",
+                width: typeBusiness == "d2c" ? "100%" : "100%",
                 "@media (max-width: 600px)": {
                     display: "none",
                 },
@@ -290,14 +290,14 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
                                 </Box>
                             </Box>
 
-                            {!noContactsYet && isMobile && CalendarButton}
+                            
                         </Box>
                         <AnalyticsTabs
                             hasNotification={!!hasNotification}
                             tabIndex={tabIndex}
                             handleTabChange={handleTabChange}
                         />
-                        <Box minWidth={2} flex={1}>
+                        <Box minWidth={2} flex={1} justifyContent="end">
                             {!noDataLoaded && ButtonGroup}
                         </Box>
                     </Box>
