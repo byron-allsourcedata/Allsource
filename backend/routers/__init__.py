@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from routers import subscriptions, users, company_info, pixel_installation, admin_customers, dashboard, sse_events, \
     sources, smart_audiences, \
-    admin_partner, admin_accounts, leads, audience, calendly, integrations, settings, domains, suppressions, data_sync, \
+    admin_partner, admin_accounts, leads, audience, meeting_booking, integrations, settings, domains, suppressions, data_sync, \
     referral, partners, admin_assets, admin_payouts, \
     slack, leads_companies, lookalikes, dashboard_audience, insights
 
@@ -25,7 +25,7 @@ main_router.include_router(suppressions.router, prefix='/suppressions')
 main_router.include_router(leads.router, prefix='/leads')
 main_router.include_router(slack.router, prefix='/slack')
 main_router.include_router(sse_events.router)
-main_router.include_router(calendly.router, prefix='/calendly')
+main_router.include_router(meeting_booking.router, prefix='/calendly')
 main_router.include_router(integrations.router, prefix='/integrations', tags=['Integrations'])
 main_router.include_router(data_sync.router, prefix='/data-sync', tags=['DataSync'])
 main_router.include_router(settings.router, prefix='/settings')

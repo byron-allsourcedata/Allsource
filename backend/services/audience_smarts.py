@@ -106,6 +106,14 @@ class AudienceSmartsService:
 
         return product
 
+    def calculate_validation_cost(self, count_active_segment: int, validations: List[str]) -> float:
+        stats = self.audience_settings_persistence.get_cost_validations()
+        costs = 0
+        for key in validations:
+            costs += count_active_segment * stats.get(key, 1.0)
+
+        return round(costs, 2)
+
     def update_audience_smart(self, id: UUID, new_name: str) -> bool:
         count_updated = self.audience_smarts_persistence.update_audience_smart(id, new_name)
         return count_updated > 0
@@ -213,7 +221,8 @@ class AudienceSmartsService:
             active_segment_records=active_segment_records,
             total_records=total_records,
             target_schema=target_schema,
-            status=status
+            status=status,
+            need_validate=need_validate
         )
         await self.start_scripts_for_matching(created_data.id, user.get("id"), need_validate, data_sources, active_segment_records, validation_params)
 
@@ -265,6 +274,7 @@ class AudienceSmartsService:
                     for subkey in item.keys():
                         count_submited = item[subkey].get("count_submited", 0)
                         count_validated = item[subkey].get("count_validated", 0)
+                        count_cost = item[subkey].get("count_cost", 0)
 
                         if subkey == "recency":
                             subkey_with_param = "recency " + str(item[subkey].get("days")) + " days"
@@ -277,7 +287,7 @@ class AudienceSmartsService:
                                 "type_validation": subkey_with_param,
                                 "count_submited": count_submited,
                                 "count_validated": count_validated,
-                                "count_cost": 0,
+                                "count_cost": count_cost,
                             }
                         })
 

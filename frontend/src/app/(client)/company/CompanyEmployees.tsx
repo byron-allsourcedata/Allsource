@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect, Suspense } from 'react';
-import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, Popover } from '@mui/material';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
+import { Box, Grid, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Chip, Drawer, Popover, SxProps, Theme } from '@mui/material';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axiosInstance from '../../../axios/axiosInterceptorInstance';
@@ -30,11 +30,13 @@ import { showErrorToast, showToast } from '@/components/ToastNotification';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import UnlockButton from './UnlockButton';
-import { UpgradePlanPopup } from  '../components/UpgradePlanPopup'
+import { UpgradePlanPopup } from '../components/UpgradePlanPopup'
 import HintCard from "../components/HintCard";
 import { useCompanyHints } from "./context/CompanyHintsContext";
 import { employeesTableCards } from "./context/hintsCardsContent";
 import DomainButtonSelect from "../components/NavigationDomainButton";
+import { useScrollShadow } from '@/hooks/useScrollShadow';
+import { SmartCell } from '@/components/table';
 
 
 interface FetchDataParams {
@@ -88,7 +90,11 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const [employeeisUnlocked, setEmployeeisUnlocked] = useState(false);
     const [firstLockedValue, setFirstLockedValue] = useState<{ key: string; index: number } | null>(null);
     const { changeEmployeesTableHint, employeesTableHints, resetEmployeesTableHints } = useCompanyHints();
-
+    const tableContainerRef = useRef<HTMLDivElement>(null);
+    const { isScrolledX, isScrolledY } = useScrollShadow(
+        tableContainerRef,
+        data.length
+    );
 
     const handleOpenPopover = (event: React.MouseEvent<HTMLElement>, jobTitle: string) => {
         setSelectedJobTitle(jobTitle);
@@ -137,7 +143,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         setLoading(true)
         try {
             const response = await axiosInstance.get(`/company/employee?id=${id}&company_id=${companyId}`)
-            if (response.status === 200){
+            if (response.status === 200) {
                 setEmployeeisUnlocked(true)
                 const updateEmployee = response.data
                 setData((prevEmployees) => {
@@ -147,10 +153,10 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         newAccounts[index] = { ...newAccounts[index], ...updateEmployee };
                         return newAccounts;
                     }
-                    return [...prevEmployees, updateEmployee]; 
+                    return [...prevEmployees, updateEmployee];
                 });
             }
-        } 
+        }
         catch {
         }
         finally {
@@ -162,15 +168,15 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         setLoading(true);
         setEmployeeisUnlocked(false)
         try {
-            if (id){
-                const response = await axiosInstance.put('/subscriptions/charge-credit', {five_x_five_id: id}, {
+            if (id) {
+                const response = await axiosInstance.put('/subscriptions/charge-credit', { five_x_five_id: id }, {
                     headers: { 'Content-Type': 'application/json' }
                 })
-                if (response.status === 200){
+                if (response.status === 200) {
                     getEmployeeById(id)
                 }
             }
-        } 
+        }
         catch {
             setLoading(false);
         }
@@ -180,20 +186,20 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         setLoading(true);
         try {
             const response = await axiosInstance.get(`/subscriptions/check-credit-status`)
-            if (response.data.status === "NO_CREDITS"){
+            if (response.data.status === "NO_CREDITS") {
                 setUpgradePlanPopup(true)
             }
-            if (response.data.status === "UNLIMITED_CREDITS" && id){
+            if (response.data.status === "UNLIMITED_CREDITS" && id) {
                 showToast("You have a unlimited amount of credits!")
                 chargeCredit(id)
             }
-            if (response.data.status === "CREDITS_ARE_AVAILABLE"){
+            if (response.data.status === "CREDITS_ARE_AVAILABLE") {
                 setCreditsChargePopup(true)
             }
         }
-        catch{
+        catch {
         }
-        finally{ 
+        finally {
             setLoading(false)
         }
     }
@@ -201,11 +207,11 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
 
     const renderField = (data: RenderCeil, id: number, callback: ((value: string) => string) | null = null) => {
         if (data?.visibility_status === "hidden") {
-            return <UnlockButton onClick={ () => {
+            return <UnlockButton onClick={() => {
                 getStatusCredits(id)
                 setEmployeeId(id)
             }
-        } label="Unlock contact" />;
+            } label="Unlock contact" />;
         }
         if (data?.visibility_status === "missing") {
             return "--";
@@ -217,7 +223,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     }
 
 
-    
+
     const fetchEmployeesCompany = async ({ sortBy, sortOrder, page, rowsPerPage }: FetchDataParams) => {
         try {
             setIsLoading(true);
@@ -228,7 +234,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             }
 
             let url = `/company/employess?company_id=${companyId}&page=${page + 1}&per_page=${rowsPerPage}`;
-            
+
             const searchQuery = selectedFilters.find(filter => filter.label === 'Search')?.value;
             if (searchQuery) {
                 setPage(0)
@@ -254,13 +260,13 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                 }
             };
 
-    
+
             processMultiFilter('Regions', 'regions', true);
             processMultiFilter('Seniority', 'seniority');
             processMultiFilter('Job Title', 'job_title');
             processMultiFilter('Department', 'department');
 
-    
+
             const response = await axiosInstance.get(url);
             const [employees, count] = response.data;
 
@@ -276,7 +282,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             setData(Array.isArray(employees) ? employees : []);
             setCount(count || 0);
             setStatus(response.data.status);
-    
+
             const options = [10, 20, 50, 100, 300, 500];
             let RowsPerPageOptions = options.filter(option => option <= count);
             if (RowsPerPageOptions.length < options.length) {
@@ -308,22 +314,22 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             const response = await axiosInstance.get(`/company/${companyId}/departments`)
             setDepartments(Array.isArray(response.data) ? response.data : []);
         }
-        catch{
+        catch {
         }
-        finally{ 
+        finally {
             setLoading(false)
         }
     }
-    
+
     const handleJobTitles = async () => {
         setLoading(true);
         try {
             const response = await axiosInstance.get(`/company/${companyId}/job-titles`)
             setJobTitles(Array.isArray(response.data) ? response.data : []);
         }
-        catch{
+        catch {
         }
-        finally{ 
+        finally {
             setLoading(false)
         }
     }
@@ -333,9 +339,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             const response = await axiosInstance.get(`/company/${companyId}/seniorities`)
             setSeniorities(Array.isArray(response.data) ? response.data : []);
         }
-        catch{
+        catch {
         }
-        finally{ 
+        finally {
             setLoading(false)
         }
     }
@@ -343,9 +349,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     interface FilterParams {
         regions: string[];
         searchQuery: string | null;
-        department: Record<string, boolean>; 
-        seniority: Record<string, boolean>; 
-        jobTitle: Record<string, boolean>; 
+        department: Record<string, boolean>;
+        seniority: Record<string, boolean>;
+        jobTitle: Record<string, boolean>;
     }
 
     useEffect(() => {
@@ -406,7 +412,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                     params.push(`${paramName}=${encodeURIComponent(filter.split(', ').join(','))}`);
                 }
             };
-            processMultiFilter('Department', 'department'); 
+            processMultiFilter('Department', 'department');
             processMultiFilter('Seniority', 'seniority');
             processMultiFilter('Job Title', 'job_title');
 
@@ -480,20 +486,20 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         const filterMappings: { condition: boolean | string | string[] | number | null, label: string, value: string | ((f: any) => string) }[] = [
             { condition: filters.regions?.length, label: 'Regions', value: () => filters.regions!.join(', ') },
             { condition: filters.searchQuery?.trim() !== '', label: 'Search', value: filters.searchQuery || '' },
-            { 
-                condition: filters.seniority && Object.values(filters.seniority).some(Boolean), 
-                label: 'Seniority', 
-                value: () => getSelectedValues(filters.seniority!) 
+            {
+                condition: filters.seniority && Object.values(filters.seniority).some(Boolean),
+                label: 'Seniority',
+                value: () => getSelectedValues(filters.seniority!)
             },
-            { 
-                condition: filters.jobTitle && Object.values(filters.jobTitle).some(Boolean), 
-                label: 'Job Title', 
-                value: () => getSelectedValues(filters.jobTitle!) 
+            {
+                condition: filters.jobTitle && Object.values(filters.jobTitle).some(Boolean),
+                label: 'Job Title',
+                value: () => getSelectedValues(filters.jobTitle!)
             },
-            { 
-                condition: filters.department && Object.values(filters.department).some(Boolean), 
-                label: 'Department', 
-                value: () => getSelectedValues(filters.department!) 
+            {
+                condition: filters.department && Object.values(filters.department).some(Boolean),
+                label: 'Department',
+                value: () => getSelectedValues(filters.department!)
             },
         ];
 
@@ -507,7 +513,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
         setSelectedFilters(newSelectedFilters);
     };
 
-    const capitalizeTableCell  = (city: string) => {
+    const capitalizeTableCell = (city: string) => {
         return city
             ?.split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -539,10 +545,10 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
     const handleDeleteFilter = (filterToDelete: { label: string; value: string }) => {
         const updatedFilters = selectedFilters.filter(filter => filter.label !== filterToDelete.label);
         setSelectedFilters(updatedFilters);
-        
+
         const filters = JSON.parse(sessionStorage.getItem('filters-employee') || '{}');
         const valuesToDelete = filterToDelete.value.split(',').map(value => value.trim());
-    
+
         switch (filterToDelete.label) {
             case 'Search':
                 filters.searchQuery = '';
@@ -571,9 +577,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             default:
                 break;
         }
-        
+
         sessionStorage.setItem('filters-employee', JSON.stringify(filters));
-    
+
         // Обновляем фильтры для применения
         const newFilters: FilterParams = {
             regions: updatedFilters.find(f => f.label === 'Regions') ? updatedFilters.find(f => f.label === 'Regions')!.value.split(', ') : [],
@@ -582,19 +588,68 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
             jobTitle: Object.fromEntries(Object.keys(filters.jobTitle).map(key => [key, updatedFilters.some(f => f.label === 'Job Title' && f.value.includes(key))])),
             seniority: Object.fromEntries(Object.keys(filters.seniority).map(key => [key, updatedFilters.some(f => f.label === 'Seniority' && f.value.includes(key))]))
         };
-    
+
         // Применяем обновленные фильтры
         handleApplyFilters(newFilters);
     };
 
+    const columns = [
+        {
+            key: 'employee_name',
+            label: 'Name',
+            widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+        },
+        {
+            key: 'personal_email',
+            label: 'Personal Email',
+            sortable: true,
+            widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
+        },
+        {
+            key: 'business_email',
+            label: 'Business Email',
+            sortable: true,
+            widths: { width: "12vw", minWidth: "150px", maxWidth: "20vw" },
+        },
+        {
+            key: 'linkedin',
+            label: 'LinkedIn',
+            widths: { width: "13vw", minWidth: "150px", maxWidth: "20vw" },
+        },
+        {
+            key: 'mobile_phone',
+            label: 'Mobile Number',
+            widths: { width: "12vw", minWidth: "150px", maxWidth: "12vw" },
+        },
+        {
+            key: 'job_title',
+            label: 'Job Title',
+            widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
+        },
+        {
+            key: 'seniority',
+            label: 'Seniority',
+            widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+        },
+        {
+            key: 'department',
+            label: 'Department',
+            widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
+        },
+        {
+            key: 'location',
+            label: 'Location',
+            widths: { width: "150px", minWidth: "150px", maxWidth: "150px" },
+        }
+    ]
 
     return (
         <>
             {loading && (
-                <CustomizedProgressBar/>
+                <CustomizedProgressBar />
             )}
             <Box sx={{
-                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%',pr:3,
+                display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%', pr: 3,
                 '@media (max-width: 900px)': {
                     paddingRight: 2,
                     minHeight: '100vh'
@@ -622,9 +677,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                                 <IconButton onClick={onBack}>
-                                    <ArrowBackIcon sx={{color: 'rgba(56, 152, 252, 1)'}}/>
+                                    <ArrowBackIcon sx={{ color: 'rgba(56, 152, 252, 1)' }} />
                                 </IconButton>
-                                <Typography className='first-sub-title' sx={{textWrap: "nowrap"}}>
+                                <Typography className='first-sub-title' sx={{ textWrap: "nowrap" }}>
                                     Employee - {companyName}
                                 </Typography>
                                 <CustomToolTip title={'Contacts automatically sync across devices and platforms.'} linkText='Learn more' linkUrl='https://allsourceio.zohodesk.com/portal/en/kb/articles/company' />
@@ -632,7 +687,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                             <DomainButtonSelect />
                         </Box>
                         <Box sx={{
-                            display: 'flex', flexDirection: 'row',  position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
+                            display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
                             '@media (max-width: 900px)': {
                                 gap: '8px'
                             }
@@ -675,13 +730,13 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                 rightSide={true}
                                 isOpenBody={employeesTableHints["download"].showBody}
                                 toggleClick={() => {
-                                if (employeesTableHints["overview"].showBody) {
-                                    changeEmployeesTableHint("overview", "showBody", "close")
-                                }
-                                if (employeesTableHints["unlock"].showBody) {
-                                    changeEmployeesTableHint("unlock", "showBody", "close")
-                                }
-                                changeEmployeesTableHint("download", "showBody", "toggle")
+                                    if (employeesTableHints["overview"].showBody) {
+                                        changeEmployeesTableHint("overview", "showBody", "close")
+                                    }
+                                    if (employeesTableHints["unlock"].showBody) {
+                                        changeEmployeesTableHint("unlock", "showBody", "close")
+                                    }
+                                    changeEmployeesTableHint("download", "showBody", "toggle")
                                 }}
                                 closeClick={() => {
                                     changeEmployeesTableHint("download", "showBody", "close")
@@ -877,135 +932,152 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         ) : (
                             <Grid container spacing={1} sx={{ flex: 1 }}>
                                 <Grid item xs={12}>
-                                <TableContainer                                
-                                    sx={{
-                                    height: "70vh",
-                                    overflowX: "scroll",
-                                    maxHeight:
-                                        selectedFilters.length > 0
-                                        ? hasNotification
-                                            ? "63vh"
-                                            : "70vh"
-                                        : "70vh",
-                                    "@media (max-height: 800px)": {
-                                        height: "60vh",
-                                        maxHeight:
-                                        selectedFilters.length > 0
-                                            ? hasNotification
-                                            ? "53vh"
-                                            : "60vh"
-                                            : "70vh",
-                                    },
-                                    "@media (max-width: 400px)": {
-                                        height: "50vh",
-                                        maxHeight:
-                                        selectedFilters.length > 0
-                                            ? hasNotification
-                                            ? "53vh"
-                                            : "50vh"
-                                            : "70vh",
-                                    },
-                                    }}>
+                                    <TableContainer
+                                    ref={tableContainerRef}
+                                        sx={{
+                                            height: "70vh",
+                                            overflowX: "scroll",
+                                            maxHeight:
+                                                selectedFilters.length > 0
+                                                    ? hasNotification
+                                                        ? "63vh"
+                                                        : "70vh"
+                                                    : "70vh",
+                                            "@media (max-height: 800px)": {
+                                                height: "60vh",
+                                                maxHeight:
+                                                    selectedFilters.length > 0
+                                                        ? hasNotification
+                                                            ? "53vh"
+                                                            : "60vh"
+                                                        : "70vh",
+                                            },
+                                            "@media (max-width: 400px)": {
+                                                height: "50vh",
+                                                maxHeight:
+                                                    selectedFilters.length > 0
+                                                        ? hasNotification
+                                                            ? "53vh"
+                                                            : "50vh"
+                                                        : "70vh",
+                                            },
+                                        }}>
                                         <Table
-                                                stickyHeader
-                                                component={Paper}
-                                                aria-label="leads table"
-                                                sx={{ 
-                                                    tableLayout: "fixed", 
-                                                    border: "1px solid rgba(235, 235, 235, 1)",
-                                                }}
-                                                >
+                                            stickyHeader
+                                            component={Paper}
+                                            aria-label="leads table"
+                                            sx={{
+                                                tableLayout: "fixed",
+                                            }}
+                                        >
                                             <TableHead>
                                                 <TableRow>
-                                                    {[
-                                                        { key: 'employee_name', label: 'Name' },
-                                                        { key: 'personal_email', label: 'Personal Email', sortable: true },
-                                                        { key: 'business_email', label: 'Business Email', sortable: true },
-                                                        { key: 'linkedin', label: 'LinkedIn' },
-                                                        { key: 'mobile_phone', label: 'Mobile Number'},
-                                                        { key: 'job_title', label: 'Job Title'},
-                                                        { key: 'seniority', label: 'Seniority'},
-                                                        { key: 'department', label: 'Department'},
-                                                        { key: 'location', label: 'Location'}
-                                                    ].map(({ key, label, sortable = false }) => (
-                                                        <TableCell
-                                                            key={key}
-                                                            sx={{
-                                                                ...companyStyles.table_column,
-                                                                ...(key === 'employee_name' && {
-                                                                    position: 'sticky',
-                                                                    left: 0,
-                                                                    zIndex: 10
-                                                                }),
-                                                                ...(key === 'average_time_sec' && {
-                                                                    "::after": { content: 'none' }
-                                                                })
-                                                            }}
-                                                            
-                                                            onClick={sortable ? () => handleSortRequest(key) : undefined}
-                                                            style={{ cursor: sortable ? 'pointer' : 'default' }}
-                                                        >
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: "space-between", }}>
-                                                                <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
-                                                                {sortable && (
-                                                                    <IconButton size="small">
-                                                                        {orderBy === key ? (
-                                                                            order === 'asc' ? (
-                                                                                <NorthOutlinedIcon fontSize="inherit" />
+                                                    {columns.map((col) => {
+                                                        const { key, label, sortable = false, widths } = col;
+                                                        const isNameColumn = key === "employee_name";
+                                                        const isActionsColumn = key === "location";
+                                                        const hideDivider = (isNameColumn && isScrolledX) || isActionsColumn;
+                                                        const baseCellSX: SxProps<Theme> = {
+                                                            ...widths,
+                                                            position: "sticky",
+                                                            top: 0,
+                                                            zIndex: 97,
+                                                            borderTop: "1px solid rgba(235,235,235,1)",
+                                                            borderBottom: "1px solid rgba(235,235,235,1)",
+                                                            cursor: sortable ? "pointer" : "default",
+                                                            borderRight: isActionsColumn ? "1px solid rgba(235,235,235,1)" : "none",
+                                                            whiteSpace: isActionsColumn || isNameColumn ? "normal" : "wrap",
+                                                            overflow: isActionsColumn || isNameColumn ? "visible" : "hidden",
+                                                        };
+                                                        if (isNameColumn) {
+                                                            baseCellSX.left = 0;
+                                                            baseCellSX.zIndex = 99;
+                                                            baseCellSX.boxShadow = isScrolledX
+                                                                ? "3px 0px 3px rgba(0,0,0,0.2)"
+                                                                : "none";
+                                                        }
+                                                        const className = isNameColumn ? "sticky-cell" : undefined;
+                                                        const onClickHandler = sortable
+                                                            ? () => handleSortRequest(key)
+                                                            : undefined
+                                                        return (
+                                                            <SmartCell
+                                                                key={key}
+                                                                cellOptions={{
+                                                                    sx: baseCellSX,
+                                                                    hideDivider,
+                                                                    onClick: onClickHandler,
+                                                                    className,
+                                                                }}
+                                                            >
+                                                                <Box sx={{
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    position: "relative",
+                                                                    justifyContent: "space-between",
+                                                                }}>
+                                                                    <Typography variant="body2" sx={{ ...companyStyles.table_column, borderRight: '0' }}>{label}</Typography>
+                                                                    {sortable && (
+                                                                        <IconButton size="small">
+                                                                            {orderBy === key ? (
+                                                                                order === 'asc' ? (
+                                                                                    <NorthOutlinedIcon fontSize="inherit" />
+                                                                                ) : (
+                                                                                    <SouthOutlinedIcon fontSize="inherit" />
+                                                                                )
                                                                             ) : (
-                                                                                <SouthOutlinedIcon fontSize="inherit" />
-                                                                            )
-                                                                        ) : (
-                                                                            <SwapVertIcon fontSize="inherit" />
-                                                                        )}
-                                                                    </IconButton>
+                                                                                <SwapVertIcon fontSize="inherit" />
+                                                                            )}
+                                                                        </IconButton>
+                                                                    )}
+
+                                                                </Box>
+
+                                                                {key === firstLockedValue?.key && (
+                                                                    <HintCard
+                                                                        card={employeesTableCards["unlock"]}
+                                                                        positionLeft={-220}
+                                                                        positionTop={64.5 * (firstLockedValue.index + 1)}
+                                                                        rightSide={true}
+                                                                        isOpenBody={employeesTableHints["unlock"].showBody}
+                                                                        toggleClick={() => {
+                                                                            if (employeesTableHints["download"].showBody) {
+                                                                                changeEmployeesTableHint("download", "showBody", "close")
+                                                                            }
+                                                                            if (employeesTableHints["overview"].showBody) {
+                                                                                changeEmployeesTableHint("overview", "showBody", "close")
+                                                                            }
+                                                                            changeEmployeesTableHint("unlock", "showBody", "toggle")
+                                                                        }}
+                                                                        closeClick={() => {
+                                                                            changeEmployeesTableHint("unlock", "showBody", "close")
+                                                                        }}
+                                                                    />
                                                                 )}
+                                                                {key === "employee_name" && (
+                                                                    <HintCard
+                                                                        card={employeesTableCards["overview"]}
+                                                                        positionLeft={110}
+                                                                        positionTop={100}
+                                                                        isOpenBody={employeesTableHints["overview"].showBody}
+                                                                        toggleClick={() => {
+                                                                            if (employeesTableHints["download"].showBody) {
+                                                                                changeEmployeesTableHint("download", "showBody", "close")
+                                                                            }
+                                                                            if (employeesTableHints["unlock"].showBody) {
+                                                                                changeEmployeesTableHint("unlock", "showBody", "close")
+                                                                            }
+                                                                            changeEmployeesTableHint("overview", "showBody", "toggle")
+                                                                        }}
+                                                                        closeClick={() => {
+                                                                            changeEmployeesTableHint("overview", "showBody", "close")
+                                                                        }}
+                                                                    />
+                                                                )}
+                                                            </SmartCell>
 
-                                                            </Box>
-
-                                                            {key === firstLockedValue?.key && (
-                                                                <HintCard
-                                                                    card={employeesTableCards["unlock"]}
-                                                                    positionLeft={-220}
-                                                                    positionTop={64.5 * (firstLockedValue.index + 1)}
-                                                                    rightSide={true}
-                                                                    isOpenBody={employeesTableHints["unlock"].showBody}
-                                                                    toggleClick={() => {
-                                                                    if (employeesTableHints["download"].showBody) {
-                                                                        changeEmployeesTableHint("download", "showBody", "close")
-                                                                    }
-                                                                    if (employeesTableHints["overview"].showBody) {
-                                                                        changeEmployeesTableHint("overview", "showBody", "close")
-                                                                    }
-                                                                    changeEmployeesTableHint("unlock", "showBody", "toggle")
-                                                                    }}
-                                                                    closeClick={() => {
-                                                                        changeEmployeesTableHint("unlock", "showBody", "close")
-                                                                    }}
-                                                                />
-                                                            )}
-                                                            {key === "employee_name" && (
-                                                                <HintCard
-                                                                    card={employeesTableCards["overview"]}
-                                                                    positionLeft={110}
-                                                                    positionTop={100}
-                                                                    isOpenBody={employeesTableHints["overview"].showBody}
-                                                                    toggleClick={() => {
-                                                                    if (employeesTableHints["download"].showBody) {
-                                                                        changeEmployeesTableHint("download", "showBody", "close")
-                                                                    }
-                                                                    if (employeesTableHints["unlock"].showBody) {
-                                                                        changeEmployeesTableHint("unlock", "showBody", "close")
-                                                                    }
-                                                                    changeEmployeesTableHint("overview", "showBody", "toggle")
-                                                                    }}
-                                                                    closeClick={() => {
-                                                                        changeEmployeesTableHint("overview", "showBody", "close")
-                                                                    }}
-                                                                />
-                                                            )}
-                                                        </TableCell>
-                                                    ))}
+                                                        )
+                                                    })}
                                                 </TableRow>
                                             </TableHead>
                                             <TableBody>
@@ -1013,9 +1085,9 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                     <>
                                                         <TableRow
                                                             key={row.id?.value}
-                                                            // selected={selectedRows.has(row.id.value)}
                                                             sx={{
-                                                                // backgroundColor: selectedRows.has(row.id.value) ? 'rgba(247, 247, 247, 1)' : '#fff',
+                                                                height: "68px",
+                                                                backgroundColor: selectedRows.has(row.id.value) ? 'rgba(247, 247, 247, 1)' : '#fff',
                                                                 '&:hover': {
                                                                     backgroundColor: 'rgba(247, 247, 247, 1)',
                                                                     '& .sticky-cell': {
@@ -1025,94 +1097,222 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                                                             }}
                                                         >
                                                             {/* Full name Column */}
-                                                            <TableCell className="sticky-cell"
-                                                                sx={{
-                                                                    ...companyStyles.table_array, cursor: 'pointer', position: 'sticky', left: '0', zIndex: 9, color: 'rgba(56, 152, 252, 1)', backgroundColor: '#fff'
-
-                                                                }} onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    setOpenPopup(true);
-                                                                    setEmployeeId(row.id.value)
-
-                                                                }}>
-                                                                {truncateText([capitalizeTableCell(renderField(row.first_name, row.id.value)), capitalizeTableCell(renderField(row.last_name, row.id.value))].filter(Boolean).join(' '), 20)}
-                                                            </TableCell>
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    className: "sticky-cell",
+                                                                    sx: {
+                                                                        zIndex: 9,
+                                                                        position: "sticky",
+                                                                        left: 0,
+                                                                        backgroundColor: "#fff",
+                                                                        boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
+                                                                    },
+                                                                    hideDivider: isScrolledX,
+                                                                    onClick: (e) => {
+                                                                        e.stopPropagation();
+                                                                        setOpenPopup(true);
+                                                                        setEmployeeId(row.id.value);
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: [
+                                                                        capitalizeTableCell(renderField(row.first_name, row.id.value)),
+                                                                        capitalizeTableCell(renderField(row.last_name, row.id.value)),
+                                                                    ]
+                                                                        .filter(Boolean)
+                                                                        .join(" "),
+                                                                }}
+                                                                contentOptions={{
+                                                                    sx: {
+                                                                        cursor: 'pointer',
+                                                                        color: 'rgba(56, 152, 252, 1)',
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {
+                                                                    [
+                                                                        capitalizeTableCell(renderField(row.first_name, row.id.value)),
+                                                                        capitalizeTableCell(renderField(row.last_name, row.id.value)),
+                                                                    ]
+                                                                        .filter(Boolean)
+                                                                        .join(" ")
+                                                                }
+                                                            </SmartCell>
 
                                                             {/* Personal Email Column */}
-                                                            <TableCell
-                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: renderField(row.personal_email, row.id.value) || "--",
+                                                                }}
                                                             >
                                                                 {renderField(row.personal_email, row.id.value)}
-                                                            </TableCell>
+                                                            </SmartCell>
 
                                                             {/* Business Email Column */}
-                                                            <TableCell
-                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: renderField(row.business_email, row.id.value) || "--",
+                                                                }}
                                                             >
                                                                 {renderField(row.business_email, row.id.value)}
-                                                            </TableCell>
+                                                            </SmartCell>
+
 
                                                             {/* Company linkedIn Column */}
-                                                            <TableCell 
-                                                                sx={{ ...companyStyles.table_array, position: 'relative', color: row.linkedin_url?.value ? 'rgba(56, 152, 252, 1)' : '', }}
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        ...companyStyles.table_array,
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                contentOptions={{
+                                                                    sx: {
+                                                                        color: row.linkedin_url?.value ? "rgba(56, 152, 252, 1)" : "",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: row.linkedin_url?.value
+                                                                        ? row.linkedin_url.value.replace("linkedin.com/company/", "")
+                                                                        : "--",
+                                                                }}
                                                             >
                                                                 {!row.is_unlocked?.value ? (
                                                                     <UnlockButton onClick={() => getStatusCredits(row.id.value)} label="Unlock contact" />
+                                                                ) : row.linkedin_url?.value ? (
+                                                                    <Box
+                                                                        sx={{ cursor: "pointer" }}
+                                                                        onClick={() => {
+                                                                            window.open(`https://${row.linkedin_url.value}`, "_blank");
+                                                                        }}
+                                                                    >
+                                                                        <Image
+                                                                            src="/linkedIn.svg"
+                                                                            alt="linkedIn"
+                                                                            width={16}
+                                                                            height={16}
+                                                                            style={{ marginRight: "2px" }}
+                                                                        />
+                                                                        /{
+                                                                            row.linkedin_url.value.replace("linkedin.com/company/", "")
+                                                                        }
+                                                                    </Box>
                                                                 ) : (
-                                                                    row.linkedin_url.value ? (
-                                                                        <Box sx={{cursor: row.linkedin_url.value ? 'pointer' : 'default'}} onClick={() => { window.open(`https://${row.linkedin_url.value}`, '_blank') }}>
-                                                                            <Image src="/linkedIn.svg" alt="linkedIn" width={16} height={16} style={{ marginRight: '2px' }} />
-                                                                            /{truncateText(row.linkedin_url.value.replace('linkedin.com/company/', ''), 20)}
-                                                                        </Box>
-                                                                    ) : (
-                                                                        '--'
-                                                                    )
+                                                                    "--"
                                                                 )}
-                                                            </TableCell>
+                                                            </SmartCell>
 
                                                             {/* Mobile phone Column */}
-                                                            <TableCell 
-                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: renderField(row.mobile_phone, row.id.value, (phones) =>
+                                                                        phones.split(",")[0] || "--"
+                                                                    ),
+                                                                }}
                                                             >
-                                                                {renderField(row.mobile_phone, row.id.value, (phones) => phones.split(',')[0] || '--')}
-                                                            </TableCell>
+                                                                {renderField(row.mobile_phone, row.id.value, (phones) =>
+                                                                    phones.split(",")[0] || "--"
+                                                                )}
+                                                            </SmartCell>
+
 
                                                             {/* Job Title Column */}
-                                                            <TableCell 
-                                                                sx={{...companyStyles.table_array, position: 'relative', cursor: row.job_title.value ? "pointer" : "default"}} 
-                                                                onClick={(e) => row.job_title.value ? handleOpenPopover(e, row.job_title.value || "--") : ''}
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                        cursor: row.job_title.value ? "pointer" : "default",
+                                                                    },
+                                                                    onClick: (e: any) => {
+                                                                        if (row.job_title.value) {
+                                                                            handleOpenPopover(e, row.job_title.value);
+                                                                        }
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: renderField(row.department, row.id.value) || "--",
+                                                                }}
                                                             >
-                                                                {truncateText(renderField(row.department, row.id.value), 20)}
-                                                            </TableCell>
+                                                                {renderField(row.department, row.id.value)}
+                                                            </SmartCell>
+
 
                                                             {/* Seniority Column */}
-                                                            <TableCell
-                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: renderField(row.seniority, row.id.value) || "--",
+                                                                }}
                                                             >
                                                                 {renderField(row.seniority, row.id.value)}
-                                                            </TableCell>
+                                                            </SmartCell>
+
 
                                                             {/* Department Column */}
-                                                            <TableCell
-                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        ...companyStyles.table_array,
+                                                                        position: "relative",
+                                                                    },
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: renderField(row.department, row.id.value) || "--",
+                                                                }}
                                                             >
-                                                                {renderField(row.department,row.id.value)}
-                                                            </TableCell>
+                                                                {renderField(row.department, row.id.value)}
+                                                            </SmartCell>
+
 
                                                             {/* Company location  Column */}
-                                                            <TableCell
-                                                                sx={{ ...companyStyles.table_array, position: 'relative' }}
+                                                            <SmartCell
+                                                                cellOptions={{
+                                                                    sx: {
+                                                                        position: "relative",
+                                                                        borderRight: "1px solid rgba(235,235,235,1)",
+                                                                    },
+                                                                    hideDivider: true
+                                                                }}
+                                                                tooltipOptions={{
+                                                                    content: [
+                                                                        capitalizeTableCell(renderField(row.city, row.id.value)),
+                                                                        capitalizeTableCell(renderField(row.state, row.id.value)),
+                                                                    ]
+                                                                        .filter(Boolean)
+                                                                        .join(", ") || "--",
+                                                                }}
                                                             >
-                                                                {[capitalizeTableCell(renderField(row.city, row.id.value)), capitalizeTableCell(renderField(row.state, row.id.value))].filter(Boolean).join(', ')}
-                                                            </TableCell>
-
+                                                                {[capitalizeTableCell(renderField(row.city, row.id.value)),
+                                                                capitalizeTableCell(renderField(row.state, row.id.value))]
+                                                                    .filter(Boolean)
+                                                                    .join(", ")}
+                                                            </SmartCell>
                                                         </TableRow>
                                                     </>
                                                 ))}
                                             </TableBody>
                                         </Table>
                                     </TableContainer>
-                                    <PaginationComponent 
+                                    <PaginationComponent
                                         countRows={count_companies ?? 0}
                                         page={page}
                                         rowsPerPage={rowsPerPage}
@@ -1169,11 +1369,11 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         </Box>
                     </Popover>
 
-                    <FilterPopup open={filterPopupOpen} 
-                        onClose={handleFilterPopupClose} 
-                        onApply={handleApplyFilters} 
-                        jobTitles={jobTitles || []} 
-                        seniorities={seniorities || []} 
+                    <FilterPopup open={filterPopupOpen}
+                        onClose={handleFilterPopupClose}
+                        onApply={handleApplyFilters}
+                        jobTitles={jobTitles || []}
+                        seniorities={seniorities || []}
                         departments={departments || []} />
                     <PopupDetails open={openPopup}
                         onClose={handleClosePopup}
@@ -1181,7 +1381,7 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({ onBack, companyName
                         updateEmployeeCallback={chargeCredit}
                         employeeId={employeeId}
                         employeeisUnlocked={employeeisUnlocked}
-                        />
+                    />
                     <PopupChargeCredits open={creditsChargePopup}
                         onClose={() => setCreditsChargePopup(false)}
                         updateEmployeeCallback={() => chargeCredit(employeeId)}

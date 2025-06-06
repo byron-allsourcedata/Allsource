@@ -16,6 +16,7 @@ class IntegrationsUserSyncPersistence:
 
     def __init__(self, db: Session):
         self.db = db
+        self.UNLIMITED = -1
 
     def create_sync(self, data: dict) -> IntegrationUserSync:
         sync = IntegrationUserSync(**data)
@@ -60,7 +61,6 @@ class IntegrationsUserSyncPersistence:
             .join(UserIntegration, IntegrationUserSync.integration_id == UserIntegration.id) \
             .filter(IntegrationUserSync.id == list_id, UserIntegration.user_id == user_id) \
             .first()
-        print(sync)
         if sync:
             if sync.is_active == False:
                 active = True
@@ -188,13 +188,18 @@ class IntegrationsUserSyncPersistence:
             IntegrationUserSync.sent_contacts,
             IntegrationUserSync.created_by,
             IntegrationUserSync.list_id,
+            IntegrationUserSync.list_name,
+            IntegrationUserSync.customer_id,
+            IntegrationUserSync.leads_type,
+            IntegrationUserSync.campaign_id,
+            IntegrationUserSync.campaign_name,
             IntegrationUserSync.data_map,
             UserIntegration.service_name,
             UserIntegration.is_failed,
             AudienceSmart.name,
             func.count(ImportedLeads.id).filter(ImportedLeads.status != 'sent').label("imported_count")
         ).join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id) \
-            .join(AudienceSmart, IntegrationUserSync.smart_audience_id == AudienceSmart.id) \
+            .outerjoin(AudienceSmart, IntegrationUserSync.smart_audience_id == AudienceSmart.id) \
             .outerjoin(ImportedLeads, ImportedLeads.data_sync_id == IntegrationUserSync.id) \
             .filter(UserIntegration.user_id == user_id) \
             .group_by(IntegrationUserSync.id, UserIntegration.service_name, UserIntegration.is_failed,
@@ -210,20 +215,24 @@ class IntegrationsUserSyncPersistence:
                 return {
                     'id': sync.id,
                     'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
-                    'name': sync.name,
+                    'name': sync.name if sync.name else sync.list_name,
                     'lastSync': sync.last_sync_date.strftime('%b %d, %Y') if sync.last_sync_date else None,
                     'platform': sync.service_name.lower(),
                     'integration_id': sync.integration_id,
                     'dataSync': sync.is_active,
                     'contacts': sync.no_of_contacts,
                     'createdBy': sync.created_by,
+                    'customer_id': sync.customer_id,
+                    'campaign_id': sync.campaign_id,
+                    'campaign_name': sync.campaign_name,
+                    'type': sync.leads_type,
                     'data_map': sync.data_map,
                     'syncStatus': False if sync.is_failed else sync.sync_status,
                     'integration_is_failed': sync.is_failed,
                     'list_id': sync.list_id,
                     'active_segment': sync.sent_contacts,
                     'records_synced': sync.no_of_contacts,
-                    'is_progress': sync.imported_count < sync.sent_contacts if sync.sent_contacts else False
+                    'is_progress': sync.imported_count < sync.sent_contacts or sync.sent_contacts == self.UNLIMITED if sync.sent_contacts else False
                 }
 
         syncs = query.order_by(desc(IntegrationUserSync.created_at)).all()
@@ -231,19 +240,23 @@ class IntegrationsUserSyncPersistence:
         return [{
             'id': sync.id,
             'createdDate': sync.created_at.strftime('%b %d, %Y') if sync.created_at else None,
-            'name': sync.name,
+            'name': sync.name if sync.name else sync.list_name,
             'lastSync': sync.last_sync_date.strftime('%b %d, %Y') if sync.last_sync_date else None,
             'platform': sync.service_name.lower(),
             'integration_id': sync.integration_id,
             'dataSync': sync.is_active,
             'createdBy': sync.created_by,
             'data_map': sync.data_map,
+            'customer_id': sync.customer_id,
+            'campaign_id': sync.campaign_id,
+            'campaign_name': sync.campaign_name,
+            'type': sync.leads_type,
             'syncStatus': False if sync.is_failed else sync.sync_status,
             'integration_is_failed': sync.is_failed,
             'list_id': sync.list_id,
             'active_segments': sync.sent_contacts,
             'records_synced': sync.no_of_contacts,
-            'is_progress': sync.imported_count < sync.sent_contacts if sync.sent_contacts else False
+            'is_progress': sync.imported_count < sync.sent_contacts or sync.sent_contacts == self.UNLIMITED if sync.sent_contacts else False
         } for sync in syncs]
 
     def get_data_sync_filter_by(self, **filter_by):
@@ -252,10 +265,10 @@ class IntegrationsUserSyncPersistence:
     def get_user_by_shop_domain(self, shop_domain):
         user = (
             self.db.query(Users)
-                .join(UserDomains, UserDomains.user_id == Users.id)
-                .join(UserIntegration, UserIntegration.domain_id == UserDomains.id)
-                .filter(UserIntegration.shop_domain == shop_domain)
-                .first()
+            .join(UserDomains, UserDomains.user_id == Users.id)
+            .join(UserIntegration, UserIntegration.domain_id == UserDomains.id)
+            .filter(UserIntegration.shop_domain == shop_domain)
+            .first()
         )
         return user
 
@@ -287,7 +300,7 @@ class IntegrationsUserSyncPersistence:
         return self.db.query(UserIntegration) \
             .join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id) \
             .filter(IntegrationUserSync.id == sync_id).first()
-        
+
     def get_verified_email_and_phone(self, enrichment_user_id):
         rows = (
             self.db.query(
@@ -317,5 +330,3 @@ class IntegrationsUserSyncPersistence:
                 phone = verified_phone
 
         return business_email, personal_email, phone
-
-

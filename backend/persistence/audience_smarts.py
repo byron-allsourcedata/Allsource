@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 
@@ -102,6 +103,7 @@ class AudienceSmartsPersistence:
             target_schema: str,
             validation_params: Optional[dict],
             active_segment_records: int,
+            need_validate: bool
     ) -> AudienceSmart:
 
         use_case_id = self.get_use_case_id_by_alias(use_case_alias)
@@ -113,9 +115,10 @@ class AudienceSmartsPersistence:
             user_id=user_id,
             created_by_user_id=created_by_user_id,
             use_case_id=use_case_id,
-            validations=validation_params,
+            validations=validation_params if need_validate else json.dumps({}),
             total_records=total_records,
             target_schema=target_schema,
+            validated_records = 0 if need_validate else active_segment_records,
             active_segment_records=active_segment_records,
             status=status
         )

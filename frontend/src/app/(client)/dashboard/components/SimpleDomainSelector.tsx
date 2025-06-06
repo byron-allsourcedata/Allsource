@@ -16,6 +16,7 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { AxiosError } from "axios";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import { DeleteOutlinedIcon } from "@/icon";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 interface Domain {
   id: number;
@@ -213,6 +214,7 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
   const open = Boolean(anchorEl);
   const [localDomains, setLocalDomains] = useState<Domain[]>(domains);
   const [showDomainPopup, setDomainPopup] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -251,6 +253,7 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
   };
   const handleDelete = async (toDelete: Domain) => {
     try {
+      setLoading(true);
       await axiosInstance.delete(`/domains/${toDelete.id}`);
       const updated = localDomains.filter((d) => d.id !== toDelete.id);
       setLocalDomains(updated);
@@ -258,15 +261,18 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
       const me = meRaw ? JSON.parse(meRaw) : {};
       me.domains = updated;
       sessionStorage.setItem("me", JSON.stringify(me));
+      sessionStorage.removeItem("current_domain")
 
       if (selectedDomain?.id === toDelete.id) {
         onChange(null);
       }
 
-      showToast("Domain deleted");
+      showToast("Domain deleted successfully");
     } catch (err) {
       // console.error(err);
       showErrorToast("Failed to delete domain");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -294,6 +300,7 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
         </Typography>
         <ExpandMoreIcon />
       </Button>
+      {loading && <CustomizedProgressBar />}
       <Menu
         id="account-dropdown"
         variant="menu"

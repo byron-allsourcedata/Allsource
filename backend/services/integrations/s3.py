@@ -1,32 +1,29 @@
-import httpx
-import os
-import logging
-from typing import List
-from fastapi import HTTPException
-import httpx
-import os
-import re
 import csv
+import json
 import logging
+import os
 import tempfile
 import uuid
-from services.integrations.commonIntegration import *
-from models.integrations.users_domains_integrations import UserIntegration
-from models.integrations.integrations_users_sync import IntegrationUserSync
 from datetime import datetime, timezone
+from typing import List
+from uuid import UUID
+
+import boto3
+import httpx
+from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
+from fastapi import HTTPException
+
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit, DataSyncType
 from models.enrichment.enrichment_users import EnrichmentUser
-from uuid import UUID
-from faker import Faker
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
-from schemas.integrations.integrations import DataMap, IntegrationCredentials
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import UserIntegration
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
-import json
-import boto3
-from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
+from schemas.integrations.integrations import DataMap, IntegrationCredentials
+from services.integrations.commonIntegration import *
+from services.integrations.million_verifier import MillionVerifierIntegrationsService
 
 logger = logging.getLogger(__name__)
 
@@ -154,13 +151,15 @@ class S3IntegrationService:
         
         return self.__save_integrations(secret_id=credentials.s3.secret_id, secret_key=credentials.s3.secret_key,domain_id=None if domain is None else domain.id, user=user)
  
-    async def create_sync(self, leads_type: str, list_name: str, data_map: List[DataMap], domain_id: int, created_by: str, user: dict):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+    async def create_sync(self, domain_id: int, leads_type: str, list_name: str, data_map: List[DataMap], created_by: str, user: dict):
+        credentials = self.get_credentials(user_id=user.get('id'), domain_id=domain_id)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_name': list_name,
-            'domain_id': domain_id,
+            'sent_contacts': -1,
+            'sync_type': DataSyncType.CONTACT.value,
             'leads_type': leads_type,
+            'domain_id': domain_id,
             'data_map': data_map,
             'created_by': created_by,
         })
@@ -183,7 +182,7 @@ class S3IntegrationService:
         })
         return sync
 
-    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: List[EnrichmentUser], target_schema: str, validations: dict = {}):
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__mapped_s3_contact(enrichment_user, target_schema, validations, integration_data_sync.data_map)

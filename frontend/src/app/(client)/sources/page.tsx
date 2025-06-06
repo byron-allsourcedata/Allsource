@@ -233,7 +233,7 @@ const Sources: React.FC = () => {
     {
       key: "type",
       label: "Type",
-      widths: { width: "13vw", minWidth: "13vw", maxWidth: "20vw" },
+      widths: { width: "150px", minWidth: "13vw", maxWidth: "20vw" },
     },
     {
       key: "created_date",
@@ -1618,7 +1618,6 @@ const Sources: React.FC = () => {
                                         >
                                           <MoreVert
                                             sx={{
-
                                               color: "rgba(32, 33, 36, 1)",
                                             }}
                                           />

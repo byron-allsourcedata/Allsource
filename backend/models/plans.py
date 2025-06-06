@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, ForeignKey, Index, BigInteger, text, Text, Numeric, Boolean, Sequence
+from sqlalchemy import Column, Integer, ForeignKey, Index, BigInteger, text, Text, Numeric, Boolean, Sequence, DECIMAL
 from sqlalchemy.dialects.postgresql import VARCHAR, JSONB
 
 from .base import Base
@@ -40,6 +40,7 @@ class SubscriptionPlan(Base):
     integrations_limit = Column(Integer, nullable=True)
     leads_credits = Column(BigInteger, nullable=True)
     prospect_credits = Column(BigInteger, nullable=True)
+    validation_funds = Column(DECIMAL(10, 2), server_default=text('0'), nullable=True)
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
     priority = Column(Integer, nullable=True)

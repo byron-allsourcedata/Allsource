@@ -2,6 +2,8 @@ from config.folders import Folders
 from pandas import DataFrame
 import re
 from typing import Optional
+
+from models import EnrichmentPostal
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 import pandas as pd
 
@@ -129,10 +131,10 @@ def add_linkedin_url(result: dict, enrichment_contacts: EnrichmentUserContact) -
 
 def add_company(result: dict, professional_profiles) -> None:
     if professional_profiles and professional_profiles.current_company_name:
-        result['company_name'] = professional_profiles.current_company_name
+        result['company'] = professional_profiles.current_company_name
 
 
-def add_city(result: dict, postal) -> None:
+def add_city(result: dict, postal: EnrichmentPostal) -> None:
     if postal:
         city = postal.home_city or postal.business_city
         if city:

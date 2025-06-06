@@ -14,6 +14,7 @@ import CustomTooltip from '@/components/customToolTip';
 import DownloadIcon from '@mui/icons-material/Download';
 import TelegramIcon from '@mui/icons-material/Telegram';
 import CustomTablePagination from '@/components/CustomTablePagination';
+import BlurBilling from './BlurBilling';
 
 type CardBrand = 'visa' | 'mastercard' | 'amex' | 'discover' | 'unionpay';
 
@@ -594,1066 +595,1068 @@ export const SettingsBilling: React.FC = () => {
 
 
     return (
-        <Box sx={{ pr: 2, pt: 1 }}>
-            <Grid container spacing={3} sx={{ mb: 3 }}>
-                <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
-                    <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, height: '100%' }}>
+        <>
+            {false && <Box sx={{ pr: 2, pt: 1 }}>
+                <Grid container spacing={3} sx={{ mb: 3 }}>
+                    <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
+                        <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, height: '100%' }}>
 
-                        {hide == true ? '' :
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2 }}>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Typography className="first-sub-title">
-                                        Card Details
-                                    </Typography>
-                                    <CustomTooltip title={"View detailed information about your card, including balance, transactions, and expiration date."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/card-details" />
-                                </Box>
-                                <Box sx={{
-                                    border: '1px dashed rgba(56, 152, 252, 1)',
-                                    borderRadius: '4px',
-                                    width: '24px',
-                                    height: '24px',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                }}>
-                                    <Button onClick={handleOpen} sx={{ padding: 2 }}>
-                                        <Image src="/add-square.svg" alt="add-square" height={24} width={24} />
-                                    </Button>
-                                </Box>
-                            </Box>
-                        }
-
-                        {cardDetails.length > 0 && cardDetails.map((card) => (
-                            <Box key={card.id} sx={{
-                                display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2,
-                                '@media (max-width: 600px)': {
-                                    alignItems: 'flex-end'
-                                }
-                            }}>
-                                <Box sx={{ display: 'flex', gap: 2 }}>
+                            {hide == true ? '' :
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 2 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Typography className="first-sub-title">
+                                            Card Details
+                                        </Typography>
+                                        <CustomTooltip title={"View detailed information about your card, including balance, transactions, and expiration date."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/card-details" />
+                                    </Box>
                                     <Box sx={{
-                                        width: '62px',
-                                        height: '62px',
+                                        border: '1px dashed rgba(56, 152, 252, 1)',
                                         borderRadius: '4px',
-                                        border: '1px solid #f0f0f0',
+                                        width: '24px',
+                                        height: '24px',
                                         display: 'flex',
                                         justifyContent: 'center',
-                                        alignItems: 'center'
+                                        alignItems: 'center',
                                     }}>
-                                        <Image
-                                            src={cardBrandImages[card.brand as CardBrand] || '/default-card-icon.svg'} // Default icon if brand not found
-                                            alt={`${card.brand}-icon`}
-                                            height={54}
-                                            width={54} // Adjust the size as needed
-                                        />
+                                        <Button onClick={handleOpen} sx={{ padding: 2 }}>
+                                            <Image src="/add-square.svg" alt="add-square" height={24} width={24} />
+                                        </Button>
                                     </Box>
-                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
-                                        <Box sx={{ display: 'flex', gap: 1 }}>
-                                            <Typography className="first-sub-title" sx={{
-                                                '@media (max-width: 600px)': {
-                                                    fontSize: '12px !important'
-                                                }
+                                </Box>
+                            }
+
+                            {cardDetails.length > 0 && cardDetails.map((card) => (
+                                <Box key={card.id} sx={{
+                                    display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2,
+                                    '@media (max-width: 600px)': {
+                                        alignItems: 'flex-end'
+                                    }
+                                }}>
+                                    <Box sx={{ display: 'flex', gap: 2 }}>
+                                        <Box sx={{
+                                            width: '62px',
+                                            height: '62px',
+                                            borderRadius: '4px',
+                                            border: '1px solid #f0f0f0',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center'
+                                        }}>
+                                            <Image
+                                                src={cardBrandImages[card.brand as CardBrand] || '/default-card-icon.svg'} // Default icon if brand not found
+                                                alt={`${card.brand}-icon`}
+                                                height={54}
+                                                width={54} // Adjust the size as needed
+                                            />
+                                        </Box>
+                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: '8px', justifyContent: 'center' }}>
+                                            <Box sx={{ display: 'flex', gap: 1 }}>
+                                                <Typography className="first-sub-title" sx={{
+                                                    '@media (max-width: 600px)': {
+                                                        fontSize: '12px !important'
+                                                    }
+                                                }}>
+                                                    {`${card.brand.charAt(0).toUpperCase() + card.brand.slice(1)} (**** ${card.last4})`}
+                                                </Typography>
+                                                {card.is_default && (
+                                                    <Typography className="main-text" sx={{
+                                                        borderRadius: '4px',
+                                                        background: '#eaf8dd',
+                                                        color: '#2b5b00',
+                                                        fontSize: '12px',
+                                                        fontWeight: '600',
+                                                        padding: '2px 12px'
+                                                    }}>Default</Typography>
+                                                )}
+                                            </Box>
+                                            <Typography className="second-text" sx={{
+                                                fontSize: '12px',
+                                                fontWeight: '400',
+                                                lineHeight: 'normal',
+                                                color: '#787878',
+                                                letterSpacing: '0.06px'
                                             }}>
-                                                {`${card.brand.charAt(0).toUpperCase() + card.brand.slice(1)} (**** ${card.last4})`}
+                                                Expire date: {`${card.exp_month < 10 ? '0' : ''}${card.exp_month}/${card.exp_year}`}
                                             </Typography>
-                                            {card.is_default && (
-                                                <Typography className="main-text" sx={{
+                                        </Box>
+                                    </Box>
+                                    <Box>
+                                        {!card.is_default && (
+                                            <IconButton onClick={(event) => handleClickOpen(event, card.id)}>
+                                                <Image
+                                                    src='/more.svg'
+                                                    alt='more'
+                                                    height={20}
+                                                    width={20}
+                                                />
+                                            </IconButton>
+                                        )}
+                                        <Popover
+                                            id={deleteId}
+                                            open={deleteOpen}
+                                            anchorEl={deleteAnchorEl}
+                                            onClose={handleDeleteClose}
+                                            anchorOrigin={{
+                                                vertical: 'bottom',
+                                                horizontal: 'center',
+                                            }}
+                                            transformOrigin={{
+                                                vertical: 'top',
+                                                horizontal: 'right',
+                                            }}
+                                        >
+                                            <Box sx={{
+                                                minWidth: '230px'
+                                            }}>
+
+                                                <Box sx={{ my: 2 }}>
+                                                    <Button
+                                                        className='hyperlink-red'
+                                                        onClick={handleRemovePopupOpen} sx={{
+                                                            border: 'none',
+                                                            boxShadow: 'none',
+                                                            color: '#202124 !important',
+                                                            lineHeight: 'normal !important',
+                                                            textTransform: 'none',
+                                                            minWidth: 'auto',
+                                                            width: '100%',
+                                                            padding: '4px 0 4px 16px',
+                                                            textAlign: 'left',
+                                                            display: 'block',
+                                                            borderRadius: '0',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgba(80, 82, 178, 0.10)'
+                                                            }
+
+                                                        }}>
+                                                        Remove
+                                                    </Button>
+                                                    <Button
+                                                        className='hyperlink-red'
+                                                        onClick={handleSetDefault} sx={{
+                                                            border: 'none',
+                                                            boxShadow: 'none',
+                                                            color: '#202124 !important',
+                                                            lineHeight: 'normal !important',
+                                                            textTransform: 'none',
+                                                            minWidth: 'auto',
+                                                            width: '100%',
+                                                            padding: '4px 0 4px 16px',
+                                                            textAlign: 'left',
+                                                            display: 'block',
+                                                            borderRadius: '0',
+                                                            '&:hover': {
+                                                                backgroundColor: 'rgba(80, 82, 178, 0.10)'
+                                                            }
+                                                        }}>
+                                                        Set as default
+                                                    </Button>
+                                                </Box>
+                                            </Box>
+                                        </Popover>
+                                    </Box>
+                                </Box>
+                            ))}
+
+
+
+                            <Modal open={open} onClose={handleClose}>
+                                <Box sx={{
+                                    bgcolor: 'white',
+                                    borderRadius: '4px',
+                                    padding: '16px',
+                                    maxWidth: '400px',
+                                    margin: '100px auto',
+                                }}>
+                                    <Elements stripe={stripePromise}>
+                                        <CheckoutForm handleClose={handleClose} onSuccess={handleCheckoutSuccess} />
+                                    </Elements>
+                                </Box>
+                            </Modal>
+
+
+                        </Box>
+
+                    </Grid>
+                    <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
+                        <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3 }}>
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', pb: 2 }}>
+                                <Typography className="first-sub-title">
+                                    Billing Details
+                                </Typography>
+                                {billingDetails?.active ? (
+                                    canceled_at ? (
+                                        <Box sx={{ display: 'flex', borderRadius: '4px', background: '#FCDBDC', padding: '2px 12px', gap: '3px', alignItems: 'center' }}>
+                                            <Typography className="main-text" sx={{
+                                                borderRadius: '4px',
+                                                color: '#4E0110',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                lineHeight: '16px',
+                                            }}>
+                                                Subscription Cancelled
+                                            </Typography>
+                                            <Image src={'danger.svg'} alt='danger' width={14} height={13.5} />
+                                        </Box>
+                                    ) : downgrade_plan.plan_name ? (
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                borderRadius: '4px',
+                                                background: '#FDF2CA',
+                                                padding: '2px 12px',
+                                                gap: '3px',
+                                                alignItems: 'center'
+                                            }}
+                                        >
+                                            <Typography
+                                                className="main-text"
+                                                sx={{
                                                     borderRadius: '4px',
-                                                    background: '#eaf8dd',
-                                                    color: '#2b5b00',
+                                                    color: '#795E00',
                                                     fontSize: '12px',
                                                     fontWeight: '600',
-                                                    padding: '2px 12px'
-                                                }}>Default</Typography>
-                                            )}
+                                                    lineHeight: '16px',
+                                                }}
+                                            >
+                                                Downgrade pending - {downgrade_plan.plan_name} {downgrade_plan.downgrade_at}.{' '}
+                                                <span
+                                                    onClick={handleCancel}
+                                                    style={{
+                                                        color: 'blue',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </span>
+                                            </Typography>
                                         </Box>
-                                        <Typography className="second-text" sx={{
-                                            fontSize: '12px',
-                                            fontWeight: '400',
-                                            lineHeight: 'normal',
-                                            color: '#787878',
-                                            letterSpacing: '0.06px'
-                                        }}>
-                                            Expire date: {`${card.exp_month < 10 ? '0' : ''}${card.exp_month}/${card.exp_year}`}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                                <Box>
-                                    {!card.is_default && (
-                                        <IconButton onClick={(event) => handleClickOpen(event, card.id)}>
-                                            <Image
-                                                src='/more.svg'
-                                                alt='more'
-                                                height={20}
-                                                width={20}
-                                            />
-                                        </IconButton>
-                                    )}
-                                    <Popover
-                                        id={deleteId}
-                                        open={deleteOpen}
-                                        anchorEl={deleteAnchorEl}
-                                        onClose={handleDeleteClose}
-                                        anchorOrigin={{
-                                            vertical: 'bottom',
-                                            horizontal: 'center',
-                                        }}
-                                        transformOrigin={{
-                                            vertical: 'top',
-                                            horizontal: 'right',
-                                        }}
-                                    >
-                                        <Box sx={{
-                                            minWidth: '230px'
-                                        }}>
-
-                                            <Box sx={{ my: 2 }}>
-                                                <Button
-                                                    className='hyperlink-red'
-                                                    onClick={handleRemovePopupOpen} sx={{
-                                                        border: 'none',
-                                                        boxShadow: 'none',
-                                                        color: '#202124 !important',
-                                                        lineHeight: 'normal !important',
-                                                        textTransform: 'none',
-                                                        minWidth: 'auto',
-                                                        width: '100%',
-                                                        padding: '4px 0 4px 16px',
-                                                        textAlign: 'left',
-                                                        display: 'block',
-                                                        borderRadius: '0',
-                                                        '&:hover': {
-                                                            backgroundColor: 'rgba(80, 82, 178, 0.10)'
-                                                        }
-
-                                                    }}>
-                                                    Remove
-                                                </Button>
-                                                <Button
-                                                    className='hyperlink-red'
-                                                    onClick={handleSetDefault} sx={{
-                                                        border: 'none',
-                                                        boxShadow: 'none',
-                                                        color: '#202124 !important',
-                                                        lineHeight: 'normal !important',
-                                                        textTransform: 'none',
-                                                        minWidth: 'auto',
-                                                        width: '100%',
-                                                        padding: '4px 0 4px 16px',
-                                                        textAlign: 'left',
-                                                        display: 'block',
-                                                        borderRadius: '0',
-                                                        '&:hover': {
-                                                            backgroundColor: 'rgba(80, 82, 178, 0.10)'
-                                                        }
-                                                    }}>
-                                                    Set as default
-                                                </Button>
-                                            </Box>
+                                    ) : (
+                                        <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px' }}>
+                                            <Typography className="main-text" sx={{
+                                                borderRadius: '4px',
+                                                color: '#2b5b00',
+                                                fontSize: '12px',
+                                                fontWeight: '600',
+                                                lineHeight: '16px'
+                                            }}>
+                                                Active
+                                            </Typography>
                                         </Box>
-                                    </Popover>
-                                </Box>
-                            </Box>
-                        ))}
-
-
-
-                        <Modal open={open} onClose={handleClose}>
-                            <Box sx={{
-                                bgcolor: 'white',
-                                borderRadius: '4px',
-                                padding: '16px',
-                                maxWidth: '400px',
-                                margin: '100px auto',
-                            }}>
-                                <Elements stripe={stripePromise}>
-                                    <CheckoutForm handleClose={handleClose} onSuccess={handleCheckoutSuccess} />
-                                </Elements>
-                            </Box>
-                        </Modal>
-
-
-                    </Box>
-
-                </Grid>
-                <Grid item xs={12} md={6} sx={{ padding: '0px' }}>
-                    <Box sx={{ border: '1px solid #f0f0f0', borderRadius: '4px', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', pb: 2 }}>
-                            <Typography className="first-sub-title">
-                                Billing Details
-                            </Typography>
-                            {billingDetails?.active ? (
-                                canceled_at ? (
-                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#FCDBDC', padding: '2px 12px', gap: '3px', alignItems: 'center' }}>
-                                        <Typography className="main-text" sx={{
-                                            borderRadius: '4px',
-                                            color: '#4E0110',
-                                            fontSize: '12px',
-                                            fontWeight: '600',
-                                            lineHeight: '16px',
-                                        }}>
-                                            Subscription Cancelled
-                                        </Typography>
-                                        <Image src={'danger.svg'} alt='danger' width={14} height={13.5} />
-                                    </Box>
-                                ) : downgrade_plan.plan_name ? (
+                                    )
+                                ) : (
                                     <Box
                                         sx={{
                                             display: 'flex',
                                             borderRadius: '4px',
-                                            background: '#FDF2CA',
+                                            background: '#f8dede',
                                             padding: '2px 12px',
-                                            gap: '3px',
-                                            alignItems: 'center'
+                                            gap: '3px'
                                         }}
                                     >
                                         <Typography
                                             className="main-text"
                                             sx={{
                                                 borderRadius: '4px',
-                                                color: '#795E00',
+                                                color: '#b00000',
                                                 fontSize: '12px',
                                                 fontWeight: '600',
                                                 lineHeight: '16px',
+                                                cursor: 'pointer'
                                             }}
                                         >
-                                            Downgrade pending - {downgrade_plan.plan_name} {downgrade_plan.downgrade_at}.{' '}
+                                            Subscription Cancelled.{' '}
                                             <span
-                                                onClick={handleCancel}
+                                                onClick={handleRedirectSubscription}
                                                 style={{
-                                                    color: 'blue',
+                                                    color: '#146EF6',
                                                     cursor: 'pointer'
                                                 }}
+                                                onMouseEnter={(e) => (e.currentTarget.style.color = 'darkblue')}
+                                                onMouseLeave={(e) => (e.currentTarget.style.color = '#146EF6')}
                                             >
-                                                Cancel
+                                                Choose Plan
                                             </span>
                                         </Typography>
                                     </Box>
-                                ) : (
-                                    <Box sx={{ display: 'flex', borderRadius: '4px', background: '#eaf8dd', padding: '2px 12px', gap: '3px' }}>
-                                        <Typography className="main-text" sx={{
-                                            borderRadius: '4px',
-                                            color: '#2b5b00',
-                                            fontSize: '12px',
-                                            fontWeight: '600',
-                                            lineHeight: '16px'
-                                        }}>
-                                            Active
-                                        </Typography>
-                                    </Box>
-                                )
-                            ) : (
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        borderRadius: '4px',
-                                        background: '#f8dede',
-                                        padding: '2px 12px',
-                                        gap: '3px'
-                                    }}
-                                >
-                                    <Typography
-                                        className="main-text"
-                                        sx={{
-                                            borderRadius: '4px',
-                                            color: '#b00000',
-                                            fontSize: '12px',
-                                            fontWeight: '600',
-                                            lineHeight: '16px',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Subscription Cancelled.{' '}
-                                        <span
-                                            onClick={handleRedirectSubscription}
-                                            style={{
-                                                color: '#146EF6',
-                                                cursor: 'pointer'
-                                            }}
-                                            onMouseEnter={(e) => (e.currentTarget.style.color = 'darkblue')}
-                                            onMouseLeave={(e) => (e.currentTarget.style.color = '#146EF6')}
-                                        >
-                                            Choose Plan
-                                        </span>
-                                    </Typography>
-                                </Box>
-                            )}
-                        </Box>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {billingDetails && Object.entries(billingDetails).map(([key, value], index) => {
-                                if (key === 'overage' && hide === false) {
-                                    // Custom flex layout for "Overage"
-                                    return (
-                                        <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <Box sx={{
-                                                display: 'flex', flexDirection: 'row', gap: '26px',
-                                                alignItems: 'center',
-                                                '@media (max-width: 600px)': {
-                                                    gap: '12px'
-                                                }
-                                            }}>
+                                )}
+                            </Box>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                {billingDetails && Object.entries(billingDetails).map(([key, value], index) => {
+                                    if (key === 'overage' && hide === false) {
+                                        // Custom flex layout for "Overage"
+                                        return (
+                                            <Box key={index} sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                                 <Box sx={{
-                                                    display: 'flex', flexDirection: 'row', width: '130px', gap: 0.5, alignItems: 'center', '@media (max-width: 600px)': {
-                                                        width: '110px'
+                                                    display: 'flex', flexDirection: 'row', gap: '26px',
+                                                    alignItems: 'center',
+                                                    '@media (max-width: 600px)': {
+                                                        gap: '12px'
                                                     }
                                                 }}>
-                                                    <Typography className="third-sub-title" sx={{
-                                                        fontWeight: '600 !important',
-                                                        lineHeight: '16px !important',
+                                                    <Box sx={{
+                                                        display: 'flex', flexDirection: 'row', width: '130px', gap: 0.5, alignItems: 'center', '@media (max-width: 600px)': {
+                                                            width: '110px'
+                                                        }
                                                     }}>
-                                                        Overage
+                                                        <Typography className="third-sub-title" sx={{
+                                                            fontWeight: '600 !important',
+                                                            lineHeight: '16px !important',
+                                                        }}>
+                                                            Overage
+                                                        </Typography>
+                                                        <CustomTooltip title='How overage works.' linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
+                                                    </Box>
+                                                    <Typography className="second-text" sx={{
+                                                        fontSize: '12px',
+                                                        fontWeight: '400',
+                                                        lineHeight: '16px',
+                                                        color: '#5f6368',
+                                                        letterSpacing: '0.06px'
+                                                    }}>
+                                                        {billingDetails.overage === 'free' ? `--` : `$ ${billingDetails.overage}/contact`}
                                                     </Typography>
-                                                    <CustomTooltip title='How overage works.' linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/allsource" />
                                                 </Box>
-                                                <Typography className="second-text" sx={{
-                                                    fontSize: '12px',
-                                                    fontWeight: '400',
-                                                    lineHeight: '16px',
-                                                    color: '#5f6368',
-                                                    letterSpacing: '0.06px'
-                                                }}>
-                                                    {billingDetails.overage === 'free' ? `--` : `$ ${billingDetails.overage}/contact`}
-                                                </Typography>
-                                            </Box>
-                                            <Box position="relative" display="inline-block">
-                                                <Switch
-                                                    {...label}
-                                                    checked={checked}
-                                                    onChange={handleSwitchChange}
-                                                    sx={{
-                                                        width: 54, // Increase width to fit "Yes" and "No"
-                                                        height: 24,
-                                                        padding: 0,
-                                                        '& .MuiSwitch-switchBase': {
+                                                <Box position="relative" display="inline-block">
+                                                    <Switch
+                                                        {...label}
+                                                        checked={checked}
+                                                        onChange={handleSwitchChange}
+                                                        sx={{
+                                                            width: 54, // Increase width to fit "Yes" and "No"
+                                                            height: 24,
                                                             padding: 0,
-                                                            top: '2px',
-                                                            left: '3px',
-                                                            '&.Mui-checked': {
-                                                                left: 0,
-                                                                transform: 'translateX(32px)', // Adjust for larger width
-                                                                color: '#fff',
-                                                                '&+.MuiSwitch-track': {
+                                                            '& .MuiSwitch-switchBase': {
+                                                                padding: 0,
+                                                                top: '2px',
+                                                                left: '3px',
+                                                                '&.Mui-checked': {
+                                                                    left: 0,
+                                                                    transform: 'translateX(32px)', // Adjust for larger width
+                                                                    color: '#fff',
+                                                                    '&+.MuiSwitch-track': {
+                                                                        backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
+                                                                        opacity: checked ? '1' : '1',
+                                                                    }
+                                                                },
+                                                            },
+                                                            '& .MuiSwitch-thumb': {
+                                                                width: 20,
+                                                                height: 20,
+                                                            },
+                                                            '& .MuiSwitch-track': {
+                                                                borderRadius: 20 / 2,
+                                                                backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
+                                                                opacity: checked ? '1' : '1',
+                                                                '& .MuiSwitch-track.Mui-checked': {
                                                                     backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
                                                                     opacity: checked ? '1' : '1',
                                                                 }
                                                             },
-                                                        },
-                                                        '& .MuiSwitch-thumb': {
-                                                            width: 20,
-                                                            height: 20,
-                                                        },
-                                                        '& .MuiSwitch-track': {
-                                                            borderRadius: 20 / 2,
-                                                            backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
-                                                            opacity: checked ? '1' : '1',
-                                                            '& .MuiSwitch-track.Mui-checked': {
-                                                                backgroundColor: checked ? 'rgba(56, 152, 252, 1)' : '#7b7b7b',
-                                                                opacity: checked ? '1' : '1',
-                                                            }
-                                                        },
-                                                    }}
-                                                />
-                                                <Box sx={{
-                                                    position: "absolute",
-                                                    top: "50%",
-                                                    left: "0px",
-                                                    width: "100%",
-                                                    display: "flex",
-                                                    justifyContent: "space-between",
-                                                    alignItems: "center",
-                                                    transform: "translateY(-50%)",
-                                                    pointerEvents: "none"
-                                                }}>
-                                                    {/* Conditional Rendering of Text */}
-                                                    {!checked && (
-                                                        <Typography
-                                                            className='second-text'
-                                                            variant="caption"
-                                                            sx={{
-                                                                fontSize: '12px',
-                                                                color: '#fff',
-                                                                fontWeight: '400',
-                                                                marginRight: '8px',
-                                                                lineHeight: 'normal',
-                                                                width: '100%',
-                                                                textAlign: 'right',
-                                                            }}
-                                                        >
-                                                            No
-                                                        </Typography>
-                                                    )}
-
-                                                    {checked && (
-                                                        <Typography
-                                                            className='second-text'
-                                                            variant="caption"
-                                                            sx={{
-                                                                fontSize: '12px',
-                                                                color: '#fff',
-                                                                fontWeight: '400',
-                                                                marginLeft: '6px',
-                                                                lineHeight: 'normal'
-                                                            }}
-                                                        >
-                                                            Yes
-                                                        </Typography>
-                                                    )}
-                                                </Box>
-
-                                                <Popover
-                                                    id={overageId}
-                                                    open={overageOpen}
-                                                    anchorEl={overageAnchorEl}
-                                                    onClose={handleOverageClose}
-                                                    anchorOrigin={{
-                                                        vertical: 'bottom',
-                                                        horizontal: 'center',
-                                                    }}
-                                                    transformOrigin={{
-                                                        vertical: 'top',
-                                                        horizontal: 'right',
-                                                    }}
-                                                >
+                                                        }}
+                                                    />
                                                     <Box sx={{
-                                                        width: '405px',
-                                                        borderRadius: '4px',
-                                                        border: '0.2px solid #afafaf',
-                                                        background: '#fff',
-                                                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                                                        padding: '16px 21px 16px 16px',
-                                                        '@media (max-width: 600px)': {
-                                                            width: 'auto'
-                                                        }
+                                                        position: "absolute",
+                                                        top: "50%",
+                                                        left: "0px",
+                                                        width: "100%",
+                                                        display: "flex",
+                                                        justifyContent: "space-between",
+                                                        alignItems: "center",
+                                                        transform: "translateY(-50%)",
+                                                        pointerEvents: "none"
                                                     }}>
-                                                        <Typography variant="body1" className='first-sub-title' sx={{
-                                                            paddingBottom: '8px'
-                                                        }}>Enable Overage</Typography>
-                                                        <Typography variant="body2" className='paragraph' sx={{
-                                                            color: '#5f6368 !important',
-                                                            lineHeight: '16px !important',
-                                                            paddingBottom: '24px'
-                                                        }}>
-                                                            On enabling overage, we will send {inactiveContactCounts} contacts that were collected after {inactiveDate ? formatDate(inactiveDate) : 'N/A'}, when your plan exceeded the limit and from now  new contacts will be added with overage charge
-                                                            ${billingDetails.overage}/contact.
-                                                        </Typography>
-                                                        <Box display="flex" justifyContent="flex-end" mt={2}>
-                                                            <Button className='hyperlink-red' onClick={handleOverageClose} sx={{
-                                                                borderRadius: '4px',
-                                                                border: '1px solid rgba(56, 152, 252, 1)',
-                                                                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                color: 'rgba(56, 152, 252, 1) !important',
-                                                                marginRight: '16px',
-                                                                textTransform: 'none'
-                                                            }}>
-                                                                Cancel
-                                                            </Button>
-                                                            <Button className='hyperlink-red' onClick={handleSendChangeOverage} sx={{
-                                                                background: 'rgba(56, 152, 252, 1)',
-                                                                borderRadius: '4px',
-                                                                border: '1px solid rgba(56, 152, 252, 1)',
-                                                                boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                                                color: '#fff !important',
-                                                                textTransform: 'none',
-                                                                '&:hover': {
-                                                                    color: 'rgba(56, 152, 252, 1) !important'
-                                                                }
-                                                            }}>
-                                                                Confirm
-                                                            </Button>
-                                                        </Box>
+                                                        {/* Conditional Rendering of Text */}
+                                                        {!checked && (
+                                                            <Typography
+                                                                className='second-text'
+                                                                variant="caption"
+                                                                sx={{
+                                                                    fontSize: '12px',
+                                                                    color: '#fff',
+                                                                    fontWeight: '400',
+                                                                    marginRight: '8px',
+                                                                    lineHeight: 'normal',
+                                                                    width: '100%',
+                                                                    textAlign: 'right',
+                                                                }}
+                                                            >
+                                                                No
+                                                            </Typography>
+                                                        )}
+
+                                                        {checked && (
+                                                            <Typography
+                                                                className='second-text'
+                                                                variant="caption"
+                                                                sx={{
+                                                                    fontSize: '12px',
+                                                                    color: '#fff',
+                                                                    fontWeight: '400',
+                                                                    marginLeft: '6px',
+                                                                    lineHeight: 'normal'
+                                                                }}
+                                                            >
+                                                                Yes
+                                                            </Typography>
+                                                        )}
                                                     </Box>
-                                                </Popover>
 
+                                                    <Popover
+                                                        id={overageId}
+                                                        open={overageOpen}
+                                                        anchorEl={overageAnchorEl}
+                                                        onClose={handleOverageClose}
+                                                        anchorOrigin={{
+                                                            vertical: 'bottom',
+                                                            horizontal: 'center',
+                                                        }}
+                                                        transformOrigin={{
+                                                            vertical: 'top',
+                                                            horizontal: 'right',
+                                                        }}
+                                                    >
+                                                        <Box sx={{
+                                                            width: '405px',
+                                                            borderRadius: '4px',
+                                                            border: '0.2px solid #afafaf',
+                                                            background: '#fff',
+                                                            boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                                                            padding: '16px 21px 16px 16px',
+                                                            '@media (max-width: 600px)': {
+                                                                width: 'auto'
+                                                            }
+                                                        }}>
+                                                            <Typography variant="body1" className='first-sub-title' sx={{
+                                                                paddingBottom: '8px'
+                                                            }}>Enable Overage</Typography>
+                                                            <Typography variant="body2" className='paragraph' sx={{
+                                                                color: '#5f6368 !important',
+                                                                lineHeight: '16px !important',
+                                                                paddingBottom: '24px'
+                                                            }}>
+                                                                On enabling overage, we will send {inactiveContactCounts} contacts that were collected after {inactiveDate ? formatDate(inactiveDate) : 'N/A'}, when your plan exceeded the limit and from now  new contacts will be added with overage charge
+                                                                ${billingDetails.overage}/contact.
+                                                            </Typography>
+                                                            <Box display="flex" justifyContent="flex-end" mt={2}>
+                                                                <Button className='hyperlink-red' onClick={handleOverageClose} sx={{
+                                                                    borderRadius: '4px',
+                                                                    border: '1px solid rgba(56, 152, 252, 1)',
+                                                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                    color: 'rgba(56, 152, 252, 1) !important',
+                                                                    marginRight: '16px',
+                                                                    textTransform: 'none'
+                                                                }}>
+                                                                    Cancel
+                                                                </Button>
+                                                                <Button className='hyperlink-red' onClick={handleSendChangeOverage} sx={{
+                                                                    background: 'rgba(56, 152, 252, 1)',
+                                                                    borderRadius: '4px',
+                                                                    border: '1px solid rgba(56, 152, 252, 1)',
+                                                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                                                    color: '#fff !important',
+                                                                    textTransform: 'none',
+                                                                    '&:hover': {
+                                                                        color: 'rgba(56, 152, 252, 1) !important'
+                                                                    }
+                                                                }}>
+                                                                    Confirm
+                                                                </Button>
+                                                            </Box>
+                                                        </Box>
+                                                    </Popover>
+
+                                                </Box>
                                             </Box>
-                                        </Box>
 
-                                    );
-                                }
+                                        );
+                                    }
 
-                                if (key === 'next_billing_date' && value !== null) {
+                                    if (key === 'next_billing_date' && value !== null) {
+                                        return (
+                                            <Box key={index} sx={{
+                                                display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '64px',
+                                                '@media (max-width: 600px)': {
+                                                    gap: '12px'
+                                                }
+                                            }}>
+                                                {/* Next Billing Date */}
+                                                <Box sx={{
+                                                    display: 'flex', alignItems: 'center', background: '#fafaf6', borderRadius: '4px', border: '1px solid #bdbdbd', padding: '8px 16px', gap: '16px',
+                                                    '@media (max-width: 600px)': {
+                                                        padding: '8px 10px',
+                                                        gap: '8px'
+                                                    }
+                                                }}>
+                                                    <Image src='/calender-icon.svg'
+                                                        alt='calender-icon'
+                                                        height={24}
+                                                        width={24}
+                                                    />
+                                                    <Box>
+                                                        <Typography className='main-text' sx={{
+                                                            fontSize: '12px',
+                                                            fontWeight: '600',
+                                                            lineHeight: '16px',
+                                                            color: '#4a4a4a'
+                                                        }}>
+                                                            {canceled_at ? `Cancellation Date` : 'Next Billing Date'}
+                                                        </Typography>
+                                                        <Typography className='first-sub-title' sx={{
+                                                            fontWeight: '700 !important',
+                                                            '@media (max-width: 600px)': {
+                                                                fontSize: '12px !important'
+                                                            }
+
+                                                        }}>On {renderValue(value)}</Typography>
+                                                    </Box>
+                                                </Box>
+                                                {/* Divider */}
+                                                <Divider orientation="vertical" flexItem sx={{ height: '32px', alignSelf: 'center' }} />
+
+                                                {/* Monthly Total - find it in the next iteration */}
+                                                {billingDetails && typeof billingDetails === 'object' && Object.entries(billingDetails).map(([nextKey, nextValue], nextIndex) => {
+                                                    if (nextKey === 'monthly_total') {
+                                                        return (
+                                                            <Box key={nextIndex} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                                                <Typography className='main-text' sx={{
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '600',
+                                                                    lineHeight: '16px',
+                                                                    color: '#4a4a4a'
+                                                                }}>Monthly Total</Typography>
+                                                                <Typography className='first-sub-title' sx={{
+                                                                    fontWeight: '700 !important'
+                                                                }}>{renderValue(nextValue)}</Typography>
+                                                            </Box>
+                                                        );
+                                                    }
+                                                    if (nextKey === 'yearly_total') {
+                                                        return (
+                                                            <Box key={nextIndex} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                                                <Typography className='main-text' sx={{
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '600',
+                                                                    lineHeight: '16px',
+                                                                    color: '#4a4a4a'
+                                                                }}>Yearly Total</Typography>
+                                                                <Typography className='first-sub-title' sx={{
+                                                                    fontWeight: '700 !important'
+                                                                }}>{renderValue(nextValue)}</Typography>
+                                                            </Box>
+                                                        );
+                                                    }
+                                                    return null;
+                                                })}
+                                            </Box>
+                                        );
+                                    }
+
+                                    // Skip rendering 'Monthly Total' in its own row, since it's already handled
+                                    if (key === 'monthly_total' || key === 'active' || key === 'yearly_total') {
+                                        return null;
+                                    }
+
+                                    // Default layout for other billing details
                                     return (
                                         <Box key={index} sx={{
-                                            display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '64px',
+                                            display: 'flex', flexDirection: 'row', gap: '26px',
                                             '@media (max-width: 600px)': {
                                                 gap: '12px'
                                             }
                                         }}>
-                                            {/* Next Billing Date */}
-                                            <Box sx={{
-                                                display: 'flex', alignItems: 'center', background: '#fafaf6', borderRadius: '4px', border: '1px solid #bdbdbd', padding: '8px 16px', gap: '16px',
+                                            <Typography className="first-sub-title" sx={{
+                                                width: '130px',
+                                                fontSize: '12px !important',
+                                                lineHeight: '16px !important',
                                                 '@media (max-width: 600px)': {
-                                                    padding: '8px 10px',
-                                                    gap: '8px'
+                                                    width: '110px'
                                                 }
                                             }}>
-                                                <Image src='/calender-icon.svg'
-                                                    alt='calender-icon'
-                                                    height={24}
-                                                    width={24}
-                                                />
-                                                <Box>
-                                                    <Typography className='main-text' sx={{
-                                                        fontSize: '12px',
-                                                        fontWeight: '600',
-                                                        lineHeight: '16px',
-                                                        color: '#4a4a4a'
-                                                    }}>
-                                                        {canceled_at ? `Cancellation Date` : 'Next Billing Date'}
-                                                    </Typography>
-                                                    <Typography className='first-sub-title' sx={{
-                                                        fontWeight: '700 !important',
-                                                        '@media (max-width: 600px)': {
-                                                            fontSize: '12px !important'
-                                                        }
-
-                                                    }}>On {renderValue(value)}</Typography>
-                                                </Box>
-                                            </Box>
-                                            {/* Divider */}
-                                            <Divider orientation="vertical" flexItem sx={{ height: '32px', alignSelf: 'center' }} />
-
-                                            {/* Monthly Total - find it in the next iteration */}
-                                            {billingDetails && typeof billingDetails === 'object' && Object.entries(billingDetails).map(([nextKey, nextValue], nextIndex) => {
-                                                if (nextKey === 'monthly_total') {
-                                                    return (
-                                                        <Box key={nextIndex} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                                            <Typography className='main-text' sx={{
-                                                                fontSize: '12px',
-                                                                fontWeight: '600',
-                                                                lineHeight: '16px',
-                                                                color: '#4a4a4a'
-                                                            }}>Monthly Total</Typography>
-                                                            <Typography className='first-sub-title' sx={{
-                                                                fontWeight: '700 !important'
-                                                            }}>{renderValue(nextValue)}</Typography>
-                                                        </Box>
-                                                    );
-                                                }
-                                                if (nextKey === 'yearly_total') {
-                                                    return (
-                                                        <Box key={nextIndex} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                                            <Typography className='main-text' sx={{
-                                                                fontSize: '12px',
-                                                                fontWeight: '600',
-                                                                lineHeight: '16px',
-                                                                color: '#4a4a4a'
-                                                            }}>Yearly Total</Typography>
-                                                            <Typography className='first-sub-title' sx={{
-                                                                fontWeight: '700 !important'
-                                                            }}>{renderValue(nextValue)}</Typography>
-                                                        </Box>
-                                                    );
-                                                }
-                                                return null;
-                                            })}
+                                                {formatKey(key)}
+                                            </Typography>
+                                            <Typography className="paragraph" sx={{
+                                                lineHeight: '16px !important',
+                                                color: '#5f6368 !important'
+                                            }}>
+                                                {renderValue(value).includes('-1') ? renderValue(value).replace('-1', 'unlimited') : renderValue(value)}
+                                            </Typography>
                                         </Box>
                                     );
-                                }
-
-                                // Skip rendering 'Monthly Total' in its own row, since it's already handled
-                                if (key === 'monthly_total' || key === 'active' || key === 'yearly_total') {
-                                    return null;
-                                }
-
-                                // Default layout for other billing details
-                                return (
-                                    <Box key={index} sx={{
-                                        display: 'flex', flexDirection: 'row', gap: '26px',
-                                        '@media (max-width: 600px)': {
-                                            gap: '12px'
-                                        }
-                                    }}>
-                                        <Typography className="first-sub-title" sx={{
-                                            width: '130px',
-                                            fontSize: '12px !important',
-                                            lineHeight: '16px !important',
-                                            '@media (max-width: 600px)': {
-                                                width: '110px'
-                                            }
-                                        }}>
-                                            {formatKey(key)}
-                                        </Typography>
-                                        <Typography className="paragraph" sx={{
-                                            lineHeight: '16px !important',
-                                            color: '#5f6368 !important'
-                                        }}>
-                                            {renderValue(value).includes('-1') ? renderValue(value).replace('-1', 'unlimited') : renderValue(value)}
-                                        </Typography>
-                                    </Box>
-                                );
-                            })}
-                        </Box>
-
-
-                    </Box>
-                </Grid>
-            </Grid>
-
-            <Box sx={{ borderRadius: '4px', border: '1px solid #f0f0f0', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, marginBottom: 2 }}>
-
-                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'start' }}>
-                    <Typography className='first-sub-title' sx={{ mb: 2 }}>
-                        Usages
-                    </Typography>
-                    <Chip
-                        label='Coming soon'
-                        className='second-sub-title'
-                        sx={{
-                            backgroundColor: '#FDF2CA', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important', "@media (max-width: 600px)": { display: 'none' }
-                        }}>
-                    </Chip>
-                </Box>
-                <Box sx={{
-                    display: 'flex', justifyContent: 'space-between', gap: '55px',
-                    '@media (max-width: 600px)': {
-                        gap: '24px',
-                        flexDirection: 'column',
-                        alignItems: 'center'
-                    }
-                }}>
-                    {
-                        hide == true ? '' :
-                            <Box sx={{ width: '100%' }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
-                                        Contacts collected
-                                    </Typography>
-                                    <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
-                                        {planContactsCollected === -1 && contactsCollected === -1
-                                            ? 'Unlimited'
-                                            : planContactsCollected
-                                                ? `${Math.floor(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)}% Used`
-                                                : 0}
-                                    </Typography>
-                                </Box>
-                                <LinearProgress
-                                    variant="determinate"
-                                    value={
-                                        planContactsCollected === -1 && contactsCollected === -1
-                                            ? 0
-                                            : Math.round(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)
-                                    }
-                                    sx={{
-                                        height: '8px',
-                                        borderRadius: '4px',
-                                        backgroundColor: '#dbdbdb',
-                                        mb: 1,
-                                        '& .MuiLinearProgress-bar': {
-                                            backgroundColor: '#6ec125',
-                                        },
-                                    }}
-                                />
-                                <Typography className='paragraph' sx={{ color: '#787878' }}>
-                                    {planContactsCollected === -1 && contactsCollected === -1
-                                        ? ''
-                                        : `${Math.max(0, planContactsCollected - contactsCollected)} out of ${planContactsCollected} Remaining`}
-                                </Typography>
+                                })}
                             </Box>
-                    }
 
-                    <Box sx={{
-                        width: '100%',
-                        '@media (min-width: 601px)': {
-                            display: 'none'
-                        }
-                    }}>
-                        <Divider sx={{
-                            borderColor: '#e4e4e4',
-                            marginLeft: '-24px',
-                            marginRight: '-24px'
-                        }} />
-                    </Box>
-                    <Box sx={{ display: 'none', "@media (max-width: 600px)": { display: 'flex', width: '100%', justifyContent: 'end' } }}>
+
+                        </Box>
+                    </Grid>
+                </Grid>
+
+                <Box sx={{ borderRadius: '4px', border: '1px solid #f0f0f0', boxShadow: '0px 2px 8px 0px rgba(0, 0, 0, 0.20)', p: 3, marginBottom: 2 }}>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <Typography className='first-sub-title' sx={{ mb: 2 }}>
+                            Usages
+                        </Typography>
                         <Chip
                             label='Coming soon'
                             className='second-sub-title'
                             sx={{
-                                backgroundColor: '#FDF2CA', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important',
+                                backgroundColor: '#FDF2CA', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important', "@media (max-width: 600px)": { display: 'none' }
                             }}>
                         </Chip>
                     </Box>
-                    {
-                        hide == true ? '' :
-                            <Box sx={{ width: '100%', marginBottom: 2 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', opacity: 0.6 }}>
-                                    <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
-                                        Prospect Data
-                                    </Typography>
-                                    <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
-                                        0% Used
+                    <Box sx={{
+                        display: 'flex', justifyContent: 'space-between', gap: '55px',
+                        '@media (max-width: 600px)': {
+                            gap: '24px',
+                            flexDirection: 'column',
+                            alignItems: 'center'
+                        }
+                    }}>
+                        {
+                            hide == true ? '' :
+                                <Box sx={{ width: '100%' }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                                        <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
+                                            Contacts collected
+                                        </Typography>
+                                        <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
+                                            {planContactsCollected === -1 && contactsCollected === -1
+                                                ? 'Unlimited'
+                                                : planContactsCollected
+                                                    ? `${Math.floor(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)}% Used`
+                                                    : 0}
+                                        </Typography>
+                                    </Box>
+                                    <LinearProgress
+                                        variant="determinate"
+                                        value={
+                                            planContactsCollected === -1 && contactsCollected === -1
+                                                ? 0
+                                                : Math.round(((planContactsCollected - contactsCollected) / planContactsCollected) * 100)
+                                        }
+                                        sx={{
+                                            height: '8px',
+                                            borderRadius: '4px',
+                                            backgroundColor: '#dbdbdb',
+                                            mb: 1,
+                                            '& .MuiLinearProgress-bar': {
+                                                backgroundColor: '#6ec125',
+                                            },
+                                        }}
+                                    />
+                                    <Typography className='paragraph' sx={{ color: '#787878' }}>
+                                        {planContactsCollected === -1 && contactsCollected === -1
+                                            ? ''
+                                            : `${Math.max(0, planContactsCollected - contactsCollected)} out of ${planContactsCollected} Remaining`}
                                     </Typography>
                                 </Box>
+                        }
 
-                                <LinearProgress
-                                    variant="determinate"
-                                    value={0}
-                                    sx={{
-                                        height: '8px',
-                                        borderRadius: '4px',
-                                        backgroundColor: '#dbdbdb',
-                                        mb: 1,
-                                        opacity: 0.6
-                                    }}
-                                />
-                                <Typography className='paragraph' sx={{ color: '#787878 !important', opacity: 0.6 }}>
-                                    {0}
-                                </Typography>
-
-                            </Box>
-                    }
-                    {hide == true ? '' :
-                        <Box sx={{ flexShrink: 0, opacity: 0.6 }}>
-                            <Button
-                                className='hyperlink-red'
-                                disabled={true}
-                                onClick={handleBuyCredits}
+                        <Box sx={{
+                            width: '100%',
+                            '@media (min-width: 601px)': {
+                                display: 'none'
+                            }
+                        }}>
+                            <Divider sx={{
+                                borderColor: '#e4e4e4',
+                                marginLeft: '-24px',
+                                marginRight: '-24px'
+                            }} />
+                        </Box>
+                        <Box sx={{ display: 'none', "@media (max-width: 600px)": { display: 'flex', width: '100%', justifyContent: 'end' } }}>
+                            <Chip
+                                label='Coming soon'
+                                className='second-sub-title'
                                 sx={{
-                                    background: 'rgba(56, 152, 252, 1)',
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#fff !important',
-                                    textTransform: 'none',
-                                    padding: '10px 24px',
-                                    '&:hover': {
-                                        color: 'rgba(56, 152, 252, 1) !important'
-                                    }
-                                }}
-                            >
-                                Buy Credits
-                            </Button>
-
+                                    backgroundColor: '#FDF2CA', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important',
+                                }}>
+                            </Chip>
                         </Box>
-                    }
+                        {
+                            hide == true ? '' :
+                                <Box sx={{ width: '100%', marginBottom: 2 }}>
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', opacity: 0.6 }}>
+                                        <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
+                                            Prospect Data
+                                        </Typography>
+                                        <Typography className='second-sub-title' sx={{ lineHeight: '20px !important', mb: '12px' }}>
+                                            0% Used
+                                        </Typography>
+                                    </Box>
 
-                </Box>
-
-
-            </Box>
-
-
-            <Divider sx={{
-                borderColor: '#e4e4e4',
-                maxWidth: '100%',
-                '@media (max-width: 600px)': {
-                    marginLeft: '-16px',
-                    marginRight: '-16px'
-                }
-            }} />
-            <Box sx={{ marginTop: '30px' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                    <Typography variant="h6" className='first-sub-title' sx={{
-                        lineHeight: '22px !important'
-                    }}>Billing History</Typography>
-                    <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/billing-history" />
-                </Box>
-                <TableContainer sx={{
-                    border: '1px solid #EBEBEB',
-                    borderRadius: '4px 4px 0px 0px'
-                }}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell
-                                    className='table-heading'
-                                    sx={{
-                                        ...billingStyles.tableColumn,
-                                        background: '#fff'
-                                    }}>Date</TableCell>
-                                <TableCell className='table-heading' sx={billingStyles.tableColumn}>Invoice ID</TableCell>
-                                <TableCell className='table-heading' sx={billingStyles.tableColumn}>Pricing Plan</TableCell>
-                                <TableCell className='table-heading' sx={billingStyles.tableColumn}>Total</TableCell>
-                                <TableCell className='table-heading' sx={billingStyles.tableColumn}>Status</TableCell>
-                                {sourcePlatform !== 'shopify' && (
-                                    <TableCell className='table-heading' sx={billingStyles.tableColumn}>Actions</TableCell>
-                                )}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {billingHistory.length === 0 ? (
-                                <TableRow sx={billingStyles.tableBodyRow}>
-                                    <TableCell className='table-data' colSpan={5} sx={{
-                                        ...billingStyles.tableBodyColumn,
-                                        textAlign: 'center',
-                                        paddingTop: '18px',
-                                        paddingBottom: '18px'
-                                    }}>
-                                        No history found
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                billingHistory.map((history, index) => (
-                                    <TableRow key={index}
+                                    <LinearProgress
+                                        variant="determinate"
+                                        value={0}
                                         sx={{
-                                            ...billingStyles.tableBodyRow,
-                                            '&:hover': {
-                                                backgroundColor: '#F7F7F7',
-                                                '& .sticky-cell': {
-                                                    backgroundColor: '#F7F7F7',
-                                                }
-                                            },
-
+                                            height: '8px',
+                                            borderRadius: '4px',
+                                            backgroundColor: '#dbdbdb',
+                                            mb: 1,
+                                            opacity: 0.6
                                         }}
-                                    >
-                                        <TableCell className="sticky-cell table-data" sx={{
-                                            ...billingStyles.tableBodyColumn,
-                                            backgroundColor: '#fff'
-                                        }}>{history.date}</TableCell>
+                                    />
+                                    <Typography className='paragraph' sx={{ color: '#787878 !important', opacity: 0.6 }}>
+                                        {0}
+                                    </Typography>
 
-                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>{history.invoice_id}</TableCell>
-                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
-                                            {history.pricing_plan}
-                                        </TableCell>
-                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>${history.total}</TableCell>
-                                        <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
-                                            <Typography component="span" className='table-data' sx={{
-                                                ...getStatusStyles(history.status),
-                                                padding: '6px 8px',
-                                                borderRadius: '2px',
-                                            }}>
-                                                {history.status}
-                                            </Typography>
-                                        </TableCell>
-                                        {sourcePlatform !== 'shopify' && (
-                                            <TableCell className="table-data" sx={billingStyles.tableBodyColumn}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                    {/* Download Button */}
-                                                    <IconButton
-                                                        onClick={() => fetchSaveBillingHistory(history.invoice_id)}
-                                                        sx={{ ':hover': { backgroundColor: 'transparent' }, padding: 0 }}
-                                                    >
-                                                        <DownloadIcon
-                                                            sx={{
-                                                                width: '24px',
-                                                                height: '24px',
-                                                                color: 'rgba(188, 188, 188, 1)',
-                                                                ':hover': { color: 'rgba(56, 152, 252, 1)' }
-                                                            }}
-                                                        />
-                                                    </IconButton>
-
-                                                    {/* Send Invoice Button */}
-                                                    <IconButton
-                                                        onClick={() => handleSendInvoicePopupOpen(history.invoice_id)}
-                                                        sx={{ ':hover': { backgroundColor: 'transparent' }, padding: 0 }}
-                                                    >
-                                                        <TelegramIcon
-                                                            sx={{
-                                                                width: '24px',
-                                                                height: '24px',
-                                                                color: 'rgba(188, 188, 188, 1)',
-                                                                ':hover': { color: 'rgba(56, 152, 252, 1)' }
-                                                            }}
-                                                        />
-                                                    </IconButton>
-                                                </Box>
-                                            </TableCell>
-                                        )}
-                                    </TableRow>
-                                )))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-                {/* Pagination Component */}
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '42px 0 0px', mb: 1 }}>
-                    <CustomTablePagination
-                        count={totalRows}
-                        page={page}
-                        rowsPerPage={rowsPerPage}
-                        onPageChange={handleChangePage}
-                        onRowsPerPageChange={handleChangeRowsPerPage}
-                        rowsPerPageOptions={rowsPerPageOptions}
-                    />
-                </Box>
-            </Box>
-
-            <Drawer
-                anchor="right"
-                open={removePopupOpen}
-                onClose={handleRemovePopupClose}
-                PaperProps={{
-                    sx: {
-                        width: '620px',
-                        position: 'fixed',
-                        zIndex: 1301,
-                        top: 0,
-                        bottom: 0,
-                        '@media (max-width: 600px)': {
-                            width: '100%',
+                                </Box>
                         }
-                    },
-                }}
-            >
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
-                        Confirm Deletion
-                    </Typography>
-                    <IconButton onClick={handleRemovePopupClose} sx={{ p: 0 }}>
-                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
-                    </IconButton>
-                </Box>
-
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Image src='/delete-card-icon.svg' alt='delete-card-icon' width={403} height={403} />
-                        <Typography className='second-sub-title' sx={{
-                            fontWeight: '600 !important',
-                            lineHeight: '20px !important',
-                            color: '#4a4a4a !important',
-                            marginBottom: '20px'
-                        }}>
-                            Delete card detail
-                        </Typography>
-                        <Typography className='paragraph' sx={{
-                            lineHeight: '16px !important',
-                            color: '#5f6368 !important'
-                        }}>
-                            To remove your default payment method, you need to set another payment <br />
-                            method as the default first!
-                        </Typography>
-                    </Box>
-
-                    <Box sx={{ position: 'relative' }}>
-                        <Box sx={{
-                            px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
-                            width: '620px',
-                            '@media (max-width: 600px)': {
-                                width: '100%',
-                            }
-                        }}>
-                            <Box display="flex" justifyContent="flex-end" mt={2}>
-                                <Button className="hyperlink-red" onClick={handleRemovePopupClose} sx={{
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: 'rgba(56, 152, 252, 1) !important',
-                                    marginRight: '16px',
-                                    textTransform: 'none',
-                                    padding: '10px 24px'
-                                }}>
-                                    Cancel
-                                </Button>
-                                <Button className="hyperlink-red" onClick={handleDeleteCard} sx={{
-                                    background: 'rgba(56, 152, 252, 1)',
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#fff !important',
-                                    textTransform: 'none',
-                                    padding: '10px 24px',
-                                    '&:hover': {
-                                        color: 'rgba(56, 152, 252, 1) !important'
-                                    }
-                                }}>
-                                    Delete
-                                </Button>
-                            </Box>
-                        </Box>
-                    </Box>
-                </Box>
-
-            </Drawer>
-
-            <Drawer
-                anchor="right"
-                open={sendInvoicePopupOpen}
-                onClose={handleSendInvoicePopupClose}
-                PaperProps={{
-                    sx: {
-                        width: '620px',
-                        position: 'fixed',
-                        zIndex: 1301,
-                        top: 0,
-                        bottom: 0,
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        }
-                    },
-                }}
-            >
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
-                        Send Invoice
-                    </Typography>
-                    <IconButton onClick={handleSendInvoicePopupClose} sx={{ p: 0 }}>
-                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
-                    </IconButton>
-                </Box>
-
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', p: 4 }}>
-                        <Typography className='second-sub-title' sx={{
-                            fontWeight: '600 !important',
-                            color: '#4a4a4a !important',
-                            marginBottom: '38px'
-                        }}>
-                            Invoice with {selectedInvoiceId} ID will be shared to the email inbox directly.
-                            Please kindly check your mail inbox.
-                        </Typography>
-                        <TextField sx={billingStyles.formField}
-                            label="Enter Email ID"
-                            fullWidth
-                            margin="normal"
-                            InputLabelProps={{
-                                className: "form-input-label",
-                                focused: false
-                            }}
-                            InputProps={{
-                                className: "form-input",
-                                sx: billingStyles.formInput
-                            }}
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                        />
-                    </Box>
-
-                    <Box sx={{ position: 'relative', height: '100%' }}>
-                        <Box sx={{
-                            px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
-                            width: '620px',
-                            '@media (max-width: 600px)': {
-                                width: '100%',
-                            }
-                        }}>
-                            <Box display="flex" justifyContent="flex-end" mt={2}>
-                                <Button className='hyperlink-red' onClick={handleSendInvoicePopupClose} sx={{
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: 'rgba(56, 152, 252, 1) !important',
-                                    marginRight: '16px',
-                                    textTransform: 'none',
-                                    padding: '10px 24px'
-                                }}>
-                                    Cancel
-                                </Button>
+                        {hide == true ? '' :
+                            <Box sx={{ flexShrink: 0, opacity: 0.6 }}>
                                 <Button
                                     className='hyperlink-red'
-                                    disabled={!isFormValidThird()}
-                                    onClick={handleSendInvoice}
+                                    disabled={true}
+                                    onClick={handleBuyCredits}
                                     sx={{
-                                        background: isFormValidThird() ? 'rgba(56, 152, 252, 1)' : '#D3D3D3',
+                                        background: 'rgba(56, 152, 252, 1)',
                                         borderRadius: '4px',
-                                        border: '1px solid',
-                                        borderColor: isFormValidThird() ? 'rgba(56, 152, 252, 1)' : '#D3D3D3',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
                                         boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                        color: isFormValidThird() ? '#fff !important' : '#A9A9A9',
+                                        color: '#fff !important',
                                         textTransform: 'none',
                                         padding: '10px 24px',
                                         '&:hover': {
-                                            color: isFormValidThird() ? 'rgba(56, 152, 252, 1) !important' : '#A9A9A9'
+                                            color: 'rgba(56, 152, 252, 1) !important'
                                         }
                                     }}
                                 >
-                                    Send
+                                    Buy Credits
                                 </Button>
+
+                            </Box>
+                        }
+
+                    </Box>
+
+                </Box>
+
+
+                <Divider sx={{
+                    borderColor: '#e4e4e4',
+                    maxWidth: '100%',
+                    '@media (max-width: 600px)': {
+                        marginLeft: '-16px',
+                        marginRight: '-16px'
+                    }
+                }} />
+                <Box sx={{ marginTop: '30px' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
+                        <Typography variant="h6" className='first-sub-title' sx={{
+                            lineHeight: '22px !important'
+                        }}>Billing History</Typography>
+                        <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/billing-history" />
+                    </Box>
+                    <TableContainer sx={{
+                        border: '1px solid #EBEBEB',
+                        borderRadius: '4px 4px 0px 0px'
+                    }}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell
+                                        className='table-heading'
+                                        sx={{
+                                            ...billingStyles.tableColumn,
+                                            background: '#fff'
+                                        }}>Date</TableCell>
+                                    <TableCell className='table-heading' sx={billingStyles.tableColumn}>Invoice ID</TableCell>
+                                    <TableCell className='table-heading' sx={billingStyles.tableColumn}>Pricing Plan</TableCell>
+                                    <TableCell className='table-heading' sx={billingStyles.tableColumn}>Total</TableCell>
+                                    <TableCell className='table-heading' sx={billingStyles.tableColumn}>Status</TableCell>
+                                    {sourcePlatform !== 'shopify' && (
+                                        <TableCell className='table-heading' sx={billingStyles.tableColumn}>Actions</TableCell>
+                                    )}
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {billingHistory.length === 0 ? (
+                                    <TableRow sx={billingStyles.tableBodyRow}>
+                                        <TableCell className='table-data' colSpan={5} sx={{
+                                            ...billingStyles.tableBodyColumn,
+                                            textAlign: 'center',
+                                            paddingTop: '18px',
+                                            paddingBottom: '18px'
+                                        }}>
+                                            No history found
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    billingHistory.map((history, index) => (
+                                        <TableRow key={index}
+                                            sx={{
+                                                ...billingStyles.tableBodyRow,
+                                                '&:hover': {
+                                                    backgroundColor: '#F7F7F7',
+                                                    '& .sticky-cell': {
+                                                        backgroundColor: '#F7F7F7',
+                                                    }
+                                                },
+
+                                            }}
+                                        >
+                                            <TableCell className="sticky-cell table-data" sx={{
+                                                ...billingStyles.tableBodyColumn,
+                                                backgroundColor: '#fff'
+                                            }}>{history.date}</TableCell>
+
+                                            <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>{history.invoice_id}</TableCell>
+                                            <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
+                                                {history.pricing_plan}
+                                            </TableCell>
+                                            <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>${history.total}</TableCell>
+                                            <TableCell className='table-data' sx={billingStyles.tableBodyColumn}>
+                                                <Typography component="span" className='table-data' sx={{
+                                                    ...getStatusStyles(history.status),
+                                                    padding: '6px 8px',
+                                                    borderRadius: '2px',
+                                                }}>
+                                                    {history.status}
+                                                </Typography>
+                                            </TableCell>
+                                            {sourcePlatform !== 'shopify' && (
+                                                <TableCell className="table-data" sx={billingStyles.tableBodyColumn}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                                        {/* Download Button */}
+                                                        <IconButton
+                                                            onClick={() => fetchSaveBillingHistory(history.invoice_id)}
+                                                            sx={{ ':hover': { backgroundColor: 'transparent' }, padding: 0 }}
+                                                        >
+                                                            <DownloadIcon
+                                                                sx={{
+                                                                    width: '24px',
+                                                                    height: '24px',
+                                                                    color: 'rgba(188, 188, 188, 1)',
+                                                                    ':hover': { color: 'rgba(56, 152, 252, 1)' }
+                                                                }}
+                                                            />
+                                                        </IconButton>
+
+                                                        {/* Send Invoice Button */}
+                                                        <IconButton
+                                                            onClick={() => handleSendInvoicePopupOpen(history.invoice_id)}
+                                                            sx={{ ':hover': { backgroundColor: 'transparent' }, padding: 0 }}
+                                                        >
+                                                            <TelegramIcon
+                                                                sx={{
+                                                                    width: '24px',
+                                                                    height: '24px',
+                                                                    color: 'rgba(188, 188, 188, 1)',
+                                                                    ':hover': { color: 'rgba(56, 152, 252, 1)' }
+                                                                }}
+                                                            />
+                                                        </IconButton>
+                                                    </Box>
+                                                </TableCell>
+                                            )}
+                                        </TableRow>
+                                    )))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                    {/* Pagination Component */}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', padding: '42px 0 0px', mb: 1 }}>
+                        <CustomTablePagination
+                            count={totalRows}
+                            page={page}
+                            rowsPerPage={rowsPerPage}
+                            onPageChange={handleChangePage}
+                            onRowsPerPageChange={handleChangeRowsPerPage}
+                            rowsPerPageOptions={rowsPerPageOptions}
+                        />
+                    </Box>
+                </Box>
+
+                <Drawer
+                    anchor="right"
+                    open={removePopupOpen}
+                    onClose={handleRemovePopupClose}
+                    PaperProps={{
+                        sx: {
+                            width: '620px',
+                            position: 'fixed',
+                            zIndex: 1301,
+                            top: 0,
+                            bottom: 0,
+                            '@media (max-width: 600px)': {
+                                width: '100%',
+                            }
+                        },
+                    }}
+                >
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                        <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
+                            Confirm Deletion
+                        </Typography>
+                        <IconButton onClick={handleRemovePopupClose} sx={{ p: 0 }}>
+                            <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                        </IconButton>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Image src='/delete-card-icon.svg' alt='delete-card-icon' width={403} height={403} />
+                            <Typography className='second-sub-title' sx={{
+                                fontWeight: '600 !important',
+                                lineHeight: '20px !important',
+                                color: '#4a4a4a !important',
+                                marginBottom: '20px'
+                            }}>
+                                Delete card detail
+                            </Typography>
+                            <Typography className='paragraph' sx={{
+                                lineHeight: '16px !important',
+                                color: '#5f6368 !important'
+                            }}>
+                                To remove your default payment method, you need to set another payment <br />
+                                method as the default first!
+                            </Typography>
+                        </Box>
+
+                        <Box sx={{ position: 'relative' }}>
+                            <Box sx={{
+                                px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
+                                width: '620px',
+                                '@media (max-width: 600px)': {
+                                    width: '100%',
+                                }
+                            }}>
+                                <Box display="flex" justifyContent="flex-end" mt={2}>
+                                    <Button className="hyperlink-red" onClick={handleRemovePopupClose} sx={{
+                                        borderRadius: '4px',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
+                                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                        color: 'rgba(56, 152, 252, 1) !important',
+                                        marginRight: '16px',
+                                        textTransform: 'none',
+                                        padding: '10px 24px'
+                                    }}>
+                                        Cancel
+                                    </Button>
+                                    <Button className="hyperlink-red" onClick={handleDeleteCard} sx={{
+                                        background: 'rgba(56, 152, 252, 1)',
+                                        borderRadius: '4px',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
+                                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                        color: '#fff !important',
+                                        textTransform: 'none',
+                                        padding: '10px 24px',
+                                        '&:hover': {
+                                            color: 'rgba(56, 152, 252, 1) !important'
+                                        }
+                                    }}>
+                                        Delete
+                                    </Button>
+                                </Box>
                             </Box>
                         </Box>
                     </Box>
-                </Box>
-            </Drawer>
-        </Box >
+
+                </Drawer>
+
+                <Drawer
+                    anchor="right"
+                    open={sendInvoicePopupOpen}
+                    onClose={handleSendInvoicePopupClose}
+                    PaperProps={{
+                        sx: {
+                            width: '620px',
+                            position: 'fixed',
+                            zIndex: 1301,
+                            top: 0,
+                            bottom: 0,
+                            '@media (max-width: 600px)': {
+                                width: '100%',
+                            }
+                        },
+                    }}
+                >
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
+                        <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
+                            Send Invoice
+                        </Typography>
+                        <IconButton onClick={handleSendInvoicePopupClose} sx={{ p: 0 }}>
+                            <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                        </IconButton>
+                    </Box>
+
+                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', p: 4 }}>
+                            <Typography className='second-sub-title' sx={{
+                                fontWeight: '600 !important',
+                                color: '#4a4a4a !important',
+                                marginBottom: '38px'
+                            }}>
+                                Invoice with {selectedInvoiceId} ID will be shared to the email inbox directly.
+                                Please kindly check your mail inbox.
+                            </Typography>
+                            <TextField sx={billingStyles.formField}
+                                label="Enter Email ID"
+                                fullWidth
+                                margin="normal"
+                                InputLabelProps={{
+                                    className: "form-input-label",
+                                    focused: false
+                                }}
+                                InputProps={{
+                                    className: "form-input",
+                                    sx: billingStyles.formInput
+                                }}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                            />
+                        </Box>
+
+                        <Box sx={{ position: 'relative', height: '100%' }}>
+                            <Box sx={{
+                                px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
+                                width: '620px',
+                                '@media (max-width: 600px)': {
+                                    width: '100%',
+                                }
+                            }}>
+                                <Box display="flex" justifyContent="flex-end" mt={2}>
+                                    <Button className='hyperlink-red' onClick={handleSendInvoicePopupClose} sx={{
+                                        borderRadius: '4px',
+                                        border: '1px solid rgba(56, 152, 252, 1)',
+                                        boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                        color: 'rgba(56, 152, 252, 1) !important',
+                                        marginRight: '16px',
+                                        textTransform: 'none',
+                                        padding: '10px 24px'
+                                    }}>
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        className='hyperlink-red'
+                                        disabled={!isFormValidThird()}
+                                        onClick={handleSendInvoice}
+                                        sx={{
+                                            background: isFormValidThird() ? 'rgba(56, 152, 252, 1)' : '#D3D3D3',
+                                            borderRadius: '4px',
+                                            border: '1px solid',
+                                            borderColor: isFormValidThird() ? 'rgba(56, 152, 252, 1)' : '#D3D3D3',
+                                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
+                                            color: isFormValidThird() ? '#fff !important' : '#A9A9A9',
+                                            textTransform: 'none',
+                                            padding: '10px 24px',
+                                            '&:hover': {
+                                                color: isFormValidThird() ? 'rgba(56, 152, 252, 1) !important' : '#A9A9A9'
+                                            }
+                                        }}
+                                    >
+                                        Send
+                                    </Button>
+                                </Box>
+                            </Box>
+                        </Box>
+                    </Box>
+                </Drawer>
+            </Box >}
+            {true && <Box sx={{ pr: 2, pt: 1 }}><BlurBilling/></Box > }
+         </>
     );
 };

@@ -13,7 +13,7 @@ from fastapi import HTTPException
 from faker import Faker
 import re
 # from models.enrichment_users import EnrichmentUser
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit
+from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit, DataSyncType
 import httpx
 from utils import format_phone_number
 from typing import List
@@ -26,7 +26,7 @@ class BingAdsIntegrationsService:
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
                  sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client, million_verifier_integrations: MillionVerifierIntegrationsService):
         self.domain_persistence = domain_persistence
-        self.integrations_persisntece = integrations_persistence
+        self.integrations_persistence = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
@@ -47,7 +47,7 @@ class BingAdsIntegrationsService:
         return response
 
     def get_credentials(self, domain_id: int, user_id: int):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.BING_ADS.value)
+        credential = self.integrations_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.BING_ADS.value)
         return credential
 
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
@@ -56,7 +56,7 @@ class BingAdsIntegrationsService:
             credential.access_token = api_key
             credential.is_failed = False
             credential.error_message = None
-            self.integrations_persisntece.db.commit()
+            self.integrations_persistence.db.commit()
             return credential
         
         common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
@@ -72,7 +72,7 @@ class BingAdsIntegrationsService:
         else:
             integration_data['domain_id'] = domain_id
             
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integrations_persistence.create_integration(integration_data)
             
         if not integartion:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
@@ -368,18 +368,24 @@ class BingAdsIntegrationsService:
                 raise Exception(f"Error when adding CustomerList: {bulk_entity.error_message}")
 
         logger.info("CustomerList has been successfully added to the campaign via the Bulk API")
+
+    def get_smart_credentials(self, user_id: int):
+        credential = self.integrations_persistence.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.GOOGLE_ADS.value)
+        return credential
             
-    async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = [], campaign_id: str = None, campaign_name: str = None):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+    async def create_sync(self, domain_id: int, customer_id: str, leads_type: str, list_id: str, list_name: str, created_by: str, user: dict, data_map: List[DataMap] = [], campaign_id: str = None, campaign_name: str = None):
+        credentials = self.get_credentials(user_id=user.get('id'), domain_id=domain_id)
         if campaign_id is not None:
             self.add_customer_list_to_campaign_bulk(access_token=credentials.access_token, customer_id=customer_id, campaign_id=campaign_id, list_id=list_id, list_name=list_name, campaign_name=campaign_name)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
-            'domain_id': domain_id,
             'leads_type': leads_type,
+            'sent_contacts': -1,
+            'sync_type': DataSyncType.CONTACT.value,
             'data_map': data_map,
+            'domain_id': domain_id,
             'created_by': created_by,
             'campaign_id': campaign_id,
             'campaign_name': campaign_name,
@@ -436,7 +442,7 @@ class BingAdsIntegrationsService:
             if not credential:
                 raise HTTPException(status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value)
             credential.suppression = suppression
-            self.integrations_persisntece.db.commit()
+            self.integrations_persistence.db.commit()
             return {'message': 'successfuly'}  
 
     def get_profile(self, domain_id: int, fields: List[ContactFiled], date_last_sync: str = None) -> List[ContactSuppression]:

@@ -28,7 +28,7 @@ interface TabPanelProps {
 const Users: React.FC = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
-    const [tabIndex, setTabIndex] = useState(0);
+    const [tabIndex, setTabIndex] = useState(1);
     const [valuesMetrics, setValueMetrics] = useState<CustomCardsProps>({
         users: 0,
         pixel_contacts: 0,
@@ -104,7 +104,8 @@ const Users: React.FC = () => {
 
     return (
         <>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', pr: 2, width: "100%",
+        overflowX: "scroll",   }}>
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'start', justifyContent: 'space-between' }}>
                     <Typography variant="h4" component="h1" sx={usersStyle.title}>
                         Users

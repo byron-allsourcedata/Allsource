@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import ENUM
 from models.base import Base
 from models.enrichment.enrichment_users import EnrichmentUser
 
-data_sync_type = ENUM('pixel', 'audience', name='data_sync_type', create_type=True)
+data_sync_type = ENUM('pixel', 'audience', 'contact', name='data_sync_type', create_type=True)
 
 
 class IntegrationUserSync(Base):
@@ -35,7 +35,7 @@ class IntegrationUserSync(Base):
         nullable=False,
         server_default=text("'pixel'::data_sync_type")
     )
-    is_active = Column(Boolean, nullable=True)
+    is_active = Column(Boolean, nullable=True, server_default=text('true'))
     created_at = Column(
         TIMESTAMP(timezone=False),
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None)
@@ -51,7 +51,7 @@ class IntegrationUserSync(Base):
     data_map = Column(JSON, nullable=True)
     leads_type = Column(VARCHAR, nullable=True)
     platform_user_id = Column(BigInteger, nullable=True)
-    sync_status = Column(Boolean, nullable=True)
+    sync_status = Column(Boolean, nullable=True, server_default=text('true'))
     no_of_contacts = Column(
         Integer,
         nullable=True,

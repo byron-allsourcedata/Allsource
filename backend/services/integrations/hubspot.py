@@ -1,9 +1,12 @@
 import logging
 import re
 import json
+from uuid import UUID
+
 from pydantic import EmailStr
 
 from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult, DataSyncType, IntegrationLimit
+from models import FiveXFiveUser
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -15,11 +18,11 @@ from models.integrations.users_domains_integrations import UserIntegration
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from fastapi import HTTPException
 from models.enrichment.enrichment_users import EnrichmentUser
-from typing import List
+from typing import List, Any
 from schemas.integrations.integrations import DataMap
 from schemas.integrations.integrations import IntegrationCredentials
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
-from uuid import UUID
+from utils import get_valid_email, get_valid_location, get_valid_phone
 
 
 class HubspotIntegrationsService:
@@ -52,11 +55,13 @@ class HubspotIntegrationsService:
         return response
 
     def get_credentials(self, domain_id: int, user_id: int):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
+        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id,
+                                                                               service_name=SourcePlatformEnum.HUBSPOT.value)
         return credential
 
     def get_smart_credentials(self, user_id: int):
-        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
+        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id,
+                                                                                     service_name=SourcePlatformEnum.HUBSPOT.value)
         return credential
 
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
@@ -67,7 +72,7 @@ class HubspotIntegrationsService:
             credential.error_message = None
             self.integrations_persisntece.db.commit()
             return credential
-              
+
         common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
         integration_data = {
             'access_token': api_key,
@@ -80,13 +85,12 @@ class HubspotIntegrationsService:
             integration_data['user_id'] = user.get('id')
         else:
             integration_data['domain_id'] = domain_id
-            
+
         integration = self.integrations_persisntece.create_integration(integration_data)
-        
-        
+
         if not integration:
             raise HTTPException(status_code=409, detail={'status': IntegrationsStatus.CREATE_IS_FAILED.value})
-        
+
         return integration
 
     def test_API_key(self, access_token: str):
@@ -97,7 +101,7 @@ class HubspotIntegrationsService:
                 "lastname": "Test Test",
                 "phone": "123-456-7890",
                 "company": "Test"
-              }
+            }
         }
         response = self.__handle_request(
             method='POST',
@@ -116,24 +120,29 @@ class HubspotIntegrationsService:
                 raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
         except:
             raise HTTPException(status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value)
-        integartions = self.__save_integrations(credentials.hubspot.access_token, None if domain is None else domain.id, user)
+        integartions = self.__save_integrations(credentials.hubspot.access_token, None if domain is None else domain.id,
+                                                user)
         return {
             'integartions': integartions,
             'status': IntegrationsStatus.SUCCESS.value
         }
 
-    async def create_sync(self, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = None, leads_type: str = None):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+    async def create_sync(self, domain_id: int ,created_by: str, user: dict, data_map: List[DataMap] = None,
+                          leads_type: str = None):
+        credentials = self.get_credentials(user_id=user.get('id'), domain_id=domain_id)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
-            'domain_id': domain_id,
+            'sent_contacts': -1,
+            'sync_type': DataSyncType.CONTACT.value,
             'leads_type': leads_type,
             'data_map': data_map,
+            'domain_id': domain_id,
             'created_by': created_by,
         })
         return sync
 
-    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, data_map: List[DataMap], created_by: str,  user: dict):
+    def create_smart_audience_sync(self, smart_audience_id: UUID, sent_contacts: int, data_map: List[DataMap],
+                                   created_by: str, user: dict):
         credentials = self.get_smart_credentials(user_id=user.get('id'))
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
@@ -146,7 +155,7 @@ class HubspotIntegrationsService:
         return sync
 
     def edit_sync(self, leads_type: str, integrations_users_sync_id: int,
-                 domain_id: int, created_by: str,  user_id: int, data_map: List[DataMap] = None):
+                  domain_id: int, created_by: str, user_id: int, data_map: List[DataMap] = None):
         credentials = self.get_credentials(domain_id, user_id)
         sync = self.sync_persistence.edit_sync({
             'integration_id': credentials.id,
@@ -157,16 +166,31 @@ class HubspotIntegrationsService:
 
         return sync
 
-    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync,
+                                enrichment_users: List[EnrichmentUser], target_schema: str = None, validations: dict = {}):
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__mapped_profile(enrichment_user, target_schema, validations, integration_data_sync.data_map)
             if profile:
                 profiles.append(profile)
-        
+
         if not profiles:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        
+
+        list_response = self.__create_profiles(user_integration.access_token, profiles)
+        return list_response
+
+    async def process_data_sync_lead(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync,
+                                lead_users: List[FiveXFiveUser]):
+        profiles = []
+        for lead_user in lead_users:
+            profile = self.__mapped_profile_lead(lead_user, integration_data_sync.data_map)
+            if profile:
+                profiles.append(profile)
+
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
         list_response = self.__create_profiles(user_integration.access_token, profiles)
         return list_response
 
@@ -211,7 +235,7 @@ class HubspotIntegrationsService:
                 to_create.append({
                     "properties": clean_props
                 })
-                
+
         if to_create:
             create_resp = self.__handle_request(
                 url="https://api.hubapi.com/crm/v3/objects/contacts/batch/create",
@@ -219,13 +243,13 @@ class HubspotIntegrationsService:
                 access_token=access_token,
                 json={"inputs": to_create}
             )
-            
+
             if create_resp.status_code == 402:
                 category = create_resp.json().get("category")
                 logging.warning(category)
                 if category == "PAYMENT_REQUIRED":
                     return ProccessDataSyncResult.PAYMENT_REQUIRED.value
-                
+
             if create_resp.status_code not in (200, 201):
                 logging.error("Batch create failed: %s", create_resp.text)
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
@@ -237,25 +261,28 @@ class HubspotIntegrationsService:
                 access_token=access_token,
                 json={"inputs": to_update}
             )
-            
+
             if update_resp.status_code not in (200, 201):
                 logging.error("Batch update failed: %s", update_resp.text)
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    
-    def __mapped_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict, data_map: list) -> dict:
+    def __mapped_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict,
+                         data_map: list) -> \
+            dict[str, Any] | None:
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
             return None
-        
+
         business_email, personal_email, phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
-        main_email, main_phone = resolve_main_email_and_phone(enrichment_contacts=enrichment_contacts, validations=validations, target_schema=target_schema, 
-                                                              business_email=business_email, personal_email=personal_email, phone=phone)
+        main_email, main_phone = resolve_main_email_and_phone(enrichment_contacts=enrichment_contacts,
+                                                              validations=validations, target_schema=target_schema,
+                                                              business_email=business_email,
+                                                              personal_email=personal_email, phone=phone)
         first_name = enrichment_contacts.first_name
         last_name = enrichment_contacts.last_name
-        
+
         if not main_email or not first_name or not last_name:
             return None
 
@@ -264,7 +291,7 @@ class HubspotIntegrationsService:
             'firstname': first_name,
             'lastname': last_name
         }
-        
+
         required_types = {m['type'] for m in data_map}
         context = {
             'main_phone': main_phone,
@@ -277,5 +304,31 @@ class HubspotIntegrationsService:
             filler = FIELD_FILLERS.get(field_type)
             if filler:
                 filler(result, context)
-                
+
         return result
+
+    def __mapped_profile_lead(self, lead: FiveXFiveUser, data_map: list) -> \
+            dict[str, Any] | None:
+        first_email = get_valid_email(lead, self.million_verifier_integrations)
+
+        if first_email in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return None
+
+        first_phone = get_valid_phone(lead)
+        location = get_valid_location(lead)
+
+        return {
+            'email': first_email,
+            'phone': first_phone,
+            'address': location[0],
+            'firstname': getattr(lead, 'first_name', None),
+            'lastname': getattr(lead, 'last_name', None),
+            'company': getattr(lead, 'company_name', None),
+            'website': getattr(lead, 'company_domain', None),
+            'jobtitle': getattr(lead, 'job_title', None),
+            'industry': getattr(lead, 'primary_industry', None),
+            'annualrevenue': getattr(lead, 'company_revenue', None),
+            'hs_linkedin_url': getattr(lead, 'linkedin_url', None),
+            'gender': getattr(lead, 'gender', None)
+        }

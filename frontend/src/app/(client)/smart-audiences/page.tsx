@@ -32,6 +32,8 @@ import {
   TextField,
   TypographyProps,
   TooltipProps,
+  SxProps,
+  Theme,
 } from "@mui/material";
 import {
   FilterListIcon,
@@ -78,6 +80,7 @@ import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup
 import HintCard from "../components/HintCard";
 import { useSmartsHints } from "./context/SmartsHintsContext";
 import { tableHintCards } from "./context/hintsCardsContent";
+import SmartCell from "@/components/table/SmartCell";
 
 interface Smarts {
   id: string;
@@ -155,45 +158,45 @@ const columns = [
   {
     key: "name",
     label: "Smart Audience Name",
-    widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
+    widths: { width: "200px", minWidth: "200px", maxWidth: "200px" },
   },
   {
     key: "use_case",
     label: "Use Case",
-    widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
+    widths: { width: "100px", minWidth: "100px", maxWidth: "100px" },
   },
   {
     key: "validations",
     label: "Validations",
-    widths: { width: "11vw", minWidth: "11vw", maxWidth: "11vw" },
+    widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
   },
   {
     key: "created_date",
     label: "Created",
-    widths: { width: "12vw", minWidth: "190px", maxWidth: "20vw" },
+    widths: { width: "13vw", minWidth: "13vw", maxWidth: "20vw" },
     sortable: true,
   },
   {
     key: "number_of_customers",
     label: "Total Universe",
-    widths: { width: "13vw", minWidth: "13vw", maxWidth: "20vw" },
+    widths: { width: "125px", minWidth: "125px", maxWidth: "125px" },
     sortable: true,
   },
   {
     key: "active_segment_records",
     label: "Active Segment",
-    widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+    widths: { width: "170px", minWidth: "170px", maxWidth: "170px" },
     sortable: true,
   },
   {
     key: "status",
     label: "Status",
-    widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+    widths: { width: "11vw", minWidth: "11vw", maxWidth: "11vw" },
   },
   {
     key: "actions",
     label: "Actions",
-    widths: { width: "7vw", minWidth: "7vw", maxWidth: "7vw" },
+    widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
   },
 ];
 
@@ -1459,42 +1462,47 @@ const SmartAudiences: React.FC = () => {
                                 component={Paper}
                                 sx={{
                                   tableLayout: "fixed",
-                                  border: "1px solid rgba(235, 235, 235, 1)",
                                 }}
                               >
                                 <TableHead sx={{ position: "relative" }}>
                                   <TableRow>
-                                    {columns.map(
-                                      ({
-                                        key,
-                                        label,
-                                        sortable = false,
-                                        widths,
-                                      }) => (
-                                        <TableCell
-                                          onClick={
-                                            sortable
-                                              ? () => handleSortRequest(key)
-                                              : undefined
-                                          }
+                                    {columns.map((col) => {
+                                      const { key, label, sortable = false, widths } = col;
+
+                                      const isNameColumn = key === "name";
+                                      const isActionsColumn = key === "actions";
+                                      const hideDivider = (isNameColumn && isScrolledX) || isActionsColumn;
+                                      const baseCellSX: SxProps<Theme> = {
+                                        ...widths,
+                                        position: "sticky",
+                                        top: 0,
+                                        zIndex: 97,
+                                        borderBottom: "none",
+                                        borderTop: "1px solid rgba(235,235,235,1)",
+                                        cursor: sortable ? "pointer" : "default",
+                                        borderRight: isActionsColumn ? "1px solid rgba(235,235,235,1)" : "none",
+                                        whiteSpace: isActionsColumn || isNameColumn ? "normal" : "wrap",
+                                        overflow: isActionsColumn || isNameColumn ? "visible" : "hidden",
+                                      };
+                                      if (isNameColumn) {
+                                        baseCellSX.left = 0;
+                                        baseCellSX.zIndex = 99;
+                                        baseCellSX.boxShadow = isScrolledX
+                                          ? "3px 0px 3px rgba(0,0,0,0.2)"
+                                          : "none";
+                                      }
+                                      const className = isNameColumn ? "sticky-cell" : undefined;
+                                      const onClickHandler = sortable
+                                        ? () => handleSortRequest(key)
+                                        : undefined
+                                      return (
+                                        <SmartCell
                                           key={key}
-                                          sx={{
-                                            ...widths,
-                                            ...smartAudiences.table_column,
-                                            ...(key === "name" && {
-                                              position: "sticky",
-                                              left: 0,
-                                              zIndex: 98,
-                                              top: 0,
-                                              boxShadow: isScrolledX
-                                                ? "3px 0px 3px #00000033"
-                                                : "none",
-                                            }),
-                                          }}
-                                          style={{
-                                            cursor: sortable
-                                              ? "pointer"
-                                              : "default",
+                                          cellOptions={{
+                                            sx: baseCellSX,
+                                            hideDivider,
+                                            onClick: onClickHandler,
+                                            className,
                                           }}
                                         >
                                           <Box
@@ -1502,13 +1510,12 @@ const SmartAudiences: React.FC = () => {
                                               display: "flex",
                                               alignItems: "center",
                                               position: "relative",
-                                              justifyContent: "space-between",
                                             }}
                                           >
                                             <Typography
                                               variant="body2"
                                               sx={{
-                                                ...smartAudiences.table_column,
+                                                ...smartAudiences.table_array,
                                                 borderRight: "0",
                                               }}
                                             >
@@ -1546,26 +1553,26 @@ const SmartAudiences: React.FC = () => {
                                               }}
                                             />
                                           )}
-                                        </TableCell>
+                                        </SmartCell>
                                       )
+                                    }
                                     )}
                                   </TableRow>
                                   <TableRow
                                     sx={{
                                       position: "sticky",
-                                      top: "60px",
-                                      zIndex: 11,
+                                      top: "65px",
+                                      zIndex: 99,
                                       borderTop: "none",
                                     }}
                                   >
                                     <TableCell
-                                      colSpan={9}
+                                      colSpan={columns.length}
                                       sx={{
                                         p: 0,
                                         pb: "1.5px",
                                         borderTop: "none",
-                                        backgroundColor:
-                                          "rgba(235, 235, 235, 1)",
+                                        backgroundColor: "rgba(235, 235, 235, 1)",
                                         borderColor: "rgba(235, 235, 235, 1)",
                                       }}
                                     >
@@ -1611,26 +1618,24 @@ const SmartAudiences: React.FC = () => {
                                         }}
                                       >
                                         {/* Name Column */}
-                                        <TableCell
-                                          className="sticky-cell"
-                                          sx={{
-                                            ...smartAudiences.table_array,
-                                            position: "sticky",
-                                            left: "0",
-                                            zIndex: 9,
-                                            backgroundColor: loaderForTable
-                                              ? "transparent"
-                                              : "#fff",
-                                            "&:hover .edit-icon": {
-                                              opacity: 1,
-                                              pointerEvents: "auto",
+                                        <SmartCell
+                                          cellOptions={{
+                                            key: row.id,
+                                            className: "sticky-cell",
+                                            sx: {
+                                              position: 'sticky',
+                                              left: 0,
+                                              zIndex: 8,
+                                              backgroundColor: '#fff',
+                                              '&:hover .edit-icon': {
+                                                opacity: 1,
+                                                pointerEvents: 'auto',
+                                              },
+                                              boxShadow: isScrolledX ? '3px 0px 3px #00000033' : 'none',
+                                              color: 'inherit',
+                                              cursor: 'pointer',
                                             },
-                                            pb: 0,
-                                            pt: 0,
-                                            boxShadow: isScrolledX
-                                              ? "3px 0px 3px #00000033"
-                                              : "none",
-                                            maxWidth: "200px",
+                                            hideDivider: isScrolledX,
                                           }}
                                         >
                                           <Box
@@ -1678,167 +1683,172 @@ const SmartAudiences: React.FC = () => {
                                               />
                                             </IconButton>
                                           </Box>
-                                        </TableCell>
-                                        <Popover
-                                          open={isEditPopoverOpen}
-                                          anchorEl={editPopoverAnchorEl}
-                                          onClose={handleCloseEditPopover}
-                                          anchorOrigin={{
-                                            vertical: "center",
-                                            horizontal: "center",
-                                          }}
-                                          transformOrigin={{
-                                            vertical: "top",
-                                            horizontal: "left",
-                                          }}
-                                          slotProps={{
-                                            paper: {
-                                              sx: {
-                                                width: "15.875rem",
-                                                boxShadow: 0,
-                                                borderRadius: "4px",
-                                                border:
-                                                  "0.5px solid rgba(175, 175, 175, 1)",
+                                          <Popover
+                                            open={isEditPopoverOpen}
+                                            anchorEl={editPopoverAnchorEl}
+                                            onClose={handleCloseEditPopover}
+                                            anchorOrigin={{
+                                              vertical: "center",
+                                              horizontal: "center",
+                                            }}
+                                            transformOrigin={{
+                                              vertical: "top",
+                                              horizontal: "left",
+                                            }}
+                                            slotProps={{
+                                              paper: {
+                                                sx: {
+                                                  width: "15.875rem",
+                                                  boxShadow: 0,
+                                                  borderRadius: "4px",
+                                                  border:
+                                                    "0.5px solid rgba(175, 175, 175, 1)",
+                                                },
                                               },
-                                            },
-                                          }}
-                                        >
-                                          <Box sx={{ p: 2 }}>
-                                            <TextField
-                                              value={editedName}
-                                              onChange={(e) =>
-                                                setEditedName(e.target.value)
-                                              }
-                                              variant="outlined"
-                                              label="Smart Audience Name"
-                                              size="small"
-                                              fullWidth
-                                              sx={{
-                                                "& label.Mui-focused": {
-                                                  color:
-                                                    "rgba(56, 152, 252, 1)",
-                                                },
-                                                "& .MuiOutlinedInput-root:hover fieldset":
-                                                {
-                                                  color:
-                                                    "rgba(56, 152, 252, 1)",
-                                                },
-                                                "& .MuiOutlinedInput-root": {
-                                                  "&:hover fieldset": {
-                                                    borderColor:
-                                                      "rgba(56, 152, 252, 1)",
-                                                    border:
-                                                      "1px solid rgba(56, 152, 252, 1)",
-                                                  },
-                                                  "&.Mui-focused fieldset": {
-                                                    borderColor:
-                                                      "rgba(56, 152, 252, 1)",
-                                                    border:
-                                                      "1px solid rgba(56, 152, 252, 1)",
-                                                  },
-                                                },
-                                              }}
-                                              InputProps={{
-                                                style: {
-                                                  fontFamily: "Roboto",
-                                                  fontSize: "14px",
-                                                },
-                                              }}
-                                              InputLabelProps={{
-                                                style: {
-                                                  fontSize: "14px",
-                                                  fontFamily: "Roboto",
-                                                },
-                                              }}
-                                            />
-                                            <Box
-                                              sx={{
-                                                display: "flex",
-                                                justifyContent: "flex-end",
-                                                mt: 2,
-                                              }}
-                                            >
-                                              <Button
-                                                onClick={handleCloseEditPopover}
+                                            }}
+                                          >
+                                            <Box sx={{ p: 2 }}>
+                                              <TextField
+                                                value={editedName}
+                                                onChange={(e) =>
+                                                  setEditedName(e.target.value)
+                                                }
+                                                variant="outlined"
+                                                label="Smart Audience Name"
+                                                size="small"
+                                                fullWidth
                                                 sx={{
-                                                  backgroundColor: "#fff",
-                                                  color:
-                                                    "rgba(56, 152, 252, 1) !important",
-                                                  fontSize: "14px",
-                                                  textTransform: "none",
-                                                  padding: "0.75em 1em",
-                                                  maxWidth: "50px",
-                                                  maxHeight: "30px",
-                                                  mr: 0.5,
-                                                  "&:hover": {
-                                                    backgroundColor: "#fff",
-                                                    boxShadow:
-                                                      "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                  "& label.Mui-focused": {
+                                                    color:
+                                                      "rgba(56, 152, 252, 1)",
                                                   },
+                                                  "& .MuiOutlinedInput-root:hover fieldset":
+                                                  {
+                                                    color:
+                                                      "rgba(56, 152, 252, 1)",
+                                                  },
+                                                  "& .MuiOutlinedInput-root": {
+                                                    "&:hover fieldset": {
+                                                      borderColor:
+                                                        "rgba(56, 152, 252, 1)",
+                                                      border:
+                                                        "1px solid rgba(56, 152, 252, 1)",
+                                                    },
+                                                    "&.Mui-focused fieldset": {
+                                                      borderColor:
+                                                        "rgba(56, 152, 252, 1)",
+                                                      border:
+                                                        "1px solid rgba(56, 152, 252, 1)",
+                                                    },
+                                                  },
+                                                }}
+                                                InputProps={{
+                                                  style: {
+                                                    fontFamily: "Roboto",
+                                                    fontSize: "14px",
+                                                  },
+                                                }}
+                                                InputLabelProps={{
+                                                  style: {
+                                                    fontSize: "14px",
+                                                    fontFamily: "Roboto",
+                                                  },
+                                                }}
+                                              />
+                                              <Box
+                                                sx={{
+                                                  display: "flex",
+                                                  justifyContent: "flex-end",
+                                                  mt: 2,
                                                 }}
                                               >
-                                                <Typography
-                                                  className="second-sub-title"
+                                                <Button
+                                                  onClick={handleCloseEditPopover}
                                                   sx={{
-                                                    color:
-                                                      "rgba(56, 152, 252, 1) !important",
-                                                  }}
-                                                >
-                                                  Cancel
-                                                </Typography>
-                                              </Button>
-                                              <Button
-                                                onClick={() => {
-                                                  handleConfirmRename();
-                                                  handleCloseEditPopover();
-                                                }}
-                                                sx={{
-                                                  backgroundColor: "#fff",
-                                                  color:
-                                                    "rgba(56, 152, 252, 1) !important",
-                                                  fontSize: "14px",
-                                                  textTransform: "none",
-                                                  padding: "0.75em 1em",
-                                                  maxWidth: "50px",
-                                                  maxHeight: "30px",
-                                                  "&:hover": {
                                                     backgroundColor: "#fff",
-                                                    boxShadow:
-                                                      "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
-                                                  },
-                                                }}
-                                              >
-                                                <Typography
-                                                  className="second-sub-title"
-                                                  sx={{
                                                     color:
                                                       "rgba(56, 152, 252, 1) !important",
+                                                    fontSize: "14px",
+                                                    textTransform: "none",
+                                                    padding: "0.75em 1em",
+                                                    maxWidth: "50px",
+                                                    maxHeight: "30px",
+                                                    mr: 0.5,
+                                                    "&:hover": {
+                                                      backgroundColor: "#fff",
+                                                      boxShadow:
+                                                        "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                    },
                                                   }}
                                                 >
-                                                  Save
-                                                </Typography>
-                                              </Button>
+                                                  <Typography
+                                                    className="second-sub-title"
+                                                    sx={{
+                                                      color:
+                                                        "rgba(56, 152, 252, 1) !important",
+                                                    }}
+                                                  >
+                                                    Cancel
+                                                  </Typography>
+                                                </Button>
+                                                <Button
+                                                  onClick={() => {
+                                                    handleConfirmRename();
+                                                    handleCloseEditPopover();
+                                                  }}
+                                                  sx={{
+                                                    backgroundColor: "#fff",
+                                                    color:
+                                                      "rgba(56, 152, 252, 1) !important",
+                                                    fontSize: "14px",
+                                                    textTransform: "none",
+                                                    padding: "0.75em 1em",
+                                                    maxWidth: "50px",
+                                                    maxHeight: "30px",
+                                                    "&:hover": {
+                                                      backgroundColor: "#fff",
+                                                      boxShadow:
+                                                        "0 0px 1px 1px rgba(0, 0, 0, 0.3)",
+                                                    },
+                                                  }}
+                                                >
+                                                  <Typography
+                                                    className="second-sub-title"
+                                                    sx={{
+                                                      color:
+                                                        "rgba(56, 152, 252, 1) !important",
+                                                    }}
+                                                  >
+                                                    Save
+                                                  </Typography>
+                                                </Button>
+                                              </Box>
                                             </Box>
-                                          </Box>
-                                        </Popover>
+                                          </Popover>
+                                        </SmartCell>
 
                                         {/* Use Case Column */}
-                                        <TableCell
-                                          sx={{
-                                            ...smartAudiences.table_array,
-                                            position: "relative",
-                                            textAlign: "center",
+                                        <SmartCell
+                                          cellOptions={{
+                                            sx: {
+                                              position: "relative",
+                                              textAlign: "center",
+                                            },
+                                          }}
+                                          tooltipOptions={{
+                                            content: row.use_case_alias,
                                           }}
                                         >
                                           {getUseCaseStyle(row.use_case_alias)}
-                                        </TableCell>
+                                        </SmartCell>
 
                                         {/* Validations Column */}
-                                        <TableCell
-                                          sx={{
-                                            ...smartAudiences.table_array,
-                                            position: "relative",
-                                            textAlign: "center",
+                                        <SmartCell
+                                          cellOptions={{
+                                            sx: {
+                                              position: "relative",
+                                              textAlign: "center",
+                                            },
                                           }}
                                         >
                                           {row.status === "unvalidated" ? (
@@ -1882,46 +1892,49 @@ const SmartAudiences: React.FC = () => {
                                                 )}
                                             </Box>
                                           )}
-                                        </TableCell>
+                                        </SmartCell>
+
                                         {/* Created Column */}
-                                        <TableCustomCell
-                                          rowExample={
-                                            dayjs(row.created_at).format(
+                                        <SmartCell
+                                          cellOptions={{
+                                            sx: {
+                                              position: "relative",
+                                              textAlign: "center",
+                                            },
+                                          }}
+                                          tooltipOptions={{
+                                            content: dayjs(row.created_at).format(
                                               "MMM D, YYYY"
                                             )
-                                          }
-                                        />
-                                        {/* <TableCell
-                                          sx={{
-                                            ...smartAudiences.table_array,
-                                            position: "relative",
-                                          }}
-                                        >
-                                          <Box>
-                                            {dayjs(row.created_at).format(
-                                              "MMM D, YYYY"
-                                            )}
-                                          </Box>
-                                          <Box>{row.created_by}</Box>
-                                        </TableCell> */}
+                                          }}>
+                                          {dayjs(row.created_at).format(
+                                            "MMM D, YYYY"
+                                          )}
+                                        </SmartCell>
 
                                         {/* Total Universe Column */}
-                                        <TableCell
-                                          sx={{
-                                            ...smartAudiences.table_array,
-                                            position: "relative",
+                                        <SmartCell
+                                          cellOptions={{
+                                            sx: {
+                                              position: "relative",
+                                            },
                                           }}
-                                        >
+                                          tooltipOptions={{
+                                            content: row.total_records.toLocaleString(
+                                              "en-US"
+                                            )
+                                          }}>
                                           {row.total_records.toLocaleString(
                                             "en-US"
                                           )}
-                                        </TableCell>
+                                        </SmartCell>
 
                                         {/* Active Segment Column */}
-                                        <TableCell
-                                          sx={{
-                                            ...smartAudiences.table_array,
-                                            position: "relative",
+                                        <SmartCell
+                                          cellOptions={{
+                                            sx: {
+                                              position: "relative",
+                                            },
                                           }}
                                         >
                                           {progressValidation?.total > 0 ? (
@@ -1959,15 +1972,15 @@ const SmartAudiences: React.FC = () => {
                                               }}
                                             />
                                           )}
-                                        </TableCell>
+                                        </SmartCell>
 
                                         {/* Status Column */}
-                                        <TableCell
-                                          sx={{
-                                            ...smartAudiences.table_array,
-                                            position: "relative",
-                                          }}
-                                        >
+                                        <SmartCell
+                                          cellOptions={{
+                                            sx: {
+                                              position: "relative",
+                                            },
+                                          }}>
                                           <Box
                                             sx={{
                                               display: "flex",
@@ -2009,13 +2022,18 @@ const SmartAudiences: React.FC = () => {
                                                 )}
                                             </Typography>
                                           </Box>
-                                        </TableCell>
+                                        </SmartCell>
 
-                                        <TableCell
-                                          sx={{
-                                            ...smartAudiences.tableBodyColumn,
-                                            paddingLeft: "16px",
-                                            textAlign: "center",
+                                        {/* Action Column */}
+                                        <SmartCell
+                                          cellOptions={{
+                                            sx: {
+                                              position: "relative",
+                                              textAlign: "center",
+                                              p: 0,
+                                              borderRight: "1px solid rgba(235,235,235,1)",
+                                            },
+                                            hideDivider: true
                                           }}
                                         >
                                           <IconButton
@@ -2023,6 +2041,7 @@ const SmartAudiences: React.FC = () => {
                                               handleOpenMorePopover(event, row)
                                             }
                                             sx={{
+                                              fontSize: '16px',
                                               ":hover": {
                                                 backgroundColor: "transparent",
                                               },
@@ -2032,8 +2051,6 @@ const SmartAudiences: React.FC = () => {
                                               sx={{
                                                 color: "rgba(32, 33, 36, 1)",
                                               }}
-                                              height={8}
-                                              width={24}
                                             />
                                           </IconButton>
 
@@ -2244,7 +2261,7 @@ const SmartAudiences: React.FC = () => {
                                               </Popover>
                                             </List>
                                           </Popover>
-                                        </TableCell>
+                                        </SmartCell>
                                       </TableRow>
                                     );
                                   })}

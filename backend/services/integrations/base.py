@@ -1,10 +1,12 @@
+from typing import Optional
+
 import httpx
 import ssl
 import truststore
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from models import UserDomains
+from models import UserDomains, FiveXFiveUser
 from services.aws import AWSService
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -218,7 +220,6 @@ class IntegrationService:
 
     def switch_toggle_smart_sync(self, user: dict, list_id):
         result = self.integrations_user_sync_persistence.switch_toggle_smart_sync(user_id=user.get('id'), list_id=list_id)
-        print(result)
         if result is not None:
             return {'status': 'SUCCESS', 'data_sync': result}
         return {'status': 'FAILED'}

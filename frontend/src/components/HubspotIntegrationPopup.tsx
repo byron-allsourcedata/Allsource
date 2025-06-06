@@ -203,7 +203,11 @@ const HubspotIntegrationPopup = ({ fromAudience, handleClose, open, onSave, init
                     handleNextTab();
                 }
             }
+            else{
+                showErrorToast("Invalid API Key")
+            }
         } catch (err) {
+            showErrorToast("Invalid API Key")
         } finally {
             setDisableButton(false)
         }

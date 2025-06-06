@@ -1,25 +1,19 @@
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { Box, Typography, TextField, Button, Tabs, Tab, Grid, Chip, Popover, Paper, IconButton, InputAdornment, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { useEffect, useMemo, useState } from "react";
-import { MoreHoriz } from "@mui/icons-material";
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import { suppressionsStyles } from "@/css/suppressions";
 import dayjs from "dayjs";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import Image from "next/image";
-import { throttle } from 'lodash';
-import CloseIcon from '@mui/icons-material/Close';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import CustomTablePagination from "@/components/CustomTablePagination";
 import InviteAdmin from "./InviteAdmin";
-import SearchIcon from '@mui/icons-material/Search';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
 import { useRouter } from "next/navigation";
 import { useUser } from '@/context/UserContext';
 import { fetchUserData } from "@/services/meService";
 import FilterPopup from "./FilterPopup";
+import { MenuIconButton } from "@/components/table";
+import { MoreVert, CloseIcon, SearchIcon, SwapVertIcon, FilterListIcon, ArrowDownwardIcon, ArrowUpwardIcon } from "@/icon";
 
 
 interface UserData {
@@ -53,6 +47,8 @@ interface TableBodyUserProps {
     setLoading: (state: boolean) => void;
 }
 
+const PRIMARY_COLOR = "rgba(56, 152, 252, 1)";
+
 const TableHeader: React.FC<{ onSort: (field: string) => void, sortField?: string, sortOrder?: string, tableHeaders: tableHeaders[] }> = ({ onSort, sortField, sortOrder, tableHeaders }) => {
     return (
         <TableHead>
@@ -79,7 +75,7 @@ const TableHeader: React.FC<{ onSort: (field: string) => void, sortField?: strin
                         }}
                         onClick={sortable ? () => onSort(key) : undefined}
                     >
-                        <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "email" || key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "email" || key === "status" || key === "actions" ? { justifyContent: "left" } : {}}>
                             <Typography variant="body2" className='table-heading'>{label}</Typography>
                             {sortable && (
                                 <IconButton size="small" sx={{ ml: 1 }}>
@@ -243,16 +239,23 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                         sx={{
                             ...suppressionsStyles.tableBodyColumn,
                             paddingLeft: "16px",
-                            minWidth: "155px",
-                            maxWidth: "155px",
                             position: "sticky",
-                            justifyContent: "space-between",
+                            justifyContent: "left",
                             left: 0,
                             zIndex: 1,
                             cursor: (isCurrentUser || row.type != 'user') ? "default" : "pointer",
-                            backgroundColor: "#fff",
+                            "& .icon-button": {
+                                opacity: 0,
+                                pointerEvents: "none",
+                                transition: "opacity 0.2s",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                mr: 2,
+                            },
                             "&:hover .icon-button": {
-                                display: (isCurrentUser || row.type != 'user') ? "none" : "flex",
+                                opacity: 1,
+                                pointerEvents: "auto",
                             },
                         }}
                         onClick={() => {
@@ -267,7 +270,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                 alignItems: "center",
                                 overflowWrap: "break-word",
                                 justifyContent: "space-between",
-                                color: "rgba(56, 152, 252, 1)",
+                                color: PRIMARY_COLOR,
                                 gap: 0,
                                 width: "100%",
                             }}
@@ -277,7 +280,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                     display: "flex",
                                     flexWrap: "wrap",
                                     alignItems: "center",
-                                    color: (isCurrentUser || row.type !== 'user') ? "#000" : "rgba(56, 152, 252, 1)",
+                                    color: (isCurrentUser || row.type !== 'user') ? "#000" : PRIMARY_COLOR,
                                     gap: 0.5,
                                 }}
                             >
@@ -292,7 +295,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                 >
                                     <Box
                                         sx={{
-                                            overflow: "hidden",
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",
                                             minWidth: 0,
@@ -345,7 +347,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                     sx={{
                                         display: "none",
                                         alignItems: "center",
-                                        color: "rgba(56, 152, 252, 1)",
+                                        color: PRIMARY_COLOR,
                                     }}
                                 >
                                     <Image
@@ -404,12 +406,14 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                 if (currentPage == 0) {
                     return (
                         <>
-                            <IconButton
-                                onClick={(event) => handleOpenMenu(event, row.id)}
-                                sx={{ ':hover': { backgroundColor: 'transparent' } }}
-                            >
-                                <MoreHoriz />
-                            </IconButton>
+                            <MenuIconButton
+                                buttonProps={{
+                                    onClick: (event) => handleOpenMenu(event, row.id),
+                                }}
+                                iconProps={{
+                                    icon: <MoreVert />,
+                                }}
+                            />
                             <Popover
                                 open={Boolean(menuAnchor) && activeRow === row.id}
                                 anchorEl={menuAnchor}
@@ -439,7 +443,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                             color: "rgba(32, 33, 36, 1)",
                                             fontWeight: 600,
                                             ":hover": {
-                                                color: "rgba(56, 152, 252, 1)",
+                                                color: PRIMARY_COLOR,
                                                 backgroundColor: "rgba(80, 82, 178, 0.1)",
                                             },
                                         }}
@@ -456,12 +460,14 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                 } else if (currentPage == 1) {
                     return (
                         <>
-                            <IconButton
-                                onClick={(event) => handleOpenMenu(event, row.id)}
-                                sx={{ ':hover': { backgroundColor: 'transparent' } }}
-                            >
-                                <MoreHoriz />
-                            </IconButton>
+                            <MenuIconButton
+                                buttonProps={{
+                                    onClick: (event) => handleOpenMenu(event, row.id),
+                                }}
+                                iconProps={{
+                                    icon: <MoreVert />,
+                                }}
+                            />
                             <Popover
                                 open={Boolean(menuAnchor) && activeRow === row.id}
                                 anchorEl={menuAnchor}
@@ -491,7 +497,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                             color: "rgba(32, 33, 36, 1)",
                                             fontWeight: 600,
                                             ":hover": {
-                                                color: "rgba(56, 152, 252, 1)",
+                                                color: PRIMARY_COLOR,
                                                 backgroundColor: "rgba(80, 82, 178, 0.1)",
                                             },
                                         }}
@@ -515,7 +521,11 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
     return (
         <TableBody>
             {data.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow key={row.id} sx={{
+                    "&:hover": {
+                      backgroundColor: "rgba(247, 247, 247, 1)",
+                    },
+                  }}>
                     {tableHeaders.map(({ key }) => (
                         <TableCell key={key} sx={{ ...leadsStyles.table_array, textAlign: key === 'actions' ? 'center' : 'left', position: 'relative', padding: '8px' }} >
                             {renderCellContent(key, row)}
@@ -840,7 +850,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                             aria-label="admin tabs"
                             TabIndicatorProps={{
                                 sx: {
-                                    backgroundColor: '#5052B2',
+                                    backgroundColor: PRIMARY_COLOR,
                                     height: '2px',
                                     bottom: 5,
                                 },
@@ -865,19 +875,26 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                                     key={index}
                                     label={tab.label}
                                     sx={{
-                                        textTransform: 'none',
-                                        padding: '4px 1px',
-                                        minHeight: 'auto',
+                                        fontFamily: "Nunito Sans",
+                                        fontWeight: 500,
+                                        fontSize: "14px",
+                                        lineHeight: "100%",
+                                        letterSpacing: "0%",
+                                        color: "rgba(112, 112, 113, 1)",
+                                        textTransform: "none",
+                                        padding: "4px 1px",
+                                        minHeight: "auto",
                                         flexGrow: 1,
-                                        pb: '10px',
-                                        textAlign: 'center',
-                                        fontSize: '14px',
-                                        fontWeight: 700,
-                                        lineHeight: '19.1px',
-                                        minWidth: 'auto',
+                                        pb: "10px",
+                                        textAlign: "center",
                                         mr: 2,
+                                        minWidth: "auto",
                                         '&.Mui-selected': {
-                                            color: '#5052B2',
+                                            fontWeight: 700,
+                                            color: PRIMARY_COLOR,
+                                        },
+                                        '&.MuiTabs-indicator': {
+                                            backgroundColor: PRIMARY_COLOR,
                                         },
                                         '@media (max-width: 600px)': {
                                             mr: 1,
@@ -913,7 +930,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                                     label="Clear all"
                                     onClick={handleResetFilters}
                                     sx={{
-                                        color: 'rgba(56, 152, 252, 1) !important',
+                                        color: `${PRIMARY_COLOR} !important`,
                                         backgroundColor: 'transparent',
                                         lineHeight: '20px !important',
                                         fontWeight: '400 !important',
@@ -999,11 +1016,11 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                                     textTransform: 'none',
                                     fontSize: '14px',
                                     fontWeight: '500',
-                                    color: 'rgba(56, 152, 252, 1)',
-                                    borderColor: 'rgba(56, 152, 252, 1)',
+                                    color: PRIMARY_COLOR,
+                                    borderColor: PRIMARY_COLOR,
                                     '&:hover': {
                                         backgroundColor: 'rgba(80, 82, 178, 0.1)',
-                                        borderColor: 'rgba(56, 152, 252, 1)',
+                                        borderColor: PRIMARY_COLOR,
                                     },
                                 }}
                                 onClick={() => {
@@ -1021,8 +1038,8 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                             sx={{
                                 textTransform: 'none',
                                 height: '40px',
-                                color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)',
-                                border: selectedFilters.length > 0 ? '1px solid rgba(56, 152, 252, 1)' : '1px solid rgba(184, 184, 184, 1)',
+                                color: selectedFilters.length > 0 ? PRIMARY_COLOR : 'rgba(128, 128, 128, 1)',
+                                border: selectedFilters.length > 0 ? `1px solid ${PRIMARY_COLOR}` : '1px solid rgba(184, 184, 184, 1)',
                                 borderRadius: '4px',
                                 padding: '8px',
                                 opacity: '1',
@@ -1034,15 +1051,15 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                                 },
                                 '&:hover': {
                                     backgroundColor: 'transparent',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    color: 'rgba(56, 152, 252, 1)',
+                                    border: `1px solid ${PRIMARY_COLOR}`,
+                                    color: PRIMARY_COLOR,
                                     '& .MuiSvgIcon-root': {
-                                        color: 'rgba(56, 152, 252, 1)'
+                                        color: PRIMARY_COLOR
                                     }
                                 }
                             }}
                         >
-                            <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? 'rgba(56, 152, 252, 1)' : 'rgba(128, 128, 128, 1)' }} />
+                            <FilterListIcon fontSize='medium' sx={{ color: selectedFilters.length > 0 ? PRIMARY_COLOR : 'rgba(128, 128, 128, 1)' }} />
 
                             {selectedFilters.length > 0 && (
                                 <Box
@@ -1069,8 +1086,12 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                     </Box>
                 </Box>
                 <Grid container direction="column" justifyContent="flex-start" spacing={2} sx={{ minHeight: '100vh' }}>
-                    <Grid item xs={12} sx={{ pl: 1, pr: 3, mt: 0 }}>
-                        <TableContainer component={Paper} sx={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }}>
+                    <Grid item xs={12} sx={{ pl: 1, mt: 0 }}>
+                        <TableContainer component={Paper} sx={{
+                            border: "1px solid rgba(235, 235, 235, 1)",
+                            maxHeight: 'calc(100vh - 400px)', overflowY: 'auto',
+                            overflowX: 'auto',
+                        }}>
                             <Table stickyHeader>
                                 <TableHeader onSort={handleSortRequest} tableHeaders={tableHeaders} sortField={orderBy} sortOrder={order} />
                                 <TableBodyClient data={userData} tableHeaders={tableHeaders} setLoading={setLoading} currentPage={page} />

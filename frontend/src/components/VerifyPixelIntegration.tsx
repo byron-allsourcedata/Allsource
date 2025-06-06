@@ -45,7 +45,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 
       const hasQuery = url.includes("?");
       const newUrl =
-        url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}` + `&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/leads?pixel_installed=true`;
+        url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}` + `&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/leads`;
       window.open(newUrl, "_blank");
     }
   };
@@ -133,7 +133,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
             },
           }}
         >
-          Verify
+          Verify Installation
         </Button>
         {verifyPixelIntegrationHints["verifyPixelIntegration"]?.show && showHint && (
           <HintCard

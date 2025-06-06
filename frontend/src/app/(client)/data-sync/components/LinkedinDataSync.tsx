@@ -138,7 +138,7 @@ const LinkedinDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({ open, onClose,
     const getCustomersInfo = async () => {
         try {
             setLoading(true)
-            const response = await axiosInstance.get('integrations/customers-info', {
+            const response = await axiosInstance.get('integrations/sync/ad_accounts', {
                 params: {
                     service_name: 'google_ads'
                 }

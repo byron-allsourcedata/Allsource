@@ -124,14 +124,15 @@ class VerifyTokenResponse(BaseModel):
     token: Optional[str] = None
 
 
-class CalendlyDict(TypedDict):
+class MeetingData(BaseModel):
     email: Optional[str] = None
-    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     utm_params: Optional[str] = None
 
 
-class CalendlyResponse(BaseModel):
-    user: Optional[CalendlyDict] = None
+class MeetingBookingResponse(BaseModel):
+    user: Optional[MeetingData] = None
 
 
 class StripeAccountID(BaseModel):

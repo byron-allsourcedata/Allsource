@@ -169,15 +169,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
   const [openConfirmValidatePopup, setOpenConfrimValidatePopup] =
     useState(false);
 
-  const handleCalculateActiveSegments = (value: number) => {
-    closeDotHintClick("calculate")
-    openDotHintClick("validate")
-    setNumberToValidate(value);
-    setEstimatedContacts(value * persentsData);
-    setValidationCost(10);
-    setIsCalculateActiveSegments(true);
-  };
-
   const handleOpenConfirmValidatePopup = () => {
     setOpenConfrimValidatePopup(true);
   };
@@ -201,6 +192,39 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
   const openDotHintClick = (key: BuilderKey) => {
     changeSmartsBuilderHint(key, "show", "open")
+  };
+
+  const handleCalculateActiveSegments = async (value: number) => {
+    closeDotHintClick("calculate")
+    openDotHintClick("validate")
+
+    setNumberToValidate(value);
+    setEstimatedContacts(value * persentsData);
+
+    const selectedValidations = Object.entries(validationFilters!).flatMap(([key, validations]) =>
+      validations.map((validation: Record<string, any>) =>
+        Object.keys(validation).map((param) => `${key}-${param}`)
+      ).flat()
+    );
+
+    const responseFunds = await axiosInstance.get('/count-validation-funds');
+    if (responseFunds.status === 200) {
+      setAvailableCredits(responseFunds.data);
+    }
+
+
+
+    const response = await axiosInstance.post('/audience-smarts/validation-cost-calculate', {
+        count_active_segment: value,
+        validations: selectedValidations
+      },
+    );
+
+    if (response.status === 200) {
+      setValidationCost(response.data);
+    }
+
+    setIsCalculateActiveSegments(true);
   };
 
   const handleInputNumberChange = (
@@ -369,7 +393,6 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
     setValue(newValue as number);
     closeDotHintClick("generateActiveSegment")
     openDotHintClick("calculate")
-    // console.log(initialSmartsBuilderHints)
   };
 
   const handleGenerateSmartAudience = async () => {
@@ -585,16 +608,18 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
             }}
           >
             <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <Typography
-                sx={{
-                  fontFamily: "Nunito Sans",
-                  fontSize: "16px",
-                  fontWeight: 500,
-                }}
-              >
-                Select your Contacts
-              </Typography>
-              <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-contacts" />
+              <Box sx={{ display: "flex", flexDirection: "space-between", alignItems: "center", gap: 1}}>
+                <Typography
+                  sx={{
+                    fontFamily: "Nunito Sans",
+                    fontSize: "16px",
+                    fontWeight: 500,
+                  }}
+                >
+                  Select your Contacts
+                </Typography>
+                <CustomTooltip title={"Smart Audience Builder."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/select-your-contacts" />
+              </Box>
               <Typography
                 sx={{
                   fontFamily: "Roboto",
@@ -1146,8 +1171,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
               <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Box sx={{ display: "flex", flexDirection: "column", position: "relative", gap: 2 }}>
                   <TextField
-                    value={value}
-                    type="number"
+                    value={value?.toLocaleString('en-US')}
                     variant="outlined"
                     onChange={handleInputNumberChange}
                     inputProps={{ max: AudienceSize }}
@@ -1221,9 +1245,9 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
 
                 <Box sx={{ flex: 1, textAlign: "left" }}>
                   <Typography className="form-input">
-                    Available Credits
+                    Available Funds
                   </Typography>
-                  <Typography>{availableCredits} Credits</Typography>
+                  <Typography>{availableCredits?.toLocaleString('en-US')} Funds</Typography>
                 </Box>
               </Box>
 
@@ -1297,7 +1321,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   <Typography className="form-input">
                     Validation Cost
                   </Typography>
-                  <Typography>{validationCost} Credits</Typography>
+                  <Typography>{validationCost?.toLocaleString('en-US')} Funds</Typography>
                   {typeof availableCredits === "number" &&
                     typeof validationCost === "number" ? (
                     availableCredits >= validationCost ? (
@@ -1309,7 +1333,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                           mb: 1,
                         }}
                       >
-                        ✓ You have enough credits to proceed.
+                        ✓ You have enough funds to proceed.
                       </Typography>
                     ) : (
                       <Typography
@@ -1320,8 +1344,8 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                           mb: 1,
                         }}
                       >
-                        ✗ You need {validationCost - availableCredits} more
-                        credits to proceed.
+                        ✗ You need {(validationCost - availableCredits).toLocaleString('en-US')} more
+                        funds to proceed.
                       </Typography>
                     )
                   ) : null}

@@ -7,6 +7,7 @@ import {
   MenuItem,
   Select,
   Typography,
+  IconButton
 } from "@mui/material";
 import axios from "axios";
 import Image from "next/image";
@@ -14,6 +15,9 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import ConfirmDialog from "@/components/ConfirmDialog";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import SyncIcon from '@mui/icons-material/Sync';
+
 
 interface GTMContainer {
   containerId: string;
@@ -28,6 +32,7 @@ interface GTMAccount {
 interface PopupProps {
   open: boolean;
   handleClose: () => void;
+  onInstallStatusChange: (status: "success" | "failed") => void;
 }
 
 const inputLabelStyles = {
@@ -52,10 +57,11 @@ type GoogleUser = {
   sub: string;
 };
 
-const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
+const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose, onInstallStatusChange }) => {
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
   const clientSecret = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET;
   const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [session, setSession] = useState<{ token: string } | null>(null);
   const [accounts, setAccounts] = useState<GTMAccount[]>([]);
   const [containers, setContainers] = useState<GTMContainer[]>([]);
@@ -66,10 +72,18 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
   const [openConfirm, setOpenConfirm] = useState(false);
   const [tagIdToDelete, setTagIdToDelete] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<GoogleUser | null>(null);
+  const [isInstallComplete, setInstallCompleted] = useState(false);
+  const [lastTagContext, setLastTagContext] = useState<{
+    accessToken: string;
+    accountId: string;
+    containerId: string;
+    workspaceId: string;
+  } | null>(null);
 
 
   const fetchUserInfo = async (accessToken: string) => {
     try {
+      setIsLoading(true)
       const response = await axios.get(
         "https://www.googleapis.com/oauth2/v3/userinfo",
         {
@@ -79,12 +93,14 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       setUserInfo(response.data);
     } catch (e) {
       if (axios.isAxiosError(e)) {
-        showErrorToast(e.message);
+        console.log(e.message);
       } else if (e instanceof Error) {
-        showErrorToast(e.message);
+        console.log(e.message);
       } else {
         showErrorToast("An unknown error occurred.");
       }
+    } finally {
+      setIsLoading(false)
     }
   };
 
@@ -96,9 +112,17 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         try {
           const tokenResponse = await exchangeCodeForToken(authorizationCode);
           const accessToken = tokenResponse.access_token;
-          setSession({ token: accessToken });
-          fetchAccounts(accessToken);
-          fetchUserInfo(accessToken);
+          const url = new URL(window.location.href);
+          url.searchParams.delete("code");
+          url.searchParams.delete("scope");
+          url.searchParams.delete("authuser");
+          url.searchParams.delete("prompt");
+          window.history.replaceState({}, document.title, url.toString());
+          if (accessToken) {
+            setSession({ token: accessToken });
+            fetchAccounts(accessToken);
+            fetchUserInfo(accessToken);
+          }
         } catch (error) {
           console.log(error)
         }
@@ -122,6 +146,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     const workspaceId = selectedWorkspace;
 
     try {
+      setIsLoading(true)
       await axios.delete(
         `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${tagIdToDelete}`,
         { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -132,6 +157,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       console.error('Error when deleting a tag:', error);
       showErrorToast(`Failed to delete tag: ${error}`);
     } finally {
+      setIsLoading(false)
       setOpenConfirm(false);
       setTagIdToDelete(null);
     }
@@ -177,6 +203,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     };
 
     try {
+      setIsLoading(true)
       const response = await axios.post(
         `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/triggers`,
         triggerData,
@@ -191,6 +218,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       } else {
         showErrorToast("An unknown error occurred.");
       }
+    } finally {
+      setIsLoading(false)
     }
   };
 
@@ -198,6 +227,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     const fetchContainers = async () => {
       if (selectedAccount && session?.token) {
         try {
+          setIsLoading(true)
           const response = await axios.get(
             `https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers`,
             { headers: { Authorization: `Bearer ${session.token}` } }
@@ -211,6 +241,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
           } else {
             showErrorToast("An unknown error occurred.");
           }
+        } finally {
+          setIsLoading(false)
         }
       }
     };
@@ -222,6 +254,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     const fetchWorkspaces = async () => {
       if (selectedAccount && selectedContainer && session?.token) {
         try {
+          setIsLoading(true);
           const response = await axios.get(
             `https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers/${selectedContainer}/workspaces`,
             { headers: { Authorization: `Bearer ${session.token}` } }
@@ -235,6 +268,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
           } else {
             showErrorToast("An unknown error occurred.");
           }
+        } finally {
+          setIsLoading(false);
         }
       }
     };
@@ -244,6 +279,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
 
   const fetchAccounts = async (accessToken: string) => {
     try {
+      setIsLoading(true)
       const response = await axios.get(
         "https://www.googleapis.com/tagmanager/v2/accounts",
         {
@@ -259,6 +295,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       } else {
         showErrorToast("An unknown error occurred.");
       }
+    } finally {
+      setIsLoading(false)
     }
   };
 
@@ -318,7 +356,6 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         {},
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-
       showToast("Changes submitted and published successfully!");
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -342,6 +379,9 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         showErrorToast("Please select account, container, and workspace.");
         return;
       }
+
+      setLastTagContext({ accessToken, accountId, containerId, workspaceId });
+
       const triggers = await fetchExistingTriggers(
         accessToken,
         accountId,
@@ -411,6 +451,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
             containerId,
             workspaceId
           );
+
         }
       } catch (e) {
         if (axios.isAxiosError(e)) {
@@ -423,6 +464,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       }
       handleClose();
       setSession(null)
+      setInstallCompleted(true);
+      onInstallStatusChange("success");
       setAccounts([])
       setContainers([])
       setSelectedAccount("")
@@ -497,8 +540,103 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
     }
   };
 
+  const handleReLogin = async () => {
+    setSession(null);
+    setUserInfo(null);
+    setAccounts([]);
+    setContainers([]);
+    setWorkspaces([]);
+    setSelectedAccount("");
+    setSelectedContainer("");
+    setSelectedWorkspace("");
+    setLastTagContext(null);
+    redirectToGoogleAuth();
+    window.close();
+  };
+
+  const handleReconnect = async () => {
+    const context = lastTagContext;
+    if (!context) {
+      showErrorToast("Missing required info to reconnect.");
+      return;
+    }
+    const { accessToken, accountId, containerId, workspaceId } = context;
+    try {
+      setIsLoading(true);
+      // const response = await axios.get(
+      //   `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags`,
+      //   { headers: { Authorization: `Bearer ${accessToken}` } }
+      // );
+      // const tags = response.data.tag || [];
+      // const existingTag = tags.find(
+      //   (tag: any) => tag.name === "Allsource pixel script"
+      // );
+
+      //console.log(existingTag)
+
+
+      // if (existingTag?.tagId) {
+      //   try {
+      //     // Пытаемся удалить тег в текущем workspace
+      //     await axios.delete(
+      //       `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/tags/${existingTag.tagId}`,
+      //       { headers: { Authorization: `Bearer ${accessToken}` } }
+      //     );
+      //     showToast("Tag deleted successfully.");
+      //   } catch (error) {
+
+      //     // Создаём временный workspace
+      //     const newWorkspaceResponse = await axios.post(
+      //       `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces`,
+      //       {
+      //         name: "Reconnect Workspace",
+      //         description: "Temporary workspace to reconnect and delete tag",
+      //       },
+      //       { headers: { Authorization: `Bearer ${accessToken}` } }
+      //     );
+
+      //     const newWorkspaceId = newWorkspaceResponse.data.workspaceId;
+      //     console.log(123)
+      //     // Удаляем тег в новом workspace
+      //     await axios.delete(
+      //       `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${newWorkspaceId}/tags/${existingTag.tagId}`,
+      //       { headers: { Authorization: `Bearer ${accessToken}` } }
+      //     );
+
+      //     // Удаляем временный workspace
+      //     await axios.delete(
+      //       `https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${newWorkspaceId}`,
+      //       { headers: { Authorization: `Bearer ${accessToken}` } }
+      //     );
+
+      //     showToast("Tag deleted using temporary workspace.");
+      //   }
+      // }
+
+
+      setSession(null);
+      setUserInfo(null);
+      setAccounts([]);
+      setContainers([]);
+      setWorkspaces([]);
+      setSelectedAccount("");
+      setSelectedContainer("");
+      setSelectedWorkspace("");
+      setInstallCompleted(false);
+      onInstallStatusChange("failed");
+      setLastTagContext(null)
+    } catch (error) {
+      showErrorToast("Failed to reconnect.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+
   return (
     <>
+      {isLoading && <CustomizedProgressBar />}
       {loading && (
         <Box
           sx={{
@@ -532,8 +670,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
       )}
       <ConfirmDialog
         open={openConfirm}
-        title="Confirmation of googleTag deletion"
-        description="A pixel script has been detected in your Google Tag Manager container. Do you really want to delete this tag?"
+        title="Confirmation of Google Tag deletion"
+        description="This Google Tag already has an active pixel. Reinstalling will remove the existing configuration and require event re-setup. Are you sure you want to proceed?"
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
       />
@@ -559,42 +697,44 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
         }}
       >
         <Box>
-          <Box
-            sx={{
-              display: "flex",
-              width: "100%",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 2,
-              pb: 1,
-              justifyContent: "start",
-              "@media (max-width: 600px)": {
-                flexDirection: "column",
-              },
-            }}
-          >
-            <Image src="/1.svg" alt="1" width={20} height={20} />
-            <Typography
-              variant="h6"
+          {!isInstallComplete &&
+            <Box
               sx={{
-                fontFamily: "'Nunito Sans', sans-serif",
-                fontSize: "16px",
+                display: "flex",
                 width: "100%",
-                fontWeight: 600,
-                color: "#202124",
-                lineHeight: "21.82px",
-                letterSpacing: "0.5px",
-                textShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
-                alignSelf: "flex-start",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 2,
+                pb: 1,
+                justifyContent: "start",
                 "@media (max-width: 600px)": {
-                  fontSize: "14px",
-                  textAlign: "left",
+                  flexDirection: "column",
                 },
               }}
             >
-              Connect Google
-            </Typography>
-          </Box>
+              <Image src="/1.svg" alt="1" width={20} height={20} />
+              <Typography
+                variant="h6"
+                sx={{
+                  fontFamily: "'Nunito Sans', sans-serif",
+                  fontSize: "16px",
+                  width: "100%",
+                  fontWeight: 600,
+                  color: "#202124",
+                  lineHeight: "21.82px",
+                  letterSpacing: "0.5px",
+                  textShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                  alignSelf: "flex-start",
+                  "@media (max-width: 600px)": {
+                    fontSize: "14px",
+                    textAlign: "left",
+                  },
+                }}
+              >
+                Connect Google
+              </Typography>
+            </Box>
+          }
           {userInfo ? (
             <Box
               sx={{
@@ -606,8 +746,8 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                 borderRadius: "4px",
                 width: "100%",
                 maxWidth: "45%",
-                marginBottom: "24px",
-                marginTop: "15px",
+                marginBottom: isInstallComplete ? "16px" : "24px",
+                marginTop: isInstallComplete ? "0px" : "15px",
                 "@media (max-width: 600px)": {
                   maxWidth: "100%",
                   width: "100%",
@@ -629,6 +769,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                   alignItems: "center",
                   justifyContent: "center",
                   gap: 2,
+                  width: '100%',
                   pl: "8px",
                 }}
               >
@@ -642,18 +783,55 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                     objectFit: "cover",
                   }}
                 />
-                <Box>
-                  {/* Account Name */}
-                  <Typography
-                    sx={{
-                      fontSize: "14px",
-                      fontWeight: "500px",
-                      fontFamily: "'Nunito Sans', sans-serif",
-                      color: "#3C4043",
-                    }}
-                  >
-                    {userInfo.name}
-                  </Typography>
+                <Box sx={{ width: '100%' }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', width: '100%' }}>
+                    {/* Account Name */}
+                    <Typography
+                      sx={{
+                        fontSize: "14px",
+                        fontWeight: "500px",
+                        fontFamily: "'Nunito Sans', sans-serif",
+                        pt: '3px',
+                        color: "#3C4043",
+                      }}
+                    >
+                      {userInfo.name}
+                    </Typography>
+                    {isInstallComplete &&
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                        }}
+                      >
+                        <Typography
+                          className="table-data"
+                          sx={{
+                            color: "rgba(43, 91, 0, 1) !important",
+                            fontSize: "12px !important",
+                            backgroundColor: "rgba(234, 248, 221, 1) !important",
+                            padding: "4px 16px",
+                            borderRadius: "4px",
+                            textTransform: 'none'
+                          }}
+                        >
+                          Connected
+                        </Typography>
+                      </Box>
+                    }
+
+                    {!isInstallComplete && (
+                      <IconButton
+                        size="small"
+                        onClick={handleReLogin}
+                        sx={{ ml: 1, mb: 0, fontSize: '12px', padding: 0 }}
+                        title="Switch account"
+                      >
+                        <SyncIcon fontSize="small" />
+                      </IconButton>
+                    )}
+
+                  </Box>
                   {/* Account Email */}
                   <Typography
                     sx={{
@@ -668,6 +846,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                 </Box>
               </Box>
             </Box>
+
           ) : (
             <Box>
               <Button
@@ -719,6 +898,33 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                 >
                   Sign in with Google
                 </Typography>
+              </Button>
+            </Box>
+          )}
+          {isInstallComplete && (
+            <Box sx={{ width: '100%', justifyContent: 'flex-end', display: 'flex' }}>
+              <Button
+                onClick={handleReconnect}
+                sx={{
+                  textTransform: "none",
+                  background: "rgba(56, 152, 252, 1)",
+                  color: "#fff",
+                  fontFamily: "Nunito Sans",
+                  fontWeight: 400,
+                  fontSize: "14px",
+                  padding: "0.75em 1.5em",
+                  lineHeight: "normal",
+                  "@media (max-width: 600px)": {
+                    padding: "0.625rem 1.5rem",
+                    marginLeft: 0,
+                    fontSize: "16px",
+                  },
+                  "&:hover": {
+                    backgroundColor: "rgba(56, 152, 252, 1)",
+                    boxShadow: 2,
+                  },
+                }}>
+                Reconnect
               </Button>
             </Box>
           )}
@@ -906,7 +1112,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({ open, handleClose }) => {
                   </Typography>
                 )}
 
-                {containers.length === 0 && selectedAccount && (
+                {(containers.length === 0 && selectedAccount !== "" && !isLoading) && (
                   <Typography color="error" variant="body2">
                     No containers available for the selected account. Please try another account.
                   </Typography>

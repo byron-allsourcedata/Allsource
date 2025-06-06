@@ -109,7 +109,8 @@ const GoogleAdsContactSyncTab: React.FC<GoogleAdsContactSyncTabProps> = ({ setIs
             }
 
             const data = newListResponse.data.channel
-            setSelectedOptionGoogle(data)  
+            setSelectedOptionGoogle(data)
+            setGoogleAdsList(prev => [...prev, data]);
             setInputListNameGoogle(data.list_name)
             setIsDropdownValidGoogle(true)
         }
@@ -121,9 +122,10 @@ const GoogleAdsContactSyncTab: React.FC<GoogleAdsContactSyncTabProps> = ({ setIs
     const getGoogleAdsList = async () => {
         try {
             setIsLoading(true)
-            const response = await axiosInstance.get('integrations/google-ads/get-channels', {
+            const response = await axiosInstance.get('integrations/get-channels', {
                 params: {
-                    customer_id: selectedAccountIdGoogle
+                    customer_id: selectedAccountIdGoogle,
+                    service_name: 'google_ads'
                 }
             });
             setInputListNameGoogle('')

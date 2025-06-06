@@ -1,55 +1,104 @@
+import { AxiosInstance } from "axios";
+import { useEffect, useState } from "react";
+
+export type PrefillData = {
+  email: string;
+  firstname: string;
+  lastname: string;
+};
+
 export function getBookingUrl(): string {
-    return "https://meetings-na2.hubspot.com/mikhail-sofin/allsource";
+  return "https://meetings-na2.hubspot.com/mikhail-sofin/allsource";
 }
 
-export function getBookingUrlWithParams(utmParams: string | null) {
-    // TODO: auto fill name and email for hubspot booking
-    return getBookingUrl();
-    // const baseUrl = "https://calendly.com/validateapi-allforce/30min";
-    // if (!utmParams) return baseUrl;
-    // const params = new URLSearchParams();
-    // try {
-    //     const parsed =
-    //         typeof utmParams === "string" ? JSON.parse(utmParams) : utmParams;
-    //     if (parsed && typeof parsed === "object") {
-    //         Object.entries(parsed).forEach(([k, v]) => {
-    //             if (v != null) params.append(k, String(v));
-    //         });
-    //     }
-    // } catch {}
-    // return `${baseUrl}?${params.toString()}`;
+export function useBookingUrl(axios: AxiosInstance) {
+  const [utmParams, setUtmParams] = useState<string | null>(null);
+
+  const { prefillData } = usePrefillData(axios, setUtmParams);
+
+  return getCalendlyPopupUrl(utmParams, prefillData);
 }
 
-export function getCalendlyPopupUrl(utmParams: string | null) {
-    // TODO: auto fill name and email for hubspot booking
-    return getBookingUrl();
-    // const baseUrl = "https://calendly.com/validateapi-allforce/30min";
-    // const searchParams = new URLSearchParams();
+export function usePrefillData(
+  axios: AxiosInstance,
+  setUtmParams: (utmParams: string | null) => void
+) {
+  const initialPrefill = { email: "", firstname: "", lastname: "" };
+  const [prefillData, setPrefillData] = useState<{
+    email: string;
+    firstname: string;
+    lastname: string;
+  }>(initialPrefill);
+  const [isPrefillLoaded, setIsPrefillLoaded] = useState(false);
 
-    // if (utmParams) {
-    //     try {
-    //         const parsedUtmParams =
-    //             typeof utmParams === "string"
-    //                 ? JSON.parse(utmParams)
-    //                 : utmParams;
+  const fetchPrefillData = async () => {
+    try {
+      const response = await axios.get("/calendly");
+      const user = response.data.user;
 
-    //         if (
-    //             typeof parsedUtmParams === "object" &&
-    //             parsedUtmParams !== null
-    //         ) {
-    //             Object.entries(parsedUtmParams).forEach(([key, value]) => {
-    //                 if (value !== null && value !== undefined) {
-    //                     searchParams.append(key, value as string);
-    //                 }
-    //             });
-    //         }
-    //     } catch (error) {
-    //         console.error("Error parsing utmParams:", error);
-    //     }
-    // }
+      if (user) {
+        const { first_name, last_name, email, utm_params } = user;
+        setUtmParams(utm_params);
+        setPrefillData({
+          email: email || "",
+          firstname: first_name || "",
+          lastname: last_name || "",
+        });
+      } else {
+        setPrefillData(initialPrefill);
+      }
+    } catch (error) {
+      setPrefillData(initialPrefill);
+    } finally {
+      setIsPrefillLoaded(true);
+    }
+  };
 
-    // const finalUrl = `${baseUrl}${
-    //     searchParams.toString() ? `?${searchParams.toString()}` : ""
-    // }`;
-    // return finalUrl;
+  useEffect(() => {
+    fetchPrefillData();
+  }, []);
+
+  return {
+    prefillData,
+    setPrefillData,
+    isPrefillLoaded,
+  };
+}
+
+export function getCalendlyPopupUrl(
+  utmParams: string | null,
+  prefillParams: PrefillData
+) {
+  const baseUrl = getBookingUrl();
+  const searchParams = new URLSearchParams();
+
+  if (prefillParams) {
+    Object.entries(prefillParams).forEach(([key, value]) => {
+      if (value !== null && value !== undefined) {
+        searchParams.append(key, value);
+      }
+    });
+  }
+
+  if (utmParams) {
+    try {
+      const parsedUtmParams =
+        typeof utmParams === "string" ? JSON.parse(utmParams) : utmParams;
+
+      if (typeof parsedUtmParams === "object" && parsedUtmParams !== null) {
+        Object.entries(parsedUtmParams).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            searchParams.append(key, value as string);
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error parsing utmParams:", error);
+    }
+  }
+
+  const finalUrl = `${baseUrl}${
+    searchParams.toString() ? `?${searchParams.toString()}` : ""
+  }`;
+  return finalUrl;
 }

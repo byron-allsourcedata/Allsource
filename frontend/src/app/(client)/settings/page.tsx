@@ -50,7 +50,7 @@ const Settings: React.FC = () => {
 
     return (
         <Box sx={{position: 'relative', width: '100%' }}>
-            <Box sx={{width: '100%', position:'sticky', top:0, zIndex:1, pl:0.5}}>
+            <Box sx={{width: '100%', position:'sticky', top:0, zIndex:9, pl:0.5}}>
 
 
             <Box sx={{

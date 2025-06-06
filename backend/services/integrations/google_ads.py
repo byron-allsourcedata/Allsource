@@ -6,6 +6,8 @@ from grpc import StatusCode
 import time
 import google.api_core.exceptions
 from google.auth.exceptions import RefreshError
+
+from models import FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -26,7 +28,7 @@ from fastapi import HTTPException
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 import httpx
 from typing import List
-from utils import validate_and_format_phone
+from utils import validate_and_format_phone, get_valid_email, get_valid_phone, get_valid_location, format_phone_number
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -124,15 +126,17 @@ class GoogleAdsIntegrationsService:
             'status': IntegrationsStatus.SUCCESS.value
         }
 
-    async def create_sync(self, customer_id: str, leads_type: str, list_id: str, list_name: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+    async def create_sync(self, domain_id: int, customer_id: str, leads_type: str, list_id: str, list_name: str, created_by: str, user: dict, data_map: List[DataMap] = []):
+        credentials = self.get_credentials(user_id=user.get('id'), domain_id=domain_id)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
-            'domain_id': domain_id,
+            'sent_contacts': -1,
+            'sync_type': DataSyncType.CONTACT.value,
             'leads_type': leads_type,
             'data_map': data_map,
+            'domain_id': domain_id,
             'created_by': created_by,
             'customer_id': customer_id
         })
@@ -154,7 +158,7 @@ class GoogleAdsIntegrationsService:
         })
         return sync
 
-    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: List[EnrichmentUser], target_schema: str, validations: dict = {}):
         profiles = []
         for enrichment_user in enrichment_users:
             result = self.__mapped_googleads_profile(enrichment_user, target_schema, validations)
@@ -168,6 +172,27 @@ class GoogleAdsIntegrationsService:
         if list_response == ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
             return self.__add_profile_to_list(access_token=user_integration.access_token, customer_id=integration_data_sync.customer_id, user_list_id=integration_data_sync.list_id, profiles=profiles)
             
+        return list_response
+
+    async def process_data_sync_lead(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync,
+                                five_x_five_users: List[FiveXFiveUser]):
+        profiles = []
+        for enrichment_user in five_x_five_users:
+            result = self.__mapped_googleads_profile_lead(enrichment_user)
+            if result:
+                profiles.append(result)
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        list_response = self.__add_profile_to_list(access_token=user_integration.access_token,
+                                                   customer_id=integration_data_sync.customer_id,
+                                                   user_list_id=integration_data_sync.list_id, profiles=profiles)
+
+        if list_response == ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
+            return self.__add_profile_to_list(access_token=user_integration.access_token,
+                                              customer_id=integration_data_sync.customer_id,
+                                              user_list_id=integration_data_sync.list_id, profiles=profiles)
+
         return list_response
     
     
@@ -280,6 +305,27 @@ class GoogleAdsIntegrationsService:
             credential.suppression = suppression
             self.integrations_persistence.db.commit()
             return {'message': 'successfuly'}
+
+    def __mapped_googleads_profile_lead(self, five_x_five_user: FiveXFiveUser) -> str | GoogleAdsProfile:
+        first_email = get_valid_email(five_x_five_user, self.million_verifier_integrations)
+
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                           ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
+
+        first_phone = get_valid_phone(five_x_five_user)
+
+        address_parts = get_valid_location(five_x_five_user)
+
+        return GoogleAdsProfile(
+            email=first_email,
+            first_name=getattr(five_x_five_user, 'first_name', None),
+            last_name=getattr(five_x_five_user, 'last_name', None),
+            phone=validate_and_format_phone(format_phone_number(first_phone)),
+            city=address_parts[1],
+            state=address_parts[2],
+            address=address_parts[0]
+        )
     
     def __mapped_googleads_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict) -> GoogleAdsProfile:
         enrichment_contacts = enrichment_user.contacts
@@ -519,7 +565,7 @@ class GoogleAdsIntegrationsService:
             logger.error(f"An unexpected error occurred: {e}")
             return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
         
-    def get_customer_info(self, domain_id, user_id):
+    def get_ad_accounts(self, domain_id, user_id):
         try:
             credential = self.get_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)

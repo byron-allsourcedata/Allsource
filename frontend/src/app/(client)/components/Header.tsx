@@ -73,7 +73,6 @@ const Header: React.FC<HeaderProps> = ({
     full_name: userFullName,
     email: userEmail,
     resetUserData,
-    partner,
     backButton,
     setBackButton,
   } = useUser();
@@ -171,7 +170,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const handleLogoClick = () => {
-    router.push(partner ? "/partners" : "/dashboard");
+    router.push("/dashboard");
   };
 
   const handleNotificationIconPopupOpen = (
