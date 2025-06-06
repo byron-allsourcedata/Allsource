@@ -273,6 +273,29 @@ class SalesForceIntegrationsService:
             return profile
             
         return ProccessDataSyncResult.SUCCESS.value
+
+    async def process_data_sync_lead(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync,
+                                five_x_five_users: List[FiveXFiveUser]):
+        profiles = []
+        access_token = self.get_access_token(user_integration.access_token)
+        if not access_token:
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+
+        for five_x_five_user in five_x_five_users:
+            profile = self.__mapped_sales_force_profile_lead(five_x_five_user, integration_data_sync.data_map)
+            if profile:
+                profiles.append(profile)
+
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        response_result = self.bulk_upsert_leads(profiles=profiles, instance_url=user_integration.instance_url,
+                                                 access_token=access_token)
+        if response_result in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                               ProccessDataSyncResult.INCORRECT_FORMAT.value):
+            return profile
+
+        return ProccessDataSyncResult.SUCCESS.value
                 
     def set_suppression(self, suppression: bool, domain_id: int, user: dict):
             credential = self.get_credentials(domain_id, user.get('id'))
@@ -347,3 +370,111 @@ class SalesForceIntegrationsService:
         }
                 
         return result
+
+    def __mapped_sales_force_profile_lead(self, five_x_five_user: FiveXFiveUser, data_map: list) -> dict:
+        email_fields = [
+            'business_email',
+            'personal_emails',
+            'additional_personal_emails',
+        ]
+
+        def get_valid_email(user) -> str:
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+            verity = 0
+            for field in email_fields:
+                email = getattr(user, field, None)
+                if email:
+                    emails = extract_first_email(email)
+                    for e in emails:
+                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
+                            if five_x_five_user.business_email_last_seen.strftime(
+                                    '%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                                return e.strip()
+                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
+                                '%Y-%m-%d %H:%M:%S')
+                            if personal_emails_last_seen_str > thirty_days_ago_str:
+                                return e.strip()
+                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
+                            return e.strip()
+                        verity += 1
+            if verity > 0:
+                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        first_email = get_valid_email(five_x_five_user)
+
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                           ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
+
+        company_name = getattr(five_x_five_user, 'company_name', None)
+        if not company_name:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        first_phone = (
+                getattr(five_x_five_user, 'mobile_phone') or
+                getattr(five_x_five_user, 'personal_phone') or
+                getattr(five_x_five_user, 'direct_number') or
+                getattr(five_x_five_user, 'company_phone', None)
+        )
+        phone_number = validate_and_format_phone(first_phone)
+        mobile_phone = getattr(five_x_five_user, 'mobile_phone', None)
+
+        location = {
+            "address1": getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address',
+                                                                                 None),
+            "city": getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
+            "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
+            "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
+        }
+
+        description = getattr(five_x_five_user, 'company_description', None)
+        if description:
+            description = description[:9999]
+
+        company_employee_count = getattr(five_x_five_user, 'company_employee_count', None)
+        if company_employee_count:
+            company_employee_count = str(company_employee_count).replace('+', '')
+            if 'to' in company_employee_count:
+                start, end = company_employee_count.split(' to ')
+                company_employee_count = (int(start) + int(end)) // 2
+            else:
+                company_employee_count = int(company_employee_count)
+            company_employee_count = str(company_employee_count)
+
+        company_revenue = getattr(five_x_five_user, 'company_revenue', None)
+        if company_revenue:
+            try:
+                company_revenue = str(company_revenue).replace('+', '').split(' to ')[-1]
+                if 'Billion' in company_revenue:
+                    cleaned_value = float(company_revenue.split()[0]) * 10 ** 9
+                elif 'Million' in company_revenue:
+                    cleaned_value = float(company_revenue.split()[0]) * 10 ** 6
+                elif company_revenue.isdigit():
+                    cleaned_value = float(company_revenue)
+                else:
+                    cleaned_value = 0
+            except:
+                cleaned_value = 0
+
+            company_revenue = str(cleaned_value)
+
+        return {
+            "FirstName": getattr(five_x_five_user, 'first_name', None),
+            "LastName": getattr(five_x_five_user, 'last_name', None),
+            "Email": first_email,
+            "Phone": ', '.join(phone_number.split(', ')[-3:]) if phone_number else None,
+            "MobilePhone": ', '.join(mobile_phone.split(', ')[-3:]) if mobile_phone else None,
+            "Company": company_name,
+            "Title": getattr(five_x_five_user, 'job_title', None),
+            "Industry": getattr(five_x_five_user, 'primary_industry', None),
+            "LeadSource": "Web",
+            "City": location.get('city') if location else None,
+            "State": location.get('region') if location else None,
+            "Country": "USA",
+            "NumberOfEmployees": company_employee_count,
+            "AnnualRevenue": company_revenue,
+            "Description": description
+        }
