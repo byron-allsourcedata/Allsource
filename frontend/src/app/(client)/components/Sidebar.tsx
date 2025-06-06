@@ -681,23 +681,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
                 </ListItem> */}
-        {/* partners */}
-        {isPartnerAvailable && (
-          <ListItem
-            button
-            onClick={() => handleNavigation("/partners")}
-            sx={
-              isActive("/partners")
-                ? sidebarStyles.activeItem
-                : sidebarStyles.ListItem
-            }
-          >
-            <ListItemIcon sx={sidebarStyles.listItemIcon}>
-              <AccountBoxIcon />
-            </ListItemIcon>
-            <ListItemText primary="Partners" />
-          </ListItem>
-        )}
         {/* <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <RuleFolderIcon />

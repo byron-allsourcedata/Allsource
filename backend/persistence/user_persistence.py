@@ -6,8 +6,9 @@ from decimal import Decimal
 
 import pytz
 from sqlalchemy import func, desc, asc, case, or_
-from sqlalchemy.orm import Session, aliased
+from sqlalchemy.orm import aliased
 
+from db_dependencies import Db
 from enums import TeamsInvitationStatus, SignUpStatus
 from models import AudienceLookalikes
 from models.partner import Partner
@@ -17,14 +18,16 @@ from models.teams_invitations import TeamInvitation
 from models.users import Users
 from models.users_domains import UserDomains
 from models.audience_sources import AudienceSource
+from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class UserPersistence:
     UNLIMITED_CREDITS = -1
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def set_reset_password_sent_now(self, user_id: int):

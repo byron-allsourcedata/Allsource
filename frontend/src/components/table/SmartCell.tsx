@@ -16,6 +16,7 @@ import {
     TooltipProps,
     Theme,
 } from '@mui/material';
+import CellTooltip from './CellTooltip';
 
 export const table_array = {
     position: 'relative',
@@ -97,6 +98,7 @@ const SmartCell: FC<SmartCellProps> = ({
 
     const textRef = useRef<HTMLDivElement>(null);
     const [isOverflow, setIsOverflow] = useState(false);
+
     useLayoutEffect(() => {
         if (!textRef.current) return;
         const el = textRef.current;
@@ -109,8 +111,7 @@ const SmartCell: FC<SmartCellProps> = ({
     const contentNode = isString ? (
         <Typography
             ref={textRef}
-            component="div"
-            sx={{ display: 'inline-block', width: '100%', ...table_array, ...baseCellStyles, ...contentOptions.sx }}
+            sx={{ ...table_array, display: "inline-block", width: '100%', ...baseCellStyles, ...contentOptions.sx }}
             onClick={contentOptions.onClick}
         >
             {rawContent as string}
@@ -125,61 +126,20 @@ const SmartCell: FC<SmartCellProps> = ({
         </Box>
     );
 
-    let needTooltip = false;
-    let tooltipContent: React.ReactNode = null;
-    let tooltipPropsFinal: Omit<TooltipProps, 'title' | 'children'> | undefined;
+    const needTooltip = tooltipOptions?.always === true || isOverflow;
+    const tooltipContent = tooltipOptions?.content;
+    const tooltipPropsFinal = tooltipOptions?.props;
 
-    if (tooltipOptions) {
-        needTooltip = tooltipOptions.always ?? isOverflow;
-        tooltipContent = tooltipOptions.content;
-        tooltipPropsFinal = tooltipOptions.props;
-    } else {
-        needTooltip = false;
-    }
-
-    const maybeTooltip = needTooltip ? (
-        <Tooltip
-            title={
-                <Box
-                    sx={{
-                        backgroundColor: '#fff',
-                        m: 0,
-                        p: 0,
-                        display: 'flex',
-                        alignItems: 'center',
-                    }}
-                >
-                    <Typography
-                        className="table-data"
-                        component="div"
-                        color="inherit"
-                        sx={{ fontSize: '12px !important' }}
-                    >
-                        {tooltipContent!}
-                    </Typography>
-                </Box>
-            }
-            sx={{ marginLeft: '0.5rem !important' }}
-            componentsProps={{
-                tooltip: {
-                    sx: {
-                        backgroundColor: '#fff',
-                        color: '#000',
-                        boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
-                        border: '0.2px solid rgba(255, 255, 255, 1)',
-                        borderRadius: '4px',
-                        maxHeight: '100%',
-                        maxWidth: '500px',
-                        padding: '11px 10px',
-                        marginLeft: '0.5rem !important',
-                    },
-                },
-            }}
-            placement="right"
-            {...tooltipPropsFinal}
+    const maybeTooltip = needTooltip && tooltipContent ? (
+        <CellTooltip
+            content={tooltipContent}
+            always={tooltipOptions.always}
+            props={tooltipPropsFinal}
+            isOverflow={isOverflow}
+            sx={{}}
         >
             {contentNode}
-        </Tooltip>
+        </CellTooltip>
     ) : (
         contentNode
     );
@@ -201,11 +161,15 @@ const SmartCell: FC<SmartCellProps> = ({
                 ...table_array,
                 ...baseCellStyles,
                 ...cellOptions.sx,
+                "& > span": {
+                    display: "block",
+                    width: "100%",
+                },
                 ...(cellOptions.hideDivider && {
                     "&::after": {
-                      display: "none",
+                        display: "none",
                     },
-                  }),
+                }),
             }}
             className={cellOptions.className}
         >

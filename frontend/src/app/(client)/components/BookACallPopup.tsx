@@ -4,7 +4,9 @@ import { Box, Button, Typography, Drawer, Backdrop } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getBookingUrl } from "@/services/booking";
+import { CustomButton } from "@/components/ui";
+import {  useBookingUrl } from "@/services/booking";
+import axiosInstance from '@/axios/axiosInterceptorInstance';
 
 export interface LeftMenuItem {
   Icon: React.ElementType;
@@ -36,8 +38,16 @@ export const BookACallPopup: React.FC<Props> = ({
   handleClose,
   leftMenu
 }) => {
+  const router = useRouter();
+  const bookingUrl = useBookingUrl(axiosInstance)
+
   const handleBookACall = () => {
-    window.open(getBookingUrl(), "_blank");
+    window.open(bookingUrl, "_blank");
+  };
+
+  const handleInstallUpgrade = () => {
+    handleClose();
+    router.push('/settings?section=subscription');
   };
 
   if (!open) return null;
@@ -229,7 +239,7 @@ export const BookACallPopup: React.FC<Props> = ({
                   gap: 2,
                 }}
               >
-                <Box sx={{ width: "100%", maxWidth: 400 }}>
+                <Box sx={{ width: "100%", px: 2, minWidth: 430 }}>
                   <Box sx={{ mb: 2 }}>
                     <Typography
                       variant="subtitle1"
@@ -285,35 +295,27 @@ export const BookACallPopup: React.FC<Props> = ({
                     ))}
                   </Box>
 
-                  <Box sx={{ textAlign: "left", mb: 2 }}>
-                    <Button
+                  <Box sx={{ display: "flex", textAlign: "left", mb: 2,  gap: 2 }}>
+                    <CustomButton
+                      onClick={handleInstallUpgrade}
+                      variant="outlined"
+                      sx={{
+                        width: "50%",
+                        py: 1.5,
+                      }}
+                    >
+                      Install Upgrade
+                    </CustomButton>
+                    <CustomButton
                       onClick={handleBookACall}
                       variant="contained"
                       sx={{
-                        textTransform: "none",
-                        fontFamily: "Nunito Sans",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        width: "100%",
-                        px: "16px",
-                        py: "8px",
-                        borderRadius: "4px",
-                        bgcolor: "rgba(56, 152, 252, 1)",
-                        color: "rgba(255, 255, 255, 1)",
-                        ":hover": {
-                            backgroundColor: "rgba(30, 136, 229, 1)",
-                          },
-                          ":active": {
-                            backgroundColor: "rgba(116, 183, 253, 1)",
-                          },
-                          ":disabled": {
-                            backgroundColor: "rgba(56, 152, 252, 1)",
-                            opacity: 0.6,
-                          },
+                        width: "50%",
+                        py: 1.5,
                       }}
                     >
-                      Book a demo call
-                    </Button>
+                      Book a consultations
+                    </CustomButton>
                   </Box>
 
                   <Typography

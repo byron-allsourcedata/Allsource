@@ -37,6 +37,7 @@ from .sendgrid import SendgridHandler
 from .stripe_service import get_stripe_payment_url
 from .subscriptions import SubscriptionService
 from encryption_utils import decrypt_data
+from .user_name import UserNamesService
 
 EMAIL_NOTIFICATIONS = 'email_notifications'
 logger = logging.getLogger(__name__)
@@ -49,6 +50,7 @@ class UsersAuth:
                  domain_persistence: UserDomainsPersistence, referral_persistence_service: ReferralDiscountCodesPersistence,
                  admin_persistence: AdminPersistence,
                  crm: CrmService,
+                 user_names: UserNamesService
                  ):
         self.db = db
         self.payments_service = payments_service
@@ -62,6 +64,7 @@ class UsersAuth:
         self.domain_persistence = domain_persistence
         self.referral_persistence_service = referral_persistence_service
         self.crm = crm
+        self.user_names = user_names
         self.UNLIMITED = -1
         self.FREE_TRIAL_DAYS = 14
 
@@ -871,7 +874,7 @@ class UsersAuth:
 
 
     def __on_create_account(self, full_name: str, email: str):
-        first_name, last_name = self.__split_name(full_name)
+        first_name, last_name = self.user_names.split_name(full_name)
 
         try:
             self.crm.add_contact(
@@ -892,15 +895,6 @@ class UsersAuth:
             self.crm.update_status(email, HubspotLeadStatus.NEW)
         except UpdateContactStatusException as e:
             logger.error(e)
-
-
-    def __split_name(self, full_name: str):
-        names = full_name.split(' ')
-        if len(names) == 1:
-            names.append('')
-        first_name = names[0]
-        last_name = names[1]
-        return first_name, last_name
 
 
     def reset_password(self, reset_password_form: ResetPasswordForm):

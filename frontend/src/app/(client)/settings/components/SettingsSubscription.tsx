@@ -10,7 +10,7 @@ import Image from 'next/image';
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from '../../../../components/ToastNotification';
 import axios from 'axios';
-import { getCalendlyPopupUrl } from '@/services/booking';
+import { useBookingUrl } from '@/services/booking';
 
 
 
@@ -225,8 +225,7 @@ export const SettingsSubscription: React.FC = () => {
         }
     };
 
-    const calendlyPopupUrl = () => getCalendlyPopupUrl(utmParams);
-
+    const meetingUrl = useBookingUrl(axiosInstance);
 
     const handleChoosePlan = async (alias: string) => {
         let path = hasActivePlan
@@ -763,7 +762,7 @@ export const SettingsSubscription: React.FC = () => {
                         }}>
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Link
-                                    href={calendlyPopupUrl()}
+                                    href={meetingUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={handleCustomPlanPopupClose}

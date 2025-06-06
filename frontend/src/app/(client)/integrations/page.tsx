@@ -212,7 +212,6 @@ const IntegrationBox = ({
   return (
     <Box
       sx={{
-        height: "calc(100vh - 4.25rem)",
         overflow: "auto",
         display: "flex",
         flexDirection: "column",
@@ -896,29 +895,29 @@ const UserIntegrationsList = ({
               >
                 {isFirst && (
                   <Box
-                  onClick={(e) => e.stopPropagation()}
-                  sx={{}}
-                >
-                  <HintCard
-                    card={cards.integration}
-                    positionLeft={isNarrow ? 150 : 125}
-                    positionTop={125}
-                    rightSide={false}
-                    isOpenBody={hints.integration.showBody}
-                    toggleClick={() => {
-                      if (hints.search.showBody) {
-                        changeIntegrationHint("search", "showBody", "close")
+                    onClick={(e) => e.stopPropagation()}
+                    sx={{}}
+                  >
+                    <HintCard
+                      card={cards.integration}
+                      positionLeft={isNarrow ? 150 : 125}
+                      positionTop={125}
+                      rightSide={false}
+                      isOpenBody={hints.integration.showBody}
+                      toggleClick={() => {
+                        if (hints.search.showBody) {
+                          changeIntegrationHint("search", "showBody", "close")
+                        }
+                        changeIntegrationHint("integration", "showBody", "toggle")
+                      }}
+                      closeClick={() =>
+                        changeIntegrationHint("integration", "showBody", "close")
                       }
-                      changeIntegrationHint("integration", "showBody", "toggle")
-                    }}
-                    closeClick={() =>
-                      changeIntegrationHint("integration", "showBody", "close")
-                    }
-                  />
-                </Box>
-                  
+                    />
+                  </Box>
+
                 )}
-      
+
                 <IntegrationBox
                   image={`/${integration.image}`}
                   service_name={integration.service_name}
@@ -931,7 +930,7 @@ const UserIntegrationsList = ({
                 />
               </Box>
             );
-          })}   
+          })}
       </Box>
 
       {openModal === "klaviyo" && (
