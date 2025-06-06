@@ -29,6 +29,8 @@ const Users: React.FC = () => {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [tabIndex, setTabIndex] = useState(0);
+    const [dateRanges, setDateRanges] = useState<Record<string, number>>({});
+      
     const [valuesMetrics, setValueMetrics] = useState<CustomCardsProps>({
         users: 0,
         pixel_contacts: 0,
@@ -48,7 +50,11 @@ const Users: React.FC = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                let url = `/admin/audience-metrics`;
+                let url = `/admin/audience-metrics?`;
+                Object.entries(dateRanges).forEach(([key, value]) => {
+                    url += `&${key}=${value}`;
+                  });
+                  
                 const response = await axiosInstance.get(url);
                 if (response.status === 200) {
                     setValueMetrics({
@@ -77,7 +83,7 @@ const Users: React.FC = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [dateRanges]);
 
     const TabPanel: React.FC<TabPanelProps> = ({ children, value, index, ...other }) => {
         return (
@@ -113,16 +119,16 @@ const Users: React.FC = () => {
                 </Box>
                 <Box sx={{ display: "flex", flexDirection: "column" }}>
                     <Box>
-                        <CustomCards values={valuesMetrics} />
+                        <CustomCards values={valuesMetrics}/>
                     </Box>
                     <Box sx={{ width: '100%' }}>
                         {<TabPanel value={tabIndex} index={0}>
-                            <Account setLoading={setLoading} is_admin={true} loading={loading} tabIndex={tabIndex} handleTabChange={handleTabChange} />
+                            <Account setLoading={setLoading} is_admin={true} loading={loading} tabIndex={tabIndex} handleTabChange={handleTabChange} setDateRanges = {setDateRanges}/>
                         </TabPanel>}
                     </Box>
                     <Box sx={{ width: '100%', padding: 0, margin: 0 }}>
                         {<TabPanel value={tabIndex} index={1}>
-                            <Account setLoading={setLoading} is_admin={false} loading={loading} tabIndex={tabIndex} handleTabChange={handleTabChange} />
+                            <Account setLoading={setLoading} is_admin={false} loading={loading} tabIndex={tabIndex} handleTabChange={handleTabChange} setDateRanges = {setDateRanges}/>
                         </TabPanel>}
                     </Box>
                 </Box>

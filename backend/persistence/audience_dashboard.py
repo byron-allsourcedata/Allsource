@@ -1,5 +1,7 @@
 from datetime import datetime, timezone, timedelta
 from collections import defaultdict
+
+import pytz
 from sqlalchemy.sql import func, select, union_all, literal_column, extract, case, literal
 from sqlalchemy.orm import aliased
 from enums import AudienceSmartStatuses
@@ -44,56 +46,60 @@ class DashboardAudiencePersistence:
         )
         return source_rows, installed_domains_count
 
-    def get_audience_metrics(self):
+    def get_audience_metrics(self, last_login_date_start, last_login_date_end, join_date_start, join_date_end):
+        user_filters = [Users.role.contains(['customer'])]
+
+        if last_login_date_start and last_login_date_end:
+            start_date = datetime.fromtimestamp(last_login_date_start, tz=pytz.UTC).date()
+            end_date = datetime.fromtimestamp(last_login_date_end, tz=pytz.UTC).date()
+            user_filters.append(func.DATE(Users.last_login) >= start_date)
+            user_filters.append(func.DATE(Users.last_login) <= end_date)
+
+        if join_date_start and join_date_end:
+            start_date = datetime.fromtimestamp(join_date_start, tz=pytz.UTC).date()
+            end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
+            user_filters.append(func.DATE(Users.created_at) >= start_date)
+            user_filters.append(func.DATE(Users.created_at) <= end_date)
+
         queries = [
             {
-                'query': self.db.query(
-                    func.count(Users.id).label("count"))
-                    .filter(Users.role.contains(['customer'])),
+                'query': self.db.query(func.count(Users.id).label("count"))
+                .filter(*user_filters),
                 'key': 'users_count'
             },
             {
-                'query': self.db.query(
-                    func.count(UserDomains.id).label("count")
-                )
-                .join(Users, Users.id == UserDomains.user_id)\
-                .filter(UserDomains.is_pixel_installed == True, Users.role.contains(['customer'])),
+                'query': self.db.query(func.count(UserDomains.id).label("count"))
+                .join(Users, Users.id == UserDomains.user_id)
+                .filter(UserDomains.is_pixel_installed == True, *user_filters),
                 'key': 'pixel_contacts'
             },
             {
-                'query': self.db.query(
-                    func.count(AudienceSource.id).label("count")
-                )
-                .join(Users, Users.id == AudienceSource.user_id) \
-                .filter(Users.role.contains(['customer'])),
+                'query': self.db.query(func.count(AudienceSource.id).label("count"))
+                .join(Users, Users.id == AudienceSource.user_id)
+                .filter(*user_filters),
                 'key': 'sources_count'
             },
             {
-                'query': self.db.query(
-                    func.count(AudienceLookalikes.id).label("count")
-                )
-                .join(Users, Users.id == AudienceLookalikes.user_id) \
-                .filter(Users.role.contains(['customer'])),
+                'query': self.db.query(func.count(AudienceLookalikes.id).label("count"))
+                .join(Users, Users.id == AudienceLookalikes.user_id)
+                .filter(*user_filters),
                 'key': 'lookalike_count'
             },
             {
-                'query': self.db.query(
-                    func.count(AudienceSmart.id).label("count")
-                )
-                .join(Users, Users.id == AudienceSmart.user_id) \
-                .filter(Users.role.contains(['customer'])),
+                'query': self.db.query(func.count(AudienceSmart.id).label("count"))
+                .join(Users, Users.id == AudienceSmart.user_id)
+                .filter(*user_filters),
                 'key': 'smart_count'
             },
             {
-                'query': self.db.query(
-                    func.count(IntegrationUserSync.id).label("count")
-                )
-                .join(UserDomains, UserDomains.id == IntegrationUserSync.domain_id) \
-                .join(Users, Users.id == UserDomains.user_id) \
-                .filter(Users.role.contains(['customer'])),
+                'query': self.db.query(func.count(IntegrationUserSync.id).label("count"))
+                .join(UserDomains, UserDomains.id == IntegrationUserSync.domain_id)
+                .join(Users, Users.id == UserDomains.user_id)
+                .filter(*user_filters),
                 'key': 'sync_count'
             }
         ]
+
         return queries
 
     def get_dashboard_audience_data(self, *, from_date: int, to_date: int, user_id: int):
