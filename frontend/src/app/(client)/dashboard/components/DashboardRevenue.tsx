@@ -484,10 +484,10 @@ const DashboardRevenue = ({ appliedDates }: { appliedDates: AppliedDates }) => {
             6300, 6600, 6900, 7200, 7500, 7800, 8100, 8400],
     }
 
-    const isAnalyticsEmpty = values.totalRevenue === 0;
+    const isAnalyticsEmpty = values.totalRevenue === 0 && values.totalVisitors === 0 && values.totalAbandonedCart === 0 && values.viewProducts === 0;;
 
     if (isAnalyticsEmpty) {
-        return <EmptyAnalyticsPlaceholder />;
+        return <EmptyAnalyticsPlaceholder customers/>;
     }
 
     return (

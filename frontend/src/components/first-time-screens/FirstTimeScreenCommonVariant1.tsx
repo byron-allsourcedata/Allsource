@@ -163,7 +163,6 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
         {/* Main Content */}
         {Content && (
           <Box sx={{
-            width: MainBoxStyleSX ? "65%" : "100%",
             mt: bannerVisible ? 3 : 0,
           }}>
             {typeof Content === "function"

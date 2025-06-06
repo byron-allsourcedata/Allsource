@@ -4,7 +4,8 @@ import sys
 import asyncio
 import functools
 import json
-from aio_pika import IncomingMessage
+from decimal import Decimal
+from aio_pika import IncomingMessage, Channel
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
@@ -17,6 +18,7 @@ from utils import send_sse
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.million_verifier import MillionVerifierPersistence
 from models.audience_smarts_persons import AudienceSmartPerson
+from persistence.user_persistence import UserPersistence
 from models.audience_smarts_validations import AudienceSmartValidation
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
@@ -35,8 +37,9 @@ def setup_logging(level):
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
-    channel,
+    channel: Channel,
     million_verifier_service: MillionVerifierIntegrationsService,
+    user_persistence: UserPersistence
 ):
     try:
         body = json.loads(message.body)
@@ -45,7 +48,9 @@ async def process_rmq_message(
         batch = body.get("batch", [])
         validation_type = body.get("validation_type")
         count_persons_before_validation = body.get("count_persons_before_validation")
+        validation_cost = body.get("validation_cost")
         verified_emails = []
+        write_off_funds = Decimal(0)
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
@@ -55,6 +60,9 @@ async def process_rmq_message(
                 if not email:
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
+                
+                write_off_funds += Decimal(validation_cost)
+
                 if not million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
@@ -71,6 +79,9 @@ async def process_rmq_message(
                 if not email:
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
+
+                write_off_funds += Decimal(validation_cost)
+                
                 if not million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
@@ -81,6 +92,13 @@ async def process_rmq_message(
                             verified_business_email=email
                         )
                     )
+        if write_off_funds:
+            user_persistence.deduct_validation_funds(user_id, write_off_funds)
+            # if not resultOperation:
+            #     logging.error("Not enough validation funds")
+            #     await message.reject(requeue=True)
+            #     return
+            db_session.flush()
             
         success_ids = [
             rec["audience_smart_person_id"]
@@ -140,7 +158,7 @@ async def process_rmq_message(
                             rule["delivery"]["processed"] = True
                             rule["delivery"]["count_validated"] = total_validated
                             rule["delivery"]["count_submited"] = count_persons_before_validation
-
+                            rule["delivery"]["count_cost"] = str(write_off_funds)
                 aud_smart.validations = json.dumps(validations)
             db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -196,13 +214,15 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
+        user_persistence = UserPersistence(db_session)
+
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_EMAIL_API,
             durable=True,
         )
         million_verifier_service = MillionVerifierIntegrationsService(million_verifier_persistence=MillionVerifierPersistence(db_session))
         await queue.consume(
-                functools.partial(process_rmq_message, channel=channel, db_session=db_session, million_verifier_service=million_verifier_service)
+                functools.partial(process_rmq_message, channel=channel, db_session=db_session, million_verifier_service=million_verifier_service, user_persistence=user_persistence),
             )
 
         await asyncio.Future()

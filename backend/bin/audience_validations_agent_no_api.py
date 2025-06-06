@@ -9,7 +9,8 @@ import random
 from datetime import datetime
 from uuid import UUID
 from sqlalchemy import update
-from aio_pika import IncomingMessage, Message
+from decimal import Decimal
+from aio_pika import IncomingMessage, Message, Channel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
@@ -22,6 +23,8 @@ from models.audience_smarts import AudienceSmart
 from utils import send_sse
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
+from models.users import Users
+from persistence.user_persistence import UserPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()
@@ -84,11 +87,17 @@ def update_stats_validations(db_session: Session, validation_type: str, count_pe
         )
         db_session.add(new_record)
 
+def check_value_in_database(db_session: Session, user_id: int, person_id: int) -> bool:
+    # Логика проверки наличия значения в базе
+    result = db_session.query(SomeModel).filter_by(user_id=user_id, person_id=person_id).first()
+    return result is not None
+
 
 async def aud_validation_agent(
     message: IncomingMessage,
     db_session: Session,
-    channel
+    channel: Channel,
+    user_persistence: UserPersistence
 ):
     try:
         body = json.loads(message.body)
@@ -99,6 +108,8 @@ async def aud_validation_agent(
         recency_personal_days = body.get("recency_personal_days", 0)
         recency_business_days = body.get("recency_business_days", 0)
         validation_type = body.get("validation_type")
+        validation_cost = body.get("validation_cost")
+        write_off_funds = Decimal(0)
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         validation_rules = {
@@ -109,11 +120,15 @@ async def aud_validation_agent(
             "mobile_phone_dnc": lambda v: v is False,
         }
 
-        failed_ids = [
-            rec["audience_smart_person_id"]
-            for rec in batch
-            if not validation_rules.get(validation_type, lambda _: False)(rec.get(validation_type))
-        ]
+        failed_ids = []
+
+        for rec in batch:
+            if not validation_rules.get(validation_type, lambda _: False)(rec.get(validation_type)):
+                failed_ids.append(rec["audience_smart_person_id"])
+            
+            if rec.get(validation_type) is not None:
+                write_off_funds += Decimal(validation_cost)
+
         logging.info(f"Failed ids len: {len(failed_ids)}")
         success_ids = [
             rec["audience_smart_person_id"]
@@ -121,6 +136,14 @@ async def aud_validation_agent(
             if rec["audience_smart_person_id"] not in failed_ids
         ]
         logging.info(f"Success ids len: {len(success_ids)}")
+
+        if write_off_funds:
+            user_persistence.deduct_validation_funds(user_id, write_off_funds)
+            # if not resultOperation:
+            #     logging.error("Not enough validation funds")
+            #     await message.reject(requeue=True)
+            #     return
+            db_session.flush()
 
         if failed_ids:
             db_session.bulk_update_mappings(
@@ -168,6 +191,7 @@ async def aud_validation_agent(
                             rule[key]["processed"] = True
                             rule[key]["count_validated"] = total_validated
                             rule[key]["count_submited"] = count_persons_before_validation
+                            rule[key]["count_cost"] = str(write_off_funds)
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -226,12 +250,14 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
+        user_persistence = UserPersistence(db_session)
+
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_NOAPI,
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_validation_agent, channel=channel, db_session=db_session)
+                functools.partial(aud_validation_agent, channel=channel, db_session=db_session, user_persistence=user_persistence)
             )
 
         await asyncio.Future()
