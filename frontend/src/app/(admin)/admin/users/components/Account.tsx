@@ -295,7 +295,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                 >
                                     <Box
                                         sx={{
-                                            overflow: "scroll",
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",
                                             minWidth: 0,
