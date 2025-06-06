@@ -37,6 +37,7 @@ export const PlanProperties: FC<Props> = (props) => {
             <Column gap="1rem">
                 {advantages.map((advantage, i) => (
                     <AdvantageRow
+                        key={i}
                         advantage={advantage}
                         addDivider={
                             showLastDivider || i !== advantages.length - 1
