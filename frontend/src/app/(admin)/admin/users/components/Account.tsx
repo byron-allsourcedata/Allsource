@@ -244,7 +244,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                             left: 0,
                             zIndex: 1,
                             cursor: (isCurrentUser || row.type != 'user') ? "default" : "pointer",
-                            backgroundColor: "#fff",
                             "& .icon-button": {
                                 opacity: 0,
                                 pointerEvents: "none",
@@ -296,7 +295,6 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                 >
                                     <Box
                                         sx={{
-                                            overflow: "scroll",
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",
                                             minWidth: 0,
@@ -414,7 +412,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                 }}
                                 iconProps={{
                                     icon: <MoreVert />,
-                                  }}
+                                }}
                             />
                             <Popover
                                 open={Boolean(menuAnchor) && activeRow === row.id}
@@ -468,7 +466,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                                 }}
                                 iconProps={{
                                     icon: <MoreVert />,
-                                  }}
+                                }}
                             />
                             <Popover
                                 open={Boolean(menuAnchor) && activeRow === row.id}
@@ -523,7 +521,11 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
     return (
         <TableBody>
             {data.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow key={row.id} sx={{
+                    "&:hover": {
+                      backgroundColor: "rgba(247, 247, 247, 1)",
+                    },
+                  }}>
                     {tableHeaders.map(({ key }) => (
                         <TableCell key={key} sx={{ ...leadsStyles.table_array, textAlign: key === 'actions' ? 'center' : 'left', position: 'relative', padding: '8px' }} >
                             {renderCellContent(key, row)}
@@ -873,20 +875,22 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                                     key={index}
                                     label={tab.label}
                                     sx={{
-                                        textTransform: 'none',
-                                        padding: '4px 1px',
-                                        minHeight: 'auto',
+                                        fontFamily: "Nunito Sans",
+                                        fontWeight: 500,
+                                        fontSize: "14px",
+                                        lineHeight: "100%",
+                                        letterSpacing: "0%",
+                                        color: "rgba(112, 112, 113, 1)",
+                                        textTransform: "none",
+                                        padding: "4px 1px",
+                                        minHeight: "auto",
                                         flexGrow: 1,
-                                        pb: '10px',
-                                        textAlign: 'center',
-                                        fontSize: '14px',
-                                        fontWeight: 700,
-                                        lineHeight: '19.1px',
-                                        minWidth: 'auto',
-                                        color: PRIMARY_COLOR,
-
+                                        pb: "10px",
+                                        textAlign: "center",
                                         mr: 2,
+                                        minWidth: "auto",
                                         '&.Mui-selected': {
+                                            fontWeight: 700,
                                             color: PRIMARY_COLOR,
                                         },
                                         '&.MuiTabs-indicator': {
@@ -1084,6 +1088,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
                 <Grid container direction="column" justifyContent="flex-start" spacing={2} sx={{ minHeight: '100vh' }}>
                     <Grid item xs={12} sx={{ pl: 1, mt: 0 }}>
                         <TableContainer component={Paper} sx={{
+                            border: "1px solid rgba(235, 235, 235, 1)",
                             maxHeight: 'calc(100vh - 400px)', overflowY: 'auto',
                             overflowX: 'auto',
                         }}>
