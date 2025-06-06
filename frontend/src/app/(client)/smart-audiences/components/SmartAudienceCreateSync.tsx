@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
     Drawer, Box, Typography, IconButton, List, LinearProgress, Grid,
     Button, Popover, Tooltip, Tab, Slider, TextField, Card, CardContent,
-    MenuItem, Link
+    MenuItem, Link, Backdrop
 } from '@mui/material';
 import TabList from "@mui/lab/TabList";
 import TabPanel from '@mui/lab/TabPanel';
@@ -997,6 +997,7 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
 
     return (
         <>
+            <Backdrop open={open} sx={{ zIndex: 100, color: "#fff" }} />
             <Drawer
                 anchor="right"
                 open={open}
@@ -1016,9 +1017,9 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({ open, onClose, updateSm
                 }}
                 slotProps={{
                     backdrop: {
-                        sx: {
-                            backgroundColor: 'rgba(0, 0, 0, 0.125)'
-                        }
+                      sx: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.01)'
+                      }
                     }
                 }}
             >

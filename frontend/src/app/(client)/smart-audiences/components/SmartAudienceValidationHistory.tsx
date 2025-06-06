@@ -110,13 +110,13 @@ const ValidationsTable = ({ validations }: {validations: ValidationHistoryRespon
                         </Box>
                         
                         <Typography sx={{ flex: 1 }} className="black-table-header">
-                            {validation.count_submited}
+                            {validation.count_submited.toLocaleString('en-US')}
                         </Typography>
                         <Typography sx={{ flex: 1 }} className="black-table-header">
-                            {validation.count_validated}
+                            {validation.count_validated.toLocaleString('en-US')}
                         </Typography>
                         <Typography sx={{ flex: 1 }} className="black-table-header">
-                            {validation.count_cost.toFixed(2)} Funds
+                            {validation.count_cost.toLocaleString('en-US')} Funds
                         </Typography>
                     </Box>
                 ))}
@@ -256,7 +256,7 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({ open, onClose, i
                 <Box sx={{ width: "100%", display: 'flex', alignItems: "center", flexDirection: "column", justifyContent: "space-between", py: "20px", px: "24px", border: "1px solid rgba(240, 240, 240, 1)", boxShadow: "rgba(0, 0, 0, 0.2)"}}>
                     {smartAudience?.map((el: any, index: number) => {
                         const isDateRow = index === 0;
-                        const formattedValue = isDateRow ? dayjs(el.value).format('MM/DD/YYYY') : el.value;
+                        const formattedValue = isDateRow ? dayjs(el.value).format('MM/DD/YYYY') : el.value?.toLocaleString('en-US');
 
                         return ( 
                             <Box key={index} sx={{ 

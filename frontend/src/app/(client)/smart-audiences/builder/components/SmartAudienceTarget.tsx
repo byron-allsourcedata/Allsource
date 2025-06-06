@@ -1171,8 +1171,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
               <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Box sx={{ display: "flex", flexDirection: "column", position: "relative", gap: 2 }}>
                   <TextField
-                    value={value}
-                    type="number"
+                    value={value?.toLocaleString('en-US')}
                     variant="outlined"
                     onChange={handleInputNumberChange}
                     inputProps={{ max: AudienceSize }}

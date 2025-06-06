@@ -82,7 +82,7 @@ const DataSourceTable = ({ title, dataSources }: {title: string, dataSources: Da
               }}>
                   <Typography sx={{flex: 1}} className='black-table-header'>{el.name}</Typography>
                   <Typography sx={{flex: 1}} className='black-table-header'>{setSourceType(el.source_type)}</Typography>
-                  <Typography sx={{flex: 1}} className='black-table-header'>{el.size}</Typography>
+                  <Typography sx={{flex: 1}} className='black-table-header'>{el.size.toLocaleString('en-US')}</Typography>
               </Box>
           ))}
       </Box>
