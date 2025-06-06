@@ -304,7 +304,7 @@ export const BookACallPopup: React.FC<Props> = ({
                         py: 1.5,
                       }}
                     >
-                      Install Upgrade
+                      Instant Upgrade
                     </CustomButton>
                     <CustomButton
                       onClick={handleBookACall}

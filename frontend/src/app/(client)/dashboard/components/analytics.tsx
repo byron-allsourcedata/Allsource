@@ -272,8 +272,14 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
                                     <Typography
                                         variant="h4"
                                         component="h1"
-                                        className="first-sub-title"
-                                        sx={dashboardStyles.title}
+                                        
+                                        sx={{
+                                            fontFamily: "Nunito Sans",
+                                            fontWeight: 600,
+                                            fontSize: "16px",
+                                            lineHeight: "140%",
+                                            letterSpacing: "0%",
+                                        }}
                                     >
                                         Analytics
                                     </Typography>

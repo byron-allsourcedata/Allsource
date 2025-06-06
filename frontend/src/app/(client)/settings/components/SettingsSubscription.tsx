@@ -11,7 +11,7 @@ import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from '../../../../components/ToastNotification';
 import axios from 'axios';
 import { getCalendlyPopupUrl } from '@/services/booking';
-import { plans as defaultPlans, Plan } from './plans';
+import { plans as defaultPlans, monthlyPlans, Plan } from './plans';
 import { fetchUserData } from '@/services/meService';
 import { BookACallPopup } from '../../components/BookACallPopup';
 
@@ -144,9 +144,10 @@ export const SettingsSubscription: React.FC = () => {
 
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
+
         const period = newValue === 0 ? 'month' : 'year';
         const period_plans = allPlans.filter((plan: any) => plan.interval === period);
-        setPlans(defaultPlans)
+        setPlans(newValue === 0 ? monthlyPlans : defaultPlans)
         // setPlans(period_plans);
 
     };
