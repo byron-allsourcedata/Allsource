@@ -1248,7 +1248,7 @@ const SmartAudiencesTarget: React.FC<SmartAudienceTargetProps> = ({
                   <Typography className="form-input">
                     Available Funds
                   </Typography>
-                  <Typography>{availableCredits} Funds</Typography>
+                  <Typography>{availableCredits?.toLocaleString('en-US')} Funds</Typography>
                 </Box>
               </Box>
 
