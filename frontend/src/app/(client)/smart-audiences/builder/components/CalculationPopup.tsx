@@ -2,7 +2,8 @@ import React from "react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Typography, Button, Divider, IconButton, Box } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { smartAudiences } from "../../smartAudiences";
-import CheckIcon from '@mui/icons-material/Check';
+import { useBookingUrl } from "@/services/booking";
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 
 interface ValidationPopupProps {
     open: boolean;
@@ -17,8 +18,10 @@ interface ValidationPopupProps {
 }
 
 const CalculationPopup: React.FC<ValidationPopupProps> = ({ open, onClose, onCancel, onConfirm, scrollToNewBlock, CalculationData }) => {
+    const meetingUrl = useBookingUrl(axiosInstance);
+
     const handleBuyCredits = () => {
-        return
+        window.open(meetingUrl, "_blank", "noopener");
     }
 
     return (
