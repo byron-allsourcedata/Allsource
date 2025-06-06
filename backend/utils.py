@@ -3,7 +3,7 @@ import re
 import os
 import hashlib
 import json
-from typing import Optional, Any, LiteralString
+from typing import Optional, Any
 
 import regex
 from urllib.parse import urlparse, parse_qs
@@ -112,7 +112,7 @@ def create_company_alias(company_name):
         return alias
 
 
-def validate_and_format_phone(phone_numbers: str) -> LiteralString | None:
+def validate_and_format_phone(phone_numbers: str) -> str | None:
     if not phone_numbers:
         return None
 

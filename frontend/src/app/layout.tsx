@@ -13,6 +13,7 @@ import { SSEProvider } from '../context/SSEContext';
 import { IntegrationProvider } from "@/context/IntegrationContext";
 import { SidebarProvider } from "@/context/SidebarContext";
 import { usePathname } from "next/navigation";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,6 +47,7 @@ export default function RootLayout({
         <title>{pageTitle ? `AllSource | ${pageTitle} ` : "AllSource"}</title>
         <meta name="description" content={`Page: ${pageTitle}`} />
         <meta httpEquiv="Content-Security-Policy" content="script-src * 'unsafe-inline' 'unsafe-eval'; object-src 'none';" />
+
       </head>
       <body className={inter.className}>
         <GoogleOAuthProvider clientId={googleClientId as string}>
@@ -66,6 +68,18 @@ export default function RootLayout({
         <ToastNotificationContainer />
         <script defer={true} src="https://www.dwin1.com/107427.js" type="text/javascript"></script>
       </body>
+      <Script id="zoho-init" strategy="beforeInteractive">
+        {`
+            window.$zoho = window.$zoho || {};
+            $zoho.salesiq = $zoho.salesiq || { ready: function() {} };
+          `}
+      </Script>
+      <Script
+        id="zsiqscript"
+        src="https://salesiq.zohopublic.com/widget?wc=siqb8de147bca1b487624f8f2587b4ee3e1eda041e3130528d6440dbf53a2d200eb"
+        strategy="afterInteractive"
+        defer
+      />
     </html>
 
   );
