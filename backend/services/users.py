@@ -1,17 +1,15 @@
 import logging
-import os
 
 from enums import UpdatePasswordStatus
 from persistence.user_persistence import UserPersistence
-from models.users import Users
 from persistence.plans_persistence import PlansPersistence
-from schemas.users import UpdatePassword, StripeAccountID
+from schemas.users import UpdatePassword, MeetingData
 from schemas.domains import DomainResponse
 from services.jwt_service import get_password_hash
-import requests
 from dotenv import load_dotenv
-from persistence.domains import UserDomainsPersistence
+
 from persistence.leads_persistence import LeadsPersistence
+from services.meeting_schedule import MeetingScheduleService
 from services.subscriptions import SubscriptionService
 from persistence.domains import UserDomainsPersistence, UserDomains
 
@@ -21,14 +19,23 @@ load_dotenv()
 
 
 class UsersService:
-    def __init__(self, user, user_persistence_service: UserPersistence, plan_persistence: PlansPersistence,
-                 subscription_service: SubscriptionService, domain_persistence: UserDomainsPersistence, leads_persistence: LeadsPersistence):
+    def __init__(
+        self,
+        user: dict,
+        user_persistence_service: UserPersistence,
+        plan_persistence: PlansPersistence,
+        subscription_service: SubscriptionService,
+        domain_persistence: UserDomainsPersistence,
+        leads_persistence: LeadsPersistence,
+        meeting_schedule: MeetingScheduleService,
+    ):
         self.user = user
         self.user_persistence_service = user_persistence_service
         self.plan_persistence = plan_persistence
         self.subscription_service = subscription_service
         self.domain_persistence = domain_persistence
         self.leads_persistence = leads_persistence
+        self.meeting_schedule = meeting_schedule
 
     def update_password(self, update_data: UpdatePassword):
         if update_data.password != update_data.confirm_password:
@@ -111,66 +118,9 @@ class UsersService:
             enable=domain.is_enable
         ).model_dump()
 
-    def get_calendly_info(self):
-        result = {
-            'utm_params': None,
-            'email': None,
-            'full_name': None
-        }
-        if self.user.get('utm_params'):
-            result['utm_params'] = self.user['utm_params']
-        try:
-            calendly_uuid = self.user.get('calendly_uuid')
-            invitee_uuid = self.user.get('calendly_invitee_uuid')
-            if calendly_uuid and invitee_uuid:
-                calendly_uuid = calendly_uuid.replace("uuid=", "").strip("'")
-                invitee_uuid = invitee_uuid.replace("uuid=", "").strip("'")
-                url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/invitees/{invitee_uuid}"
+    def get_meeting_info(self) -> MeetingData:
+        return self.meeting_schedule.get_meeting_info(self.user)
 
-                headers = {
-                    'Authorization': f'Bearer {os.getenv("CALENDLY_TOKEN")}',
-                    'Content-Type': 'application/json'
-                }
-                
-                response = requests.get(url, headers=headers).json()
-                result['email'] = response.get('resource').get('email')
-                result['full_name'] = response.get('resource').get('name')
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Request failed: {str(e)}")
-        except Exception as e:
-            logger.error(f"An error occurred: {str(e)}")
-            
-        return result
-
-    def update_calendly_info(self, uuid: str, invitees: str):
-        try:
-            calendly_uuid = self.user.get('calendly_uuid')
-            if calendly_uuid:
-                calendly_uuid = calendly_uuid.replace("uuid=", "").strip("'")
-                url = f"https://api.calendly.com/scheduled_events/{calendly_uuid}/cancellation"
-
-                headers = {
-                    'Authorization': f'Bearer {os.getenv("CALENDLY_TOKEN")}',
-                    'Content-Type': 'application/json'
-                }
-
-                data = {
-                    "reason": 'Reschedule a Call'
-                }
-                response = requests.post(url, headers=headers, json=data)
-                if response.status_code == 204 and response.status_code == 201 and response.status_code == 200:
-                    logger.info('Event completed successfully')
-                else:
-                    logger.error(f"Calendly cancel response code: {response.status_code}")
-
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Request failed: {str(e)}")
-        except Exception as e:
-            logger.error(f"An error occurred: {str(e)}")
-
-        self.user_persistence_service.update_calendly_uuid(self.user.get('id'), str(uuid), str(invitees))
-        return 'OK'
 
     def add_stripe_account(self, stripe_connected_account_id: str):
         self.user_persistence_service.add_stripe_account(self.user.get('id'), stripe_connected_account_id)

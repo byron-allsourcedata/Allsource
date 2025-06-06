@@ -6,8 +6,8 @@ import axios, { AxiosError } from "axios";
 import { useSlider } from "@/context/SliderContext";
 import CustomTooltip from "@/components/customToolTip";
 import React, { useEffect, useState, useMemo } from "react";
-import ManualPopup from "../components/ManualPopup";
-import GoogleTagPopup from "../components/GoogleTagPopup";
+import ManualPopup from "./ManualPopup";
+import GoogleTagPopup from "./GoogleTagPopup";
 import CRMPopup from "./CMSPopup";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
@@ -28,10 +28,12 @@ interface CmsData {
 }
 interface PixelInstallationProps {
   onInstallSelected: (method: "manual" | "google" | "cms" | null) => void;
+  onInstallStatusChange: (status: "success" | "failed") => void;
 }
 
 const PixelInstallation: React.FC<PixelInstallationProps> = ({
   onInstallSelected,
+  onInstallStatusChange,
 }) => {
   const { pixelInstallationHints, resetPixelInstallationHints, changePixelInstallationHint } = useGetStartedHints();
   const { setShowSlider } = useSlider();
@@ -513,7 +515,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         )}
         {showGoogleInline && (
           <Box ref={googleRef} sx={{ width: '100%' }}>
-            <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} />
+            <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} onInstallStatusChange={onInstallStatusChange} />
           </Box>
         )}
         {showCMSInline && (

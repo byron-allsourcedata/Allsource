@@ -30,6 +30,9 @@ class UserDomainsService:
 
     def clean_account(self, email):
         user = self.domain_persistence.get_user_by_email(email=email)
+        if not user:
+            return None
+
         user_dict = {
             c.name: getattr(user, c.name)
             for c in Users.__table__.columns

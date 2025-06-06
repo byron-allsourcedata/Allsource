@@ -212,7 +212,6 @@ const IntegrationBox = ({
   return (
     <Box
       sx={{
-        height: "calc(100vh - 4.25rem)",
         overflow: "auto",
         display: "flex",
         flexDirection: "column",
@@ -743,14 +742,14 @@ const UserIntegrationsList = ({
   };
 
   const integrationsAvailable = [
-    { image: "klaviyo.svg", service_name: "klaviyo" },
+    // { image: "klaviyo.svg", service_name: "klaviyo" },
     { image: "meta-icon.svg", service_name: "meta" },
-    { image: "omnisend_icon_black.svg", service_name: "omnisend" },
+    // { image: "omnisend_icon_black.svg", service_name: "omnisend" },
     { image: "mailchimp-icon.svg", service_name: "mailchimp" },
-    { image: "sendlane-icon.svg", service_name: "sendlane" },
-    { image: "zapier-icon.svg", service_name: "zapier" },
-    { image: "slack-icon.svg", service_name: "slack" },
-    { image: "webhook-icon.svg", service_name: "webhook" },
+    // { image: "sendlane-icon.svg", service_name: "sendlane" },
+    // { image: "zapier-icon.svg", service_name: "zapier" },
+    // { image: "slack-icon.svg", service_name: "slack" },
+    // { image: "webhook-icon.svg", service_name: "webhook" },
     { image: "hubspot.svg", service_name: "hubspot" },
     { image: "google-ads.svg", service_name: "google_ads" },
     { image: "salesforce-icon.svg", service_name: "sales_force" },
@@ -896,29 +895,29 @@ const UserIntegrationsList = ({
               >
                 {isFirst && (
                   <Box
-                  onClick={(e) => e.stopPropagation()}
-                  sx={{}}
-                >
-                  <HintCard
-                    card={cards.integration}
-                    positionLeft={isNarrow ? 150 : 125}
-                    positionTop={125}
-                    rightSide={false}
-                    isOpenBody={hints.integration.showBody}
-                    toggleClick={() => {
-                      if (hints.search.showBody) {
-                        changeIntegrationHint("search", "showBody", "close")
+                    onClick={(e) => e.stopPropagation()}
+                    sx={{}}
+                  >
+                    <HintCard
+                      card={cards.integration}
+                      positionLeft={isNarrow ? 150 : 125}
+                      positionTop={125}
+                      rightSide={false}
+                      isOpenBody={hints.integration.showBody}
+                      toggleClick={() => {
+                        if (hints.search.showBody) {
+                          changeIntegrationHint("search", "showBody", "close")
+                        }
+                        changeIntegrationHint("integration", "showBody", "toggle")
+                      }}
+                      closeClick={() =>
+                        changeIntegrationHint("integration", "showBody", "close")
                       }
-                      changeIntegrationHint("integration", "showBody", "toggle")
-                    }}
-                    closeClick={() =>
-                      changeIntegrationHint("integration", "showBody", "close")
-                    }
-                  />
-                </Box>
-                  
+                    />
+                  </Box>
+
                 )}
-      
+
                 <IntegrationBox
                   image={`/${integration.image}`}
                   service_name={integration.service_name}
@@ -931,7 +930,7 @@ const UserIntegrationsList = ({
                 />
               </Box>
             );
-          })}   
+          })}
       </Box>
 
       {openModal === "klaviyo" && (

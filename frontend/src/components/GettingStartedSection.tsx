@@ -20,6 +20,7 @@ const GettingStartedSection: React.FC = () => {
   const [selectedDomain, setSelectedDomain] = useState("");
   const [showHintVerify, setShowHintVerify] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<string | null>("");
+  const [installationStatus, setInstallationStatus] = useState<"success" | "failed" | null>(null);
   const [stepData, setStepData] = useState<StepConfig[]>([
     {
       label: "Choose a domain",
@@ -49,6 +50,14 @@ const GettingStartedSection: React.FC = () => {
       ),
     },
   ]);
+
+  const handleInstallStatusChange = (status: "success" | "failed") => {
+    setInstallationStatus(status);
+
+    const updatedStepData = [...stepData];
+    updatedStepData[2].status = "active";
+    setStepData(updatedStepData);
+  };
 
   useEffect(() => {
     const handleRedirect = async () => {
@@ -98,6 +107,7 @@ const GettingStartedSection: React.FC = () => {
   const handleInstallSelected = (
     method: "manual" | "google" | "cms" | null
   ) => {
+    setInstallationStatus(null);
     if (method === null) {
       const newStepData: StepConfig[] = [
         {
@@ -126,12 +136,12 @@ const GettingStartedSection: React.FC = () => {
         },
         {
           label: "Select Installation Method",
-          status: "completed",
+          status: method === "google" ? "active" : "completed",
           icon: defaultStepIcons[1],
         },
         {
           label: "Verify integration",
-          status: "active",
+          status: method === "google" ? "default" : "active",
           icon: defaultStepIcons[2],
         },
       ];
@@ -164,6 +174,7 @@ const GettingStartedSection: React.FC = () => {
             />
             {selectedDomain !== "" && (
               <PixelInstallation
+                onInstallStatusChange={handleInstallStatusChange}
                 onInstallSelected={(method) => {
                   handleInstallSelected(method);
                   setShowHintVerify(true);
@@ -171,10 +182,15 @@ const GettingStartedSection: React.FC = () => {
               />
             )}
 
-            <VerifyPixelIntegration
-              domain={selectedDomain}
-              showHint={showHintVerify}
-            />
+            {selectedDomain !== "" &&
+              selectedMethod !== "" &&
+              selectedMethod !== null &&
+              (selectedMethod === "google" ? installationStatus === "success" : true) && (
+                <VerifyPixelIntegration
+                  domain={selectedDomain}
+                  showHint={showHintVerify}
+                />
+              )}
           </Grid>
           <Grid
             item
@@ -192,6 +208,7 @@ const GettingStartedSection: React.FC = () => {
               />
               {selectedDomain !== "" && (
                 <PixelInstallation
+                  onInstallStatusChange={handleInstallStatusChange}
                   onInstallSelected={(method) => {
                     handleInstallSelected(method);
                     setSelectedMethod(method);
@@ -201,7 +218,8 @@ const GettingStartedSection: React.FC = () => {
               )}
               {selectedDomain !== "" &&
                 selectedMethod !== "" &&
-                selectedMethod !== null && (
+                selectedMethod !== null &&
+                (selectedMethod === "google" ? installationStatus === "success" : true) && (
                   <VerifyPixelIntegration
                     domain={selectedDomain}
                     showHint={showHintVerify}

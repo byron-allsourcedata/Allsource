@@ -15,7 +15,11 @@ import {
   LinearProgress,
   Typography,
   Collapse,
-  Button
+  Button,
+  Icon,
+  SvgIcon,
+  Tooltip,
+  Stack
 } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
@@ -42,6 +46,8 @@ import InsertChartOutlinedIcon from "@mui/icons-material/InsertChartOutlined";
 import FastForward from "@mui/icons-material/FastForward";
 import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
 import { useSidebar } from "@/context/SidebarContext";
+import CustomTooltip from "@/components/customToolTip";
+import { Row } from "./Row";
 
 
 const sidebarStyles = {
@@ -639,6 +645,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               </ListItemIcon>
               <ListItemText primary="Integrations" />
             </ListItem>
+            <PremiumSources />  
           </List>
 
           {!isSourceInstalled && !loading && (
@@ -681,23 +688,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                     </ListItemIcon>
                     <ListItemText primary="Analytics" />
                 </ListItem> */}
-        {/* partners */}
-        {isPartnerAvailable && (
-          <ListItem
-            button
-            onClick={() => handleNavigation("/partners")}
-            sx={
-              isActive("/partners")
-                ? sidebarStyles.activeItem
-                : sidebarStyles.ListItem
-            }
-          >
-            <ListItemIcon sx={sidebarStyles.listItemIcon}>
-              <AccountBoxIcon />
-            </ListItemIcon>
-            <ListItemText primary="Partners" />
-          </ListItem>
-        )}
         {/* <ListItem button onClick={() => handleNavigation('/rules')} sx={isActive('/rules') ? sidebarStyles.activeItem : sidebarStyles.ListItem}>
                     <ListItemIcon sx={sidebarStyles.listItemIcon}>
                         <RuleFolderIcon />
@@ -734,5 +724,50 @@ const Sidebar: React.FC<SidebarProps> = ({
     </Box>
   );
 };
+
+const PremiumSources = () => {
+     return  <ListItem
+        sx={
+          {
+            ...sidebarStyles.ListItem,
+            backgroundColor: "transparent",
+            "&:hover": { 
+              backgroundColor: "transparent !important"
+          }}
+        }
+      >
+        <Tooltip
+          title={
+            <Box sx={{ backgroundColor: '#fff', margin: 0, ml: 0, padding: 0, display: 'flex', flexDirection: 'row', alignItems: 'center', }}>
+              <Typography className='table-data' component='div' sx={{ fontSize: '14px !important', }}>
+                Coming soon...
+              </Typography>
+            </Box>
+          }
+          componentsProps={{
+            tooltip: {
+              sx: {
+                backgroundColor: '#fff',
+                color: '#000',
+                boxShadow: '0px 4px 4px 0px rgba(0, 0, 0, 0.12)',
+                border: ' 0.2px solid rgba(255, 255, 255, 1)',
+                borderRadius: '4px',
+                maxHeight: '100%',
+                maxWidth: '500px',
+                padding: '11px 10px',
+              },
+            },
+          }}
+          placement="right"
+        >
+          <Row gap="0px" alignItems="center">
+            <ListItemIcon sx={{...sidebarStyles.listItemIcon, justifyContent: "center"}}>
+              <Image src="/crown-flat.svg" alt="" width={18} height={18} />
+            </ListItemIcon>
+            <ListItemText primary="Premium Sources" sx={{ color: "#A8A8A8" }}/>
+          </Row>
+        </Tooltip>
+      </ListItem>      
+}
 
 export default Sidebar;

@@ -434,6 +434,7 @@ class SubscriptionService:
         user = self.db.query(User).filter(User.id == user_id).first()
         user.activate_steps_percent=50
         user.leads_credits=plan.leads_credits
+        user.validation_funds=plan.validation_funds
         user.prospect_credits=plan.prospect_credits
         user.current_subscription_id=add_subscription_obj.id
         user.is_book_call_passed=True

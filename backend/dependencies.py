@@ -64,6 +64,7 @@ from services.integrations.million_verifier import MillionVerifierIntegrationsSe
 from services.integrations.slack import SlackService
 from services.leads import LeadsService
 from services.lookalikes import AudienceLookalikesService
+from services.meeting_schedule import MeetingScheduleService
 from services.notification import Notification
 from services.partners import PartnersService
 from services.partners_assets import PartnersAssetService
@@ -80,6 +81,7 @@ from services.sse_events import SseEventsService
 from services.stripe_service import StripeService, get_stripe_payment_url
 from services.subscriptions import SubscriptionService
 from services.suppression import SuppressionService
+from services.user_name import UserNamesService
 from services.users import UsersService
 from services.users_auth import UsersAuth
 from services.users_email_verification import UsersEmailVerificationService
@@ -230,9 +232,10 @@ def get_lookalikes_persistence(db: Session = Depends(get_db)):
 
 
 def get_accounts_service(
-        referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence),
-        user_persistence: UserPersistence = Depends(get_user_persistence_service),
-        partner_persistence: PartnersPersistence = Depends(get_partners_persistence)):
+    user_persistence: UserPersistence,
+    referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence),
+    partner_persistence: PartnersPersistence = Depends(get_partners_persistence)
+):
     return AccountsService(referral_user_persistence=referral_user_persistence, user_persistence=user_persistence,
                            partner_persistence=partner_persistence)
 
@@ -264,7 +267,7 @@ def get_audience_smarts_service(
 
 
 def get_slack_service(
-        user_persistence: UserPersistence = Depends(get_user_persistence_service),
+        user_persistence: UserPersistence,
         lead_persistence: LeadsPersistence = Depends(get_leads_persistence),
         user_integrations_persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
         sync_persistence: IntegrationsUserSyncPersistence = Depends(get_integrations_user_sync_persistence),
@@ -279,9 +282,10 @@ def get_stripe_service():
 
 
 def get_referral_service(
+    user_persistence: UserPersistence,
         referral_persistence_discount_code: ReferralDiscountCodesPersistence = Depends(
             get_referral_persistence_service),
-        user_persistence: UserPersistence = Depends(get_user_persistence_service),
+
         stripe_service: StripeService = Depends(get_stripe_service),
         referral_payouts_persistence: ReferralPayoutsPersistence = Depends(get_referral_payouts_persistence),
         referral_user_persistence: ReferralUserPersistence = Depends(get_referral_user_persistence)):
@@ -292,8 +296,7 @@ def get_referral_service(
 
 
 def check_user_authentication(Authorization: Annotated[str, Header()],
-                              user_persistence_service: UserPersistence = Depends(
-                                  get_user_persistence_service)) -> Token:
+                              user_persistence_service: UserPersistence) -> Token:
     user_data = parse_jwt_data(Authorization)
     user = user_persistence_service.get_user_by_id(user_data.id)
     if not user:
@@ -348,8 +351,10 @@ def check_pixel_install_domain(domain: UserDomains = Depends(check_domain)):
     return domain
 
 
-def get_subscription_service(db: Session = Depends(get_db),
-                             user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
+def get_subscription_service(
+    user_persistence_service: UserPersistence,
+    db: Session = Depends(get_db),
+
                              plans_persistence: PlansPersistence = Depends(get_plans_persistence),
                              referral_service: ReferralService = Depends(get_referral_service),
                              partners_persistence: PartnersPersistence = Depends(get_partners_persistence)):
@@ -367,14 +372,18 @@ def get_partners_assets_service(
     )
 
 
-def get_payments_plans_service(db: Session = Depends(get_db),
+def get_payments_plans_service(
+    user_persistence_service: UserPersistence,
+    db: Session = Depends(get_db),
                                subscription_service: SubscriptionService = Depends(get_subscription_service),
-                               user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
+                               ):
     return PaymentsPlans(db=db, subscription_service=subscription_service,
                          user_persistence_service=user_persistence_service)
 
 
-def get_integration_service(db: Session = Depends(get_db),
+def get_integration_service(
+    user_persistence: UserPersistence,
+    db: Session = Depends(get_db),
                             audience_persistence=Depends(get_audience_persistence),
                             integration_presistence: IntegrationsPresistence = Depends(
                                 get_user_integrations_presistence),
@@ -386,7 +395,6 @@ def get_integration_service(db: Session = Depends(get_db),
                             domain_persistence=Depends(get_user_domain_persistence),
                             suppression_persitence: IntegrationsSuppressionPersistence = Depends(
                                 get_suppression_persistence),
-                            user_persistence: UserPersistence = Depends(get_user_persistence_service),
                             epi_persistence: ExternalAppsInstallationsPersistence = Depends(get_epi_persistence),
                             million_verifier_integrations: MillionVerifierIntegrationsService = Depends(
                                 get_million_verifier_service)
@@ -405,8 +413,9 @@ def get_integration_service(db: Session = Depends(get_db),
 
 
 def get_partners_service(
-        partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
-        user_persistence: UserPersistence = Depends(get_user_persistence_service),
+    user_persistence: UserPersistence,
+    partners_persistence: PartnersPersistence = Depends(get_partners_persistence),
+
         send_grid_persistence: SendgridPersistence = Depends(get_send_grid_persistence_service),
         plans_persistence: PlansPersistence = Depends(get_plans_persistence)):
     return PartnersService(
@@ -419,9 +428,10 @@ def get_partners_service(
 
 def get_users_auth_service(
     crm: CrmService,
+    user_persistence_service: UserPersistence,
+    user_names: UserNamesService,
     db: Session = Depends(get_db),
     payments_plans: PaymentsPlans = Depends(get_payments_plans_service),
-    user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
     send_grid_persistence_service: SendgridPersistence = Depends(get_send_grid_persistence_service),
     plans_persistence: PlansPersistence = Depends(get_plans_persistence),
     integration_service: IntegrationService = Depends(get_integration_service),
@@ -437,13 +447,16 @@ def get_users_auth_service(
                      plans_persistence=plans_persistence, integration_service=integration_service,
                      partners_service=partners_service, admin_persistence=admin_persistence,
                      domain_persistence=domain_persistence, referral_persistence_service=referral_persistence_service,
-                    crm=crm
-                     )
+        crm=crm,
+        user_names=user_names
+    )
 
 
-def get_admin_customers_service(db: Session = Depends(get_db),
+def get_admin_customers_service(
+    user_persistence: UserPersistence,
+    db: Session = Depends(get_db),
                                 subscription_service: SubscriptionService = Depends(get_subscription_service),
-                                user_persistence: UserPersistence = Depends(get_user_persistence_service),
+
                                 users_auth_service: UsersAuth = Depends(get_users_auth_service),
                                 plans_presistence: PlansPersistence = Depends(get_plans_persistence),
                                 send_grid_persistence: SendgridPersistence = Depends(get_send_grid_persistence_service),
@@ -481,8 +494,7 @@ def parse_jwt_data(Authorization: Annotated[str, Header()]) -> Token:
 
 
 def check_user_authorization(Authorization: Annotated[str, Header()],
-                             user_persistence_service: UserPersistence = Depends(
-                                 get_user_persistence_service), users_auth_service: UsersAuth = Depends(
+                             user_persistence_service: UserPersistence, users_auth_service: UsersAuth = Depends(
             get_users_auth_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     auth_status = get_user_authorization_status(user, users_auth_service)
@@ -502,8 +514,7 @@ def check_user_authorization(Authorization: Annotated[str, Header()],
 
 
 def check_user_authorization_without_pixel(Authorization: Annotated[str, Header()],
-                                           user_persistence_service: UserPersistence = Depends(
-                                               get_user_persistence_service),
+                                           user_persistence_service: UserPersistence,
                                            users_auth_service: UsersAuth = Depends(
                                                get_users_auth_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
@@ -524,8 +535,7 @@ def check_user_authorization_without_pixel(Authorization: Annotated[str, Header(
 
 
 def check_user_setting_access(Authorization: Annotated[str, Header()],
-                              user_persistence_service: UserPersistence = Depends(
-                                  get_user_persistence_service),
+                              user_persistence_service: UserPersistence,
                               users_auth_service: UsersAuth = Depends(
                                   get_users_auth_service)) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
@@ -539,8 +549,8 @@ def check_user_setting_access(Authorization: Annotated[str, Header()],
 
 
 def check_user_partner(Authorization: Annotated[str, Header()],
-                       user_persistence_service: UserPersistence = Depends(
-                           get_user_persistence_service)) -> Token:
+                       user_persistence_service: UserPersistence
+) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     if not user['is_partner']:
         raise HTTPException(
@@ -565,16 +575,18 @@ def check_team_access_standard_user(user: dict = Depends(check_user_authenticati
     return user
 
 
-def get_users_service(user=Depends(check_user_authentication),
-                      user_persistence: UserPersistence = Depends(get_user_persistence_service),
-                      plan_persistence: PlansPersistence = Depends(get_plans_persistence),
-                      subscription_service: SubscriptionService = Depends(get_subscription_service),
-                      domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence),
-                      leads_persistence: LeadsPersistence = Depends(get_lead_orders_persistence)
-                      ):
+def get_users_service(
+    user_persistence: UserPersistence,
+    meeting_schedule: MeetingScheduleService,
+    user=Depends(check_user_authentication),
+    plan_persistence: PlansPersistence = Depends(get_plans_persistence),
+    subscription_service: SubscriptionService = Depends(get_subscription_service),
+    domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence),
+    leads_persistence: LeadsPersistence = Depends(get_lead_orders_persistence)
+):
     return UsersService(user=user, user_persistence_service=user_persistence, plan_persistence=plan_persistence,
                         subscription_service=subscription_service, domain_persistence=domain_persistence,
-                        leads_persistence=leads_persistence)
+                        leads_persistence=leads_persistence, meeting_schedule=meeting_schedule)
 
 
 def get_notification_service(notification_persistence: NotificationPersistence = Depends(get_notification_persistence),
@@ -608,12 +620,14 @@ def get_audience_service(audience_persistence_service: AudiencePersistence = Dep
     return AudienceService(audience_persistence_service=audience_persistence_service)
 
 
-def get_sse_events_service(user_persistence_service: UserPersistence = Depends(get_user_persistence_service)):
+def get_sse_events_service(user_persistence_service: UserPersistence):
     return SseEventsService(user_persistence_service=user_persistence_service)
 
 
-def get_dashboard_service(domain: UserDomains = Depends(check_pixel_install_domain),
-                          user_persistence: UserPersistence = Depends(get_user_persistence_service),
+def get_dashboard_service(
+    user_persistence: UserPersistence,
+    domain: UserDomains = Depends(check_pixel_install_domain),
+
                           leads_persistence_service: LeadsPersistence = Depends(get_leads_persistence)):
     return DashboardService(domain=domain, user_persistence=user_persistence,
                             leads_persistence_service=leads_persistence_service)
@@ -648,14 +662,14 @@ def get_pixel_installation_service(db: Session = Depends(get_db),
     return PixelInstallationService(db=db, send_grid_persistence_service=send_grid_persistence_service)
 
 
-def get_settings_service(settings_persistence: SettingsPersistence = Depends(
+def get_settings_service(
+    user_persistence: UserPersistence,
+    settings_persistence: SettingsPersistence = Depends(
     get_settings_persistence),
         plan_persistence: PlansPersistence = Depends(
             get_plans_persistence
         ),
-        user_persistence: UserPersistence = Depends(
-            get_user_persistence_service
-        ),
+
         send_grid_persistence: SendgridPersistence = Depends(
             get_send_grid_persistence_service
         )
@@ -708,17 +722,17 @@ def get_company_info_service(db: Session = Depends(get_db), user=Depends(check_u
                               partners_persistence=partners_persistence)
 
 
-def get_users_email_verification_service(user=Depends(check_user_authentication),
-                                         user_persistence_service: UserPersistence = Depends(
-                                             get_user_persistence_service),
-                                         sendgrid_persistence_service: SendgridPersistence = Depends(
+def get_users_email_verification_service(
+    user_persistence_service: UserPersistence,
+    user=Depends(check_user_authentication),
+    sendgrid_persistence_service: SendgridPersistence = Depends(
                                              get_send_grid_persistence_service)):
     return UsersEmailVerificationService(user=user, user_persistence_service=user_persistence_service,
                                          send_grid_persistence_service=sendgrid_persistence_service)
 
 
 def check_user_admin(Authorization: Annotated[str, Header()],
-                     user_persistence_service: UserPersistence = Depends(get_user_persistence_service),
+                     user_persistence_service: UserPersistence,
                      ) -> Token:
     user = check_user_authentication(Authorization, user_persistence_service)
     if 'admin' not in user['role']:

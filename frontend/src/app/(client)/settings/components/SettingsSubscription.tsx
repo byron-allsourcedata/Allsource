@@ -15,6 +15,9 @@ import { plans as defaultPlans, Plan } from './plans';
 import { fetchUserData } from '@/services/meService';
 import { BookACallPopup } from '../../components/BookACallPopup';
 
+import { useBookingUrl } from '@/services/booking';
+
+
 const subscriptionStyles = {
     title: {
         whiteSpace: 'nowrap',
@@ -243,8 +246,7 @@ export const SettingsSubscription: React.FC = () => {
         }
     };
 
-    const calendlyPopupUrl = () => getCalendlyPopupUrl(utmParams);
-
+    const meetingUrl = useBookingUrl(axiosInstance);
 
     const handleChoosePlan = async (alias: string) => {
         let path = hasActivePlan
@@ -577,7 +579,7 @@ export const SettingsSubscription: React.FC = () => {
                         }}>
                             <Box display="flex" justifyContent="flex-end" mt={2}>
                                 <Link
-                                    href={calendlyPopupUrl()}
+                                    href={meetingUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={handleCustomPlanPopupClose}

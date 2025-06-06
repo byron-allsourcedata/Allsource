@@ -110,13 +110,13 @@ const ValidationsTable = ({ validations }: {validations: ValidationHistoryRespon
                         </Box>
                         
                         <Typography sx={{ flex: 1 }} className="black-table-header">
-                            {validation.count_submited}
+                            {validation.count_submited.toLocaleString('en-US')}
                         </Typography>
                         <Typography sx={{ flex: 1 }} className="black-table-header">
-                            {validation.count_validated}
+                            {validation.count_validated.toLocaleString('en-US')}
                         </Typography>
                         <Typography sx={{ flex: 1 }} className="black-table-header">
-                            {validation.count_cost} Credits
+                            {validation.count_cost.toLocaleString('en-US')} Funds
                         </Typography>
                     </Box>
                 ))}
@@ -139,6 +139,10 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({ open, onClose, i
             const response = await axiosInstance.get(`/audience-smarts/${id}/validation-history`);
             if (response.status === 200 && smartAudience) {
               const validationsResponse = response.data
+              const totalCost = validationsResponse.reduce((sum: number, validation: ValidationHistoryResponse) => {
+                const key = Object.keys(validation)[0];
+                return sum + (validation[key]?.count_cost || 0);
+              }, 0);
               const lastValidation = validationsResponse.at(-1);
               const lastValidationKey = lastValidation ? Object.keys(lastValidation)[0] : undefined;
               const countValidated = lastValidationKey
@@ -149,7 +153,7 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({ open, onClose, i
                 "total": {
                   count_submited: smartAudience[2].value, 
                   count_validated: countValidated, 
-                  count_cost: 0
+                  count_cost: totalCost
                 } 
               }])
             }
@@ -252,7 +256,7 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({ open, onClose, i
                 <Box sx={{ width: "100%", display: 'flex', alignItems: "center", flexDirection: "column", justifyContent: "space-between", py: "20px", px: "24px", border: "1px solid rgba(240, 240, 240, 1)", boxShadow: "rgba(0, 0, 0, 0.2)"}}>
                     {smartAudience?.map((el: any, index: number) => {
                         const isDateRow = index === 0;
-                        const formattedValue = isDateRow ? dayjs(el.value).format('MM/DD/YYYY') : el.value;
+                        const formattedValue = isDateRow ? dayjs(el.value).format('MM/DD/YYYY') : el.value?.toLocaleString('en-US');
 
                         return ( 
                             <Box key={index} sx={{ 

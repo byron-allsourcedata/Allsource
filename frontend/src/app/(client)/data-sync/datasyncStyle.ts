@@ -70,7 +70,7 @@ export const datasyncStyle: { [key: string]: SxProps<Theme> } = {
     textAlign: "left",
     whiteSpace: "nowrap",
     color: "rgba(95, 99, 104, 1)",
-    position: "relative", // Для работы с псевдоэлементом ::after
+    position: "relative",
     "&::after": {
       content: '""',
       display: "block",

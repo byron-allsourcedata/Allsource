@@ -1,9 +1,12 @@
 import logging
 import re
 import json
+from uuid import UUID
+
 from pydantic import EmailStr
 
 from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult, DataSyncType, IntegrationLimit
+from models import FiveXFiveUser
 from persistence.domains import UserDomainsPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
@@ -19,7 +22,7 @@ from typing import List, Any
 from schemas.integrations.integrations import DataMap
 from schemas.integrations.integrations import IntegrationCredentials
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
-from uuid import UUID
+from utils import get_valid_email, get_valid_location, get_valid_phone
 
 
 class HubspotIntegrationsService:
@@ -124,14 +127,16 @@ class HubspotIntegrationsService:
             'status': IntegrationsStatus.SUCCESS.value
         }
 
-    async def create_sync(self, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = None,
+    async def create_sync(self, domain_id: int ,created_by: str, user: dict, data_map: List[DataMap] = None,
                           leads_type: str = None):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+        credentials = self.get_credentials(user_id=user.get('id'), domain_id=domain_id)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
-            'domain_id': domain_id,
+            'sent_contacts': -1,
+            'sync_type': DataSyncType.CONTACT.value,
             'leads_type': leads_type,
             'data_map': data_map,
+            'domain_id': domain_id,
             'created_by': created_by,
         })
         return sync
@@ -162,10 +167,24 @@ class HubspotIntegrationsService:
         return sync
 
     async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync,
-                                enrichment_users: List[EnrichmentUser], target_schema: str, validations: dict):
+                                enrichment_users: List[EnrichmentUser], target_schema: str = None, validations: dict = {}):
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__mapped_profile(enrichment_user, target_schema, validations, integration_data_sync.data_map)
+            if profile:
+                profiles.append(profile)
+
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        list_response = self.__create_profiles(user_integration.access_token, profiles)
+        return list_response
+
+    async def process_data_sync_lead(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync,
+                                lead_users: List[FiveXFiveUser]):
+        profiles = []
+        for lead_user in lead_users:
+            profile = self.__mapped_profile_lead(lead_user, integration_data_sync.data_map)
             if profile:
                 profiles.append(profile)
 
@@ -287,3 +306,29 @@ class HubspotIntegrationsService:
                 filler(result, context)
 
         return result
+
+    def __mapped_profile_lead(self, lead: FiveXFiveUser, data_map: list) -> \
+            dict[str, Any] | None:
+        first_email = get_valid_email(lead, self.million_verifier_integrations)
+
+        if first_email in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return None
+
+        first_phone = get_valid_phone(lead)
+        location = get_valid_location(lead)
+
+        return {
+            'email': first_email,
+            'phone': first_phone,
+            'address': location[0],
+            'firstname': getattr(lead, 'first_name', None),
+            'lastname': getattr(lead, 'last_name', None),
+            'company': getattr(lead, 'company_name', None),
+            'website': getattr(lead, 'company_domain', None),
+            'jobtitle': getattr(lead, 'job_title', None),
+            'industry': getattr(lead, 'primary_industry', None),
+            'annualrevenue': getattr(lead, 'company_revenue', None),
+            'hs_linkedin_url': getattr(lead, 'linkedin_url', None),
+            'gender': getattr(lead, 'gender', None)
+        }

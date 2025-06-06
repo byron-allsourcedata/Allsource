@@ -104,7 +104,8 @@ const Users: React.FC = () => {
 
     return (
         <>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', pr: 2, width: "100%",
+        overflowX: "scroll",   }}>
                 <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'start', justifyContent: 'space-between' }}>
                     <Typography variant="h4" component="h1" sx={usersStyle.title}>
                         Users

@@ -27,3 +27,6 @@ export { default as SpeedIcon } from'@mui/icons-material/Speed';
 export { default as MovingIcon } from'@mui/icons-material/Moving';
 export { default as DeleteIcon } from'@mui/icons-material/Delete';
 export { default as DeleteOutlinedIcon } from'@mui/icons-material/DeleteOutlined';
+export { default as SearchIcon } from'@mui/icons-material/Search';
+export { default as ArrowDownwardIcon } from'@mui/icons-material/ArrowDownward';
+export { default as ArrowUpwardIcon } from'@mui/icons-material/ArrowUpward';
