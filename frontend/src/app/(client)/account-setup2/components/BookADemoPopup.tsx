@@ -43,8 +43,8 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
       const meData = JSON.parse(meItem);
       setPrefillData({
         email: meData.email,
-        first_name: meData.full_name,
-        last_name: "",
+        firstname: meData.full_name,
+        lastname: "",
       });
     }
   }, []);
