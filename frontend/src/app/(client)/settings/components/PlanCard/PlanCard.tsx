@@ -5,7 +5,6 @@ import { PlanProperties } from "./Properties";
 import { CardGiftcard, HistoryToggleOff, Update } from "@mui/icons-material";
 import { Plan } from "../plans";
 import { Row } from "@/components/Row";
-import { PlanButton } from "./PlanButton";
 import { CustomButton } from "@/components/ui";
 
 const PlanTitle = styled(Typography)`

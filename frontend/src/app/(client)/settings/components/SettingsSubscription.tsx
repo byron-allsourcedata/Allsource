@@ -12,8 +12,8 @@ import { showErrorToast, showToast } from '../../../../components/ToastNotificat
 import axios from 'axios';
 import { getCalendlyPopupUrl } from '@/services/booking';
 import { plans as defaultPlans, Plan } from './plans';
-import { display } from '@mui/system';
 import { fetchUserData } from '@/services/meService';
+import { BookACallPopup } from '../../components/BookACallPopup';
 
 const subscriptionStyles = {
     title: {
@@ -116,7 +116,11 @@ export const SettingsSubscription: React.FC = () => {
     const [utmParams, setUtmParams] = useState<string | null>(null);
     const [activePlan, setActivePlan] = useState<any>(null);
     const [isTrial, setIsTrial] = useState<boolean | null>(null);
+    const [popupOpen, setPopupOpen] = useState(false);
 
+    const handleOpenPopup = () => {
+        setPopupOpen(true);
+    };
     const sourcePlatform = useMemo(() => {
         if (typeof window !== 'undefined') {
             const savedMe = sessionStorage.getItem('me');
@@ -479,7 +483,7 @@ export const SettingsSubscription: React.FC = () => {
                                         tabValue={tabValue}
                                         isRecommended={plan.isRecommended}
                                         buttonProps={{
-                                            onChoose: handleChoosePlan,
+                                            onChoose: handleOpenPopup,
                                             text: buttonText,
                                             disabled: disabled,
                                         }}
@@ -867,9 +871,13 @@ export const SettingsSubscription: React.FC = () => {
                         </Box>
                     </Box>
                 </Box>
-
             </Drawer>
-
+            {popupOpen && (
+                <BookACallPopup
+                    open={popupOpen}
+                    handleClose={() => setPopupOpen(false)}
+                />
+            )}
         </Box>
     );
 };
