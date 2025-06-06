@@ -49,7 +49,7 @@ def setup_logging(level):
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-async def process_rmq_message(message: IncomingMessage, db_session: Session, channel: Channel, userPersistence: UserPersistence):
+async def process_rmq_message(message: IncomingMessage, db_session: Session, channel: Channel, user_persistence: UserPersistence):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -144,7 +144,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                     continue
         
         if write_off_funds:
-            userPersistence.deduct_validation_funds(user_id, write_off_funds)
+            user_persistence.deduct_validation_funds(user_id, write_off_funds)
             # if not resultOperation:
             #     logging.error("Not enough validation funds")
             #     await message.reject(requeue=True)
@@ -287,14 +287,14 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
-        userPersistence = UserPersistence(db_session)
+        user_persistence = UserPersistence(db_session)
 
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API,
             durable=True
         )
         await queue.consume(
-                functools.partial(process_rmq_message, channel=channel, db_session=db_session, userPersistence=userPersistence)
+                functools.partial(process_rmq_message, channel=channel, db_session=db_session, userPersistence=user_persistence)
             )
 
         await asyncio.Future()

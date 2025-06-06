@@ -60,7 +60,7 @@ async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
     channel: Channel,
-    userPersistence: UserPersistence
+    user_persistence: UserPersistence
 ):
     try:
         body = json.loads(message.body)
@@ -133,7 +133,7 @@ async def process_rmq_message(
         logging.info(f"Success ids: len{len(success_ids)}")
 
         if write_off_funds:
-            userPersistence.deduct_validation_funds(user_id, write_off_funds)
+            user_persistence.deduct_validation_funds(user_id, write_off_funds)
             # if not resultOperation:
             #     logging.error("Not enough validation funds")
             #     await message.reject(requeue=True)
@@ -251,14 +251,14 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
-        userPersistence = UserPersistence(db_session)
+        user_persistence = UserPersistence(db_session)
 
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
             durable=True,
         )
         await queue.consume(
-                functools.partial(process_rmq_message, channel=channel, db_session=db_session, userPersistence=userPersistence)
+                functools.partial(process_rmq_message, channel=channel, db_session=db_session, user_persistence=user_persistence)
             )
 
         await asyncio.Future()

@@ -39,7 +39,7 @@ async def process_rmq_message(
     db_session: Session,
     channel: Channel,
     million_verifier_service: MillionVerifierIntegrationsService,
-    userPersistence: UserPersistence
+    user_persistence: UserPersistence
 ):
     try:
         body = json.loads(message.body)
@@ -93,7 +93,7 @@ async def process_rmq_message(
                         )
                     )
         if write_off_funds:
-            userPersistence.deduct_validation_funds(user_id, write_off_funds)
+            user_persistence.deduct_validation_funds(user_id, write_off_funds)
             # if not resultOperation:
             #     logging.error("Not enough validation funds")
             #     await message.reject(requeue=True)
@@ -214,7 +214,7 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
-        userPersistence = UserPersistence(db_session)
+        user_persistence = UserPersistence(db_session)
 
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_EMAIL_API,
@@ -222,7 +222,7 @@ async def main():
         )
         million_verifier_service = MillionVerifierIntegrationsService(million_verifier_persistence=MillionVerifierPersistence(db_session))
         await queue.consume(
-                functools.partial(process_rmq_message, channel=channel, db_session=db_session, million_verifier_service=million_verifier_service, userPersistence=userPersistence),
+                functools.partial(process_rmq_message, channel=channel, db_session=db_session, million_verifier_service=million_verifier_service, user_persistence=user_persistence),
             )
 
         await asyncio.Future()
