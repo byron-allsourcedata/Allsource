@@ -46,6 +46,7 @@ async def process_rmq_message(
         batch = body.get("batch", [])
         validation_type = body.get("validation_type")
         count_persons_before_validation = body.get("count_persons_before_validation")
+        validation_cost = body.get("validation_cost")
         verified_emails = []
         write_off_funds = 0 
         logging.info(f"aud_smart_id: {aud_smart_id}")
@@ -58,7 +59,7 @@ async def process_rmq_message(
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
                 
-                write_off_funds += 1
+                write_off_funds += validation_cost
 
                 if not million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
@@ -77,7 +78,7 @@ async def process_rmq_message(
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
 
-                write_off_funds += 1
+                write_off_funds += validation_cost
                 
                 if not million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
@@ -91,7 +92,7 @@ async def process_rmq_message(
                     )
         if write_off_funds:
             user = db_session.query(Users).filter(Users.id == user_id).first()
-            user.validation_funds = user.validation_funds - write_off_funds
+            user.validation_funds = float(user.validation_funds) - write_off_funds
             db_session.flush()
             
         success_ids = [

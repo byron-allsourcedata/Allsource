@@ -67,6 +67,7 @@ async def process_rmq_message(
         batch = body.get("batch", [])
         count_persons_before_validation = body.get("count_persons_before_validation")
         validation_type = body.get("validation_type")
+        validation_cost = body.get("validation_cost")
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
@@ -83,7 +84,7 @@ async def process_rmq_message(
                 failed_ids.append(pid)
                 continue
             
-            write_off_funds += 1
+            write_off_funds += validation_cost
             ev = (
                 db_session.query(AudienceLinkedinVerification)
                 .filter_by(linkedin_url=url)
@@ -131,7 +132,7 @@ async def process_rmq_message(
 
         if write_off_funds:
             user = db_session.query(Users).filter(Users.id == user_id).first()
-            user.validation_funds = user.validation_funds - write_off_funds
+            user.validation_funds = float(user.validation_funds) - write_off_funds
             db_session.flush()
         
         if verifications:

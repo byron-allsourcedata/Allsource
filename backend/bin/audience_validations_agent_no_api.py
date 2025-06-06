@@ -100,6 +100,7 @@ async def aud_validation_agent(
         recency_personal_days = body.get("recency_personal_days", 0)
         recency_business_days = body.get("recency_business_days", 0)
         validation_type = body.get("validation_type")
+        validation_cost = body.get("validation_cost")
         write_off_funds = 0 
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")

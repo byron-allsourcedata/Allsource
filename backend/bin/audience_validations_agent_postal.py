@@ -79,6 +79,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         batch = message_body.get("batch")
         count_persons_before_validation = message_body.get("count_persons_before_validation")
         validation_type = message_body.get("validation_type")
+        validation_cost = message_body.get("validation_cost")
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         failed_ids = []
@@ -97,7 +98,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                 failed_ids.append(person_id)
                 continue
 
-            write_off_funds += 1
+            write_off_funds += validation_cost
             
             existing_verification = db_session.query(AudiencePostalVerification).filter(AudiencePostalVerification.postal_code == postal_code).first()
 
@@ -157,7 +158,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
 
         if write_off_funds:
             user = db_session.query(Users).filter(Users.id == user_id).first()
-            user.validation_funds = user.validation_funds - write_off_funds
+            user.validation_funds = float(user.validation_funds) - write_off_funds
             db_session.flush()
         
         if verifications:

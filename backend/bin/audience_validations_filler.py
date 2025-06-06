@@ -215,6 +215,23 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
     
     return enrichment_users
 
+def get_validation_cost(db_session: Session, column_name: str):
+    validation_cost = (
+        db_session.query(AudienceSetting.value)
+        .filter(AudienceSetting.alias == AudienceSettingAlias.VALIDATION_COST.value)
+        .first()
+    )
+    
+    if not validation_cost:
+        return 0
+    
+    cost_dict = json.loads(validation_cost.value)
+    
+    if column_name in cost_dict:
+        return cost_dict[column_name]
+    
+    return 0
+
 def validation_processed(db_session: Session, ids: List[int]):
     stmt = (
         update(AudienceSmartPerson)
@@ -306,7 +323,10 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, ch
                                             break
                                         
                                 enrichment_users = get_enrichment_users(db_session, validation_type, aud_smart_id, column_name)
+                                validation_cost = get_validation_cost(db_session, value)
+
                                 logging.info(f"validation by {column_name}")
+                                logging.info(f"validation_cost {validation_cost}")
                                 logging.info(f"count person which will processed validation {len(enrichment_users)}")
 
                                 if not enrichment_users:
@@ -328,6 +348,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, ch
                                         'user_id': user_id,
                                         'batch': serialized_batch,
                                         'validation_type': column_name,
+                                        'validation_cost': validation_cost,
                                         'count_persons_before_validation': len(enrichment_users),
                                     }
                                     queue_map = {
