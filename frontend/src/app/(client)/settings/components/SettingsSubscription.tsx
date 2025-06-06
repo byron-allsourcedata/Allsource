@@ -41,6 +41,7 @@ const subscriptionStyles = {
     },
     plantabHeading: {
         padding: '10px 32px',
+        color: "rgba(32, 33, 36, 1)",
         textTransform: 'none',
         fontWeight: '400 !important',
         '&.Mui-selected': {
@@ -62,7 +63,7 @@ const subscriptionStyles = {
         }
     },
     saveHeading: {
-        background: '#EDEDF7',
+        background: 'rgba(235, 245, 255, 1)',
         padding: '5px 12px',
         borderRadius: '4px',
         fontSize: '14px !important',
@@ -400,7 +401,7 @@ export const SettingsSubscription: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                         {/* Tabs for Monthly and Yearly */}
                         <Tabs value={tabValue} onChange={handleTabChange} sx={{
-                            border: '1px solid #808080',
+                            border: '1px solid rgba(237, 237, 237, 1)',
                             borderRadius: '4px',
                             '& .MuiTabs-indicator': {
                                 background: 'none'
@@ -419,8 +420,8 @@ export const SettingsSubscription: React.FC = () => {
                                                 fontSize: '18px !important'
                                             }
                                         }}>Yearly</Typography>
-                                        <Typography variant="body2" sx={subscriptionStyles.saveHeading} className='paragraph active-save-color' color="primary">
-                                            Save 20%
+                                        <Typography variant="body2" sx={subscriptionStyles.saveHeading} className='paragraph' color="primary">
+                                            Save 33%
                                         </Typography>
                                     </Box>
                                 }
@@ -489,224 +490,6 @@ export const SettingsSubscription: React.FC = () => {
                     Custom Plans
                 </Button>
             )}
-            <Divider sx={{
-                borderColor: '#e4e4e4',
-                width: '100%',
-                '@media (max-width: 600px)': {
-                    marginRight: '-8px'
-                }
-            }} />
-
-            {/* Prospect Credits Section */}
-            <Box sx={{
-                marginTop: 2, marginBottom: '24px', borderRadius: '10px',
-                boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.10)',
-                border: '1px solid #e4e4e4',
-                padding: 3,
-            }}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6" className='first-sub-title' sx={{
-                        marginBottom: '8px',
-                        opacity: 0.6
-                    }}>
-                        Prospect Credits
-                    </Typography>
-                    <Chip
-                        label='Coming soon'
-                        className='second-sub-title'
-                        sx={{ backgroundColor: 'rgba(255, 233, 100, 1)', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important', }}>
-                    </Chip>
-                </Box>
-                <Typography variant="body1" className='paragraph' sx={{
-                    marginBottom: 3,
-                    opacity: 0.6
-                }}>
-                    Choose the number of contacts credits for your team
-                </Typography>
-
-                <Box sx={{ marginBottom: 3, opacity: 0.6 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, opacity: 0.6 }}>
-                        <Typography variant="body1" component="span" className='third-sub-title' sx={{
-                            fontSize: '20px !important',
-                            color: '#4a4a4a !important'
-                        }}>
-                            <Typography component="span" className='heading-text' sx={{
-                                fontWeight: '700 !important',
-                                paddingRight: '8px'
-                            }}>50K</Typography>
-                            Credits/month</Typography>
-                        <Typography variant="body1" component="span" className='third-sub-title' sx={{
-                            fontSize: '18px !important',
-                            color: '#4a4a4a !important'
-                        }}>
-                            <Typography component="span" className='third-sub-title' sx={{
-                                fontWeight: '700 !important',
-                                fontSize: '18px !important'
-                            }}>$211/</Typography>
-                            month</Typography>
-                    </Box>
-
-                    <Box sx={{ position: 'relative', width: '100%', marginBottom: '20px', }}>
-                        {/* Custom labels above the slider */}
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                position: 'absolute',
-                                width: '100%',
-                                bottom: '-16px',
-                                left: 0,
-                                right: 0,
-
-                            }}
-                        >
-                            {marks.map((mark) => (
-                                <Typography
-                                    key={mark.value}
-                                    sx={{
-                                        textAlign: mark.value === 0 ? 'left' : mark.value === 50000000 ? 'right' : 'center',
-                                        width: 'fit-content', // Allow flexible label width
-                                        fontSize: '12px',
-                                    }}
-                                >
-                                    {mark.label}
-                                </Typography>
-                            ))}
-                        </Box>
-
-                        {/* Slider */}
-                        <Slider
-                            value={credits}
-                            onChange={handleChangeCredits}
-                            min={0}
-                            disabled={true}
-                            max={50000000}
-                            step={1000}
-                            valueLabelDisplay="off" // Remove the default label
-                            aria-labelledby="credits-slider"
-                            sx={{
-                                '& .MuiSlider-rail': {
-                                    color: '#dbdbdb',
-                                    height: 6,
-                                },
-                                '& .MuiSlider-track': {
-                                    color: '#6EC125',
-                                    height: 6,
-                                },
-                                '& .MuiSlider-thumb': {
-                                    color: '#bebebe',
-                                    width: '16px',
-                                    height: '16px'
-                                },
-                            }}
-                        />
-                    </Box>
-
-
-                </Box>
-                <Box sx={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    gap: '26px',
-                    paddingTop: '24px',
-                    '@media (max-width: 600px)': {
-                        flexWrap: 'wrap',
-                        justifyContent: 'center'
-                    }
-                }}>
-                    <Box sx={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        background: '#fafaf6',
-                        border: '1px solid #bdbdbd',
-                        borderRadius: '4px',
-                        padding: '18px 24px',
-                        width: '100%',
-                        opacity: 0.6
-                    }}>
-                        <Box>
-                            <Typography variant="h6" className='third-sub-title' sx={{
-                                fontWeight: '600 !important',
-                                lineHeight: '16px !important',
-                                color: '#4a4a4a !important',
-                                opacity: 0.6
-                            }}>
-                                Summary
-                            </Typography>
-                            <Typography variant="body1" component="span" className='first-sub-title' sx={{
-                                fontWeight: '700 !important',
-                                opacity: 0.6
-                            }}>
-                                {selectedPlan?.name || 'None'} plan+
-                                {' '}{credits} prospect contacts credits.
-
-                            </Typography>
-
-                        </Box>
-                        <Box>
-                            <Typography variant="h6" component="span" className='heading-text' sx={{
-                                fontSize: '40px !important',
-                                fontWeight: '700 !important',
-                                opacity: 0.6
-                            }}>
-                                ${selectedPlan?.price || '0'}
-                                <Typography component='span' className='paragraph' sx={{
-                                    paddingLeft: '6px'
-                                }}>/month</Typography>
-                            </Typography>
-                        </Box>
-                    </Box>
-                    <Box>
-                        <Button variant="contained" className='hyperlink-red' color="primary" disabled={true} onClick={handleBuyCredits}
-                            sx={{
-                                background: 'rgba(56, 152, 252, 1) !important',
-                                borderRadius: '4px',
-                                border: '1px solid rgba(56, 152, 252, 1)',
-                                padding: '9px 24px',
-                                color: '#fff !important',
-                                textTransform: 'none',
-                                whiteSpace: 'nowrap',
-                                opacity: 0.6
-
-                            }}
-                        >
-                            Buy Credits
-                        </Button>
-                    </Box>
-
-                </Box>
-            </Box>
-
-            <Divider sx={{
-                borderColor: '#e4e4e4',
-                width: '100%',
-                '@media (max-width: 600px)': {
-                    paddingRight: '8px'
-                }
-            }} />
-
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                marginTop: '16px',
-                '@media (max-width: 600px)': {
-                    justifyContent: 'center'
-                }
-            }}>
-                <Button variant="contained" className='hyperlink-red' color="primary"
-                    onClick={handleCancelSubscriptionPlanPopupOpen}
-                    sx={{
-                        background: 'none !important',
-                        borderRadius: '4px',
-                        border: 'none',
-                        padding: '9px 24px',
-                        color: 'rgba(56, 152, 252, 1) !important',
-                        textTransform: 'none',
-                        whiteSpace: 'nowrap',
-                        boxShadow: 'none !important',
-                    }}
-                >
-                    Cancel Subscription
-                </Button>
-            </Box>
 
             <Drawer
                 anchor="right"

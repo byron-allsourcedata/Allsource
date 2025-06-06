@@ -6,6 +6,7 @@ import { CardGiftcard, HistoryToggleOff, Update } from "@mui/icons-material";
 import { Plan } from "../plans";
 import { Row } from "@/components/Row";
 import { PlanButton } from "./PlanButton";
+import { CustomButton } from "@/components/ui";
 
 const PlanTitle = styled(Typography)`
     font-family: Nunito Sans;
@@ -120,11 +121,15 @@ export const PlanCard: React.FC<{
                 }}
             >
                 <Box sx={{ textAlign: "center" }}>
-                    <PlanButton
-                        isActive={false}
-                        label={"Current Plan"}
+                    <CustomButton
                         onClick={() => onChoose(alias)}
-                    />
+                        disabled={false}
+                        sx={{
+                            width: "100%"
+                        }}
+                    >
+                        Current Plan
+                    </CustomButton>
                 </Box>
             </Box>
             <Box
