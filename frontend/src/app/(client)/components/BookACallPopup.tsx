@@ -46,6 +46,7 @@ export const BookACallPopup: React.FC<Props> = ({
   };
 
   const handleInstallUpgrade = () => {
+    handleClose();
     router.push('/settings?section=subscription');
   };
 
