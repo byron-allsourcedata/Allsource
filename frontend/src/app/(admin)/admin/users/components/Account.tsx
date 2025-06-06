@@ -408,23 +408,14 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                 if (currentPage == 0) {
                     return (
                         <>
-                            <IconButton
-                                onClick={(event) => handleOpenMenu(event, row.id)}
-                                sx={{
-                                    fontSize: '16px',
-                                    ":hover": {
-                                        backgroundColor: "transparent",
-                                        px: 0
-                                    },
+                            <MenuIconButton
+                                buttonProps={{
+                                    onClick: (event) => handleOpenMenu(event, row.id),
                                 }}
-                            >
-                                <MoreVert
-                                    sx={{
-
-                                        color: "rgba(32, 33, 36, 1)",
-                                    }}
-                                />
-                            </IconButton>
+                                iconProps={{
+                                    icon: <MoreVert />,
+                                  }}
+                            />
                             <Popover
                                 open={Boolean(menuAnchor) && activeRow === row.id}
                                 anchorEl={menuAnchor}
@@ -474,11 +465,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                             <MenuIconButton
                                 buttonProps={{
                                     onClick: (event) => handleOpenMenu(event, row.id),
-                                    sx: {},
                                 }}
                                 iconProps={{
                                     icon: <MoreVert />,
-                                    sx: {},
                                   }}
                             />
                             <Popover
