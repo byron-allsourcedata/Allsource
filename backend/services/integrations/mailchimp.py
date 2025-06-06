@@ -240,6 +240,24 @@ class MailchimpIntegrationsService:
             return profile
 
         return ProccessDataSyncResult.SUCCESS.value
+
+    async def process_data_sync_lead(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync,
+                                five_x_five_users: List[FiveXFiveUser]):
+        profiles = []
+        for five_x_five_user in five_x_five_users:
+            profile = self.__mapped_member_into_list_lead(five_x_five_user, integration_data_sync.data_map)
+            if profile:
+                profiles.append(profile)
+
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        profile = self.__create_profile(user_integration, integration_data_sync, profiles)
+        if profile in (ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                       ProccessDataSyncResult.INCORRECT_FORMAT.value, ProccessDataSyncResult.LIST_NOT_EXISTS.value):
+            return profile
+
+        return ProccessDataSyncResult.SUCCESS.value
     
     def sync_contacts_bulk(self, list_id: str, profiles_list: list):
         operations = []
@@ -267,7 +285,7 @@ class MailchimpIntegrationsService:
         
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __create_profile(self, user_integration, integration_data_sync, profiles: EnrichmentUser):
+    def __create_profile(self, user_integration, integration_data_sync, profiles: dict):
         self.client.set_config({
             'api_key': user_integration.access_token,
             'server': user_integration.data_center
@@ -394,3 +412,79 @@ class MailchimpIntegrationsService:
             }
         
         return result
+
+    def __mapped_member_into_list_lead(self, five_x_five_user: FiveXFiveUser, data_map: list):
+        email_fields = [
+            'business_email',
+            'personal_emails',
+            'additional_personal_emails',
+        ]
+
+        def get_valid_email(user) -> str:
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+            verity = 0
+            for field in email_fields:
+                email = getattr(user, field, None)
+                if email:
+                    emails = extract_first_email(email)
+                    for e in emails:
+                        if e and field == 'business_email' and five_x_five_user.business_email_last_seen:
+                            if five_x_five_user.business_email_last_seen.strftime(
+                                    '%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                                return e.strip()
+                        if e and field == 'personal_emails' and five_x_five_user.personal_emails_last_seen:
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
+                                '%Y-%m-%d %H:%M:%S')
+                            if personal_emails_last_seen_str > thirty_days_ago_str:
+                                return e.strip()
+                        if e and self.million_verifier_integrations.is_email_verify(email=e.strip()):
+                            return e.strip()
+                        verity += 1
+            if verity > 0:
+                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        first_email = get_valid_email(five_x_five_user)
+
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                           ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
+
+        first_phone = (
+                getattr(five_x_five_user, 'mobile_phone') or
+                getattr(five_x_five_user, 'personal_phone') or
+                getattr(five_x_five_user, 'direct_number') or
+                getattr(five_x_five_user, 'company_phone', None)
+        )
+
+        location = {
+            "address": getattr(five_x_five_user, 'personal_address') or getattr(five_x_five_user, 'company_address',
+                                                                                None),
+            "city": getattr(five_x_five_user, 'personal_city') or getattr(five_x_five_user, 'company_city', None),
+            "region": getattr(five_x_five_user, 'personal_state') or getattr(five_x_five_user, 'company_state', None),
+            "zip": getattr(five_x_five_user, 'personal_zip') or getattr(five_x_five_user, 'company_zip', None),
+        }
+        time_on_site, url_visited = self.leads_persistence.get_visit_stats(five_x_five_user.id)
+        return {
+            "email": first_email,
+            "phone_number": format_phone_number(first_phone),
+            "first_name": getattr(five_x_five_user, 'first_name', None),
+            "last_name": getattr(five_x_five_user, 'last_name', None),
+            "organization": getattr(five_x_five_user, 'company_name', None),
+            "location": location,
+            "job_title": getattr(five_x_five_user, 'job_title', None),
+            "company_name": getattr(five_x_five_user, 'company_name', None),
+            "status": "subscribed",
+            "email_type": "text",
+            "time_on_site": time_on_site,
+            "url_visited": url_visited,
+            "merge_fields": {
+                "FNAME": getattr(five_x_five_user, 'first_name', None),
+                "LNAME": getattr(five_x_five_user, 'last_name', None),
+                "ORG": getattr(five_x_five_user, 'company_name', None),
+                "JOB": getattr(five_x_five_user, 'job_title', None),
+                "COMPANY": getattr(five_x_five_user, 'company_name', None)
+            }
+        }
+

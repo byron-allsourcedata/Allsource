@@ -6,6 +6,8 @@ from grpc import StatusCode
 import time
 import google.api_core.exceptions
 from google.auth.exceptions import RefreshError
+
+from models import FiveXFiveUser
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
@@ -26,7 +28,7 @@ from fastapi import HTTPException
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 import httpx
 from typing import List
-from utils import validate_and_format_phone
+from utils import validate_and_format_phone, get_valid_email, get_valid_phone, get_valid_location, format_phone_number
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -156,7 +158,7 @@ class GoogleAdsIntegrationsService:
         })
         return sync
 
-    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict = {}):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: List[EnrichmentUser], target_schema: str, validations: dict = {}):
         profiles = []
         for enrichment_user in enrichment_users:
             result = self.__mapped_googleads_profile(enrichment_user, target_schema, validations)
@@ -170,6 +172,27 @@ class GoogleAdsIntegrationsService:
         if list_response == ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
             return self.__add_profile_to_list(access_token=user_integration.access_token, customer_id=integration_data_sync.customer_id, user_list_id=integration_data_sync.list_id, profiles=profiles)
             
+        return list_response
+
+    async def process_data_sync_lead(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync,
+                                five_x_five_users: List[FiveXFiveUser]):
+        profiles = []
+        for enrichment_user in five_x_five_users:
+            result = self.__mapped_googleads_profile_lead(enrichment_user)
+            if result:
+                profiles.append(result)
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        list_response = self.__add_profile_to_list(access_token=user_integration.access_token,
+                                                   customer_id=integration_data_sync.customer_id,
+                                                   user_list_id=integration_data_sync.list_id, profiles=profiles)
+
+        if list_response == ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
+            return self.__add_profile_to_list(access_token=user_integration.access_token,
+                                              customer_id=integration_data_sync.customer_id,
+                                              user_list_id=integration_data_sync.list_id, profiles=profiles)
+
         return list_response
     
     
@@ -282,6 +305,27 @@ class GoogleAdsIntegrationsService:
             credential.suppression = suppression
             self.integrations_persistence.db.commit()
             return {'message': 'successfuly'}
+
+    def __mapped_googleads_profile_lead(self, five_x_five_user: FiveXFiveUser) -> str | GoogleAdsProfile:
+        first_email = get_valid_email(five_x_five_user, self.million_verifier_integrations)
+
+        if first_email in (ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                           ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value):
+            return first_email
+
+        first_phone = get_valid_phone(five_x_five_user)
+
+        address_parts = get_valid_location(five_x_five_user)
+
+        return GoogleAdsProfile(
+            email=first_email,
+            first_name=getattr(five_x_five_user, 'first_name', None),
+            last_name=getattr(five_x_five_user, 'last_name', None),
+            phone=validate_and_format_phone(format_phone_number(first_phone)),
+            city=address_parts[1],
+            state=address_parts[2],
+            address=address_parts[0]
+        )
     
     def __mapped_googleads_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict) -> GoogleAdsProfile:
         enrichment_contacts = enrichment_user.contacts

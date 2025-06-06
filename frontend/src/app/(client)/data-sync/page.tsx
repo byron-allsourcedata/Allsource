@@ -168,7 +168,7 @@ const DataSync = () => {
                 <Box sx={{
                   pl: 1,
                 }}>
-                  <DomainButtonSelect />
+                  {/* <DomainButtonSelect /> */}
                 </Box>
 
               </Box>
@@ -185,7 +185,7 @@ const DataSync = () => {
                   },
                 }}
               >
-                <Button
+                {/* <Button
                   onClick={handleAudiencePopupOpen}
                   aria-haspopup="true"
                   disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
@@ -211,7 +211,7 @@ const DataSync = () => {
                   }}>
                     Create Contact Sync
                   </Typography>
-                </Button>
+                </Button> */}
                 <Button
                   onClick={handleFilterPopupOpen}
                   aria-haspopup="true"
@@ -335,7 +335,7 @@ const DataSync = () => {
                           headerTitle="Sync Audience to Any Platform"
                           caption="Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
                           onOpenPopup={handleOpenPopup}
-                          onBegin={() => setHasDataSync(true)}
+                          onBegin={() => router.push("/smart-audiences")}
                           beginDisabled={!hasIntegrations}
                           buttonLabel="Create Data Sync"
                         />
