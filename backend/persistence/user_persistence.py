@@ -2,6 +2,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from urllib.parse import uses_query
+from decimal import Decimal
 
 import pytz
 from sqlalchemy import func, desc, asc, case, or_
@@ -509,3 +510,13 @@ class UserPersistence:
 
     def has_sources_for_user(self, user_id: int) -> bool:
         return self.db.query(AudienceSource).filter(AudienceSource.user_id == user_id).first() is not None
+    
+    def deduct_validation_funds(self, user_id: int, amount: Decimal):
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+        
+        # if user and user.validation_funds >= amount:
+        #     user.validation_funds -= amount
+        #     return True
+        # return False
+
+        user.validation_funds -= amount

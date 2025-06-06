@@ -8,10 +8,12 @@ import boto3
 import random
 import requests
 import re
+from decimal import Decimal
 from datetime import datetime
+from aio_pika import Channel
 from rapidfuzz import fuzz
 from sqlalchemy import update
-from aio_pika import IncomingMessage, Message
+from aio_pika import IncomingMessage, Message, Channel
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
@@ -23,8 +25,8 @@ from sqlalchemy.dialects.postgresql import insert
 from models.audience_smarts import AudienceSmart
 from utils import send_sse
 from models.audience_smarts_persons import AudienceSmartPerson
-from models.users import Users
 from models.audience_postals_verification import AudiencePostalVerification
+from persistence.user_persistence import UserPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()
@@ -71,7 +73,7 @@ def verify_address(addresses, address, city, state_name):
 
     return is_verified
 
-async def process_rmq_message(message: IncomingMessage, db_session: Session, channel):
+async def process_rmq_message(message: IncomingMessage, db_session: Session, channel: Channel, userPersistence: UserPersistence):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -84,7 +86,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         logging.info(f"validation_type: {validation_type}")
         failed_ids = []
         verifications = []
-        write_off_funds = 0 
+        write_off_funds = Decimal(0)
 
         for record in batch:
             person_id = record.get("audience_smart_person_id")            
@@ -98,7 +100,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                 failed_ids.append(person_id)
                 continue
 
-            write_off_funds += validation_cost
+            write_off_funds += Decimal(validation_cost)
             
             existing_verification = db_session.query(AudiencePostalVerification).filter(AudiencePostalVerification.postal_code == postal_code).first()
 
@@ -157,8 +159,11 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         logging.info(f"success_ids len: {len(success_ids)}")
 
         if write_off_funds:
-            user = db_session.query(Users).filter(Users.id == user_id).first()
-            user.validation_funds = float(user.validation_funds) - write_off_funds
+            userPersistence.deduct_validation_funds(user_id, write_off_funds)
+            # if not resultOperation:
+            #     logging.error("Not enough validation funds")
+            #     await message.reject(requeue=True)
+            #     return
             db_session.flush()
         
         if verifications:
@@ -277,12 +282,14 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
+        userPersistence = UserPersistence(db_session)
+
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_POSTAL,
             durable=True,
         )
         await queue.consume(
-                functools.partial(process_rmq_message, channel=channel, db_session=db_session)
+                functools.partial(process_rmq_message, channel=channel, db_session=db_session, userPersistence=userPersistence)
             )
 
         await asyncio.Future()

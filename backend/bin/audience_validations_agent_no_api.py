@@ -9,7 +9,8 @@ import random
 from datetime import datetime
 from uuid import UUID
 from sqlalchemy import update
-from aio_pika import IncomingMessage, Message
+from decimal import Decimal
+from aio_pika import IncomingMessage, Message, Channel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
@@ -23,6 +24,7 @@ from utils import send_sse
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.users import Users
+from persistence.user_persistence import UserPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()
@@ -89,7 +91,8 @@ def update_stats_validations(db_session: Session, validation_type: str, count_pe
 async def aud_validation_agent(
     message: IncomingMessage,
     db_session: Session,
-    channel
+    channel: Channel,
+    userPersistence: UserPersistence
 ):
     try:
         body = json.loads(message.body)
@@ -101,7 +104,7 @@ async def aud_validation_agent(
         recency_business_days = body.get("recency_business_days", 0)
         validation_type = body.get("validation_type")
         validation_cost = body.get("validation_cost")
-        write_off_funds = 0 
+        write_off_funds = Decimal(0)
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         validation_rules = {
@@ -126,8 +129,11 @@ async def aud_validation_agent(
         logging.info(f"Success ids len: {len(success_ids)}")
 
         if write_off_funds:
-            user = db_session.query(Users).filter(Users.id == user_id).first()
-            user.validation_funds = user.validation_funds - write_off_funds
+            userPersistence.deduct_validation_funds(user_id, write_off_funds)
+            # if not resultOperation:
+            #     logging.error("Not enough validation funds")
+            #     await message.reject(requeue=True)
+            #     return
             db_session.flush()
 
         if failed_ids:
@@ -234,12 +240,14 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
+        userPersistence = UserPersistence(db_session)
+
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_NOAPI,
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_validation_agent, channel=channel, db_session=db_session)
+                functools.partial(aud_validation_agent, channel=channel, db_session=db_session, userPersistence=userPersistence)
             )
 
         await asyncio.Future()

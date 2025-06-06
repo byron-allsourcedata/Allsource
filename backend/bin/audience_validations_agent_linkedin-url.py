@@ -10,7 +10,8 @@ import requests
 from datetime import datetime
 from rapidfuzz import fuzz
 from sqlalchemy import update
-from aio_pika import IncomingMessage, Message
+from decimal import Decimal
+from aio_pika import IncomingMessage, Message, Channel
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
@@ -23,7 +24,7 @@ from utils import send_sse
 from models.audience_smarts import AudienceSmart
 from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
-from models.users import Users
+from persistence.user_persistence import UserPersistence
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_linkedin_verification import AudienceLinkedinVerification
@@ -58,7 +59,8 @@ def setup_logging(level):
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
-    channel,
+    channel: Channel,
+    userPersistence: UserPersistence
 ):
     try:
         body = json.loads(message.body)
@@ -72,7 +74,7 @@ async def process_rmq_message(
         logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
         verifications: list[AudienceLinkedinVerification] = []
-        write_off_funds = 0 
+        write_off_funds = Decimal(0)
 
         for rec in batch:
             pid = rec.get("audience_smart_person_id")
@@ -84,7 +86,7 @@ async def process_rmq_message(
                 failed_ids.append(pid)
                 continue
             
-            write_off_funds += validation_cost
+            write_off_funds += Decimal(validation_cost)
             ev = (
                 db_session.query(AudienceLinkedinVerification)
                 .filter_by(linkedin_url=url)
@@ -131,8 +133,11 @@ async def process_rmq_message(
         logging.info(f"Success ids: len{len(success_ids)}")
 
         if write_off_funds:
-            user = db_session.query(Users).filter(Users.id == user_id).first()
-            user.validation_funds = float(user.validation_funds) - write_off_funds
+            userPersistence.deduct_validation_funds(user_id, write_off_funds)
+            # if not resultOperation:
+            #     logging.error("Not enough validation funds")
+            #     await message.reject(requeue=True)
+            #     return
             db_session.flush()
         
         if verifications:
@@ -246,12 +251,14 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
+        userPersistence = UserPersistence(db_session)
+
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
             durable=True,
         )
         await queue.consume(
-                functools.partial(process_rmq_message, channel=channel, db_session=db_session)
+                functools.partial(process_rmq_message, channel=channel, db_session=db_session, userPersistence=userPersistence)
             )
 
         await asyncio.Future()
