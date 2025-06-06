@@ -89,6 +89,10 @@ export const PlanCard: React.FC<{
 
         return (
             <Box sx={{
+                position: "relative",
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
             }}>
                 {isRecommended && (
                     <Box
@@ -132,7 +136,6 @@ export const PlanCard: React.FC<{
                             boxShadow: "0px 1px 4px 0px rgba(0, 0, 0, 0.08)",
                             height: "100%",
                             position: "relative",
-                            width: "320px",
                         }}
                     >
                         <Box

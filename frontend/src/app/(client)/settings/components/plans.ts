@@ -58,7 +58,7 @@ export const plans: Plan[] = [
         title: "Basic",
         isActive: false,
         price: {
-            value: "$0,08",
+            value: "$0,04",
             y: "record",
         },
         isRecommended: false,
@@ -98,7 +98,7 @@ export const plans: Plan[] = [
         title: "Smart Audience",
         isActive: false,
         price: {
-            value: "$5,000",
+            value: "$2,500",
             y: "month",
         },
         isRecommended: true,
@@ -137,7 +137,7 @@ export const plans: Plan[] = [
     {
         title: "Pro",
         price: {
-            value: "$10,000",
+            value: "$5,000",
             y: "month",
         },
         isActive: false,
