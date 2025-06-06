@@ -46,6 +46,8 @@ const CustomButton: React.FC<CustomButtonProps> = ({
         boxShadow: "none",
       },
       "&:disabled": {
+        color: "rgba(255, 255, 255, 1)",
+
         backgroundColor: "rgba(56, 152, 252, 1)",
         opacity: 0.6,
         boxShadow: "none",
@@ -94,5 +96,6 @@ const CustomButton: React.FC<CustomButtonProps> = ({
     </Button>
   );
 };
+
 
 export default CustomButton;

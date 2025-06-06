@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Button, Tabs, Tab, TextField, Slider, IconButton, Drawer, Divider, Chip, Link } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import PlanCard from './PlanCard';
+import { PlanCard } from './PlanCard';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import CustomTooltip from '../../../../components/customToolTip';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
@@ -10,8 +10,12 @@ import Image from 'next/image';
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from '../../../../components/ToastNotification';
 import axios from 'axios';
-import { useBookingUrl } from '@/services/booking';
+import { getCalendlyPopupUrl } from '@/services/booking';
+import { plans as defaultPlans, Plan } from './plans';
+import { fetchUserData } from '@/services/meService';
+import { BookACallPopup } from '../../components/BookACallPopup';
 
+import { useBookingUrl } from '@/services/booking';
 
 
 const subscriptionStyles = {
@@ -26,20 +30,21 @@ const subscriptionStyles = {
         gap: 3,
         justifyContent: 'space-between',
         width: '100%',
-        marginTop: '40px',
         '@media (max-width: 900px)': {
             flexDirection: 'column',
             marginTop: '24px'
         },
     },
     formWrapper: {
+        display: "flex",
+        alignItems: "end",
         '@media (min-width: 901px)': {
-            // width: '344px'
             width: '100%'
         }
     },
     plantabHeading: {
         padding: '10px 32px',
+        color: "rgba(32, 33, 36, 1)",
         textTransform: 'none',
         fontWeight: '400 !important',
         '&.Mui-selected': {
@@ -61,7 +66,7 @@ const subscriptionStyles = {
         }
     },
     saveHeading: {
-        background: '#EDEDF7',
+        background: 'rgba(235, 245, 255, 1)',
         padding: '5px 12px',
         borderRadius: '4px',
         fontSize: '14px !important',
@@ -97,11 +102,11 @@ const marks = [
 ];
 
 export const SettingsSubscription: React.FC = () => {
-    const [plans, setPlans] = useState<any[]>([]);
+    const [plans, setPlans] = useState<Plan[]>([]);
     const [allPlans, setAllPlans] = useState<any[]>([]);
     const [credits, setCredits] = useState<number>(50000);
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useState(1);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
     const [cancelSubscriptionPlanPopupOpen, setCancelSubscriptionPlanPopupOpen] = useState(false);
@@ -113,6 +118,12 @@ export const SettingsSubscription: React.FC = () => {
     const [showSlider, setShowSlider] = useState(true);
     const [utmParams, setUtmParams] = useState<string | null>(null);
     const [activePlan, setActivePlan] = useState<any>(null);
+    const [isTrial, setIsTrial] = useState<boolean | null>(null);
+    const [popupOpen, setPopupOpen] = useState(false);
+
+    const handleOpenPopup = () => {
+        setPopupOpen(true);
+    };
     const sourcePlatform = useMemo(() => {
         if (typeof window !== 'undefined') {
             const savedMe = sessionStorage.getItem('me');
@@ -135,7 +146,9 @@ export const SettingsSubscription: React.FC = () => {
         setTabValue(newValue);
         const period = newValue === 0 ? 'month' : 'year';
         const period_plans = allPlans.filter((plan: any) => plan.interval === period);
-        setPlans(period_plans);
+        setPlans(defaultPlans)
+        // setPlans(period_plans);
+
     };
 
     const handleCustomPlanPopupOpen = () => {
@@ -191,19 +204,27 @@ export const SettingsSubscription: React.FC = () => {
                 setHasActivePlan(!!active);
 
                 const interval = active ? active.interval : 'month';
-                if (interval === 'year') {
-                    setTabValue(1);
-                } else {
-                    setTabValue(0);
-                }
+                // if (interval === 'year') {
+                //     setTabValue(1);
+                // } else {
+                //     setTabValue(0);
+                // }
                 const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
-                setPlans(period_plans);
+                setPlans(defaultPlans);
             } catch (error) {
             } finally {
                 setIsLoading(false);
             }
         };
 
+        const loadUser = async () => {
+            const userData = await fetchUserData();
+            if (userData) {
+                setIsTrial(!!userData.trial);
+            }
+        };
+
+        loadUser();
         fetchData();
     }, []);
 
@@ -299,10 +320,12 @@ export const SettingsSubscription: React.FC = () => {
 
 
     // Filter plans based on the selected tab
-    const filteredPlans = plans.filter(plan =>
-        (tabValue === 0 && plan.interval === 'month') ||
-        (tabValue === 1 && plan.interval === 'year')
-    );
+    const filteredPlans = plans;
+
+    // .filter(plan =>
+    //     (tabValue === 0 && plan.interval === 'month') ||
+    //     (tabValue === 1 && plan.interval === 'year')
+    // );
 
 
 
@@ -381,12 +404,11 @@ export const SettingsSubscription: React.FC = () => {
     };
 
     return (
-        <Box sx={{ marginBottom: '12px', pr:'1rem', '@media (max-width: 600px)':{ pr:'16px'} }}>
-
+        <Box sx={{ marginBottom: '12px', pr: '1rem', '@media (max-width: 600px)': { pr: '16px' } }}>
             {/* Plans Section */}
             <Box sx={{ marginBottom: 4 }}>
                 <Box sx={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 4, marginBottom: 2, position: 'relative',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 4, marginBottom: 1, position: 'relative',
                     '@media (max-width: 600px)': {
                         justifyContent: 'start'
                     }
@@ -394,7 +416,7 @@ export const SettingsSubscription: React.FC = () => {
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
                         {/* Tabs for Monthly and Yearly */}
                         <Tabs value={tabValue} onChange={handleTabChange} sx={{
-                            border: '1px solid #808080',
+                            border: '1px solid rgba(237, 237, 237, 1)',
                             borderRadius: '4px',
                             '& .MuiTabs-indicator': {
                                 background: 'none'
@@ -413,51 +435,64 @@ export const SettingsSubscription: React.FC = () => {
                                                 fontSize: '18px !important'
                                             }
                                         }}>Yearly</Typography>
-                                        <Typography variant="body2" sx={subscriptionStyles.saveHeading} className='paragraph active-save-color' color="primary">
-                                            Save 20%
+                                        <Typography variant="body2" sx={subscriptionStyles.saveHeading} className='paragraph' color="primary">
+                                            Save 33%
                                         </Typography>
                                     </Box>
                                 }
                             />
                         </Tabs>
                     </Box>
-                    {sourcePlatform !== 'shopify' && (
-                        <Button variant="outlined" className='hyperlink-red' sx={{
-                            position: 'absolute',
-                            right: 0,
-                            color: 'rgba(56, 152, 252, 1) !important',
-                            borderRadius: '4px',
-                            border: '1px solid rgba(56, 152, 252, 1)',
-                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                            textTransform: 'none',
-                            padding: '9px 16px',
-                            '&:hover': {
-                                background: 'transparent'
-                            },
-                            '@media (max-width: 600px)': {
-                                display: 'none'
-                            }
-                        }} onClick={handleCustomPlanPopupOpen}>
-                            Custom Plan
-                        </Button>
-                    )}
-
                 </Box>
 
-                {/* Display Plans */}
+
                 <Box sx={subscriptionStyles.formContainer}>
                     {filteredPlans.length > 0 ? (
-                        filteredPlans.map((plan, index) => (
-                            <Box key={index} sx={subscriptionStyles.formWrapper}>
-                                <PlanCard
-                                    plan={plan}
-                                    activePlanTitle={activePlan?.title || ''}
-                                    activePlanPeriod={activePlan?.interval || ''}
-                                    tabValue={tabValue}
-                                    onChoose={handleChoosePlan}
-                                />
-                            </Box>
-                        ))
+                        plans.map((plan, index) => {
+                            if (isTrial === false && plan.title === "Free Trial") {
+                                return null;
+                            }
+                            let buttonText = "Speak to Us";
+                            let disabled = false;
+
+                            if (isTrial === true) {
+                                if (plan.title === "Free Trial") {
+                                    buttonText = "Current Plan";
+                                    disabled = true;
+                                } else if (plan.title === "Basic") {
+                                    buttonText = "Instant Upgrade";
+                                    disabled = false;
+                                } else {
+                                    buttonText = "Speak to Us";
+                                    disabled = false;
+                                }
+                            } else {
+                                if (plan.title === "Basic") {
+                                    buttonText = "Current Plan";
+                                    disabled = true;
+                                } else {
+                                    buttonText = "Speak to Us";
+                                    disabled = false;
+                                }
+                            }
+
+                            return (
+                                <Box key={index} sx={subscriptionStyles.formWrapper}>
+                                    <PlanCard
+                                        plan={plan}
+                                        activePlanTitle={activePlan?.title || ""}
+                                        activePlanPeriod={activePlan?.interval || ""}
+                                        tabValue={tabValue}
+                                        isRecommended={plan.isRecommended}
+                                        buttonProps={{
+                                            onChoose: handleOpenPopup,
+                                            text: buttonText,
+                                            disabled: disabled,
+                                        }}
+                                    />
+                                </Box>
+                            );
+                        })
                     ) : (
                         <Typography>No plans available</Typography>
                     )}
@@ -483,224 +518,6 @@ export const SettingsSubscription: React.FC = () => {
                     Custom Plans
                 </Button>
             )}
-            <Divider sx={{
-                borderColor: '#e4e4e4',
-                width: '100%',
-                '@media (max-width: 600px)': {
-                    marginRight: '-8px'
-                }
-            }} />
-
-            {/* Prospect Credits Section */}
-            <Box sx={{
-                marginTop: 2, marginBottom: '24px', borderRadius: '10px',
-                boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.10)',
-                border: '1px solid #e4e4e4',
-                padding: 3,
-            }}>
-                <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="h6" className='first-sub-title' sx={{
-                        marginBottom: '8px',
-                        opacity: 0.6
-                    }}>
-                        Prospect Credits
-                    </Typography>
-                    <Chip
-                        label='Coming soon'
-                        className='second-sub-title'
-                        sx={{ backgroundColor: 'rgba(255, 233, 100, 1)', borderRadius: '4px', justifyContent: 'center', color: '#795E00 !important', }}>
-                    </Chip>
-                </Box>
-                <Typography variant="body1" className='paragraph' sx={{
-                    marginBottom: 3,
-                    opacity: 0.6
-                }}>
-                    Choose the number of contacts credits for your team
-                </Typography>
-
-                <Box sx={{ marginBottom: 3, opacity: 0.6 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, opacity: 0.6 }}>
-                        <Typography variant="body1" component="span" className='third-sub-title' sx={{
-                            fontSize: '20px !important',
-                            color: '#4a4a4a !important'
-                        }}>
-                            <Typography component="span" className='heading-text' sx={{
-                                fontWeight: '700 !important',
-                                paddingRight: '8px'
-                            }}>50K</Typography>
-                            Credits/month</Typography>
-                        <Typography variant="body1" component="span" className='third-sub-title' sx={{
-                            fontSize: '18px !important',
-                            color: '#4a4a4a !important'
-                        }}>
-                            <Typography component="span" className='third-sub-title' sx={{
-                                fontWeight: '700 !important',
-                                fontSize: '18px !important'
-                            }}>$211/</Typography>
-                            month</Typography>
-                    </Box>
-
-                    <Box sx={{ position: 'relative', width: '100%', marginBottom: '20px', }}>
-                        {/* Custom labels above the slider */}
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                position: 'absolute',
-                                width: '100%',
-                                bottom: '-16px',
-                                left: 0,
-                                right: 0,
-
-                            }}
-                        >
-                            {marks.map((mark) => (
-                                <Typography
-                                    key={mark.value}
-                                    sx={{
-                                        textAlign: mark.value === 0 ? 'left' : mark.value === 50000000 ? 'right' : 'center',
-                                        width: 'fit-content', // Allow flexible label width
-                                        fontSize: '12px',
-                                    }}
-                                >
-                                    {mark.label}
-                                </Typography>
-                            ))}
-                        </Box>
-
-                        {/* Slider */}
-                        <Slider
-                            value={credits}
-                            onChange={handleChangeCredits}
-                            min={0}
-                            disabled={true}
-                            max={50000000}
-                            step={1000}
-                            valueLabelDisplay="off" // Remove the default label
-                            aria-labelledby="credits-slider"
-                            sx={{
-                                '& .MuiSlider-rail': {
-                                    color: '#dbdbdb',
-                                    height: 6,
-                                },
-                                '& .MuiSlider-track': {
-                                    color: '#6EC125',
-                                    height: 6,
-                                },
-                                '& .MuiSlider-thumb': {
-                                    color: '#bebebe',
-                                    width: '16px',
-                                    height: '16px'
-                                },
-                            }}
-                        />
-                    </Box>
-
-
-                </Box>
-                <Box sx={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    gap: '26px',
-                    paddingTop: '24px',
-                    '@media (max-width: 600px)': {
-                        flexWrap: 'wrap',
-                        justifyContent: 'center'
-                    }
-                }}>
-                    <Box sx={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        background: '#fafaf6',
-                        border: '1px solid #bdbdbd',
-                        borderRadius: '4px',
-                        padding: '18px 24px',
-                        width: '100%',
-                        opacity: 0.6
-                    }}>
-                        <Box>
-                            <Typography variant="h6" className='third-sub-title' sx={{
-                                fontWeight: '600 !important',
-                                lineHeight: '16px !important',
-                                color: '#4a4a4a !important',
-                                opacity: 0.6
-                            }}>
-                                Summary
-                            </Typography>
-                            <Typography variant="body1" component="span" className='first-sub-title' sx={{
-                                fontWeight: '700 !important',
-                                opacity: 0.6
-                            }}>
-                                {selectedPlan?.name || 'None'} plan+
-                                {' '}{credits} prospect contacts credits.
-
-                            </Typography>
-
-                        </Box>
-                        <Box>
-                            <Typography variant="h6" component="span" className='heading-text' sx={{
-                                fontSize: '40px !important',
-                                fontWeight: '700 !important',
-                                opacity: 0.6
-                            }}>
-                                ${selectedPlan?.price || '0'}
-                                <Typography component='span' className='paragraph' sx={{
-                                    paddingLeft: '6px'
-                                }}>/month</Typography>
-                            </Typography>
-                        </Box>
-                    </Box>
-                    <Box>
-                        <Button variant="contained" className='hyperlink-red' color="primary" disabled={true} onClick={handleBuyCredits}
-                            sx={{
-                                background: 'rgba(56, 152, 252, 1) !important',
-                                borderRadius: '4px',
-                                border: '1px solid rgba(56, 152, 252, 1)',
-                                padding: '9px 24px',
-                                color: '#fff !important',
-                                textTransform: 'none',
-                                whiteSpace: 'nowrap',
-                                opacity: 0.6
-
-                            }}
-                        >
-                            Buy Credits
-                        </Button>
-                    </Box>
-
-                </Box>
-            </Box>
-
-            <Divider sx={{
-                borderColor: '#e4e4e4',
-                width: '100%',
-                '@media (max-width: 600px)': {
-                    paddingRight: '8px'
-                }
-            }} />
-
-            <Box sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                marginTop: '16px',
-                '@media (max-width: 600px)': {
-                    justifyContent: 'center'
-                }
-            }}>
-                <Button variant="contained" className='hyperlink-red' color="primary"
-                    onClick={handleCancelSubscriptionPlanPopupOpen}
-                    sx={{
-                        background: 'none !important',
-                        borderRadius: '4px',
-                        border: 'none',
-                        padding: '9px 24px',
-                        color: 'rgba(56, 152, 252, 1) !important',
-                        textTransform: 'none',
-                        whiteSpace: 'nowrap',
-                        boxShadow: 'none !important',
-                    }}
-                >
-                    Cancel Subscription
-                </Button>
-            </Box>
 
             <Drawer
                 anchor="right"
@@ -1056,9 +873,13 @@ export const SettingsSubscription: React.FC = () => {
                         </Box>
                     </Box>
                 </Box>
-
             </Drawer>
-
+            {popupOpen && (
+                <BookACallPopup
+                    open={popupOpen}
+                    handleClose={() => setPopupOpen(false)}
+                />
+            )}
         </Box>
     );
 };
