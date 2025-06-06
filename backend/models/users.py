@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Integer, Boolean, text, ForeignKey, BigInteger, Index, Sequence
+from sqlalchemy import Column, DateTime, Integer, Boolean, text, ForeignKey, BigInteger, Index, Sequence, DECIMAL
 from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR, ARRAY, JSON
 
 from .base import Base
@@ -50,6 +50,7 @@ class Users(Base):
     activate_steps_percent = Column(Integer, nullable=True, server_default=text('0'))
     leads_credits = Column(Integer, nullable=False, server_default=text('0'))
     prospect_credits = Column(Integer, nullable=False, server_default=text('0'))
+    validation_funds = Column(DECIMAL(10, 2), nullable=False, server_default=text('0'))
     change_email_sent_at = Column(TIMESTAMP(precision=7), nullable=True)
     is_leads_auto_charging = Column(Boolean, nullable=False, server_default=text('false'))
     last_signed_in = Column(TIMESTAMP(precision=7), nullable=True)

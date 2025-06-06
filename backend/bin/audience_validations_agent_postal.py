@@ -8,10 +8,12 @@ import boto3
 import random
 import requests
 import re
+from decimal import Decimal
 from datetime import datetime
+from aio_pika import Channel
 from rapidfuzz import fuzz
 from sqlalchemy import update
-from aio_pika import IncomingMessage, Message
+from aio_pika import IncomingMessage, Message, Channel
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
@@ -24,6 +26,7 @@ from models.audience_smarts import AudienceSmart
 from utils import send_sse
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_postals_verification import AudiencePostalVerification
+from persistence.user_persistence import UserPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()
@@ -70,7 +73,7 @@ def verify_address(addresses, address, city, state_name):
 
     return is_verified
 
-async def process_rmq_message(message: IncomingMessage, db_session: Session, channel):
+async def process_rmq_message(message: IncomingMessage, db_session: Session, channel: Channel, user_persistence: UserPersistence):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -78,10 +81,12 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         batch = message_body.get("batch")
         count_persons_before_validation = message_body.get("count_persons_before_validation")
         validation_type = message_body.get("validation_type")
+        validation_cost = message_body.get("validation_cost")
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         failed_ids = []
         verifications = []
+        write_off_funds = Decimal(0)
 
         for record in batch:
             person_id = record.get("audience_smart_person_id")            
@@ -94,6 +99,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
             if not postal_code or not city or not state_name:
                 failed_ids.append(person_id)
                 continue
+
+            write_off_funds += Decimal(validation_cost)
             
             existing_verification = db_session.query(AudiencePostalVerification).filter(AudiencePostalVerification.postal_code == postal_code).first()
 
@@ -150,6 +157,14 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         ]
         
         logging.info(f"success_ids len: {len(success_ids)}")
+
+        if write_off_funds:
+            user_persistence.deduct_validation_funds(user_id, write_off_funds)
+            # if not resultOperation:
+            #     logging.error("Not enough validation funds")
+            #     await message.reject(requeue=True)
+            #     return
+            db_session.flush()
         
         if verifications:
             stmt = insert(AudiencePostalVerification).values(verifications)
@@ -212,6 +227,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                             rule[key]["processed"] = True
                             rule[key]["count_validated"] = total_validated
                             rule[key]["count_submited"] = count_persons_before_validation
+                            rule[key]["count_cost"] = str(write_off_funds)
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -266,12 +282,14 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
+        user_persistence = UserPersistence(db_session)
+
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_POSTAL,
             durable=True,
         )
         await queue.consume(
-                functools.partial(process_rmq_message, channel=channel, db_session=db_session)
+                functools.partial(process_rmq_message, channel=channel, db_session=db_session, user_persistence=user_persistence)
             )
 
         await asyncio.Future()

@@ -19,6 +19,7 @@ sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_settings import AudienceSetting
+from persistence.audience_settings import AudienceSettingPersistence
 from enums import AudienceSettingAlias
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_postals import EnrichmentPostal
@@ -215,6 +216,17 @@ def get_enrichment_users(db_session: Session, validation_type: str, aud_smart_id
     
     return enrichment_users
 
+def get_validation_cost(settingPersistence: AudienceSettingPersistence, column_name: str):
+    validation_cost = settingPersistence.get_cost_validations()
+    
+    if not validation_cost:
+        return 0
+    
+    if column_name in validation_cost:
+        return validation_cost[column_name]
+    
+    return 0
+
 def validation_processed(db_session: Session, ids: List[int]):
     stmt = (
         update(AudienceSmartPerson)
@@ -247,7 +259,7 @@ async def complete_validation(db_session: Session, aud_smart_id: int, channel, u
     logging.info(f"completed validation, status audience smart ready")
 
 
-async def aud_email_validation(message: IncomingMessage, db_session: Session, channel):
+async def aud_email_validation(message: IncomingMessage, db_session: Session, channel, settingPersistence: AudienceSettingPersistence):
     try:
         message_body = json.loads(message.body)
         logging.info('Received message: %s', message_body)
@@ -306,7 +318,10 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, ch
                                             break
                                         
                                 enrichment_users = get_enrichment_users(db_session, validation_type, aud_smart_id, column_name)
+                                validation_cost = get_validation_cost(settingPersistence, value)
+
                                 logging.info(f"validation by {column_name}")
+                                logging.info(f"validation_cost {validation_cost}")
                                 logging.info(f"count person which will processed validation {len(enrichment_users)}")
 
                                 if not enrichment_users:
@@ -328,6 +343,7 @@ async def aud_email_validation(message: IncomingMessage, db_session: Session, ch
                                         'user_id': user_id,
                                         'batch': serialized_batch,
                                         'validation_type': column_name,
+                                        'validation_cost': validation_cost,
                                         'count_persons_before_validation': len(enrichment_users),
                                     }
                                     queue_map = {
@@ -394,12 +410,14 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
+        settingPersistence = AudienceSettingPersistence(db_session)
+
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_FILLER,
             durable=True,
         )
         await queue.consume(
-                functools.partial(aud_email_validation, channel=channel, db_session=db_session)
+                functools.partial(aud_email_validation, channel=channel, db_session=db_session, settingPersistence=settingPersistence)
             )
 
         await asyncio.Future()

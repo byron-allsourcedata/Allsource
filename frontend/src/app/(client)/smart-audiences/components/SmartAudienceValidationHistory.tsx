@@ -116,7 +116,7 @@ const ValidationsTable = ({ validations }: {validations: ValidationHistoryRespon
                             {validation.count_validated}
                         </Typography>
                         <Typography sx={{ flex: 1 }} className="black-table-header">
-                            {validation.count_cost} Credits
+                            {validation.count_cost.toFixed(2)} Funds
                         </Typography>
                     </Box>
                 ))}
@@ -139,6 +139,10 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({ open, onClose, i
             const response = await axiosInstance.get(`/audience-smarts/${id}/validation-history`);
             if (response.status === 200 && smartAudience) {
               const validationsResponse = response.data
+              const totalCost = validationsResponse.reduce((sum: number, validation: ValidationHistoryResponse) => {
+                const key = Object.keys(validation)[0];
+                return sum + (validation[key]?.count_cost || 0);
+              }, 0);
               const lastValidation = validationsResponse.at(-1);
               const lastValidationKey = lastValidation ? Object.keys(lastValidation)[0] : undefined;
               const countValidated = lastValidationKey
@@ -149,7 +153,7 @@ const ValidationsHistoryPopup: React.FC<DetailsPopupProps> = ({ open, onClose, i
                 "total": {
                   count_submited: smartAudience[2].value, 
                   count_validated: countValidated, 
-                  count_cost: 0
+                  count_cost: totalCost
                 } 
               }])
             }
