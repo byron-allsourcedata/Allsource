@@ -133,7 +133,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
             },
           }}
         >
-          Verify
+          Verify Installation
         </Button>
         {verifyPixelIntegrationHints["verifyPixelIntegration"]?.show && showHint && (
           <HintCard
