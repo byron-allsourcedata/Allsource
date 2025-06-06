@@ -602,7 +602,7 @@ const AudienceDashboard: React.FC = () => {
     setWelcomePopup(storedPopup);
   }, []);
   return (
-    <Box>
+    <Box pr={2}>
       <Grid
         sx={{
           display: "flex",
