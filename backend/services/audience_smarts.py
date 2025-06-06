@@ -273,6 +273,7 @@ class AudienceSmartsService:
                     for subkey in item.keys():
                         count_submited = item[subkey].get("count_submited", 0)
                         count_validated = item[subkey].get("count_validated", 0)
+                        count_cost = item[subkey].get("count_cost", 0)
 
                         if subkey == "recency":
                             subkey_with_param = "recency " + str(item[subkey].get("days")) + " days"
@@ -285,7 +286,7 @@ class AudienceSmartsService:
                                 "type_validation": subkey_with_param,
                                 "count_submited": count_submited,
                                 "count_validated": count_validated,
-                                "count_cost": 0,
+                                "count_cost": count_cost,
                             }
                         })
 

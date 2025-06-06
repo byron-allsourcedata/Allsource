@@ -153,7 +153,7 @@ async def process_rmq_message(
                             rule["delivery"]["processed"] = True
                             rule["delivery"]["count_validated"] = total_validated
                             rule["delivery"]["count_submited"] = count_persons_before_validation
-
+                            rule["delivery"]["count_cost"] = write_off_funds
                 aud_smart.validations = json.dumps(validations)
             db_session.commit()
             await publish_rabbitmq_message_with_channel(

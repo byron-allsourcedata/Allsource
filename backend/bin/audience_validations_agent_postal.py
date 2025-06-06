@@ -222,6 +222,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                             rule[key]["processed"] = True
                             rule[key]["count_validated"] = total_validated
                             rule[key]["count_submited"] = count_persons_before_validation
+                            rule[key]["count_cost"] = write_off_funds
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(

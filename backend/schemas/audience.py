@@ -50,7 +50,7 @@ class ValidationHistory(BaseModel):
     type_validation: str
     count_submited: int
     count_validated: int
-    count_cost: int
+    count_cost: float
 
 class DataSourcesResponse(BaseModel):
     includes: List[DataSource]
