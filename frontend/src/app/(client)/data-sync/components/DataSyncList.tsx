@@ -15,8 +15,10 @@ import {
   DialogActions,
   DialogContent,
   DialogContentText,
+  SxProps,
+  Theme,
 } from "@mui/material";
-import React, { useState, useEffect, memo } from "react";
+import React, { useState, useEffect, memo, useRef } from "react";
 import Image from "next/image";
 import axios, { AxiosError } from "axios";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -60,6 +62,8 @@ import HubspotDataSync from "./HubspotDataSync";
 import HintCard from "../../components/HintCard";
 import { useDataSyncHints } from "../context/dataSyncHintsContext";
 import { useNotification } from "@/context/NotificationContext";
+import { SmartCell } from "@/components/table";
+import { useScrollShadow } from "@/hooks/useScrollShadow";
 
 interface DataSyncProps {
   service_name?: string | null;
@@ -105,6 +109,11 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   const [integrationsCredentials, setIntegrationsCredentials] = useState<
     IntegrationsCredentials[]
   >([]);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const { isScrolledX, isScrolledY } = useScrollShadow(
+    tableContainerRef,
+    data.length
+  );
 
   const [openMetaConnect, setOpenMetaConnect] = useState(false);
   const [openKlaviyoConnect, setOpenKlaviyoConnect] = useState(false);
@@ -141,7 +150,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   };
 
   const { hints, cards, changeDataSyncHint, resetDataSyncHints } = useDataSyncHints();
-  const { hasNotification } = useNotification();  
+  const { hasNotification } = useNotification();
 
   useEffect(() => {
     handleIntegrationsSync();
@@ -777,6 +786,50 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
     }
   };
 
+  const columns = [
+    {
+      key: "smart_audience_name",
+      label: "Smart Audience Name",
+      widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
+    },
+    {
+      key: "created",
+      label: "Created",
+      sortable: true,
+      widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
+    },
+    {
+      key: "last_sync",
+      label: "Last Sync",
+      widths: { width: "12vw", minWidth: "190px", maxWidth: "20vw" },
+    },
+    {
+      key: "platform",
+      label: "Sync",
+      widths: { width: "13vw", minWidth: "13vw", maxWidth: "20vw" },
+    },
+    {
+      key: "data_sync",
+      label: "Active Segments",
+      widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+    },
+    {
+      key: "record_synced",
+      label: "Records Synced",
+      widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
+    },
+    {
+      key: "sync_status",
+      label: "Status",
+      widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
+    },
+    {
+      key: "action",
+      label: "Actions",
+      widths: { width: "80px", minWidth: "80px", maxWidth: "80px" },
+    },
+  ]
+
   return (
     <>
       {isLoading && <CustomizedProgressBar />}
@@ -833,6 +886,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           }}
         >
           <TableContainer
+            ref={tableContainerRef}
             sx={{
               height: "70vh",
               overflowX: "scroll",
@@ -864,85 +918,92 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
           >
             <Table stickyHeader aria-label="datasync table" component={Paper} sx={{
               tableLayout: "fixed",
-              border: "1px solid rgba(235, 235, 235, 1)",
             }}>
               <TableHead sx={{ position: "relative" }}>
                 <TableRow>
-                  {[
-                    {
-                      key: "smart_audience_name",
-                      label: "Smart Audience Name",
-                    },
-                    {
-                      key: "created",
-                      label: "Created",
-                      sortable: true,
-                    },
-                    { key: "last_sync", label: "Last Sync" },
-                    { key: "platform", label: "Sync" },
-                    { key: "data_sync", label: "Active Segments" },
-                    { key: "record_synced", label: "Records Synced" },
-                    { key: "sync_status", label: "Status" },
-                    { key: "action", label: "Actions" },
-                  ].map(({ key, label, sortable = false }) => (
-                    <TableCell
-                      key={key}
-                      sx={{
-                        ...datasyncStyle.table_column,
-                        backgroundColor: "#fff",
-                        ...(key === "smart_audience_name" && {
-                          position: "sticky",
-                          left: 0,
-                          zIndex: 99,
-                        }),
-                        ...(key === "action" && {
-                          maxWidth: "50px",
-                          position: "relative",
-                          "::after": {
-                            content: "none",
-                          },
-                        }),
-                      }}
-                      onClick={
-                        sortable ? () => handleSortRequest(key) : undefined
-                      }
-                      style={{ cursor: sortable ? "pointer" : "default" }}
-                    >
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        <Typography
-                          variant="body2"
-                          sx={{ ...leadsStyles.table_column, borderRight: "0" }}
+                  {columns.map((col) => {
+                    const { key, label, sortable = false, widths } = col;
+
+                    const isNameColumn = key === "smart_audience_name";
+                    const isActionsColumn = key === "action";
+                    const hideDivider = (isNameColumn && isScrolledX) || isActionsColumn;
+                    const baseCellSX: SxProps<Theme> = {
+                      ...widths,
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 97,
+                      borderTop: "1px solid rgba(235,235,235,1)",
+                      borderBottom: "1px solid rgba(235,235,235,1)",
+                      cursor: sortable ? "pointer" : "default",
+                      borderRight: isActionsColumn ? "1px solid rgba(235,235,235,1)" : "none",
+                      whiteSpace: isActionsColumn || isNameColumn ? "normal" : "wrap",
+                      overflow: isActionsColumn || isNameColumn ? "visible" : "hidden",
+                    };
+                    if (isNameColumn) {
+                      baseCellSX.left = 0;
+                      baseCellSX.zIndex = 99;
+                      baseCellSX.boxShadow = isScrolledX
+                        ? "3px 0px 3px rgba(0,0,0,0.2)"
+                        : "none";
+                    }
+                    const className = isNameColumn ? "sticky-cell" : undefined;
+                    const onClickHandler = sortable
+                      ? () => handleSortRequest(key)
+                      : undefined
+                    return (
+                      <SmartCell
+                        key={key}
+                        cellOptions={{
+                          sx: baseCellSX,
+                          hideDivider,
+                          onClick: onClickHandler,
+                          className,
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            position: "relative",
+                            justifyContent: "space-between",
+                          }}
                         >
-                          {label}
-                        </Typography>
-                        {key === "action" && (
-                          <HintCard
-                            card={cards.action}
-                            positionLeft={-395}
-                            positionTop={78}
-                            rightSide={true}
-                            isOpenBody={hints.action.showBody}
-                            toggleClick={() => {
-                              changeDataSyncHint("action", "showBody", "toggle")
-                            }
-                            }
-                            closeClick={() =>
-                              changeDataSyncHint("action", "showBody", "close")
-                            }
-                          />
-                        )}
-                        {sortable && orderBy === key && (
-                          <IconButton size="small" sx={{ ml: 1 }}>
-                            {order === "asc" ? (
-                              <ArrowUpwardIcon fontSize="inherit" />
-                            ) : (
-                              <ArrowDownwardIcon fontSize="inherit" />
-                            )}
-                          </IconButton>
-                        )}
-                      </Box>
-                    </TableCell>
-                  ))}
+                          <Typography
+                            variant="body2"
+                            sx={{ ...leadsStyles.table_column, borderRight: "0" }}
+                          >
+                            {label}
+                          </Typography>
+                          {key === "action" && (
+                            <HintCard
+                              card={cards.action}
+                              positionLeft={-395}
+                              positionTop={78}
+                              rightSide={true}
+                              isOpenBody={hints.action.showBody}
+                              toggleClick={() => {
+                                changeDataSyncHint("action", "showBody", "toggle")
+                              }
+                              }
+                              closeClick={() =>
+                                changeDataSyncHint("action", "showBody", "close")
+                              }
+                            />
+                          )}
+                          {sortable && orderBy === key && (
+                            <IconButton size="small" sx={{ ml: 1 }}>
+                              {order === "asc" ? (
+                                <ArrowUpwardIcon fontSize="inherit" />
+                              ) : (
+                                <ArrowDownwardIcon fontSize="inherit" />
+                              )}
+                            </IconButton>
+                          )}
+                        </Box>
+                      </SmartCell>
+                    )
+                  }
+                  )}
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -973,33 +1034,66 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                         },
                       }}
                     >
-                      <TableCell
-                        className="sticky-cell"
-                        sx={{
-                          ...datasyncStyle.table_array,
-                          position: "sticky",
-                          left: "0",
-                          zIndex: 9,
-                          backgroundColor: "#fff",
+                      <SmartCell
+                        cellOptions={{
+                          className: "sticky-cell",
+                          sx: {
+                            zIndex: 9,
+                            position: "sticky",
+                            left: 0,
+                            backgroundColor: "#fff",
+                            boxShadow: isScrolledX ? "3px 0px 3px #00000033" : "none",
+                          },
+                          hideDivider: isScrolledX,
                         }}
+                        tooltipOptions={{ content: row.name || "--" }}
                       >
                         {row.name || "--"}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          ...datasyncStyle.table_array,
-                          display: "flex",
-                          flexDirection: "column",
-                          pr: 0,
+                      </SmartCell>
+                      <SmartCell
+                        cellOptions={{
+                          sx: {
+                            position: "relative",
+                            pr: 0,
+                          },
+                        }}
+                        tooltipOptions={{
+                          content: (
+                            <Box sx={{ display: "flex", flexDirection: "column" }}>
+                              <span>{row.createdBy || "--"}</span>
+                              <span>{row.createdDate || "--"}</span>
+                            </Box>
+                          ),
                         }}
                       >
-                        <span>{row.createdBy || "--"}</span>
-                        <span>{row.createdDate || "--"}</span>
-                      </TableCell>
-                      <TableCell sx={datasyncStyle.table_array}>
+                        <Box sx={{ display: "flex", flexDirection: "column", lineHeight: 1.4 }}>
+                          <Typography sx={{ ...datasyncStyle.table_array }}>
+                            {row.createdBy || "--"}
+                          </Typography>
+                          <Typography sx={{ ...datasyncStyle.table_array }}>
+                            {row.createdDate || "--"}
+                          </Typography>
+                        </Box>
+                      </SmartCell>
+
+                      <SmartCell
+                        cellOptions={{
+                          sx: {
+                            position: "relative",
+                          },
+                        }}
+                        tooltipOptions={{ content: row.lastSync || "--" }}
+                      >
                         {row.lastSync || "--"}
-                      </TableCell>
-                      <TableCell sx={datasyncStyle.table_array}>
+                      </SmartCell>
+
+                      <SmartCell
+                        cellOptions={{
+                          sx: {
+                            position: "relative",
+                          },
+                        }}
+                        tooltipOptions={{ content: row.platform || "--" }}>
                         <Box
                           sx={{
                             display: "flex",
@@ -1008,25 +1102,44 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                         >
                           {platformIcon(row.platform) || "--"}
                         </Box>
-                      </TableCell>
-                      <TableCell sx={datasyncStyle.table_array}>
+                      </SmartCell>
+
+                      <SmartCell
+                        cellOptions={{
+                          sx: {
+                            position: "relative",
+                          },
+                        }}
+                        tooltipOptions={{
+                          content: new Intl.NumberFormat("en-US").format(row.active_segments) || "--"
+                        }}>
                         {new Intl.NumberFormat("en-US").format(
                           row.active_segments
                         ) || "--"}
-                      </TableCell>
-                      <TableCell sx={datasyncStyle.table_array}>
+                      </SmartCell>
+
+                      <SmartCell
+                        cellOptions={{
+                          sx: {
+                            position: "relative",
+                          },
+                        }}
+                        tooltipOptions={{
+                          content: new Intl.NumberFormat("en-US").format(
+                            row.records_synced)
+                        }}>
                         {new Intl.NumberFormat("en-US").format(
                           row.records_synced
                         )}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          ...datasyncStyle.table_array,
-                          position: "relative",
-                          padding: 0,
-                          textAlign: "center",
-                        }}
-                      >
+                      </SmartCell>
+                      <SmartCell
+                        cellOptions={{
+                          sx: {
+                            position: "relative",
+                            padding: 0,
+                            textAlign: "center",
+                          },
+                        }}>
                         <Box
                           sx={{
                             display: "flex",
@@ -1068,25 +1181,35 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                             })()}
                           </Box>
                         </Box>
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          ...datasyncStyle.table_array,
-                          maxWidth: "40px",
-                          padding: "8px",
-                          textAlign: "center",
-                          position: "relative",
-                        }}
-                      >
+                      </SmartCell>
+                      <SmartCell
+                        cellOptions={{
+                          sx: {
+                            position: "relative",
+                            p: 0,
+                            textAlign: "center",
+                            borderRight: "1px solid rgba(235,235,235,1)",
+                          },
+                          hideDivider: true
+                        }}>
                         <IconButton
-                          sx={{ pt: 0.25, pb: 0.25, padding: 0 }}
+                          sx={{
+                            fontSize: '16px',
+                            ":hover": {
+                              backgroundColor: "transparent",
+                              px: 0
+                            },
+                          }}
                           onClick={(event) => {
                             handleClick(event, row.id);
                           }}
                         >
-                          <MoreVertIcon />
+                          <MoreVertIcon sx={{
+                            color: "rgba(32, 33, 36, 1)",
+                          }}
+                          />
                         </IconButton>
-                      </TableCell>
+                      </SmartCell>
                     </TableRow>
                   ))
                 )}
@@ -1192,53 +1315,53 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                 )}
             </Box>
           </Popover>
-            {totalRows && totalRows > 10 ? (
-              <Box
+          {totalRows && totalRows > 10 ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                padding: "24px 0 0",
+                "@media (max-width: 600px)": {
+                  padding: "12px 0 0",
+                },
+              }}
+            >
+              <CustomTablePagination
+                count={totalRows ?? 0}
+                page={page}
+                rowsPerPage={rowsPerPage}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={rowsPerPageOptions}
+              />
+            </Box>
+          ) : (
+            <Box
+              display="flex"
+              justifyContent="flex-end"
+              alignItems="center"
+              sx={{
+                padding: "16px",
+                backgroundColor: "#fff",
+                borderRadius: "4px",
+                "@media (max-width: 600px)": {
+                  padding: "12px",
+                },
+              }}
+            >
+              <Typography
                 sx={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  padding: "24px 0 0",
-                  "@media (max-width: 600px)": {
-                    padding: "12px 0 0",
-                  },
+                  fontFamily: "Nunito Sans",
+                  fontWeight: "400",
+                  fontSize: "12px",
+                  lineHeight: "16px",
+                  marginRight: "16px",
                 }}
               >
-                <CustomTablePagination
-                  count={totalRows ?? 0}
-                  page={page}
-                  rowsPerPage={rowsPerPage}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  rowsPerPageOptions={rowsPerPageOptions}
-                />
-              </Box>
-            ) : (
-              <Box
-                display="flex"
-                justifyContent="flex-end"
-                alignItems="center"
-                sx={{
-                  padding: "16px",
-                  backgroundColor: "#fff",
-                  borderRadius: "4px",
-                  "@media (max-width: 600px)": {
-                    padding: "12px",
-                  },
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontFamily: "Nunito Sans",
-                    fontWeight: "400",
-                    fontSize: "12px",
-                    lineHeight: "16px",
-                    marginRight: "16px",
-                  }}
-                >
-                  {`1 - ${totalRows} of ${totalRows}`}
-                </Typography>
-              </Box>
-            )}
+                {`1 - ${totalRows} of ${totalRows}`}
+              </Typography>
+            </Box>
+          )}
         </Box>
         {klaviyoIconPopupOpen && isEdit === true && (
           <>
