@@ -16,7 +16,8 @@ import { AxiosError } from "axios";
 import HintCard from "@/app/(client)/components/HintCard";
 import { domainSelectorHintCards } from "./context/hintsCardsContent";
 import { useGetStartedHints } from "./context/PixelInstallHintsContext";
-import { showErrorToast } from "@/components/ToastNotification";
+import { showErrorToast, showToast } from "@/components/ToastNotification";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 interface Domain {
   id: number;
@@ -44,6 +45,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
   const [isFocused, setIsFocused] = useState(false);
   const handleFocus = () => setIsFocused(true);
   const handleBlur = () => setIsFocused(false);
+  const [loading, setLoading] = useState(false);
 
   const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,}$/;
 
@@ -128,10 +130,13 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
     }
 
     try {
+      setLoading(true)
       const response = await axiosInstance.post("/domains/", {
         domain: newDomain.trim(),
       });
       if (response.status === 201) {
+        let cleanedDomain = newDomain.trim().replace(/^https?:\/\//, "");
+        sessionStorage.setItem("current_domain", cleanedDomain);
         const newDom: Domain = response.data;
         const updatedDomains = [...domains, newDom];
         const me = JSON.parse(sessionStorage.getItem("me") || "{}");
@@ -143,6 +148,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
         setNewDomain("");
         setAddingNew(false);
         setError(null);
+        showToast("Domain added successfully");
       }
     } catch (err) {
       if (
@@ -153,6 +159,8 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
       } else {
         setError("Failed to add domain");
       }
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -172,6 +180,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
         }
       }}
     >
+      {loading && <CustomizedProgressBar />}
       <Box sx={{ display: "flex", alignItems: "center", gap: 1, pb: "4px" }}>
         <Typography
           sx={{

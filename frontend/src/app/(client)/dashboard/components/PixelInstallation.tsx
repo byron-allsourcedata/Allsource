@@ -42,9 +42,15 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
   const [showManualInline, setShowManualInline] = useState(false);
   const [showGoogleInline, setShowGoogleInline] = useState(false);
   const [showCMSInline, setShowCMSInline] = useState(false);
+  const [installStatus, setInstallStatus] = useState<"success" | "failed" | null>(null);
   const manualRef = useRef<HTMLDivElement | null>(null);
   const googleRef = useRef<HTMLDivElement | null>(null);
   const cmsRef = useRef<HTMLDivElement | null>(null);
+
+  const UpdateInstallStatus = (status: "success" | "failed") => {
+    setInstallStatus(status)
+    onInstallStatusChange(status)
+  }
 
   const installManually = async () => {
     if (showManualInline) {
@@ -305,6 +311,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
               onClick={installGoogleTag}
               sx={{
                 ...buttonGoogle(showGoogleInline),
+                pointerEvents: installStatus !== null ? "none" : "initial",
                 ...((sourcePlatform === "shopify" ||
                   sourcePlatform === "big_commerce") && {
                   color: "grey",
@@ -336,23 +343,29 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
                 />
                 <Box
                   sx={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
+                    display: "flex",
+                    flexDirection: "column",
                   }}
                 >
-                  <CustomTooltip
-                    title={
-                      "Quickly integrate using Google Tag Manager for seamless setup."
-                    }
-                    linkText="Learn more"
-                    linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/how-to-integrate-google-tag-manager"
-                  />
+                  <Typography
+                    className="table-data"
+                    sx={{
+                      color: "rgba(43, 91, 0, 1) !important",
+                      fontSize: "12px !important",
+                      backgroundColor: "rgba(234, 248, 221, 1) !important",
+                      padding: "4px 16px",
+                      borderRadius: "4px",
+                      textTransform: 'none'
+                    }}
+                  >
+                    Recommended
+                  </Typography>
                 </Box>
               </Box>
               <Typography className="second-sub-title" sx={typographyGoogle}>
                 Install on Google Tag Manager
               </Typography>
+
             </Button>
           </Grid>
           <Grid item xs={12} md={4}>
@@ -362,6 +375,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
               onClick={installManually}
               sx={{
                 ...buttonStyles(showManualInline),
+                opacity: installStatus !== null ? "0.5" : "1",
                 ...((sourcePlatform === "shopify" ||
                   sourcePlatform === "big_commerce") && {
                   color: "grey",
@@ -372,7 +386,8 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
               }}
               disabled={
                 sourcePlatform === "shopify" ||
-                sourcePlatform === "big_commerce"
+                sourcePlatform === "big_commerce" ||
+                installStatus !== null
               }
             >
               <Box
@@ -416,7 +431,10 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
               variant="outlined"
               fullWidth
               onClick={installCMS}
-              sx={buttonStyles(showCMSInline)}
+              sx={{ ...buttonStyles(showCMSInline), opacity: installStatus !== null ? "0.5" : "1" }}
+              disabled={
+                installStatus !== null
+              }
             >
               <Box
                 sx={{
@@ -515,7 +533,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
         )}
         {showGoogleInline && (
           <Box ref={googleRef} sx={{ width: '100%' }}>
-            <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} onInstallStatusChange={onInstallStatusChange} />
+            <GoogleTagPopup open={opengoogle} handleClose={handleGoogleClose} onInstallStatusChange={UpdateInstallStatus} />
           </Box>
         )}
         {showCMSInline && (
@@ -573,6 +591,8 @@ const buttonGoogle = (showGoogleInline: boolean) => ({
   flexDirection: "column",
   alignItems: "flex-start",
   padding: "0.875rem",
+  gap: 1,
+  pt: 1,
   borderColor: "rgba(228, 228, 228, 1)",
   border: showGoogleInline
     ? "1px solid rgba(56, 152, 252, 1)"
