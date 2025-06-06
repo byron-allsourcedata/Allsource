@@ -140,16 +140,16 @@ export const PlanCard: React.FC<{
                         <Box
                             sx={{
                                 display: "flex",
-                                justifyContent: "space-between",
                                 alignItems: "end",
                                 marginBottom: 2,
+                                gap: "8px",
                             }}
                         >
-                            <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <Box sx={{ display: "flex", whiteSpace: "nowrap", alignItems: "center", gap: "8px", }}>
                                 <PlanTitle>{plan.title}</PlanTitle>
                             </Box>
 
-                            <Row gap="0.25rem">
+                            <Row gap="0.25rem" sx={{marginLeft: "auto",}}>
                                 <PlanPrice>{plan.price.value.toLocaleString()}</PlanPrice>
                                 <PlanTerm>/</PlanTerm>
                                 <PlanTerm>{plan.price.y}</PlanTerm>
