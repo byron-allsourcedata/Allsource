@@ -7,7 +7,7 @@ export type Plan = {
         y: string;
     };
     isActive: boolean;
-    isPopular: boolean;
+    isRecommended: boolean;
     permanentLimits: Advantage[];
     monthlyLimits: Advantage[];
     giftedFunds: Advantage[];
@@ -18,10 +18,10 @@ export const plans: Plan[] = [
         title: "Free Trial",
         isActive: false,
         price: {
-            value: "0",
+            value: "$0",
             y: "month",
         },
-        isPopular: true,
+        isRecommended: false,
         permanentLimits: [
             {
                 good: true,
@@ -61,7 +61,7 @@ export const plans: Plan[] = [
             value: "$0,08",
             y: "record",
         },
-        isPopular: false,
+        isRecommended: false,
         permanentLimits: [
             {
                 good: true,
@@ -101,7 +101,7 @@ export const plans: Plan[] = [
             value: "$5,000",
             y: "month",
         },
-        isPopular: true,
+        isRecommended: true,
         permanentLimits: [
             {
                 good: true,
@@ -141,7 +141,7 @@ export const plans: Plan[] = [
             y: "month",
         },
         isActive: false,
-        isPopular: false,
+        isRecommended: false,
         permanentLimits: [
             {
                 good: true,

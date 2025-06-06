@@ -12,8 +12,8 @@ import { showErrorToast, showToast } from '../../../../components/ToastNotificat
 import axios from 'axios';
 import { getCalendlyPopupUrl } from '@/services/booking';
 import { plans as defaultPlans, Plan } from './plans';
-
-
+import { display } from '@mui/system';
+import { fetchUserData } from '@/services/meService';
 
 const subscriptionStyles = {
     title: {
@@ -27,15 +27,15 @@ const subscriptionStyles = {
         gap: 3,
         justifyContent: 'space-between',
         width: '100%',
-        marginTop: '40px',
         '@media (max-width: 900px)': {
             flexDirection: 'column',
             marginTop: '24px'
         },
     },
     formWrapper: {
+        display: "flex",
+        alignItems: "end",
         '@media (min-width: 901px)': {
-            // width: '344px'
             width: '100%'
         }
     },
@@ -103,7 +103,7 @@ export const SettingsSubscription: React.FC = () => {
     const [allPlans, setAllPlans] = useState<any[]>([]);
     const [credits, setCredits] = useState<number>(50000);
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
-    const [tabValue, setTabValue] = useState(0);
+    const [tabValue, setTabValue] = useState(1);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
     const [cancelSubscriptionPlanPopupOpen, setCancelSubscriptionPlanPopupOpen] = useState(false);
@@ -115,6 +115,8 @@ export const SettingsSubscription: React.FC = () => {
     const [showSlider, setShowSlider] = useState(true);
     const [utmParams, setUtmParams] = useState<string | null>(null);
     const [activePlan, setActivePlan] = useState<any>(null);
+    const [isTrial, setIsTrial] = useState<boolean | null>(null);
+
     const sourcePlatform = useMemo(() => {
         if (typeof window !== 'undefined') {
             const savedMe = sessionStorage.getItem('me');
@@ -139,7 +141,7 @@ export const SettingsSubscription: React.FC = () => {
         const period_plans = allPlans.filter((plan: any) => plan.interval === period);
         setPlans(defaultPlans)
         // setPlans(period_plans);
-        
+
     };
 
     const handleCustomPlanPopupOpen = () => {
@@ -195,11 +197,11 @@ export const SettingsSubscription: React.FC = () => {
                 setHasActivePlan(!!active);
 
                 const interval = active ? active.interval : 'month';
-                if (interval === 'year') {
-                    setTabValue(1);
-                } else {
-                    setTabValue(0);
-                }
+                // if (interval === 'year') {
+                //     setTabValue(1);
+                // } else {
+                //     setTabValue(0);
+                // }
                 const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
                 setPlans(defaultPlans);
             } catch (error) {
@@ -208,6 +210,14 @@ export const SettingsSubscription: React.FC = () => {
             }
         };
 
+        const loadUser = async () => {
+            const userData = await fetchUserData();
+            if (userData) {
+                setIsTrial(!!userData.trial);
+            }
+        };
+
+        loadUser();
         fetchData();
     }, []);
 
@@ -305,7 +315,7 @@ export const SettingsSubscription: React.FC = () => {
 
     // Filter plans based on the selected tab
     const filteredPlans = plans;
-    
+
     // .filter(plan =>
     //     (tabValue === 0 && plan.interval === 'month') ||
     //     (tabValue === 1 && plan.interval === 'year')
@@ -388,12 +398,11 @@ export const SettingsSubscription: React.FC = () => {
     };
 
     return (
-        <Box sx={{ marginBottom: '12px', pr:'1rem', '@media (max-width: 600px)':{ pr:'16px'} }}>
-
+        <Box sx={{ marginBottom: '12px', pr: '1rem', '@media (max-width: 600px)': { pr: '16px' } }}>
             {/* Plans Section */}
             <Box sx={{ marginBottom: 4 }}>
                 <Box sx={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 4, marginBottom: 2, position: 'relative',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 4, marginBottom: 1, position: 'relative',
                     '@media (max-width: 600px)': {
                         justifyContent: 'start'
                     }
@@ -428,43 +437,56 @@ export const SettingsSubscription: React.FC = () => {
                             />
                         </Tabs>
                     </Box>
-                    {sourcePlatform !== 'shopify' && (
-                        <Button variant="outlined" className='hyperlink-red' sx={{
-                            position: 'absolute',
-                            right: 0,
-                            color: 'rgba(56, 152, 252, 1) !important',
-                            borderRadius: '4px',
-                            border: '1px solid rgba(56, 152, 252, 1)',
-                            boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                            textTransform: 'none',
-                            padding: '9px 16px',
-                            '&:hover': {
-                                background: 'transparent'
-                            },
-                            '@media (max-width: 600px)': {
-                                display: 'none'
-                            }
-                        }} onClick={handleCustomPlanPopupOpen}>
-                            Custom Plan
-                        </Button>
-                    )}
-                
                 </Box>
 
-                
+
                 <Box sx={subscriptionStyles.formContainer}>
                     {filteredPlans.length > 0 ? (
-                        plans.map((plan, index) => (
-                            <Box key={index} sx={subscriptionStyles.formWrapper}>
-                                <PlanCard
-                                    plan={plan}
-                                    activePlanTitle={activePlan?.title || ''}
-                                    activePlanPeriod={activePlan?.interval || ''}
-                                    tabValue={tabValue}
-                                    onChoose={handleChoosePlan}
-                                />
-                            </Box>
-                        ))
+                        plans.map((plan, index) => {
+                            if (isTrial === false && plan.title === "Free Trial") {
+                                return null;
+                            }
+                            let buttonText = "Speak to Us";
+                            let disabled = false;
+
+                            if (isTrial === true) {
+                                if (plan.title === "Free Trial") {
+                                    buttonText = "Current Plan";
+                                    disabled = true;
+                                } else if (plan.title === "Basic") {
+                                    buttonText = "Instant Upgrade";
+                                    disabled = false;
+                                } else {
+                                    buttonText = "Speak to Us";
+                                    disabled = false;
+                                }
+                            } else {
+                                if (plan.title === "Basic") {
+                                    buttonText = "Current Plan";
+                                    disabled = true;
+                                } else {
+                                    buttonText = "Speak to Us";
+                                    disabled = false;
+                                }
+                            }
+
+                            return (
+                                <Box key={index} sx={subscriptionStyles.formWrapper}>
+                                    <PlanCard
+                                        plan={plan}
+                                        activePlanTitle={activePlan?.title || ""}
+                                        activePlanPeriod={activePlan?.interval || ""}
+                                        tabValue={tabValue}
+                                        isRecommended={plan.isRecommended}
+                                        buttonProps={{
+                                            onChoose: handleChoosePlan,
+                                            text: buttonText,
+                                            disabled: disabled,
+                                        }}
+                                    />
+                                </Box>
+                            );
+                        })
                     ) : (
                         <Typography>No plans available</Typography>
                     )}
