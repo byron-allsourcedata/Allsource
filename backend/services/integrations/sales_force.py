@@ -220,11 +220,13 @@ class SalesForceIntegrationsService:
             raise HTTPException(status_code=400, detail="Failed to get access token")
         
     async def create_sync(self, leads_type: str, domain_id: int, created_by: str, user: dict, data_map: List[DataMap] = []):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+        credentials = self.get_credentials(user_id=user.get('id'), domain_id=domain_id)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'domain_id': domain_id,
             'leads_type': leads_type,
+            'sent_contacts': -1,
+            'sync_type': DataSyncType.CONTACT.value,
             'data_map': data_map,
             'created_by': created_by,
         })
@@ -252,7 +254,7 @@ class SalesForceIntegrationsService:
         response.raise_for_status()
         return response.text
 
-    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict = {}):
         profiles = []
         access_token = self.get_access_token(user_integration.access_token)
         if not access_token:

@@ -45,6 +45,7 @@ class TypeOfSourceOrigin(Enum):
 class DataSyncType(Enum):
     AUDIENCE = 'audience'
     PIXEL = 'pixel'
+    CONTACT = 'contact'
 
 class IntegrationLimit(Enum):
     MAILCHIMP = 10000

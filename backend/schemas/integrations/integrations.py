@@ -127,7 +127,7 @@ class SyncCreate(BaseModel):
     integrations_users_sync_id: Optional[int] = None
     leads_type: Optional[str] = 'allContacts'
     data_map: Optional[List[DataMap]] = None
-    campaign_id: Optional[int] = None
+    campaign: Optional[Campaign] = None
 
 class SyncRequest(BaseModel):
     list_id: str

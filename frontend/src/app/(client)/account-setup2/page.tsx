@@ -1053,7 +1053,7 @@ const AccountSetup = () => {
       }
 
       const hasQuery = url.includes("?");
-      const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}` + `&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/leads?pixel_installed=true`;
+      const newUrl = url + (hasQuery ? "&" : "?") + "mff=true" + `&api=${apiUrl}` + `&domain_url=${process.env.NEXT_PUBLIC_BASE_URL}/leads`;
       window.open(newUrl, "_blank");
     }
   };

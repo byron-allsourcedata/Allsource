@@ -141,7 +141,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
   };
 
   const { hints, cards, changeDataSyncHint, resetDataSyncHints } = useDataSyncHints();
-  const { hasNotification } = useNotification();  
+  const { hasNotification } = useNotification();
 
   useEffect(() => {
     handleIntegrationsSync();
@@ -1010,9 +1010,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                         </Box>
                       </TableCell>
                       <TableCell sx={datasyncStyle.table_array}>
-                        {new Intl.NumberFormat("en-US").format(
-                          row.active_segments
-                        ) || "--"}
+                        {row.active_segments === -1
+                          ? "unlimit"
+                          : new Intl.NumberFormat("en-US").format(row.active_segments) || "--"}
                       </TableCell>
                       <TableCell sx={datasyncStyle.table_array}>
                         {new Intl.NumberFormat("en-US").format(
@@ -1192,53 +1192,53 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
                 )}
             </Box>
           </Popover>
-            {totalRows && totalRows > 10 ? (
-              <Box
+          {totalRows && totalRows > 10 ? (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "flex-end",
+                padding: "24px 0 0",
+                "@media (max-width: 600px)": {
+                  padding: "12px 0 0",
+                },
+              }}
+            >
+              <CustomTablePagination
+                count={totalRows ?? 0}
+                page={page}
+                rowsPerPage={rowsPerPage}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={rowsPerPageOptions}
+              />
+            </Box>
+          ) : (
+            <Box
+              display="flex"
+              justifyContent="flex-end"
+              alignItems="center"
+              sx={{
+                padding: "16px",
+                backgroundColor: "#fff",
+                borderRadius: "4px",
+                "@media (max-width: 600px)": {
+                  padding: "12px",
+                },
+              }}
+            >
+              <Typography
                 sx={{
-                  display: "flex",
-                  justifyContent: "flex-end",
-                  padding: "24px 0 0",
-                  "@media (max-width: 600px)": {
-                    padding: "12px 0 0",
-                  },
+                  fontFamily: "Nunito Sans",
+                  fontWeight: "400",
+                  fontSize: "12px",
+                  lineHeight: "16px",
+                  marginRight: "16px",
                 }}
               >
-                <CustomTablePagination
-                  count={totalRows ?? 0}
-                  page={page}
-                  rowsPerPage={rowsPerPage}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  rowsPerPageOptions={rowsPerPageOptions}
-                />
-              </Box>
-            ) : (
-              <Box
-                display="flex"
-                justifyContent="flex-end"
-                alignItems="center"
-                sx={{
-                  padding: "16px",
-                  backgroundColor: "#fff",
-                  borderRadius: "4px",
-                  "@media (max-width: 600px)": {
-                    padding: "12px",
-                  },
-                }}
-              >
-                <Typography
-                  sx={{
-                    fontFamily: "Nunito Sans",
-                    fontWeight: "400",
-                    fontSize: "12px",
-                    lineHeight: "16px",
-                    marginRight: "16px",
-                  }}
-                >
-                  {`1 - ${totalRows} of ${totalRows}`}
-                </Typography>
-              </Box>
-            )}
+                {`1 - ${totalRows} of ${totalRows}`}
+              </Typography>
+            </Box>
+          )}
         </Box>
         {klaviyoIconPopupOpen && isEdit === true && (
           <>

@@ -80,7 +80,6 @@ def assume_role(role_arn, sts_client):
 
 async def send_sse(connection, user_id: int, data: dict):
     try:
-        print(f"userd_id = {user_id}")
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
             connection=connection,

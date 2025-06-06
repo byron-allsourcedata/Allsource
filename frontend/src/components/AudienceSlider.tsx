@@ -283,32 +283,32 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({ open, onClose, selectedLe
             case 'meta':
                 handleMetaIconPopupOpen()
                 break
-            case 'klaviyo':
-                handleKlaviyoIconPopupOpen()
-                break
+            // case 'klaviyo':
+            //     handleKlaviyoIconPopupOpen()
+            //     break
             case 'bing_ads':
                 handleBingAdsIconPopupOpen()
                 break
             case 'mailchimp':
                 handleMailchimpIconPopupIconOpen()
                 break
-            case 'omnisend':
-                handleOmnisendIconPopupOpen()
-                break
-            case 'sendlane':
-                handleSendlaneIconPopupOpen()
-                break
+            // case 'omnisend':
+            //     handleOmnisendIconPopupOpen()
+            //     break
+            // case 'sendlane':
+            //     handleSendlaneIconPopupOpen()
+            //     break
             case 's3':
                 handleS3IconPopupOpen()
                 break
-            case 'slack':
-                handleSlackIconPopupIconOpen()
-                break
+            // case 'slack':
+            //     handleSlackIconPopupIconOpen()
+            //     break
             case 'google_ads':
                 handleGoogleAdsIconPopupIconOpen()
-            case 'webhook':
-                handleWebhookIconPopupOpen()
-                break
+            // case 'webhook':
+            //     handleWebhookIconPopupOpen()
+            //     break
             case 'hubspot':
                 handleHubspotIconPopupOpen()
                 break

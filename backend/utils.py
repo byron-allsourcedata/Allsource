@@ -3,6 +3,8 @@ import re
 import os
 import hashlib
 import json
+from typing import Optional, Any, LiteralString
+
 import regex
 from urllib.parse import urlparse, parse_qs
 import logging
@@ -12,23 +14,29 @@ from services.integrations.million_verifier import MillionVerifierIntegrationsSe
 from config.rmq_connection import publish_rabbitmq_message_with_channel
 
 logger = logging.getLogger(__name__)
+
+
 def get_utc_aware_date():
     return datetime.now(timezone.utc).replace(microsecond=0)
 
+
 def get_md5_hash(email):
     md5_token_info = {
-                    'user_mail': email,
-                    'salt': os.getenv('SECRET_SALT')
-                }
+        'user_mail': email,
+        'salt': os.getenv('SECRET_SALT')
+    }
     json_string = json.dumps(md5_token_info, sort_keys=True)
     md5_hash = hashlib.md5(json_string.encode()).hexdigest()
     return md5_hash
 
+
 def get_utc_aware_date_for_postgres():
     return get_utc_aware_date().isoformat()[:-6] + "Z"
 
+
 def timestamp_to_date(timestamp):
-        return datetime.fromtimestamp(timestamp)
+    return datetime.fromtimestamp(timestamp)
+
 
 def get_valid_email(user: FiveXFiveUser, million_verifier_integrations: MillionVerifierIntegrationsService) -> str:
     email_fields = [
@@ -58,6 +66,7 @@ def get_valid_email(user: FiveXFiveUser, million_verifier_integrations: MillionV
         return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
     return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
+
 def get_valid_email_without_million(user: FiveXFiveUser) -> str:
     email_fields = [
         'business_email',
@@ -70,9 +79,10 @@ def get_valid_email_without_million(user: FiveXFiveUser) -> str:
             emails = extract_first_email(email)
             for e in emails:
                 return e
-                
+
     return ProccessDataSyncResult.INCORRECT_FORMAT.value
-    
+
+
 def format_phone_number(phones):
     if phones:
         phone_list = phones.split(',')
@@ -87,9 +97,11 @@ def format_phone_number(phones):
 
         return ', '.join(formatted_phones)
 
+
 def extract_first_email(text: str) -> str:
     email_regex = r"[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+"
     return re.findall(email_regex, text)
+
 
 def create_company_alias(company_name):
     if company_name:
@@ -98,8 +110,9 @@ def create_company_alias(company_name):
         alias = company_name.replace(" ", "_")
         alias = alias.lower()
         return alias
-    
-def validate_and_format_phone(phone_numbers: str) -> str:
+
+
+def validate_and_format_phone(phone_numbers: str) -> LiteralString | None:
     if not phone_numbers:
         return None
 
@@ -119,14 +132,37 @@ def validate_and_format_phone(phone_numbers: str) -> str:
             continue
 
     unique_numbers = sorted(set(formatted_numbers))
-    return ', '.join(unique_numbers) if unique_numbers else None
+    if unique_numbers:
+        return ', '.join(unique_numbers)
+    else:
+        return None
+
+
+def get_valid_location(user: FiveXFiveUser) -> tuple[Any | None, Any | None, Any | None, Any | None]:
+    return (
+        getattr(user, "personal_address") or getattr(user, "company_address", None),
+        getattr(user, "personal_city") or getattr(user, "company_city", None),
+        getattr(user, "personal_state") or getattr(user, "company_state", None),
+        getattr(user, "personal_zip") or getattr(user, "company_zip", None),
+    )
+
+
+def get_valid_phone(user: FiveXFiveUser) -> Optional[str]:
+    return (
+            getattr(user, 'mobile_phone') or
+            getattr(user, 'personal_phone') or
+            getattr(user, 'direct_number') or
+            getattr(user, 'company_phone', None)
+    )
+
 
 def get_url_params_list(url: str) -> str:
     parsed_url = urlparse(url)
     params = parse_qs(parsed_url.query)
     param_list = [f"{key}={','.join(value)}" for key, value in params.items()]
-    
+
     return ", ".join(param_list)
+
 
 def normalize_url(url):
     """
@@ -157,6 +193,7 @@ def normalize_url(url):
     normalized_url = scheme + path
     return normalized_url
 
+
 def check_certain_urls(page, activate_certain_urls):
     page_path = re.sub(r'^(https?://)?(www\.)?', '', page).strip('/')
     urls_to_check = activate_certain_urls.split(', ')
@@ -165,6 +202,7 @@ def check_certain_urls(page, activate_certain_urls):
         if (page_path == url) or (url in page_path):
             return True
     return False
+
 
 async def send_sse(channel, user_id: int, data: dict):
     try:

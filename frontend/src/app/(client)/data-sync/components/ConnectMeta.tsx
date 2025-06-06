@@ -48,7 +48,10 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [anchorElCampaign, setAnchorElCampaign] = useState<null | HTMLElement>(null);
     const [selectedOption, setSelectedOption] = useState<MetaAuidece | null>(null);
-    const [selectedOptionCampaign, setSelectedOptionCampaign] = useState<MetaCampaign | null>(null);
+    const [selectedOptionCampaign, setSelectedOptionCampaign] = useState<MetaCampaign | null>({
+        list_name: data?.campaign_name,
+        id: data?.campaign_id
+      });
     const [inputValue, setInputValue] = useState('');
     const [inputValueCampaign, setInputValueCampaign] = useState(data?.campaign_name ?? '');
     const [showCreateForm, setShowCreateForm] = useState<boolean>(false);
@@ -101,18 +104,13 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
             return
         }
 
-        if (formValues.dailyBudget < 100 || formValues.dailyBudget > 1000000000){
+        if (formValues.dailyBudget < 100 || formValues.dailyBudget > 1000000000) {
             showErrorToast('the daily Budget must be more than 100 and less than 1000000000')
             return
         }
 
         if (isChecked) {
-            const newKlaviyoList = { id: '-1', list_name: formValues.campaignName }
-            setSelectedOptionCampaign(newKlaviyoList);
-            if (isKlaviyoList(newKlaviyoList)) {
-                setIsDropdownValid(true);
-            }
-            setInputValueCampaign(newKlaviyoList.list_name)
+            createNewCampaign()
             handleCloseCampaign();
         }
     };
@@ -122,7 +120,11 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
             if (open) {
                 setLoading(true);
                 try {
-                    const response = await axiosInstance.get('/integrations/sync/ad_accounts');
+                    const response = await axiosInstance.get('integrations/sync/ad_accounts', {
+                        params: {
+                            service_name: 'meta'
+                        }
+                    });
                     if (response.status === 200) {
                         setAdAccounts(response.data);
                         const foundItem = response.data?.find((item: any) => item.id === data?.customer_id);
@@ -551,6 +553,42 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
         }
     };
 
+    const createNewCampaign = async () => {
+        try {
+            setLoading(false)
+            const newListResponse = await axiosInstance.post('/integrations/sync/campaign/', {
+                ad_account_id: String(optionAdAccount?.id),
+                campaign_name: String(formValues.campaignName),
+                bid_amount: String(formValues.bidAmount),
+                daily_budget: String(formValues.dailyBudget)
+            }, {
+                params: {
+                    service_name: "meta"
+                }
+            });
+
+            if (newListResponse.status === 201 && newListResponse.data.terms_link && !newListResponse.data.terms_accepted) {
+                showErrorToast('User has not accepted the Custom Audience Terms.')
+                window.open(newListResponse.data.terms_link, '_blank');
+                return
+            }
+            if (newListResponse.status !== 201) {
+                showErrorToast('Failed to create a new tags')
+            }
+            else {
+                const data = newListResponse.data
+                setInputValueCampaign(data.list_name)
+                setSelectedOptionCampaign(data);
+                setMetaCampaign(prev => [...prev, data]);
+                setIsDropdownValid(true)
+
+            }
+        } catch {
+        } finally {
+            setLoading(false)
+        }
+    };
+
     const deleteOpen = Boolean(deleteAnchorEl);
     const deleteId = deleteOpen ? 'delete-popover' : undefined;
 
@@ -571,21 +609,9 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
             if (UpdateKlaviuo) {
 
                 const requestData: any = {
-                    customer_id: String(optionAdAccount?.id),
-                    list_id: list?.id,
                     integrations_users_sync_id: UpdateKlaviuo,
                     leads_type: selectedRadioValue,
                 };
-
-                if (selectedOptionCampaign?.id || formValues?.campaignName) {
-                    requestData.campaign = {
-                        campaign_id: selectedOptionCampaign?.id,
-                        campaign_name: formValues?.campaignName,
-                        campaign_objective: formValues?.campaignObjective,
-                        bid_amount: formValues?.bidAmount,
-                        daily_budget: formValues?.dailyBudget
-                    };
-                }
 
                 const response = await axiosInstance.put('/data-sync/sync', requestData, {
                     params: {
@@ -606,13 +632,17 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({ open, onClose, data, isE
                     leads_type: selectedRadioValue,
                 };
                 if (selectedOptionCampaign?.id || formValues?.campaignName) {
-                    requestData.campaign = {
-                        campaign_id: selectedOptionCampaign?.id,
-                        campaign_name: selectedOptionCampaign?.list_name,
-                        campaign_objective: formValues?.campaignObjective,
-                        bid_amount: formValues?.bidAmount,
-                        daily_budget: formValues?.dailyBudget
+                    const campaign: any = {
+                        campaign_id: String(selectedOptionCampaign?.id),
+                        campaign_name: String(selectedOptionCampaign?.list_name)
                     };
+                    if (formValues?.campaignObjective?.trim()) {
+                        campaign.campaign_objective = String(formValues.campaignObjective);
+                    }
+                    if (formValues?.bidAmount) {
+                        campaign.bid_amount = String(formValues.bidAmount);
+                    }
+                    requestData.campaign = campaign;
                 }
 
                 const response = await axiosInstance.post('/data-sync/sync', requestData, {

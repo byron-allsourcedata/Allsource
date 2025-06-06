@@ -194,14 +194,16 @@ class MailchimpIntegrationsService:
                                              server=data_center, user=user)
         return integration
 
-    async def create_sync(self, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap], domain_id: int,
+    async def create_sync(self, domain_id: int, leads_type: str, list_id: str, list_name: str, data_map: List[DataMap],
                           created_by: str, user: dict):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+        credentials = self.get_credentials(user_id=user.get('id'), domain_id=domain_id)
         sync = self.sync_persistence.create_sync({
             'integration_id': credentials.id,
             'list_id': list_id,
             'list_name': list_name,
+            'sent_contacts': -1,
             'domain_id': domain_id,
+            'sync_type': DataSyncType.CONTACT.value,
             'leads_type': leads_type,
             'data_map': data_map,
             'created_by': created_by,
@@ -223,7 +225,7 @@ class MailchimpIntegrationsService:
         })
         return sync
 
-    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict = {}):
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__mapped_member_into_list(enrichment_user, target_schema, validations, integration_data_sync.data_map)

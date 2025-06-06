@@ -238,22 +238,14 @@ class MetaIntegrationsService:
             'list_name': list.name
         }
 
-    # def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int,
-    #               customer_id=None, list_id=None):
-    #     credentials = self.get_credentials(domain_id, user_id)
-    #     campaign_id = campaign.get('campaign_id')
-    #     if campaign_id == -1 and campaign.get('campaign_name'):
-    #         campaign_id = self.create_campaign(campaign['campaign_name'], campaign['daily_budget'],
-    #                                            credentials.access_token, customer_id)
-    #     if campaign_id and campaign_id != -1:
-    #         self.create_adset(customer_id, campaign['campaign_name'], campaign_id, credentials.access_token, list_id)
-    #
-    #     sync = self.sync_persistence.edit_sync({
-    #         'integration_id': credentials.id,
-    #         'leads_type': leads_type,
-    #         'created_by': created_by,
-    #     }, integrations_users_sync_id)
-    #     return sync
+    def edit_sync(self, leads_type: str, integrations_users_sync_id: int, domain_id: int, created_by: str, user_id: int):
+        credentials = self.get_credentials(domain_id, user_id)
+        sync = self.sync_persistence.edit_sync({
+            'integration_id': credentials.id,
+            'leads_type': leads_type,
+            'created_by': created_by,
+        }, integrations_users_sync_id)
+        return sync
 
     def create_adset(self, ad_account_id, campaign_id, access_token, list_id, campaign_name, bid_amount=None, campaign_objective=None):
         url = f'https://graph.facebook.com/v22.0/{ad_account_id}/adsets'
@@ -303,9 +295,11 @@ class MetaIntegrationsService:
             'list_name': campaign_name
         }
 
-    async def create_sync(self, customer_id: int, domain_id: int, created_by: str,
-                          user: dict, leads_type: str, list_id: str, list_name: str, campaign: {} = None):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get('id'))
+    async def create_sync(self, domain_id: int, customer_id: int, created_by: str,
+                          user: dict, leads_type: str, list_id: str, list_name: str, campaign=None):
+        if campaign is None:
+            campaign = {}
+        credentials = self.get_credentials(user_id=user.get('id'), domain_id=domain_id)
         if campaign.get('campaign_id'):
             self.create_adset(ad_account_id=customer_id, campaign_id=campaign['campaign_id'], access_token=credentials.access_token,
                               list_id=list_id, campaign_objective=campaign['campaign_objective'],
@@ -315,8 +309,10 @@ class MetaIntegrationsService:
             'list_id': list_id,
             'list_name': list_name,
             'leads_type': leads_type,
-            'domain_id': domain_id,
+            'sent_contacts': -1,
+            'sync_type': DataSyncType.CONTACT.value,
             'customer_id': customer_id,
+            'domain_id': domain_id,
             'campaign_id': campaign.get('campaign_id'),
             'campaign_name': campaign.get('campaign_name'),
             'created_by': created_by
@@ -348,7 +344,7 @@ class MetaIntegrationsService:
         return sync
 
     async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync,
-                                enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
+                                enrichment_users: EnrichmentUser, target_schema: str, validations: dict = {}):
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__hash_mapped_meta_user(enrichment_user, target_schema, validations)
