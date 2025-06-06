@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Typography, Button, Tabs, Tab, TextField, Slider, IconButton, Drawer, Divider, Chip, Link } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import PlanCard from './PlanCard';
+import { PlanCard } from './PlanCard';
 import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
 import CustomTooltip from '../../../../components/customToolTip';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
@@ -11,6 +11,7 @@ import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from '../../../../components/ToastNotification';
 import axios from 'axios';
 import { getCalendlyPopupUrl } from '@/services/booking';
+import { plans as defaultPlans, Plan } from './plans';
 
 
 
@@ -97,7 +98,7 @@ const marks = [
 ];
 
 export const SettingsSubscription: React.FC = () => {
-    const [plans, setPlans] = useState<any[]>([]);
+    const [plans, setPlans] = useState<Plan[]>([]);
     const [allPlans, setAllPlans] = useState<any[]>([]);
     const [credits, setCredits] = useState<number>(50000);
     const [selectedPlan, setSelectedPlan] = useState<any>(null);
@@ -135,7 +136,9 @@ export const SettingsSubscription: React.FC = () => {
         setTabValue(newValue);
         const period = newValue === 0 ? 'month' : 'year';
         const period_plans = allPlans.filter((plan: any) => plan.interval === period);
-        setPlans(period_plans);
+        setPlans(defaultPlans)
+        // setPlans(period_plans);
+        
     };
 
     const handleCustomPlanPopupOpen = () => {
@@ -197,7 +200,7 @@ export const SettingsSubscription: React.FC = () => {
                     setTabValue(0);
                 }
                 const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
-                setPlans(period_plans);
+                setPlans(defaultPlans);
             } catch (error) {
             } finally {
                 setIsLoading(false);
@@ -300,10 +303,12 @@ export const SettingsSubscription: React.FC = () => {
 
 
     // Filter plans based on the selected tab
-    const filteredPlans = plans.filter(plan =>
-        (tabValue === 0 && plan.interval === 'month') ||
-        (tabValue === 1 && plan.interval === 'year')
-    );
+    const filteredPlans = plans;
+    
+    // .filter(plan =>
+    //     (tabValue === 0 && plan.interval === 'month') ||
+    //     (tabValue === 1 && plan.interval === 'year')
+    // );
 
 
 
@@ -442,13 +447,13 @@ export const SettingsSubscription: React.FC = () => {
                             Custom Plan
                         </Button>
                     )}
-
+                
                 </Box>
 
-                {/* Display Plans */}
+                
                 <Box sx={subscriptionStyles.formContainer}>
                     {filteredPlans.length > 0 ? (
-                        filteredPlans.map((plan, index) => (
+                        plans.map((plan, index) => (
                             <Box key={index} sx={subscriptionStyles.formWrapper}>
                                 <PlanCard
                                     plan={plan}

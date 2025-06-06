@@ -52,7 +52,9 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
       typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
     if (meItem) {
       const meData = JSON.parse(meItem);
+
       setPrefillData({ email: meData.email, name: meData.full_name });
+
     }
   }, []);
 
