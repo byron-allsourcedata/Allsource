@@ -16,8 +16,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import { showToast } from "@/components/ToastNotification";
-import { get } from "lodash";
-import { getCalendlyPopupUrl } from "@/services/booking";
+import { useBookingUrl, usePrefillData } from "@/services/booking";
 
 interface PopupProps {
   endSetup: () => void;
@@ -25,38 +24,30 @@ interface PopupProps {
 
 const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
   const [open, setOpen] = useState(true);
-  const initialPrefill = { email: "", name: "" };
-  const [prefillData, setPrefillData] = useState<{
-    email: string;
-    name: string;
-  }>(initialPrefill);
-  const [isPrefillLoaded, setIsPrefillLoaded] = useState(false);
+  const [utmParams, setUtmParams] = useState<string | null>(null);
 
   const handleClose = () => {
     setOpen(false);
     endSetup();
   };
 
-  const calendlyPopupRef = useRef<HTMLDivElement | null>(null);
-  const [rootElement, setRootElement] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (calendlyPopupRef.current) {
-      fetchPrefillData();
-      setRootElement(calendlyPopupRef.current);
-    }
-  }, []);
+  const { prefillData, setPrefillData } = usePrefillData(
+    axiosInstance,
+    setUtmParams
+  );
 
   useEffect(() => {
     const meItem =
       typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
     if (meItem) {
       const meData = JSON.parse(meItem);
-      setPrefillData({ email: meData.email, name: meData.full_name });
+      setPrefillData({
+        email: meData.email,
+        firstname: meData.full_name,
+        lastname: "",
+      });
     }
   }, []);
-
-  const [utmParams, setUtmParams] = useState<string | null>(null);
 
   useCalendlyEventListener({
     onEventScheduled: async (e) => {
@@ -74,36 +65,14 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
             invitees: inviteesUUID,
           });
           response;
-        } catch (error) {}
+        } catch (error) { }
         handleClose();
         showToast("You have successfully signed up for a call");
       }
     },
   });
 
-  const fetchPrefillData = async () => {
-    try {
-      const response = await axiosInstance.get("/calendly");
-      const user = response.data.user;
-
-      if (user) {
-        const { full_name, email, utm_params } = user;
-        setUtmParams(utm_params);
-        setPrefillData({
-          email: email || "",
-          name: full_name || "",
-        });
-      } else {
-        setPrefillData(initialPrefill);
-      }
-    } catch (error) {
-      setPrefillData(initialPrefill);
-    } finally {
-      setIsPrefillLoaded(true);
-    }
-  };
-
-  const calendlyPopupUrl = () => getCalendlyPopupUrl(utmParams);
+  const meetingUrl = useBookingUrl(axiosInstance);
 
   return (
     <>
@@ -168,7 +137,7 @@ const DemoPopup: React.FC<PopupProps> = ({ endSetup }) => {
               cursor: "pointer",
             }}
             prefill={prefillData}
-            url={calendlyPopupUrl()}
+            url={meetingUrl}
             rootElement={document.getElementById("calendly-popup-wrapper")!}
             text="Book a Demo"
           />

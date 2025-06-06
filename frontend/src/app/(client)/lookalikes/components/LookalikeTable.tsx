@@ -286,7 +286,7 @@ const LookalikeTable: React.FC<LookalikeTableProps> = ({
     if (text !== "---") {
       navigator.clipboard.writeText(text);
     }
-    alert("Copied to clipboard");
+    showToast("Copied to clipboard");
   };
 
   const fullFormattedFields = (

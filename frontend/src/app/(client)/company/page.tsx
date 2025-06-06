@@ -40,6 +40,10 @@ import { companyTableCards } from "./context/hintsCardsContent";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 import { useScrollShadow } from '@/hooks/useScrollShadow';
 import { SmartCell } from '@/components/table';
+import { EmptyAnalyticsPlaceholder } from '../dashboard/components/placeholders/EmptyPlaceholder';
+import { CalendarButton } from './CalendarButton';
+import { FilterButton } from './FilterButton';
+import { SelectedFilter } from './schemas';
 
 
 interface FetchDataParams {
@@ -78,7 +82,7 @@ const Leads: React.FC = () => {
     const [audiencePopupOpen, setAudiencePopupOpen] = useState(false);
     const [companyEmployeesOpen, setCompanyEmployeesOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [selectedFilters, setSelectedFilters] = useState<{ label: string, value: string }[]>([]);
+    const [selectedFilters, setSelectedFilters] = useState<SelectedFilter[]>([]);
     const [openPopup, setOpenPopup] = React.useState(false);
     const [popupData, setPopupData] = React.useState<any>(null);
     const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>([]);
@@ -796,6 +800,84 @@ const Leads: React.FC = () => {
         },
     ];
 
+    const noContactsYet = data.length === 0 && selectedFilters.length === 0;
+
+    const DownloadButton = (
+        <Button
+            aria-controls={dropdownOpen ? 'account-dropdown' : undefined}
+            aria-haspopup="true"
+            aria-expanded={dropdownOpen ? 'true' : undefined}
+            disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
+            sx={{
+                textTransform: 'none',
+                color: 'rgba(128, 128, 128, 1)',
+                opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.5' : '1',
+                border: '1px solid rgba(184, 184, 184, 1)',
+                borderRadius: '4px',
+                padding: '8px',
+                minWidth: 'auto',
+                '@media (max-width: 900px)': {
+                    border: 'none',
+                    padding: 0
+                },
+                '&:hover': {
+                    backgroundColor: 'transparent',
+                    border: '1px solid rgba(56, 152, 252, 1)',
+                    color: 'rgba(56, 152, 252, 1)',
+                    '& .MuiSvgIcon-root': {
+                        color: 'rgba(56, 152, 252, 1)'
+                    }
+                }
+            }}
+            onClick={handleDownload}
+        >
+            <DownloadIcon fontSize='medium' />
+        </Button>
+    )
+    
+    const ButtonGroup = (
+        <Box sx={{
+            display: 'flex', flexDirection: 'row', position: "relative", alignItems: 'center', gap: '15px', pt: '4px',
+            '@media (max-width: 900px)': {
+                gap: '8px'
+            }
+        }}>
+            { DownloadButton }
+            <HintCard
+                card={companyTableCards["download"]}
+                positionLeft={-420}
+                positionTop={20}
+                rightSide={true}
+                isOpenBody={companyTableHints["download"].showBody}
+                toggleClick={() => {
+                if (companyTableHints["overview"].showBody) {
+                    changeCompanyTableHint("overview", "showBody", "close")
+                }
+                if (companyTableHints["employees"].showBody) {
+                    changeCompanyTableHint("employees", "showBody", "close")
+                }
+                changeCompanyTableHint("download", "showBody", "toggle")
+                }}
+                closeClick={() => {
+                    changeCompanyTableHint("download", "showBody", "close")
+                }}
+            />
+
+            <FilterButton 
+                dropdownOpen={dropdownOpen} 
+                handleFilterPopupOpen={handleFilterPopupOpen} 
+                selectedFilters={selectedFilters} 
+                status={status}                                            
+            />
+            <CalendarButton 
+                isCalendarOpen={isCalendarOpen} 
+                handleCalendarClick={handleCalendarClick} 
+                formattedDates={formattedDates} 
+                status={status}
+            />
+        </Box>
+    )
+
     return (
         <>
             {loading && (
@@ -817,7 +899,7 @@ const Leads: React.FC = () => {
                         marginLeft: 0,
                     }
                 }}>
-                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', gap: noContactsYet ? 2 : undefined }}>
                         {status !== 'PIXEL_INSTALLATION_NEEDED' && (
                             <>
                                 <Box
@@ -837,7 +919,7 @@ const Leads: React.FC = () => {
                                             marginTop: hasNotification ? '2rem' : '0rem',
                                         },
                                     }}>
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3 }}>
+                                    <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 3, height: "46px" }}>
                                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                                             <Typography className='first-sub-title' style={{ textWrap: "nowrap" }}>
                                                 Company list {data.length === 0 ? '' : `(${count_companies})`}
@@ -997,6 +1079,7 @@ const Leads: React.FC = () => {
                                             </Typography>
                                         </Button>
                                     </Box>
+                                    { !noContactsYet && ButtonGroup }
                                 </Box>
                                 <Box sx={{ display: 'flex', flexDirection: 'row', gap: 1, mt: 2, overflowX: 'auto', "@media (max-width: 600px)": { mb: 1 } }}>
                                     {selectedFilters.length > 0 && (
@@ -1120,6 +1203,50 @@ const Leads: React.FC = () => {
                                         Please check back later.
                                     </Typography>
                                 </Box>
+                                 <Box sx={{ mr: 2 }}>
+                                 <FirstTimeScreenCommonVariant2
+                                     Header={{
+                                         TextTitle: "Install Pixel",
+                                     }}
+                                     InfoNotification={{
+                                         Text: "Company page will be available after pixel installation",
+                                     }}
+                                     HelpCard={{
+                                         headline: "Need Help with Pixel Setup?",
+                                         description:
+                                             "Book a 30-minute call, and our expert will guide you through the platform and troubleshoot any pixel issues.",
+                                         helpPoints: [
+                                             {
+                                                 title: "Quick Setup Walkthrough",
+                                                 description: "Step-by-step pixel installation help",
+                                             },
+                                             {
+                                                 title: "Troubleshooting Session",
+                                                 description: "Fix errors and verify your pixel",
+                                             },
+                                             {
+                                                 title: "Platform Demo",
+                                                 description: "See how everything works in action",
+                                             },
+                                         ],
+                                     }}
+                                     Content={
+                                         <GettingStartedSection />
+                                     }
+                                     ContentStyleSX={{
+                                         display: "flex",
+                                         flexDirection: "column",
+                                         justifyContent: "center",
+                                         alignItems: "center",
+                                         width: "100%",
+                                         pb: 2,
+                                         mt: 2,
+                                     }}
+                                 />
+                             </Box>
+                            ) : 
+                            data.length === 0 ? (
+                                <EmptyAnalyticsPlaceholder />
                             ) : (
                                 <Grid container spacing={1} sx={{ flex: 1 }}>
                                     <Grid item xs={12}>

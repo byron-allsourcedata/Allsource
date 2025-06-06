@@ -213,7 +213,8 @@ class AudienceSmartsService:
             active_segment_records=active_segment_records,
             total_records=total_records,
             target_schema=target_schema,
-            status=status
+            status=status,
+            need_validate=need_validate
         )
         await self.start_scripts_for_matching(created_data.id, user.get("id"), need_validate, data_sources, active_segment_records, validation_params)
 

@@ -9,13 +9,11 @@ import { signupStyles } from './signupStyles';
 import { showErrorToast } from '../../../components/ToastNotification';
 import { GoogleLogin } from '@react-oauth/google';
 import { fetchUserData } from '@/services/meService';
-import { useUser } from '@/context/UserContext';
 import CustomizedProgressBar from '@/components/CustomizedProgressBar';
 
 const UTM_STORAGE_KEY = 'utm_params'
 
 const Signup: React.FC = () => {
-  const { partner } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
   const is_with_card = searchParams.get('is_with_card');
@@ -81,7 +79,7 @@ const Signup: React.FC = () => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       if (token) {
-        router.push(partner ? '/partners' : '/dashboard');
+        router.push('/dashboard');
       }
     }
   }, [router]);
@@ -111,7 +109,7 @@ const Signup: React.FC = () => {
 
     switch (name) {
       case 'full_name':
-        const isValid = /^[а-яА-Яa-zA-Z0-9.\s]+$/.test(value.trim());
+        const isValid = /^[а-яА-Яa-zA-Z0-9.\s#[\]_-]+$/.test(value.trim());
 
         const hasLetter = /[a-zA-Zа-яА-Я]/.test(value);
 
@@ -269,7 +267,7 @@ const Signup: React.FC = () => {
               break;
             case "PIXEL_INSTALLATION_NEEDED":
               get_me()
-              router.push(partner ? '/partners' : '/dashboard');
+              router.push('/dashboard');
               break;
             default:
               get_me()
@@ -367,7 +365,7 @@ const Signup: React.FC = () => {
                 switch (response.data.status) {
                   case 'SUCCESS':
                     get_me()
-                    router.push(partner ? '/partners' : '/dashboard');
+                    router.push('/dashboard');
                     break;
                   case "SUCCESS_ADMIN":
                     await fetchUserData();
@@ -409,7 +407,7 @@ const Signup: React.FC = () => {
                     break;
                   case "PIXEL_INSTALLATION_NEEDED":
                     get_me()
-                    router.push(partner ? '/partners' : '/dashboard');
+                    router.push('/dashboard');
                     break;
                   case "EMAIL_ALREADY_EXISTS":
                     showErrorToast('Email is associated with an account. Please login')

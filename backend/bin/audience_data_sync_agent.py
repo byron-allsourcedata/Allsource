@@ -9,7 +9,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from uuid import UUID
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
 from models.enrichment.enrichment_users import EnrichmentUser
@@ -98,17 +98,17 @@ def update_users_integrations(session, status, integration_data_sync_id, service
         
     if status == ProccessDataSyncResult.AUTHENTICATION_FAILED.value or ProccessDataSyncResult.PAYMENT_REQUIRED.value:
         logging.info(f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}")
+
         subquery = (
-            session.query(AudienceSmart.id)
+            select(AudienceSmart.id)
             .join(IntegrationUserSync, IntegrationUserSync.smart_audience_id == AudienceSmart.id)
             .filter(IntegrationUserSync.id == integration_data_sync_id)
-            .subquery()
         )
-        session.query(AudienceSmart)\
-            .filter(AudienceSmart.id.in_(subquery))\
+
+        session.query(AudienceSmart) \
+            .filter(AudienceSmart.id.in_(subquery)) \
             .update({AudienceSmart.status: AudienceSmartStatuses.FAILED.value}, synchronize_session=False)
 
-        
         if service_name == SourcePlatformEnum.WEBHOOK.value:
             session.query(IntegrationUserSync).filter(IntegrationUserSync.id == integration_data_sync_id).update({
                 'sync_status': False,

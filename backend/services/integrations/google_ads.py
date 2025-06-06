@@ -519,7 +519,7 @@ class GoogleAdsIntegrationsService:
             logger.error(f"An unexpected error occurred: {e}")
             return {'status': IntegrationsStatus.CREDENTAILS_INVALID.value, 'message': str(e)}
         
-    def get_customer_info(self, domain_id, user_id):
+    def get_ad_accounts(self, domain_id, user_id):
         try:
             credential = self.get_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)

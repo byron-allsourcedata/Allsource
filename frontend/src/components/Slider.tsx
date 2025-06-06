@@ -7,8 +7,7 @@ import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import axiosInstance from '@/axios/axiosInterceptorInstance';
 import { showToast } from './ToastNotification';
-import CustomizedProgressBar from './CustomizedProgressBar';
-import { getCalendlyPopupUrl } from '@/services/booking';
+import { useBookingUrl } from '@/services/booking';
 
 
 interface SliderProps {
@@ -37,7 +36,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
     email: email || '',
   };
 
-  const calendlyPopupUrl = () => getCalendlyPopupUrl(utmParams);
+  const meetingUrl = useBookingUrl(axiosInstance);
   
   const fetchPrefillData = async () => {
     try {
@@ -212,7 +211,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
                       cursor: 'pointer',
                     }}
                     prefill={prefillData}
-                    url={calendlyPopupUrl()}
+                    url={meetingUrl}
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Reschedule a Call"
                   />
@@ -313,7 +312,7 @@ const Slider: React.FC<SliderProps> = ({ setShowSliders }) => {
                       textTransform: 'none',
                       cursor: 'pointer',
                     }}
-                    url={calendlyPopupUrl()}
+                    url={meetingUrl}
                     rootElement={document.getElementById("calendly-popup-wrapper")!}
                     text="Get Started"
                     prefill={prefillDataStorage}
