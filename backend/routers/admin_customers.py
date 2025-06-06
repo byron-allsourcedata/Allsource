@@ -44,8 +44,11 @@ async def get_users(
         join_date_end: int = Query(None, description="End date in integer format"),
         per_page: int = Query(9, alias="per_page", ge=1, le=500, description="Items per page"),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
-    users = admin_customers_service.get_customer_users(search_query=search_query, page=page, per_page=per_page, sort_by=sort_by, sort_order=sort_order,
-                                                       last_login_date_start=last_login_date_start, last_login_date_end=last_login_date_end, join_date_start=join_date_start,
+    users = admin_customers_service.get_customer_users(search_query=search_query, page=page, per_page=per_page,
+                                                       sort_by=sort_by, sort_order=sort_order,
+                                                       last_login_date_start=last_login_date_start,
+                                                       last_login_date_end=last_login_date_end,
+                                                       join_date_start=join_date_start,
                                                        join_date_end=join_date_end)
     return users
 
@@ -63,8 +66,11 @@ async def get_admins(
         join_date_start: int = Query(None, description="Start date in integer format"),
         join_date_end: int = Query(None, description="End date in integer format"),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
-    users = admin_customers_service.get_admin_users(search_query=search_query, page=page, per_page=per_page, sort_by=sort_by, sort_order=sort_order, last_login_date_start=last_login_date_start,
-                                                    last_login_date_end=last_login_date_end, join_date_start=join_date_start, join_date_end=join_date_end)
+    users = admin_customers_service.get_admin_users(search_query=search_query, page=page, per_page=per_page,
+                                                    sort_by=sort_by, sort_order=sort_order,
+                                                    last_login_date_start=last_login_date_start,
+                                                    last_login_date_end=last_login_date_end,
+                                                    join_date_start=join_date_start, join_date_end=join_date_end)
     return users
 
 
@@ -78,8 +84,14 @@ def update_user(update_data: UpdateUserRequest,
 @router.get('/audience-metrics')
 async def get_audience_metrics(
         user: dict = Depends(check_user_admin),
+        last_login_date_start: int = Query(None, description="Start date in integer format"),
+        last_login_date_end: int = Query(None, description="End date in integer format"),
+        join_date_start: int = Query(None, description="Start date in integer format"),
+        join_date_end: int = Query(None, description="End date in integer format"),
         admin_customers_service: AdminCustomersService = Depends(get_admin_customers_service)):
-    users = admin_customers_service.get_audience_metrics()
+    users = admin_customers_service.get_audience_metrics(last_login_date_start=last_login_date_start,
+                                                         last_login_date_end=last_login_date_end,
+                                                         join_date_start=join_date_start, join_date_end=join_date_end)
     return users
 
 

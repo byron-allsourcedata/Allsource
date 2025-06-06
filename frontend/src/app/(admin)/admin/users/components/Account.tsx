@@ -172,6 +172,11 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
                     background: 'rgba(235, 243, 254, 1)',
                     color: 'rgba(20, 110, 246, 1) !important',
                 };
+            case "PIXEL_INSTALLED":
+                return {
+                    background: 'rgba(234, 248, 221, 1)',
+                    color: 'rgba(43, 91, 0, 1) !important',
+                };
             case 'FILL_COMPANY_DETAILS':
                 return {
                     background: 'rgba(254, 243, 205, 1)',
@@ -226,6 +231,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, tableHeaders, set
         }
         if (text === 'PAYMENT_NEEDED') {
             return "Payment needed"
+        }
+        if (text === 'PIXEL_INSTALLED') {
+            return "Pixel installed"
         }
     };
 
@@ -549,6 +557,7 @@ interface PartnersAccountsProps {
     setLoading: (state: boolean) => void;
     tabIndex?: number;
     handleTabChange?: (event: React.SyntheticEvent | null, newIndex: number) => void;
+    setDateRanges?: (dateRanges: Record<string, number>) => void;
     setMasterData?: any
 }
 
@@ -571,7 +580,7 @@ interface FilterParams {
 }
 
 
-const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabIndex, handleTabChange }) => {
+const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabIndex, handleTabChange, setDateRanges }) => {
     const tableHeaders = is_admin
         ? [
             { key: 'name', label: 'Account name', sortable: false },
@@ -612,6 +621,7 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
 
     const fetchData = async () => {
         try {
+            const updatedRanges: Record<string, number> = {};
             let url = '/admin'
 
             if (tabIndex === 0) {
@@ -628,10 +638,15 @@ const Account: React.FC<PartnersAccountsProps> = ({ is_admin, setLoading, tabInd
 
                     const startUnix = Math.floor(new Date(start).getTime() / 1000);
                     const endUnix = Math.floor(new Date(end).getTime() / 1000);
-
+                    updatedRanges[paramKeyStart] = startUnix;
+                    updatedRanges[paramKeyEnd] = endUnix;
                     url += `&${paramKeyStart}=${startUnix}&${paramKeyEnd}=${endUnix}`;
                 }
-            });
+            })
+
+            if (selectedFilters.length > 0) {
+                    setDateRanges?.({ ...updatedRanges });
+                }
 
             if (search.trim() !== "") {
                 url += `&search_query=${encodeURIComponent(search.trim())}`;

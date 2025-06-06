@@ -208,7 +208,10 @@ class AdminCustomersService:
                     if user_plan.is_trial:
                         payment_status = 'TRIAL_ACTIVE'
                     else:
-                        payment_status = 'SUBSCRIPTION_ACTIVE'
+                        if user.get('pixel_installed_count') and user.get('pixel_installed_count') > 1:
+                            payment_status = 'PIXEL_INSTALLED'
+                        else:
+                            payment_status = 'SUBSCRIPTION_ACTIVE'
 
             result.append({
                 "id": user.get('id'),
@@ -230,9 +233,11 @@ class AdminCustomersService:
             'count': total_count
         }
 
-    def get_audience_metrics(self):
+    def get_audience_metrics(self, last_login_date_start, last_login_date_end, join_date_start, join_date_end):
         audience_metrics = {}
-        dashboard_audience_data = self.dashboard_audience_persistence.get_audience_metrics()
+        dashboard_audience_data = self.dashboard_audience_persistence.get_audience_metrics(
+            last_login_date_start=last_login_date_start, last_login_date_end=last_login_date_end,
+            join_date_start=join_date_start, join_date_end=join_date_end)
 
         for result in dashboard_audience_data:
             key = result['key']
