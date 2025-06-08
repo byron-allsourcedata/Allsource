@@ -41,49 +41,54 @@ class UsersService:
         if update_data.password != update_data.confirm_password:
             return UpdatePasswordStatus.PASSWORDS_DO_NOT_MATCH
         update_data.password = get_password_hash(update_data.password)
-        logger.info('update password success')
-        self.user_persistence_service.update_password(self.user.get('id'), update_data.password)
+        logger.info("update password success")
+        self.user_persistence_service.update_password(
+            self.user.get("id"), update_data.password
+        )
         return UpdatePasswordStatus.PASSWORD_UPDATED_SUCCESSFULLY
 
     def get_info_plan(self):
-        if not self.user.get('is_book_call_passed') and not self.user.get('is_with_card'):
+        if not self.user.get("is_book_call_passed") and not self.user.get(
+            "is_with_card"
+        ):
+            return {"is_trial_pending": True}
+        result = (
+            self.subscription_service.get_user_subscription_with_trial_status(
+                self.user.get("id")
+            )
+        )
+        if result["subscription"]:
             return {
-                'is_trial_pending': True
+                "is_artificial_status": result["is_artificial_status"],
+                "is_trial": result["subscription"].is_trial,
+                "plan_end": result["subscription"].plan_end,
+                "lead_credits": result["lead_credits"],
             }
-        result = self.subscription_service.get_user_subscription_with_trial_status(
-            self.user.get('id'))
-        if result['subscription']:
-            return {
-                "is_artificial_status": result['is_artificial_status'],
-                "is_trial": result['subscription'].is_trial,
-                "plan_end": result['subscription'].plan_end,
-                "lead_credits": result['lead_credits']
-            }
-        return {
-            "is_trial_pending": True
-        }
+        return {"is_trial_pending": True}
 
     def get_my_info(self):
-        if self.user.get('team_member'):
-            team_member = self.user.get('team_member')
+        if self.user.get("team_member"):
+            team_member = self.user.get("team_member")
             return {
-                "email": team_member.get('email'),
-                "full_name": team_member.get('full_name'),
-                "is_partner": team_member.get('is_partner'),
-                "business_type": team_member.get('business_type'),
-                "source": team_member.get('source_platform'),
-                "leads_credits": self.user.get('leads_credits')
+                "email": team_member.get("email"),
+                "full_name": team_member.get("full_name"),
+                "is_partner": team_member.get("is_partner"),
+                "business_type": team_member.get("business_type"),
+                "source": team_member.get("source_platform"),
+                "leads_credits": self.user.get("leads_credits"),
             }
         return {
-            "email": self.user.get('email'),
-            "full_name": self.user.get('full_name'),
-            "is_partner": self.user.get('is_partner'),
-            "business_type": self.user.get('business_type'),
-            "source_platform": self.user.get('source_platform'),
-            "leads_credits": self.user.get('leads_credits')
+            "email": self.user.get("email"),
+            "full_name": self.user.get("full_name"),
+            "is_partner": self.user.get("is_partner"),
+            "business_type": self.user.get("business_type"),
+            "source_platform": self.user.get("source_platform"),
+            "leads_credits": self.user.get("leads_credits"),
         }
 
-    def add_percent_to_domain(self, domain: UserDomains, activate_percent, is_current_subscription_id):
+    def add_percent_to_domain(
+        self, domain: UserDomains, activate_percent, is_current_subscription_id
+    ):
         domain_percent = 0
         if domain.is_pixel_installed:
             domain_percent = 75
@@ -92,20 +97,32 @@ class UsersService:
                 domain_percent = activate_percent
             elif is_current_subscription_id:
                 domain_percent = 50
-                
+
         domain_data = self.domain_mapped(domain)
         domain_data["activate_percent"] = domain_percent
         return domain_data
 
     def get_domains(self):
-        domains = self.domain_persistence.get_domains_by_user(self.user.get('id'))
+        domains = self.domain_persistence.get_domains_by_user(
+            self.user.get("id")
+        )
         enabled_domains = [domain for domain in domains if domain.is_enable]
-        disabled_domains = [domain for domain in domains if not domain.is_enable]
-        enabled_domains_sorted = sorted(enabled_domains, key=lambda x: (x.created_at, x.id))
-        disabled_domains_sorted = sorted(disabled_domains, key=lambda x: (x.created_at, x.id))
+        disabled_domains = [
+            domain for domain in domains if not domain.is_enable
+        ]
+        enabled_domains_sorted = sorted(
+            enabled_domains, key=lambda x: (x.created_at, x.id)
+        )
+        disabled_domains_sorted = sorted(
+            disabled_domains, key=lambda x: (x.created_at, x.id)
+        )
         sorted_domains = enabled_domains_sorted + disabled_domains_sorted
         return [
-            self.add_percent_to_domain(domain, self.user.get('activate_steps_percent'), self.user.get('current_subscription_id'))
+            self.add_percent_to_domain(
+                domain,
+                self.user.get("activate_steps_percent"),
+                self.user.get("current_subscription_id"),
+            )
             for domain in sorted_domains
         ]
 
@@ -115,16 +132,19 @@ class UsersService:
             domain=domain.domain,
             data_provider_id=domain.data_provider_id,
             is_pixel_installed=domain.is_pixel_installed,
-            enable=domain.is_enable
+            enable=domain.is_enable,
         ).model_dump()
 
     def get_meeting_info(self) -> MeetingData:
         return self.meeting_schedule.get_meeting_info(self.user)
 
-
     def add_stripe_account(self, stripe_connected_account_id: str):
-        self.user_persistence_service.add_stripe_account(self.user.get('id'), stripe_connected_account_id)
-        return 'SUCCESS_CONNECT'
+        self.user_persistence_service.add_stripe_account(
+            self.user.get("id"), stripe_connected_account_id
+        )
+        return "SUCCESS_CONNECT"
 
     def check_source_import(self):
-        return self.user_persistence_service.has_sources_for_user(self.user.get('id'))
+        return self.user_persistence_service.has_sources_for_user(
+            self.user.get("id")
+        )

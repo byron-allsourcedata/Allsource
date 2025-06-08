@@ -12,15 +12,22 @@ from fastapi import HTTPException
 from schemas.lookalikes import CalculateRequest
 from schemas.similar_audiences import AudienceFeatureImportance
 from services.similar_audiences import SimilarAudienceService
-from services.similar_audiences.exceptions import EqualTrainTargets, EmptyTrainDataset
+from services.similar_audiences.exceptions import (
+    EqualTrainTargets,
+    EmptyTrainDataset,
+)
 
 
 class AudienceInsightsService:
-    def __init__(self, insights_persistence_service: AudienceInsightsPersistence):
+    def __init__(
+        self, insights_persistence_service: AudienceInsightsPersistence
+    ):
         self.insights_persistence_service = insights_persistence_service
 
     def get_source_insights(self, source_uuid: UUID, user: dict) -> dict:
-        raw_data = self.insights_persistence_service.get_source_insights_info(source_uuid, user.get('id'))
+        raw_data = self.insights_persistence_service.get_source_insights_info(
+            source_uuid, user.get("id")
+        )
         response = self._build_response(raw_data.get("insights", {}))
         response["name"] = raw_data.get("name", "")
         response["audience_type"] = raw_data.get("audience_type", "")
@@ -28,7 +35,11 @@ class AudienceInsightsService:
         return response
 
     def get_lookalike_insights(self, lookalike_uuid: UUID, user: dict) -> dict:
-        raw_data = self.insights_persistence_service.get_lookalike_insights_info(lookalike_uuid, user.get('id'))
+        raw_data = (
+            self.insights_persistence_service.get_lookalike_insights_info(
+                lookalike_uuid, user.get("id")
+            )
+        )
         response = self._build_response(raw_data.get("insights", {}))
         response["name"] = raw_data.get("name", "")
         response["audience_type"] = raw_data.get("audience_type", "")
@@ -38,14 +49,20 @@ class AudienceInsightsService:
     def get_data_sources(self, user: dict) -> dict:
         user_id = user["id"]
         sources = self.insights_persistence_service.get_recent_sources(user_id)
-        lookalikes = self.insights_persistence_service.get_recent_lookalikes(user_id)
+        lookalikes = self.insights_persistence_service.get_recent_lookalikes(
+            user_id
+        )
 
         return self._combine_limit_20(sources, lookalikes)
 
     def search_data_sources(self, user: dict, query: str) -> dict:
         user_id = user["id"]
-        sources = self.insights_persistence_service.search_sources(user_id, query)
-        lookalikes = self.insights_persistence_service.search_lookalikes(user_id, query)
+        sources = self.insights_persistence_service.search_sources(
+            user_id, query
+        )
+        lookalikes = self.insights_persistence_service.search_lookalikes(
+            user_id, query
+        )
 
         return self._combine_limit_20(sources, lookalikes)
 
@@ -61,7 +78,7 @@ class AudienceInsightsService:
                 "financial": data.get("financial", {}),
                 "lifestyle": data.get("lifestyle", {}),
                 "voter": data.get("voter", {}),
-            }
+            },
         )
         return parsed.dict()
 
@@ -73,7 +90,7 @@ class AudienceInsightsService:
                 "type": item.type,
                 "data_source_type": "sources",
                 "size": item.matched_records,
-                "created_date": item.created_date.isoformat()
+                "created_date": item.created_date.isoformat(),
             }
             for item in sources
         ]
@@ -85,7 +102,7 @@ class AudienceInsightsService:
                 "type": item.type,
                 "data_source_type": "lookalikes",
                 "size": item.size,
-                "created_date": item.created_date.isoformat()
+                "created_date": item.created_date.isoformat(),
             }
             for item in lookalikes
         ]
@@ -95,7 +112,10 @@ class AudienceInsightsService:
         combined = combined[:20]
 
         return {
-            "source": [x for x in combined if x["data_source_type"] == "sources"],
-            "lookalike": [x for x in combined if x["data_source_type"] == "lookalikes"]
+            "source": [
+                x for x in combined if x["data_source_type"] == "sources"
+            ],
+            "lookalike": [
+                x for x in combined if x["data_source_type"] == "lookalikes"
+            ],
         }
-

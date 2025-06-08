@@ -1,76 +1,66 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, Integer, BOOLEAN, TIMESTAMP, TEXT, ForeignKey, Boolean, text, Index, Sequence
+from sqlalchemy import (
+    Column,
+    Integer,
+    BOOLEAN,
+    TIMESTAMP,
+    TEXT,
+    ForeignKey,
+    Boolean,
+    text,
+    Index,
+    Sequence,
+)
 
 from .base import Base
 
 
 class SuppressionRule(Base):
-    __tablename__ = 'suppressions_rules'
+    __tablename__ = "suppressions_rules"
     __table_args__ = (
-        Index('suppressions_rules_domain_id_idx', 'domain_id', unique=True),
+        Index("suppressions_rules_domain_id_idx", "domain_id", unique=True),
     )
 
     id = Column(
         Integer,
-        Sequence('suppressions_rules_id_seq', metadata=Base.metadata),
+        Sequence("suppressions_rules_id_seq", metadata=Base.metadata),
         primary_key=True,
         nullable=False,
     )
-    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
-    is_stop_collecting_contacts = Column(
-        Boolean,
-        nullable=True
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
-    is_url_certain_activation = Column(
-        Boolean,
-        nullable=True
-    )
-    activate_certain_urls = Column(
-        TEXT,
-        nullable=True
-    )
-    is_based_activation = Column(
-        Boolean,
-        nullable=True
-    )
-    activate_based_urls = Column(
-        TEXT,
-        nullable=True
-    )
+    is_stop_collecting_contacts = Column(Boolean, nullable=True)
+    is_url_certain_activation = Column(Boolean, nullable=True)
+    activate_certain_urls = Column(TEXT, nullable=True)
+    is_based_activation = Column(Boolean, nullable=True)
+    activate_based_urls = Column(TEXT, nullable=True)
     domain_id = Column(
         Integer,
-        ForeignKey('users_domains.id', ondelete='CASCADE'),
-        nullable=False
+        ForeignKey("users_domains.id", ondelete="CASCADE"),
+        nullable=False,
     )
-    actual_contect_days = Column(
-        Integer,
-        nullable=True
+    actual_contect_days = Column(Integer, nullable=True)
+    page_views_limit = Column(Integer, nullable=True)
+    collection_timeout = Column(Integer, nullable=True)
+    suppressions_multiple_emails = Column(TEXT, nullable=True)
+    is_delete_contacts = Column(
+        BOOLEAN, nullable=False, server_default=text("FALSE")
     )
-    page_views_limit = Column(
-        Integer,
-        nullable=True
-    )
-    collection_timeout = Column(
-        Integer,
-        nullable=True
-    )
-    suppressions_multiple_emails = Column(
-        TEXT,
-        nullable=True
-    )
-    is_delete_contacts = Column(BOOLEAN, nullable=False, server_default=text('FALSE'))
-    
+
     def to_dict(self):
-            return {
-                "is_stop_collecting_contacts": self.is_stop_collecting_contacts,
-                "is_url_certain_activation": self.is_url_certain_activation,
-                "activate_certain_urls": self.activate_certain_urls,
-                "is_based_activation": self.is_based_activation,
-                "activate_based_urls": self.activate_based_urls,
-                "page_views_limit": self.page_views_limit,
-                "collection_timeout": self.collection_timeout,
-                "suppressions_multiple_emails": self.suppressions_multiple_emails,
-                "actual_contect_days": self.actual_contect_days,
-                "is_delete_contacts": self.is_delete_contacts
-            }
+        return {
+            "is_stop_collecting_contacts": self.is_stop_collecting_contacts,
+            "is_url_certain_activation": self.is_url_certain_activation,
+            "activate_certain_urls": self.activate_certain_urls,
+            "is_based_activation": self.is_based_activation,
+            "activate_based_urls": self.activate_based_urls,
+            "page_views_limit": self.page_views_limit,
+            "collection_timeout": self.collection_timeout,
+            "suppressions_multiple_emails": self.suppressions_multiple_emails,
+            "actual_contect_days": self.actual_contect_days,
+            "is_delete_contacts": self.is_delete_contacts,
+        }

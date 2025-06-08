@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from typing import Optional, Callable, Dict, List
 from decimal import Decimal
 
+
 class AudienceData(BaseModel):
     EmailAddress: Optional[str] = None
     PersonExactAge: Optional[str] = None
@@ -26,6 +27,7 @@ class AudienceData(BaseModel):
     IsTraveler: Optional[str] = None
     customer_value: Decimal
 
+
 class AudienceFeatureImportance(BaseModel):
     PersonExactAge: Optional[float] = 0
     PersonGender: Optional[float] = 0
@@ -49,16 +51,19 @@ class AudienceFeatureImportance(BaseModel):
     state_name: Optional[float] = 0
     state_city: Optional[float] = 0
 
+
 OrderedFeatureRules = Dict[str, Callable[[str], int | None]]
+
 
 class NormalizationConfig(BaseModel):
     """
-        numerical features: Age, NumberOfChildren
-        unordered features: ZipCode, Gender, HasChildren, IsBookReader
-        ordered features: IncomeCode, Credit Rating
+    numerical features: Age, NumberOfChildren
+    unordered features: ZipCode, Gender, HasChildren, IsBookReader
+    ordered features: IncomeCode, Credit Rating
 
-        ordered features require mapping to int
+    ordered features require mapping to int
     """
+
     numerical_features: List[str]
     unordered_features: List[str]
     ordered_features: OrderedFeatureRules

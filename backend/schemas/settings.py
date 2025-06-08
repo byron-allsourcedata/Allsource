@@ -45,6 +45,7 @@ class SendBilling(BaseModel):
     invoice_id: str
     email: str
 
+
 class ApiKeysRequest(BaseModel):
     id: Optional[str] = None
     api_key: Optional[str] = None

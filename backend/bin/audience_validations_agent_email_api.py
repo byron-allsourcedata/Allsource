@@ -15,31 +15,38 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from models.audience_smarts import AudienceSmart
 from utils import send_sse
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from persistence.million_verifier import MillionVerifierPersistence
 from models.audience_smarts_persons import AudienceSmartPerson
 from persistence.user_persistence import UserPersistence
 from models.audience_smarts_validations import AudienceSmartValidation
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 
 load_dotenv()
 
-AUDIENCE_VALIDATION_AGENT_EMAIL_API = 'aud_validation_agent_email-api'
-AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
+AUDIENCE_VALIDATION_AGENT_EMAIL_API = "aud_validation_agent_email-api"
+AUDIENCE_VALIDATION_FILLER = "aud_validation_filler"
+
 
 def setup_logging(level):
     logging.basicConfig(
         level=level,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
+
 
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
     channel: Channel,
     million_verifier_service: MillionVerifierIntegrationsService,
-    user_persistence: UserPersistence
+    user_persistence: UserPersistence,
 ):
     try:
         body = json.loads(message.body)
@@ -47,7 +54,9 @@ async def process_rmq_message(
         aud_smart_id = body.get("aud_smart_id")
         batch = body.get("batch", [])
         validation_type = body.get("validation_type")
-        count_persons_before_validation = body.get("count_persons_before_validation")
+        count_persons_before_validation = body.get(
+            "count_persons_before_validation"
+        )
         validation_cost = body.get("validation_cost")
         verified_emails = []
         write_off_funds = Decimal(0)
@@ -55,43 +64,47 @@ async def process_rmq_message(
         logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
         for rec in batch:
-            if validation_type == 'personal_email':
+            if validation_type == "personal_email":
                 email = rec.get("personal_email")
                 if not email:
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
-                
+
                 write_off_funds += Decimal(validation_cost)
 
                 if not million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
-                
+
                 verified_emails.append(
-                        AudienceSmartValidation(
-                            audience_smart_person_id=rec["audience_smart_person_id"],
-                            verified_personal_email=email
-                        )
+                    AudienceSmartValidation(
+                        audience_smart_person_id=rec[
+                            "audience_smart_person_id"
+                        ],
+                        verified_personal_email=email,
                     )
-                
-            elif validation_type == 'business_email':
+                )
+
+            elif validation_type == "business_email":
                 email = rec.get("business_email")
                 if not email:
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
 
                 write_off_funds += Decimal(validation_cost)
-                
+
                 if not million_verifier_service.is_email_verify(email):
                     failed_ids.append(rec["audience_smart_person_id"])
                     continue
-                
+
                 verified_emails.append(
-                        AudienceSmartValidation(
-                            audience_smart_person_id=rec["audience_smart_person_id"],
-                            verified_business_email=email
-                        )
+                    AudienceSmartValidation(
+                        audience_smart_person_id=rec[
+                            "audience_smart_person_id"
+                        ],
+                        verified_business_email=email,
                     )
+                )
         if write_off_funds:
             user_persistence.deduct_validation_funds(user_id, write_off_funds)
             # if not resultOperation:
@@ -99,7 +112,7 @@ async def process_rmq_message(
             #     await message.reject(requeue=True)
             #     return
             db_session.flush()
-            
+
         success_ids = [
             rec["audience_smart_person_id"]
             for rec in batch
@@ -109,7 +122,11 @@ async def process_rmq_message(
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
                 [
-                    {"id": pid, "is_validation_processed": False, "is_valid": False}
+                    {
+                        "id": pid,
+                        "is_validation_processed": False,
+                        "is_valid": False,
+                    }
                     for pid in failed_ids
                 ],
             )
@@ -118,7 +135,7 @@ async def process_rmq_message(
         if len(verified_emails):
             db_session.bulk_save_objects(verified_emails)
             db_session.flush()
-        
+
         if success_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
@@ -128,7 +145,7 @@ async def process_rmq_message(
                 ],
             )
             db_session.flush()
-            
+
         db_session.commit()
         logging.info(f"Success ids len: {len(success_ids)}")
         total_validated = db_session.scalar(
@@ -143,10 +160,12 @@ async def process_rmq_message(
                 AudienceSmartPerson.is_validation_processed.is_(False),
             )
         )
-        total_count = db_session.query(AudienceSmartPerson).filter(
-                AudienceSmartPerson.smart_audience_id == aud_smart_id
-            ).count()
-        
+        total_count = (
+            db_session.query(AudienceSmartPerson)
+            .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
+            .count()
+        )
+
         if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
@@ -156,9 +175,15 @@ async def process_rmq_message(
                     for rule in validations[validation_type]:
                         if "delivery" in rule:
                             rule["delivery"]["processed"] = True
-                            rule["delivery"]["count_validated"] = total_validated
-                            rule["delivery"]["count_submited"] = count_persons_before_validation
-                            rule["delivery"]["count_cost"] = str(write_off_funds)
+                            rule["delivery"]["count_validated"] = (
+                                total_validated
+                            )
+                            rule["delivery"]["count_submited"] = (
+                                count_persons_before_validation
+                            )
+                            rule["delivery"]["count_cost"] = str(
+                                write_off_funds
+                            )
                 aud_smart.validations = json.dumps(validations)
             db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -173,7 +198,10 @@ async def process_rmq_message(
         await send_sse(
             channel=channel,
             user_id=user_id,
-            data={"smart_audience_id": aud_smart_id, "total_validated": total_validated},
+            data={
+                "smart_audience_id": aud_smart_id,
+                "total_validated": total_validated,
+            },
         )
         logging.info("sent sse with total count")
 
@@ -185,21 +213,20 @@ async def process_rmq_message(
         await message.reject(requeue=True)
 
 
-
 async def main():
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
-        if arg == 'DEBUG':
+        if arg == "DEBUG":
             log_level = logging.DEBUG
-        elif arg != 'INFO':
+        elif arg != "INFO":
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
-    
+
     setup_logging(log_level)
-    db_username = os.getenv('DB_USERNAME')
-    db_password = os.getenv('DB_PASSWORD')
-    db_host = os.getenv('DB_HOST')
-    db_name = os.getenv('DB_NAME')
+    db_username = os.getenv("DB_USERNAME")
+    db_password = os.getenv("DB_PASSWORD")
+    db_host = os.getenv("DB_HOST")
+    db_name = os.getenv("DB_NAME")
 
     try:
         logging.info("Starting processing...")
@@ -209,7 +236,8 @@ async def main():
         await channel.set_qos(prefetch_count=1)
 
         engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}", pool_pre_ping=True
+            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
+            pool_pre_ping=True,
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
@@ -220,15 +248,23 @@ async def main():
             name=AUDIENCE_VALIDATION_AGENT_EMAIL_API,
             durable=True,
         )
-        million_verifier_service = MillionVerifierIntegrationsService(million_verifier_persistence=MillionVerifierPersistence(db_session))
+        million_verifier_service = MillionVerifierIntegrationsService(
+            million_verifier_persistence=MillionVerifierPersistence(db_session)
+        )
         await queue.consume(
-                functools.partial(process_rmq_message, channel=channel, db_session=db_session, million_verifier_service=million_verifier_service, user_persistence=user_persistence),
-            )
+            functools.partial(
+                process_rmq_message,
+                channel=channel,
+                db_session=db_session,
+                million_verifier_service=million_verifier_service,
+                user_persistence=user_persistence,
+            ),
+        )
 
         await asyncio.Future()
 
     except Exception:
-        logging.error('Unhandled Exception:', exc_info=True)
+        logging.error("Unhandled Exception:", exc_info=True)
         if db_session:
             logging.info("Closing the database session...")
             db_session.close()
@@ -236,7 +272,7 @@ async def main():
             logging.info("Closing RabbitMQ connection...")
             await rmq_connection.close()
         logging.info("Shutting down...")
-        
+
 
 if __name__ == "__main__":
     asyncio.run(main())

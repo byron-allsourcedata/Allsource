@@ -8,8 +8,15 @@ from pydantic.v1 import UUID4
 from sqlalchemy.dialects.postgresql import INT4RANGE
 
 from enums import LookalikeSize, BusinessType
-from models.enrichment import EnrichmentUser, EnrichmentPersonalProfiles, EnrichmentFinancialRecord, EnrichmentLifestyle, \
-    EnrichmentVoterRecord, EnrichmentProfessionalProfile, EnrichmentEmploymentHistory
+from models.enrichment import (
+    EnrichmentUser,
+    EnrichmentPersonalProfiles,
+    EnrichmentFinancialRecord,
+    EnrichmentLifestyle,
+    EnrichmentVoterRecord,
+    EnrichmentProfessionalProfile,
+    EnrichmentEmploymentHistory,
+)
 from models.audience_sources import AudienceSource
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
@@ -22,7 +29,9 @@ from sqlalchemy import asc, desc, or_, func
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from urllib.parse import unquote
-from models.enrichment.enrichment_lookalike_scores import EnrichmentLookalikeScore
+from models.enrichment.enrichment_lookalike_scores import (
+    EnrichmentLookalikeScore,
+)
 from uuid import UUID
 
 from models.users import Users
@@ -34,53 +43,75 @@ class AudienceLookalikesPersistence:
         self.db = db
 
     def get_source_info(self, uuid_of_source, user_id):
-        source = self.db.query(AudienceSource, Users.full_name).join(Users, Users.id == AudienceSource.created_by_user_id) \
-            .filter(AudienceSource.id == uuid_of_source, AudienceSource.user_id == user_id).first()
+        source = (
+            self.db.query(AudienceSource, Users.full_name)
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .filter(
+                AudienceSource.id == uuid_of_source,
+                AudienceSource.user_id == user_id,
+            )
+            .first()
+        )
 
         return source
-    
-    def get_lookalikes(self, user_id: int, page: Optional[int] = None, per_page: Optional[int] = None,
-                       from_date: Optional[int] = None, to_date: Optional[int] = None,
-                       sort_by: Optional[str] = None, sort_order: Optional[str] = None,
-                       lookalike_size: Optional[str] = None, lookalike_type: Optional[str] = None,
-                       search_query: Optional[str] = None):
-        
-        query = self.db.query(
-            AudienceLookalikes,
-            AudienceSource.name,
-            AudienceSource.source_type,
-            Users.full_name,
-            AudienceSource.source_origin,
-            UserDomains.domain,
-            AudienceSource.target_schema)\
-            .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)\
-            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id) \
-            .join(Users, Users.id == AudienceSource.created_by_user_id) \
-            .filter(AudienceLookalikes.user_id == user_id)
 
-        source_count = self.db.query(AudienceSource.id) \
-            .filter(AudienceSource.user_id == user_id) \
+    def get_lookalikes(
+        self,
+        user_id: int,
+        page: Optional[int] = None,
+        per_page: Optional[int] = None,
+        from_date: Optional[int] = None,
+        to_date: Optional[int] = None,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
+        lookalike_size: Optional[str] = None,
+        lookalike_type: Optional[str] = None,
+        search_query: Optional[str] = None,
+    ):
+        query = (
+            self.db.query(
+                AudienceLookalikes,
+                AudienceSource.name,
+                AudienceSource.source_type,
+                Users.full_name,
+                AudienceSource.source_origin,
+                UserDomains.domain,
+                AudienceSource.target_schema,
+            )
+            .join(
+                AudienceSource,
+                AudienceLookalikes.source_uuid == AudienceSource.id,
+            )
+            .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .filter(AudienceLookalikes.user_id == user_id)
+        )
+
+        source_count = (
+            self.db.query(AudienceSource.id)
+            .filter(AudienceSource.user_id == user_id)
             .count()
+        )
 
         if search_query:
             query = query.filter(
                 or_(
                     AudienceLookalikes.name.ilike(f"%{search_query}%"),
                     AudienceSource.name.ilike(f"%{search_query}%"),
-                    Users.full_name.ilike(f"%{search_query}%")
+                    Users.full_name.ilike(f"%{search_query}%"),
                 )
             )
 
         sort_options = {
-            'name': AudienceLookalikes.name,
-            'created_date': AudienceLookalikes.created_date,
-            'size': AudienceLookalikes.size,
+            "name": AudienceLookalikes.name,
+            "created_date": AudienceLookalikes.created_date,
+            "size": AudienceLookalikes.size,
         }
         if sort_by:
             sort_column = sort_options[sort_by]
-            if sort_order == 'asc':
+            if sort_order == "asc":
                 query = query.order_by(asc(sort_column))
-            elif sort_order == 'desc':
+            elif sort_order == "desc":
                 query = query.order_by(desc(sort_column))
         else:
             query = query.order_by(desc(AudienceLookalikes.created_date))
@@ -91,15 +122,20 @@ class AudienceLookalikesPersistence:
 
             query = query.filter(
                 AudienceLookalikes.created_date >= start_date,
-                AudienceLookalikes.created_date <= end_date
+                AudienceLookalikes.created_date <= end_date,
             )
         if lookalike_size:
-            sizes = [unquote(i.strip()) for i in lookalike_size.split(',')]
+            sizes = [unquote(i.strip()) for i in lookalike_size.split(",")]
             query = query.filter(AudienceLookalikes.lookalike_size.in_(sizes))
 
         if lookalike_type:
-            types = [unquote(i.strip()).replace(' ', '_') for i in lookalike_type.split(',')]
-            filters = [AudienceSource.source_type.ilike(f"%{t}%") for t in types]
+            types = [
+                unquote(i.strip()).replace(" ", "_")
+                for i in lookalike_type.split(",")
+            ]
+            filters = [
+                AudienceSource.source_type.ilike(f"%{t}%") for t in types
+            ]
             query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
@@ -108,18 +144,30 @@ class AudienceLookalikesPersistence:
         max_page = math.ceil(count / per_page)
         return result_query, count, max_page, source_count
 
-    def create_lookalike(self, uuid_of_source, user_id, lookalike_size,
-                         lookalike_name, created_by_user_id, audience_feature_importance: AudienceFeatureImportance):
+    def create_lookalike(
+        self,
+        uuid_of_source,
+        user_id,
+        lookalike_size,
+        lookalike_name,
+        created_by_user_id,
+        audience_feature_importance: AudienceFeatureImportance,
+    ):
         source_info = self.get_source_info(uuid_of_source, user_id)
         if not source_info:
-            raise HTTPException(status_code=404, detail="Source not found or access denied")
+            raise HTTPException(
+                status_code=404, detail="Source not found or access denied"
+            )
 
         sources, created_by = source_info
 
-        if sources.matched_records == 0 and sources.matched_records_status != "complete":
+        if (
+            sources.matched_records == 0
+            and sources.matched_records_status != "complete"
+        ):
             raise HTTPException(
                 status_code=400,
-                detail="Cannot create lookalike: no matched records or matching not complete"
+                detail="Cannot create lookalike: no matched records or matching not complete",
             )
 
         audience_feature_dict = {
@@ -128,20 +176,26 @@ class AudienceLookalikesPersistence:
         }
 
         def get_max_size(lookalike_size):
-            if lookalike_size == 'almost_identical':
+            if lookalike_size == "almost_identical":
                 size = 10000
-            elif lookalike_size == 'extremely_similar':
+            elif lookalike_size == "extremely_similar":
                 size = 50000
-            elif lookalike_size == 'very_similar':
+            elif lookalike_size == "very_similar":
                 size = 100000
-            elif lookalike_size == 'quite_similar':
+            elif lookalike_size == "quite_similar":
                 size = 200000
-            elif lookalike_size == 'broad':
+            elif lookalike_size == "broad":
                 size = 500000
 
             return size
 
-        sorted_dict = dict(sorted(audience_feature_dict.items(), key=lambda item: item[1], reverse=True))
+        sorted_dict = dict(
+            sorted(
+                audience_feature_dict.items(),
+                key=lambda item: item[1],
+                reverse=True,
+            )
+        )
         lookalike = AudienceLookalikes(
             name=lookalike_name,
             lookalike_size=lookalike_size,
@@ -150,7 +204,7 @@ class AudienceLookalikesPersistence:
             created_by_user_id=created_by_user_id,
             source_uuid=uuid_of_source,
             significant_fields=sorted_dict,
-            size=get_max_size(lookalike_size)
+            size=get_max_size(lookalike_size),
         )
         self.db.add(lookalike)
         self.db.commit()
@@ -170,10 +224,14 @@ class AudienceLookalikesPersistence:
         }
 
     def delete_lookalike(self, uuid_of_lookalike, user_id):
-        delete_lookalike = self.db.query(AudienceLookalikes).filter(
-            AudienceLookalikes.id == uuid_of_lookalike,
-            AudienceLookalikes.user_id == user_id
-        ).first()
+        delete_lookalike = (
+            self.db.query(AudienceLookalikes)
+            .filter(
+                AudienceLookalikes.id == uuid_of_lookalike,
+                AudienceLookalikes.user_id == user_id,
+            )
+            .first()
+        )
 
         if delete_lookalike:
             try:
@@ -188,27 +246,39 @@ class AudienceLookalikesPersistence:
     def update_lookalike(self, uuid_of_lookalike, name_of_lookalike, user_id):
         query = self.db.query(AudienceLookalikes).filter(
             AudienceLookalikes.id == uuid_of_lookalike,
-            AudienceLookalikes.user_id == user_id
+            AudienceLookalikes.user_id == user_id,
         )
 
-        updated_rows = query.update({AudienceLookalikes.name: name_of_lookalike}, synchronize_session=False)
+        updated_rows = query.update(
+            {AudienceLookalikes.name: name_of_lookalike},
+            synchronize_session=False,
+        )
         self.db.commit()
 
         return updated_rows > 0
 
     def search_lookalikes(self, start_letter, user_id):
-        query = self.db.query(
-            AudienceLookalikes, AudienceSource.name.label('source_name'), AudienceSource.source_type, Users.full_name) \
-            .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id) \
-            .join(Users, Users.id == AudienceSource.created_by_user_id) \
+        query = (
+            self.db.query(
+                AudienceLookalikes,
+                AudienceSource.name.label("source_name"),
+                AudienceSource.source_type,
+                Users.full_name,
+            )
+            .join(
+                AudienceSource,
+                AudienceLookalikes.source_uuid == AudienceSource.id,
+            )
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
             .filter(AudienceLookalikes.user_id == user_id)
+        )
 
         if start_letter:
             query = query.filter(
                 or_(
                     AudienceLookalikes.name.ilike(f"{start_letter}%"),
                     AudienceSource.name.ilike(f"{start_letter}%"),
-                    Users.full_name.ilike(f"{start_letter}%")
+                    Users.full_name.ilike(f"{start_letter}%"),
                 )
             )
 
@@ -217,12 +287,16 @@ class AudienceLookalikesPersistence:
         return lookalike_data
 
     def get_all_sources(self, user_id):
-        source = self.db.query(AudienceSource, Users.full_name).join(Users,
-                                                                     Users.id == AudienceSource.created_by_user_id) \
-            .filter(AudienceSource.user_id == user_id).order_by(AudienceSource.created_at.desc()).all()
+        source = (
+            self.db.query(AudienceSource, Users.full_name)
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .filter(AudienceSource.user_id == user_id)
+            .order_by(AudienceSource.created_at.desc())
+            .all()
+        )
 
         return source
-    
+
     def get_processing_lookalike(self, id: UUID):
         query = (
             self.db.query(
@@ -237,22 +311,26 @@ class AudienceLookalikesPersistence:
                 AudienceSource.source_type,
                 Users.full_name,
                 AudienceSource.source_origin,
-                AudienceSource.target_schema
+                AudienceSource.target_schema,
             )
-                .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)
-                .join(Users, Users.id == AudienceSource.created_by_user_id)
-                .filter(AudienceLookalikes.id == id)
+            .join(
+                AudienceSource,
+                AudienceLookalikes.source_uuid == AudienceSource.id,
+            )
+            .join(Users, Users.id == AudienceSource.created_by_user_id)
+            .filter(AudienceLookalikes.id == id)
         ).first()
 
         return dict(query._asdict()) if query else None
 
-    def retrieve_source_insights(self, source_uuid: UUID, audience_type: BusinessType,
-                              limit: Optional[int] = None, ) -> List[Dict]:
+    def retrieve_source_insights(
+        self,
+        source_uuid: UUID,
+        audience_type: BusinessType,
+        limit: Optional[int] = None,
+    ) -> List[Dict]:
         def all_columns_except(model, *skip: str):
-            return tuple(
-                c for c in model.__table__.c
-                if c.name not in skip
-            )
+            return tuple(c for c in model.__table__.c if c.name not in skip)
 
         # for b2c
         enrichment_models_b2c = [
@@ -285,15 +363,13 @@ class AudienceLookalikesPersistence:
             .select_from(AudienceSourcesMatchedPerson)
             .join(
                 EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id
+                AudienceSourcesMatchedPerson.enrichment_user_id
+                == EnrichmentUser.id,
             )
         )
 
         for model in enrichment_models:
-            q = q.outerjoin(
-                model,
-                model.asid == EnrichmentUser.asid
-            )
+            q = q.outerjoin(model, model.asid == EnrichmentUser.asid)
 
         q = q.filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
         if limit is not None:
@@ -317,21 +393,29 @@ class AudienceLookalikesPersistence:
         result: List[Dict[str, Any]] = [_row2dict(r) for r in rows]
         return result
 
-    def calculate_lookalikes(self, user_id: int, source_uuid: UUID, lookalike_size: str) -> List[Dict]:
+    def calculate_lookalikes(
+        self, user_id: int, source_uuid: UUID, lookalike_size: str
+    ) -> List[Dict]:
         audience_source = (
             self.db.query(AudienceSource)
             .filter(
                 AudienceSource.id == str(source_uuid),
-                AudienceSource.user_id == user_id
+                AudienceSource.user_id == user_id,
             )
             .first()
         )
         if not audience_source:
-            raise HTTPException(status_code=404, detail="Audience source not found or access denied")
+            raise HTTPException(
+                status_code=404,
+                detail="Audience source not found or access denied",
+            )
 
-        total_matched = self.db.query(func.count(AudienceSourcesMatchedPerson.id)).filter(
-            AudienceSourcesMatchedPerson.source_id == str(source_uuid)
-        ).scalar()
+        total_matched = (
+            self.db.query(func.count(AudienceSourcesMatchedPerson.id))
+            .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
+            .scalar()
+        )
+
         def get_number_users(lookalike_size: str, size: int) -> int:
             if lookalike_size == LookalikeSize.ALMOST.value:
                 number = size * 0.2
@@ -352,8 +436,8 @@ class AudienceLookalikesPersistence:
             "b2b": BusinessType.B2B,
             "b2c": BusinessType.B2C,
         }.get(audience_source.target_schema, BusinessType.ALL)
-        result = self.retrieve_source_insights(source_uuid=source_uuid, audience_type=atype, limit=number_required)
+        result = self.retrieve_source_insights(
+            source_uuid=source_uuid, audience_type=atype, limit=number_required
+        )
 
         return result
-
-

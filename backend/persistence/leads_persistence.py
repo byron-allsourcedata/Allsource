@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 def create_age_conditions(age_str: str):
     filters = []
     for part in age_str:
-        if '-' in part:
-            start, end = map(int, part.split('-'))
+        if "-" in part:
+            start, end = map(int, part.split("-"))
             filters.append(and_(Lead.age_min <= end, Lead.age_max >= start))
         else:
             age = int(part)
@@ -47,24 +47,40 @@ def create_age_conditions(age_str: str):
 
 def build_net_worth_filters(net_worth_str: str):
     filters = []
-    for part in net_worth_str.split(','):
+    for part in net_worth_str.split(","):
         part = part.strip()
-        if '-' in part:
-            if '$' in part:
-                part = part.replace('$', '').replace(',', '')
-            start, end = map(int, part.split('-'))
-            filters.append(and_(
-                func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) >= start,
-                func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) <= end
-            ))
+        if "-" in part:
+            if "$" in part:
+                part = part.replace("$", "").replace(",", "")
+            start, end = map(int, part.split("-"))
+            filters.append(
+                and_(
+                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(
+                        Integer
+                    )
+                    >= start,
+                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(
+                        Integer
+                    )
+                    <= end,
+                )
+            )
         else:
-            if '$' in part:
-                part = part.replace('$', '').replace(',', '')
+            if "$" in part:
+                part = part.replace("$", "").replace(",", "")
             value = int(part)
-            filters.append(and_(
-                func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) >= value,
-                func.regexp_replace(Lead.net_worth, r'[\$,]', '', 'g').cast(Integer) <= value
-            ))
+            filters.append(
+                and_(
+                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(
+                        Integer
+                    )
+                    >= value,
+                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(
+                        Integer
+                    )
+                    <= value,
+                )
+            )
     return filters
 
 
@@ -76,16 +92,32 @@ class LeadsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-    def filter_leads(self, domain_id, page, per_page, from_date, to_date, from_time, to_time, regions, page_visits,
-                     average_time_sec, behavior_type, recurring_visits, sort_by, sort_order, search_query, status, page_url):
-        
+    def filter_leads(
+        self,
+        domain_id,
+        page,
+        per_page,
+        from_date,
+        to_date,
+        from_time,
+        to_time,
+        regions,
+        page_visits,
+        average_time_sec,
+        behavior_type,
+        recurring_visits,
+        sort_by,
+        sort_order,
+        search_query,
+        status,
+        page_url,
+    ):
         FirstNameAlias = aliased(FiveXFiveNames)
         LastNameAlias = aliased(FiveXFiveNames)
 
         recurring_visits_subquery = (
             self.db.query(
-                LeadsVisits.lead_id,
-                func.count().label('recurring_visits')
+                LeadsVisits.lead_id, func.count().label("recurring_visits")
             )
             .group_by(LeadsVisits.lead_id)
             .subquery()
@@ -152,9 +184,9 @@ class LeadsPersistence:
                 LeadUser.behavior_type,
                 FiveXFiveUser.personal_state,
                 FiveXFiveUser.personal_city,
-                LeadsVisits.start_date.label('start_date'),
-                LeadsVisits.start_time.label('start_time'),
-                LeadsVisits.full_time_sec.label('time_on_site'),
+                LeadsVisits.start_date.label("start_date"),
+                LeadsVisits.start_time.label("start_time"),
+                LeadsVisits.full_time_sec.label("time_on_site"),
                 recurring_visits_subquery.c.recurring_visits,
                 LeadUser.is_returning_visitor,
                 LeadUser.avarage_visit_time,
@@ -164,13 +196,28 @@ class LeadsPersistence:
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .outerjoin(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
-            .outerjoin(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
-            .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
-            .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+            .outerjoin(
+                FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id
+            )
+            .outerjoin(
+                LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id
+            )
+            .outerjoin(
+                FiveXFiveUsersLocations,
+                FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id,
+            )
+            .outerjoin(
+                FiveXFiveLocations,
+                FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id,
+            )
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)
-            .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
-            .filter(LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True)
+            .outerjoin(
+                recurring_visits_subquery,
+                recurring_visits_subquery.c.lead_id == LeadUser.id,
+            )
+            .filter(
+                LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True
+            )
             .group_by(
                 FiveXFiveUser.id,
                 LeadUser.behavior_type,
@@ -182,28 +229,28 @@ class LeadsPersistence:
                 LeadUser.avarage_visit_time,
                 LeadUser.is_converted_sales,
                 LeadUser.is_active,
-                LeadUser.id
+                LeadUser.id,
             )
         )
         sort_options = {
-            'name': FiveXFiveUser.first_name,
-            'business_email': FiveXFiveUser.business_email,
-            'personal_email': FiveXFiveUser.personal_emails,
-            'mobile_phone': FiveXFiveUser.mobile_phone,
-            'gender': FiveXFiveUser.gender,
-            'first_visited_date': LeadsVisits.start_date,
-            'state': FiveXFiveLocations.state_id,
-            'city': FiveXFiveLocations.city,
-            'age': FiveXFiveUser.age_min,
-            'average_time_sec': LeadUser.avarage_visit_time,
-            'status': LeadUser.is_returning_visitor,
-            'funnel': LeadUser.behavior_type,
+            "name": FiveXFiveUser.first_name,
+            "business_email": FiveXFiveUser.business_email,
+            "personal_email": FiveXFiveUser.personal_emails,
+            "mobile_phone": FiveXFiveUser.mobile_phone,
+            "gender": FiveXFiveUser.gender,
+            "first_visited_date": LeadsVisits.start_date,
+            "state": FiveXFiveLocations.state_id,
+            "city": FiveXFiveLocations.city,
+            "age": FiveXFiveUser.age_min,
+            "average_time_sec": LeadUser.avarage_visit_time,
+            "status": LeadUser.is_returning_visitor,
+            "funnel": LeadUser.behavior_type,
         }
         if sort_by:
             sort_column = sort_options[sort_by]
-            if sort_order == 'asc':
+            if sort_order == "asc":
                 query = query.order_by(asc(sort_column))
-            elif sort_order == 'desc':
+            elif sort_order == "desc":
                 query = query.order_by(desc(sort_column))
         else:
             query = query.order_by(desc(LeadsVisits.start_date))
@@ -212,183 +259,229 @@ class LeadsPersistence:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
             query = query.filter(
-                and_(  
+                and_(
                     or_(
                         and_(
                             LeadsVisits.start_date == start_date.date(),
-                            LeadsVisits.start_time >= start_date.time()
-                        ),  
+                            LeadsVisits.start_time >= start_date.time(),
+                        ),
                         and_(
                             LeadsVisits.start_date == end_date.date(),
-                            LeadsVisits.start_time <= end_date.time()
-                        ),  
+                            LeadsVisits.start_time <= end_date.time(),
+                        ),
                         and_(
                             LeadsVisits.start_date > start_date.date(),
-                            LeadsVisits.start_date < end_date.date()
-                        )
+                            LeadsVisits.start_date < end_date.date(),
+                        ),
                     )
                 )
             )
-            
-        if status:
-            status_list = status.split(',')
-            filters = []
-            
-            if 'converted_sales' in status_list or 'abandoned_cart' in status_list:
-                query = query.outerjoin(
-                        LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
-                    ).outerjoin(
-                        LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
-                    )
 
-            if 'converted_sales' in status_list:
+        if status:
+            status_list = status.split(",")
+            filters = []
+
+            if (
+                "converted_sales" in status_list
+                or "abandoned_cart" in status_list
+            ):
+                query = query.outerjoin(
+                    LeadsUsersAddedToCart,
+                    LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
+                ).outerjoin(
+                    LeadsUsersOrdered,
+                    LeadsUsersOrdered.lead_user_id == LeadUser.id,
+                )
+
+            if "converted_sales" in status_list:
                 filters.append(
                     or_(
                         and_(
                             LeadUser.behavior_type != "product_added_to_cart",
-                            LeadUser.is_converted_sales == True
+                            LeadUser.is_converted_sales == True,
                         ),
                         and_(
                             LeadUser.is_converted_sales == True,
-                            LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at
-                        )
+                            LeadsUsersAddedToCart.added_at
+                            < LeadsUsersOrdered.ordered_at,
+                        ),
                     )
                 )
 
-            if 'view_product' in status_list:
-                filters.append(and_(
-                    LeadUser.behavior_type == "viewed_product",
-                    LeadUser.is_converted_sales == False
-                ))
-                
-            if 'visitor' in status_list:
-                filters.append(and_(
-                    LeadUser.behavior_type == "visitor",
-                    LeadUser.is_converted_sales == False
-                ))
+            if "view_product" in status_list:
+                filters.append(
+                    and_(
+                        LeadUser.behavior_type == "viewed_product",
+                        LeadUser.is_converted_sales == False,
+                    )
+                )
 
-            if 'abandoned_cart' in status_list:
+            if "visitor" in status_list:
+                filters.append(
+                    and_(
+                        LeadUser.behavior_type == "visitor",
+                        LeadUser.is_converted_sales == False,
+                    )
+                )
+
+            if "abandoned_cart" in status_list:
                 filters.append(
                     or_(
                         and_(
                             LeadUser.behavior_type == "product_added_to_cart",
-                            LeadUser.is_converted_sales == False
+                            LeadUser.is_converted_sales == False,
                         ),
                         and_(
                             LeadUser.behavior_type == "product_added_to_cart",
-                            LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at
-                        )
+                            LeadsUsersAddedToCart.added_at
+                            > LeadsUsersOrdered.ordered_at,
+                        ),
                     )
                 )
 
             query = query.filter(or_(*filters))
 
-
         if from_time and to_time:
-            from_time = datetime.strptime(from_time, '%H:%M').time()
-            to_time = datetime.strptime(to_time, '%H:%M').time()
+            from_time = datetime.strptime(from_time, "%H:%M").time()
+            to_time = datetime.strptime(to_time, "%H:%M").time()
             query = query.filter(
                 and_(
                     LeadsVisits.start_time >= from_time,
-                    LeadsVisits.start_time <= to_time
+                    LeadsVisits.start_time <= to_time,
                 )
             )
 
         if recurring_visits:
-            recurring_visits_list = recurring_visits.split(',')
+            recurring_visits_list = recurring_visits.split(",")
             filters = []
             for recurring_visit in recurring_visits_list:
-                if recurring_visit == '4+':
-                    filters.append(recurring_visits_subquery.c.recurring_visits > 4)
+                if recurring_visit == "4+":
+                    filters.append(
+                        recurring_visits_subquery.c.recurring_visits > 4
+                    )
                 else:
-                    filters.append(recurring_visits_subquery.c.recurring_visits == recurring_visit)
+                    filters.append(
+                        recurring_visits_subquery.c.recurring_visits
+                        == recurring_visit
+                    )
             query = query.filter(or_(*filters))
-            
+
         if regions:
             filters = []
-            region_list = regions.split(',')
+            region_list = regions.split(",")
             for region_data in region_list:
-                region_data = region_data.split('-')
-                filters.append(FiveXFiveLocations.city.ilike(f'{region_data[0]}%'))
+                region_data = region_data.split("-")
+                filters.append(
+                    FiveXFiveLocations.city.ilike(f"{region_data[0]}%")
+                )
 
                 if len(region_data) > 1 and region_data[1]:
-                    filters.append(States.state_name.ilike(f'{region_data[1]}%'))
+                    filters.append(
+                        States.state_name.ilike(f"{region_data[1]}%")
+                    )
 
             query = query.filter(or_(*filters))
-        
+
         if page_url:
             query = query.outerjoin(
-                        LeadsRequests, LeadsRequests.lead_id == LeadUser.id
-                    )
+                LeadsRequests, LeadsRequests.lead_id == LeadUser.id
+            )
             filters = []
-            page_list = page_url.split(',')
+            page_list = page_url.split(",")
             for page_url in page_list:
                 filters.append(LeadsRequests.page.like(page_url))
 
             query = query.filter(or_(*filters))
 
         if behavior_type:
-            behavior_type_list = behavior_type.split(',')
+            behavior_type_list = behavior_type.split(",")
             filters = []
             for behavior in behavior_type_list:
-                if behavior == 'returning':
+                if behavior == "returning":
                     filters.append(LeadUser.is_returning_visitor == True)
-                elif behavior == 'new':
+                elif behavior == "new":
                     filters.append(LeadUser.is_returning_visitor == False)
             query = query.filter(or_(*filters))
 
         if page_visits:
-            page_visits_list = page_visits.split(',')
+            page_visits_list = page_visits.split(",")
             filters = []
             for visit in page_visits_list:
-                if visit == 'more_than_3_pages':
+                if visit == "more_than_3_pages":
                     filters.append(LeadsVisits.pages_count > 3)
-                elif visit == '2_pages':
+                elif visit == "2_pages":
                     filters.append(LeadsVisits.pages_count == 2)
-                elif visit == '3_pages':
+                elif visit == "3_pages":
                     filters.append(LeadsVisits.pages_count == 3)
-                elif visit == '1_pages':
+                elif visit == "1_pages":
                     filters.append(LeadsVisits.pages_count == 1)
             query = query.filter(or_(*filters))
 
         if average_time_sec:
-            page_visits_list = average_time_sec.split(',')
+            page_visits_list = average_time_sec.split(",")
             filters = []
             for visit in page_visits_list:
-                if visit == 'under_10':
+                if visit == "under_10":
                     filters.append(LeadUser.avarage_visit_time <= 10)
-                elif visit == '10-30_secs':
-                    filters.append(and_(LeadUser.avarage_visit_time > 10, LeadUser.avarage_visit_time <= 30))
-                elif visit == '30-60_secs':
-                    filters.append(and_(LeadUser.avarage_visit_time > 30, LeadUser.avarage_visit_time <= 60))
+                elif visit == "10-30_secs":
+                    filters.append(
+                        and_(
+                            LeadUser.avarage_visit_time > 10,
+                            LeadUser.avarage_visit_time <= 30,
+                        )
+                    )
+                elif visit == "30-60_secs":
+                    filters.append(
+                        and_(
+                            LeadUser.avarage_visit_time > 30,
+                            LeadUser.avarage_visit_time <= 60,
+                        )
+                    )
                 else:
                     filters.append(LeadUser.avarage_visit_time > 60)
             query = query.filter(or_(*filters))
 
         if search_query:
             query = (
-                query
-                .outerjoin(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
-                .outerjoin(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
-                .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
-                .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
+                query.outerjoin(
+                    FiveXFiveUsersEmails,
+                    FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
+                )
+                .outerjoin(
+                    FiveXFiveEmails,
+                    FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
+                )
+                .outerjoin(
+                    FiveXFiveUsersPhones,
+                    FiveXFiveUsersPhones.user_id == FiveXFiveUser.id,
+                )
+                .outerjoin(
+                    FiveXFivePhones,
+                    FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id,
+                )
             )
 
             filters = [
-                FiveXFiveEmails.email.ilike(f'{search_query}%'),
-                FiveXFiveEmails.email_host.ilike(f'{search_query}%'),
-                FiveXFivePhones.number.ilike(f"{search_query.replace('+', '')}%")
+                FiveXFiveEmails.email.ilike(f"{search_query}%"),
+                FiveXFiveEmails.email_host.ilike(f"{search_query}%"),
+                FiveXFivePhones.number.ilike(
+                    f"{search_query.replace('+', '')}%"
+                ),
             ]
             search_query = search_query.split()
             if len(search_query) == 1:
-                filters.extend([
-                    FirstNameAlias.name.ilike(f'{search_query[0].strip()}%'),
-                    LastNameAlias.name.ilike(f'{search_query[0].strip()}%')
-                ])
+                filters.extend(
+                    [
+                        FirstNameAlias.name.ilike(
+                            f"{search_query[0].strip()}%"
+                        ),
+                        LastNameAlias.name.ilike(f"{search_query[0].strip()}%"),
+                    ]
+                )
             elif len(search_query) == 2:
                 name_filter = and_(
-                    FirstNameAlias.name.ilike(f'{search_query[0].strip()}%'),
-                    LastNameAlias.name.ilike(f'{search_query[1].strip()}%')
+                    FirstNameAlias.name.ilike(f"{search_query[0].strip()}%"),
+                    LastNameAlias.name.ilike(f"{search_query[1].strip()}%"),
                 )
                 filters.append(name_filter)
 
@@ -401,21 +494,20 @@ class LeadsPersistence:
             self.db.query(
                 LeadsRequests.lead_id,
                 LeadsRequests.page,
-                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time")
+                func.sum(LeadsRequests.spent_time_sec).label(
+                    "total_spent_time"
+                ),
             )
             .filter(LeadsRequests.lead_id.in_(lead_ids))
             .group_by(LeadsRequests.lead_id, LeadsRequests.page)
             .subquery()
         )
 
-        filtered_page_time_query = (
-            self.db.query(
-                latest_page_time_subquery.c.lead_id,
-                latest_page_time_subquery.c.page,
-                latest_page_time_subquery.c.total_spent_time
-            )
-            .all()
-        )
+        filtered_page_time_query = self.db.query(
+            latest_page_time_subquery.c.lead_id,
+            latest_page_time_subquery.c.page,
+            latest_page_time_subquery.c.total_spent_time,
+        ).all()
 
         leads_requests = {}
 
@@ -423,10 +515,9 @@ class LeadsPersistence:
             lead_id = row.lead_id
             if lead_id not in leads_requests:
                 leads_requests[lead_id] = []
-            leads_requests[lead_id].append({
-                "page": row.page,
-                "spent_time_sec": row.total_spent_time
-            })
+            leads_requests[lead_id].append(
+                {"page": row.page, "spent_time_sec": row.total_spent_time}
+            )
 
         count = query.count()
         max_page = math.ceil(count / per_page)
@@ -434,18 +525,18 @@ class LeadsPersistence:
         if leads:
             states = self.db.query(States).all()
         return leads, count, max_page, states, leads_requests
-    
+
     def get_new_leads_per_day(self, domain_id, start_date, end_date):
         query = (
             self.db.query(
                 func.date(LeadsVisits.start_date).label("start_date"),
-                func.count(LeadUser.id.distinct()).label("new_leads")
+                func.count(LeadUser.id.distinct()).label("new_leads"),
             )
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
             .where(
                 LeadUser.domain_id == domain_id,
                 LeadsVisits.start_date >= start_date,
-                LeadsVisits.end_date <= end_date
+                LeadsVisits.end_date <= end_date,
             )
             .where(
                 LeadUser.id.notin_(
@@ -457,7 +548,7 @@ class LeadsPersistence:
             .group_by(func.date(LeadsVisits.start_date))
         )
         return query.all()
-    
+
     def get_returning_visitors_per_day(self, domain_id, start_date, end_date):
         active_users_subquery = (
             select(LeadsVisits.lead_id)
@@ -472,31 +563,45 @@ class LeadsPersistence:
         query = (
             self.db.query(
                 func.date(LeadsVisits.start_date).label("start_date"),
-                func.count(LeadsVisits.lead_id.distinct()).label("returning_visitors")
+                func.count(LeadsVisits.lead_id.distinct()).label(
+                    "returning_visitors"
+                ),
             )
             .join(LeadUser, LeadUser.id == LeadsVisits.lead_id)
-            .join(active_users_subquery, active_users_subquery.c.lead_id == LeadsVisits.lead_id)
+            .join(
+                active_users_subquery,
+                active_users_subquery.c.lead_id == LeadsVisits.lead_id,
+            )
             .where(
                 LeadUser.domain_id == domain_id,
                 LeadsVisits.start_date >= start_date,
-                LeadsVisits.end_date <= end_date
+                LeadsVisits.end_date <= end_date,
             )
             .group_by(func.date(LeadsVisits.start_date))
         )
-        
+
         return query.all()
-    
-    def get_confirm_leads_by_emails(self, email_list: list[str], domain_id: int) -> list[int]:
+
+    def get_confirm_leads_by_emails(
+        self, email_list: list[str], domain_id: int
+    ) -> list[int]:
         stmt = (
             select(LeadUser.id)
-            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
-            .join(FiveXFiveUsersEmails,
-                FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
-            .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
+            .join(
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
+            )
+            .join(
+                FiveXFiveUsersEmails,
+                FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
+            )
+            .join(
+                FiveXFiveEmails,
+                FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
+            )
             .where(
                 FiveXFiveEmails.email.in_(email_list),
                 LeadUser.domain_id == domain_id,
-                LeadUser.is_confirmed == True
+                LeadUser.is_confirmed == True,
             )
             .distinct()
         )
@@ -505,18 +610,17 @@ class LeadsPersistence:
             leads_ids = [row[0] for row in result.fetchall()]
 
         return leads_ids
-    
+
     def unconfirm_leads(self, leads_ids: list[int]):
-        self.db.query(LeadUser) \
-            .filter(LeadUser.id.in_(leads_ids)) \
-            .update({LeadUser.is_confirmed: False})
+        self.db.query(LeadUser).filter(LeadUser.id.in_(leads_ids)).update(
+            {LeadUser.is_confirmed: False}
+        )
         self.db.commit()
-    
+
     def get_visit_stats(self, five_x_five_user_id: int):
         recurring_visits_subquery = (
             self.db.query(
-                LeadsVisits.lead_id,
-                func.count().label('url_visited')
+                LeadsVisits.lead_id, func.count().label("url_visited")
             )
             .group_by(LeadsVisits.lead_id)
             .subquery()
@@ -524,45 +628,54 @@ class LeadsPersistence:
 
         result = (
             self.db.query(
-                LeadsVisits.full_time_sec.label('time_on_site'),
+                LeadsVisits.full_time_sec.label("time_on_site"),
                 recurring_visits_subquery.c.url_visited,
             )
             .select_from(LeadUser)
-            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+            .join(
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
+            )
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
+            .outerjoin(
+                recurring_visits_subquery,
+                recurring_visits_subquery.c.lead_id == LeadUser.id,
+            )
             .filter(FiveXFiveUser.id == five_x_five_user_id)
             .first()
         )
 
         return (result.time_on_site, result.url_visited) if result else (0, 0)
-    
+
     def get_page_views_per_day(self, domain_id, start_date, end_date):
         query = (
             self.db.query(
                 func.date(LeadsVisits.start_date).label("start_date"),
-                func.sum(LeadsVisits.pages_count).label("page_views")
+                func.sum(LeadsVisits.pages_count).label("page_views"),
             )
             .join(LeadUser, LeadsVisits.lead_id == LeadUser.id)
             .where(
                 LeadUser.domain_id == domain_id,
                 LeadsVisits.start_date >= start_date,
-                LeadsVisits.end_date <= end_date
+                LeadsVisits.end_date <= end_date,
             )
             .group_by(func.date(LeadsVisits.start_date))
         )
         return query.all()
-    
+
     def get_contact_data_for_d2c(self, domain_id, from_date, to_date):
         query = (
             self.db.query(
                 LeadsVisits.start_date,
                 LeadUser.behavior_type,
                 LeadUser.is_converted_sales,
-                func.count(LeadUser.id).label('lead_count')
+                func.count(LeadUser.id).label("lead_count"),
             )
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .group_by(LeadsVisits.start_date, LeadUser.behavior_type, LeadUser.is_converted_sales)
+            .group_by(
+                LeadsVisits.start_date,
+                LeadUser.behavior_type,
+                LeadUser.is_converted_sales,
+            )
             .filter(LeadUser.domain_id == domain_id)
         )
 
@@ -572,7 +685,7 @@ class LeadsPersistence:
             query = query.filter(
                 and_(
                     LeadsVisits.start_date >= start_date,
-                    LeadsVisits.start_date <= end_date
+                    LeadsVisits.start_date <= end_date,
                 )
             )
 
@@ -582,31 +695,45 @@ class LeadsPersistence:
     def get_contact_data_for_b2b(self, domain_id, from_date, to_date):
         start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
         end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-        new_leads_data = self.get_new_leads_per_day(domain_id, start_date, end_date)
-        returning_visitors_data = self.get_returning_visitors_per_day(domain_id, start_date, end_date)
-        page_views_data = self.get_page_views_per_day(domain_id, start_date, end_date)
+        new_leads_data = self.get_new_leads_per_day(
+            domain_id, start_date, end_date
+        )
+        returning_visitors_data = self.get_returning_visitors_per_day(
+            domain_id, start_date, end_date
+        )
+        page_views_data = self.get_page_views_per_day(
+            domain_id, start_date, end_date
+        )
         return new_leads_data, returning_visitors_data, page_views_data
 
     def get_lifetime_revenue(self, domain_id):
         total_revenue = (
-                            self.db.query(func.sum(LeadOrders.total_price))
-                            .join(LeadUser, LeadOrders.lead_user_id == LeadUser.id)
-                            .filter(LeadUser.domain_id == domain_id)
-                        ).scalar() or 0
+            self.db.query(func.sum(LeadOrders.total_price))
+            .join(LeadUser, LeadOrders.lead_user_id == LeadUser.id)
+            .filter(LeadUser.domain_id == domain_id)
+        ).scalar() or 0
         return total_revenue
 
     def get_investment(self, user_id):
-        transactions = self.db.query(SubscriptionTransactions).filter(
-            SubscriptionTransactions.user_id == user_id
-        ).all()
+        transactions = (
+            self.db.query(SubscriptionTransactions)
+            .filter(SubscriptionTransactions.user_id == user_id)
+            .all()
+        )
         unique_combinations = set()
         total_investment = 0
 
         for transaction in transactions:
-            key = (transaction.price_id, transaction.start_date, transaction.end_date)
+            key = (
+                transaction.price_id,
+                transaction.start_date,
+                transaction.end_date,
+            )
             if key not in unique_combinations:
                 unique_combinations.add(key)
-                total_investment += transaction.amount if transaction.amount else 0
+                total_investment += (
+                    transaction.amount if transaction.amount else 0
+                )
 
         return total_investment
 
@@ -615,8 +742,8 @@ class LeadsPersistence:
             self.db.query(
                 LeadsVisits.start_date,
                 LeadsVisits.behavior_type,
-                func.sum(LeadOrders.total_price).label('total_price'),
-                func.count(LeadOrders.id).label('total_orders')
+                func.sum(LeadOrders.total_price).label("total_price"),
+                func.count(LeadOrders.id).label("total_orders"),
             )
             .join(LeadUser, LeadsVisits.id == LeadUser.first_visit_id)
             .join(LeadOrders, LeadOrders.lead_user_id == LeadUser.id)
@@ -629,11 +756,13 @@ class LeadsPersistence:
             query = query.filter(
                 and_(
                     LeadsVisits.start_date >= start_date,
-                    LeadsVisits.start_date <= end_date
+                    LeadsVisits.start_date <= end_date,
                 )
             )
 
-        query = query.group_by(func.date(LeadsVisits.start_date), LeadsVisits.behavior_type)
+        query = query.group_by(
+            func.date(LeadsVisits.start_date), LeadsVisits.behavior_type
+        )
 
         lifetime_revenue = self.get_lifetime_revenue(domain_id)
         investment = self.get_investment(user_id)
@@ -642,15 +771,21 @@ class LeadsPersistence:
         return results, lifetime_revenue, investment
 
     def get_lead_data(self, lead_id):
-        return self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()
-    
+        return (
+            self.db.query(FiveXFiveUser)
+            .filter(FiveXFiveUser.id == lead_id)
+            .first()
+        )
+
     def get_latest_page_time(self, lead_id):
         latest_page_time_subquery = (
             self.db.query(
                 LeadsRequests.page,
                 LeadsRequests.page_parameters,
-                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time"),
-                func.count().label("count")
+                func.sum(LeadsRequests.spent_time_sec).label(
+                    "total_spent_time"
+                ),
+                func.count().label("count"),
             )
             .filter(LeadsRequests.lead_id == lead_id)
             .group_by(LeadsRequests.page, LeadsRequests.page_parameters)
@@ -667,8 +802,13 @@ class LeadsPersistence:
         )
 
     def get_ids_user_leads_ids(self, domain_id, leads_ids):
-        lead_users = self.db.query(LeadUser).filter(LeadUser.domain_id == domain_id,
-                                                    LeadUser.lead_id.in_(leads_ids)).all()
+        lead_users = (
+            self.db.query(LeadUser)
+            .filter(
+                LeadUser.domain_id == domain_id, LeadUser.lead_id.in_(leads_ids)
+            )
+            .all()
+        )
         lead_ids_set = {lead_user.lead_id for lead_user in lead_users}
         return lead_ids_set
 
@@ -679,14 +819,14 @@ class LeadsPersistence:
             .filter(
                 LeadUser.domain_id == domain_id,
                 LeadUser.is_active.is_(True),
-                FiveXFiveUser.id.in_(leads_ids)
+                FiveXFiveUser.id.in_(leads_ids),
             )
             .all()
         )
-        
+
         if not result_query:
             return None, None, {}
-        
+
         lead_user_ids, five_x_five_users = zip(*result_query)
         leads_requests = {}
 
@@ -695,64 +835,95 @@ class LeadsPersistence:
                 LeadsRequests.lead_id,
                 LeadsRequests.page,
                 LeadsRequests.page_parameters,
-                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time")
+                func.sum(LeadsRequests.spent_time_sec).label(
+                    "total_spent_time"
+                ),
             )
             .filter(LeadsRequests.lead_id.in_(lead_user_ids))
-            .group_by(LeadsRequests.lead_id, LeadsRequests.page, LeadsRequests.page_parameters)
+            .group_by(
+                LeadsRequests.lead_id,
+                LeadsRequests.page,
+                LeadsRequests.page_parameters,
+            )
             .subquery()
         )
-        
-        filtered_page_time_query = (
-            self.db.query(
-                latest_page_time_subquery.c.lead_id,
-                latest_page_time_subquery.c.page,
-                latest_page_time_subquery.c.page_parameters,
-                latest_page_time_subquery.c.total_spent_time
-            )
-            .all()
-        )
+
+        filtered_page_time_query = self.db.query(
+            latest_page_time_subquery.c.lead_id,
+            latest_page_time_subquery.c.page,
+            latest_page_time_subquery.c.page_parameters,
+            latest_page_time_subquery.c.total_spent_time,
+        ).all()
 
         for row in filtered_page_time_query:
             lead_id = row.lead_id
             if lead_id not in leads_requests:
                 leads_requests[lead_id] = []
-            leads_requests[lead_id].append({
-                "page": row.page,
-                "page_parameters": row.page_parameters,
-                "spent_time_sec": row.total_spent_time
-            })
+            leads_requests[lead_id].append(
+                {
+                    "page": row.page,
+                    "page_parameters": row.page_parameters,
+                    "spent_time_sec": row.total_spent_time,
+                }
+            )
 
         return result_query, self.db.query(States).all(), leads_requests
 
-    def get_full_user_leads_by_filters(self, domain_id, from_date, to_date, regions, page_visits,
-                                   average_time_spent, behavior_type, status, recurring_visits, sort_by, sort_order,
-                                   search_query, from_time, to_time, page_url):
+    def get_full_user_leads_by_filters(
+        self,
+        domain_id,
+        from_date,
+        to_date,
+        regions,
+        page_visits,
+        average_time_spent,
+        behavior_type,
+        status,
+        recurring_visits,
+        sort_by,
+        sort_order,
+        search_query,
+        from_time,
+        to_time,
+        page_url,
+    ):
         FirstNameAlias = aliased(FiveXFiveNames)
         LastNameAlias = aliased(FiveXFiveNames)
 
         recurring_visits_subquery = (
             self.db.query(
-                LeadsVisits.lead_id,
-                func.count().label('recurring_visits')
+                LeadsVisits.lead_id, func.count().label("recurring_visits")
             )
             .group_by(LeadsVisits.lead_id)
             .subquery()
         )
 
         query = (
-            self.db.query(
-                LeadUser.id,
-                FiveXFiveUser
-            )
+            self.db.query(LeadUser.id, FiveXFiveUser)
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-            .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
+            .join(
+                FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id
+            )
             .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .outerjoin(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id)
-            .outerjoin(FiveXFiveLocations, FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id)
+            .outerjoin(
+                FiveXFiveUsersLocations,
+                FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id,
+            )
+            .outerjoin(
+                FiveXFiveLocations,
+                FiveXFiveLocations.id == FiveXFiveUsersLocations.location_id,
+            )
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)
-            .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
-            .filter(LeadUser.domain_id == domain_id, LeadUser.is_active.is_(True), LeadUser.is_confirmed == True)
+            .outerjoin(
+                recurring_visits_subquery,
+                recurring_visits_subquery.c.lead_id == LeadUser.id,
+            )
+            .filter(
+                LeadUser.domain_id == domain_id,
+                LeadUser.is_active.is_(True),
+                LeadUser.is_confirmed == True,
+            )
             .group_by(FiveXFiveUser.id, LeadUser.id, LeadsVisits.start_date)
             .order_by(desc(LeadsVisits.start_date))
         )
@@ -760,126 +931,221 @@ class LeadsPersistence:
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-            query = query.filter(LeadsVisits.start_date.between(start_date, end_date))
-        
+            query = query.filter(
+                LeadsVisits.start_date.between(start_date, end_date)
+            )
+
         if status:
             status_filters = []
             status_map = {
-                'converted_sales': LeadUser.is_converted_sales.is_(True),
-                'view_product': LeadUser.behavior_type == "viewed_product",
-                'visitor': LeadUser.behavior_type == "visitor"
+                "converted_sales": LeadUser.is_converted_sales.is_(True),
+                "view_product": LeadUser.behavior_type == "viewed_product",
+                "visitor": LeadUser.behavior_type == "visitor",
             }
-            
-            for s in status.split(','):
+
+            for s in status.split(","):
                 if s in status_map:
                     status_filters.append(status_map[s])
-                elif s == 'abandoned_cart':
-                    query = query.join(LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id)
-                    query = query.outerjoin(LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id)
+                elif s == "abandoned_cart":
+                    query = query.join(
+                        LeadsUsersAddedToCart,
+                        LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
+                    )
+                    query = query.outerjoin(
+                        LeadsUsersOrdered,
+                        LeadsUsersOrdered.lead_user_id == LeadUser.id,
+                    )
                     query = query.filter(
                         LeadsUsersAddedToCart.added_at.isnot(None),
                         or_(
-                            LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
-                            and_(LeadsUsersOrdered.ordered_at.is_(None), LeadsUsersAddedToCart.added_at.isnot(None))
-                        )
+                            LeadsUsersAddedToCart.added_at
+                            > LeadsUsersOrdered.ordered_at,
+                            and_(
+                                LeadsUsersOrdered.ordered_at.is_(None),
+                                LeadsUsersAddedToCart.added_at.isnot(None),
+                            ),
+                        ),
                     )
-            
+
             if status_filters:
                 query = query.filter(or_(*status_filters))
-        
+
         if from_time and to_time:
-            query = query.filter(LeadsVisits.start_time.between(from_time, to_time))
-        
+            query = query.filter(
+                LeadsVisits.start_time.between(from_time, to_time)
+            )
+
         if recurring_visits:
-            visit_filters = [recurring_visits_subquery.c.recurring_visits == int(v) if v.isdigit() else recurring_visits_subquery.c.recurring_visits > 4
-                            for v in recurring_visits.split(',')]
+            visit_filters = [
+                recurring_visits_subquery.c.recurring_visits == int(v)
+                if v.isdigit()
+                else recurring_visits_subquery.c.recurring_visits > 4
+                for v in recurring_visits.split(",")
+            ]
             query = query.filter(or_(*visit_filters))
-        
+
         if regions:
-            region_filters = [FiveXFiveLocations.city.ilike(f'{region.split("-")[0]}%') for region in regions.split(',')]
+            region_filters = [
+                FiveXFiveLocations.city.ilike(f"{region.split('-')[0]}%")
+                for region in regions.split(",")
+            ]
             query = query.filter(or_(*region_filters))
-                    
+
         if page_url:
             query = query.outerjoin(
-                        LeadsRequests, LeadsRequests.lead_id == LeadUser.id
-                    )
+                LeadsRequests, LeadsRequests.lead_id == LeadUser.id
+            )
             filters = []
-            page_list = page_url.split(',')
+            page_list = page_url.split(",")
             for page_url in page_list:
                 filters.append(LeadsRequests.page.like(page_url))
 
             query = query.filter(or_(*filters))
-        
+
         if behavior_type:
             behavior_map = {
-                'returning': LeadUser.is_returning_visitor.is_(True),
-                'new': LeadUser.is_returning_visitor.is_(False)
+                "returning": LeadUser.is_returning_visitor.is_(True),
+                "new": LeadUser.is_returning_visitor.is_(False),
             }
-            query = query.filter(or_(*(behavior_map[b] for b in behavior_type.split(',') if b in behavior_map)))
-        
+            query = query.filter(
+                or_(
+                    *(
+                        behavior_map[b]
+                        for b in behavior_type.split(",")
+                        if b in behavior_map
+                    )
+                )
+            )
+
         if page_visits:
             visit_map = {
-                'more_than_3_pages': LeadsVisits.pages_count > 3,
-                '2_pages': LeadsVisits.pages_count == 2,
-                '3_pages': LeadsVisits.pages_count == 3,
-                '1_pages': LeadsVisits.pages_count == 1
+                "more_than_3_pages": LeadsVisits.pages_count > 3,
+                "2_pages": LeadsVisits.pages_count == 2,
+                "3_pages": LeadsVisits.pages_count == 3,
+                "1_pages": LeadsVisits.pages_count == 1,
             }
-            query = query.filter(or_(*(visit_map[v] for v in page_visits.split(',') if v in visit_map)))
-        
+            query = query.filter(
+                or_(
+                    *(
+                        visit_map[v]
+                        for v in page_visits.split(",")
+                        if v in visit_map
+                    )
+                )
+            )
+
         if average_time_spent:
             time_map = {
-                'under_10_secs': LeadsVisits.average_time_sec < 10,
-                '10-30_secs': and_(LeadsVisits.average_time_sec >= 10, LeadsVisits.average_time_sec <= 30),
-                '30-60_secs': and_(LeadsVisits.average_time_sec >= 30, LeadsVisits.average_time_sec <= 60),
-                'over_60_secs': LeadsVisits.average_time_sec > 60
+                "under_10_secs": LeadsVisits.average_time_sec < 10,
+                "10-30_secs": and_(
+                    LeadsVisits.average_time_sec >= 10,
+                    LeadsVisits.average_time_sec <= 30,
+                ),
+                "30-60_secs": and_(
+                    LeadsVisits.average_time_sec >= 30,
+                    LeadsVisits.average_time_sec <= 60,
+                ),
+                "over_60_secs": LeadsVisits.average_time_sec > 60,
             }
-            query = query.filter(or_(*(time_map[t] for t in average_time_spent.split(',') if t in time_map)))
-        
+            query = query.filter(
+                or_(
+                    *(
+                        time_map[t]
+                        for t in average_time_spent.split(",")
+                        if t in time_map
+                    )
+                )
+            )
+
         if search_query:
-            query = query.outerjoin(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
-            query = query.outerjoin(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
-            query = query.outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
-            query = query.outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
-            
+            query = query.outerjoin(
+                FiveXFiveUsersEmails,
+                FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
+            )
+            query = query.outerjoin(
+                FiveXFiveEmails,
+                FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
+            )
+            query = query.outerjoin(
+                FiveXFiveUsersPhones,
+                FiveXFiveUsersPhones.user_id == FiveXFiveUser.id,
+            )
+            query = query.outerjoin(
+                FiveXFivePhones,
+                FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id,
+            )
+
             search_filters = [
-                FiveXFiveEmails.email.ilike(f'{search_query}%'),
-                FiveXFivePhones.number.ilike(f'{search_query}%')
+                FiveXFiveEmails.email.ilike(f"{search_query}%"),
+                FiveXFivePhones.number.ilike(f"{search_query}%"),
             ]
-            
+
             search_terms = search_query.split()
             if len(search_terms) == 1:
-                search_filters.append(FirstNameAlias.name.ilike(f'{search_terms[0]}%'))
-                search_filters.append(LastNameAlias.name.ilike(f'{search_terms[0]}%'))
+                search_filters.append(
+                    FirstNameAlias.name.ilike(f"{search_terms[0]}%")
+                )
+                search_filters.append(
+                    LastNameAlias.name.ilike(f"{search_terms[0]}%")
+                )
             elif len(search_terms) == 2:
-                search_filters.append(and_(
-                    FirstNameAlias.name.ilike(f'{search_terms[0]}%'),
-                    LastNameAlias.name.ilike(f'{search_terms[1]}%')
-                ))
+                search_filters.append(
+                    and_(
+                        FirstNameAlias.name.ilike(f"{search_terms[0]}%"),
+                        LastNameAlias.name.ilike(f"{search_terms[1]}%"),
+                    )
+                )
             query = query.filter(or_(*search_filters))
-        
+
         result_query = query.limit(20000).all()
-        
+
         if not result_query:
             return None, None, {}
-        
+
         lead_user_ids, five_x_five_users = zip(*result_query)
         leads_requests = {}
-        
+
         latest_page_time_subquery = (
-            self.db.query(LeadsRequests.lead_id, LeadsRequests.page, func.sum(LeadsRequests.spent_time_sec).label("total_spent_time"), LeadsRequests.page_parameters)
+            self.db.query(
+                LeadsRequests.lead_id,
+                LeadsRequests.page,
+                func.sum(LeadsRequests.spent_time_sec).label(
+                    "total_spent_time"
+                ),
+                LeadsRequests.page_parameters,
+            )
             .filter(LeadsRequests.lead_id.in_(lead_user_ids))
-            .group_by(LeadsRequests.lead_id, LeadsRequests.page, LeadsRequests.page_parameters)
+            .group_by(
+                LeadsRequests.lead_id,
+                LeadsRequests.page,
+                LeadsRequests.page_parameters,
+            )
             .subquery()
         )
-        
+
         for row in self.db.query(latest_page_time_subquery).all():
-            leads_requests.setdefault(row.lead_id, []).append({"page": row.page, "spent_time_sec": row.total_spent_time, "page_parameters": row.page_parameters})
+            leads_requests.setdefault(row.lead_id, []).append(
+                {
+                    "page": row.page,
+                    "spent_time_sec": row.total_spent_time,
+                    "page_parameters": row.page_parameters,
+                }
+            )
 
         return result_query, self.db.query(States).all(), leads_requests
 
-
-    def filter_leads_for_build_audience(self, regions, professions, ages, genders, net_worths,
-                                        interest_list, not_in_existing_lists, page, per_page):
+    def filter_leads_for_build_audience(
+        self,
+        regions,
+        professions,
+        ages,
+        genders,
+        net_worths,
+        interest_list,
+        not_in_existing_lists,
+        page,
+        per_page,
+    ):
         query = (
             self.db.query(
                 Lead.id,
@@ -893,12 +1159,19 @@ class LeadsPersistence:
                 FiveXFiveLocations.state_id,
                 FiveXFiveLocations.city,
             )
-            .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.five_x_five_user_id == Lead.id)
-            .join(FiveXFiveLocations, FiveXFiveUsersLocations.location_id == FiveXFiveUsersLocations.id)
+            .join(
+                FiveXFiveUsersLocations,
+                FiveXFiveUsersLocations.five_x_five_user_id == Lead.id,
+            )
+            .join(
+                FiveXFiveLocations,
+                FiveXFiveUsersLocations.location_id
+                == FiveXFiveUsersLocations.id,
+            )
         )
 
         if not_in_existing_lists:
-            not_in_existing_lists = not_in_existing_lists.split(',')
+            not_in_existing_lists = not_in_existing_lists.split(",")
             audience_leads_alias = aliased(AudienceLeads)
             audience_subquery = (
                 self.db.query(audience_leads_alias.lead_id)
@@ -908,27 +1181,33 @@ class LeadsPersistence:
             )
             query = query.filter(Lead.id.notin_(audience_subquery))
         if regions:
-            regions = regions.split(',')
-            filters = [FiveXFiveLocations.city == region.lower() for region in regions]
+            regions = regions.split(",")
+            filters = [
+                FiveXFiveLocations.city == region.lower() for region in regions
+            ]
             query = query.filter(or_(*filters))
         if professions:
-            professions = professions.split(',')
-            normalized_professions = [normalize_profession(p) for p in professions]
+            professions = professions.split(",")
+            normalized_professions = [
+                normalize_profession(p) for p in professions
+            ]
             profession_filters = []
             for profession in normalized_professions:
-                profession_filters.append(Lead.job_title.ilike(f"%{profession.replace('-', ' ')}%"))
+                profession_filters.append(
+                    Lead.job_title.ilike(f"%{profession.replace('-', ' ')}%")
+                )
 
             query = query.filter(or_(*profession_filters))
         if ages:
-            ages = ages.split(',')
+            ages = ages.split(",")
             age_filters = create_age_conditions(ages)
             query = query.filter(or_(*age_filters))
         if genders:
-            genders = genders.split(',')
+            genders = genders.split(",")
             filters = [Lead.gender == gender.upper() for gender in genders]
             query = query.filter(or_(*filters))
         if net_worths:
-            net_worths = net_worths.split(',')
+            net_worths = net_worths.split(",")
             net_worth_filters = build_net_worth_filters(net_worths)
             query = query.filter(or_(*net_worth_filters))
 
@@ -938,35 +1217,60 @@ class LeadsPersistence:
         max_page = math.ceil(count / per_page) if per_page > 0 else 1
         return leads_data, count, max_page
 
-    def get_leads_users_by_lead_id(self, lead_id: int, domain_id: int) -> LeadUser:
-        return self.db.query(LeadUser).filter(LeadUser.five_x_five_user_id == lead_id,
-                                              LeadUser.domain_id == domain_id).first()
+    def get_leads_users_by_lead_id(
+        self, lead_id: int, domain_id: int
+    ) -> LeadUser:
+        return (
+            self.db.query(LeadUser)
+            .filter(
+                LeadUser.five_x_five_user_id == lead_id,
+                LeadUser.domain_id == domain_id,
+            )
+            .first()
+        )
 
     def get_leads_user_filter_by_email(self, domain_id: int, email: str):
-        return self.db.query(LeadUser)\
-            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)\
-            .join(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)\
-            .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)\
-            .filter(LeadUser.domain_id == domain_id, FiveXFiveEmails.email == email).first()
+        return (
+            self.db.query(LeadUser)
+            .join(
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
+            )
+            .join(
+                FiveXFiveUsersEmails,
+                FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
+            )
+            .join(
+                FiveXFiveEmails,
+                FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
+            )
+            .filter(
+                LeadUser.domain_id == domain_id, FiveXFiveEmails.email == email
+            )
+            .first()
+        )
 
     def get_leads_domain(self, domain_id: int, **filter_by: dict):
-        return self.db.query(LeadUser).filter_by(domain_id=domain_id, **filter_by).all()
-    
+        return (
+            self.db.query(LeadUser)
+            .filter_by(domain_id=domain_id, **filter_by)
+            .all()
+        )
+
     def get_last_leads_for_zapier(self, domain_id: int):
         lead_users = (
             self.db.query(LeadUser)
-            .filter(LeadUser.domain_id == domain_id)\
+            .filter(LeadUser.domain_id == domain_id)
             .order_by(LeadUser.created_at.desc())
             .limit(10)
             .all()
         )
         if not lead_users:
             return None
-        
+
         recurring_visits_subquery = (
             self.db.query(
                 LeadsVisits.lead_id,
-                func.count(LeadsVisits.id).label('url_visited')
+                func.count(LeadsVisits.id).label("url_visited"),
             )
             .group_by(LeadsVisits.lead_id)
             .subquery()
@@ -1003,17 +1307,20 @@ class LeadsPersistence:
                 FiveXFiveUser.dpv_code,
                 FiveXFiveUser.children,
                 FiveXFiveUser.income_range,
-                LeadsVisits.full_time_sec.label('time_on_site'),
+                LeadsVisits.full_time_sec.label("time_on_site"),
                 recurring_visits_subquery.c.url_visited,
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .outerjoin(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
-            .outerjoin(recurring_visits_subquery, recurring_visits_subquery.c.lead_id == LeadUser.id)
+            .outerjoin(
+                recurring_visits_subquery,
+                recurring_visits_subquery.c.lead_id == LeadUser.id,
+            )
             .filter(FiveXFiveUser.id.in_(five_x_five_user_ids))
             .all()
         )
         return five_x_five_users
-        
+
     def search_contact(self, start_letter, domain_id):
         letters = start_letter.split()
         FirstNameAlias = aliased(FiveXFiveNames)
@@ -1024,74 +1331,99 @@ class LeadsPersistence:
                 FiveXFiveUser.first_name,
                 FiveXFiveUser.last_name,
                 FiveXFiveEmails.email,
-                FiveXFivePhones.number
+                FiveXFivePhones.number,
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-            .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
+            .join(
+                FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id
+            )
             .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
-            .outerjoin(FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id)
-            .outerjoin(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
-            .outerjoin(FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id)
-            .outerjoin(FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id)
+            .outerjoin(
+                FiveXFiveUsersEmails,
+                FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
+            )
+            .outerjoin(
+                FiveXFiveEmails,
+                FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
+            )
+            .outerjoin(
+                FiveXFiveUsersPhones,
+                FiveXFiveUsersPhones.user_id == FiveXFiveUser.id,
+            )
+            .outerjoin(
+                FiveXFivePhones,
+                FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id,
+            )
             .filter(
                 LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True
-            ).group_by(FiveXFiveUser.first_name, FiveXFiveUser.last_name, FiveXFiveEmails.email, FiveXFivePhones.number,
-                       LeadUser.five_x_five_user_id)
+            )
+            .group_by(
+                FiveXFiveUser.first_name,
+                FiveXFiveUser.last_name,
+                FiveXFiveEmails.email,
+                FiveXFivePhones.number,
+                LeadUser.five_x_five_user_id,
+            )
         )
-        email_host = start_letter.split('@')
+        email_host = start_letter.split("@")
         if len(email_host) == 2:
             email_host = email_host[1]
         filters = [
-            FiveXFiveEmails.email.ilike(f'{start_letter}%'),
-            FiveXFiveEmails.email_host.ilike(f'{email_host}%'),
-            FiveXFivePhones.number.ilike(f"{start_letter.replace('+', '')}%")
+            FiveXFiveEmails.email.ilike(f"{start_letter}%"),
+            FiveXFiveEmails.email_host.ilike(f"{email_host}%"),
+            FiveXFivePhones.number.ilike(f"{start_letter.replace('+', '')}%"),
         ]
         if len(letters) == 1:
-            filters.extend([
-                FirstNameAlias.name.ilike(f'{letters[0].strip()}%'),
-                LastNameAlias.name.ilike(f'{letters[0].strip()}%')
-            ])
+            filters.extend(
+                [
+                    FirstNameAlias.name.ilike(f"{letters[0].strip()}%"),
+                    LastNameAlias.name.ilike(f"{letters[0].strip()}%"),
+                ]
+            )
         elif len(letters) == 2:
             name_filter = and_(
-                FirstNameAlias.name.ilike(f'{letters[0].strip()}%'),
-                LastNameAlias.name.ilike(f'{letters[1].strip()}%')
+                FirstNameAlias.name.ilike(f"{letters[0].strip()}%"),
+                LastNameAlias.name.ilike(f"{letters[1].strip()}%"),
             )
             filters.append(name_filter)
         query = query.filter(or_(*filters))
         leads = query.all()
         return leads
-    
 
     def search_location(self, start_letter, domain_id):
         query = (
-            self.db.query(
-                FiveXFiveLocations.city,
-                States.state_name
+            self.db.query(FiveXFiveLocations.city, States.state_name)
+            .join(
+                FiveXFiveUsersLocations,
+                FiveXFiveUsersLocations.location_id == FiveXFiveLocations.id,
             )
-            .join(FiveXFiveUsersLocations, FiveXFiveUsersLocations.location_id == FiveXFiveLocations.id)
-            .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUsersLocations.five_x_five_user_id)
+            .join(
+                LeadUser,
+                LeadUser.five_x_five_user_id
+                == FiveXFiveUsersLocations.five_x_five_user_id,
+            )
             .outerjoin(States, States.id == FiveXFiveLocations.state_id)
             .filter(
                 LeadUser.domain_id == domain_id,
                 LeadUser.is_confirmed == True,
                 or_(
-                    FiveXFiveLocations.city.ilike(f'{start_letter}%'),
-                    States.state_name.ilike(f'{start_letter}%')
-                )
+                    FiveXFiveLocations.city.ilike(f"{start_letter}%"),
+                    States.state_name.ilike(f"{start_letter}%"),
+                ),
             )
             .group_by(FiveXFiveLocations.id, States.state_name)
             .limit(10)
         )
         locations = query.all()
         return locations
-    
+
     def search_page_url(self, start_letter: str, domain_id: int):
         query = (
             self.db.query(LeadsRequests.page)
             .join(LeadUser, LeadUser.id == LeadsRequests.lead_id)
             .filter(
                 LeadUser.domain_id == domain_id,
-                LeadsRequests.page.ilike(f'%{start_letter}%')
+                LeadsRequests.page.ilike(f"%{start_letter}%"),
             )
             .distinct()
             .limit(10)
@@ -1100,25 +1432,38 @@ class LeadsPersistence:
         return result
 
     def get_lead_user_by_up_id(self, domain_id, up_id):
-        return self.db.query(LeadUser).join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id).filter(FiveXFiveUser.up_id == up_id, LeadUser.domain_id == domain_id).first()
-    
+        return (
+            self.db.query(LeadUser)
+            .join(
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
+            )
+            .filter(
+                FiveXFiveUser.up_id == up_id, LeadUser.domain_id == domain_id
+            )
+            .first()
+        )
+
     def get_first_visited_url(self, lead_user):
-        result = self.db.query(LeadsRequests)\
-            .join(LeadUser, LeadUser.first_visit_id == LeadsRequests.visit_id)\
-            .filter(LeadUser.id == lead_user.id).first()
+        result = (
+            self.db.query(LeadsRequests)
+            .join(LeadUser, LeadUser.first_visit_id == LeadsRequests.visit_id)
+            .filter(LeadUser.id == lead_user.id)
+            .first()
+        )
         return result.page
-    
 
     def add_unlocked_user(self, user_id, domain_id, five_x_five_id):
-        five_x_five_up_id = self.db.query(FiveXFiveUser.up_id).filter(
-            FiveXFiveUser.id == five_x_five_id
-        ).scalar()
-        
+        five_x_five_up_id = (
+            self.db.query(FiveXFiveUser.up_id)
+            .filter(FiveXFiveUser.id == five_x_five_id)
+            .scalar()
+        )
+
         user = UsersUnlockedFiveXFiveUser(
             domain_id=domain_id,
             user_id=user_id,
             amount_credits=1,
-            five_x_five_up_id=five_x_five_up_id
+            five_x_five_up_id=five_x_five_up_id,
         )
 
         self.db.add(user)

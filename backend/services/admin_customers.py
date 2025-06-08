@@ -10,7 +10,13 @@ from sqlalchemy.orm import Session
 
 from persistence.admin import AdminPersistence
 from schemas.users import UpdateUserRequest
-from enums import UserAuthorizationStatus, UpdateUserStatus, SendgridTemplate, SettingStatus, AdminStatus
+from enums import (
+    UserAuthorizationStatus,
+    UpdateUserStatus,
+    SendgridTemplate,
+    SettingStatus,
+    AdminStatus,
+)
 from models.plans import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import Users
@@ -30,13 +36,18 @@ logger = logging.getLogger(__name__)
 
 
 class AdminCustomersService:
-
-    def __init__(self, db: Session, subscription_service: SubscriptionService, user_persistence: UserPersistence,
-                 plans_persistence: PlansPersistence, users_auth_service: UsersAuth,
-                 send_grid_persistence: SendgridPersistence,
-                 partners_persistence: PartnersPersistence,
-                 dashboard_audience_persistence: DashboardAudiencePersistence,
-                 admin_persistence: AdminPersistence):
+    def __init__(
+        self,
+        db: Session,
+        subscription_service: SubscriptionService,
+        user_persistence: UserPersistence,
+        plans_persistence: PlansPersistence,
+        users_auth_service: UsersAuth,
+        send_grid_persistence: SendgridPersistence,
+        partners_persistence: PartnersPersistence,
+        dashboard_audience_persistence: DashboardAudiencePersistence,
+        admin_persistence: AdminPersistence,
+    ):
         self.db = db
         self.subscription_service = subscription_service
         self.user_persistence = user_persistence
@@ -47,42 +58,60 @@ class AdminCustomersService:
         self.dashboard_audience_persistence = dashboard_audience_persistence
         self.admin_persistence = admin_persistence
 
-    def get_admin_users(self, *, search_query: str, page: int, per_page: int, sort_by: str, sort_order: str,
-                        last_login_date_start: int,
-                        last_login_date_end: int, join_date_start: int, join_date_end: int):
-        admin_users = self.user_persistence.get_admin_users(search_query=search_query,
-                                                            last_login_date_start=last_login_date_start,
-                                                            last_login_date_end=last_login_date_end,
-                                                            join_date_start=join_date_start,
-                                                            join_date_end=join_date_end)
-        invitations_admin = self.admin_persistence.get_pending_invitations_admin(search_query=search_query,
-                                                                                 join_date_start=join_date_start,
-                                                                                 join_date_end=join_date_end) if not last_login_date_start else []
+    def get_admin_users(
+        self,
+        *,
+        search_query: str,
+        page: int,
+        per_page: int,
+        sort_by: str,
+        sort_order: str,
+        last_login_date_start: int,
+        last_login_date_end: int,
+        join_date_start: int,
+        join_date_end: int,
+    ):
+        admin_users = self.user_persistence.get_admin_users(
+            search_query=search_query,
+            last_login_date_start=last_login_date_start,
+            last_login_date_end=last_login_date_end,
+            join_date_start=join_date_start,
+            join_date_end=join_date_end,
+        )
+        invitations_admin = (
+            self.admin_persistence.get_pending_invitations_admin(
+                search_query=search_query,
+                join_date_start=join_date_start,
+                join_date_end=join_date_end,
+            )
+            if not last_login_date_start
+            else []
+        )
 
         users_dict = [
             {
-                'id': user.id,
-                'email': user.email,
-                'full_name': user.full_name,
-                'created_at': user.created_at,
-                'last_login': user.last_login,
-                'invited_by_email': user.invited_by_email,
-                'role': user.role,
-                'type': 'user'
+                "id": user.id,
+                "email": user.email,
+                "full_name": user.full_name,
+                "created_at": user.created_at,
+                "last_login": user.last_login,
+                "invited_by_email": user.invited_by_email,
+                "role": user.role,
+                "type": "user",
             }
             for user in admin_users
         ]
 
         invitations_admin_dicts = [
             {
-                'id': inv.id,
-                'email': inv.email,
-                'full_name': inv.full_name,
-                'created_at': inv.created_at,
-                'last_login': None,
-                'invited_by_email': inv.invited_by_email,
-                'role': None,
-                'type': 'invitation'
+                "id": inv.id,
+                "email": inv.email,
+                "full_name": inv.full_name,
+                "created_at": inv.created_at,
+                "last_login": None,
+                "invited_by_email": inv.invited_by_email,
+                "role": None,
+                "type": "invitation",
             }
             for inv in invitations_admin
         ]
@@ -97,56 +126,52 @@ class AdminCustomersService:
             return datetime.min
 
         sort_key_mapping = {
-            'id': 'id',
-            'join_date': 'created_at',
-            'last_login_date': 'last_login'
+            "id": "id",
+            "join_date": "created_at",
+            "last_login_date": "last_login",
         }
 
-        sort_key = sort_key_mapping.get(sort_by, 'created_at')
-        reverse_order = sort_order == 'desc'
+        sort_key = sort_key_mapping.get(sort_by, "created_at")
+        reverse_order = sort_order == "desc"
 
         combined.sort(
             key=lambda x: normalize_sort_value(x.get(sort_key)),
-            reverse=reverse_order
+            reverse=reverse_order,
         )
 
         start = (page - 1) * per_page
         end = start + per_page
         paginated = combined[start:end]
 
-        return {
-            'users': paginated,
-            'count': len(combined)
-        }
+        return {"users": paginated, "count": len(combined)}
 
     def generate_access_token(self, user: dict, user_account_id: int):
         if self.user_persistence.get_user_by_id(user_account_id):
             token_info = {
                 "id": user_account_id,
-                "requester_access_user_id": user.get('id')
+                "requester_access_user_id": user.get("id"),
             }
             return create_access_token(token_info)
         return None
 
     def invite_user(self, user: dict, email: str, name: str):
         exists_user = self.user_persistence.get_user_by_email(email=email)
-        exist_invite = self.admin_persistence.get_pending_invitation_by_email(email=email)
+        exist_invite = self.admin_persistence.get_pending_invitation_by_email(
+            email=email
+        )
         if exists_user or exist_invite:
-            return {
-                'status': AdminStatus.ALREADY_EXISTS
-            }
+            return {"status": AdminStatus.ALREADY_EXISTS}
         template_id = self.send_grid_persistence.get_template_by_alias(
-            SendgridTemplate.ADMIN_INVITATION_TEMPLATE.value)
+            SendgridTemplate.ADMIN_INVITATION_TEMPLATE.value
+        )
         if not template_id:
             logger.info("template_id is None")
-            return {
-                'status': AdminStatus.SENDGRID_TEMPLATE_NOT_FAILED
-            }
+            return {"status": AdminStatus.SENDGRID_TEMPLATE_NOT_FAILED}
 
         md5_token_info = {
-            'id': user.get('id'),
-            'user_mail': email,
-            'salt': os.getenv('SECRET_SALT')
+            "id": user.get("id"),
+            "user_mail": email,
+            "salt": os.getenv("SECRET_SALT"),
         }
         json_string = json.dumps(md5_token_info, sort_keys=True)
         md5_hash = hashlib.md5(json_string.encode()).hexdigest()
@@ -155,24 +180,40 @@ class AdminCustomersService:
         mail_object.send_sign_up_mail(
             to_emails=email,
             template_id=template_id,
-            template_placeholder={"full_name": name, "link": confirm_email_url}
+            template_placeholder={"full_name": name, "link": confirm_email_url},
         )
-        self.admin_persistence.save_pending_invitations_admin(email=email, full_name=name,
-                                                              invited_by_id=user.get('id'), md5_hash=md5_hash)
-        return {
-            'status': AdminStatus.SUCCESS
-        }
+        self.admin_persistence.save_pending_invitations_admin(
+            email=email,
+            full_name=name,
+            invited_by_id=user.get("id"),
+            md5_hash=md5_hash,
+        )
+        return {"status": AdminStatus.SUCCESS}
 
-    def get_customer_users(self, *, search_query: str, page: int, per_page: int, sort_by: str, sort_order: str,
-                           last_login_date_start: int, last_login_date_end: int, join_date_start: int,
-                           join_date_end: int):
-        users, total_count = self.user_persistence.get_customer_users(search_query=search_query, page=page,
-                                                                      per_page=per_page, sort_by=sort_by,
-                                                                      sort_order=sort_order,
-                                                                      last_login_date_start=last_login_date_start,
-                                                                      last_login_date_end=last_login_date_end,
-                                                                      join_date_start=join_date_start,
-                                                                      join_date_end=join_date_end)
+    def get_customer_users(
+        self,
+        *,
+        search_query: str,
+        page: int,
+        per_page: int,
+        sort_by: str,
+        sort_order: str,
+        last_login_date_start: int,
+        last_login_date_end: int,
+        join_date_start: int,
+        join_date_end: int,
+    ):
+        users, total_count = self.user_persistence.get_customer_users(
+            search_query=search_query,
+            page=page,
+            per_page=per_page,
+            sort_by=sort_by,
+            sort_order=sort_order,
+            last_login_date_start=last_login_date_start,
+            last_login_date_end=last_login_date_end,
+            join_date_start=join_date_start,
+            join_date_end=join_date_end,
+        )
         result = []
         users_dict = [
             dict(
@@ -187,100 +228,138 @@ class AdminCustomersService:
                 lookalikes_count=user.lookalikes_count,
                 credits_count=user.credits_count,
                 is_email_confirmed=user.is_email_confirmed,
-                is_book_call_passed=user.is_book_call_passed
+                is_book_call_passed=user.is_book_call_passed,
             )
             for user in users
         ]
         for user in users_dict:
-            payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(user)
+            payment_status = self.users_auth_service.get_user_authorization_status_without_pixel(
+                user
+            )
             if payment_status == UserAuthorizationStatus.SUCCESS:
-                user_plan = self.db.query(
-                    UserSubscriptions.is_trial,
-                    UserSubscriptions.plan_end
-                ).filter(
-                    UserSubscriptions.user_id == user.get('id'),
-                    UserSubscriptions.status.in_(('active', 'canceled'))
-                ).order_by(
-                    UserSubscriptions.status,
-                    UserSubscriptions.plan_end.desc()
-                ).first()
+                user_plan = (
+                    self.db.query(
+                        UserSubscriptions.is_trial, UserSubscriptions.plan_end
+                    )
+                    .filter(
+                        UserSubscriptions.user_id == user.get("id"),
+                        UserSubscriptions.status.in_(("active", "canceled")),
+                    )
+                    .order_by(
+                        UserSubscriptions.status,
+                        UserSubscriptions.plan_end.desc(),
+                    )
+                    .first()
+                )
                 if user_plan:
                     if user_plan.is_trial:
-                        payment_status = 'TRIAL_ACTIVE'
+                        payment_status = "TRIAL_ACTIVE"
                     else:
-                        if user.get('pixel_installed_count') and user.get('pixel_installed_count') > 1:
-                            payment_status = 'PIXEL_INSTALLED'
+                        if (
+                            user.get("pixel_installed_count")
+                            and user.get("pixel_installed_count") > 1
+                        ):
+                            payment_status = "PIXEL_INSTALLED"
                         else:
-                            payment_status = 'SUBSCRIPTION_ACTIVE'
+                            payment_status = "SUBSCRIPTION_ACTIVE"
 
-            result.append({
-                "id": user.get('id'),
-                "email": user.get('email'),
-                "full_name": user.get('full_name'),
-                "created_at": user.get('created_at'),
-                'payment_status': payment_status,
-                "is_trial": self.plans_persistence.get_trial_status_by_user_id(user.get('id')),
-                'last_login': user.get('last_login'),
-                'role': user.get('role'),
-                'pixel_installed_count': user.get('pixel_installed_count'),
-                'sources_count': user.get('sources_count'),
-                'lookalikes_count': user.get('lookalikes_count'),
-                'type': 'user',
-                'credits_count': user.get('credits_count')
-            })
-        return {
-            'users': result,
-            'count': total_count
-        }
+            result.append(
+                {
+                    "id": user.get("id"),
+                    "email": user.get("email"),
+                    "full_name": user.get("full_name"),
+                    "created_at": user.get("created_at"),
+                    "payment_status": payment_status,
+                    "is_trial": self.plans_persistence.get_trial_status_by_user_id(
+                        user.get("id")
+                    ),
+                    "last_login": user.get("last_login"),
+                    "role": user.get("role"),
+                    "pixel_installed_count": user.get("pixel_installed_count"),
+                    "sources_count": user.get("sources_count"),
+                    "lookalikes_count": user.get("lookalikes_count"),
+                    "type": "user",
+                    "credits_count": user.get("credits_count"),
+                }
+            )
+        return {"users": result, "count": total_count}
 
-    def get_audience_metrics(self, last_login_date_start, last_login_date_end, join_date_start, join_date_end):
+    def get_audience_metrics(
+        self,
+        last_login_date_start,
+        last_login_date_end,
+        join_date_start,
+        join_date_end,
+    ):
         audience_metrics = {}
-        dashboard_audience_data = self.dashboard_audience_persistence.get_audience_metrics(
-            last_login_date_start=last_login_date_start, last_login_date_end=last_login_date_end,
-            join_date_start=join_date_start, join_date_end=join_date_end)
+        dashboard_audience_data = (
+            self.dashboard_audience_persistence.get_audience_metrics(
+                last_login_date_start=last_login_date_start,
+                last_login_date_end=last_login_date_end,
+                join_date_start=join_date_start,
+                join_date_end=join_date_end,
+            )
+        )
 
         for result in dashboard_audience_data:
-            key = result['key']
-            query = result['query']
+            key = result["key"]
+            query = result["query"]
             count = query.scalar()
             audience_metrics[key] = count or 0
 
-        return {
-            "audience_metrics": audience_metrics
-        }
+        return {"audience_metrics": audience_metrics}
 
     def get_user_by_email(self, email):
-        user_object = self.db.query(Users).filter(func.lower(Users.email) == func.lower(email)).first()
+        user_object = (
+            self.db.query(Users)
+            .filter(func.lower(Users.email) == func.lower(email))
+            .first()
+        )
         return user_object
 
     def create_subscription_for_partner(self, user: Users):
         if not user.current_subscription_id:
-            self.subscription_service.create_subscription_from_partners(user_id=user.id)
+            self.subscription_service.create_subscription_from_partners(
+                user_id=user.id
+            )
         else:
-            user_subscription = self.subscription_service.get_user_subscription(user_id=user.id)
-            if user_subscription.is_trial or user_subscription.plan_end.replace(
-                    tzinfo=timezone.utc) < get_utc_aware_date():
-                self.subscription_service.create_subscription_from_partners(user_id=user.id)
+            user_subscription = self.subscription_service.get_user_subscription(
+                user_id=user.id
+            )
+            if (
+                user_subscription.is_trial
+                or user_subscription.plan_end.replace(tzinfo=timezone.utc)
+                < get_utc_aware_date()
+            ):
+                self.subscription_service.create_subscription_from_partners(
+                    user_id=user.id
+                )
 
     def update_user(self, update_data: UpdateUserRequest):
-        user = self.db.query(Users).filter(Users.id == update_data.user_id).first()
+        user = (
+            self.db.query(Users).filter(Users.id == update_data.user_id).first()
+        )
         if not user:
             return UpdateUserStatus.USER_NOT_FOUND
 
         if update_data.is_partner:
             if update_data.is_partner == True:
                 self.create_subscription_for_partner(user=user)
-                commission = 70 if update_data.commission >= 70 else update_data.commission
+                commission = (
+                    70
+                    if update_data.commission >= 70
+                    else update_data.commission
+                )
                 creating_data = {
-                    'user_id': user.id,
-                    'join_date': datetime.now(timezone.utc),
+                    "user_id": user.id,
+                    "join_date": datetime.now(timezone.utc),
                     "name": user.full_name,
                     "email": user.email,
                     "company_name": user.company_name,
                     "commission": commission,
                     "token": get_md5_hash(user.email),
                     "is_master": True if update_data.is_master else False,
-                    'status': 'signup'
+                    "status": "signup",
                 }
                 self.partners_persistence.create_partner(creating_data)
             user.is_partner = update_data.is_partner
@@ -289,15 +368,27 @@ class AdminCustomersService:
         return UpdateUserStatus.SUCCESS
 
     def get_user_subscription(self, user_id):
-        user_subscription = self.db.query(UserSubscriptions).filter(UserSubscriptions.user_id == user_id).first()
+        user_subscription = (
+            self.db.query(UserSubscriptions)
+            .filter(UserSubscriptions.user_id == user_id)
+            .first()
+        )
         return user_subscription
 
     def get_free_trial_plan(self):
-        free_trial_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_free_trial == True).first()
+        free_trial_plan = (
+            self.db.query(SubscriptionPlan)
+            .filter(SubscriptionPlan.is_free_trial == True)
+            .first()
+        )
         return free_trial_plan
 
     def get_default_plan(self):
-        default_plan = self.db.query(SubscriptionPlan).filter(SubscriptionPlan.is_default == True).first()
+        default_plan = (
+            self.db.query(SubscriptionPlan)
+            .filter(SubscriptionPlan.is_default == True)
+            .first()
+        )
         return default_plan
 
     def set_user_subscription(self, user_id, plan_start, plan_end):
@@ -305,7 +396,10 @@ class AdminCustomersService:
             self.db.query(UserSubscriptions)
             .filter(Users.id == user_id)
             .update(
-                {UserSubscriptions.plan_start: plan_start, UserSubscriptions.plan_end: plan_end},
+                {
+                    UserSubscriptions.plan_start: plan_start,
+                    UserSubscriptions.plan_end: plan_end,
+                },
                 synchronize_session=False,
             )
         )
@@ -314,7 +408,9 @@ class AdminCustomersService:
     def confirmation_customer(self, email, free_trial=None):
         user_data = self.get_user_by_email(email)
         if free_trial:
-            self.subscription_service.create_subscription_from_free_trial(user_id=user_data.id)
+            self.subscription_service.create_subscription_from_free_trial(
+                user_id=user_data.id
+            )
         else:
             self.subscription_service.remove_trial(user_data.id)
 

@@ -15,14 +15,12 @@ class OmnisendProfile(BaseModel):
     postalCode: tp.Optional[str] = None
     state: tp.Optional[str] = None
 
+
 class Identifiers(BaseModel):
     """
     ID - Email lead
     """
-    channels: tp.Any = { "email": { "status": "subscribed" } }
-    type: str = 'email'
+
+    channels: tp.Any = {"email": {"status": "subscribed"}}
+    type: str = "email"
     id: EmailStr
-
-
-
-    

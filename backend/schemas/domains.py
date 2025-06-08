@@ -1,7 +1,10 @@
 from pydantic import BaseModel
 from typing import Optional
+
+
 class DomainScheme(BaseModel):
     domain: str
+
 
 class DomainResponse(BaseModel):
     id: int
@@ -10,8 +13,10 @@ class DomainResponse(BaseModel):
     is_pixel_installed: bool
     enable: bool
 
+
 class UpdateDomain(BaseModel):
     new_domain: str
-    
+
+
 class UpdateDomainRequest(BaseModel):
     domain_name: str

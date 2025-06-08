@@ -30,14 +30,14 @@ class SendgridHandler:
 
     @classmethod
     def send_sign_up_mail(
-            cls,
-            template_id: str,
-            template_placeholder: dict,
-            to_emails: List[str],
-            attachedfile: Optional[any] = None,
-            cc_emails: List[str] = None,
-            html_content: str = None,
-            from_user: str = "noreply@allsourcedata.io",
+        cls,
+        template_id: str,
+        template_placeholder: dict,
+        to_emails: List[str],
+        attachedfile: Optional[any] = None,
+        cc_emails: List[str] = None,
+        html_content: str = None,
+        from_user: str = "noreply@allsourcedata.io",
     ) -> dict:
         # UNSAFE: opt out of ssl check
         tempfunc = ssl._create_default_https_context
@@ -60,7 +60,7 @@ class SendgridHandler:
             "Invoice_date": template_placeholder.get("invoice_date"),
             "Total": template_placeholder.get("total"),
             "Message": template_placeholder.get("message"),
-            "commission": template_placeholder.get("commission")
+            "commission": template_placeholder.get("commission"),
         }
         message.is_multiple = True
         if attachedfile is not None:
@@ -78,5 +78,3 @@ class SendgridHandler:
             "body": json.loads(response.body) if response.body else None,
             "x_message_id": response.headers.get("X-Message-Id"),
         }
-
-

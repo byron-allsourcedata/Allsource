@@ -12,27 +12,37 @@ logger = logging.getLogger(__name__)
 class AudienceService:
     def __init__(self, audience_persistence_service: AudiencePersistence):
         self.audience_persistence_service = audience_persistence_service
-        self.AUDIENCE_SYNC = 'audience_sync'
+        self.AUDIENCE_SYNC = "audience_sync"
 
     def get_user_audience_list(self, domain_id) -> List[AudienceResponse]:
-        return self.audience_persistence_service.get_user_audience_list(domain_id)
+        return self.audience_persistence_service.get_user_audience_list(
+            domain_id
+        )
 
-    async def create_audience(self, domain_id: int, data_source: str, audience_type: str, audience_threshold: int):
-        audience = self.audience_persistence_service.create_domain_audience(domain_id, data_source, audience_type, audience_threshold)
+    async def create_audience(
+        self,
+        domain_id: int,
+        data_source: str,
+        audience_type: str,
+        audience_threshold: int,
+    ):
+        audience = self.audience_persistence_service.create_domain_audience(
+            domain_id, data_source, audience_type, audience_threshold
+        )
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         try:
             message_text = {
-                'audience_id': audience.id,
-                'domain_id': domain_id,
-                'data_source': data_source,
-                'audience_type': audience_type,
-                'audience_threshold': audience_threshold
+                "audience_id": audience.id,
+                "domain_id": domain_id,
+                "data_source": data_source,
+                "audience_type": audience_type,
+                "audience_threshold": audience_threshold,
             }
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=self.AUDIENCE_SYNC,
-                message_body=message_text
+                message_body=message_text,
             )
         except:
             await rabbitmq_connection.close()
@@ -43,5 +53,7 @@ class AudienceService:
 
     def delete_audience(self, audience_ids):
         for audience_id in audience_ids:
-            self.audience_persistence_service.delete_user_audience(self.user.get('id'), audience_id)
+            self.audience_persistence_service.delete_user_audience(
+                self.user.get("id"), audience_id
+            )
         return AudienceInfoEnum.SUCCESS
