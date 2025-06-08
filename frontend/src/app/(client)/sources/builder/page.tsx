@@ -19,6 +19,7 @@ import {
   SelectChangeEvent,
   IconButton,
   ToggleButton,
+  Skeleton
 } from "@mui/material";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -39,6 +40,7 @@ import { builderHintCards } from "../context/hintsCardsContent";
 import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
 import { BuilderKey } from '../context/hintsCardsContent';
+import { useTimeout } from "usehooks-ts";
 
 
 interface Row {
@@ -124,6 +126,21 @@ const SourcesImport: React.FC = () => {
     DomainsLeads[]
   >([]);
   const [showTargetStep, setShowTargetStep] = useState(false)
+
+  type SkeletonState = Record<BuilderKey, boolean>;
+
+  const initialSkeletons: SkeletonState = {
+    sourceType: false,
+    pixelDomain: true,
+    dataSource: true,
+    sourceFile: true,
+    dataMaping: true,
+    targetType: true,
+    name: true,
+  };
+
+  const [skeletons, setSkeletons] = useState<SkeletonState>(initialSkeletons);
+
   const [totalLeads, setTotalLeads] = useState(0);
   const [matchedLeads, setMatchedLeads] = useState(0);
 
@@ -262,7 +279,7 @@ const SourcesImport: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    setShowTargetStep(true);
+    setShowTargetStep(false)
     if (typeFromSearchParams) {
       closeDotHintClick("sourceType");
       let newType = "";
@@ -271,12 +288,12 @@ const SourcesImport: React.FC = () => {
       if (typeFromSearchParams === "failed-leads") newType = "Failed Leads";
       if (typeFromSearchParams === "interests") newType = "Interest";
       if (typeFromSearchParams === "pixel") {
-        setShowTargetStep(false);
         newType = "Website - Pixel";
         setTimeout(() => {
           scrollToBlock(block4Ref);
         }, 0);
         fetchDomainsAndLeads();
+        closeSkeleton("pixelDomain")
         setSourceMethod(2);
         openDotHintClick("pixelDomain");
       } else {
@@ -286,6 +303,7 @@ const SourcesImport: React.FC = () => {
         setTimeout(() => {
           scrollToBlock(block2Ref);
         }, 0);
+        closeSkeleton("sourceFile")
       }
 
       setSourceType(newType);
@@ -312,6 +330,15 @@ const SourcesImport: React.FC = () => {
     }
   };
 
+  const closeSkeleton = (key: BuilderKey) => {
+    setTimeout(() => {
+      setSkeletons(prev => ({
+        ...prev,
+        [key]: false,
+      }));
+    }, 1000);
+  };
+
   // Switching
 
   const handleChangeSourceType = (event: SelectChangeEvent<string>) => {
@@ -320,11 +347,12 @@ const SourcesImport: React.FC = () => {
     handleDeleteFile();
     setTargetAudience("");
     setSelectedDomainId(0)
+    setShowTargetStep(false)
 
     closeDotHintClick("sourceType");
     if (newSourceType === "Website - Pixel") {
-      setShowTargetStep(false)
       setSourceMethod(2);
+      closeSkeleton("pixelDomain")
       if (selectedDomain === "") {
         openDotHintClick("pixelDomain");
       }
@@ -334,8 +362,8 @@ const SourcesImport: React.FC = () => {
       fetchDomainsAndLeads();
     } else {
       setMappingRows([...defaultMapping, ...mappingRowsSourceType[newSourceType as keyof InterfaceMappingRowsSourceType]]);
-      setShowTargetStep(true)
       setSourceMethod(1);
+      closeSkeleton("sourceFile")
       if (sourceType === "") {
         openDotHintClick("sourceFile");
       }
@@ -354,6 +382,7 @@ const SourcesImport: React.FC = () => {
     setTimeout(() => {
       scrollToBlock(block6Ref);
     }, 0);
+    closeSkeleton("name")
     closeDotHintClick("dataSource");
     closeDotHintClick("targetType");
     if (targetAudience === "") {
@@ -619,11 +648,7 @@ const SourcesImport: React.FC = () => {
 
       const content = await readFileContent(file);
       await processFileContent(content);
-      setTimeout(() => {
-        scrollToBlock(block4Ref);
-      }, 0);
-      closeDotHintClick("sourceFile");
-      openDotHintClick("targetType");
+      // setShowTargetStep(true)
     } catch (error: unknown) {
       if (error instanceof Error) {
         showErrorToast(error.message);
@@ -666,6 +691,7 @@ const SourcesImport: React.FC = () => {
   const handleChangeDomain = (event: SelectChangeEvent<string>) => {
     const domainName = event.target.value;
     closeDotHintClick("pixelDomain");
+    closeSkeleton("dataSource");
     if (selectedDomain === "") {
       openDotHintClick("dataSource");
     }
@@ -682,7 +708,7 @@ const SourcesImport: React.FC = () => {
       setEventType([]);
     }
     setTimeout(() => {
-      scrollToBlock(block4Ref);
+      scrollToBlock(block5Ref);
     }, 0);
   };
 
@@ -716,6 +742,20 @@ const SourcesImport: React.FC = () => {
     setIsAllSelected(true);
     setEventType([]);
     setMatchedLeads(totalLeads);
+  };
+
+  const renderSkeleton = (arg: BuilderKey) => {
+    if (!skeletons[arg]) return null;
+      return (
+        <Skeleton
+          key={arg}
+          variant="rectangular"
+          animation="wave"
+          width="100%"
+          height="20vh"
+          sx={{ borderRadius: '4px' }}
+        />
+      );
   };
 
   return (
@@ -779,171 +819,18 @@ const SourcesImport: React.FC = () => {
               }}
             >
               <Box
-                ref={block1Ref}
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 2,
-                  flexWrap: "wrap",
-                  border: "1px solid rgba(228, 228, 228, 1)",
-                  borderRadius: "6px",
-                  padding: "20px",
-                }}
-              >
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <Typography
-                    sx={{
-                      fontFamily: "Nunito Sans",
-                      fontSize: "16px",
-                      fontWeight: 500,
-                    }}
-                  >
-                    Choose your data source
-                  </Typography>
-                  <Typography
-                    sx={{
-                      fontFamily: "Roboto",
-                      fontSize: "12px",
-                      color: "rgba(95, 99, 104, 1)",
-                    }}
-                  >
-                    Choose your data source, and let Allsource AI Audience
-                    Algorithm identify high-intent leads and create lookalike
-                    audiences to slash your acquisition costs.
-                  </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    gap: 2,
-                    "@media (max-width: 420px)": {
-                      display: "grid",
-                      gridTemplateColumns: "1fr",
-                    },
-                  }}
-                >
-                  <FormControl variant="outlined">
-                    <Select
-                      value={sourceType}
-                      onChange={handleChangeSourceType}
-                      displayEmpty
-                      MenuProps={{
-                        MenuListProps: {
-                          sx: {
-                            pb: 0,
-                            pt: pixelNotInstalled ? 0 : "inherit",
-                          },
-                        },
-                      }}
-                      sx={{
-                        ...sourcesStyles.text,
-                        position: "relative",
-                        width: "316px",
-                        borderRadius: "4px",
-                        fontSize: "14px",
-                        fontFamily: "Roboto",
-                        color:
-                          sourceType === ""
-                            ? "rgba(112, 112, 113, 1)"
-                            : "rgba(32, 33, 36, 1)",
-                        "@media (max-width: 390px)": {
-                          width: "calc(100vw - 74px)",
-                        },
-                      }}
-                    >
-                      <MenuItem value="" disabled sx={{ display: "none" }}>
-                        Choose Source Type
-                      </MenuItem>
-                      <MenuItem
-                        sx={{
-                          fontSize: "14px",
-                          borderBottom: "1px solid rgba(228, 228, 228, 1)",
-                        }}
-                        value={"Website - Pixel"}
-                      >
-                        Website - Pixel
-                      </MenuItem>
-                      <MenuItem
-                        sx={{
-                          fontSize: "14px",
-                          borderBottom: "1px solid rgba(228, 228, 228, 1)",
-                        }}
-                        value={"Customer Conversions"}
-                      >
-                        Customer Conversions (CSV)
-                      </MenuItem>
-                      <MenuItem
-                        sx={{
-                          fontSize: "14px",
-                          borderBottom: "1px solid rgba(228, 228, 228, 1)",
-                        }}
-                        value={"Failed Leads"}
-                      >
-                        Failed Leads (CSV)
-                      </MenuItem>
-                      <MenuItem sx={{ fontSize: "14px" }} value={"Interest"}>
-                        Interest (CSV)
-                      </MenuItem>
-                    </Select>
-                    {sourcesBuilderHints["sourceType"].show && (
-                      <HintCard
-                        card={builderHintCards["sourceType"]}
-                        positionLeft={340}
-                        isOpenBody={sourcesBuilderHints["sourceType"].showBody}
-                        toggleClick={() => changeSourcesBuilderHint("sourceType", "showBody", "toggle")}
-                        closeClick={() => changeSourcesBuilderHint("sourceType", "showBody", "close")}
-
-                      />
-                    )}
-                  </FormControl>
-                </Box>
-              </Box>
-
-              {sourceMethod === 1 && sourceType !== "" && !file && (
-                <Box
-                  ref={block2Ref}
+                  ref={block1Ref}
                   sx={{
                     display: "flex",
                     flexDirection: "column",
                     gap: 2,
-                    position: "relative",
                     flexWrap: "wrap",
                     border: "1px solid rgba(228, 228, 228, 1)",
                     borderRadius: "6px",
                     padding: "20px",
                   }}
                 >
-                  {uploadProgress !== null && (
-                    <Box
-                      sx={{
-                        width: "100%",
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        zIndex: 1200,
-                      }}
-                    >
-                      <LinearProgress
-                        variant="determinate"
-                        value={uploadProgress}
-                        sx={{
-                          borderRadius: "6px",
-                          backgroundColor: "#c6dafc",
-                          "& .MuiLinearProgress-bar": {
-                            borderRadius: 5,
-                            backgroundColor: "#4285f4",
-                          },
-                        }}
-                      />
-                    </Box>
-                  )}
-                  <Box
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: 1,
-                    }}
-                  >
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                     <Typography
                       sx={{
                         fontFamily: "Nunito Sans",
@@ -951,7 +838,7 @@ const SourcesImport: React.FC = () => {
                         fontWeight: 500,
                       }}
                     >
-                      Select your source file
+                      Choose your data source
                     </Typography>
                     <Typography
                       sx={{
@@ -960,649 +847,346 @@ const SourcesImport: React.FC = () => {
                         color: "rgba(95, 99, 104, 1)",
                       }}
                     >
-                      {sourceTypeDescriptions[sourceType] ?? ""}
+                      Choose your data source, and let Allsource AI Audience
+                      Algorithm identify high-intent leads and create lookalike
+                      audiences to slash your acquisition costs.
                     </Typography>
                   </Box>
                   <Box
                     sx={{
                       display: "flex",
-                      alignItems: "center",
-                      width: "316px",
-                      border: dragActive
-                        ? "2px dashed rgba(56, 152, 252, 1)"
-                        : "1px dashed rgba(56, 152, 252, 1)",
-                      borderRadius: "4px",
-                      padding: "8px 16px",
-                      height: "80px",
-                      gap: "16px",
-                      cursor: "pointer",
-                      backgroundColor: dragActive
-                        ? "rgba(80, 82, 178, 0.1)"
-                        : "rgba(246, 248, 250, 1)",
-                      transition: "background-color 0.3s, border-color 0.3s",
-                      "@media (max-width: 390px)": {
-                        width: "calc(100vw - 74px)",
+                      gap: 2,
+                      "@media (max-width: 420px)": {
+                        display: "grid",
+                        gridTemplateColumns: "1fr",
                       },
                     }}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                    onClick={() =>
-                      document.getElementById("fileInput")?.click()
-                    }
                   >
-                    <IconButton
-                      sx={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "4px",
-                        backgroundColor: "rgba(234, 235, 255, 1)",
-                      }}
-                    >
-                      <FileUploadOutlinedIcon
-                        sx={{
-                          color: "rgba(56, 152, 252, 1)",
+                    <FormControl variant="outlined">
+                      <Select
+                        value={sourceType}
+                        onChange={handleChangeSourceType}
+                        displayEmpty
+                        MenuProps={{
+                          MenuListProps: {
+                            sx: {
+                              pb: 0,
+                              pt: pixelNotInstalled ? 0 : "inherit",
+                            },
+                          },
                         }}
-                      />
-                    </IconButton>
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Typography
                         sx={{
-                          fontFamily: "Nunito Sans",
-                          fontSize: "16px",
-                          fontWeight: "600",
-                          color: "rgba(56, 152, 252, 1)",
-                        }}
-                      >
-                        Upload a file
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: "Nunito Sans",
+                          ...sourcesStyles.text,
+                          position: "relative",
+                          width: "316px",
+                          borderRadius: "4px",
                           fontSize: "14px",
-                          fontWeight: "500",
-                          color: "rgba(32, 33, 36, 1)",
+                          fontFamily: "Roboto",
+                          color:
+                            sourceType === ""
+                              ? "rgba(112, 112, 113, 1)"
+                              : "rgba(32, 33, 36, 1)",
+                          "@media (max-width: 390px)": {
+                            width: "calc(100vw - 74px)",
+                          },
                         }}
                       >
-                        CSV.Max 100MB
-                      </Typography>
-                    </Box>
-                    <input
-                      id="fileInput"
-                      type="file"
-                      hidden
-                      accept=".csv"
-                      onChange={(event: ChangeEvent<HTMLInputElement>) => {
-                        const file = event.target.files?.[0];
-                        if (file) {
-                          handleFileUpload(file);
-                        }
-                        event.target.value = "";
-                      }}
-                    />
+                        <MenuItem value="" disabled sx={{ display: "none" }}>
+                          Choose Source Type
+                        </MenuItem>
+                        <MenuItem
+                          sx={{
+                            fontSize: "14px",
+                            borderBottom: "1px solid rgba(228, 228, 228, 1)",
+                          }}
+                          value={"Website - Pixel"}
+                        >
+                          Website - Pixel
+                        </MenuItem>
+                        <MenuItem
+                          sx={{
+                            fontSize: "14px",
+                            borderBottom: "1px solid rgba(228, 228, 228, 1)",
+                          }}
+                          value={"Customer Conversions"}
+                        >
+                          Customer Conversions (CSV)
+                        </MenuItem>
+                        <MenuItem
+                          sx={{
+                            fontSize: "14px",
+                            borderBottom: "1px solid rgba(228, 228, 228, 1)",
+                          }}
+                          value={"Failed Leads"}
+                        >
+                          Failed Leads (CSV)
+                        </MenuItem>
+                        <MenuItem sx={{ fontSize: "14px" }} value={"Interest"}>
+                          Interest (CSV)
+                        </MenuItem>
+                      </Select>
+                      {sourcesBuilderHints["sourceType"].show && (
+                        <HintCard
+                          card={builderHintCards["sourceType"]}
+                          positionLeft={340}
+                          isOpenBody={sourcesBuilderHints["sourceType"].showBody}
+                          toggleClick={() => changeSourcesBuilderHint("sourceType", "showBody", "toggle")}
+                          closeClick={() => changeSourcesBuilderHint("sourceType", "showBody", "close")}
+
+                        />
+                      )}
+                    </FormControl>
                   </Box>
-                  {sourceType !== "" && file && (
-                    <Box
+              </Box>
+              
+
+              {sourceMethod === 1 && sourceType !== "" && !file && (
+                  <Box
+                    ref={block2Ref}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                    }}
+                  >
+                  {!skeletons["sourceFile"] &&  
+                    <Box 
                       sx={{
                         display: "flex",
-                        alignItems: "center",
-                        width: "316px",
+                        flexDirection: "column",
+                        gap: 2,
+                        position: "relative",
+                        flexWrap: "wrap",
                         border: "1px solid rgba(228, 228, 228, 1)",
-                        borderRadius: "4px",
-                        padding: "8px 16px",
-                        height: "80px",
-                        backgroundColor: "rgba(246, 248, 250, 1)",
-                        gap: "16px",
-                        "@media (max-width: 390px)": {
-                          width: "calc(100vw - 74px)",
-                        },
-                      }}
-                    >
-                      <Box sx={{ flexGrow: 1 }}>
+                        borderRadius: "6px",
+                        padding: "20px",
+                      }}>
+
+                      {uploadProgress !== null && (
+                        <Box
+                          sx={{
+                            width: "100%",
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            zIndex: 1200,
+                          }}
+                        >
+                          <LinearProgress
+                            variant="determinate"
+                            value={uploadProgress}
+                            sx={{
+                              borderRadius: "6px",
+                              backgroundColor: "#c6dafc",
+                              "& .MuiLinearProgress-bar": {
+                                borderRadius: 5,
+                                backgroundColor: "#4285f4",
+                              },
+                            }}
+                          />
+                        </Box>
+                      )}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 1,
+                        }}
+                      >
                         <Typography
                           sx={{
                             fontFamily: "Nunito Sans",
                             fontSize: "16px",
-                            fontWeight: "600",
-                            color: "rgba(32, 33, 36, 1)",
-                            maxWidth: "13.75rem",
-                            overflow: "hidden",
-                            textWrap: "wrap",
-                            textOverflow: "ellipsis",
+                            fontWeight: 500,
                           }}
                         >
-                          {fileName}
+                          Select your source file
                         </Typography>
                         <Typography
                           sx={{
-                            fontFamily: "Nunito Sans",
+                            fontFamily: "Roboto",
                             fontSize: "12px",
-                            fontWeight: "600",
-                            color: "rgba(74, 74, 74, 1)",
+                            color: "rgba(95, 99, 104, 1)",
                           }}
                         >
-                          {fileSizeStr}
+                          {sourceTypeDescriptions[sourceType] ?? ""}
                         </Typography>
                       </Box>
-                      <IconButton onClick={handleDeleteFile}>
-                        <DeleteOutlinedIcon />
-                      </IconButton>
-                    </Box>
-                  )}
-
-                  {sourceType !== "" && (
-                    <Typography
-                      className="main-text"
-                      component="div"
-                      sx={{
-                        ...sourcesStyles.text,
-                        gap: 0.25,
-                        pt: 1,
-                        fontSize: "12px",
-                        "@media (max-width: 700px)": { mb: 1 },
-                      }}
-                    >
-                      Sample doc:{" "}
-                      <Typography
-                        onClick={downloadSampleFile}
-                        component="span"
+                      <Box
                         sx={{
-                          ...sourcesStyles.text,
-                          color: "rgba(56, 152, 252, 1)",
+                          display: "flex",
+                          alignItems: "center",
+                          width: "316px",
+                          border: dragActive
+                            ? "2px dashed rgba(56, 152, 252, 1)"
+                            : "1px dashed rgba(56, 152, 252, 1)",
+                          borderRadius: "4px",
+                          padding: "8px 16px",
+                          height: "80px",
+                          gap: "16px",
                           cursor: "pointer",
-                          fontWeight: 400,
+                          backgroundColor: dragActive
+                            ? "rgba(80, 82, 178, 0.1)"
+                            : "rgba(246, 248, 250, 1)",
+                          transition: "background-color 0.3s, border-color 0.3s",
+                          "@media (max-width: 390px)": {
+                            width: "calc(100vw - 74px)",
+                          },
                         }}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onDrop={handleDrop}
+                        onClick={() =>
+                          document.getElementById("fileInput")?.click()
+                        }
                       >
-                        sample recent customers-list.csv
-                      </Typography>
-                    </Typography>
-                  )}
+                        <IconButton
+                          sx={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "4px",
+                            backgroundColor: "rgba(234, 235, 255, 1)",
+                          }}
+                        >
+                          <FileUploadOutlinedIcon
+                            sx={{
+                              color: "rgba(56, 152, 252, 1)",
+                            }}
+                          />
+                        </IconButton>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <Typography
+                            sx={{
+                              fontFamily: "Nunito Sans",
+                              fontSize: "16px",
+                              fontWeight: "600",
+                              color: "rgba(56, 152, 252, 1)",
+                            }}
+                          >
+                            Upload a file
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: "Nunito Sans",
+                              fontSize: "14px",
+                              fontWeight: "500",
+                              color: "rgba(32, 33, 36, 1)",
+                            }}
+                          >
+                            CSV.Max 100MB
+                          </Typography>
+                        </Box>
+                        <input
+                          id="fileInput"
+                          type="file"
+                          hidden
+                          accept=".csv"
+                          onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                            const file = event.target.files?.[0];
+                            if (file) {
+                              handleFileUpload(file);
+                            }
+                            event.target.value = "";
+                          }}
+                        />
+                      </Box>
+                      {sourceType !== "" && file && (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            width: "316px",
+                            border: "1px solid rgba(228, 228, 228, 1)",
+                            borderRadius: "4px",
+                            padding: "8px 16px",
+                            height: "80px",
+                            backgroundColor: "rgba(246, 248, 250, 1)",
+                            gap: "16px",
+                            "@media (max-width: 390px)": {
+                              width: "calc(100vw - 74px)",
+                            },
+                          }}
+                        >
+                          <Box sx={{ flexGrow: 1 }}>
+                            <Typography
+                              sx={{
+                                fontFamily: "Nunito Sans",
+                                fontSize: "16px",
+                                fontWeight: "600",
+                                color: "rgba(32, 33, 36, 1)",
+                                maxWidth: "13.75rem",
+                                overflow: "hidden",
+                                textWrap: "wrap",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
+                              {fileName}
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontFamily: "Nunito Sans",
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                color: "rgba(74, 74, 74, 1)",
+                              }}
+                            >
+                              {fileSizeStr}
+                            </Typography>
+                          </Box>
+                          <IconButton onClick={handleDeleteFile}>
+                            <DeleteOutlinedIcon />
+                          </IconButton>
+                        </Box>
+                      )}
 
-                  {sourcesBuilderHints["sourceFile"].show && (
-                    <HintCard
-                      card={builderHintCards["sourceFile"]}
-                      positionLeft={360}
-                      positionTop={100}
-                      isOpenBody={sourcesBuilderHints["sourceFile"].showBody}
-                      toggleClick={() => changeSourcesBuilderHint("sourceFile", "showBody", "toggle")}
-                      closeClick={() => changeSourcesBuilderHint("sourceFile", "showBody", "close")}
-                    />
-                  )}
-                </Box>
+                      {sourceType !== "" && (
+                        <Typography
+                          className="main-text"
+                          component="div"
+                          sx={{
+                            ...sourcesStyles.text,
+                            gap: 0.25,
+                            pt: 1,
+                            fontSize: "12px",
+                            "@media (max-width: 700px)": { mb: 1 },
+                          }}
+                        >
+                          Sample doc:{" "}
+                          <Typography
+                            onClick={downloadSampleFile}
+                            component="span"
+                            sx={{
+                              ...sourcesStyles.text,
+                              color: "rgba(56, 152, 252, 1)",
+                              cursor: "pointer",
+                              fontWeight: 400,
+                            }}
+                          >
+                            sample recent customers-list.csv
+                          </Typography>
+                        </Typography>
+                      )}
+
+                      {sourcesBuilderHints["sourceFile"].show && (
+                        <HintCard
+                          card={builderHintCards["sourceFile"]}
+                          positionLeft={360}
+                          positionTop={100}
+                          isOpenBody={sourcesBuilderHints["sourceFile"].showBody}
+                          toggleClick={() => changeSourcesBuilderHint("sourceFile", "showBody", "toggle")}
+                          closeClick={() => changeSourcesBuilderHint("sourceFile", "showBody", "close")}
+                        />
+                      )}
+                    </Box>
+                  }
+                  {renderSkeleton("sourceFile")} 
+                  </Box>
               )}
 
               {sourceMethod === 1 && (
                 <Box
-                  ref={block3Ref}
-                  sx={{
-                    display: file ? "flex" : "none",
-                    flexDirection: "column",
-                    position: "relative",
-                    gap: 2,
-                    flexWrap: "wrap",
-                    border: "1px solid rgba(228, 228, 228, 1)",
-                    borderRadius: "6px",
-                    padding: "20px",
-                  }}
-                >
-                  {isChatGPTProcessing && (
-                    <Box
-                      sx={{
-                        width: "100%",
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        zIndex: 1200,
-                      }}
-                    >
-                      <BorderLinearProgress
-                        variant="indeterminate"
-                        sx={{ borderRadius: "6px" }}
-                      />
-                    </Box>
-                  )}
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        fontSize: "16px",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Data Maping
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: "Roboto",
-                        fontSize: "12px",
-                        color: "rgba(95, 99, 104, 1)",
-                      }}
-                    >
-                      Map your Field from your Source to the destination data
-                      base.
-                    </Typography>
-                  </Box>
-
-                  <Box sx={{ position: "relative", display: "flex", flexDirection: "column", gap: 1 }}>
-                    <Grid
-                      container
-                      alignItems="center"
-                      sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-                    >
-                      <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
-                        <Image
-                          src="/logo-icon.svg"
-                          alt="logo"
-                          height={22}
-                          width={34}
-                        />
-                      </Grid>
-                      <Grid item xs={1} sm={0.5}>
-                        &nbsp;
-                      </Grid>
-                      <Grid item xs={5} sm={3} sx={{ textAlign: "center", }}>
-                        <Image
-                          src="/csv-icon.svg"
-                          alt="scv"
-                          height={22}
-                          width={34}
-                        />
-                      </Grid>
-                    </Grid>
-                    {mappingRows
-                      ?.filter((row) => !row.isHidden)
-                      .map((row, index) => (
-                        <Box
-                          key={index}
-                          sx={{
-                            mt: index === 1 && emailNotSubstitution ? "10px" : 0,
-                          }}
-                        >
-                          <Grid
-                            container
-                            spacing={2}
-                            alignItems="center"
-                            sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
-                          >
-                            {/* Left Input Field */}
-                            <Grid item xs={5} sm={3}>
-                              <TextField
-                                fullWidth
-                                variant="outlined"
-                                value={row.type}
-                                disabled={true}
-                                InputLabelProps={{
-                                  sx: {
-                                    fontFamily: "Nunito Sans",
-                                    fontSize: "12px",
-                                    lineHeight: "16px",
-                                    color: "rgba(17, 17, 19, 0.60)",
-                                    top: "-5px",
-                                    "&.Mui-focused": {
-                                      color: "rgba(56, 152, 252, 1)",
-                                      top: 0,
-                                    },
-                                    "&.MuiInputLabel-shrink": {
-                                      top: 0,
-                                    },
-                                  },
-                                }}
-                                InputProps={{
-                                  sx: {
-                                    "&.MuiOutlinedInput-root": {
-                                      height: "36px",
-                                      "& .MuiOutlinedInput-input": {
-                                        padding: "6.5px 8px",
-                                        fontFamily: "Roboto",
-                                        color: "#202124",
-                                        fontSize: "12px",
-                                        fontWeight: "400",
-                                        lineHeight: "20px",
-                                      },
-                                      "& .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: "#A3B0C2",
-                                      },
-                                      "&:hover .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "#A3B0C2",
-                                      },
-                                      "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "rgba(56, 152, 252, 1)",
-                                      },
-                                    },
-                                    "&+.MuiFormHelperText-root": {
-                                      marginLeft: "0",
-                                    },
-                                  },
-                                }}
-                              />
-                            </Grid>
-
-                            {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
-                            <Grid
-                              item
-                              xs={1}
-                              sm={0.5}
-                              container
-                              justifyContent="center"
-                            >
-                              <Image
-                                src="/chevron-right-purple.svg"
-                                alt="chevron-right-purple"
-                                height={18}
-                                width={18}
-                              />
-                            </Grid>
-
-                            <Grid item xs={5} sm={3}>
-                              <FormControl fullWidth sx={{ height: "36px" }}>
-                                <Select
-                                  value={row.value || ""}
-                                  onChange={(e) =>
-                                    handleMapListChange(row.id, e.target.value)
-                                  }
-                                  displayEmpty
-                                  inputProps={{
-                                    sx: {
-                                      height: "36px",
-                                      padding: "6.5px 8px",
-                                      fontFamily: "Roboto",
-                                      fontSize: "12px",
-                                      fontWeight: "400",
-                                      color: "#202124",
-                                      lineHeight: "20px",
-                                    },
-                                  }}
-                                  sx={{
-                                    "&.MuiOutlinedInput-root": {
-                                      height: "36px",
-                                      "& .MuiOutlinedInput-notchedOutline": {
-                                        borderColor: "#A3B0C2",
-                                      },
-                                      "&:hover .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "#A3B0C2",
-                                      },
-                                      "&.Mui-focused .MuiOutlinedInput-notchedOutline":
-                                      {
-                                        borderColor: "rgba(56, 152, 252, 1)",
-                                      },
-                                    },
-                                  }}
-                                >
-                                  {headersinCSV.map(
-                                    (item: string, index: number) => (
-                                      <MenuItem key={index} value={item}>
-                                        {item}
-                                      </MenuItem>
-                                    )
-                                  )}
-                                </Select>
-                                {row.type === "Email" && emailNotSubstitution && (
-                                  <Typography
-                                    sx={{
-                                      fontFamily: "Nunito",
-                                      fontSize: "12px",
-                                      color: "rgba(224, 49, 48, 1)",
-                                    }}
-                                  >
-                                    Please match email
-                                  </Typography>
-                                )}
-                              </FormControl>
-                            </Grid>
-
-                            {/* Delete Icon */}
-                            <Grid
-                              item
-                              xs={1}
-                              sm={0.5}
-                              container
-                              justifyContent="center"
-                            >
-                              {row.canDelete && (
-                                <>
-                                  <IconButton
-                                    onClick={() => handleDelete(row.id)}
-                                  >
-                                    <Image
-                                      src="/trash-icon-filled.svg"
-                                      alt="trash-icon-filled"
-                                      height={18}
-                                      width={18}
-                                    />
-                                  </IconButton>
-                                </>
-                              )}
-                            </Grid>
-                          </Grid>
-                        </Box>
-                      ))}
-                    {mappingRows.some((row) => row.isHidden) && (
-                      <Box
-                        sx={{ display: "flex", justifyContent: "flex-start" }}
-                        onClick={handleAdd}
-                      >
-                        <Typography
-                          sx={{
-                            fontFamily: "Nunito Sans",
-                            lineHeight: "22.4px",
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            color: "rgba(56, 152, 252, 1)",
-                            cursor: "pointer",
-                          }}
-                        >
-                          + Add more
-                        </Typography>
-                      </Box>
-                    )}
-                    {sourcesBuilderHints["dataMaping"].show && (
-                      <HintCard
-                        card={builderHintCards["dataMaping"]}
-                        positionLeft={460}
-                        isOpenBody={sourcesBuilderHints["dataMaping"].showBody}
-                        toggleClick={() => changeSourcesBuilderHint("dataMaping", "showBody", "toggle")}
-                        closeClick={() => changeSourcesBuilderHint("dataMaping", "showBody", "close")}
-                      />
-                    )}
-                  </Box>
-                </Box>
-              )}
-
-              {sourceMethod === 2 && (
-                <Box
-                  ref={block4Ref}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    position: "relative",
-                    flexWrap: "wrap",
-                    border: "1px solid rgba(228, 228, 228, 1)",
-                    borderRadius: "6px",
-                    padding: "20px",
-                  }}
-                >
-                  {isDomainSearchProcessing && (
-                    <Box
-                      sx={{
-                        width: "100%",
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        zIndex: 1200,
-                      }}
-                    >
-                      <BorderLinearProgress
-                        variant="indeterminate"
-                        sx={{ borderRadius: "6px" }}
-                      />
-                    </Box>
-                  )}
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                  >
-                    <Typography
-                      sx={{
-                        fontFamily: "Nunito Sans",
-                        fontSize: "16px",
-                        fontWeight: 500,
-                      }}
-                    >
-                      Select your domain
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontFamily: "Roboto",
-                        fontSize: "12px",
-                        color: "rgba(95, 99, 104, 1)",
-                      }}
-                    >
-                      Please select your domain.
-                    </Typography>
-                  </Box>
-                  <FormControl variant="outlined">
-                    <Select
-                      value={selectedDomain}
-                      onChange={handleChangeDomain}
-                      displayEmpty
-                      MenuProps={{
-                        MenuListProps: {
-                          sx: {
-                            pb: 0,
-                            pt: pixelNotInstalled ? 0 : "inherit",
-                          },
-                        },
-                      }}
-                      sx={{
-                        ...sourcesStyles.text,
-                        width: "316px",
-                        borderRadius: "4px",
-                        fontFamily: "Roboto",
-                        fontSize: "14px",
-                        color:
-                          selectedDomain === ""
-                            ? "rgba(112, 112, 113, 1)"
-                            : "rgba(32, 33, 36, 1)",
-                        "@media (max-width: 390px)": {
-                          width: "calc(100vw - 74px)",
-                        },
-                      }}
-                    >
-                      <MenuItem
-                        value=""
-                        disabled
-                        sx={{
-                          display: "none",
-                        }}
-                      >
-                        Select domain
-                      </MenuItem>
-                      {pixelNotInstalled && (
-                        <MenuItem
-                          sx={{
-                            p: 0,
-                            display: "flex",
-                            justifyContent: "center",
-                            width: "100%",
-                            "&:hover": {
-                              backgroundColor: "transparent",
-                            },
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              width: "100%",
-                              display: "flex",
-                              justifyContent: "center",
-                              padding: "6px 16px",
-                              borderBottom: "1px solid rgba(228, 228, 228, 1)",
-                              cursor: "pointer",
-                            }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handlePixelInstall();
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontFamily: "Nunito Sans",
-                                lineHeight: "22.4px",
-                                textDecoration: "underline",
-                                fontSize: "14px",
-                                fontWeight: "600",
-                                color: "rgba(56, 152, 252, 1)",
-                              }}
-                            >
-                              + Add a new pixel to domain
-                            </Typography>
-                          </Box>
-                        </MenuItem>
-                      )}
-                      {domains.map((item: DomainsLeads, index) => (
-                        <MenuItem
-                          sx={{
-                            fontFamily: "Roboto",
-                            fontWeight: 400,
-                            fontSize: "14px",
-                            borderBottom: "1px solid rgba(228, 228, 228, 1)",
-                          }}
-                          key={index}
-                          value={item.name}
-                        >
-                          {item.name}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                    {sourcesBuilderHints["pixelDomain"].show && (
-                      <HintCard
-                        card={builderHintCards["pixelDomain"]}
-                        positionLeft={340}
-                        isOpenBody={sourcesBuilderHints["pixelDomain"].showBody}
-                        toggleClick={() => changeSourcesBuilderHint("pixelDomain", "showBody", "toggle")}
-                        closeClick={() => changeSourcesBuilderHint("pixelDomain", "showBody", "close")}
-                      />
-                    )}
-                  </FormControl>
-                  {selectedDomain && (
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Roboto",
-                          fontSize: "14px",
-                          color: "rgba(32, 33, 36, 1)",
-                        }}
-                      >
-                        Total Leads
-                      </Typography>
-                      <Typography
-                        className="second-sub-title"
-                        sx={{
-                          fontFamily: "Nunino Sans",
-                          fontWeight: 600,
-                          fontSize: "16px",
-                          color: "rgba(33, 33, 33, 1))",
-                        }}
-                      >
-                        {totalLeads}
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              )}
-
-              {sourceMethod === 2 && selectedDomainId ? (
-                <>
-                  <Box
-                    ref={block5Ref}
+                    ref={block3Ref}
                     sx={{
-                      display: "flex",
+                      display: file ? "flex" : "none",
                       flexDirection: "column",
                       position: "relative",
                       gap: 2,
@@ -1612,6 +1196,22 @@ const SourcesImport: React.FC = () => {
                       padding: "20px",
                     }}
                   >
+                    {isChatGPTProcessing && (
+                      <Box
+                        sx={{
+                          width: "100%",
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          zIndex: 1200,
+                        }}
+                      >
+                        <BorderLinearProgress
+                          variant="indeterminate"
+                          sx={{ borderRadius: "6px" }}
+                        />
+                      </Box>
+                    )}
                     <Box
                       sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                     >
@@ -1622,7 +1222,7 @@ const SourcesImport: React.FC = () => {
                           fontWeight: 500,
                         }}
                       >
-                        Choose your data source
+                        Data Maping
                       </Typography>
                       <Typography
                         sx={{
@@ -1631,123 +1231,249 @@ const SourcesImport: React.FC = () => {
                           color: "rgba(95, 99, 104, 1)",
                         }}
                       >
-                        Please select your event type.
+                        Map your Field from your Source to the destination data
+                        base.
                       </Typography>
                     </Box>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        gap: 2,
-                        "@media (max-width: 420px)": {
-                          display: "grid",
-                          gridTemplateColumns: "1fr",
-                        },
-                      }}
-                    >
-                      <Button
-                        variant="outlined"
-                        onClick={handleToggleAll}
-                        sx={{
-                          fontFamily: "Nunito Sans",
-                          border: "1px solid rgba(208, 213, 221, 1)",
-                          borderRadius: "4px",
-                          textTransform: "none",
-                          fontSize: "14px",
-                          padding: "8px 12px",
-                          backgroundColor: allSelected
-                            ? "rgba(246, 248, 250, 1)"
-                            : "rgba(255, 255, 255, 1)",
-                          borderColor: allSelected
-                            ? "rgba(117, 168, 218, 1)"
-                            : "rgba(208, 213, 221, 1)",
-                          color: allSelected
-                            ? "rgba(32, 33, 36, 1)"
-                            : "rgba(32, 33, 36, 1)",
-                          ":hover": {
-                            borderColor: "rgba(208, 213, 221, 1)",
-                            backgroundColor: "rgba(236, 238, 241, 1)",
-                          },
-                        }}
+
+                    <Box sx={{ position: "relative", display: "flex", flexDirection: "column", gap: 1 }}>
+                      <Grid
+                        container
+                        alignItems="center"
+                        sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
                       >
-                        All
-                      </Button>
-                      {eventTypes.map((ev) => {
-                        const active = !isAllSelected && eventType.includes(ev.id);
-                        return (
-                          <Button
-                            key={ev.id}
-                            variant="outlined"
-                            onClick={() => toggleEventType(ev.id)}
+                        <Grid item xs={5} sm={3} sx={{ textAlign: "center" }}>
+                          <Image
+                            src="/logo-icon.svg"
+                            alt="logo"
+                            height={22}
+                            width={34}
+                          />
+                        </Grid>
+                        <Grid item xs={1} sm={0.5}>
+                          &nbsp;
+                        </Grid>
+                        <Grid item xs={5} sm={3} sx={{ textAlign: "center", }}>
+                          <Image
+                            src="/csv-icon.svg"
+                            alt="scv"
+                            height={22}
+                            width={34}
+                          />
+                        </Grid>
+                      </Grid>
+                      {mappingRows
+                        ?.filter((row) => !row.isHidden)
+                        .map((row, index) => (
+                          <Box
+                            key={index}
                             sx={{
-                              fontFamily: "Nunito Sans",
-                              border: "1px solid rgba(208, 213, 221, 1)",
-                              borderRadius: "4px",
-                              color: "rgba(32, 33, 36, 1)",
-                              textTransform: "none",
-                              fontSize: "14px",
-                              padding: "8px 12px",
-                              backgroundColor: active
-                                ? "rgba(246, 248, 250, 1)"
-                                : "rgba(255, 255, 255, 1)",
-                              borderColor: active
-                                ? "rgba(117, 168, 218, 1)"
-                                : "rgba(208, 213, 221, 1)",
-                              ":hover": {
-                                borderColor: "rgba(208, 213, 221, 1)",
-                                backgroundColor: "rgba(236, 238, 241, 1)",
-                              },
+                              mt: index === 1 && emailNotSubstitution ? "10px" : 0,
                             }}
                           >
-                            {ev.title.charAt(0).toUpperCase() + ev.title.slice(1).replace("_", " ")}
-                          </Button>
-                        );
-                      })}
-                      {sourcesBuilderHints["dataSource"].show && (
+                            <Grid
+                              container
+                              spacing={2}
+                              alignItems="center"
+                              sx={{ flexWrap: { xs: "nowrap", sm: "wrap" } }}
+                            >
+                              {/* Left Input Field */}
+                              <Grid item xs={5} sm={3}>
+                                <TextField
+                                  fullWidth
+                                  variant="outlined"
+                                  value={row.type}
+                                  disabled={true}
+                                  InputLabelProps={{
+                                    sx: {
+                                      fontFamily: "Nunito Sans",
+                                      fontSize: "12px",
+                                      lineHeight: "16px",
+                                      color: "rgba(17, 17, 19, 0.60)",
+                                      top: "-5px",
+                                      "&.Mui-focused": {
+                                        color: "rgba(56, 152, 252, 1)",
+                                        top: 0,
+                                      },
+                                      "&.MuiInputLabel-shrink": {
+                                        top: 0,
+                                      },
+                                    },
+                                  }}
+                                  InputProps={{
+                                    sx: {
+                                      "&.MuiOutlinedInput-root": {
+                                        height: "36px",
+                                        "& .MuiOutlinedInput-input": {
+                                          padding: "6.5px 8px",
+                                          fontFamily: "Roboto",
+                                          color: "#202124",
+                                          fontSize: "12px",
+                                          fontWeight: "400",
+                                          lineHeight: "20px",
+                                        },
+                                        "& .MuiOutlinedInput-notchedOutline": {
+                                          borderColor: "#A3B0C2",
+                                        },
+                                        "&:hover .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "#A3B0C2",
+                                        },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "rgba(56, 152, 252, 1)",
+                                        },
+                                      },
+                                      "&+.MuiFormHelperText-root": {
+                                        marginLeft: "0",
+                                      },
+                                    },
+                                  }}
+                                />
+                              </Grid>
+
+                              {/* Middle Icon Toggle (Right Arrow or Close Icon) */}
+                              <Grid
+                                item
+                                xs={1}
+                                sm={0.5}
+                                container
+                                justifyContent="center"
+                              >
+                                <Image
+                                  src="/chevron-right-purple.svg"
+                                  alt="chevron-right-purple"
+                                  height={18}
+                                  width={18}
+                                />
+                              </Grid>
+
+                              <Grid item xs={5} sm={3}>
+                                <FormControl fullWidth sx={{ height: "36px" }}>
+                                  <Select
+                                    value={row.value || ""}
+                                    onChange={(e) =>
+                                      handleMapListChange(row.id, e.target.value)
+                                    }
+                                    displayEmpty
+                                    inputProps={{
+                                      sx: {
+                                        height: "36px",
+                                        padding: "6.5px 8px",
+                                        fontFamily: "Roboto",
+                                        fontSize: "12px",
+                                        fontWeight: "400",
+                                        color: "#202124",
+                                        lineHeight: "20px",
+                                      },
+                                    }}
+                                    sx={{
+                                      "&.MuiOutlinedInput-root": {
+                                        height: "36px",
+                                        "& .MuiOutlinedInput-notchedOutline": {
+                                          borderColor: "#A3B0C2",
+                                        },
+                                        "&:hover .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "#A3B0C2",
+                                        },
+                                        "&.Mui-focused .MuiOutlinedInput-notchedOutline":
+                                        {
+                                          borderColor: "rgba(56, 152, 252, 1)",
+                                        },
+                                      },
+                                    }}
+                                  >
+                                    {headersinCSV.map(
+                                      (item: string, index: number) => (
+                                        <MenuItem key={index} value={item}>
+                                          {item}
+                                        </MenuItem>
+                                      )
+                                    )}
+                                  </Select>
+                                  {row.type === "Email" && emailNotSubstitution && (
+                                    <Typography
+                                      sx={{
+                                        fontFamily: "Nunito",
+                                        fontSize: "12px",
+                                        color: "rgba(224, 49, 48, 1)",
+                                      }}
+                                    >
+                                      Please match email
+                                    </Typography>
+                                  )}
+                                </FormControl>
+                              </Grid>
+
+                              {/* Delete Icon */}
+                              <Grid
+                                item
+                                xs={1}
+                                sm={0.5}
+                                container
+                                justifyContent="center"
+                              >
+                                {row.canDelete && (
+                                  <>
+                                    <IconButton
+                                      onClick={() => handleDelete(row.id)}
+                                    >
+                                      <Image
+                                        src="/trash-icon-filled.svg"
+                                        alt="trash-icon-filled"
+                                        height={18}
+                                        width={18}
+                                      />
+                                    </IconButton>
+                                  </>
+                                )}
+                              </Grid>
+                            </Grid>
+                          </Box>
+                        ))}
+                      {mappingRows.some((row) => row.isHidden) && (
+                        <Box
+                          sx={{ display: "flex", justifyContent: "flex-start" }}
+                          onClick={handleAdd}
+                        >
+                          <Typography
+                            sx={{
+                              fontFamily: "Nunito Sans",
+                              lineHeight: "22.4px",
+                              fontSize: "14px",
+                              fontWeight: "600",
+                              color: "rgba(56, 152, 252, 1)",
+                              cursor: "pointer",
+                            }}
+                          >
+                            + Add more
+                          </Typography>
+                        </Box>
+                      )}
+                      {sourcesBuilderHints["dataMaping"].show && (
                         <HintCard
-                          card={builderHintCards["dataSource"]}
-                          positionLeft={650}
-                          positionTop={100}
-                          isOpenBody={sourcesBuilderHints["dataSource"].showBody}
-                          toggleClick={() => changeSourcesBuilderHint("dataSource", "showBody", "toggle")}
-                          closeClick={() => changeSourcesBuilderHint("dataSource", "showBody", "close")}
+                          card={builderHintCards["dataMaping"]}
+                          positionLeft={460}
+                          isOpenBody={sourcesBuilderHints["dataMaping"].showBody}
+                          toggleClick={() => changeSourcesBuilderHint("dataMaping", "showBody", "toggle")}
+                          closeClick={() => changeSourcesBuilderHint("dataMaping", "showBody", "close")}
                         />
                       )}
                     </Box>
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Roboto",
-                          fontSize: "14px",
-                          color: "rgba(32, 33, 36, 1)",
-                        }}
-                      >
-                        Total Leads
-                      </Typography>
-                      <Typography
-                        className="second-sub-title"
-                        sx={{
-                          fontFamily: "Nunino Sans",
-                          fontWeight: 600,
-                          fontSize: "16px",
-                          color: "rgba(32, 33, 36, 1)",
-                        }}
-                      >
-                        {eventType.some((id) => [1, 2, 3, 4].includes(id))
-                          ? matchedLeads
-                          : totalLeads}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  {!showTargetStep && (
-                    <Box sx={{ display: "flex", justifyContent: "right" }}>
+
+                    {!showTargetStep && <Box sx={{ display: "flex", justifyContent: "right" }}>
                       <Button
+                        disabled={isChatGPTProcessing || emailNotSubstitution}
                         variant="contained"
                         onClick={() => {
                           setShowTargetStep(true)
-                          closeDotHintClick("dataSource");
+                          setTimeout(() => {
+                            scrollToBlock(block4Ref);
+                          }, 0);
+                          closeDotHintClick("sourceFile");
                           openDotHintClick("targetType");
+                          closeSkeleton("targetType");
                         }}
                         sx={{
                           backgroundColor: "rgba(56, 152, 252, 1)",
@@ -1779,292 +1505,710 @@ const SourcesImport: React.FC = () => {
                           Continue
                         </Typography>
                       </Button>
-                    </Box>
-                  )}
-                </>
-              ) : null}
-
-              {showTargetStep && sourceMethod !== 0 && (selectedDomainId || file) && (
-                <Box
-                  ref={block4Ref}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    minWidth: "100%",
-                    flexGrow: 1,
-                    position: "relative",
-                    flexWrap: "wrap",
-                    border: "1px solid rgba(228, 228, 228, 1)",
-                    borderRadius: "6px",
-                    padding: "20px",
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      width: "100%",
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      gap: 1,
-                    }}
-                  >
-                    <Box
-                      sx={{ display: "flex", flexDirection: "column", gap: 1 }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Nunito Sans",
-                          fontSize: "16px",
-                          fontWeight: 500,
-                        }}
-                      >
-                        Select your target type
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontFamily: "Roboto",
-                          fontSize: "12px",
-                          color: "rgba(95, 99, 104, 1)",
-                        }}
-                      >
-                        Choose what you would like to use it for.
-                      </Typography>
-                    </Box>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      position: "relative",
-                      flexDirection: "row",
-                      gap: 2,
-                    }}
-                  >
-                    {["B2B", "B2C"].map((option) => (
-                      <ToggleButton
-                        key={option}
-                        value={option}
-                        selected={targetAudience === option}
-                        className="form-input-label"
-                        onClick={() => handleTargetAudienceChange(option)}
-                        sx={{
-                          "&.MuiToggleButton-root.Mui-selected": {
-                            backgroundColor: "rgba(246, 248, 250, 1)",
-                            ":hover": {
-                              borderColor: "rgba(208, 213, 221, 1)",
-                              backgroundColor: "rgba(236, 238, 241, 1)",
-                            },
-                          },
-                          "&.MuiToggleButton-root": {
-                            ":hover": {
-                              borderColor: "rgba(208, 213, 221, 1)",
-                              backgroundColor: "rgba(236, 238, 241, 1)",
-                            },
-                          },
-                          textTransform: "none",
-                          border:
-                            targetAudience === option
-                              ? "1px solid rgba(117, 168, 218, 1)"
-                              : "1px solid #ccc",
-                          color: "rgba(32, 33, 36, 1)",
-                          borderRadius: "4px",
-                          padding: "8px 12px",
-                        }}
-                      >
-                        {option}
-                      </ToggleButton>
-                    ))}
-                    {sourcesBuilderHints["targetType"].show && (
-                      <HintCard
-                        card={builderHintCards["targetType"]}
-                        positionLeft={140}
-                        isOpenBody={sourcesBuilderHints["targetType"].showBody}
-                        toggleClick={() => changeSourcesBuilderHint("targetType", "showBody", "toggle")}
-                        closeClick={() => changeSourcesBuilderHint("targetType", "showBody", "close")}
-                      />
-                    )}
-                  </Box>
+                    </Box>}
                 </Box>
-
               )}
 
-              {sourceMethod !== 0 &&
-                targetAudience !== "" &&
-                (file || selectedDomainId) ? (
-                <>
+              {sourceMethod === 2 && (                
                   <Box
-                    ref={block6Ref}
+                    ref={block4Ref}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column"
+                    }}
+                  >
+                      {!skeletons["pixelDomain"] && 
+                        <Box 
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2,
+                            position: "relative",
+                            flexWrap: "wrap",
+                            border: "1px solid rgba(228, 228, 228, 1)",
+                            borderRadius: "6px",
+                            padding: "20px",
+                          }}>
+
+                          {isDomainSearchProcessing && (
+                            <Box
+                              sx={{
+                                width: "100%",
+                                position: "absolute",
+                                top: 0,
+                                left: 0,
+                                zIndex: 1200,
+                              }}
+                            >
+                              <BorderLinearProgress
+                                variant="indeterminate"
+                                sx={{ borderRadius: "6px" }}
+                              />
+                            </Box>
+                          )}
+                          <Box
+                            sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                          >
+                            <Typography
+                              sx={{
+                                fontFamily: "Nunito Sans",
+                                fontSize: "16px",
+                                fontWeight: 500,
+                              }}
+                            >
+                              Select your domain
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontFamily: "Roboto",
+                                fontSize: "12px",
+                                color: "rgba(95, 99, 104, 1)",
+                              }}
+                            >
+                              Please select your domain.
+                            </Typography>
+                          </Box>
+                          <FormControl variant="outlined">
+                            <Select
+                              value={selectedDomain}
+                              onChange={handleChangeDomain}
+                              displayEmpty
+                              MenuProps={{
+                                MenuListProps: {
+                                  sx: {
+                                    pb: 0,
+                                    pt: pixelNotInstalled ? 0 : "inherit",
+                                  },
+                                },
+                              }}
+                              sx={{
+                                ...sourcesStyles.text,
+                                width: "316px",
+                                borderRadius: "4px",
+                                fontFamily: "Roboto",
+                                fontSize: "14px",
+                                color:
+                                  selectedDomain === ""
+                                    ? "rgba(112, 112, 113, 1)"
+                                    : "rgba(32, 33, 36, 1)",
+                                "@media (max-width: 390px)": {
+                                  width: "calc(100vw - 74px)",
+                                },
+                              }}
+                            >
+                              <MenuItem
+                                value=""
+                                disabled
+                                sx={{
+                                  display: "none",
+                                }}
+                              >
+                                Select domain
+                              </MenuItem>
+                              {pixelNotInstalled && (
+                                <MenuItem
+                                  sx={{
+                                    p: 0,
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    width: "100%",
+                                    "&:hover": {
+                                      backgroundColor: "transparent",
+                                    },
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      width: "100%",
+                                      display: "flex",
+                                      justifyContent: "center",
+                                      padding: "6px 16px",
+                                      borderBottom: "1px solid rgba(228, 228, 228, 1)",
+                                      cursor: "pointer",
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handlePixelInstall();
+                                    }}
+                                  >
+                                    <Typography
+                                      sx={{
+                                        fontFamily: "Nunito Sans",
+                                        lineHeight: "22.4px",
+                                        textDecoration: "underline",
+                                        fontSize: "14px",
+                                        fontWeight: "600",
+                                        color: "rgba(56, 152, 252, 1)",
+                                      }}
+                                    >
+                                      + Add a new pixel to domain
+                                    </Typography>
+                                  </Box>
+                                </MenuItem>
+                              )}
+                              {domains.map((item: DomainsLeads, index) => (
+                                <MenuItem
+                                  sx={{
+                                    fontFamily: "Roboto",
+                                    fontWeight: 400,
+                                    fontSize: "14px",
+                                    borderBottom: "1px solid rgba(228, 228, 228, 1)",
+                                  }}
+                                  key={index}
+                                  value={item.name}
+                                >
+                                  {item.name}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                            {sourcesBuilderHints["pixelDomain"].show && (
+                              <HintCard
+                                card={builderHintCards["pixelDomain"]}
+                                positionLeft={340}
+                                isOpenBody={sourcesBuilderHints["pixelDomain"].showBody}
+                                toggleClick={() => changeSourcesBuilderHint("pixelDomain", "showBody", "toggle")}
+                                closeClick={() => changeSourcesBuilderHint("pixelDomain", "showBody", "close")}
+                              />
+                            )}
+                          </FormControl>
+                          {selectedDomain && (
+                            <Box
+                              sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                            >
+                              <Typography
+                                sx={{
+                                  fontFamily: "Roboto",
+                                  fontSize: "14px",
+                                  color: "rgba(32, 33, 36, 1)",
+                                }}
+                              >
+                                Total Leads
+                              </Typography>
+                              <Typography
+                                className="second-sub-title"
+                                sx={{
+                                  fontFamily: "Nunino Sans",
+                                  fontWeight: 600,
+                                  fontSize: "16px",
+                                  color: "rgba(33, 33, 33, 1))",
+                                }}
+                              >
+                                {totalLeads}
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      }
+                      {renderSkeleton("pixelDomain")}
+                  </Box>
+              )}
+
+              {sourceMethod === 2 && selectedDomainId 
+              ? (
+                <>
+                    <Box
+                      ref={block5Ref}
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column"
+                      }}
+                    >
+                      {!skeletons["dataSource"] &&
+                        <Box 
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            position: "relative",
+                            gap: 2,
+                            flexWrap: "wrap",
+                            border: "1px solid rgba(228, 228, 228, 1)",
+                            borderRadius: "6px",
+                            padding: "20px",
+                          }}>
+
+                          <Box
+                            sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                          >
+                            <Typography
+                              sx={{
+                                fontFamily: "Nunito Sans",
+                                fontSize: "16px",
+                                fontWeight: 500,
+                              }}
+                            >
+                              Choose your data source
+                            </Typography>
+                            <Typography
+                              sx={{
+                                fontFamily: "Roboto",
+                                fontSize: "12px",
+                                color: "rgba(95, 99, 104, 1)",
+                              }}
+                            >
+                              Please select your event type.
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 2,
+                              "@media (max-width: 420px)": {
+                                display: "grid",
+                                gridTemplateColumns: "1fr",
+                              },
+                            }}
+                          >
+                            <Button
+                              variant="outlined"
+                              onClick={handleToggleAll}
+                              sx={{
+                                fontFamily: "Nunito Sans",
+                                border: "1px solid rgba(208, 213, 221, 1)",
+                                borderRadius: "4px",
+                                textTransform: "none",
+                                fontSize: "14px",
+                                padding: "8px 12px",
+                                backgroundColor: allSelected
+                                  ? "rgba(246, 248, 250, 1)"
+                                  : "rgba(255, 255, 255, 1)",
+                                borderColor: allSelected
+                                  ? "rgba(117, 168, 218, 1)"
+                                  : "rgba(208, 213, 221, 1)",
+                                color: allSelected
+                                  ? "rgba(32, 33, 36, 1)"
+                                  : "rgba(32, 33, 36, 1)",
+                                ":hover": {
+                                  borderColor: "rgba(208, 213, 221, 1)",
+                                  backgroundColor: "rgba(236, 238, 241, 1)",
+                                },
+                              }}
+                            >
+                              All
+                            </Button>
+                            {eventTypes.map((ev) => {
+                              const active = !isAllSelected && eventType.includes(ev.id);
+                              return (
+                                <Button
+                                  key={ev.id}
+                                  variant="outlined"
+                                  onClick={() => toggleEventType(ev.id)}
+                                  sx={{
+                                    fontFamily: "Nunito Sans",
+                                    border: "1px solid rgba(208, 213, 221, 1)",
+                                    borderRadius: "4px",
+                                    color: "rgba(32, 33, 36, 1)",
+                                    textTransform: "none",
+                                    fontSize: "14px",
+                                    padding: "8px 12px",
+                                    backgroundColor: active
+                                      ? "rgba(246, 248, 250, 1)"
+                                      : "rgba(255, 255, 255, 1)",
+                                    borderColor: active
+                                      ? "rgba(117, 168, 218, 1)"
+                                      : "rgba(208, 213, 221, 1)",
+                                    ":hover": {
+                                      borderColor: "rgba(208, 213, 221, 1)",
+                                      backgroundColor: "rgba(236, 238, 241, 1)",
+                                    },
+                                  }}
+                                >
+                                  {ev.title.charAt(0).toUpperCase() + ev.title.slice(1).replace("_", " ")}
+                                </Button>
+                              );
+                            })}
+                            {sourcesBuilderHints["dataSource"].show && (
+                              <HintCard
+                                card={builderHintCards["dataSource"]}
+                                positionLeft={650}
+                                positionTop={100}
+                                isOpenBody={sourcesBuilderHints["dataSource"].showBody}
+                                toggleClick={() => changeSourcesBuilderHint("dataSource", "showBody", "toggle")}
+                                closeClick={() => changeSourcesBuilderHint("dataSource", "showBody", "close")}
+                              />
+                            )}
+                          </Box>
+                          <Box
+                            sx={{ display: "flex", flexDirection: "column", gap: 1 }}
+                          >
+                            <Typography
+                              sx={{
+                                fontFamily: "Roboto",
+                                fontSize: "14px",
+                                color: "rgba(32, 33, 36, 1)",
+                              }}
+                            >
+                              Total Leads
+                            </Typography>
+                            <Typography
+                              className="second-sub-title"
+                              sx={{
+                                fontFamily: "Nunino Sans",
+                                fontWeight: 600,
+                                fontSize: "16px",
+                                color: "rgba(32, 33, 36, 1)",
+                              }}
+                            >
+                              {eventType.some((id) => [1, 2, 3, 4].includes(id))
+                                ? matchedLeads
+                                : totalLeads}
+                            </Typography>
+                          </Box>
+
+                          {!showTargetStep && (
+                            <Box sx={{ display: "flex", justifyContent: "right" }}>
+                              <Button
+                                variant="contained"
+                                onClick={() => {
+                                  setShowTargetStep(true)
+                                  closeDotHintClick("dataSource");
+                                  openDotHintClick("targetType");
+                                  closeSkeleton("targetType")
+                                  setTimeout(() => {
+                                    scrollToBlock(block4Ref);
+                                  }, 0);
+                                }}
+                                sx={{
+                                  backgroundColor: "rgba(56, 152, 252, 1)",
+                                  width: "120px",
+                                  height: "40px",
+                                  ":hover": {
+                                    backgroundColor: "rgba(30, 136, 229, 1)",
+                                  },
+                                  ":active": {
+                                    backgroundColor: "rgba(56, 152, 252, 1)",
+                                  },
+                                  ":disabled": {
+                                    backgroundColor: "rgba(56, 152, 252, 1)",
+                                    opacity: 0.6,
+                                  },
+                                }}
+                              >
+                                <Typography
+                                  sx={{
+                                    textAlign: "center",
+                                    color: "rgba(255, 255, 255, 1)",
+                                    fontFamily: "Nunito Sans",
+                                    textTransform: "none",
+                                    fontWeight: "600",
+                                    fontSize: "14px",
+                                    lineHeight: "19.6px",
+                                  }}
+                                >
+                                  Continue
+                                </Typography>
+                              </Button>
+                            </Box>
+                          )}
+
+                        </Box>
+                      }
+                      {renderSkeleton("dataSource")}
+
+                    </Box>
+                  </>   
+              ) 
+              : null}
+
+              {showTargetStep && sourceMethod !== 0 && (selectedDomainId || file) && (
+                  <Box
+                    ref={block4Ref}
                     sx={{
                       display: "flex",
                       flexDirection: "column",
-                      gap: 2,
-                      flexWrap: "wrap",
-                      border: "1px solid rgba(228, 228, 228, 1)",
-                      borderRadius: "6px",
-                      padding: "20px",
                     }}
                   >
+                    {!skeletons["targetType"] && 
                     <Box
                       sx={{
                         display: "flex",
-                        alignItems: "center",
-                        position: "relative",
+                        flexDirection: "column",
                         gap: 2,
-                        "@media (max-width: 400px)": {
+                        minWidth: "100%",
+                        flexGrow: 1,
+                        position: "relative",
+                        flexWrap: "wrap",
+                        border: "1px solid rgba(228, 228, 228, 1)",
+                        borderRadius: "6px",
+                        padding: "20px",
+                      }}>
+
+                      <Box
+                        sx={{
+                          display: "flex",
+                          width: "100%",
+                          flexDirection: "row",
                           justifyContent: "space-between",
-                        },
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontFamily: "Nunito Sans",
-                          fontSize: "16px",
-                          fontWeight: 500,
+                          gap: 1,
                         }}
                       >
-                        Create Name
-                      </Typography>
-                      <TextField
-                        id="outlined"
-                        label="Name"
-                        InputLabelProps={{
-                          sx: {
-                            color: "rgba(17, 17, 19, 0.6)",
-                            fontFamily: "Nunito Sans",
-                            fontWeight: 400,
-                            fontSize: "15px",
-                            padding: 0,
-                            top: "-1px",
-                            margin: 0,
-                          },
-                        }}
-                        sx={{
-                          width: "250px",
-                          "@media (max-width: 400px)": { width: "150px" },
-                          "& .MuiInputLabel-root.Mui-focused": {
-                            color: "rgba(17, 17, 19, 0.6)",
-                          },
-                          "& .MuiInputLabel-root[data-shrink='false']": {
-                            transform: "translate(16px, 50%) scale(1)",
-                          },
-                          "& .MuiOutlinedInput-root": {
-                            maxHeight: "40px",
-                          },
-                        }}
-                        InputProps={{
-                          className: "form-input",
-                        }}
-                        value={sourceName}
-                        onChange={(e) => {
-                          if (e.target.value.length < 128) {
-                            setSourceName(e.target.value);
-                          } else {
-                            showErrorToast("Your name is too long!");
-                          }
-                        }}
-                      />
-                      {sourcesBuilderHints["name"].show && (
-                        <HintCard
-                          card={builderHintCards["name"]}
-                          positionLeft={380}
-                          isOpenBody={sourcesBuilderHints["name"].showBody}
-                          toggleClick={() => changeSourcesBuilderHint("name", "showBody", "toggle")}
-                          closeClick={() => changeSourcesBuilderHint("name", "showBody", "close")}
-                        />
-                      )}
-                    </Box>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      gap: 2,
-                      flexWrap: "wrap",
-                      justifyContent: "flex-end",
-                      borderRadius: "6px",
-                    }}
-                  >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-                      <Button
-                        variant="outlined"
-                        onClick={() => {
-                          setSourceMethod(0);
-                          handleDeleteFile();
-                          setSourceName("");
-                          setSourceType("");
-                          router.push("/sources");
-                        }}
-                        sx={{
-                          borderColor: "rgba(56, 152, 252, 1)",
-                          width: "92px",
-                          height: "40px",
-                          ":hover": {
-                            borderColor: "rgba(30, 136, 229, 1)",
-                          },
-                          ":active": {
-                            borderColor: "rgba(56, 152, 252, 1)",
-                          },
-                          ":disabled": {
-                            borderColor: "rgba(56, 152, 252, 1)",
-                            opacity: 0.4,
-                          },
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            textAlign: "center",
-                            color: "rgba(56, 152, 252, 1)",
-                            textTransform: "none",
-                            fontFamily: "Nunito Sans",
-                            fontWeight: "600",
-                            fontSize: "14px",
-                            lineHeight: "19.6px",
-                          }}
+                        <Box
+                          sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                         >
-                          Cancel
-                        </Typography>
-                      </Button>
-                      <Button
-                        variant="contained"
-                        onClick={handleSumbit}
-                        disabled={
-                          sourceName.trim() === "" ||
-                          emailNotSubstitution ||
-                          pixelNotInstalled
-                        }
+                          <Typography
+                            sx={{
+                              fontFamily: "Nunito Sans",
+                              fontSize: "16px",
+                              fontWeight: 500,
+                            }}
+                          >
+                            Select your target type
+                          </Typography>
+                          <Typography
+                            sx={{
+                              fontFamily: "Roboto",
+                              fontSize: "12px",
+                              color: "rgba(95, 99, 104, 1)",
+                            }}
+                          >
+                            Choose what you would like to use it for.
+                          </Typography>
+                        </Box>
+                      </Box>
+                      <Box
                         sx={{
-                          backgroundColor: "rgba(56, 152, 252, 1)",
-                          width: "120px",
-                          height: "40px",
-                          ":hover": {
-                            backgroundColor: "rgba(30, 136, 229, 1)",
-                          },
-                          ":active": {
-                            backgroundColor: "rgba(116, 183, 253, 1)",
-                          },
-                          ":disabled": {
-                            backgroundColor: "rgba(56, 152, 252, 1)",
-                            opacity: 0.6,
-                          },
+                          display: "flex",
+                          position: "relative",
+                          flexDirection: "row",
+                          gap: 2,
                         }}
                       >
-                        <Typography
-                          sx={{
-                            textAlign: "center",
-                            color: "rgba(255, 255, 255, 1)",
-                            fontFamily: "Nunito Sans",
-                            textTransform: "none",
-                            fontWeight: "600",
-                            fontSize: "14px",
-                            lineHeight: "19.6px",
-                          }}
-                        >
-                          Create
-                        </Typography>
-                      </Button>
+                        {["B2B", "B2C"].map((option) => (
+                          <ToggleButton
+                            key={option}
+                            value={option}
+                            selected={targetAudience === option}
+                            className="form-input-label"
+                            onClick={() => handleTargetAudienceChange(option)}
+                            sx={{
+                              "&.MuiToggleButton-root.Mui-selected": {
+                                backgroundColor: "rgba(246, 248, 250, 1)",
+                                ":hover": {
+                                  borderColor: "rgba(208, 213, 221, 1)",
+                                  backgroundColor: "rgba(236, 238, 241, 1)",
+                                },
+                              },
+                              "&.MuiToggleButton-root": {
+                                ":hover": {
+                                  borderColor: "rgba(208, 213, 221, 1)",
+                                  backgroundColor: "rgba(236, 238, 241, 1)",
+                                },
+                              },
+                              textTransform: "none",
+                              border:
+                                targetAudience === option
+                                  ? "1px solid rgba(117, 168, 218, 1)"
+                                  : "1px solid #ccc",
+                              color: "rgba(32, 33, 36, 1)",
+                              borderRadius: "4px",
+                              padding: "8px 12px",
+                            }}
+                          >
+                            {option}
+                          </ToggleButton>
+                        ))}
+                        {sourcesBuilderHints["targetType"].show && (
+                          <HintCard
+                            card={builderHintCards["targetType"]}
+                            positionLeft={140}
+                            isOpenBody={sourcesBuilderHints["targetType"].showBody}
+                            toggleClick={() => changeSourcesBuilderHint("targetType", "showBody", "toggle")}
+                            closeClick={() => changeSourcesBuilderHint("targetType", "showBody", "close")}
+                          />
+                        )}
+                      </Box>
+
                     </Box>
+                    }
+                    {renderSkeleton("targetType")}
                   </Box>
-                </>
-              ) : null}
+              )}
+
+              {sourceMethod !== 0 && targetAudience !== "" && (file || selectedDomainId) 
+                ? (
+                    <>
+                      <Box
+                        ref={block6Ref}
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column"
+                        }}
+                      >
+                      {!skeletons["name"] &&
+                      <Box
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 2,
+                          flexWrap: "wrap",
+                          border: "1px solid rgba(228, 228, 228, 1)",
+                          borderRadius: "6px",
+                          padding: "20px",
+                        }}>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              position: "relative",
+                              gap: 2,
+                              "@media (max-width: 400px)": {
+                                justifyContent: "space-between",
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                fontFamily: "Nunito Sans",
+                                fontSize: "16px",
+                                fontWeight: 500,
+                              }}
+                            >
+                              Create Name
+                            </Typography>
+                            <TextField
+                              id="outlined"
+                              label="Name"
+                              InputLabelProps={{
+                                sx: {
+                                  color: "rgba(17, 17, 19, 0.6)",
+                                  fontFamily: "Nunito Sans",
+                                  fontWeight: 400,
+                                  fontSize: "15px",
+                                  padding: 0,
+                                  top: "-1px",
+                                  margin: 0,
+                                },
+                              }}
+                              sx={{
+                                width: "250px",
+                                "@media (max-width: 400px)": { width: "150px" },
+                                "& .MuiInputLabel-root.Mui-focused": {
+                                  color: "rgba(17, 17, 19, 0.6)",
+                                },
+                                "& .MuiInputLabel-root[data-shrink='false']": {
+                                  transform: "translate(16px, 50%) scale(1)",
+                                },
+                                "& .MuiOutlinedInput-root": {
+                                  maxHeight: "40px",
+                                },
+                              }}
+                              InputProps={{
+                                className: "form-input",
+                              }}
+                              value={sourceName}
+                              onChange={(e) => {
+                                if (e.target.value.length < 128) {
+                                  setSourceName(e.target.value);
+                                } else {
+                                  showErrorToast("Your name is too long!");
+                                }
+                              }}
+                            />
+                            {sourcesBuilderHints["name"].show && (
+                              <HintCard
+                                card={builderHintCards["name"]}
+                                positionLeft={380}
+                                isOpenBody={sourcesBuilderHints["name"].showBody}
+                                toggleClick={() => changeSourcesBuilderHint("name", "showBody", "toggle")}
+                                closeClick={() => changeSourcesBuilderHint("name", "showBody", "close")}
+                              />
+                            )}
+                          </Box>
+                      </Box>
+                      }
+                      {renderSkeleton("name")}
+                      </Box>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          gap: 2,
+                          flexWrap: "wrap",
+                          justifyContent: "flex-end",
+                          borderRadius: "6px",
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+                          <Button
+                            variant="outlined"
+                            onClick={() => {
+                              setSourceMethod(0);
+                              handleDeleteFile();
+                              setSourceName("");
+                              setSourceType("");
+                              router.push("/sources");
+                            }}
+                            sx={{
+                              borderColor: "rgba(56, 152, 252, 1)",
+                              width: "92px",
+                              height: "40px",
+                              ":hover": {
+                                borderColor: "rgba(30, 136, 229, 1)",
+                              },
+                              ":active": {
+                                borderColor: "rgba(56, 152, 252, 1)",
+                              },
+                              ":disabled": {
+                                borderColor: "rgba(56, 152, 252, 1)",
+                                opacity: 0.4,
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                textAlign: "center",
+                                color: "rgba(56, 152, 252, 1)",
+                                textTransform: "none",
+                                fontFamily: "Nunito Sans",
+                                fontWeight: "600",
+                                fontSize: "14px",
+                                lineHeight: "19.6px",
+                              }}
+                            >
+                              Cancel
+                            </Typography>
+                          </Button>
+                          <Button
+                            variant="contained"
+                            onClick={handleSumbit}
+                            disabled={
+                              sourceName.trim() === "" ||
+                              emailNotSubstitution ||
+                              pixelNotInstalled
+                            }
+                            sx={{
+                              backgroundColor: "rgba(56, 152, 252, 1)",
+                              width: "120px",
+                              height: "40px",
+                              ":hover": {
+                                backgroundColor: "rgba(30, 136, 229, 1)",
+                              },
+                              ":active": {
+                                backgroundColor: "rgba(116, 183, 253, 1)",
+                              },
+                              ":disabled": {
+                                backgroundColor: "rgba(56, 152, 252, 1)",
+                                opacity: 0.6,
+                              },
+                            }}
+                          >
+                            <Typography
+                              sx={{
+                                textAlign: "center",
+                                color: "rgba(255, 255, 255, 1)",
+                                fontFamily: "Nunito Sans",
+                                textTransform: "none",
+                                fontWeight: "600",
+                                fontSize: "14px",
+                                lineHeight: "19.6px",
+                              }}
+                            >
+                              Create
+                            </Typography>
+                          </Button>
+                        </Box>
+                      </Box>
+                    </>
+                ) 
+                : null}
             </Box>
           </Box>
         </Box>
