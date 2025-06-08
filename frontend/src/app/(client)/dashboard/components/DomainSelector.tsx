@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Box,
-  Typography,
-  Button,
-  TextField,
-  InputAdornment,
+	Box,
+	Typography,
+	Button,
+	TextField,
+	InputAdornment,
 } from "@mui/material";
 import CustomTooltip from "@/components/customToolTip";
 import AddIcon from "@mui/icons-material/Add";
@@ -20,332 +20,346 @@ import { showErrorToast, showToast } from "@/components/ToastNotification";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 
 interface Domain {
-  id: number;
-  user_id: number;
-  domain: string;
-  data_provider_id: number;
-  is_pixel_installed: boolean;
-  enable: boolean;
+	id: number;
+	user_id: number;
+	domain: string;
+	data_provider_id: number;
+	is_pixel_installed: boolean;
+	enable: boolean;
 }
 
-
 interface DomainSelectorProps {
-  onDomainSelected: (domain: Domain | null) => void;
+	onDomainSelected: (domain: Domain | null) => void;
 }
 
 const DomainSelector: React.FC<DomainSelectorProps> = ({
-  onDomainSelected,
+	onDomainSelected,
 }) => {
-  const { domainSelectorHints, resetDomainSelectorHints, changeDomainSelectorHint } = useGetStartedHints();
-  const [domains, setDomains] = useState<Domain[]>([]);
-  const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
-  const [addingNew, setAddingNew] = useState(false);
-  const [newDomain, setNewDomain] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [isFocused, setIsFocused] = useState(false);
-  const handleFocus = () => setIsFocused(true);
-  const handleBlur = () => setIsFocused(false);
-  const [loading, setLoading] = useState(false);
+	const {
+		domainSelectorHints,
+		resetDomainSelectorHints,
+		changeDomainSelectorHint,
+	} = useGetStartedHints();
+	const [domains, setDomains] = useState<Domain[]>([]);
+	const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
+	const [addingNew, setAddingNew] = useState(false);
+	const [newDomain, setNewDomain] = useState("");
+	const [error, setError] = useState<string | null>(null);
+	const [isFocused, setIsFocused] = useState(false);
+	const handleFocus = () => setIsFocused(true);
+	const handleBlur = () => setIsFocused(false);
+	const [loading, setLoading] = useState(false);
 
-  const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,}$/;
+	const domainRegex = /^(?!:\/\/)([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,}$/;
 
-  const validateField = (value: string): string => {
-    const sanitizedValue = value
-      .replace(/^https?:\/\//, "")
-      .replace(/^www\./, "")
-      .trim();
-    return domainRegex.test(sanitizedValue) ? "" : "Invalid domain format";
-  };
+	const validateField = (value: string): string => {
+		const sanitizedValue = value
+			.replace(/^https?:\/\//, "")
+			.replace(/^www\./, "")
+			.trim();
+		return domainRegex.test(sanitizedValue) ? "" : "Invalid domain format";
+	};
 
-  const loadDomainsFromSession = () => {
-    const me = sessionStorage.getItem("me");
-    const savedDomains: Domain[] = me ? JSON.parse(me).domains || [] : [];
-    return savedDomains;
-  };
+	const loadDomainsFromSession = () => {
+		const me = sessionStorage.getItem("me");
+		const savedDomains: Domain[] = me ? JSON.parse(me).domains || [] : [];
+		return savedDomains;
+	};
 
-  useEffect(() => {
-    const handleRedirect = async () => {
-      const query = new URLSearchParams(window.location.search);
-      const authorizationGoogleCode = query.get("code");
-      const installBigcommerce = query.get("install_bigcommerce");
-      const googleScope = query.get("scope");
-      if ((authorizationGoogleCode && googleScope) || installBigcommerce) {
-        const savedCurrentDomain = sessionStorage.getItem("current_domain");
-        if (savedCurrentDomain) {
-          const matchedDomain = domains.find(
-            (domain) => domain.domain === savedCurrentDomain
-          );
-          if (matchedDomain) {
-            setSelectedDomain(matchedDomain);
-          }
-        }
-      }
-    };
+	useEffect(() => {
+		const handleRedirect = async () => {
+			const query = new URLSearchParams(window.location.search);
+			const authorizationGoogleCode = query.get("code");
+			const installBigcommerce = query.get("install_bigcommerce");
+			const googleScope = query.get("scope");
+			if ((authorizationGoogleCode && googleScope) || installBigcommerce) {
+				const savedCurrentDomain = sessionStorage.getItem("current_domain");
+				if (savedCurrentDomain) {
+					const matchedDomain = domains.find(
+						(domain) => domain.domain === savedCurrentDomain,
+					);
+					if (matchedDomain) {
+						setSelectedDomain(matchedDomain);
+					}
+				}
+			}
+		};
 
-    handleRedirect();
-  }, [domains]);
+		handleRedirect();
+	}, [domains]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const saved = loadDomainsFromSession();
+	useEffect(() => {
+		const interval = setInterval(() => {
+			const saved = loadDomainsFromSession();
 
-      const filtered = saved.filter(
-        (domain) => domain.is_pixel_installed === false
-      );
+			const filtered = saved.filter(
+				(domain) => domain.is_pixel_installed === false,
+			);
 
-      setDomains((prev) => {
-        if (JSON.stringify(prev) !== JSON.stringify(filtered)) {
-          return filtered;
-        }
-        return prev;
-      });
-    }, 1000);
+			setDomains((prev) => {
+				if (JSON.stringify(prev) !== JSON.stringify(filtered)) {
+					return filtered;
+				}
+				return prev;
+			});
+		}, 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+		return () => clearInterval(interval);
+	}, []);
 
-  const validateDomain = (input: string): boolean => {
-    const domainPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}$/i;
-    return domainPattern.test(input.trim());
-  };
+	const validateDomain = (input: string): boolean => {
+		const domainPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}$/i;
+		return domainPattern.test(input.trim());
+	};
 
-  const handleWebsiteLink = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const rawInput = event.target.value.trim();
-    const sanitizedInput = rawInput
-      .replace(/^https?:\/\//, "")
-      .replace(/^www\./, "");
+	const handleWebsiteLink = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const rawInput = event.target.value.trim();
+		const sanitizedInput = rawInput
+			.replace(/^https?:\/\//, "")
+			.replace(/^www\./, "");
 
-    const websiteError = validateField(rawInput);
+		const websiteError = validateField(rawInput);
 
-    const finalDomain = !websiteError ? `https://${sanitizedInput}` : rawInput;
+		const finalDomain = !websiteError ? `https://${sanitizedInput}` : rawInput;
 
-    setNewDomain(finalDomain);
-    setError(websiteError);
-  };
+		setNewDomain(finalDomain);
+		setError(websiteError);
+	};
 
-  const handleAddDomain = async () => {
-    if (!validateDomain(newDomain)) {
-      setError("Invalid domain format");
-      return;
-    }
+	const handleAddDomain = async () => {
+		if (!validateDomain(newDomain)) {
+			setError("Invalid domain format");
+			return;
+		}
 
-    try {
-      setLoading(true)
-      const response = await axiosInstance.post("/domains/", {
-        domain: newDomain.trim(),
-      });
-      if (response.status === 201) {
-        let cleanedDomain = newDomain.trim().replace(/^https?:\/\//, "");
-        sessionStorage.setItem("current_domain", cleanedDomain);
-        const newDom: Domain = response.data;
-        const updatedDomains = [...domains, newDom];
-        const me = JSON.parse(sessionStorage.getItem("me") || "{}");
-        me.domains = updatedDomains;
-        sessionStorage.setItem("me", JSON.stringify(me));
-        setDomains(updatedDomains);
-        setSelectedDomain(newDom);
-        onDomainSelected(newDom);
-        setNewDomain("");
-        setAddingNew(false);
-        setError(null);
-        showToast("Domain added successfully");
-      }
-    } catch (err) {
-      if (
-        err instanceof AxiosError &&
-        err.response?.data?.status === "NEED_UPGRADE_PLAN"
-      ) {
-        showErrorToast("Upgrade your plan to add more domains.");
-      } else {
-        setError("Failed to add domain");
-      }
-    } finally {
-      setLoading(false)
-    }
-  };
+		try {
+			setLoading(true);
+			const response = await axiosInstance.post("/domains/", {
+				domain: newDomain.trim(),
+			});
+			if (response.status === 201) {
+				let cleanedDomain = newDomain.trim().replace(/^https?:\/\//, "");
+				sessionStorage.setItem("current_domain", cleanedDomain);
+				const newDom: Domain = response.data;
+				const updatedDomains = [...domains, newDom];
+				const me = JSON.parse(sessionStorage.getItem("me") || "{}");
+				me.domains = updatedDomains;
+				sessionStorage.setItem("me", JSON.stringify(me));
+				setDomains(updatedDomains);
+				setSelectedDomain(newDom);
+				onDomainSelected(newDom);
+				setNewDomain("");
+				setAddingNew(false);
+				setError(null);
+				showToast("Domain added successfully");
+			}
+		} catch (err) {
+			if (
+				err instanceof AxiosError &&
+				err.response?.data?.status === "NEED_UPGRADE_PLAN"
+			) {
+				showErrorToast("Upgrade your plan to add more domains.");
+			} else {
+				setError("Failed to add domain");
+			}
+		} finally {
+			setLoading(false);
+		}
+	};
 
+	return (
+		<Box
+			sx={{
+				height: "100%",
+				padding: "1rem",
+				border: "1px solid #e4e4e4",
+				borderRadius: "8px",
+				backgroundColor: "rgba(255, 255, 255, 1)",
+				boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.08)",
+				marginBottom: "2rem",
+				"@media (max-width: 900px)": {
+					height: "auto",
+				},
+			}}
+		>
+			{loading && <CustomizedProgressBar />}
+			<Box sx={{ display: "flex", alignItems: "center", gap: 1, pb: "4px" }}>
+				<Typography
+					sx={{
+						fontFamily: "Nunito Sans",
+						fontWeight: 700,
+						fontSize: "16px",
+						color: "#1c1c1c",
+					}}
+				>
+					1. Choose your domain
+				</Typography>
+				<CustomTooltip
+					title="Set which domain's user activity will be tracked."
+					linkText="Learn more"
+					linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/create-or-select-your-domain"
+				/>
+			</Box>
+			<Typography className="paragraph" sx={{ marginBottom: "1rem" }}>
+				Select the domain you want to install pixel on
+			</Typography>
 
-  return (
-    <Box
-      sx={{
-        height: '100%',
-        padding: "1rem",
-        border: "1px solid #e4e4e4",
-        borderRadius: "8px",
-        backgroundColor: "rgba(255, 255, 255, 1)",
-        boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.08)",
-        marginBottom: "2rem",
-        "@media (max-width: 900px)": {
-          height: 'auto'
-        }
-      }}
-    >
-      {loading && <CustomizedProgressBar />}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, pb: "4px" }}>
-        <Typography
-          sx={{
-            fontFamily: "Nunito Sans",
-            fontWeight: 700,
-            fontSize: "16px",
-            color: "#1c1c1c",
-          }}
-        >
-          1. Choose your domain
-        </Typography>
-        <CustomTooltip
-          title="Set which domain's user activity will be tracked."
-          linkText="Learn more"
-          linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/create-or-select-your-domain"
-        />
-      </Box>
-      <Typography className="paragraph" sx={{ marginBottom: "1rem" }}>
-        Select the domain you want to install pixel on
-      </Typography>
-
-      {domains.length === 0 && !addingNew ? (
-        <Box sx={{ position: "relative", }}>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => setAddingNew(true)}
-            sx={{
-              backgroundColor: "rgba(56, 152, 252, 1)",
-              textTransform: "none",
-            }}
-          >
-            Add domain
-          </Button>
-          {domainSelectorHints["addDomain"]?.show && !addingNew && (
-            <HintCard
-              card={domainSelectorHintCards["addDomain"]}
-              positionLeft={150}
-              positionTop={-3}
-              isOpenBody={domainSelectorHints["addDomain"].showBody}
-              toggleClick={() => changeDomainSelectorHint("addDomain", "showBody", "toggle")}
-              closeClick={() => changeDomainSelectorHint("addDomain", "showBody", "close")}
-            />
-          )}
-        </Box>
-      ) : addingNew ? (
-        <Box
-          display="flex"
-          alignItems="start"
-          position="relative"
-          gap={2}
-          pt={1}
-        >
-          <TextField
-            onKeyDown={(e) => e.stopPropagation()}
-            fullWidth
-            label="Enter domain link"
-            variant="outlined"
-            sx={{
-              maxHeight: "56px",
-              maxWidth: "40%",
-              "& .MuiOutlinedInput-root": {
-                fontSize: "14px",
-                maxHeight: "48px",
-                "& fieldset": {
-                  borderColor: "rgba(56, 152, 252, 1)",
-                },
-                "&:hover fieldset": {
-                  borderColor: "rgba(56, 152, 252, 1)",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "rgba(56, 152, 252, 1)",
-                },
-                paddingTop: "13px",
-                paddingBottom: "13px",
-              },
-              "& .MuiInputLabel-root": {
-                fontSize: "14px",
-              },
-              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                borderColor: "rgba(56, 152, 252, 1)",
-                color: "rgba(56, 152, 252, 1)",
-              },
-            }}
-            placeholder={isFocused ? "example.com" : ""}
-            value={
-              isFocused
-                ? newDomain.replace(/^https?:\/\//, "")
-                : `https://${newDomain.replace(/^https?:\/\//, "")}`
-            }
-            onChange={handleWebsiteLink}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            error={!!error}
-            helperText={error}
-            InputProps={{
-              startAdornment: isFocused && (
-                <InputAdornment
-                  position="start"
-                  disablePointerEvents
-                  sx={{ marginRight: 0 }}
-                >
-                  https://
-                </InputAdornment>
-              ),
-            }}
-          />
-          {domainSelectorHints["enterDomain"]?.show && addingNew && (
-            <HintCard
-              card={domainSelectorHintCards["enterDomain"]}
-              positionLeft={263}
-              positionTop={-10}
-              isOpenBody={domainSelectorHints["enterDomain"].showBody}
-              toggleClick={() => changeDomainSelectorHint("enterDomain", "showBody", "toggle")}
-              closeClick={() => changeDomainSelectorHint("enterDomain", "showBody", "close")}
-            />
-          )}
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: "rgba(56, 152, 252, 1)",
-              textTransform: "none",
-              minHeight: "48px",
-              fontWeight: "400",
-              fontFamily: "Nunito Sans",
-              fontSize: "13px",
-              "&:hover": {
-                backgroundColor: "rgba(56, 152, 252, 1)",
-              },
-            }}
-            onClick={handleAddDomain}
-          >
-            Save
-          </Button>
-        </Box>
-      ) : (
-        <Box sx={{ position: "relative" }}>
-          <SimpleDomainSelector
-            domains={domains}
-            selectedDomain={selectedDomain}
-            onChange={(newDomain) => {
-              setSelectedDomain(newDomain);
-              onDomainSelected(newDomain);
-              setDomains((prev) => {
-                if (newDomain && !prev.find((d) => d.id === newDomain.id)) {
-                  return [...prev, newDomain];
-                }
-                return prev;
-              });
-            }}
-          />
-          {domainSelectorHints["selectDomain"]?.show && !selectedDomain && (
-            <HintCard
-              card={domainSelectorHintCards["selectDomain"]}
-              positionLeft={400}
-              positionTop={15}
-              isOpenBody={domainSelectorHints["selectDomain"].showBody}
-              toggleClick={() => changeDomainSelectorHint("selectDomain", "showBody", "toggle")}
-              closeClick={() => changeDomainSelectorHint("selectDomain", "showBody", "close")}
-            />
-          )}
-        </Box>
-      )}
-    </Box>
-  );
+			{domains.length === 0 && !addingNew ? (
+				<Box sx={{ position: "relative" }}>
+					<Button
+						variant="contained"
+						startIcon={<AddIcon />}
+						onClick={() => setAddingNew(true)}
+						sx={{
+							backgroundColor: "rgba(56, 152, 252, 1)",
+							textTransform: "none",
+						}}
+					>
+						Add domain
+					</Button>
+					{domainSelectorHints["addDomain"]?.show && !addingNew && (
+						<HintCard
+							card={domainSelectorHintCards["addDomain"]}
+							positionLeft={150}
+							positionTop={-3}
+							isOpenBody={domainSelectorHints["addDomain"].showBody}
+							toggleClick={() =>
+								changeDomainSelectorHint("addDomain", "showBody", "toggle")
+							}
+							closeClick={() =>
+								changeDomainSelectorHint("addDomain", "showBody", "close")
+							}
+						/>
+					)}
+				</Box>
+			) : addingNew ? (
+				<Box
+					display="flex"
+					alignItems="start"
+					position="relative"
+					gap={2}
+					pt={1}
+				>
+					<TextField
+						onKeyDown={(e) => e.stopPropagation()}
+						fullWidth
+						label="Enter domain link"
+						variant="outlined"
+						sx={{
+							maxHeight: "56px",
+							maxWidth: "40%",
+							"& .MuiOutlinedInput-root": {
+								fontSize: "14px",
+								maxHeight: "48px",
+								"& fieldset": {
+									borderColor: "rgba(56, 152, 252, 1)",
+								},
+								"&:hover fieldset": {
+									borderColor: "rgba(56, 152, 252, 1)",
+								},
+								"&.Mui-focused fieldset": {
+									borderColor: "rgba(56, 152, 252, 1)",
+								},
+								paddingTop: "13px",
+								paddingBottom: "13px",
+							},
+							"& .MuiInputLabel-root": {
+								fontSize: "14px",
+							},
+							"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+								borderColor: "rgba(56, 152, 252, 1)",
+								color: "rgba(56, 152, 252, 1)",
+							},
+						}}
+						placeholder={isFocused ? "example.com" : ""}
+						value={
+							isFocused
+								? newDomain.replace(/^https?:\/\//, "")
+								: `https://${newDomain.replace(/^https?:\/\//, "")}`
+						}
+						onChange={handleWebsiteLink}
+						onFocus={handleFocus}
+						onBlur={handleBlur}
+						error={!!error}
+						helperText={error}
+						InputProps={{
+							startAdornment: isFocused && (
+								<InputAdornment
+									position="start"
+									disablePointerEvents
+									sx={{ marginRight: 0 }}
+								>
+									https://
+								</InputAdornment>
+							),
+						}}
+					/>
+					{domainSelectorHints["enterDomain"]?.show && addingNew && (
+						<HintCard
+							card={domainSelectorHintCards["enterDomain"]}
+							positionLeft={263}
+							positionTop={-10}
+							isOpenBody={domainSelectorHints["enterDomain"].showBody}
+							toggleClick={() =>
+								changeDomainSelectorHint("enterDomain", "showBody", "toggle")
+							}
+							closeClick={() =>
+								changeDomainSelectorHint("enterDomain", "showBody", "close")
+							}
+						/>
+					)}
+					<Button
+						variant="contained"
+						sx={{
+							backgroundColor: "rgba(56, 152, 252, 1)",
+							textTransform: "none",
+							minHeight: "48px",
+							fontWeight: "400",
+							fontFamily: "Nunito Sans",
+							fontSize: "13px",
+							"&:hover": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+						}}
+						onClick={handleAddDomain}
+					>
+						Save
+					</Button>
+				</Box>
+			) : (
+				<Box sx={{ position: "relative" }}>
+					<SimpleDomainSelector
+						domains={domains}
+						selectedDomain={selectedDomain}
+						onChange={(newDomain) => {
+							setSelectedDomain(newDomain);
+							onDomainSelected(newDomain);
+							setDomains((prev) => {
+								if (newDomain && !prev.find((d) => d.id === newDomain.id)) {
+									return [...prev, newDomain];
+								}
+								return prev;
+							});
+						}}
+					/>
+					{domainSelectorHints["selectDomain"]?.show && !selectedDomain && (
+						<HintCard
+							card={domainSelectorHintCards["selectDomain"]}
+							positionLeft={400}
+							positionTop={15}
+							isOpenBody={domainSelectorHints["selectDomain"].showBody}
+							toggleClick={() =>
+								changeDomainSelectorHint("selectDomain", "showBody", "toggle")
+							}
+							closeClick={() =>
+								changeDomainSelectorHint("selectDomain", "showBody", "close")
+							}
+						/>
+					)}
+				</Box>
+			)}
+		</Box>
+	);
 };
 
 export default DomainSelector;

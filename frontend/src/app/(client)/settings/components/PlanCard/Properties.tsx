@@ -7,10 +7,10 @@ import { AdvantageRow } from "./AdvantageRow";
 import { Advantage } from "./Advantages";
 
 type Props = {
-    icon: ReactNode;
-    title: string;
-    advantages: Advantage[];
-    showLastDivider: boolean;
+	icon: ReactNode;
+	title: string;
+	advantages: Advantage[];
+	showLastDivider: boolean;
 };
 
 const T = Typography;
@@ -25,26 +25,24 @@ const Title = styled(Typography)`
 `;
 
 export const PlanProperties: FC<Props> = (props) => {
-    const { icon, title, showLastDivider, advantages } = props;
+	const { icon, title, showLastDivider, advantages } = props;
 
-    return (
-        <Column gap="1rem">
-            <Row gap="0.5rem">
-                {icon}
-                <Title>{title}</Title>
-            </Row>
+	return (
+		<Column gap="1rem">
+			<Row gap="0.5rem">
+				{icon}
+				<Title>{title}</Title>
+			</Row>
 
-            <Column gap="1rem">
-                {advantages.map((advantage, i) => (
-                    <AdvantageRow
-                        key={i}
-                        advantage={advantage}
-                        addDivider={
-                            showLastDivider || i !== advantages.length - 1
-                        }
-                    />
-                ))}
-            </Column>
-        </Column>
-    );
+			<Column gap="1rem">
+				{advantages.map((advantage, i) => (
+					<AdvantageRow
+						key={i}
+						advantage={advantage}
+						addDivider={showLastDivider || i !== advantages.length - 1}
+					/>
+				))}
+			</Column>
+		</Column>
+	);
 };

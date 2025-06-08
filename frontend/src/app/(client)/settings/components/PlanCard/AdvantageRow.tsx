@@ -29,23 +29,23 @@ const AdvantageValue = styled(Typography)`
 `;
 
 type AdvantageRowProps = {
-    advantage: Advantage;
-    addDivider?: boolean;
+	advantage: Advantage;
+	addDivider?: boolean;
 };
 
 export const AdvantageRow: FC<AdvantageRowProps> = (props) => {
-    const { addDivider, advantage } = props;
+	const { addDivider, advantage } = props;
 
-    return (
-        <Column gap="0.25rem">
-            <Row justifyContent="space-between" gap="0.25rem">
-                <Row gap="0.5rem">
-                    <AdvantageMark good={advantage.good} />
-                    <AdvantageName>{advantage.name}</AdvantageName>
-                </Row>
-                <AdvantageValue>{advantage.value}</AdvantageValue>
-            </Row>
-            {addDivider && <Divider />}
-        </Column>
-    );
+	return (
+		<Column gap="0.25rem">
+			<Row justifyContent="space-between" gap="0.25rem">
+				<Row gap="0.5rem">
+					<AdvantageMark good={advantage.good} />
+					<AdvantageName>{advantage.name}</AdvantageName>
+				</Row>
+				<AdvantageValue>{advantage.value}</AdvantageValue>
+			</Row>
+			{addDivider && <Divider />}
+		</Column>
+	);
 };

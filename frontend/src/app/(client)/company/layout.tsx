@@ -1,13 +1,10 @@
 "use client";
-import { CompanyHintsProvider } from './context/CompanyHintsContext';
+import { CompanyHintsProvider } from "./context/CompanyHintsContext";
 
-
-export default function Layout({children}: {
-  children: React.ReactNode;
+export default function Layout({
+	children,
+}: {
+	children: React.ReactNode;
 }) {
-  return (
-    <CompanyHintsProvider>
-        {children}
-    </CompanyHintsProvider>
-  );
+	return <CompanyHintsProvider>{children}</CompanyHintsProvider>;
 }
