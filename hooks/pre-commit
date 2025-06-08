@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+
+cd frontend
+npx biome format --write src
+npm run build
