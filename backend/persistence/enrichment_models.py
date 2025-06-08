@@ -17,17 +17,16 @@ class EnrichmentModelsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
-
-    def save(self, lookalike_id: UUID, model: CatBoostRegressor) -> EnrichmentModels:
+    def save(
+        self, lookalike_id: UUID, model: CatBoostRegressor
+    ) -> EnrichmentModels:
         new_model = EnrichmentModels(
-            lookalike_id=lookalike_id,
-            model=model._serialize_model()
+            lookalike_id=lookalike_id, model=model._serialize_model()
         )
 
         self.db.add(new_model)
         self.db.flush()
         return new_model
-
 
     def by_lookalike_id(self, lookalike_id: UUID) -> Optional[EnrichmentModels]:
         stmt = (
@@ -41,13 +40,14 @@ class EnrichmentModelsPersistence:
         if result is None:
             return None
 
-        model, = result
+        (model,) = result
         return model
-
 
 
 def get_persistence_repository(db: Db) -> EnrichmentModelsPersistence:
     return EnrichmentModelsPersistence(db)
 
 
-EnrichmentModelsPersistenceDep = Annotated[EnrichmentModelsPersistence, Depends(get_persistence_repository)]
+EnrichmentModelsPersistenceDep = Annotated[
+    EnrichmentModelsPersistence, Depends(get_persistence_repository)
+]

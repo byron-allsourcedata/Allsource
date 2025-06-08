@@ -42,9 +42,11 @@ class BingAdsCredentials(BaseModel):
     state: str
     code_verifier: str
 
+
 class LinkedinCredentials(BaseModel):
     code: str
     state: str
+
 
 class SalesForceCredentials(BaseModel):
     code: str
@@ -66,7 +68,9 @@ class S3Credentials(BaseModel):
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
-    bigcommerce: Optional[ShopifyOrBigcommerceCredentials | ExternalAppInstalled] = None
+    bigcommerce: Optional[
+        ShopifyOrBigcommerceCredentials | ExternalAppInstalled
+    ] = None
     klaviyo: Optional[ApiKeyCredentials] = None
     mailchimp: Optional[ApiKeyCredentials] = None
     attentive: Optional[ApiKeyCredentials] = None
@@ -125,9 +129,10 @@ class SyncCreate(BaseModel):
     webhook_url: Optional[str] = None
     method: Optional[str] = None
     integrations_users_sync_id: Optional[int] = None
-    leads_type: Optional[str] = 'allContacts'
+    leads_type: Optional[str] = "allContacts"
     data_map: Optional[List[DataMap]] = None
     campaign: Optional[Campaign] = None
+
 
 class SyncRequest(BaseModel):
     list_id: str
@@ -142,11 +147,13 @@ class SmartAudienceSyncCreate(BaseModel):
     list_name: Optional[str] = None
     data_map: Optional[List[DataMap]] = None
 
-class CreateCampaign(BaseModel):                
+
+class CreateCampaign(BaseModel):
     campaign_name: str
     bid_amount: Optional[str] = None
     daily_budget: Optional[str] = None
     ad_account_id: Optional[str] = None
+
 
 class CreateListOrTags(BaseModel):
     name: str
@@ -165,9 +172,9 @@ class ContactSuppression(BaseModel):
 
 
 class ContactFiled(Enum):
-    id = 'id'
-    email = 'email'
-    phone_number = 'phone_number'
+    id = "id"
+    email = "email"
+    phone_number = "phone_number"
 
 
 class OrderAPI(BaseModel):

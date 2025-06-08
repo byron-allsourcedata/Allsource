@@ -1,6 +1,11 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
-from dependencies import get_slack_service, check_domain, check_user_authentication, verify_signature
+from dependencies import (
+    get_slack_service,
+    check_domain,
+    check_user_authentication,
+    verify_signature,
+)
 from services.integrations.slack import SlackService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from config.slack import SlackConfig
@@ -10,53 +15,78 @@ import logging
 
 router = APIRouter()
 
+
 @router.get("/oauth/callback")
-async def slack_oauth_callback(request: Request, slack_service: SlackService = Depends(get_slack_service)):
+async def slack_oauth_callback(
+    request: Request, slack_service: SlackService = Depends(get_slack_service)
+):
     code = request.query_params.get("code")
     state = request.query_params.get("state")
     result = slack_service.slack_oauth_callback(code=code, state=state)
-    if result['status'] == 'SUCCESS':
+    if result["status"] == "SUCCESS":
         rabbitmq_connection = RabbitMQConnection()
         connection = await rabbitmq_connection.connect()
         queue_name = f"sse_events_{str(result['user_id'])}"
         try:
             await publish_rabbitmq_message(
-            connection=connection,
-            queue_name=queue_name,
-            message_body={'status': 'Integration with slack was successful'}
+                connection=connection,
+                queue_name=queue_name,
+                message_body={
+                    "status": "Integration with slack was successful"
+                },
             )
         except:
-            logging.error('Failed to publish rabbitmq message')
+            logging.error("Failed to publish rabbitmq message")
         finally:
             await rabbitmq_connection.close()
         return RedirectResponse(SlackConfig.frontend_redirect)
-    return RedirectResponse(f"{SlackConfig.sign_up_redirect}?slack_status={result['status']}")
-    
+    return RedirectResponse(
+        f"{SlackConfig.sign_up_redirect}?slack_status={result['status']}"
+    )
+
+
 @router.get("/authorize-url")
-async def get_authorize_url(domain = Depends(check_domain),
-                            user=Depends(check_user_authentication), 
-                            slack_service: SlackService = Depends(get_slack_service)):
-    return slack_service.generate_authorize_url(user_id=user.get('id'), domain_id=domain.id)
+async def get_authorize_url(
+    domain=Depends(check_domain),
+    user=Depends(check_user_authentication),
+    slack_service: SlackService = Depends(get_slack_service),
+):
+    return slack_service.generate_authorize_url(
+        user_id=user.get("id"), domain_id=domain.id
+    )
+
 
 @router.get("/get-channels")
-async def get_channels(user=Depends(check_user_authentication),
-                       domain = Depends(check_domain),
-                       slack_service: SlackService = Depends(get_slack_service)):
-    return slack_service.get_channels(domain_id = domain.id, user_id=user.get('id'))
+async def get_channels(
+    user=Depends(check_user_authentication),
+    domain=Depends(check_domain),
+    slack_service: SlackService = Depends(get_slack_service),
+):
+    return slack_service.get_channels(
+        domain_id=domain.id, user_id=user.get("id")
+    )
+
 
 @router.post("/create-channel")
-async def get_channels(slack_create_List_request: SlackCreateListRequest,
-                       user=Depends(check_user_authentication),
-                       domain = Depends(check_domain),
-                       slack_service: SlackService = Depends(get_slack_service)):
-    return slack_service.create_channel(domain_id = domain.id, user_id=user.get('id'), channel_name = slack_create_List_request.name)
+async def get_channels(
+    slack_create_List_request: SlackCreateListRequest,
+    user=Depends(check_user_authentication),
+    domain=Depends(check_domain),
+    slack_service: SlackService = Depends(get_slack_service),
+):
+    return slack_service.create_channel(
+        domain_id=domain.id,
+        user_id=user.get("id"),
+        channel_name=slack_create_List_request.name,
+    )
+
 
 @router.post(
-            "/events", 
-            status_code=HTTP_200_OK,
-            dependencies=[Depends(verify_signature)]
+    "/events", status_code=HTTP_200_OK, dependencies=[Depends(verify_signature)]
 )
-async def handle_slack_events(request: Request, slack_service: SlackService = Depends(get_slack_service)):
+async def handle_slack_events(
+    request: Request, slack_service: SlackService = Depends(get_slack_service)
+):
     data = await request.json()
     if "challenge" in data:
         return {"challenge": data["challenge"]}

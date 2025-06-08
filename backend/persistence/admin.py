@@ -17,7 +17,6 @@ import re
 
 
 class AdminPersistence:
-
     def __init__(self, db: Session):
         self.db = db
 
@@ -28,15 +27,17 @@ class AdminPersistence:
         return query.all()
 
     def save_pending_invitations_admin(
-            self,
-            email: str,
-            invited_by_id: int,
-            full_name: str,
-            md5_hash: str,
+        self,
+        email: str,
+        invited_by_id: int,
+        full_name: str,
+        md5_hash: str,
     ):
-        existing_invitation = self.db.query(AdminInvitation).filter(
-            AdminInvitation.email == email
-        ).first()
+        existing_invitation = (
+            self.db.query(AdminInvitation)
+            .filter(AdminInvitation.email == email)
+            .first()
+        )
 
         if existing_invitation:
             self.db.delete(existing_invitation)
@@ -46,29 +47,33 @@ class AdminPersistence:
             email=email,
             invited_by_id=invited_by_id,
             full_name=full_name,
-            token=md5_hash
+            token=md5_hash,
         )
         self.db.add(new_invitation)
         self.db.commit()
 
     def check_status_invitations(self, admin_token, user_mail):
-        result = {
-            'success': True
-        }
-        teams_invitation = self.db.query(AdminInvitation).filter(AdminInvitation.token == admin_token).first()
+        result = {"success": True}
+        teams_invitation = (
+            self.db.query(AdminInvitation)
+            .filter(AdminInvitation.token == admin_token)
+            .first()
+        )
         if teams_invitation:
             if teams_invitation.email != user_mail:
-                result['success'] = False
-                result['error'] = SignUpStatus.NOT_VALID_EMAIL
+                result["success"] = False
+                result["error"] = SignUpStatus.NOT_VALID_EMAIL
         else:
-            result['success'] = False
-            result['error'] = SignUpStatus.TEAM_INVITATION_INVALID
+            result["success"] = False
+            result["error"] = SignUpStatus.TEAM_INVITATION_INVALID
         return result
 
     def update_admin_user(self, user_id: int, admin_token: str):
-        admin_invitation = self.db.query(AdminInvitation).filter(
-            AdminInvitation.token == admin_token
-        ).first()
+        admin_invitation = (
+            self.db.query(AdminInvitation)
+            .filter(AdminInvitation.token == admin_token)
+            .first()
+        )
         user_data = self.db.query(Users).filter(Users.id == user_id).first()
         user_data.is_email_confirmed = True
         user_data.role = ["admin"]
@@ -79,9 +84,15 @@ class AdminPersistence:
         self.db.commit()
 
     def get_pending_invitation_by_email(self, email: str):
-        return self.db.query(AdminInvitation).filter(AdminInvitation.email == email).first()
+        return (
+            self.db.query(AdminInvitation)
+            .filter(AdminInvitation.email == email)
+            .first()
+        )
 
-    def get_pending_invitations_admin(self, search_query: str, join_date_start=None, join_date_end=None):
+    def get_pending_invitations_admin(
+        self, search_query: str, join_date_start=None, join_date_end=None
+    ):
         Inviter = aliased(Users)
         query = self.db.query(
             AdminInvitation.id,
@@ -89,21 +100,25 @@ class AdminPersistence:
             AdminInvitation.full_name,
             AdminInvitation.date_invited_at.label("created_at"),
             Inviter.email.label("invited_by_email"),
-            AdminInvitation.invited_by_id
+            AdminInvitation.invited_by_id,
         ).outerjoin(Inviter, AdminInvitation.invited_by_id == Inviter.id)
 
         if search_query:
-            query = query.filter(or_(
-                AdminInvitation.email.ilike(f'{search_query}%'),
-                AdminInvitation.full_name.ilike(f'{search_query}%')
-            ))
+            query = query.filter(
+                or_(
+                    AdminInvitation.email.ilike(f"{search_query}%"),
+                    AdminInvitation.full_name.ilike(f"{search_query}%"),
+                )
+            )
 
         if join_date_start and join_date_end:
-            start_date = datetime.fromtimestamp(join_date_start, tz=pytz.UTC).date()
+            start_date = datetime.fromtimestamp(
+                join_date_start, tz=pytz.UTC
+            ).date()
             end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
             query = query.filter(
                 func.DATE(AdminInvitation.date_invited_at) >= start_date,
-                func.DATE(AdminInvitation.date_invited_at) <= end_date
+                func.DATE(AdminInvitation.date_invited_at) <= end_date,
             )
 
         return query.all()

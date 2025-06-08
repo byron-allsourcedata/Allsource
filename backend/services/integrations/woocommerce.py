@@ -9,7 +9,7 @@
 
 # class WoocommerceIntegrationsService:
 
-#     def __init__(self, integration_persistence: IntegrationsPresistence, 
+#     def __init__(self, integration_persistence: IntegrationsPresistence,
 #                  lead_persistence: LeadsPersistence, lead_orders_persistence: LeadOrdersPersistence,
 #                  integrations_user_sync_persistence: IntegrationsUserSyncPersistence,
 #                  client: Client, aws_service: AWSService):
@@ -19,10 +19,10 @@
 #         self.integrations_user_sync_persistence = integrations_user_sync_persistence
 #         self.client = client
 #         self.AWS = aws_service
-        
+
 #     def get_credentials(self, domain_id: int):
 #         return self.integration_persistence.get_credentials_for_service(domain_id=domain_id, service_name='Woocommerce')
-    
+
 
 #     def __get_orders(self, credentials):
 #         ...

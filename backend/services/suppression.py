@@ -11,20 +11,28 @@ from persistence.suppression_persistence import SuppressionPersistence
 
 
 class SuppressionService:
-
-    def __init__(self, suppression_persistence: SuppressionPersistence, leads_persistence: LeadsPersistence):
+    def __init__(
+        self,
+        suppression_persistence: SuppressionPersistence,
+        leads_persistence: LeadsPersistence,
+    ):
         self.suppression_persistence = suppression_persistence
         self.leads_persistence = leads_persistence
-        
+
     def get_sample_suppression_list(self):
         return os.path.join(os.getcwd(), "data/sample-suppression-list.csv")
-    
+
     def process_actual_contect_days(self, domain_id, days):
-        is_url_certain_activation = self.suppression_persistence.process_actual_contect_days(domain_id=domain_id, days=days)
-        return {'status': SuppressionStatus.SUCCESS,
-                'is_url_certain_activation': is_url_certain_activation
-                }
-    
+        is_url_certain_activation = (
+            self.suppression_persistence.process_actual_contect_days(
+                domain_id=domain_id, days=days
+            )
+        )
+        return {
+            "status": SuppressionStatus.SUCCESS,
+            "is_url_certain_activation": is_url_certain_activation,
+        }
+
     def process_suppression_list(
         self, file: UploadFile, domain_id: int
     ) -> Dict[str, Any]:
@@ -44,16 +52,32 @@ class SuppressionService:
         )
 
         if not email_list:
-            return {"status": SuppressionStatus.NO_EMAILS_FOUND, "leads_count": 0}
+            return {
+                "status": SuppressionStatus.NO_EMAILS_FOUND,
+                "leads_count": 0,
+            }
 
         list_name = file.filename.rsplit(".", 1)[0]
         email_list = set(email_list)
-        suppression_lists = self.suppression_persistence.get_all_suppression_list(domain_id=domain_id)
-        emails_list = [suppression_list.total_emails for suppression_list in suppression_lists]
+        suppression_lists = (
+            self.suppression_persistence.get_all_suppression_list(
+                domain_id=domain_id
+            )
+        )
+        emails_list = [
+            suppression_list.total_emails
+            for suppression_list in suppression_lists
+        ]
         all_emails = []
         for email_str in emails_list:
-            all_emails.extend([email.strip() for email in email_str.split(',') if email.strip()])
-            
+            all_emails.extend(
+                [
+                    email.strip()
+                    for email in email_str.split(",")
+                    if email.strip()
+                ]
+            )
+
         new_leads_count = len(email_list - set(all_emails))
         self.suppression_persistence.save_suppressions_list(
             email_list=email_list, list_name=list_name, domain_id=domain_id
@@ -66,92 +90,152 @@ class SuppressionService:
             )
             if leads_ids:
                 self.leads_persistence.unconfirm_leads(leads_ids=leads_ids)
-            return {"status": SuppressionStatus.SUCCESS, "delete_leads_count": len(leads_ids), "new_leads_count": new_leads_count}
+            return {
+                "status": SuppressionStatus.SUCCESS,
+                "delete_leads_count": len(leads_ids),
+                "new_leads_count": new_leads_count,
+            }
 
-        return {"status": SuppressionStatus.SUCCESS, "delete_leads_count": 0, "new_leads_count": new_leads_count}
-    
-    def get_suppression_list(self, page, per_page, domain_id):
-        suppression_list, total_count, max_page = self.suppression_persistence.get_suppression_list(page=page, per_page=per_page, domain_id=domain_id)
         return {
-            'suppression_list': suppression_list,
-            'total_count': total_count,
-            'max_page': max_page
+            "status": SuppressionStatus.SUCCESS,
+            "delete_leads_count": 0,
+            "new_leads_count": new_leads_count,
         }
-    
+
+    def get_suppression_list(self, page, per_page, domain_id):
+        suppression_list, total_count, max_page = (
+            self.suppression_persistence.get_suppression_list(
+                page=page, per_page=per_page, domain_id=domain_id
+            )
+        )
+        return {
+            "suppression_list": suppression_list,
+            "total_count": total_count,
+            "max_page": max_page,
+        }
+
     def delete_suppression_list(self, suppression_list_id, domain_id):
         if suppression_list_id:
-            self.suppression_persistence.delete_suppression_list(suppression_list_id=suppression_list_id, domain_id=domain_id)
+            self.suppression_persistence.delete_suppression_list(
+                suppression_list_id=suppression_list_id, domain_id=domain_id
+            )
             return SuppressionStatus.SUCCESS
         return SuppressionStatus.INCOMPLETE
-    
+
     def download_suppression_list(self, suppression_list_id, domain_id):
         if suppression_list_id:
             suppression_lists = []
-            suppression_list = self.suppression_persistence.get_suppression_list_by_id(suppression_list_id=suppression_list_id, domain_id=domain_id)
+            suppression_list = (
+                self.suppression_persistence.get_suppression_list_by_id(
+                    suppression_list_id=suppression_list_id, domain_id=domain_id
+                )
+            )
             if suppression_list:
                 suppression_lists.append(suppression_list)
 
             output = StringIO()
             writer = csv.writer(output)
-            writer.writerow(['List Name', 'Created At', 'Total Emails', 'Status'])
+            writer.writerow(
+                ["List Name", "Created At", "Total Emails", "Status"]
+            )
             for suppression in suppression_lists:
-                writer.writerow([
-                    suppression.list_name,
-                    suppression.created_at,
-                    suppression.total_emails,
-                    suppression.status
-                ])
+                writer.writerow(
+                    [
+                        suppression.list_name,
+                        suppression.created_at,
+                        suppression.total_emails,
+                        suppression.status,
+                    ]
+                )
 
             output.seek(0)
-            return StreamingResponse(output, media_type="text/csv", headers={"Content-Disposition": "attachment; filename=suppression_list.csv"})
+            return StreamingResponse(
+                output,
+                media_type="text/csv",
+                headers={
+                    "Content-Disposition": "attachment; filename=suppression_list.csv"
+                },
+            )
         return False
-    
+
     def process_suppression_multiple_emails(self, emails, domain_id):
-        self.suppression_persistence.save_rules_multiple_emails(emails=emails, domain_id=domain_id)
+        self.suppression_persistence.save_rules_multiple_emails(
+            emails=emails, domain_id=domain_id
+        )
         return SuppressionStatus.SUCCESS
-        
+
     def get_rules(self, domain_id):
         rules = self.suppression_persistence.get_rules(domain_id)
         if rules:
             return rules.to_dict()
         return None
-    
+
     def process_collecting_contacts(self, domain_id):
-        is_stop_collecting_contacts = self.suppression_persistence.process_collecting_contacts(domain_id=domain_id)
-        return {'status': SuppressionStatus.SUCCESS,
-                'is_stop_collecting_contacts': is_stop_collecting_contacts
-                }
-        
+        is_stop_collecting_contacts = (
+            self.suppression_persistence.process_collecting_contacts(
+                domain_id=domain_id
+            )
+        )
+        return {
+            "status": SuppressionStatus.SUCCESS,
+            "is_stop_collecting_contacts": is_stop_collecting_contacts,
+        }
+
     def process_certain_activation(self, domain_id):
-        is_url_certain_activation = self.suppression_persistence.process_certain_activation(domain_id=domain_id)
-        return {'status': SuppressionStatus.SUCCESS,
-                'is_url_certain_activation': is_url_certain_activation
-                }
-        
+        is_url_certain_activation = (
+            self.suppression_persistence.process_certain_activation(
+                domain_id=domain_id
+            )
+        )
+        return {
+            "status": SuppressionStatus.SUCCESS,
+            "is_url_certain_activation": is_url_certain_activation,
+        }
+
     def process_certain_urls(self, urls, domain_id):
-        self.suppression_persistence.process_certain_urls(url_list=urls, domain_id=domain_id)
+        self.suppression_persistence.process_certain_urls(
+            url_list=urls, domain_id=domain_id
+        )
         return SuppressionStatus.SUCCESS
 
     def process_delete_contacts(self, domain_id):
-        is_process_delete_contacts = self.suppression_persistence.process_delete_contacts(domain_id=domain_id)
-        return {'status': SuppressionStatus.SUCCESS,
-                'is_process_delete_contacts': is_process_delete_contacts
-                }
-        
+        is_process_delete_contacts = (
+            self.suppression_persistence.process_delete_contacts(
+                domain_id=domain_id
+            )
+        )
+        return {
+            "status": SuppressionStatus.SUCCESS,
+            "is_process_delete_contacts": is_process_delete_contacts,
+        }
+
     def process_based_activation(self, domain_id):
-        is_based_activation = self.suppression_persistence.process_based_activation(domain_id=domain_id)
-        return {'status': SuppressionStatus.SUCCESS,
-                'is_based_activation': is_based_activation
-                }
-        
+        is_based_activation = (
+            self.suppression_persistence.process_based_activation(
+                domain_id=domain_id
+            )
+        )
+        return {
+            "status": SuppressionStatus.SUCCESS,
+            "is_based_activation": is_based_activation,
+        }
+
     def process_based_urls(self, identifiers, domain_id):
-        self.suppression_persistence.process_based_urls(identifiers=identifiers, domain_id=domain_id)
+        self.suppression_persistence.process_based_urls(
+            identifiers=identifiers, domain_id=domain_id
+        )
         return SuppressionStatus.SUCCESS
-    
+
     def save_suppress_contact_days(self, days, domain_id):
-        self.suppression_persistence.save_suppress_contact_days(domain_id=domain_id, days=days)
+        self.suppression_persistence.save_suppress_contact_days(
+            domain_id=domain_id, days=days
+        )
         return SuppressionStatus.SUCCESS
-        
-    def process_page_views_limit(self, page_views: int, seconds: int, domain_id):
-        self.suppression_persistence.process_page_views_limit(page_views=page_views, seconds=seconds, domain_id=domain_id)
+
+    def process_page_views_limit(
+        self, page_views: int, seconds: int, domain_id
+    ):
+        self.suppression_persistence.process_page_views_limit(
+            page_views=page_views, seconds=seconds, domain_id=domain_id
+        )
         return SuppressionStatus.SUCCESS

@@ -14,15 +14,14 @@ router = APIRouter()
 
 logger = logging.getLogger(__name__)
 
-@router.get('', response_model=MeetingBookingResponse)
+
+@router.get("", response_model=MeetingBookingResponse)
 def get_me(user_service: UsersService = Depends(get_users_service)):
     result = user_service.get_meeting_info()
     return MeetingBookingResponse(user=result)
 
 
-@router.post('')
+@router.post("")
 async def update_calendly_uuid():
     logger.warning("POST /calendly is deprecated and does nothing")
     return None
-
-

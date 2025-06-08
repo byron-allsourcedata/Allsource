@@ -1,6 +1,14 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, TIMESTAMP, VARCHAR, Index, BigInteger, Boolean, Sequence
+from sqlalchemy import (
+    Column,
+    TIMESTAMP,
+    VARCHAR,
+    Index,
+    BigInteger,
+    Boolean,
+    Sequence,
+)
 
 from .base import Base
 
@@ -8,16 +16,20 @@ from .base import Base
 class LeadEmailsVerification(Base):
     __tablename__ = "leads_emails_verifications"
     __table_args__ = (
-        Index('leads_emails_verification_email_idx', 'email', unique=True),
+        Index("leads_emails_verification_email_idx", "email", unique=True),
     )
 
     id = Column(
         BigInteger,
-        Sequence('million_verifier_email_id_seq', metadata=Base.metadata),
+        Sequence("million_verifier_email_id_seq", metadata=Base.metadata),
         primary_key=True,
         nullable=False,
     )
     email = Column(VARCHAR(128), nullable=False)
     is_verify = Column(Boolean, nullable=False)
-    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     verify_result = Column(VARCHAR(64), nullable=False)

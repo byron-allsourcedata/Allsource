@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional
 
+
 class PartnersAssetResponse(BaseModel):
     id: int
     title: str

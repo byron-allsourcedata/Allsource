@@ -38,10 +38,12 @@ from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
+
 def clean_nan(value):
     if pd.isna(value):
         return None
     return value
+
 
 def clean_date(value: Union[str, datetime, None]) -> Optional[datetime]:
     if value is None:
@@ -51,11 +53,11 @@ def clean_date(value: Union[str, datetime, None]) -> Optional[datetime]:
         return value
 
     value = str(value).strip()
-    
+
     if not value:
         return None
-    
-    value = re.sub(r'(\.\d{6})\d+', r'\1', value)
+
+    value = re.sub(r"(\.\d{6})\d+", r"\1", value)
     formats = [
         "%Y-%m-%d %H:%M:%S.%f",
         "%Y-%m-%d %H:%M:%S",
@@ -71,49 +73,75 @@ def clean_date(value: Union[str, datetime, None]) -> Optional[datetime]:
 
     return None
 
+
 def read_and_fill_enrichment_postal(db_session, file_path):
     try:
         df = pd.read_csv(file_path, dtype=str)
 
-        for record in df.to_dict(orient='records'):
-            asid = UUID(record.get('ASID').strip().strip('{}'))
-            home_postal_code = clean_nan(record.get('HomePostalCode'))
+        for record in df.to_dict(orient="records"):
+            asid = UUID(record.get("ASID").strip().strip("{}"))
+            home_postal_code = clean_nan(record.get("HomePostalCode"))
             existing_asid = db_session.execute(
-                select(EnrichmentUser.asid)
-                .where(EnrichmentUser.asid == asid)
+                select(EnrichmentUser.asid).where(EnrichmentUser.asid == asid)
             ).scalar_one_or_none()
             if not existing_asid:
                 continue
-            
-            home_address_line1 = clean_nan(record.get('HomeAddressLine1'))
-            home_address_line2 = clean_nan(record.get('HomeAddressLine2'))
-            home_city = clean_nan(record.get('HomeCity'))
-            enrichment_postal = insert(EnrichmentPostal).values(
-                asid=asid,
-                home_address_line1=home_address_line1.lower() if home_address_line1 else None,
-                home_address_line2=home_address_line2.lower().capitalize() if home_address_line2 else None,
-                home_city=home_city.lower().capitalize() if home_city else None,
-                home_state=clean_nan(record.get('HomeState')),
-                home_postal_code=home_postal_code if home_postal_code != '-' else None,
-                home_country=clean_nan(record.get('HomeCountry')),
-                home_address_last_seen=clean_nan(record.get('HomeAddressLastSeen')),
-                home_address_validation_status=clean_nan(record.get('HomeAddressValidStatus')),
-                business_address_line1=clean_nan(record.get('BusinessAddressLine1')),
-                business_address_line2=clean_nan(record.get('BusinessAddressLine2')),
-                business_city=clean_nan(record.get('BusinessCity')),
-                business_state=clean_nan(record.get('BusinessState')),
-                business_postal_code=clean_nan(record.get('BusinessPostalCode')),
-                business_country=clean_nan(record.get('BusinessCountry')),
-                business_address_last_seen=clean_nan(record.get('BusinessAddressLastSeen')),
-                business_address_validation_status=clean_nan(record.get('BusinessAddressValidStatus')),
-                address_source=clean_nan(record.get('AddressSource')),
-                raw_url_date=clean_date(record.get('RawUrlDate')),
-                raw_last_updated=clean_date(record.get('RawLastUpdated')),
-                created_date=clean_date(record.get('CreatedDate'))
-            ).on_conflict_do_nothing()
+
+            home_address_line1 = clean_nan(record.get("HomeAddressLine1"))
+            home_address_line2 = clean_nan(record.get("HomeAddressLine2"))
+            home_city = clean_nan(record.get("HomeCity"))
+            enrichment_postal = (
+                insert(EnrichmentPostal)
+                .values(
+                    asid=asid,
+                    home_address_line1=home_address_line1.lower()
+                    if home_address_line1
+                    else None,
+                    home_address_line2=home_address_line2.lower().capitalize()
+                    if home_address_line2
+                    else None,
+                    home_city=home_city.lower().capitalize()
+                    if home_city
+                    else None,
+                    home_state=clean_nan(record.get("HomeState")),
+                    home_postal_code=home_postal_code
+                    if home_postal_code != "-"
+                    else None,
+                    home_country=clean_nan(record.get("HomeCountry")),
+                    home_address_last_seen=clean_nan(
+                        record.get("HomeAddressLastSeen")
+                    ),
+                    home_address_validation_status=clean_nan(
+                        record.get("HomeAddressValidStatus")
+                    ),
+                    business_address_line1=clean_nan(
+                        record.get("BusinessAddressLine1")
+                    ),
+                    business_address_line2=clean_nan(
+                        record.get("BusinessAddressLine2")
+                    ),
+                    business_city=clean_nan(record.get("BusinessCity")),
+                    business_state=clean_nan(record.get("BusinessState")),
+                    business_postal_code=clean_nan(
+                        record.get("BusinessPostalCode")
+                    ),
+                    business_country=clean_nan(record.get("BusinessCountry")),
+                    business_address_last_seen=clean_nan(
+                        record.get("BusinessAddressLastSeen")
+                    ),
+                    business_address_validation_status=clean_nan(
+                        record.get("BusinessAddressValidStatus")
+                    ),
+                    address_source=clean_nan(record.get("AddressSource")),
+                    raw_url_date=clean_date(record.get("RawUrlDate")),
+                    raw_last_updated=clean_date(record.get("RawLastUpdated")),
+                    created_date=clean_date(record.get("CreatedDate")),
+                )
+                .on_conflict_do_nothing()
+            )
             db_session.execute(enrichment_postal)
             db_session.commit()
-                
+
             logging.info(f"Committed records from {file_path}")
 
     except Exception as e:
@@ -128,15 +156,15 @@ def main():
     db_session = None
     try:
         engine = create_engine(
-			f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
-			pool_pre_ping=True
-		)
+            f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
+            pool_pre_ping=True,
+        )
         Session = sessionmaker(bind=engine)
         db_session = Session()
-        path = 'tmp/PostalProfiles_500k.csv'
+        path = "tmp/PostalProfiles_500k.csv"
         read_and_fill_enrichment_postal(db_session, path)
     except Exception as err:
-        logging.error('Unhandled Exception:', exc_info=True)
+        logging.error("Unhandled Exception:", exc_info=True)
     finally:
         if db_session:
             logging.info("Closing the database session...")

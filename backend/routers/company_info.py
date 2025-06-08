@@ -8,14 +8,26 @@ router = APIRouter()
 
 
 @router.post("/company-info", response_model=CompanyInfoResponse)
-async def set_company_info(company_info: CompanyInfo,
-                           company_info_service: CompanyInfoService = Depends(get_company_info_service)):
+async def set_company_info(
+    company_info: CompanyInfo,
+    company_info_service: CompanyInfoService = Depends(
+        get_company_info_service
+    ),
+):
     result_status = company_info_service.set_company_info(company_info)
-    return CompanyInfoResponse(status=result_status.get('status'),
-                               stripe_payment_url=result_status.get('stripe_payment_url'))
+    return CompanyInfoResponse(
+        status=result_status.get("status"),
+        stripe_payment_url=result_status.get("stripe_payment_url"),
+    )
 
 
 @router.get("/company-info")
-async def get_company_info(company_info_service: CompanyInfoService = Depends(get_company_info_service)):
+async def get_company_info(
+    company_info_service: CompanyInfoService = Depends(
+        get_company_info_service
+    ),
+):
     result = company_info_service.get_company_info()
-    return CompanyInfoResponse(status=result.get('status'), domain_url = result.get('domain_url'))
+    return CompanyInfoResponse(
+        status=result.get("status"), domain_url=result.get("domain_url")
+    )

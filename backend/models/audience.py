@@ -8,22 +8,24 @@ from .base import update_timestamps
 
 
 class Audience(Base):
-    __tablename__ = 'audience'
+    __tablename__ = "audience"
 
     id = Column(
         BigInteger,
-        Sequence('audience_id_seq'),
+        Sequence("audience_id_seq"),
         primary_key=True,
-        nullable=False
+        nullable=False,
     )
     name = Column(String(64), nullable=False)
     user_id = Column(
-        BigInteger,
-        ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=False
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     type = Column(String(16), nullable=False)
-    created_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     status = Column(String(16), nullable=False)
     exported_on = Column(TIMESTAMP, nullable=True)
 

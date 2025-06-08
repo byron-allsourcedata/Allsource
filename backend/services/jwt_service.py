@@ -35,19 +35,28 @@ def decode_jwt_data(token: str) -> Union[Mapping, Dict]:
         token = token.replace("Bearer ", "")
     except AttributeError:
         raise TokenError
-    jwt_data = jwt.decode(token, AuthConfig.secret_key, options={"verify_signature": False}, audience="Filed-Client-Apps",
-                          algorithms=["HS256"])
+    jwt_data = jwt.decode(
+        token,
+        AuthConfig.secret_key,
+        options={"verify_signature": False},
+        audience="Filed-Client-Apps",
+        algorithms=["HS256"],
+    )
     return jwt_data
 
 
-def create_access_token(token_dict: dict, expires_delta: Union[timedelta, None] = None):
+def create_access_token(
+    token_dict: dict, expires_delta: Union[timedelta, None] = None
+):
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
     else:
         expire = datetime.utcnow() + timedelta(days=AuthConfig.expire_days)
 
     token_dict.update({"exp": int(expire.timestamp())})
-    encoded_jwt = jwt.encode(token_dict, AuthConfig.secret_key, AuthConfig.algorithm)
+    encoded_jwt = jwt.encode(
+        token_dict, AuthConfig.secret_key, AuthConfig.algorithm
+    )
     return encoded_jwt
 
 

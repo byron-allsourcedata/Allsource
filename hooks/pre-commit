@@ -5,5 +5,5 @@ cd frontend
 npx biome format --write src
 npm run build
 
-cd ..
-python3 -m ruff format backend
+cd ../backend
+python3 -m ruff format .

@@ -15,4 +15,5 @@ def get_hubspot_client():
     client.headers["Content-Type"] = "application/json"
     return client
 
+
 HubspotClient = Annotated[httpx.Client, Depends(get_hubspot_client)]
