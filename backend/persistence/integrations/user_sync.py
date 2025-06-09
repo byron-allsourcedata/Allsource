@@ -162,7 +162,10 @@ class IntegrationsUserSyncPersistence:
                 UserIntegration,
                 UserIntegration.id == IntegrationUserSync.integration_id,
             )
-            .filter(IntegrationUserSync.domain_id == domain_id, IntegrationUserSync.sync_type == DataSyncType.CONTACT.value)
+            .filter(
+                IntegrationUserSync.domain_id == domain_id,
+                IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
+            )
         )
 
         if service_name:
@@ -282,7 +285,10 @@ class IntegrationsUserSyncPersistence:
                 ImportedLeads,
                 ImportedLeads.data_sync_id == IntegrationUserSync.id,
             )
-            .filter(UserIntegration.user_id == user_id, IntegrationUserSync.sync_type == DataSyncType.AUDIENCE.value)
+            .filter(
+                UserIntegration.user_id == user_id,
+                IntegrationUserSync.sync_type == DataSyncType.AUDIENCE.value,
+            )
             .group_by(
                 IntegrationUserSync.id,
                 UserIntegration.service_name,

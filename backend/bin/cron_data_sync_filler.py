@@ -7,7 +7,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
-from sqlalchemy import create_engine, select, and_, or_
+from sqlalchemy import create_engine, and_, or_
 from dotenv import load_dotenv
 from models.leads_visits import LeadsVisits
 from sqlalchemy.orm import sessionmaker, Session
@@ -24,7 +24,6 @@ from models.leads_users_ordered import LeadsUsersOrdered
 from models.users_domains import UserDomains
 from sqlalchemy.dialects.postgresql import insert
 from models.integrations.integrations_users_sync import IntegrationUserSync
-from models.five_x_five_users import FiveXFiveUser
 from models.integrations.users_domains_integrations import UserIntegration
 from models.data_sync_imported_leads import DataSyncImportedLead
 from models.leads_users import LeadUser
@@ -98,7 +97,12 @@ def fetch_leads_by_domain(
         last_sent_lead_id = 0
 
     query = (
-        session.query(LeadUser.id, LeadUser.behavior_type, LeadUser.user_id)
+        session.query(
+            LeadUser.id.label("id"),
+            LeadUser.user_id.label(
+                "user_id"
+            ),
+        )
         .join(UserDomains, UserDomains.id == LeadUser.domain_id)
         .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
         .join(
@@ -118,6 +122,7 @@ def fetch_leads_by_domain(
             LeadUser.is_confirmed == True,
         )
     )
+
     if data_sync_leads_type != "allContacts":
         if data_sync_leads_type == "converted_sales":
             query = query.filter(LeadUser.is_converted_sales == True)
@@ -183,8 +188,11 @@ def update_data_sync_imported_leads(session, status, data_sync_id):
 
 
 def get_previous_imported_leads(session, data_sync_id):
-    query = (
-        session.query(LeadUser.id, LeadUser.behavior_type, LeadUser.user_id)
+    lead_users = (
+        session.query(
+            LeadUser.id.label("id"),
+            LeadUser.user_id.label("user_id"),
+        )
         .join(
             DataSyncImportedLead,
             DataSyncImportedLead.lead_users_id == LeadUser.id,
@@ -197,9 +205,10 @@ def get_previous_imported_leads(session, data_sync_id):
             LeadUser.is_active == True,
             UserDomains.is_enable == True,
         )
+        .all()
     )
 
-    return query.all()
+    return lead_users
 
 
 async def send_leads_to_rmq(
@@ -210,7 +219,7 @@ async def send_leads_to_rmq(
     user_integrations_service_name,
 ):
     enrichment_user_ids = [lead_user.id for lead_user in lead_users]
-    users_id = lead_users[-1][2]
+    users_id = lead_users[-1].user_id
     records = [
         {
             "status": DataSyncImportedStatus.SENT.value,
@@ -299,7 +308,7 @@ async def process_user_integrations(rmq_connection, session):
 
         update_data_sync_integration(session, data_sync.id)
         if not lead_users:
-            logging.info(f"lead_users empty")
+            logging.info("lead_users empty")
             continue
 
         logging.debug(f"lead_users len = {len(lead_users)}")
@@ -311,7 +320,7 @@ async def process_user_integrations(rmq_connection, session):
             data_sync,
             user_integrations[i].service_name,
         )
-        last_lead_id = lead_users[-1][0]
+        last_lead_id = lead_users[-1].id
         if last_lead_id:
             logging.info(f"last_lead_id = {last_lead_id}")
             update_last_sent_lead(session, data_sync.id, last_lead_id)
@@ -361,7 +370,7 @@ async def main():
             await process_user_integrations(rmq_connection, db_session)
 
             logging.info("Processing completed. Sleeping for 10 minutes...")
-        except Exception as err:
+        except Exception:
             logging.error("Unhandled Exception:", exc_info=True)
         finally:
             if db_session:
