@@ -1,6 +1,6 @@
 import { Box, Step, StepLabel, Stepper, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import React from "react";
+import type React from "react";
 
 type StepStatus = "completed" | "default" | "active";
 
@@ -38,6 +38,7 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
 				borderRadius: "4px",
 				ml: 2,
 				backgroundColor: "rgba(255, 255, 255, 1)",
+				'@media (max-width: 1200px)': { ml: 0 },
 				"@media (max-width: 900px)": {
 					ml: 0,
 					mb: 4,
@@ -57,6 +58,7 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
 			>
 				{steps.map((step, index) => (
 					<Step
+						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 						key={index}
 						active={step.status === "active"}
 						completed={step.status === "completed"}
