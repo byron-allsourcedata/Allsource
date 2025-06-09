@@ -15,7 +15,10 @@ class EnrichmentUser(Base):
         server_default=text("gen_random_uuid()"),
     )
     asid = Column(UUID(as_uuid=True), nullable=False)
-    __table_args__ = (Index("enrichment_user_ids_asid_idx", asid, unique=True),)
+    __table_args__ = (
+        Index("enrichment_user_ids_asid_idx", asid, unique=True),
+        UniqueConstraint("asid", name="enrichment_user_ids_asid_key"),
+    )
 
 
 from .enrichment_user_contact import EnrichmentUserContact
