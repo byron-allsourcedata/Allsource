@@ -691,47 +691,47 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		return <CustomizedProgressBar />;
 	}
 
-	const formatStatusText = (row: any) => {
-		if (row.dataSync === false) {
-			return "Disabled";
-		}
-		if (row.syncStatus === false) {
-			return "Failed";
-		}
-		if (row.is_progress === true) {
-			return "In Progress";
-		}
-		if (row.is_progress === false) {
-			return "Synced";
-		}
+	const formatStatusText = (row: string) => {
+		// if (row.dataSync === false) {
+		// 	return "Disabled";
+		// }
+		// if (row.syncStatus === false) {
+		// 	return "Failed";
+		// }
+		// if (row.is_progress === true) {
+		// 	return "In Progress";
+		// }
+		// if (row.is_progress === false) {
+		// 	return "Synced";
+		// }
 		return "--";
 	};
 
-	const getStatusStyle = (row: any) => {
-		if (row.dataSync === false) {
-			return {
-				background: "rgba(219, 219, 219, 1)",
-				color: "rgba(74, 74, 74, 1) !important",
-			};
-		}
-		if (row.syncStatus === false) {
-			return {
-				background: "rgba(252, 205, 200, 1)",
-				color: "rgba(200, 62, 46, 1) !important",
-			};
-		}
-		if (row.is_progress) {
-			return {
-				background: "rgba(0, 129, 251, 0.2)",
-				color: "rgba(0, 129, 251, 1)!important",
-			};
-		}
-		if (row.is_progress === false) {
-			return {
-				background: "rgba(234, 248, 221, 1)",
-				color: "rgba(43, 91, 0, 1) !important",
-			};
-		}
+	const getStatusStyle = (row: string) => {
+		// if (row.dataSync === false) {
+		// 	return {
+		// 		background: "rgba(219, 219, 219, 1)",
+		// 		color: "rgba(74, 74, 74, 1) !important",
+		// 	};
+		// }
+		// if (row.syncStatus === false) {
+		// 	return {
+		// 		background: "rgba(252, 205, 200, 1)",
+		// 		color: "rgba(200, 62, 46, 1) !important",
+		// 	};
+		// }
+		// if (row.is_progress) {
+		// 	return {
+		// 		background: "rgba(0, 129, 251, 0.2)",
+		// 		color: "rgba(0, 129, 251, 1)!important",
+		// 	};
+		// }
+		// if (row.is_progress === false) {
+		// 	return {
+		// 		background: "rgba(234, 248, 221, 1)",
+		// 		color: "rgba(43, 91, 0, 1) !important",
+		// 	};
+		// }
 		return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
 	};
 
@@ -1192,7 +1192,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														}}
 													>
 														{(() => {
-															const { color, background } = getStatusStyle(row);
+															const { color, background } = getStatusStyle(
+																row.status,
+															);
 															return (
 																<Typography
 																	className="paragraph"
@@ -1211,7 +1213,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																		borderRadius: "2px",
 																	}}
 																>
-																	{formatStatusText(row) || "--"}
+																	{row.status}
 																</Typography>
 															);
 														})()}
@@ -1329,6 +1331,24 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 								onClick={handleEdit}
 							>
 								Edit
+							</Button>
+							<Button
+								sx={{
+									justifyContent: "flex-start",
+									width: "100%",
+									textTransform: "none",
+									fontFamily: "Nunito Sans",
+									fontSize: "14px",
+									color: "rgba(32, 33, 36, 1)",
+									fontWeight: 600,
+									":hover": {
+										color: "rgba(56, 152, 252, 1)",
+										backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+									},
+								}}
+								onClick={handleDelete}
+							>
+								Delete
 							</Button>
 							{data.find((row) => row.id === selectedId)?.syncStatus ===
 								false && (
