@@ -329,11 +329,10 @@ class HubspotIntegrationsService:
         to_create = []
         to_update = []
         for props in profiles_list:
-            clean_props = {
-                k: v for k, v in props.items() if v is not None and k != "email"
-            }
+            clean_props = {k: v for k, v in props.items() if v is not None}
             email = props.get("email")
             if email in existing:
+                clean_props.pop("email", None)
                 to_update.append(
                     {"id": existing[email], "properties": clean_props}
                 )
