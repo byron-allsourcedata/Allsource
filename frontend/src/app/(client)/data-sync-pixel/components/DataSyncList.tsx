@@ -828,6 +828,15 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		},
 	];
 
+
+	const formatListName = (name: string) => {
+		if (!name) return "--";
+	
+		return name
+			.replace(/([a-z])([A-Z])/g, "$1 $2")
+			.replace(/^./, (str) => str.toUpperCase());
+	};
+
 	return (
 		<>
 			{isLoading && <CustomizedProgressBar />}
@@ -923,7 +932,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 									{columns.map((col) => {
 										const { key, label, sortable = false, widths } = col;
 
-										const isNameColumn = key === "smart_audience_name";
+										const isNameColumn = key === "list_name";
 										const isActionsColumn = key === "action";
 										const hideDivider =
 											(isNameColumn && isScrolledX) || isActionsColumn;
@@ -1061,9 +1070,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													},
 													hideDivider: isScrolledX,
 												}}
-												tooltipOptions={{ content: row.name || "--" }}
+												tooltipOptions={{ content: row.list_name || "--" }}
 											>
-												{row.list_name || "--"}
+												{(row.list_name) || "--"}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1157,7 +1166,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													),
 												}}
 											>
-												{row.type}
+												{formatListName(row.type)}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
