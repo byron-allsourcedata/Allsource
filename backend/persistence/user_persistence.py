@@ -395,8 +395,8 @@ class UserPersistence:
         if search_query:
             query = query.filter(
                 or_(
-                    Users.email.ilike(f"{search_query}%"),
-                    Users.full_name.ilike(f"{search_query}%"),
+                    Users.email.ilike(f"%{search_query}%"),
+                    Users.full_name.ilike(f"%{search_query}%"),
                 )
             )
 

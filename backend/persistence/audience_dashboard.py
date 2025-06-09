@@ -55,10 +55,11 @@ class DashboardAudiencePersistence:
 
     def get_audience_metrics(
         self,
-        last_login_date_start,
-        last_login_date_end,
-        join_date_start,
-        join_date_end,
+        last_login_date_start: int,
+        last_login_date_end: int,
+        join_date_start: int,
+        join_date_end: int,
+        search_query: str,
     ):
         user_filters = [Users.role.contains(["customer"])]
 
@@ -79,6 +80,14 @@ class DashboardAudiencePersistence:
             end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
             user_filters.append(func.DATE(Users.created_at) >= start_date)
             user_filters.append(func.DATE(Users.created_at) <= end_date)
+
+        if search_query:
+            user_filters.append(
+                or_(
+                    Users.email.ilike(f"{search_query}%"),
+                    Users.full_name.ilike(f"{search_query}%"),
+                )
+            )
 
         queries = [
             {

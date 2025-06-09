@@ -2,16 +2,12 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import {
 	Box,
 	Typography,
-	TextField,
 	Button,
-	Tabs,
-	Tab,
 	Grid,
 	Chip,
 	Popover,
 	Paper,
 	IconButton,
-	InputAdornment,
 	Table,
 	TableBody,
 	TableCell,
@@ -19,28 +15,23 @@ import {
 	TableHead,
 	TableRow,
 } from "@mui/material";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { suppressionsStyles } from "@/css/suppressions";
-import dayjs from "dayjs";
 import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
 import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
 import Image from "next/image";
 import CustomTablePagination from "@/components/CustomTablePagination";
-import InviteAdmin from "./InviteAdmin";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { fetchUserData } from "@/services/meService";
-import FilterPopup from "./FilterPopup";
 import { MenuIconButton } from "@/components/table";
 import {
 	MoreVert,
-	CloseIcon,
-	SearchIcon,
 	SwapVertIcon,
-	FilterListIcon,
 	ArrowDownwardIcon,
 	ArrowUpwardIcon,
 } from "@/icon";
+import { set } from "date-fns";
 
 interface UserData {
 	id: number;
@@ -71,8 +62,6 @@ interface TableBodyUserProps {
 	tableHeaders: tableHeaders[];
 	setLoading: (state: boolean) => void;
 }
-
-const PRIMARY_COLOR = "rgba(56, 152, 252, 1)";
 
 const TableHeader: React.FC<{
 	onSort: (field: string) => void;
@@ -205,18 +194,8 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 		};
 		return new Date(dateString).toLocaleDateString("en-US", options);
 	};
-	const getStatusStyle = (behavior_type: any) => {
+	const getStatusStyle = (behavior_type: string) => {
 		switch (behavior_type) {
-			case false:
-				return {
-					background: "rgba(235, 243, 254, 1)",
-					color: "rgba(20, 110, 246, 1)",
-				};
-			case true:
-				return {
-					background: "rgba(244, 252, 238, 1)",
-					color: "rgba(43, 91, 0, 1)",
-				};
 			case "TRIAL_ACTIVE":
 				return {
 					background: "rgba(235, 243, 254, 1)",
@@ -302,7 +281,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							left: 0,
 							zIndex: 1,
 							cursor:
-								isCurrentUser || row.type != "user" ? "default" : "pointer",
+								isCurrentUser || row.type !== "user" ? "default" : "pointer",
 							"& .icon-button": {
 								opacity: 0,
 								pointerEvents: "none",
@@ -318,7 +297,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							},
 						}}
 						onClick={() => {
-							if (!isCurrentUser && row.type == "user") {
+							if (!isCurrentUser && row.type === "user") {
 								handleLogin(row.id);
 							}
 						}}
@@ -329,7 +308,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 								alignItems: "center",
 								overflowWrap: "break-word",
 								justifyContent: "space-between",
-								color: PRIMARY_COLOR,
+								color: "rgba(56, 152, 252, 1)",
 								gap: 0,
 								width: "100%",
 							}}
@@ -342,7 +321,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 									color:
 										isCurrentUser || row.type !== "user"
 											? "#000"
-											: PRIMARY_COLOR,
+											: "rgba(56, 152, 252, 1)",
 									gap: 0.5,
 								}}
 							>
@@ -397,7 +376,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 								)}
 							</Box>
 
-							{!isCurrentUser && row.type == "user" && (
+							{!isCurrentUser && row.type === "user" && (
 								<IconButton
 									onClick={(e) => {
 										e.stopPropagation();
@@ -407,7 +386,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 									sx={{
 										display: "none",
 										alignItems: "center",
-										color: PRIMARY_COLOR,
+										color: "rgba(56, 152, 252, 1)",
 									}}
 								>
 									<Image
@@ -428,7 +407,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 			case "invited_by":
 				return row.invited_by_email || "--";
 			case "access_level":
-				return row.role || "--";
+				return Array.isArray(row.role) && row.role.length > 0
+					? row.role.join(", ")
+					: "--";
 			case "pixel_installed_count":
 				return row.pixel_installed_count || "0";
 			case "join_date":
@@ -453,8 +434,9 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							fontSize: "12px",
 							fontWeight: "400",
 							lineHeight: "normal",
-							backgroundColor: getStatusStyle(row.payment_status).background,
-							color: getStatusStyle(row.payment_status).color,
+							backgroundColor: getStatusStyle(row.payment_status ?? "")
+								.background,
+							color: getStatusStyle(row?.payment_status ?? "").color,
 							justifyContent: "center",
 							minWidth: "130px",
 							textTransform: "capitalize",
@@ -464,7 +446,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 					</Typography>
 				);
 			case "actions":
-				if (currentPage == 0) {
+				if (currentPage === 0) {
 					return (
 						<>
 							<MenuIconButton
@@ -504,7 +486,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 											color: "rgba(32, 33, 36, 1)",
 											fontWeight: 600,
 											":hover": {
-												color: PRIMARY_COLOR,
+												color: "rgba(56, 152, 252, 1)",
 												backgroundColor: "rgba(80, 82, 178, 0.1)",
 											},
 										}}
@@ -518,63 +500,63 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 							</Popover>
 						</>
 					);
-				} else if (currentPage == 1) {
-					return (
-						<>
-							<MenuIconButton
-								buttonProps={{
-									onClick: (event) => handleOpenMenu(event, row.id),
-								}}
-								iconProps={{
-									icon: <MoreVert />,
-								}}
-							/>
-							<Popover
-								open={Boolean(menuAnchor) && activeRow === row.id}
-								anchorEl={menuAnchor}
-								onClose={handleCloseMenu}
-								anchorOrigin={{
-									vertical: "bottom",
-									horizontal: "center",
-								}}
-							>
-								<Box
-									sx={{
-										p: 1,
-										display: "flex",
-										flexDirection: "column",
-										alignItems: "flex-start",
-										width: "100%",
-										maxWidth: "160px",
-									}}
-								>
-									<Button
-										sx={{
-											justifyContent: "flex-start",
-											width: "100%",
-											textTransform: "none",
-											fontFamily: "Nunito Sans",
-											fontSize: "14px",
-											color: "rgba(32, 33, 36, 1)",
-											fontWeight: 600,
-											":hover": {
-												color: PRIMARY_COLOR,
-												backgroundColor: "rgba(80, 82, 178, 0.1)",
-											},
-										}}
-										onClick={() => {
-											console.log("Customer: View Orders clicked");
-										}}
-									>
-										View Orders
-									</Button>
-								</Box>
-							</Popover>
-						</>
-					);
-				} else {
-					return null;
 				}
+				if (currentPage === 1) {
+					return (
+						<>
+							<MenuIconButton
+								buttonProps={{
+									onClick: (event) => handleOpenMenu(event, row.id),
+								}}
+								iconProps={{
+									icon: <MoreVert />,
+								}}
+							/>
+							<Popover
+								open={Boolean(menuAnchor) && activeRow === row.id}
+								anchorEl={menuAnchor}
+								onClose={handleCloseMenu}
+								anchorOrigin={{
+									vertical: "bottom",
+									horizontal: "center",
+								}}
+							>
+								<Box
+									sx={{
+										p: 1,
+										display: "flex",
+										flexDirection: "column",
+										alignItems: "flex-start",
+										width: "100%",
+										maxWidth: "160px",
+									}}
+								>
+									<Button
+										sx={{
+											justifyContent: "flex-start",
+											width: "100%",
+											textTransform: "none",
+											fontFamily: "Nunito Sans",
+											fontSize: "14px",
+											color: "rgba(32, 33, 36, 1)",
+											fontWeight: 600,
+											":hover": {
+												color: "rgba(56, 152, 252, 1)",
+												backgroundColor: "rgba(80, 82, 178, 0.1)",
+											},
+										}}
+										onClick={() => {
+											console.log("Customer: View Orders clicked");
+										}}
+									>
+										View Orders
+									</Button>
+								</Box>
+							</Popover>
+						</>
+					);
+				}
+				return null;
 		}
 	};
 
@@ -609,48 +591,53 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 };
 
 interface PartnersAccountsProps {
-	appliedDates?: { start: Date | null; end: Date | null };
-	id?: number | null;
-	fromAdmin?: boolean;
-	fromMain?: boolean;
 	is_admin?: boolean;
-	masterData?: any;
-	accountName?: string;
-	loading?: boolean;
-	setLoading: (state: boolean) => void;
-	tabIndex?: number;
-	handleTabChange?: (
-		event: React.SyntheticEvent | null,
-		newIndex: number,
-	) => void;
-	setDateRanges?: (dateRanges: Record<string, number>) => void;
-	setMasterData?: any;
+	rowsPerPageOptions: any;
+	totalCount: any;
+	userData: AccountData[];
+	setPage?: any;
+	page?: any;
+	setLoading?: any;
+	rowsPerPage?: any;
+	accountsData?: any;
+	order?: any;
+	orderBy?: any;
+	setRowsPerPage?: any;
+	setOrder?: any;
+	setOrderBy?: any;
 }
 
 interface AccountData {
 	id: number;
-	account_name: string;
+	full_name: string;
 	email: string;
-	join_date: Date | string;
-	plan_amount: string;
-	reward_status: string;
-	reward_amount: string;
-	reward_payout_date: string;
-	last_payment_date: string;
-	status: string;
-}
-
-interface FilterParams {
-	joinDate: { fromDate: number | null; toDate: number | null };
-	lastLoginDate: { fromDate: number | null; toDate: number | null };
+	created_at: string;
+	payment_status?: string;
+	is_trial?: boolean;
+	last_login: string;
+	invited_by_email?: string;
+	role: string[];
+	pixel_installed_count?: number;
+	sources_count?: number;
+	lookalikes_count?: number;
+	credits_count?: number;
+	type?: string;
 }
 
 const Account: React.FC<PartnersAccountsProps> = ({
 	is_admin,
+	rowsPerPageOptions,
+	totalCount,
+	userData,
+	setPage,
+	page,
+	setRowsPerPage,
+	rowsPerPage,
+	order,
+	orderBy,
 	setLoading,
-	tabIndex,
-	handleTabChange,
-	setDateRanges,
+	setOrder,
+	setOrderBy,
 }) => {
 	const tableHeaders = is_admin
 		? [
@@ -674,113 +661,6 @@ const Account: React.FC<PartnersAccountsProps> = ({
 				{ key: "status", label: "Status", sortable: false },
 				{ key: "actions", label: "Actions", sortable: false },
 			];
-	const [accounts, setAccounts] = useState<AccountData[]>([]);
-	const router = useRouter();
-	const [page, setPage] = useState(0);
-	const [rowsPerPage, setRowsPerPage] = useState<number>(50);
-	const [totalCount, setTotalCount] = useState(0);
-	const [order, setOrder] = useState<"asc" | "desc">("desc");
-	const [orderBy, setOrderBy] = useState<string>("");
-	const [currentPage, setCurrentPage] = useState(1);
-	const [isSliderOpen, setSliderOpen] = useState(false);
-	const [filterPopupOpen, setFilterPopupOpen] = useState(false);
-	const [selectedFilters, setSelectedFilters] = useState<
-		{ label: string; value: string }[]
-	>([]);
-	const [userData, setUserData] = useState<UserData[]>([]);
-
-	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>();
-	const [search, setSearch] = useState("");
-
-	const fetchData = async () => {
-		try {
-			const updatedRanges: Record<string, number> = {};
-			let url = "/admin";
-
-			if (tabIndex === 0) {
-				url +=
-					`/admins?page=${page + 1}&per_page=${rowsPerPage}` +
-					`&sort_by=${orderBy}&sort_order=${order}`;
-			} else if (tabIndex === 1) {
-				url +=
-					`/users?page=${page + 1}&per_page=${rowsPerPage}` +
-					`&sort_by=${orderBy}&sort_order=${order}`;
-			}
-
-			selectedFilters.forEach((filter) => {
-				if (
-					filter.label === "Last login date" ||
-					filter.label === "Join date"
-				) {
-					const [start, end] = filter.value.split(" to ");
-					const paramKeyStart = `${filter.label.toLowerCase().replace(/\s+/g, "_")}_start`;
-					const paramKeyEnd = `${filter.label.toLowerCase().replace(/\s+/g, "_")}_end`;
-
-					const startUnix = Math.floor(new Date(start).getTime() / 1000);
-					const endUnix = Math.floor(new Date(end).getTime() / 1000);
-					updatedRanges[paramKeyStart] = startUnix;
-					updatedRanges[paramKeyEnd] = endUnix;
-					url += `&${paramKeyStart}=${startUnix}&${paramKeyEnd}=${endUnix}`;
-				}
-			});
-
-			if (selectedFilters.length > 0) {
-				setDateRanges?.({ ...updatedRanges });
-			}
-
-			if (search.trim() !== "") {
-				url += `&search_query=${encodeURIComponent(search.trim())}`;
-			}
-
-			const response = await axiosInstance.get(url);
-			if (response.status === 200) {
-				setUserData(response.data.users);
-				setTotalCount(response.data.count);
-				const options = [50, 100, 300, 500];
-				let RowsPerPageOptions = options.filter(
-					(option) => option <= response.data.count,
-				);
-				if (RowsPerPageOptions.length < options.length) {
-					RowsPerPageOptions = [
-						...RowsPerPageOptions,
-						options[RowsPerPageOptions.length],
-					];
-				}
-				setRowsPerPageOptions(RowsPerPageOptions);
-				const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
-					? rowsPerPage
-					: 15;
-				setRowsPerPage(selectedValue);
-			}
-		} catch {
-		} finally {
-			setLoading(false);
-		}
-	};
-
-	useEffect(() => {
-		const accessToken = localStorage.getItem("token");
-		if (!accessToken) {
-			router.push("/signin");
-			return;
-		}
-		fetchData();
-	}, [currentPage, page, rowsPerPage, order, selectedFilters]);
-
-	const handleSearchChange = (
-		event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-	) => {
-		setSearch(event.target.value);
-	};
-
-	const handleFormOpenPopup = () => {
-		setSliderOpen(true);
-	};
-
-	const handleFormClosePopup = () => {
-		fetchData();
-		setSliderOpen(false);
-	};
 
 	const handlePageChange = (
 		event: React.MouseEvent<HTMLButtonElement> | null,
@@ -789,167 +669,21 @@ const Account: React.FC<PartnersAccountsProps> = ({
 		setPage(newPage);
 	};
 
-	const handleApplyFilters = (filters: FilterParams) => {
-		const newSelectedFilters: { label: string; value: string }[] = [];
-		const dateFormat = "YYYY-MM-DD";
-
-		const filterMappings: {
-			condition: boolean | string | string[] | number | null;
-			label: string;
-			value: string | ((f: any) => string);
-		}[] = [
-			{
-				condition:
-					filters.lastLoginDate?.fromDate || filters.lastLoginDate?.toDate,
-				label: "Last login date",
-				value: () => {
-					const from = dayjs
-						.unix(filters.lastLoginDate.fromDate!)
-						.format(dateFormat);
-					const to = dayjs
-						.unix(filters.lastLoginDate.toDate!)
-						.format(dateFormat);
-					return `${from} to ${to}`;
-				},
-			},
-			{
-				condition: filters.joinDate?.fromDate || filters.joinDate?.toDate,
-				label: "Join date",
-				value: () => {
-					const from = dayjs
-						.unix(filters.joinDate.fromDate!)
-						.format(dateFormat);
-					const to = dayjs.unix(filters.joinDate.toDate!).format(dateFormat);
-					return `${from} to ${to}`;
-				},
-			},
-		];
-
-		filterMappings.forEach(({ condition, label, value }) => {
-			if (condition) {
-				newSelectedFilters.push({
-					label,
-					value: typeof value === "function" ? value(filters) : value,
-				});
-			}
-		});
-
-		setSelectedFilters(newSelectedFilters);
-	};
-
-	const handleDeleteFilter = (filterToDelete: {
-		label: string;
-		value: string;
-	}) => {
-		const updatedFilters = selectedFilters.filter(
-			(filter) => filter.label !== filterToDelete.label,
-		);
-
-		setSelectedFilters(updatedFilters);
-
-		const filters = JSON.parse(
-			sessionStorage.getItem("filtersByAdmin") || "{}",
-		);
-
-		switch (filterToDelete.label) {
-			case "From Date":
-				filters.from_date = null;
-				break;
-			case "To Date":
-				filters.to_date = null;
-				break;
-			default:
-				break;
-		}
-
-		sessionStorage.setItem("filtersByAdmin", JSON.stringify(filters));
-	};
-
-	const handleResetFilters = async () => {
-		const url =
-			`/admin/admins?page=${page + 1}&per_page=${rowsPerPage}` +
-			`&sort_by=${orderBy}&sort_order=${order}`;
-
-		try {
-			setLoading(true);
-			sessionStorage.removeItem("filtersByAdmin");
-			const response = await axiosInstance.get(url);
-			if (response.status === 200) {
-				setUserData(response.data.users);
-				setTotalCount(response.data.count);
-				const options = [50, 100, 300, 500];
-				let RowsPerPageOptions = options.filter(
-					(option) => option <= response.data.count,
-				);
-				if (RowsPerPageOptions.length < options.length) {
-					RowsPerPageOptions = [
-						...RowsPerPageOptions,
-						options[RowsPerPageOptions.length],
-					];
-				}
-				setRowsPerPageOptions(RowsPerPageOptions);
-				const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
-					? rowsPerPage
-					: 15;
-				setRowsPerPage(selectedValue);
-			}
-			setSelectedFilters([]);
-		} catch (error) {
-			console.error("Error fetching leads:", error);
-		} finally {
-			setLoading(false);
-		}
-	};
-
 	const handleRowsPerPageChange = (
 		event: React.ChangeEvent<{ value: unknown }>,
 	) => {
-		setRowsPerPage(parseInt(event.target.value as string, 10));
+		setRowsPerPage(Number.parseInt(event.target.value as string, 10));
 		setPage(0);
 	};
 
-	const handleFilterPopupOpen = () => {
-		setFilterPopupOpen(true);
+	const handleSortRequest = (property: string) => {
+		const isAsc = orderBy === property && order === "asc";
+		setOrder(isAsc ? "desc" : "asc");
+		setOrderBy(property);
 	};
-
-	const handleFilterPopupClose = () => {
-		setFilterPopupOpen(false);
-	};
-
-	const handleSortRequest = (key: string) => {
-		const isAsc = orderBy === key && order === "asc";
-		const newOrder = isAsc ? "desc" : "asc";
-		setOrder(newOrder);
-		setOrderBy(key);
-
-		const sortedAccounts = [...accounts].sort((a, b) => {
-			const aValue = a[key as keyof typeof a];
-			const bValue = b[key as keyof typeof b];
-
-			if (typeof aValue === "string" && typeof bValue === "string") {
-				return newOrder === "asc"
-					? aValue.localeCompare(bValue)
-					: bValue.localeCompare(aValue);
-			}
-			if (aValue instanceof Date && bValue instanceof Date) {
-				return newOrder === "asc"
-					? new Date(aValue).getTime() - new Date(bValue).getTime()
-					: new Date(bValue).getTime() - new Date(aValue).getTime();
-			}
-			return 0;
-		});
-
-		setAccounts(sortedAccounts);
-	};
-
-	const tabs = [
-		{ label: "Admins", visible: true },
-		{ label: "Accounts", visible: true },
-	];
 
 	return (
 		<>
-			<InviteAdmin open={isSliderOpen} onClose={handleFormClosePopup} />
 			<Box
 				sx={{
 					backgroundColor: "#fff",
@@ -963,268 +697,6 @@ const Account: React.FC<PartnersAccountsProps> = ({
 					"@media (max-width: 600px)": { margin: "0rem auto 0rem" },
 				}}
 			>
-				<Box
-					sx={{ display: "flex", justifyContent: "space-between", pb: "24px" }}
-				>
-					<Box>
-						<Tabs
-							value={tabIndex}
-							onChange={handleTabChange}
-							aria-label="admin tabs"
-							TabIndicatorProps={{
-								sx: {
-									backgroundColor: PRIMARY_COLOR,
-									height: "2px",
-									bottom: 5,
-								},
-							}}
-							sx={{
-								maxWidth: 200,
-								minHeight: 0,
-								justifyContent: "flex-start",
-								alignItems: "left",
-								"@media (max-width: 600px)": {
-									border: "1px solid rgba(228, 228, 228, 1)",
-									borderRadius: "4px",
-									width: "100%",
-									"& .MuiTabs-indicator": {
-										height: "1.4px",
-									},
-								},
-							}}
-						>
-							{tabs
-								.filter((t) => t.visible)
-								.map((tab, index) => (
-									<Tab
-										key={index}
-										label={tab.label}
-										sx={{
-											fontFamily: "Nunito Sans",
-											fontWeight: 500,
-											fontSize: "14px",
-											lineHeight: "100%",
-											letterSpacing: "0%",
-											color: "rgba(112, 112, 113, 1)",
-											textTransform: "none",
-											padding: "4px 1px",
-											minHeight: "auto",
-											flexGrow: 1,
-											pb: "10px",
-											textAlign: "center",
-											mr: 2,
-											minWidth: "auto",
-											"&.Mui-selected": {
-												fontWeight: 700,
-												color: PRIMARY_COLOR,
-											},
-											"&.MuiTabs-indicator": {
-												backgroundColor: PRIMARY_COLOR,
-											},
-											"@media (max-width: 600px)": {
-												mr: 1,
-												borderRadius: "4px",
-												"&.Mui-selected": {
-													backgroundColor: "rgba(249, 249, 253, 1)",
-													border: "1px solid rgba(220, 220, 239, 1)",
-												},
-											},
-										}}
-									/>
-								))}
-						</Tabs>
-
-						<Box
-							sx={{
-								display: "flex",
-								alignItems: "center",
-								flexDirection: "row",
-								flexWrap: "wrap",
-								gap: 1,
-								mt: 2,
-								mb: 2,
-								overflowX: "auto",
-								"@media (max-width: 600px)": {
-									mb: 1,
-								},
-							}}
-						>
-							{selectedFilters.length > 0 && (
-								<Chip
-									className="second-sub-title"
-									label="Clear all"
-									onClick={handleResetFilters}
-									sx={{
-										color: `${PRIMARY_COLOR} !important`,
-										backgroundColor: "transparent",
-										lineHeight: "20px !important",
-										fontWeight: "400 !important",
-										borderRadius: "4px",
-									}}
-								/>
-							)}
-							{selectedFilters.map((filter) => {
-								const displayValue =
-									filter.value.charAt(0).toUpperCase() + filter.value.slice(1);
-								return (
-									<Chip
-										className="paragraph"
-										key={filter.label}
-										label={`${filter.label}: ${displayValue}`}
-										onDelete={() => handleDeleteFilter(filter)}
-										deleteIcon={
-											<CloseIcon
-												sx={{
-													backgroundColor: "transparent",
-													color: "#828282 !important",
-													fontSize: "14px !important",
-												}}
-											/>
-										}
-										sx={{
-											borderRadius: "4.5px",
-											backgroundColor: "rgba(80, 82, 178, 0.10)",
-											color: "#5F6368 !important",
-											lineHeight: "16px !important",
-										}}
-									/>
-								);
-							})}
-						</Box>
-					</Box>
-
-					<Box sx={{ display: "flex", gap: "16px" }}>
-						<TextField
-							id="input-with-icon-textfield"
-							placeholder="Search by account name, emails"
-							value={search}
-							onChange={(e) => {
-								handleSearchChange(e);
-								fetchData();
-							}}
-							onKeyDown={(e) => {
-								if (e.key === "Enter") {
-									e.preventDefault();
-									fetchData();
-								}
-							}}
-							InputProps={{
-								startAdornment: (
-									<InputAdornment position="start">
-										<SearchIcon style={{ cursor: "pointer" }} />
-									</InputAdornment>
-								),
-							}}
-							variant="outlined"
-							sx={{
-								flex: 1,
-								width: "360px",
-								"& .MuiOutlinedInput-root": {
-									borderRadius: "4px",
-									height: "40px",
-								},
-								"& input": {
-									paddingLeft: 0,
-								},
-								"& input::placeholder": {
-									fontSize: "14px",
-									color: "#8C8C8C",
-								},
-							}}
-						/>
-						{tabIndex === 0 && (
-							<Button
-								variant="outlined"
-								sx={{
-									height: "40px",
-									borderRadius: "4px",
-									textTransform: "none",
-									fontSize: "14px",
-									fontWeight: "500",
-									color: PRIMARY_COLOR,
-									borderColor: PRIMARY_COLOR,
-									"&:hover": {
-										backgroundColor: "rgba(80, 82, 178, 0.1)",
-										borderColor: PRIMARY_COLOR,
-									},
-								}}
-								onClick={() => {
-									handleFormOpenPopup();
-								}}
-							>
-								Add Admin
-							</Button>
-						)}
-						<Button
-							onClick={handleFilterPopupOpen}
-							aria-controls={undefined}
-							aria-haspopup="true"
-							aria-expanded={undefined}
-							sx={{
-								textTransform: "none",
-								height: "40px",
-								color:
-									selectedFilters.length > 0
-										? PRIMARY_COLOR
-										: "rgba(128, 128, 128, 1)",
-								border:
-									selectedFilters.length > 0
-										? `1px solid ${PRIMARY_COLOR}`
-										: "1px solid rgba(184, 184, 184, 1)",
-								borderRadius: "4px",
-								padding: "8px",
-								opacity: "1",
-								minWidth: "auto",
-								position: "relative",
-								"@media (max-width: 900px)": {
-									border: "none",
-									padding: 0,
-								},
-								"&:hover": {
-									backgroundColor: "transparent",
-									border: `1px solid ${PRIMARY_COLOR}`,
-									color: PRIMARY_COLOR,
-									"& .MuiSvgIcon-root": {
-										color: PRIMARY_COLOR,
-									},
-								},
-							}}
-						>
-							<FilterListIcon
-								fontSize="medium"
-								sx={{
-									color:
-										selectedFilters.length > 0
-											? PRIMARY_COLOR
-											: "rgba(128, 128, 128, 1)",
-								}}
-							/>
-
-							{selectedFilters.length > 0 && (
-								<Box
-									sx={{
-										position: "absolute",
-										top: 6,
-										right: 8,
-										width: "10px",
-										height: "10px",
-										backgroundColor: "red",
-										borderRadius: "50%",
-										"@media (max-width: 900px)": {
-											top: -1,
-											right: 1,
-										},
-									}}
-								/>
-							)}
-						</Button>
-						<FilterPopup
-							open={filterPopupOpen}
-							onClose={handleFilterPopupClose}
-							onApply={handleApplyFilters}
-						/>
-					</Box>
-				</Box>
 				<Grid
 					container
 					direction="column"
