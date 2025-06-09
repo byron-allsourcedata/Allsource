@@ -710,7 +710,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 
 	return (
 		<>
-			<Backdrop open={open} sx={{ zIndex: 1200, color: "#fff" }} />
+			<Backdrop open={open} sx={{ zIndex: 1000, color: "#fff" }} />
 
 			<Drawer
 				anchor="right"
@@ -720,7 +720,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 					sx: {
 						width: "40%",
 						position: "fixed",
-						zIndex: 2602,
 						top: 0,
 						bottom: 0,
 						"@media (max-width: 600px)": {
@@ -731,7 +730,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 				slotProps={{
 					backdrop: {
 						sx: {
-							backgroundColor: "rgba(0, 0, 0, 0.1)",
+							backgroundColor: "rgba(0, 0, 0, 0.01)",
 						},
 					},
 				}}
@@ -823,6 +822,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 										</InputAdornment>
 									),
 									sx: {
+										"& input": {
+											paddingLeft: 0,
+										},
 										fontFamily: "Roboto",
 										fontSize: "0.875rem",
 										fontWeight: 400,

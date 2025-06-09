@@ -205,7 +205,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 					onClose();
 					setPopupData(null);
 				}}
-				sx={{ zIndex: 1200, color: "#fff" }}
+				sx={{ zIndex: 100, color: "#fff" }}
 			/>
 			<Drawer
 				anchor="right"
@@ -219,7 +219,6 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 					sx: {
 						width: "48%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						"@media (max-width: 600px)": {
@@ -383,7 +382,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 									display: "flex",
 									flexDirection: "row",
 									gap: 5,
-									"@media (max-width: 600px)": {
+									"@media (max-width: 900px)": {
 										flexDirection: "column",
 										gap: 1,
 									},
