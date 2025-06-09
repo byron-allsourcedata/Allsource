@@ -1330,6 +1330,24 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							>
 								Edit
 							</Button>
+							<Button
+								sx={{
+									justifyContent: "flex-start",
+									width: "100%",
+									textTransform: "none",
+									fontFamily: "Nunito Sans",
+									fontSize: "14px",
+									color: "rgba(32, 33, 36, 1)",
+									fontWeight: 600,
+									":hover": {
+										color: "rgba(56, 152, 252, 1)",
+										backgroundColor: "background: rgba(80, 82, 178, 0.1)",
+									},
+								}}
+								onClick={handleDelete}
+							>
+								Delete
+							</Button>
 							{data.find((row) => row.id === selectedId)?.syncStatus ===
 								false && (
 								<Button
