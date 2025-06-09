@@ -1,7 +1,8 @@
+from typing import Optional
 from urllib.parse import urlparse
 
 
-def extract_domain(url: str) -> str | None:
+def extract_domain(url: str) -> Optional[str]:
     if not url:
         return None
 
@@ -13,7 +14,7 @@ def extract_domain(url: str) -> str | None:
 
     return domain
 
-def get_domain_from_headers(referer: str, origin: str) -> str:
+def get_domain_from_headers(referer: str, origin: str) -> Optional[str]:
     domain = None
     if referer:
         domain = extract_domain(referer)

@@ -34,7 +34,7 @@ async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
             logger.error(f"An error occurred: {str(e)}")
             return None
 
-async def fetch_external_data(domain: str):
+async def fetch_external_data(domain: str) -> None:
     async with httpx.AsyncClient() as client:
         response = await client.get(CHECK_PIXEL_URL, params={"domain": domain})
         if response.status_code == 200:

@@ -7,7 +7,6 @@ from contextlib import asynccontextmanager
 from tasks import fetch_external_data, fetch_domains_with_secret
 from utils import get_domain_from_headers
 
-load_dotenv()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 valid_domain_cache = set()
@@ -16,12 +15,12 @@ valid_domain_cache = set()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global valid_domain_cache
-    domains = await fetch_domains_with_secret()
+    domains_list_response = await fetch_domains_with_secret()
 
-    if domains is None:
+    if domains_list_response is None:
         raise HTTPException(status_code=500, detail="Failed to fetch domains from external service")
 
-    valid_domain_cache = set(domains.domains)
+    valid_domain_cache = set(domains_list_response.domains)
     logger.info(f"Loaded {len(valid_domain_cache)} domains into cache.")
     yield
     logger.info("Application shutdown.")
