@@ -177,7 +177,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			const response = await axiosInstance.get("/data-sync/sync", {
 				params: params,
 			});
-			console.log({response})
 			const { length: count } = response.data;
 			setAllData(response.data);
 			setTotalRows(count);
