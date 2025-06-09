@@ -174,12 +174,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					service_name: service_name,
 				};
 			}
-			const response = await axiosInstance.get(
-				"/data-sync/get-smart-audience-sync",
-				{
-					params: params,
-				},
-			);
+			const response = await axiosInstance.get("/data-sync/sync", {
+				params: params,
+			});
 			const { length: count } = response.data;
 			setAllData(response.data);
 			setTotalRows(count);

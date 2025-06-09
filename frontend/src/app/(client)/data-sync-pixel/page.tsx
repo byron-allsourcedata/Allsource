@@ -336,7 +336,7 @@ const DataSync = () => {
 													headerTitle="Sync Audience to Any Platform"
 													caption="Send your audience segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
 													onOpenPopup={handleOpenPopup}
-													onBegin={() => router.push("/smart-audiences")}
+													onBegin={() => router.push("/contacts")}
 													beginDisabled={!hasIntegrations}
 													buttonLabel="Create Data Sync"
 												/>
