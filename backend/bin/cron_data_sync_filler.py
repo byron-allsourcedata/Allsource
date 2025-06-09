@@ -99,9 +99,7 @@ def fetch_leads_by_domain(
     query = (
         session.query(
             LeadUser.id.label("id"),
-            LeadUser.user_id.label(
-                "user_id"
-            ),
+            LeadUser.user_id.label("user_id"),
         )
         .join(UserDomains, UserDomains.id == LeadUser.domain_id)
         .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
