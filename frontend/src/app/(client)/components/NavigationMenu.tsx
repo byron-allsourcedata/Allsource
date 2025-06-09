@@ -401,7 +401,8 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 							isActive("/dashboard") ||
 							isActive("/leads") ||
 							isActive("/company") ||
-							isActive("/supression")
+							isActive("/supression") ||
+							isActive("/data-sync-pixel")
 								? navigationmenuStyles.activeItem
 								: {}),
 							...navigationmenuStyles.mobileDrawerList,
@@ -482,6 +483,22 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 									<FeaturedPlayListIcon />
 								</ListItemIcon>
 								<ListItemText primary="Supression" />
+							</ListItem>
+							<ListItem
+								button
+								onClick={() => handleNavigation("/data-sync-pixel")}
+								sx={{
+									...(isActive("/data-sync-pixel")
+										? navigationmenuStyles.activeItem
+										: {}),
+									...navigationmenuStyles.mobileDrawerList,
+									pl: 4,
+								}}
+							>
+								<ListItemIcon>
+									<CategoryIcon />
+								</ListItemIcon>
+								<ListItemText primary="Data Sync" />
 							</ListItem>
 						</List>
 					</Collapse>
