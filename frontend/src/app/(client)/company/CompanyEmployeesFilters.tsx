@@ -347,6 +347,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 
 	return (
 		<>
+			<Backdrop open={open} sx={{ zIndex: 100, color: "#fff" }} />
 			<Drawer
 				anchor="right"
 				open={open}
@@ -365,7 +366,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 				slotProps={{
 					backdrop: {
 						sx: {
-							backgroundColor: "rgba(0, 0, 0, 0.1)",
+							backgroundColor: "rgba(0, 0, 0, 0.01)",
 						},
 					},
 				}}
@@ -957,7 +958,7 @@ const CompanyFilterPopup: React.FC<FilterPopupProps> = ({
 								{isRegionOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
 							</IconButton>
 						</Box>
-						<Collapse in={isRegionOpen}>
+						<Collapse in={isRegionOpen} sx={{ pl: 2 }}>
 							<TextField
 								placeholder="Search by town, city or state.."
 								variant="outlined"
