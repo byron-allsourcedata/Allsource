@@ -328,6 +328,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									</InputAdornment>
 								),
 								sx: {
+									"& input": {
+										paddingLeft: 0,
+									},
 									fontFamily: "Roboto",
 									fontSize: "0.875rem",
 									fontWeight: 400,

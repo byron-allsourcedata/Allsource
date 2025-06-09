@@ -331,7 +331,6 @@ const CompanyEmployees: React.FC<CompanyEmployeesProps> = ({
 					([key, value]: [string, any]) => value.visibility_status === "hidden",
 				);
 				if (hiddenField) {
-					console.log({ key: hiddenField[0], index });
 					setFirstLockedValue({ key: hiddenField[0], index });
 					return true;
 				}

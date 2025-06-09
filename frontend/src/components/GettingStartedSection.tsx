@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { Box, Link as MuiLink, Grid, Typography } from "@mui/material";
 import { dashboardStyles } from "@/app/(client)/dashboard/dashboardStyles";
 import {
-	StepConfig,
+	type StepConfig,
 	VerticalStepper,
 } from "@/app/(client)/dashboard/components/VerticalStepper";
 import PixelInstallation from "@/app/(client)/dashboard/components/PixelInstallation";
@@ -68,7 +69,7 @@ const GettingStartedSection: React.FC = () => {
 			const installBigcommerce = query.get("install_bigcommerce");
 			const googleScope = query.get("scope");
 			if ((authorizationGoogleCode && googleScope) || installBigcommerce) {
-				let currentDomain = sessionStorage.getItem("current_domain");
+				const currentDomain = sessionStorage.getItem("current_domain");
 				if (currentDomain) {
 					setSelectedDomain(currentDomain);
 				}
@@ -154,7 +155,7 @@ const GettingStartedSection: React.FC = () => {
 	return (
 		<>
 			<GetStartedHintsProvider>
-				<Grid container sx={{ height: "100%", pr: 2 }}>
+				<Grid container sx={{ height: "100%", pr: 2, "@media (max-width: 1200px)": { gap: 4, pr: 0 } }}>
 					<Grid
 						item
 						xs={12}
@@ -202,6 +203,7 @@ const GettingStartedSection: React.FC = () => {
 						lg={8}
 						sx={{
 							display: { xs: "none", md: "block" },
+							order: { xs: 2, sm: 2, md: 2, lg: 1 },
 						}}
 					>
 						<Box sx={{ overflow: "visible" }}>
@@ -233,15 +235,16 @@ const GettingStartedSection: React.FC = () => {
 								)}
 						</Box>
 					</Grid>
-
 					<Grid
 						item
 						xs={12}
 						lg={4}
-						sx={{ display: { xs: "none", md: "block" } }}
+						sx={{ display: { xs: "none", md: "block" }, order: { xs: 1, sm: 1, md: 1, lg: 2 }, }}
+
 					>
 						<VerticalStepper steps={stepData} />
 					</Grid>
+
 				</Grid>
 			</GetStartedHintsProvider>
 		</>
