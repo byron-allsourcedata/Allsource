@@ -84,8 +84,8 @@ class DashboardAudiencePersistence:
         if search_query:
             user_filters.append(
                 or_(
-                    Users.email.ilike(f"{search_query}%"),
-                    Users.full_name.ilike(f"{search_query}%"),
+                    Users.email.ilike(f"%{search_query}%"),
+                    Users.full_name.ilike(f"%{search_query}%"),
                 )
             )
 
