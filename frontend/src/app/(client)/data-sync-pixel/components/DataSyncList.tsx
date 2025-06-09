@@ -828,10 +828,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		},
 	];
 
-
 	const formatListName = (name: string) => {
 		if (!name) return "--";
-	
+
 		return name
 			.replace(/([a-z])([A-Z])/g, "$1 $2")
 			.replace(/^./, (str) => str.toUpperCase());
@@ -1072,7 +1071,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												}}
 												tooltipOptions={{ content: row.list_name || "--" }}
 											>
-												{(row.list_name) || "--"}
+												{row.list_name || "--"}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1566,7 +1565,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					invalid_api_key={isInvalidApiKey}
 					boxShadow="rgba(0, 0, 0, 0.01)"
 				/>
-				{linkedinIconPopupOpen && isEdit && (
+				{/* {linkedinIconPopupOpen && isEdit && (
 					<>
 						<LinkedinDataSync
 							open={linkedinIconPopupOpen}
@@ -1575,7 +1574,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							data={data.find((item) => item.id === selectedId)}
 						/>
 					</>
-				)}
+				)} */}
 				<MailchimpConnect
 					open={openMailchimpConnect}
 					handleClose={() => {
@@ -1693,7 +1692,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					invalid_api_key={isInvalidApiKey}
 					boxShadow="rgba(0, 0, 0, 0.01)"
 				/>
-				<LinkedinConnectPopup
+				{/* <LinkedinConnectPopup
 					open={openLinkedinConnect}
 					handlePopupClose={() => {
 						setOpenLinkedinConnect(false), setIsInvalidApiKey(false);
@@ -1705,7 +1704,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					}
 					invalid_api_key={isInvalidApiKey}
 					boxShadow="rgba(0, 0, 0, 0.01)"
-				/>
+				/> */}
 				<WebhookConnectPopup
 					open={openWebhookConnect}
 					handleClose={() => {

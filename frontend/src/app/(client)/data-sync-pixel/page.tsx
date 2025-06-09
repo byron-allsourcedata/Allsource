@@ -169,7 +169,7 @@ const DataSync = () => {
 										pl: 1,
 									}}
 								>
-									{/* <DomainButtonSelect /> */}
+									<DomainButtonSelect />
 								</Box>
 							</Box>
 							<Box
@@ -185,7 +185,7 @@ const DataSync = () => {
 									},
 								}}
 							>
-								{/* <Button
+								<Button
                   onClick={handleAudiencePopupOpen}
                   aria-haspopup="true"
                   disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
@@ -211,7 +211,7 @@ const DataSync = () => {
                   }}>
                     Create Contact Sync
                   </Typography>
-                </Button> */}
+                </Button>
 								<Button
 									onClick={handleFilterPopupOpen}
 									aria-haspopup="true"

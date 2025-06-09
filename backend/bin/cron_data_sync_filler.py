@@ -98,8 +98,7 @@ def fetch_leads_by_domain(
         last_sent_lead_id = 0
 
     query = (
-        session.query(LeadUser.id, LeadUser.behavior_type, FiveXFiveUser.up_id)
-        .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+        session.query(LeadUser.id, LeadUser.behavior_type, LeadUser.user_id)
         .join(UserDomains, UserDomains.id == LeadUser.domain_id)
         .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
         .join(
@@ -185,8 +184,7 @@ def update_data_sync_imported_leads(session, status, data_sync_id):
 
 def get_previous_imported_leads(session, data_sync_id):
     query = (
-        session.query(LeadUser.id, LeadUser.behavior_type, FiveXFiveUser.up_id)
-        .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+        session.query(LeadUser.id, LeadUser.behavior_type, LeadUser.user_id)
         .join(
             DataSyncImportedLead,
             DataSyncImportedLead.lead_users_id == LeadUser.id,
@@ -212,7 +210,7 @@ async def send_leads_to_rmq(
     user_integrations_service_name,
 ):
     enrichment_user_ids = [lead_user.id for lead_user in lead_users]
-    users_id = lead_users[-1].users_id
+    users_id = lead_users[-1][2]
     records = [
         {
             "status": DataSyncImportedStatus.SENT.value,
@@ -313,7 +311,7 @@ async def process_user_integrations(rmq_connection, session):
             data_sync,
             user_integrations[i].service_name,
         )
-        last_lead_id = lead_users[-1].id
+        last_lead_id = lead_users[-1][0]
         if last_lead_id:
             logging.info(f"last_lead_id = {last_lead_id}")
             update_last_sent_lead(session, data_sync.id, last_lead_id)
