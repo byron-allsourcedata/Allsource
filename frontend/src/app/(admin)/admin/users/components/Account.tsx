@@ -31,7 +31,6 @@ import {
 	ArrowDownwardIcon,
 	ArrowUpwardIcon,
 } from "@/icon";
-import { set } from "date-fns";
 
 interface UserData {
 	id: number;
@@ -179,6 +178,16 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 		setMenuAnchor(event.currentTarget);
 		setActiveRow(rowId);
 	};
+
+	function formatCreditsCount(count: number | null) {
+		if (count === -1) {
+			return "unlimited";
+		}
+		if (typeof count === "number" && count > 0) {
+			return count.toLocaleString("en-US");
+		}
+		return "0";
+	}
 
 	const handleCloseMenu = () => {
 		setMenuAnchor(null);
@@ -419,9 +428,7 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 			case "lookalikes_count":
 				return row.lookalikes_count || "0";
 			case "credits_count":
-				return row.credits_count === -1
-					? "unlimited"
-					: row.credits_count || "0";
+				return formatCreditsCount(row.credits_count || 0);
 			case "status":
 				return (
 					<Typography
@@ -592,16 +599,16 @@ const TableBodyClient: React.FC<TableBodyUserProps> = ({
 
 interface PartnersAccountsProps {
 	is_admin?: boolean;
-	rowsPerPageOptions: any;
-	totalCount: any;
+	rowsPerPageOptions?: number[];
+	totalCount: number;
 	userData: AccountData[];
-	setPage?: any;
-	page?: any;
+	setPage: any;
+	page: number;
 	setLoading?: any;
-	rowsPerPage?: any;
+	rowsPerPage: number;
 	accountsData?: any;
 	order?: any;
-	orderBy?: any;
+	orderBy?: string;
 	setRowsPerPage?: any;
 	setOrder?: any;
 	setOrderBy?: any;

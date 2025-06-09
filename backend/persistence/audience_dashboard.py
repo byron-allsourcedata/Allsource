@@ -63,22 +63,26 @@ class DashboardAudiencePersistence:
     ):
         user_filters = [Users.role.contains(["customer"])]
 
-        if last_login_date_start and last_login_date_end:
+        if last_login_date_start:
             start_date = datetime.fromtimestamp(
                 last_login_date_start, tz=pytz.UTC
             ).date()
+            user_filters.append(func.DATE(Users.last_login) >= start_date)
+
+        if last_login_date_end:
             end_date = datetime.fromtimestamp(
                 last_login_date_end, tz=pytz.UTC
             ).date()
-            user_filters.append(func.DATE(Users.last_login) >= start_date)
             user_filters.append(func.DATE(Users.last_login) <= end_date)
 
-        if join_date_start and join_date_end:
+        if join_date_start:
             start_date = datetime.fromtimestamp(
                 join_date_start, tz=pytz.UTC
             ).date()
-            end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
             user_filters.append(func.DATE(Users.created_at) >= start_date)
+
+        if join_date_end:
+            end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
             user_filters.append(func.DATE(Users.created_at) <= end_date)
 
         if search_query:

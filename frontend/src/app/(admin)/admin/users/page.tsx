@@ -273,7 +273,7 @@ const Users: React.FC = () => {
 
 	function formatFilterValue(value: string): string {
 		if (/^\d+$/.test(value)) {
-			const date = new Date(parseInt(value, 10) * 1000);
+			const date = new Date(Number.parseInt(value, 10) * 1000);
 			const month = (date.getMonth() + 1).toString().padStart(2, "0");
 			const day = date.getDate().toString().padStart(2, "0");
 			const year = date.getFullYear();
@@ -281,6 +281,13 @@ const Users: React.FC = () => {
 		}
 		return value.charAt(0).toUpperCase() + value.slice(1);
 	}
+
+	function formatFilterLabel(label: string) {
+		if (typeof label !== "string") return "";
+		const normalized = label.replace(/_/g, " ");
+		return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+	  }
+	  
 
 	const handleApplyFilters = (filters: FilterParams) => {
 		const newSelectedFilters: { label: string; value: string }[] = [];
@@ -465,7 +472,7 @@ const Users: React.FC = () => {
 								{selectedFilters.map((filter) => (
 									<Chip
 										key={filter.label}
-										label={`${filter.label}: ${formatFilterValue(filter.value)}`}
+										label={`${formatFilterLabel(filter.label)}: ${formatFilterValue(filter.value)}`}
 										onDelete={() => handleDeleteFilter(filter)}
 										deleteIcon={
 											<CloseIcon
@@ -617,7 +624,7 @@ const Users: React.FC = () => {
 						</Box>
 					</Box>
 					<Account
-						is_admin={tabIndex === 0 ? false : true}
+						is_admin={tabIndex !== 0}
 						rowsPerPageOptions={rowsPerPageOptions}
 						totalCount={totalCount}
 						userData={userData}

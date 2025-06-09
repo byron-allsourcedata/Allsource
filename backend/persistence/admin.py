@@ -111,14 +111,14 @@ class AdminPersistence:
                 )
             )
 
-        if join_date_start and join_date_end:
+        if join_date_start:
             start_date = datetime.fromtimestamp(
                 join_date_start, tz=pytz.UTC
             ).date()
+            query = query.filter(func.DATE(Users.created_at) >= start_date)
+
+        if join_date_end:
             end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
-            query = query.filter(
-                func.DATE(AdminInvitation.date_invited_at) >= start_date,
-                func.DATE(AdminInvitation.date_invited_at) <= end_date,
-            )
+            query = query.filter(func.DATE(Users.created_at) <= end_date)
 
         return query.all()
