@@ -512,6 +512,22 @@ const Sidebar: React.FC<SidebarProps> = ({
 										</ListItemIcon>
 										<ListItemText primary="Suppressions" />
 									</ListItem>
+
+									{/* Data sync */}
+									<ListItem
+										button
+										onClick={() => handleNavigation("/data-sync-pixel")}
+										sx={
+											isActive("/data-sync-pixel")
+												? { ...sidebarStyles.activeItem, pl: 4 }
+												: { ...sidebarStyles.ListItem, pl: 4 }
+										}
+									>
+										<ListItemIcon sx={sidebarStyles.listItemIcon}>
+											<CategoryIcon />
+										</ListItemIcon>
+										<ListItemText primary="Data Sync" />
+									</ListItem>
 								</List>
 							</Collapse>
 
