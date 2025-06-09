@@ -169,7 +169,7 @@ const DataSync = () => {
 										pl: 1,
 									}}
 								>
-									{/* <DomainButtonSelect /> */}
+									<DomainButtonSelect />
 								</Box>
 							</Box>
 							<Box
@@ -185,33 +185,39 @@ const DataSync = () => {
 									},
 								}}
 							>
-								{/* <Button
-                  onClick={handleAudiencePopupOpen}
-                  aria-haspopup="true"
-                  disabled={status === 'PIXEL_INSTALLATION_NEEDED'}
-
-                  sx={{
-                    textTransform: 'none',
-                    color: status === 'PIXEL_INSTALLATION_NEEDED' ? 'rgba(128, 128, 128, 1)' : 'rgba(56, 152, 252, 1)',
-                    border: '1px solid rgba(56, 152, 252, 1)',
-                    borderRadius: '4px',
-                    padding: '9px 16px',
-                    opacity: status === 'PIXEL_INSTALLATION_NEEDED' ? '0.4' : '1',
-                    minWidth: 'auto',
-                    '@media (max-width: 900px)': {
-                      display: 'none'
-                    }
-                  }}
-                >
-                  <Typography className='second-sub-title' sx={{
-                    marginRight: '0.5em',
-                    padding: 0.2,
-                    textAlign: 'left',
-                    color: 'rgba(56, 152, 252, 1) !important'
-                  }}>
-                    Create Contact Sync
-                  </Typography>
-                </Button> */}
+								<Button
+									onClick={handleAudiencePopupOpen}
+									aria-haspopup="true"
+									disabled={status === "PIXEL_INSTALLATION_NEEDED"}
+									sx={{
+										textTransform: "none",
+										color:
+											status === "PIXEL_INSTALLATION_NEEDED"
+												? "rgba(128, 128, 128, 1)"
+												: "rgba(56, 152, 252, 1)",
+										border: "1px solid rgba(56, 152, 252, 1)",
+										borderRadius: "4px",
+										padding: "9px 16px",
+										opacity:
+											status === "PIXEL_INSTALLATION_NEEDED" ? "0.4" : "1",
+										minWidth: "auto",
+										"@media (max-width: 900px)": {
+											display: "none",
+										},
+									}}
+								>
+									<Typography
+										className="second-sub-title"
+										sx={{
+											marginRight: "0.5em",
+											padding: 0.2,
+											textAlign: "left",
+											color: "rgba(56, 152, 252, 1) !important",
+										}}
+									>
+										Create Contact Sync
+									</Typography>
+								</Button>
 								<Button
 									onClick={handleFilterPopupOpen}
 									aria-haspopup="true"

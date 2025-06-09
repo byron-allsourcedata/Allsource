@@ -155,7 +155,14 @@ const GettingStartedSection: React.FC = () => {
 	return (
 		<>
 			<GetStartedHintsProvider>
-				<Grid container sx={{ height: "100%", pr: 2, "@media (max-width: 1200px)": { gap: 4, pr: 0 } }}>
+				<Grid
+					container
+					sx={{
+						height: "100%",
+						pr: 2,
+						"@media (max-width: 1200px)": { gap: 4, pr: 0 },
+					}}
+				>
 					<Grid
 						item
 						xs={12}
@@ -239,12 +246,13 @@ const GettingStartedSection: React.FC = () => {
 						item
 						xs={12}
 						lg={4}
-						sx={{ display: { xs: "none", md: "block" }, order: { xs: 1, sm: 1, md: 1, lg: 2 }, }}
-
+						sx={{
+							display: { xs: "none", md: "block" },
+							order: { xs: 1, sm: 1, md: 1, lg: 2 },
+						}}
 					>
 						<VerticalStepper steps={stepData} />
 					</Grid>
-
 				</Grid>
 			</GetStartedHintsProvider>
 		</>

@@ -38,7 +38,7 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
 				borderRadius: "4px",
 				ml: 2,
 				backgroundColor: "rgba(255, 255, 255, 1)",
-				'@media (max-width: 1200px)': { ml: 0 },
+				"@media (max-width: 1200px)": { ml: 0 },
 				"@media (max-width: 900px)": {
 					ml: 0,
 					mb: 4,
