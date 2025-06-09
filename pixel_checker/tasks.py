@@ -13,10 +13,7 @@ logger = logging.getLogger(__name__)
 
 GET_DOMAINS_URL = os.getenv("GET_DOMAINS_URL")
 SECRET_KEY = os.getenv("SECRET_KEY")
-
-def long_task():
-    time.sleep(5)
-    logger.info("Completed background task")
+CHECK_PIXEL_URL = os.getenv("GET_CHECK_PIXEL_INSTALLATION_STATUS")
 
 async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
     async with httpx.AsyncClient() as client:
@@ -37,11 +34,10 @@ async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
             logger.error(f"An error occurred: {str(e)}")
             return None
 
-async def fetch_external_data():
+async def fetch_external_data(domain: str):
     async with httpx.AsyncClient() as client:
-        response = await client.get("http://127.0.0.1:8000/referer-cache")
-        long_task()
+        response = await client.get(CHECK_PIXEL_URL, params={"domain": domain})
         if response.status_code == 200:
-            logger.info("Successfully fetched data from /referer-cache")
+            logger.info(f"Successfully fetched pixel installation status for domain: {domain}")
         else:
-            logger.error("Failed to fetch data from /referer-cache")
+            logger.error(f"Failed to fetch pixel installation status for domain: {domain}")
