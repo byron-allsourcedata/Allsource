@@ -343,13 +343,17 @@ const Sidebar: React.FC<SidebarProps> = ({
 	};
 
 	const isActive = (path: string) => pathname.startsWith(path);
+	const isEquals = (path: string) => {
+		return pathname === path;
+	};
 
 	const [open, setOpen] = useState(false);
 	const isPixelActive =
 		isActive("/leads") ||
 		isActive("/company") ||
 		isActive("/suppressions") ||
-		isActive("/dashboard");
+		isActive("/dashboard") ||
+		isActive("/data-sync-pixel");
 	const handleClick = () => {
 		setOpen(!open);
 	};
@@ -512,6 +516,22 @@ const Sidebar: React.FC<SidebarProps> = ({
 										</ListItemIcon>
 										<ListItemText primary="Suppressions" />
 									</ListItem>
+
+									{/* Data sync */}
+									<ListItem
+										button
+										onClick={() => handleNavigation("/data-sync-pixel")}
+										sx={
+											isEquals("/data-sync-pixel")
+												? { ...sidebarStyles.activeItem, pl: 4 }
+												: { ...sidebarStyles.ListItem, pl: 4 }
+										}
+									>
+										<ListItemIcon sx={sidebarStyles.listItemIcon}>
+											<CategoryIcon />
+										</ListItemIcon>
+										<ListItemText primary="Data Sync" />
+									</ListItem>
 								</List>
 							</Collapse>
 
@@ -626,7 +646,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 							button
 							onClick={() => handleNavigation("/data-sync")}
 							sx={
-								isActive("/data-sync")
+								isEquals("/data-sync")
 									? sidebarStyles.activeItem
 									: sidebarStyles.ListItem
 							}

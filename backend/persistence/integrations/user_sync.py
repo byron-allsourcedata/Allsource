@@ -2,7 +2,7 @@ from models.audience_smarts import AudienceSmart
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from sqlalchemy.orm import Session, aliased
 from models.users import Users
-from enums import SourcePlatformEnum
+from enums import SourcePlatformEnum, DataSyncType
 from models.users_domains import UserDomains
 from models.subscriptions import UserSubscriptions
 from models.audience_data_sync_imported_persons import (
@@ -162,7 +162,7 @@ class IntegrationsUserSyncPersistence:
                 UserIntegration,
                 UserIntegration.id == IntegrationUserSync.integration_id,
             )
-            .filter(IntegrationUserSync.domain_id == domain_id)
+            .filter(IntegrationUserSync.domain_id == domain_id, IntegrationUserSync.sync_type == DataSyncType.CONTACT.value)
         )
 
         if service_name:
@@ -282,7 +282,7 @@ class IntegrationsUserSyncPersistence:
                 ImportedLeads,
                 ImportedLeads.data_sync_id == IntegrationUserSync.id,
             )
-            .filter(UserIntegration.user_id == user_id)
+            .filter(UserIntegration.user_id == user_id, IntegrationUserSync.sync_type == DataSyncType.AUDIENCE.value)
             .group_by(
                 IntegrationUserSync.id,
                 UserIntegration.service_name,
