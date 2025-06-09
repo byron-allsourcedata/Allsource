@@ -1,11 +1,12 @@
 "use client";
-import React, {
+import type React from "react";
+import {
 	createContext,
 	useContext,
-	useState,
-	ReactNode,
+	useState, type
+		ReactNode,
 	useEffect,
-} from "react";
+} from "react"
 
 interface TrialContextType {
 	trial: boolean;
@@ -54,9 +55,9 @@ export const TrialProvider: React.FC<TrialProviderProps> = ({ children }) => {
 					// Update the state with the calculated days difference
 					setDaysDifference(daysDifferences);
 				}
-			} catch (error) {}
+			} catch (error) { }
 		}
-	}, [trial]);
+	}, []);
 
 	return (
 		<TrialContext.Provider
