@@ -177,6 +177,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			const response = await axiosInstance.get("/data-sync/sync", {
 				params: params,
 			});
+			console.log({response})
 			const { length: count } = response.data;
 			setAllData(response.data);
 			setTotalRows(count);
@@ -786,8 +787,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
 	const columns = [
 		{
-			key: "smart_audience_name",
-			label: "Smart Audience Name",
+			key: "list_name",
+			label: "List Name",
 			widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
 		},
 		{
@@ -808,12 +809,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		},
 		{
 			key: "data_sync",
-			label: "Active Segments",
+			label: "No. of Contacts",
 			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
 		},
 		{
-			key: "record_synced",
-			label: "Records Synced",
+			key: "list_type",
+			label: "List Type",
 			widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
 		},
 		{
@@ -1063,7 +1064,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												}}
 												tooltipOptions={{ content: row.name || "--" }}
 											>
-												{row.name || "--"}
+												{row.list_name || "--"}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1142,11 +1143,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																) || "--",
 												}}
 											>
-												{row.active_segments === -1
-													? "unlimit"
-													: new Intl.NumberFormat("en-US").format(
-															row.active_segments,
-														) || "--"}
+												{row.contacts}
 											</SmartCell>
 
 											<SmartCell
@@ -1161,9 +1158,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													),
 												}}
 											>
-												{new Intl.NumberFormat("en-US").format(
-													row.records_synced,
-												)}
+												{row.type}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
