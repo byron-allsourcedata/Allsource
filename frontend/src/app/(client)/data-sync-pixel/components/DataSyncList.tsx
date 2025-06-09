@@ -692,46 +692,46 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	}
 
 	const formatStatusText = (row: string) => {
-		if (row.dataSync === false) {
-			return "Disabled";
-		}
-		if (row.syncStatus === false) {
-			return "Failed";
-		}
-		if (row.is_progress === true) {
-			return "In Progress";
-		}
-		if (row.is_progress === false) {
-			return "Synced";
-		}
+		// if (row.dataSync === false) {
+		// 	return "Disabled";
+		// }
+		// if (row.syncStatus === false) {
+		// 	return "Failed";
+		// }
+		// if (row.is_progress === true) {
+		// 	return "In Progress";
+		// }
+		// if (row.is_progress === false) {
+		// 	return "Synced";
+		// }
 		return "--";
 	};
 
 	const getStatusStyle = (row: string) => {
-		if (row.dataSync === false) {
-			return {
-				background: "rgba(219, 219, 219, 1)",
-				color: "rgba(74, 74, 74, 1) !important",
-			};
-		}
-		if (row.syncStatus === false) {
-			return {
-				background: "rgba(252, 205, 200, 1)",
-				color: "rgba(200, 62, 46, 1) !important",
-			};
-		}
-		if (row.is_progress) {
-			return {
-				background: "rgba(0, 129, 251, 0.2)",
-				color: "rgba(0, 129, 251, 1)!important",
-			};
-		}
-		if (row.is_progress === false) {
-			return {
-				background: "rgba(234, 248, 221, 1)",
-				color: "rgba(43, 91, 0, 1) !important",
-			};
-		}
+		// if (row.dataSync === false) {
+		// 	return {
+		// 		background: "rgba(219, 219, 219, 1)",
+		// 		color: "rgba(74, 74, 74, 1) !important",
+		// 	};
+		// }
+		// if (row.syncStatus === false) {
+		// 	return {
+		// 		background: "rgba(252, 205, 200, 1)",
+		// 		color: "rgba(200, 62, 46, 1) !important",
+		// 	};
+		// }
+		// if (row.is_progress) {
+		// 	return {
+		// 		background: "rgba(0, 129, 251, 0.2)",
+		// 		color: "rgba(0, 129, 251, 1)!important",
+		// 	};
+		// }
+		// if (row.is_progress === false) {
+		// 	return {
+		// 		background: "rgba(234, 248, 221, 1)",
+		// 		color: "rgba(43, 91, 0, 1) !important",
+		// 	};
+		// }
 		return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
 	};
 
