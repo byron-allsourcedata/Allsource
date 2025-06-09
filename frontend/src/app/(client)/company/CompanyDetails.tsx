@@ -138,7 +138,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 			<Backdrop
 				open={open}
 				onClick={onClose}
-				sx={{ zIndex: 1200, color: "#fff" }}
+				sx={{ zIndex: 100, color: "#fff" }}
 			/>
 			<Drawer
 				anchor="right"
@@ -149,7 +149,6 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 					sx: {
 						width: "48%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						"@media (max-width: 600px)": {
@@ -179,7 +178,7 @@ const PopupDetails: React.FC<PopupDetailsProps> = ({
 							sx={{
 								fontSize: "16px",
 								fontFamily: "Nunito Sans",
-								fontWeight: 700,
+								fontWeight: 600,
 								lineHeight: "22.4px",
 							}}
 						>

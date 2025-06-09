@@ -1166,9 +1166,8 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 				onClose={handleClosePopup}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						overflowY: "auto",
@@ -1394,7 +1393,10 @@ const CreateSyncPopup: React.FC<AudiencePopupProps> = ({
 																				integration.service_name,
 																			)
 																}
-																sx={{ width: "135px" }}
+																sx={{
+																	width: `calc((100% - (${integrations.length} - 1) * 16px) / ${integrations.length})`,
+																	minWidth: "135px",
+																}}
 															>
 																<IntegrationBox
 																	image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
