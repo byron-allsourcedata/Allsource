@@ -286,8 +286,7 @@ const Users: React.FC = () => {
 		if (typeof label !== "string") return "";
 		const normalized = label.replace(/_/g, " ");
 		return normalized.charAt(0).toUpperCase() + normalized.slice(1);
-	  }
-	  
+	}
 
 	const handleApplyFilters = (filters: FilterParams) => {
 		const newSelectedFilters: { label: string; value: string }[] = [];
