@@ -1,13 +1,19 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
 from sqlalchemy import case
+
+from db_dependencies import Db
 from models import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import User
 from enums import SourcePlatformEnum
+from resolver import injectable
 
 
+@injectable
 class PlansPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_stripe_plans(self, platform):
@@ -56,7 +62,7 @@ class PlansPersistence:
         else:
             return None
 
-    def get_plan_by_alias(self, alias: str):
+    def get_plan_by_alias(self, alias: str) -> Optional[SubscriptionPlan]:
         plan = (
             self.db.query(SubscriptionPlan)
             .filter(SubscriptionPlan.alias == alias)
@@ -145,6 +151,7 @@ class PlansPersistence:
                 SubscriptionPlan.id == UserSubscriptions.plan_id,
             )
             .filter(User.id == user_id)
+            .order_by(UserSubscriptions.id.desc())
             .first()
         )
 

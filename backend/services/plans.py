@@ -19,7 +19,7 @@ class PlansService:
         self.plans_persistence = plans_persistence
         self.subscription_service = subscription_service
 
-    def get_customer_id(self, user):
+    def get_customer_id(self, user: dict):
         return user.get("customer_id")
 
     def is_had_trial_period(self, user):
