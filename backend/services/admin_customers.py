@@ -251,7 +251,10 @@ class AdminCustomersService:
                 )
                 if user_plan:
                     if user_plan.is_trial:
-                        if user.get("pixel_installed_count") and user.get("pixel_installed_count") >= 1:
+                        if (
+                            user.get("pixel_installed_count")
+                            and user.get("pixel_installed_count") >= 1
+                        ):
                             payment_status = "PIXEL_INSTALLED"
                         else:
                             payment_status = "TRIAL_ACTIVE"
@@ -294,7 +297,7 @@ class AdminCustomersService:
                 last_login_date_end=last_login_date_end,
                 join_date_start=join_date_start,
                 join_date_end=join_date_end,
-                search_query=search_query
+                search_query=search_query,
             )
         )
 

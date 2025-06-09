@@ -467,15 +467,23 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 
 	const handleApplyFilters = (filters: FilterParams) => {
 		setJoinDateRange({
-		  fromDate: filters.joinDate.fromDate ? dayjs.unix(filters.joinDate.fromDate) : null,
-		  toDate: filters.joinDate.toDate ? dayjs.unix(filters.joinDate.toDate) : null,
+			fromDate: filters.joinDate.fromDate
+				? dayjs.unix(filters.joinDate.fromDate)
+				: null,
+			toDate: filters.joinDate.toDate
+				? dayjs.unix(filters.joinDate.toDate)
+				: null,
 		});
-	  
+
 		setDateRange({
-		  fromDate: filters.lastLoginDate.fromDate ? dayjs.unix(filters.lastLoginDate.fromDate) : null,
-		  toDate: filters.lastLoginDate.toDate ? dayjs.unix(filters.lastLoginDate.toDate) : null,
+			fromDate: filters.lastLoginDate.fromDate
+				? dayjs.unix(filters.lastLoginDate.fromDate)
+				: null,
+			toDate: filters.lastLoginDate.toDate
+				? dayjs.unix(filters.lastLoginDate.toDate)
+				: null,
 		});
-	  };
+	};
 
 	const getFilterDates = () => {
 		const today = dayjs();

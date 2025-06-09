@@ -145,8 +145,8 @@ async def get_audience_metrics(
         None, description="Start date in integer format"
     ),
     search_query: str = Query(
-            None, description="Search for email, account name"
-        ),
+        None, description="Search for email, account name"
+    ),
     join_date_end: int = Query(None, description="End date in integer format"),
     admin_customers_service: AdminCustomersService = Depends(
         get_admin_customers_service
@@ -157,7 +157,7 @@ async def get_audience_metrics(
         last_login_date_end=last_login_date_end,
         join_date_start=join_date_start,
         join_date_end=join_date_end,
-        search_query=search_query
+        search_query=search_query,
     )
     return users
 
