@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from typing import List
 
 from models.five_x_five_users import FiveXFiveUser
 from models.users_domains import UserDomains
@@ -230,3 +231,11 @@ class UserDomainsPersistence:
             {UserDomains.is_pixel_installed: is_pixel_install}
         )
         self.db.commit()
+
+    def get_verify_domains(self) -> List[UserDomains]:
+        domains = (
+            self.db.query(UserDomains)
+            .filter(UserDomains.is_pixel_installed)
+            .all()
+        )
+        return domains

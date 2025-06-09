@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
 
 class PixelInstallationRequest(BaseModel):
@@ -19,3 +19,7 @@ class ManualFormResponse(BaseModel):
 
 class PixelInstallationResponse(BaseModel):
     pixel_installation: bool
+
+
+class DomainsListResponse(BaseModel):
+    domains: List[str]
