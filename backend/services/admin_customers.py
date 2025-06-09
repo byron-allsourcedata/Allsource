@@ -2,9 +2,8 @@ import hashlib
 import json
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-import pytz
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -14,7 +13,6 @@ from enums import (
     UserAuthorizationStatus,
     UpdateUserStatus,
     SendgridTemplate,
-    SettingStatus,
     AdminStatus,
 )
 from models.plans import SubscriptionPlan
@@ -253,15 +251,15 @@ class AdminCustomersService:
                 )
                 if user_plan:
                     if user_plan.is_trial:
-                        payment_status = "TRIAL_ACTIVE"
-                    else:
                         if (
                             user.get("pixel_installed_count")
-                            and user.get("pixel_installed_count") > 1
+                            and user.get("pixel_installed_count") >= 1
                         ):
                             payment_status = "PIXEL_INSTALLED"
                         else:
-                            payment_status = "SUBSCRIPTION_ACTIVE"
+                            payment_status = "TRIAL_ACTIVE"
+                    else:
+                        payment_status = "SUBSCRIPTION_ACTIVE"
 
             result.append(
                 {
@@ -286,10 +284,11 @@ class AdminCustomersService:
 
     def get_audience_metrics(
         self,
-        last_login_date_start,
-        last_login_date_end,
-        join_date_start,
-        join_date_end,
+        last_login_date_start: int,
+        last_login_date_end: int,
+        join_date_start: int,
+        join_date_end: int,
+        search_query: str,
     ):
         audience_metrics = {}
         dashboard_audience_data = (
@@ -298,6 +297,7 @@ class AdminCustomersService:
                 last_login_date_end=last_login_date_end,
                 join_date_start=join_date_start,
                 join_date_end=join_date_end,
+                search_query=search_query,
             )
         )
 

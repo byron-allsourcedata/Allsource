@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useState, useEffect } from "react";
 import {
 	Drawer,
 	Box,
@@ -16,7 +17,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import InsertInvitationIcon from "@mui/icons-material/InsertInvitation";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
-import dayjs, { Dayjs } from "dayjs";
+import dayjs, { type Dayjs } from "dayjs";
 import { filterStyles } from "@/css/filterSlider";
 
 interface FilterParams {
@@ -452,6 +453,36 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 			Object.values(checkedJoinDateFilters).some((value) => value) ||
 			(joinDateRange.fromDate && joinDateRange.toDate)
 		);
+	};
+
+	useEffect(() => {
+		const storedFilters = sessionStorage.getItem("filtersByAdmin");
+
+		if (storedFilters) {
+			const filters = JSON.parse(storedFilters);
+
+			handleApplyFilters(filters);
+		}
+	}, []);
+
+	const handleApplyFilters = (filters: FilterParams) => {
+		setJoinDateRange({
+			fromDate: filters.joinDate.fromDate
+				? dayjs.unix(filters.joinDate.fromDate)
+				: null,
+			toDate: filters.joinDate.toDate
+				? dayjs.unix(filters.joinDate.toDate)
+				: null,
+		});
+
+		setDateRange({
+			fromDate: filters.lastLoginDate.fromDate
+				? dayjs.unix(filters.lastLoginDate.fromDate)
+				: null,
+			toDate: filters.lastLoginDate.toDate
+				? dayjs.unix(filters.lastLoginDate.toDate)
+				: null,
+		});
 	};
 
 	const getFilterDates = () => {

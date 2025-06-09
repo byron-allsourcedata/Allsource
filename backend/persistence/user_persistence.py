@@ -313,27 +313,27 @@ class UserPersistence:
                 )
             )
 
-        if last_login_date_start and last_login_date_end:
+        if last_login_date_start:
             start_date = datetime.fromtimestamp(
                 last_login_date_start, tz=pytz.UTC
             ).date()
+            query = query.filter(func.DATE(Users.last_login) >= start_date)
+
+        if last_login_date_end:
             end_date = datetime.fromtimestamp(
                 last_login_date_end, tz=pytz.UTC
             ).date()
-            query = query.filter(
-                func.DATE(Users.last_login) >= start_date,
-                func.DATE(Users.last_login) <= end_date,
-            )
+            query = query.filter(func.DATE(Users.last_login) <= end_date)
 
-        if join_date_start and join_date_end:
+        if join_date_start:
             start_date = datetime.fromtimestamp(
                 join_date_start, tz=pytz.UTC
             ).date()
+            query = query.filter(func.DATE(Users.created_at) >= start_date)
+
+        if join_date_end:
             end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
-            query = query.filter(
-                func.DATE(Users.created_at) >= start_date,
-                func.DATE(Users.created_at) <= end_date,
-            )
+            query = query.filter(func.DATE(Users.created_at) <= end_date)
 
         return query.all()
 
@@ -381,33 +381,33 @@ class UserPersistence:
             .group_by(Users.id)
         )
 
-        if last_login_date_start and last_login_date_end:
+        if last_login_date_start:
             start_date = datetime.fromtimestamp(
                 last_login_date_start, tz=pytz.UTC
             ).date()
+            query = query.filter(func.DATE(Users.last_login) >= start_date)
+
+        if last_login_date_end:
             end_date = datetime.fromtimestamp(
                 last_login_date_end, tz=pytz.UTC
             ).date()
-            query = query.filter(
-                func.DATE(Users.last_login) >= start_date,
-                func.DATE(Users.last_login) <= end_date,
-            )
+            query = query.filter(func.DATE(Users.last_login) <= end_date)
 
-        if join_date_start and join_date_end:
+        if join_date_start:
             start_date = datetime.fromtimestamp(
                 join_date_start, tz=pytz.UTC
             ).date()
+            query = query.filter(func.DATE(Users.created_at) >= start_date)
+
+        if join_date_end:
             end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
-            query = query.filter(
-                func.DATE(Users.created_at) >= start_date,
-                func.DATE(Users.created_at) <= end_date,
-            )
+            query = query.filter(func.DATE(Users.created_at) <= end_date)
 
         if search_query:
             query = query.filter(
                 or_(
-                    Users.email.ilike(f"{search_query}%"),
-                    Users.full_name.ilike(f"{search_query}%"),
+                    Users.email.ilike(f"%{search_query}%"),
+                    Users.full_name.ilike(f"%{search_query}%"),
                 )
             )
 
