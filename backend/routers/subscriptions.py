@@ -1,3 +1,4 @@
+import json
 import logging
 
 from fastapi import (
@@ -9,6 +10,7 @@ from fastapi import (
 )
 
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
+from db_dependencies import Db
 from dependencies import (
     get_plans_service,
     get_payments_service,
@@ -18,6 +20,7 @@ from dependencies import (
     get_subscription_service,
     get_leads_persistence,
     check_pixel_install_domain,
+    AuthUser,
 )
 from enums import TeamAccessLevel
 from models.users import Users
@@ -28,11 +31,15 @@ from schemas.subscriptions import UnsubscribeRequest
 from services.payments import PaymentsService
 from services.plans import PlansService
 from services.subscriptions import SubscriptionService
+from services.subscriptions.basic import BasicPlanService
+from services.subscriptions.webhooks import SubscriptionWebhookService
 from services.webhook import WebhookService
 
 QUEUE_CREDITS_CHARGING = "credits_charging"
 EMAIL_NOTIFICATIONS = "email_notifications"
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 
 @router.get("/stripe-plans")
@@ -61,6 +68,19 @@ async def create_customer_session(
             )
 
     return payments_service.create_customer_session(alias=alias, user=user)
+
+
+@router.get("/basic-plan-upgrade")
+async def test(
+    user: AuthUser,
+    basic_plan_service: BasicPlanService,
+    plans_service: PlansService = Depends(get_plans_service),
+):
+    customer_id = plans_service.get_customer_id(user)
+    session_url = basic_plan_service.get_basic_plan_payment_url(
+        customer_id=customer_id
+    )
+    return session_url
 
 
 @router.post("/update-subscription-webhook")
@@ -166,6 +186,45 @@ async def update_payment_confirmation(
             await rabbitmq_connection.close()
 
     return "OK"
+
+
+@router.post("/checkout-completed")
+async def checkout_completed(
+    request: fastRequest,
+    db: Db,
+    subscription_webhooks: SubscriptionWebhookService,
+):
+    event = await request.json()
+    object_type = event["object"]
+
+    if object_type != "event":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid object type",
+        )
+
+    event_type = event["type"]
+
+    if event_type == "checkout.session.completed":
+        event_session = event["data"]["object"]
+        customer_id = event_session["customer"]
+
+        metadata = event_session.get("metadata", {})
+
+        checkout_type = metadata.get("type")
+
+        if checkout_type == "upgrade_basic":
+            subscription_webhooks.move_to_basic_plan(customer_id)
+            db.commit()
+            return
+        else:
+            logger.warning(f"Unknown checkout type: {checkout_type}")
+
+    logger.warning(f"Unknown event type: {event_type}")
+
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid object type"
+    )
 
 
 @router.post("/update-payment-webhook")

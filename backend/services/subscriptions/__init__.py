@@ -27,8 +27,6 @@ from services.stripe_service import determine_plan_name_from_product_id
 from urllib.parse import urlencode
 import requests
 from services.referral import ReferralService
-from models.account_notification import AccountNotification
-from models.users_account_notification import UserAccountNotification
 
 load_dotenv()
 
@@ -227,6 +225,10 @@ class SubscriptionService:
 
         if subscription_with_trial["subscription"].status == "inactive":
             return False
+
+        if subscription_with_trial["subscription"].plan_end is None:
+            return True
+
         subscription_plan_end = subscription_with_trial[
             "subscription"
         ].plan_end.replace(tzinfo=timezone.utc)

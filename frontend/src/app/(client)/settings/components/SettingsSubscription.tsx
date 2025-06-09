@@ -27,7 +27,7 @@ import {
 } from "../../../../components/ToastNotification";
 import axios from "axios";
 import { getCalendlyPopupUrl } from "@/services/booking";
-import { plans as defaultPlans, monthlyPlans, Plan } from "./plans";
+import { plans as defaultPlans, monthlyPlans, type Plan } from "./plans";
 import { fetchUserData } from "@/services/meService";
 import { BookACallPopup } from "../../components/BookACallPopup";
 
@@ -254,6 +254,24 @@ export const SettingsSubscription: React.FC = () => {
 		loadUser();
 		fetchData();
 	}, []);
+
+	const handleInstantUpgrade = async () => {
+		try {
+			setIsLoading(true);
+
+			const response = await axiosInstance.get(
+				"/subscriptions/basic-plan-upgrade",
+			);
+
+			if (response.status === 200) {
+				if (response.data != null) {
+					window.location.href = response.data;
+				}
+			}
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
 	const handleBuyCredits = () => {
 		// Логика для покупки кредитов
@@ -537,6 +555,7 @@ export const SettingsSubscription: React.FC = () => {
 							let buttonText = "Speak to Us";
 							let disabled = false;
 
+							let handle = handleOpenPopup;
 							if (isTrial === true) {
 								if (plan.title === "Free Trial") {
 									buttonText = "Current Plan";
@@ -544,6 +563,7 @@ export const SettingsSubscription: React.FC = () => {
 								} else if (plan.title === "Basic") {
 									buttonText = "Instant Upgrade";
 									disabled = false;
+									handle = handleInstantUpgrade;
 								} else {
 									buttonText = "Speak to Us";
 									disabled = false;
@@ -559,7 +579,7 @@ export const SettingsSubscription: React.FC = () => {
 							}
 
 							return (
-								<Box key={index} sx={subscriptionStyles.formWrapper}>
+								<Box key={plan.title} sx={subscriptionStyles.formWrapper}>
 									<PlanCard
 										plan={plan}
 										activePlanTitle={activePlan?.title || ""}
@@ -567,7 +587,7 @@ export const SettingsSubscription: React.FC = () => {
 										tabValue={tabValue}
 										isRecommended={plan.isRecommended}
 										buttonProps={{
-											onChoose: handleOpenPopup,
+											onChoose: handle,
 											text: buttonText,
 											disabled: disabled,
 										}}

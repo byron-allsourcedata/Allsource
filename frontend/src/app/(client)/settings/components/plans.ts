@@ -1,4 +1,4 @@
-import { Advantage } from "./PlanCard/Advantages";
+import type { Advantage } from "./PlanCard/Advantages";
 
 export type Plan = {
 	title: string;
@@ -125,12 +125,12 @@ export const plans: Plan[] = [
 			{
 				good: true,
 				name: "Validation funds:",
-				value: "2$500",
+				value: "$2,500",
 			},
 			{
 				good: true,
 				name: "Premium Source funds:",
-				value: "$2500",
+				value: "$2,500",
 			},
 		],
 	},
@@ -288,12 +288,12 @@ export const monthlyPlans: Plan[] = [
 			{
 				good: true,
 				name: "Validation funds:",
-				value: "2$500",
+				value: "$2,500",
 			},
 			{
 				good: true,
 				name: "Premium Source funds:",
-				value: "$2500",
+				value: "$2,500",
 			},
 		],
 	},

@@ -69,19 +69,19 @@ export default function RootLayout({
 					src="https://www.dwin1.com/107427.js"
 					type="text/javascript"
 				></script>
-			</body>
-			<Script id="zoho-init" strategy="beforeInteractive">
-				{`
+				<Script id="zoho-init" strategy="beforeInteractive">
+					{`
             window.$zoho = window.$zoho || {};
             $zoho.salesiq = $zoho.salesiq || { ready: function() {} };
           `}
-			</Script>
-			<Script
-				id="zsiqscript"
-				src="https://salesiq.zohopublic.com/widget?wc=siqb8de147bca1b487624f8f2587b4ee3e1eda041e3130528d6440dbf53a2d200eb"
-				strategy="afterInteractive"
-				defer
-			/>
+				</Script>
+				<Script
+					id="zsiqscript"
+					src="https://salesiq.zohopublic.com/widget?wc=siqb8de147bca1b487624f8f2587b4ee3e1eda041e3130528d6440dbf53a2d200eb"
+					strategy="afterInteractive"
+					defer
+				/>
+			</body>
 		</html>
 	);
 }

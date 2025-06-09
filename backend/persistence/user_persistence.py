@@ -1,11 +1,12 @@
 import json
 import logging
 from datetime import datetime, timedelta
+from typing import Optional
 from urllib.parse import uses_query
 from decimal import Decimal
 
 import pytz
-from sqlalchemy import func, desc, asc, case, or_
+from sqlalchemy import func, desc, asc, case, or_, select
 from sqlalchemy.orm import aliased
 
 from db_dependencies import Db
@@ -113,6 +114,16 @@ class UserPersistence:
         else:
             result["error"] = SignUpStatus.TEAM_INVITATION_INVALID
         return result
+
+    def by_id(self, user_id: int) -> Optional[Users]:
+        return self.db.execute(
+            select(Users).where(Users.id == user_id)
+        ).scalar()
+
+    def by_customer_id(self, customer_id: str) -> Optional[Users]:
+        return self.db.execute(
+            select(Users).where(Users.customer_id == customer_id)
+        ).scalar()
 
     def get_user_by_id(self, user_id, result_as_object=False):
         user, partner_is_active = (

@@ -1,10 +1,12 @@
 import math
 import os
 import certifi
-from typing import List
+from typing import List, Optional
 
 import stripe
 import logging
+
+from resolver import injectable
 
 os.environ["SSL_CERT_FILE"] = certifi.where()
 
@@ -17,6 +19,7 @@ logging.getLogger("stripe").setLevel(logging.WARNING)
 TRIAL_PERIOD_WITH_COUPON = 7
 
 
+@injectable
 class StripeService:
     def __init__(self):
         pass
@@ -46,6 +49,27 @@ class StripeService:
             destination=destination_account,
         )
         return transfer
+
+    def create_checkout_session(
+        self,
+        customer_id: str,
+        price_id: str,
+        mode: str,
+        metadata: dict = {},
+        payment_intent_data: Optional[dict] = None,
+    ):
+        session = stripe.checkout.Session.create(
+            success_url=StripeConfig.success_url,
+            cancel_url=StripeConfig.cancel_url,
+            customer=customer_id,
+            payment_method_types=["card"],
+            payment_intent_data=payment_intent_data,
+            line_items=[{"price": price_id, "quantity": 1}],
+            mode=mode,
+            metadata=metadata,
+        )
+
+        return session.url
 
 
 def create_customer(user: UserSignUpForm):
