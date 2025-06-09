@@ -28,46 +28,57 @@ from persistence.user_persistence import UserPersistence
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_linkedin_verification import AudienceLinkedinVerification
-from models.enrichment.enrichment_employment_history import EnrichmentEmploymentHistory
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
-from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
+from models.enrichment.enrichment_employment_history import (
+    EnrichmentEmploymentHistory,
+)
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from config.rmq_connection import (
+    RabbitMQConnection,
+    publish_rabbitmq_message_with_channel,
+)
 
 load_dotenv()
 
-AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = 'aud_validation_agent_linkedin-api'
-AUDIENCE_VALIDATION_PROGRESS = 'AUDIENCE_VALIDATION_PROGRESS'
-AUDIENCE_VALIDATION_FILLER = 'aud_validation_filler'
-REVERSE_CONTACT_API_KEY = os.getenv('REVERSE_CONTACT_API_KEY')
-REVERSE_CONTACT_API_URL = os.getenv('REVERSE_CONTACT_API_URL')
+AUDIENCE_VALIDATION_AGENT_LINKEDIN_API = "aud_validation_agent_linkedin-api"
+AUDIENCE_VALIDATION_PROGRESS = "AUDIENCE_VALIDATION_PROGRESS"
+AUDIENCE_VALIDATION_FILLER = "aud_validation_filler"
+REVERSE_CONTACT_API_KEY = os.getenv("REVERSE_CONTACT_API_KEY")
+REVERSE_CONTACT_API_URL = os.getenv("REVERSE_CONTACT_API_URL")
 
 COLUMN_MAPPING = {
-    'personal_email_validation_status': 'mx',
-    'business_email_validation_status': 'mx',
-    'personal_email_last_seen': 'recency',
-    'business_email_last_seen_date': 'recency',
-    'mobile_phone_dnc': 'dnc_filter',
-    'job_validation': 'job_validation'
+    "personal_email_validation_status": "mx",
+    "business_email_validation_status": "mx",
+    "personal_email_last_seen": "recency",
+    "business_email_last_seen_date": "recency",
+    "mobile_phone_dnc": "dnc_filter",
+    "job_validation": "job_validation",
 }
+
 
 def setup_logging(level):
     logging.basicConfig(
         level=level,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
     )
+
 
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
     channel: Channel,
-    user_persistence: UserPersistence
+    user_persistence: UserPersistence,
 ):
     try:
         body = json.loads(message.body)
         user_id = body.get("user_id")
         aud_smart_id = body.get("aud_smart_id")
         batch = body.get("batch", [])
-        count_persons_before_validation = body.get("count_persons_before_validation")
+        count_persons_before_validation = body.get(
+            "count_persons_before_validation"
+        )
         validation_type = body.get("validation_type")
         validation_cost = body.get("validation_cost")
         logging.info(f"aud_smart_id: {aud_smart_id}")
@@ -85,7 +96,7 @@ async def process_rmq_message(
             if not (url and title and name):
                 failed_ids.append(pid)
                 continue
-            
+
             write_off_funds += Decimal(validation_cost)
             ev = (
                 db_session.query(AudienceLinkedinVerification)
@@ -97,14 +108,23 @@ async def process_rmq_message(
             if ev is None:
                 resp = requests.get(
                     REVERSE_CONTACT_API_URL,
-                    params={"linkedInUrl": url, "apikey": REVERSE_CONTACT_API_KEY},
+                    params={
+                        "linkedInUrl": url,
+                        "apikey": REVERSE_CONTACT_API_KEY,
+                    },
                 )
                 data = resp.json()
-                if resp.status_code == 402 or (resp.status_code != 200 and not data.get("success")):
+                if resp.status_code == 402 or (
+                    resp.status_code != 200 and not data.get("success")
+                ):
                     failed_ids.append(pid)
                     continue
 
-                for pos in data.get("person", {}).get("positions", {}).get("positionHistory", []):
+                for pos in (
+                    data.get("person", {})
+                    .get("positions", {})
+                    .get("positionHistory", [])
+                ):
                     sim_title = fuzz.ratio(title, pos.get("title", ""))
                     sim_comp = fuzz.ratio(name, pos.get("companyName", ""))
                     if sim_title > 70 and sim_comp > 70:
@@ -123,7 +143,7 @@ async def process_rmq_message(
 
             if not is_verify:
                 failed_ids.append(pid)
-                
+
         logging.info(f"Failed ids len: {len(failed_ids)}")
         success_ids = [
             rec["audience_smart_person_id"]
@@ -139,7 +159,7 @@ async def process_rmq_message(
             #     await message.reject(requeue=True)
             #     return
             db_session.flush()
-        
+
         if verifications:
             db_session.bulk_save_objects(verifications)
             db_session.flush()
@@ -148,12 +168,16 @@ async def process_rmq_message(
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
                 [
-                    {"id": pid, "is_validation_processed": False, "is_valid": False}
+                    {
+                        "id": pid,
+                        "is_validation_processed": False,
+                        "is_valid": False,
+                    }
                     for pid in failed_ids
                 ],
             )
             db_session.flush()
-            
+
         if success_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
@@ -163,7 +187,7 @@ async def process_rmq_message(
                 ],
             )
             db_session.flush()
-            
+
         db_session.commit()
         total_validated = db_session.scalar(
             select(func.count(AudienceSmartPerson.id)).where(
@@ -177,10 +201,12 @@ async def process_rmq_message(
                 AudienceSmartPerson.is_validation_processed.is_(False),
             )
         )
-        total_count = db_session.query(AudienceSmartPerson).filter(
-                AudienceSmartPerson.smart_audience_id == aud_smart_id
-            ).count()
-        
+        total_count = (
+            db_session.query(AudienceSmartPerson)
+            .filter(AudienceSmartPerson.smart_audience_id == aud_smart_id)
+            .count()
+        )
+
         if validation_count == total_count:
             aud_smart = db_session.get(AudienceSmart, aud_smart_id)
             validations = {}
@@ -192,7 +218,9 @@ async def process_rmq_message(
                         if key in rule:
                             rule[key]["processed"] = True
                             rule[key]["count_validated"] = total_validated
-                            rule[key]["count_submited"] = count_persons_before_validation
+                            rule[key]["count_submited"] = (
+                                count_persons_before_validation
+                            )
                             rule[key]["count_cost"] = str(write_off_funds)
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
@@ -205,11 +233,14 @@ async def process_rmq_message(
                     "validation_params": validations,
                 },
             )
-            
+
         await send_sse(
             channel=channel,
             user_id=user_id,
-            data={"smart_audience_id": aud_smart_id, "total_validated": total_validated},
+            data={
+                "smart_audience_id": aud_smart_id,
+                "total_validated": total_validated,
+            },
         )
         logging.info("sent sse with total count")
 
@@ -222,21 +253,20 @@ async def process_rmq_message(
         return
 
 
-
 async def main():
     log_level = logging.INFO
     if len(sys.argv) > 1:
         arg = sys.argv[1].upper()
-        if arg == 'DEBUG':
+        if arg == "DEBUG":
             log_level = logging.DEBUG
-        elif arg != 'INFO':
+        elif arg != "INFO":
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
-    
+
     setup_logging(log_level)
-    db_username = os.getenv('DB_USERNAME')
-    db_password = os.getenv('DB_PASSWORD')
-    db_host = os.getenv('DB_HOST')
-    db_name = os.getenv('DB_NAME')
+    db_username = os.getenv("DB_USERNAME")
+    db_password = os.getenv("DB_PASSWORD")
+    db_host = os.getenv("DB_HOST")
+    db_name = os.getenv("DB_NAME")
 
     try:
         logging.info("Starting processing...")
@@ -246,7 +276,8 @@ async def main():
         await channel.set_qos(prefetch_count=1)
 
         engine = create_engine(
-            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}", pool_pre_ping=True
+            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
+            pool_pre_ping=True,
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
@@ -258,13 +289,18 @@ async def main():
             durable=True,
         )
         await queue.consume(
-                functools.partial(process_rmq_message, channel=channel, db_session=db_session, user_persistence=user_persistence)
+            functools.partial(
+                process_rmq_message,
+                channel=channel,
+                db_session=db_session,
+                user_persistence=user_persistence,
             )
+        )
 
         await asyncio.Future()
 
     except Exception:
-        logging.error('Unhandled Exception:', exc_info=True)
+        logging.error("Unhandled Exception:", exc_info=True)
         if db_session:
             logging.info("Closing the database session...")
             db_session.close()
@@ -272,7 +308,7 @@ async def main():
             logging.info("Closing RabbitMQ connection...")
             await rmq_connection.close()
         logging.info("Shutting down...")
-        
+
 
 if __name__ == "__main__":
     asyncio.run(main())

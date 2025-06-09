@@ -1,104 +1,119 @@
 "use client";
-import React, { useState, useEffect, useMemo } from 'react';
-import { Box, Typography, Button, Tabs, Tab, TextField, Slider, IconButton, Drawer, Divider, Chip, Link } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import { PlanCard } from './PlanCard';
-import axiosInterceptorInstance from '@/axios/axiosInterceptorInstance';
-import CustomTooltip from '../../../../components/customToolTip';
-import CustomizedProgressBar from '@/components/CustomizedProgressBar';
-import Image from 'next/image';
+import React, { useState, useEffect, useMemo } from "react";
+import {
+    Box,
+    Typography,
+    Button,
+    Tabs,
+    Tab,
+    TextField,
+    Slider,
+    IconButton,
+    Drawer,
+    Divider,
+    Chip,
+    Link,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import { PlanCard } from "./PlanCard";
+import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
+import CustomTooltip from "../../../../components/customToolTip";
+import CustomizedProgressBar from "@/components/CustomizedProgressBar";
+import Image from "next/image";
 import axiosInstance from "../../../../axios/axiosInterceptorInstance";
-import { showErrorToast, showToast } from '../../../../components/ToastNotification';
-import axios from 'axios';
-import { getCalendlyPopupUrl } from '@/services/booking';
-import { plans as defaultPlans, monthlyPlans, Plan } from './plans';
-import { fetchUserData } from '@/services/meService';
-import { BookACallPopup } from '../../components/BookACallPopup';
+import {
+    showErrorToast,
+    showToast,
+} from "../../../../components/ToastNotification";
+import axios from "axios";
+import { getCalendlyPopupUrl } from "@/services/booking";
+import { plans as defaultPlans, monthlyPlans, type Plan } from "./plans";
+import { fetchUserData } from "@/services/meService";
+import { BookACallPopup } from "../../components/BookACallPopup";
 
-import { useBookingUrl } from '@/services/booking';
-
+import { useBookingUrl } from "@/services/booking";
 
 const subscriptionStyles = {
     title: {
-        whiteSpace: 'nowrap',
-        textAlign: 'start',
-        lineHeight: '22px',
-        margin: 0
+        whiteSpace: "nowrap",
+        textAlign: "start",
+        lineHeight: "22px",
+        margin: 0,
     },
     formContainer: {
-        display: 'flex',
+        display: "flex",
         gap: 3,
-        justifyContent: 'space-between',
-        width: '100%',
-        '@media (max-width: 900px)': {
-            flexDirection: 'column',
-            marginTop: '24px'
+        justifyContent: "space-between",
+        width: "100%",
+        "@media (max-width: 900px)": {
+            flexDirection: "column",
+            marginTop: "24px",
         },
     },
     formWrapper: {
         display: "flex",
         alignItems: "end",
-        '@media (min-width: 901px)': {
-            width: '100%'
-        }
+        "@media (min-width: 901px)": {
+            width: "100%",
+        },
     },
     plantabHeading: {
-        padding: '10px 32px',
+        padding: "10px 32px",
         color: "rgba(32, 33, 36, 1)",
-        textTransform: 'none',
-        fontWeight: '400 !important',
-        '&.Mui-selected': {
-            background: 'rgba(56, 152, 252, 1)',
-            color: '#fff',
-            border: 'none',
-            '& .active-text-color': {
-                color: '#fff'
+        textTransform: "none",
+        fontWeight: "400 !important",
+        "&.Mui-selected": {
+            background: "rgba(56, 152, 252, 1)",
+            color: "#fff",
+            border: "none",
+            "& .active-text-color": {
+                color: "#fff",
             },
-            '& .active-save-color': {
-                background: '#fff'
-            }
+            "& .active-save-color": {
+                background: "#fff",
+            },
         },
-        '@media (max-width: 600px)': {
-            paddingLeft: '22px',
-            paddingRight: '22px',
-            fontSize: '18px !important',
-            width: '50%',
-        }
+        "@media (max-width: 600px)": {
+            paddingLeft: "22px",
+            paddingRight: "22px",
+            fontSize: "18px !important",
+            width: "50%",
+        },
     },
     saveHeading: {
-        background: 'rgba(235, 245, 255, 1)',
-        padding: '5px 12px',
-        borderRadius: '4px',
-        fontSize: '14px !important',
-        color: '#202124 !important'
+        background: "rgba(235, 245, 255, 1)",
+        padding: "5px 12px",
+        borderRadius: "4px",
+        fontSize: "14px !important",
+        color: "#202124 !important",
     },
     inputLabel: {
-        top: '-3px',
-        '&.Mui-focused': {
+        top: "-3px",
+        "&.Mui-focused": {
             top: 0,
-            color: 'rgba(17, 17, 19, 0.6)',
-            fontFamily: 'Nunito Sans',
+            color: "rgba(17, 17, 19, 0.6)",
+            fontFamily: "Nunito Sans",
             fontWeight: 400,
-            fontSize: '12px',
-            lineHeight: '16px'
+            fontSize: "12px",
+            lineHeight: "16px",
         },
-    }
-}
+    },
+};
 
 const marks = [
-    { value: 0, label: '0/yr' },
-    { value: 10000, label: '10K' },
-    { value: 25000, label: '25K' },
-    { value: 50000, label: '50K' },
-    { value: 100000, label: '100K' },
-    { value: 250000, label: '250K' },
-    { value: 500000, label: '500K' },
-    { value: 1000000, label: '1M' },
-    { value: 2500000, label: '2.5M' },
-    { value: 5000000, label: '5M' },
-    { value: 7500000, label: '7.5M' },  // Adjusted additional mark to balance space
-    { value: 10000000, label: '10M' },
-    { value: 50000000, label: '50M' }
+    { value: 0, label: "0/yr" },
+    { value: 10000, label: "10K" },
+    { value: 25000, label: "25K" },
+    { value: 50000, label: "50K" },
+    { value: 100000, label: "100K" },
+    { value: 250000, label: "250K" },
+    { value: 500000, label: "500K" },
+    { value: 1000000, label: "1M" },
+    { value: 2500000, label: "2.5M" },
+    { value: 5000000, label: "5M" },
+    { value: 7500000, label: "7.5M" }, // Adjusted additional mark to balance space
+    { value: 10000000, label: "10M" },
+    { value: 50000000, label: "50M" },
 ];
 
 export const SettingsSubscription: React.FC = () => {
@@ -109,11 +124,15 @@ export const SettingsSubscription: React.FC = () => {
     const [tabValue, setTabValue] = useState(1);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
-    const [cancelSubscriptionPlanPopupOpen, setCancelSubscriptionPlanPopupOpen] = useState(false);
+    const [
+        cancelSubscriptionPlanPopupOpen,
+        setCancelSubscriptionPlanPopupOpen,
+    ] = useState(false);
     const [excitingOfferPopupOpen, setExcitingOfferPopupOpen] = useState(false);
-    const [confirmCancellationPopupOpen, setConfirmCancellationPopupOpen] = useState(false);
+    const [confirmCancellationPopupOpen, setConfirmCancellationPopupOpen] =
+        useState(false);
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
-    const [formValues, setFormValues] = useState({ unsubscribe: '', });
+    const [formValues, setFormValues] = useState({ unsubscribe: "" });
     const [hasActivePlan, setHasActivePlan] = useState<boolean>(false);
     const [showSlider, setShowSlider] = useState(true);
     const [utmParams, setUtmParams] = useState<string | null>(null);
@@ -125,31 +144,31 @@ export const SettingsSubscription: React.FC = () => {
         setPopupOpen(true);
     };
     const sourcePlatform = useMemo(() => {
-        if (typeof window !== 'undefined') {
-            const savedMe = sessionStorage.getItem('me');
+        if (typeof window !== "undefined") {
+            const savedMe = sessionStorage.getItem("me");
             if (savedMe) {
                 try {
                     const parsed = JSON.parse(savedMe);
-                    return parsed.source_platform || '';
-                } catch (error) { }
+                    return parsed.source_platform || "";
+                } catch (error) {}
             }
         }
-        return '';
-    }, [typeof window !== 'undefined' ? sessionStorage.getItem('me') : null]);
+        return "";
+    }, [typeof window !== "undefined" ? sessionStorage.getItem("me") : null]);
 
     const handleFilterPopupClose = () => {
         setShowSlider(false);
     };
 
-
     const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
         setTabValue(newValue);
 
-        const period = newValue === 0 ? 'month' : 'year';
-        const period_plans = allPlans.filter((plan: any) => plan.interval === period);
-        setPlans(newValue === 0 ? monthlyPlans : defaultPlans)
+        const period = newValue === 0 ? "month" : "year";
+        const period_plans = allPlans.filter(
+            (plan: any) => plan.interval === period
+        );
+        setPlans(newValue === 0 ? monthlyPlans : defaultPlans);
         // setPlans(period_plans);
-
     };
 
     const handleCustomPlanPopupOpen = () => {
@@ -196,21 +215,30 @@ export const SettingsSubscription: React.FC = () => {
             try {
                 setIsLoading(true);
                 fetchPrefillData();
-                const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
+                const response = await axiosInterceptorInstance.get(
+                    `/subscriptions/stripe-plans`
+                );
                 setAllPlans(response.data.stripe_plans);
 
                 const stripePlans: StripePlan[] = response.data.stripe_plans;
-                const active = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial' && plan.title !== 'Partners Live');
+                const active = stripePlans.find(
+                    (plan) =>
+                        plan.is_active &&
+                        plan.title !== "Free Trial" &&
+                        plan.title !== "Partners Live"
+                );
                 setActivePlan(active || null);
                 setHasActivePlan(!!active);
 
-                const interval = active ? active.interval : 'month';
+                const interval = active ? active.interval : "month";
                 // if (interval === 'year') {
                 //     setTabValue(1);
                 // } else {
                 //     setTabValue(0);
                 // }
-                const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
+                const period_plans = response.data.stripe_plans.filter(
+                    (plan: any) => plan.interval === interval
+                );
                 setPlans(defaultPlans);
             } catch (error) {
             } finally {
@@ -229,18 +257,36 @@ export const SettingsSubscription: React.FC = () => {
         fetchData();
     }, []);
 
+    const handleInstantUpgrade = async () => {
+        try {
+            setIsLoading(true);
+
+            const response = await axiosInstance.get(
+                "/subscriptions/basic-plan-upgrade"
+            );
+
+            if (response.status === 200) {
+                if (response.data != null) {
+                    window.location.href = response.data;
+                }
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     const handleBuyCredits = () => {
         // Логика для покупки кредитов
     };
 
     const fetchPrefillData = async () => {
         try {
-            const response = await axiosInstance.get('/calendly');
+            const response = await axiosInstance.get("/calendly");
             const user = response.data.user;
 
             if (user) {
                 const { full_name, email, utm_params } = user;
-                setUtmParams(utm_params)
+                setUtmParams(utm_params);
             }
         } catch (error) {
             setUtmParams(null);
@@ -251,74 +297,92 @@ export const SettingsSubscription: React.FC = () => {
 
     const handleChoosePlan = async (alias: string) => {
         let path = hasActivePlan
-            ? '/subscriptions/upgrade-and-downgrade-user-subscription'
-            : '/subscriptions/session/new';
+            ? "/subscriptions/upgrade-and-downgrade-user-subscription"
+            : "/subscriptions/session/new";
         try {
-            setIsLoading(true)
-            const response = await axiosInterceptorInstance.get(`${path}?alias=${alias}`);
+            setIsLoading(true);
+            const response = await axiosInterceptorInstance.get(
+                `${path}?alias=${alias}`
+            );
             if (response.status === 200) {
-                if (response.data.link !== null && response.data.link !== undefined) {
-                    if (response.data?.source_platform == 'big_commerce') {
-                        window.open(response.data.link, '_blank');
+                if (
+                    response.data.link !== null &&
+                    response.data.link !== undefined
+                ) {
+                    if (response.data?.source_platform == "big_commerce") {
+                        window.open(response.data.link, "_blank");
                     } else {
                         window.location.href = response.data.link;
                     }
                 }
                 if (response.data.status_subscription) {
-                    if (response.data.status_subscription === 'active') {
-                        showToast('Subscription was successful!');
-                        window.location.href = "/settings?section=subscription"
+                    if (response.data.status_subscription === "active") {
+                        showToast("Subscription was successful!");
+                        window.location.href = "/settings?section=subscription";
                     } else {
-                        showToast('Subscription purchase error!');
+                        showToast("Subscription purchase error!");
                     }
-                }
-                else if (response.data.status === 'SUCCESS') {
-                    showToast('Subscription was successful!');
+                } else if (response.data.status === "SUCCESS") {
+                    showToast("Subscription was successful!");
                     try {
                         setIsLoading(true);
-                        await new Promise(resolve => setTimeout(resolve, 3000));
-                        const response = await axiosInterceptorInstance.get(`/subscriptions/stripe-plans`);
-                        setAllPlans(response.data.stripe_plans)
-                        const stripePlans: StripePlan[] = response.data.stripe_plans;
-                        const activePlan = stripePlans.find(plan => plan.is_active);
-                        const active = stripePlans.find(plan => plan.is_active && plan.title !== 'Free Trial' && plan.title !== 'Partners Live');
+                        await new Promise((resolve) =>
+                            setTimeout(resolve, 3000)
+                        );
+                        const response = await axiosInterceptorInstance.get(
+                            `/subscriptions/stripe-plans`
+                        );
+                        setAllPlans(response.data.stripe_plans);
+                        const stripePlans: StripePlan[] =
+                            response.data.stripe_plans;
+                        const activePlan = stripePlans.find(
+                            (plan) => plan.is_active
+                        );
+                        const active = stripePlans.find(
+                            (plan) =>
+                                plan.is_active &&
+                                plan.title !== "Free Trial" &&
+                                plan.title !== "Partners Live"
+                        );
                         setActivePlan(active || null);
                         setHasActivePlan(!!activePlan);
-                        let interval = 'month'
+                        let interval = "month";
                         if (activePlan) {
-                            interval = activePlan.interval
+                            interval = activePlan.interval;
                         }
-                        if (interval === 'year') {
-                            setTabValue(1)
+                        if (interval === "year") {
+                            setTabValue(1);
                         }
-                        const period_plans = response.data.stripe_plans.filter((plan: any) => plan.interval === interval);
+                        const period_plans = response.data.stripe_plans.filter(
+                            (plan: any) => plan.interval === interval
+                        );
                         setPlans(period_plans);
                     } catch (error) {
                     } finally {
                         setIsLoading(false);
                     }
-                }
-                else if (response.data.status === 'INCOMPLETE') {
-                    const errorMessage = response?.data?.message || 'Subscription not found!';
+                } else if (response.data.status === "INCOMPLETE") {
+                    const errorMessage =
+                        response?.data?.message || "Subscription not found!";
                     showErrorToast(errorMessage);
                 }
             }
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 if (error.response && error.response.status === 403) {
-                    showErrorToast('Access denied: You do not have permission to remove this member.');
+                    showErrorToast(
+                        "Access denied: You do not have permission to remove this member."
+                    );
                 }
             }
         } finally {
-            setIsLoading(false)
+            setIsLoading(false);
         }
     };
 
     const handleChangeCredits = (event: Event, newValue: number | number[]) => {
         setCredits(newValue as number);
     };
-
-
 
     // Filter plans based on the selected tab
     const filteredPlans = plans;
@@ -328,8 +392,6 @@ export const SettingsSubscription: React.FC = () => {
     //     (tabValue === 1 && plan.interval === 'year')
     // );
 
-
-
     if (isLoading) {
         return <CustomizedProgressBar />;
     }
@@ -338,9 +400,9 @@ export const SettingsSubscription: React.FC = () => {
         const newErrors: { [key: string]: string } = { ...errors };
 
         switch (name) {
-            case 'unsubscribe':
+            case "unsubscribe":
                 if (!value) {
-                    newErrors.unsubscribe = 'Please enter the reason';
+                    newErrors.unsubscribe = "Please enter the reason";
                 } else {
                     delete newErrors.unsubscribe;
                 }
@@ -364,79 +426,127 @@ export const SettingsSubscription: React.FC = () => {
         const newErrors: { [key: string]: string } = {};
 
         if (!formValues.unsubscribe) {
-            newErrors.unsubscribe = 'Please enter the reason';
+            newErrors.unsubscribe = "Please enter the reason";
             setErrors(newErrors);
             return;
         }
         if (formValues.unsubscribe) {
             try {
-                setIsLoading(true)
-                const response = await axiosInterceptorInstance.post('/subscriptions/cancel-plan', {
-                    reason_unsubscribe: formValues.unsubscribe
-                });
+                setIsLoading(true);
+                const response = await axiosInterceptorInstance.post(
+                    "/subscriptions/cancel-plan",
+                    {
+                        reason_unsubscribe: formValues.unsubscribe,
+                    }
+                );
                 if (response.status === 200) {
                     switch (response.data) {
-                        case 'SUCCESS':
-                            showToast('Unsubscribe Teams Plan processed!');
-                            break
-                        case 'SUBSCRIPTION_NOT_FOUND':
-                            showErrorToast('Subscription not found!');
-                            break
-                        case 'SUBSCRIPTION_ALREADY_CANCELED':
-                            showErrorToast('Subscription already canceled!');
-                            break
-                        case 'INCOMPLETE':
-                            showErrorToast('Subscription cancellation error!');
-                            break
+                        case "SUCCESS":
+                            showToast("Unsubscribe Teams Plan processed!");
+                            break;
+                        case "SUBSCRIPTION_NOT_FOUND":
+                            showErrorToast("Subscription not found!");
+                            break;
+                        case "SUBSCRIPTION_ALREADY_CANCELED":
+                            showErrorToast("Subscription already canceled!");
+                            break;
+                        case "INCOMPLETE":
+                            showErrorToast("Subscription cancellation error!");
+                            break;
                         default:
-                            showErrorToast('Unknown response received.');
+                            showErrorToast("Unknown response received.");
                     }
                 }
             } catch (error) {
-                showErrorToast('An error occurred while sending URLs.');
-            }
-            finally {
+                showErrorToast("An error occurred while sending URLs.");
+            } finally {
                 setIsLoading(false);
-                handleConfirmCancellationPopupClose()
-                handleExcitingOfferPopupClose()
-                handleCancelSubscriptionPlanPopupClose()
+                handleConfirmCancellationPopupClose();
+                handleExcitingOfferPopupClose();
+                handleCancelSubscriptionPlanPopupClose();
             }
         }
     };
 
     return (
-        <Box sx={{ marginBottom: '12px', pr: '1rem', '@media (max-width: 600px)': { pr: '16px' } }}>
+        <Box
+            sx={{
+                marginBottom: "12px",
+                pr: "1rem",
+                "@media (max-width: 600px)": { pr: "16px" },
+            }}
+        >
             {/* Plans Section */}
             <Box sx={{ marginBottom: 4 }}>
-                <Box sx={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, marginTop: 4, marginBottom: 1, position: 'relative',
-                    '@media (max-width: 600px)': {
-                        justifyContent: 'start'
-                    }
-                }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 2,
+                        marginTop: 4,
+                        marginBottom: 1,
+                        position: "relative",
+                        "@media (max-width: 600px)": {
+                            justifyContent: "start",
+                        },
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            width: "100%",
+                        }}
+                    >
                         {/* Tabs for Monthly and Yearly */}
-                        <Tabs value={tabValue} onChange={handleTabChange} sx={{
-                            border: '1px solid rgba(237, 237, 237, 1)',
-                            borderRadius: '4px',
-                            '& .MuiTabs-indicator': {
-                                background: 'none'
-                            },
-                            '@media (max-width: 600px)': { width: '100%' }
-                        }}>
-                            <Tab className='first-sub-title' sx={subscriptionStyles.plantabHeading}
-                                label="Monthly" />
-                            <Tab className='first-sub-title'
+                        <Tabs
+                            value={tabValue}
+                            onChange={handleTabChange}
+                            sx={{
+                                border: "1px solid rgba(237, 237, 237, 1)",
+                                borderRadius: "4px",
+                                "& .MuiTabs-indicator": {
+                                    background: "none",
+                                },
+                                "@media (max-width: 600px)": { width: "100%" },
+                            }}
+                        >
+                            <Tab
+                                className="first-sub-title"
+                                sx={subscriptionStyles.plantabHeading}
+                                label="Monthly"
+                            />
+                            <Tab
+                                className="first-sub-title"
                                 sx={subscriptionStyles.plantabHeading}
                                 label={
-                                    <Box sx={{ display: 'flex', flexDirection: 'row', gap: '12px', alignItems: 'center' }}>
-                                        <Typography className='first-sub-title active-text-color' sx={{
-                                            fontWeight: '400 !important',
-                                            '@media (max-width: 600px)': {
-                                                fontSize: '18px !important'
-                                            }
-                                        }}>Yearly</Typography>
-                                        <Typography variant="body2" sx={subscriptionStyles.saveHeading} className='paragraph' color="primary">
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            flexDirection: "row",
+                                            gap: "12px",
+                                            alignItems: "center",
+                                        }}
+                                    >
+                                        <Typography
+                                            className="first-sub-title active-text-color"
+                                            sx={{
+                                                fontWeight: "400 !important",
+                                                "@media (max-width: 600px)": {
+                                                    fontSize: "18px !important",
+                                                },
+                                            }}
+                                        >
+                                            Yearly
+                                        </Typography>
+                                        <Typography
+                                            variant="body2"
+                                            sx={subscriptionStyles.saveHeading}
+                                            className="paragraph"
+                                            color="primary"
+                                        >
                                             Save 33%
                                         </Typography>
                                     </Box>
@@ -446,16 +556,24 @@ export const SettingsSubscription: React.FC = () => {
                     </Box>
                 </Box>
 
-
-                <Box sx={subscriptionStyles.formContainer}>
+                <Box
+                    sx={{
+                        ...subscriptionStyles.formContainer,
+                        overflowX: "scroll",
+                    }}
+                >
                     {filteredPlans.length > 0 ? (
                         plans.map((plan, index) => {
-                            if (isTrial === false && plan.title === "Free Trial") {
+                            if (
+                                isTrial === false &&
+                                plan.title === "Free Trial"
+                            ) {
                                 return null;
                             }
                             let buttonText = "Speak to Us";
                             let disabled = false;
 
+                            let handle = handleOpenPopup;
                             if (isTrial === true) {
                                 if (plan.title === "Free Trial") {
                                     buttonText = "Current Plan";
@@ -463,6 +581,7 @@ export const SettingsSubscription: React.FC = () => {
                                 } else if (plan.title === "Basic") {
                                     buttonText = "Instant Upgrade";
                                     disabled = false;
+                                    handle = handleInstantUpgrade;
                                 } else {
                                     buttonText = "Speak to Us";
                                     disabled = false;
@@ -478,15 +597,22 @@ export const SettingsSubscription: React.FC = () => {
                             }
 
                             return (
-                                <Box key={index} sx={subscriptionStyles.formWrapper}>
+                                <Box
+                                    key={plan.title}
+                                    sx={subscriptionStyles.formWrapper}
+                                >
                                     <PlanCard
                                         plan={plan}
-                                        activePlanTitle={activePlan?.title || ""}
-                                        activePlanPeriod={activePlan?.interval || ""}
+                                        activePlanTitle={
+                                            activePlan?.title || ""
+                                        }
+                                        activePlanPeriod={
+                                            activePlan?.interval || ""
+                                        }
                                         tabValue={tabValue}
                                         isRecommended={plan.isRecommended}
                                         buttonProps={{
-                                            onChoose: handleOpenPopup,
+                                            onChoose: handle,
                                             text: buttonText,
                                             disabled: disabled,
                                         }}
@@ -499,23 +625,28 @@ export const SettingsSubscription: React.FC = () => {
                     )}
                 </Box>
             </Box>
-            {sourcePlatform !== 'shopify' && (
-                <Button variant="outlined" className='hyperlink-red' sx={{
-                    color: 'rgba(56, 152, 252, 1) !important',
-                    borderRadius: '4px',
-                    border: '1px solid rgba(56, 152, 252, 1)',
-                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                    textTransform: 'none',
-                    padding: '9px 16px',
-                    marginBottom: '16px',
-                    width: '100%',
-                    '&:hover': {
-                        background: 'transparent'
-                    },
-                    '@media (min-width: 601px)': {
-                        display: 'none'
-                    }
-                }} onClick={handleCustomPlanPopupOpen}>
+            {sourcePlatform !== "shopify" && (
+                <Button
+                    variant="outlined"
+                    className="hyperlink-red"
+                    sx={{
+                        color: "rgba(56, 152, 252, 1) !important",
+                        borderRadius: "4px",
+                        border: "1px solid rgba(56, 152, 252, 1)",
+                        boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+                        textTransform: "none",
+                        padding: "9px 16px",
+                        marginBottom: "16px",
+                        width: "100%",
+                        "&:hover": {
+                            background: "transparent",
+                        },
+                        "@media (min-width: 601px)": {
+                            display: "none",
+                        },
+                    }}
+                    onClick={handleCustomPlanPopupOpen}
+                >
                     Custom Plans
                 </Button>
             )}
@@ -526,80 +657,155 @@ export const SettingsSubscription: React.FC = () => {
                 onClose={handleCustomPlanPopupClose}
                 PaperProps={{
                     sx: {
-                        width: '640px',
-                        position: 'fixed',
+                        width: "640px",
+                        position: "fixed",
                         zIndex: 1301,
                         top: 0,
                         bottom: 0,
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        }
+                        "@media (max-width: 600px)": {
+                            width: "100%",
+                        },
                     },
                 }}
             >
-                {sourcePlatform !== 'shopify' && (
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px', mb: 3 }}>
-                            <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
+                {sourcePlatform !== "shopify" && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            py: 3.5,
+                            px: 2,
+                            borderBottom: "1px solid #e4e4e4",
+                            position: "sticky",
+                            top: 0,
+                            zIndex: "9",
+                            backgroundColor: "#fff",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                mb: 3,
+                            }}
+                        >
+                            <Typography
+                                variant="h6"
+                                className="first-sub-title"
+                                sx={{ textAlign: "center" }}
+                            >
                                 Custom plan
                             </Typography>
-                            <CustomTooltip title={"You can download the billing history and share it with your teammates."} linkText="Learn more" linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/custom-plan" />
+                            <CustomTooltip
+                                title={
+                                    "You can download the billing history and share it with your teammates."
+                                }
+                                linkText="Learn more"
+                                linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/custom-plan"
+                            />
                         </Box>
-                        <IconButton onClick={handleCustomPlanPopupClose} sx={{ p: 0 }}>
-                            <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                        <IconButton
+                            onClick={handleCustomPlanPopupClose}
+                            sx={{ p: 0 }}
+                        >
+                            <CloseIcon sx={{ width: "20px", height: "20px" }} />
                         </IconButton>
                     </Box>
-                )
-                }
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: 4 }}>
-                        <Image src='/custom-plan.svg' alt='custom-plan' width={509} height={329} style={{ width: '100%' }} />
-                        <Typography className='first-sub-title' sx={{
-                            marginTop: '32px',
-                            marginBottom: '8px',
-                            letterSpacing: '0.08px'
-                        }}>
-                            Tailor your experience with our Custom Plan, designed just for you. Choose exactly what you need and only pay for what you use!
+                )}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 5,
+                        height: "100%",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            padding: 4,
+                        }}
+                    >
+                        <Image
+                            src="/custom-plan.svg"
+                            alt="custom-plan"
+                            width={509}
+                            height={329}
+                            style={{ width: "100%" }}
+                        />
+                        <Typography
+                            className="first-sub-title"
+                            sx={{
+                                marginTop: "32px",
+                                marginBottom: "8px",
+                                letterSpacing: "0.08px",
+                            }}
+                        >
+                            Tailor your experience with our Custom Plan,
+                            designed just for you. Choose exactly what you need
+                            and only pay for what you use!
                         </Typography>
-                        <Typography className='paragraph' sx={{
-                            letterSpacing: '0.07px',
-                            fontSize: '14px !important',
-                            color: '#5f6368 !important'
-                        }}>
-                            Kindly book a call with one of our marketing specialist to custom your plan.
+                        <Typography
+                            className="paragraph"
+                            sx={{
+                                letterSpacing: "0.07px",
+                                fontSize: "14px !important",
+                                color: "#5f6368 !important",
+                            }}
+                        >
+                            Kindly book a call with one of our marketing
+                            specialist to custom your plan.
                         </Typography>
                     </Box>
 
-                    <Box sx={{ position: 'relative' }}>
-                        <Box sx={{
-                            px: 4, py: 3, position: 'fixed', bottom: 0, right: 0, background: '#fff',
-                            width: '620px',
-                            '@media (max-width: 600px)': {
-                                width: '100%',
-                            }
-                        }}>
-                            <Box display="flex" justifyContent="flex-end" mt={2}>
+                    <Box sx={{ position: "relative" }}>
+                        <Box
+                            sx={{
+                                px: 4,
+                                py: 3,
+                                position: "fixed",
+                                bottom: 0,
+                                right: 0,
+                                background: "#fff",
+                                width: "620px",
+                                "@media (max-width: 600px)": {
+                                    width: "100%",
+                                },
+                            }}
+                        >
+                            <Box
+                                display="flex"
+                                justifyContent="flex-end"
+                                mt={2}
+                            >
                                 <Link
                                     href={meetingUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={handleCustomPlanPopupClose}
                                     sx={{
-                                        display: 'inline-block',
-                                        width: '100%',
-                                        textDecoration: 'none',
-                                        color: '#fff',
-                                        padding: '1em 8em',
-                                        fontFamily: 'Nunito Sans',
-                                        fontWeight: '600',
-                                        fontSize: '14px',
-                                        borderRadius: '4px',
-                                        border: 'none',
-                                        lineHeight: '22.4px',
-                                        backgroundColor: 'rgba(56, 152, 252, 1)',
-                                        textTransform: 'none',
-                                        textAlign: 'center',
-                                        cursor: 'pointer',
+                                        display: "inline-block",
+                                        width: "100%",
+                                        textDecoration: "none",
+                                        color: "#fff",
+                                        padding: "1em 8em",
+                                        fontFamily: "Nunito Sans",
+                                        fontWeight: "600",
+                                        fontSize: "14px",
+                                        borderRadius: "4px",
+                                        border: "none",
+                                        lineHeight: "22.4px",
+                                        backgroundColor:
+                                            "rgba(56, 152, 252, 1)",
+                                        textTransform: "none",
+                                        textAlign: "center",
+                                        cursor: "pointer",
                                     }}
                                 >
                                     Book a call
@@ -608,7 +814,6 @@ export const SettingsSubscription: React.FC = () => {
                         </Box>
                     </Box>
                 </Box>
-
             </Drawer>
 
             <Drawer
@@ -617,79 +822,135 @@ export const SettingsSubscription: React.FC = () => {
                 onClose={handleCancelSubscriptionPlanPopupClose}
                 PaperProps={{
                     sx: {
-                        width: '620px',
-                        position: 'fixed',
+                        width: "620px",
+                        position: "fixed",
                         zIndex: 1301,
                         top: 0,
                         bottom: 0,
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        }
+                        "@media (max-width: 600px)": {
+                            width: "100%",
+                        },
                     },
                 }}
             >
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        py: 3.5,
+                        px: 2,
+                        borderBottom: "1px solid #e4e4e4",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: "9",
+                        backgroundColor: "#fff",
+                    }}
+                >
+                    <Typography
+                        variant="h6"
+                        className="first-sub-title"
+                        sx={{ textAlign: "center" }}
+                    >
                         Unsubscribe Teams Plan
                     </Typography>
-                    <IconButton onClick={handleCancelSubscriptionPlanPopupClose} sx={{ p: 0 }}>
-                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                    <IconButton
+                        onClick={handleCancelSubscriptionPlanPopupClose}
+                        sx={{ p: 0 }}
+                    >
+                        <CloseIcon sx={{ width: "20px", height: "20px" }} />
                     </IconButton>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 5, height: '100%' }}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-
-                        <Typography className='first-sub-title' sx={{
-                            paddingTop: '24px',
-                            paddingLeft: '32px'
-                        }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        gap: 5,
+                        height: "100%",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                        }}
+                    >
+                        <Typography
+                            className="first-sub-title"
+                            sx={{
+                                paddingTop: "24px",
+                                paddingLeft: "32px",
+                            }}
+                        >
                             Are you sure you want to unsubscribe teams plan?
                         </Typography>
                     </Box>
 
-                    <Box sx={{ position: 'relative' }}>
-                        <Box sx={{
-                            px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
-                            width: '620px',
-                            '@media (max-width: 600px)': {
-                                width: '100%',
-                            }
-                        }}>
-                            <Box display="flex" justifyContent="flex-end" mt={2}>
-                                <Button className="hyperlink-red" sx={{
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: 'rgba(56, 152, 252, 1) !important',
-                                    marginRight: '16px',
-                                    textTransform: 'none',
-                                    padding: '10px 24px'
-                                }}
+                    <Box sx={{ position: "relative" }}>
+                        <Box
+                            sx={{
+                                px: 2,
+                                py: 3.5,
+                                border: "1px solid #e4e4e4",
+                                position: "fixed",
+                                bottom: 0,
+                                right: 0,
+                                background: "#fff",
+                                width: "620px",
+                                "@media (max-width: 600px)": {
+                                    width: "100%",
+                                },
+                            }}
+                        >
+                            <Box
+                                display="flex"
+                                justifyContent="flex-end"
+                                mt={2}
+                            >
+                                <Button
+                                    className="hyperlink-red"
+                                    sx={{
+                                        borderRadius: "4px",
+                                        border: "1px solid rgba(56, 152, 252, 1)",
+                                        boxShadow:
+                                            "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+                                        color: "rgba(56, 152, 252, 1) !important",
+                                        marginRight: "16px",
+                                        textTransform: "none",
+                                        padding: "10px 24px",
+                                    }}
                                     onClick={handleExcitingOfferPopupOpen}
                                 >
                                     Yes
                                 </Button>
-                                <Button className="hyperlink-red" onClick={handleCancelSubscriptionPlanPopupClose} sx={{
-                                    background: 'rgba(56, 152, 252, 1)',
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#fff !important',
-                                    textTransform: 'none',
-                                    padding: '10px 24px',
-                                    '&:hover': {
-                                        color: 'rgba(56, 152, 252, 1) !important'
+                                <Button
+                                    className="hyperlink-red"
+                                    onClick={
+                                        handleCancelSubscriptionPlanPopupClose
                                     }
-                                }}>
+                                    sx={{
+                                        background: "rgba(56, 152, 252, 1)",
+                                        borderRadius: "4px",
+                                        border: "1px solid rgba(56, 152, 252, 1)",
+                                        boxShadow:
+                                            "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+                                        color: "#fff !important",
+                                        textTransform: "none",
+                                        padding: "10px 24px",
+                                        "&:hover": {
+                                            color: "rgba(56, 152, 252, 1) !important",
+                                        },
+                                    }}
+                                >
                                     No
                                 </Button>
                             </Box>
                         </Box>
                     </Box>
                 </Box>
-
             </Drawer>
 
             <Drawer
@@ -698,83 +959,143 @@ export const SettingsSubscription: React.FC = () => {
                 onClose={handleExcitingOfferPopupClose}
                 PaperProps={{
                     sx: {
-                        width: '620px',
-                        position: 'fixed',
+                        width: "620px",
+                        position: "fixed",
                         zIndex: 1301,
                         top: 0,
                         bottom: 0,
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        }
+                        "@media (max-width: 600px)": {
+                            width: "100%",
+                        },
                     },
                 }}
             >
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        py: 3.5,
+                        px: 2,
+                        borderBottom: "1px solid #e4e4e4",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: "9",
+                        backgroundColor: "#fff",
+                    }}
+                >
+                    <Typography
+                        variant="h6"
+                        className="first-sub-title"
+                        sx={{ textAlign: "center" }}
+                    >
                         Exciting offer only for you!
                     </Typography>
-                    <IconButton onClick={handleExcitingOfferPopupClose} sx={{ p: 0 }}>
-                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                    <IconButton
+                        onClick={handleExcitingOfferPopupClose}
+                        sx={{ p: 0 }}
+                    >
+                        <CloseIcon sx={{ width: "20px", height: "20px" }} />
                     </IconButton>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center', gap: 5, height: '100%' }}>
-                    <Box sx={{
-                        display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '24px 32px'
-                    }}>
-                        <Image src='/exciting-offer.svg' alt='exciting-offer-icon' width={316} height={338} />
-                        <Typography className='first-sub-title' sx={{
-                            marginTop: '40px',
-                            textAlign: 'center'
-                        }}>
-                            We have an exciting offer to you, we give 30% discount on next 3 months subscriptions only for you.
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: 5,
+                        height: "100%",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            padding: "24px 32px",
+                        }}
+                    >
+                        <Image
+                            src="/exciting-offer.svg"
+                            alt="exciting-offer-icon"
+                            width={316}
+                            height={338}
+                        />
+                        <Typography
+                            className="first-sub-title"
+                            sx={{
+                                marginTop: "40px",
+                                textAlign: "center",
+                            }}
+                        >
+                            We have an exciting offer to you, we give 30%
+                            discount on next 3 months subscriptions only for
+                            you.
                         </Typography>
-
                     </Box>
 
-                    <Box sx={{ position: 'relative' }}>
-                        <Box sx={{
-                            px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
-                            width: '620px',
-                            '@media (max-width: 600px)': {
-                                width: '100%',
-                            }
-                        }}>
-                            <Box display="flex" justifyContent="flex-end" mt={2}>
-                                <Button className="hyperlink-red" sx={{
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: 'rgba(56, 152, 252, 1) !important',
-                                    marginRight: '16px',
-                                    textTransform: 'none',
-                                    padding: '10px 24px'
-                                }}
+                    <Box sx={{ position: "relative" }}>
+                        <Box
+                            sx={{
+                                px: 2,
+                                py: 3.5,
+                                border: "1px solid #e4e4e4",
+                                position: "fixed",
+                                bottom: 0,
+                                right: 0,
+                                background: "#fff",
+                                width: "620px",
+                                "@media (max-width: 600px)": {
+                                    width: "100%",
+                                },
+                            }}
+                        >
+                            <Box
+                                display="flex"
+                                justifyContent="flex-end"
+                                mt={2}
+                            >
+                                <Button
+                                    className="hyperlink-red"
+                                    sx={{
+                                        borderRadius: "4px",
+                                        border: "1px solid rgba(56, 152, 252, 1)",
+                                        boxShadow:
+                                            "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+                                        color: "rgba(56, 152, 252, 1) !important",
+                                        marginRight: "16px",
+                                        textTransform: "none",
+                                        padding: "10px 24px",
+                                    }}
                                     onClick={handleConfirmCancellationPopupOpen}
                                 >
                                     Confirm cancellation
                                 </Button>
-                                <Button className="hyperlink-red" sx={{
-                                    background: 'rgba(56, 152, 252, 1)',
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#fff !important',
-                                    textTransform: 'none',
-                                    padding: '10px 24px',
-                                    '&:hover': {
-                                        color: 'rgba(56, 152, 252, 1) !important'
-                                    }
-                                }}>
+                                <Button
+                                    className="hyperlink-red"
+                                    sx={{
+                                        background: "rgba(56, 152, 252, 1)",
+                                        borderRadius: "4px",
+                                        border: "1px solid rgba(56, 152, 252, 1)",
+                                        boxShadow:
+                                            "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+                                        color: "#fff !important",
+                                        textTransform: "none",
+                                        padding: "10px 24px",
+                                        "&:hover": {
+                                            color: "rgba(56, 152, 252, 1) !important",
+                                        },
+                                    }}
+                                >
                                     Claim offer
                                 </Button>
                             </Box>
                         </Box>
                     </Box>
                 </Box>
-
             </Drawer>
 
             <Drawer
@@ -783,42 +1104,75 @@ export const SettingsSubscription: React.FC = () => {
                 onClose={handleConfirmCancellationPopupClose}
                 PaperProps={{
                     sx: {
-                        width: '620px',
-                        position: 'fixed',
+                        width: "620px",
+                        position: "fixed",
                         zIndex: 1301,
                         top: 0,
                         bottom: 0,
-                        '@media (max-width: 600px)': {
-                            width: '100%',
-                        }
+                        "@media (max-width: 600px)": {
+                            width: "100%",
+                        },
                     },
                 }}
             >
-
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', py: 3.5, px: 2, borderBottom: '1px solid #e4e4e4', position: 'sticky', top: 0, zIndex: '9', backgroundColor: '#fff' }}>
-                    <Typography variant="h6" className='first-sub-title' sx={{ textAlign: 'center' }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        py: 3.5,
+                        px: 2,
+                        borderBottom: "1px solid #e4e4e4",
+                        position: "sticky",
+                        top: 0,
+                        zIndex: "9",
+                        backgroundColor: "#fff",
+                    }}
+                >
+                    <Typography
+                        variant="h6"
+                        className="first-sub-title"
+                        sx={{ textAlign: "center" }}
+                    >
                         Unsubscribe Teams Plan
                     </Typography>
-                    <IconButton onClick={handleConfirmCancellationPopupClose} sx={{ p: 0 }}>
-                        <CloseIcon sx={{ width: '20px', height: '20px' }} />
+                    <IconButton
+                        onClick={handleConfirmCancellationPopupClose}
+                        sx={{ p: 0 }}
+                    >
+                        <CloseIcon sx={{ width: "20px", height: "20px" }} />
                     </IconButton>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 5, height: '100%' }}>
-                    <Box sx={{
-                        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                        padding: '24px 32px'
-                    }}>
-
-                        <Typography className='first-sub-title' sx={{
-                            marginBottom: '32px'
-                        }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "space-between",
+                        gap: 5,
+                        height: "100%",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between",
+                            padding: "24px 32px",
+                        }}
+                    >
+                        <Typography
+                            className="first-sub-title"
+                            sx={{
+                                marginBottom: "32px",
+                            }}
+                        >
                             Are you sure you want to unsubscribe teams plan?
                         </Typography>
                         <TextField
                             InputLabelProps={{
                                 sx: subscriptionStyles.inputLabel,
-                                focused: false
+                                focused: false,
                             }}
                             label="Enter the reason for unsubscribe"
                             name="unsubscribe"
@@ -829,45 +1183,67 @@ export const SettingsSubscription: React.FC = () => {
                             error={Boolean(errors.unsubscribe)}
                             helperText={errors.unsubscribe}
                             InputProps={{
-                                className: "form-input"
+                                className: "form-input",
                             }}
                         />
                     </Box>
 
-                    <Box sx={{ position: 'relative' }}>
-                        <Box sx={{
-                            px: 2, py: 3.5, border: '1px solid #e4e4e4', position: 'fixed', bottom: 0, right: 0, background: '#fff',
-                            width: '620px',
-                            '@media (max-width: 600px)': {
-                                width: '100%',
-                            }
-                        }}>
-                            <Box display="flex" justifyContent="flex-end" mt={2}>
-                                <Button className="hyperlink-red" onClick={handleSubmit} sx={{
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: 'rgba(56, 152, 252, 1) !important',
-                                    marginRight: '16px',
-                                    textTransform: 'none',
-                                    padding: '10px 24px'
-                                }}
-
+                    <Box sx={{ position: "relative" }}>
+                        <Box
+                            sx={{
+                                px: 2,
+                                py: 3.5,
+                                border: "1px solid #e4e4e4",
+                                position: "fixed",
+                                bottom: 0,
+                                right: 0,
+                                background: "#fff",
+                                width: "620px",
+                                "@media (max-width: 600px)": {
+                                    width: "100%",
+                                },
+                            }}
+                        >
+                            <Box
+                                display="flex"
+                                justifyContent="flex-end"
+                                mt={2}
+                            >
+                                <Button
+                                    className="hyperlink-red"
+                                    onClick={handleSubmit}
+                                    sx={{
+                                        borderRadius: "4px",
+                                        border: "1px solid rgba(56, 152, 252, 1)",
+                                        boxShadow:
+                                            "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+                                        color: "rgba(56, 152, 252, 1) !important",
+                                        marginRight: "16px",
+                                        textTransform: "none",
+                                        padding: "10px 24px",
+                                    }}
                                 >
                                     Yes
                                 </Button>
-                                <Button className="hyperlink-red" onClick={handleConfirmCancellationPopupClose} sx={{
-                                    background: 'rgba(56, 152, 252, 1)',
-                                    borderRadius: '4px',
-                                    border: '1px solid rgba(56, 152, 252, 1)',
-                                    boxShadow: '0px 1px 2px 0px rgba(0, 0, 0, 0.25)',
-                                    color: '#fff !important',
-                                    textTransform: 'none',
-                                    padding: '10px 24px',
-                                    '&:hover': {
-                                        color: 'rgba(56, 152, 252, 1) !important'
+                                <Button
+                                    className="hyperlink-red"
+                                    onClick={
+                                        handleConfirmCancellationPopupClose
                                     }
-                                }}>
+                                    sx={{
+                                        background: "rgba(56, 152, 252, 1)",
+                                        borderRadius: "4px",
+                                        border: "1px solid rgba(56, 152, 252, 1)",
+                                        boxShadow:
+                                            "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
+                                        color: "#fff !important",
+                                        textTransform: "none",
+                                        padding: "10px 24px",
+                                        "&:hover": {
+                                            color: "rgba(56, 152, 252, 1) !important",
+                                        },
+                                    }}
+                                >
                                     No
                                 </Button>
                             </Box>

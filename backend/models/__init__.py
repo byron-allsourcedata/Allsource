@@ -23,9 +23,20 @@ from .audience_sources import AudienceSource
 from .audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from .base import Base
 from .data_sync_imported_leads import DataSyncImportedLead
-from .enrichment import (EnrichmentEmploymentHistory, EnrichmentFinancialRecord,
-                         EnrichmentLifestyle, EnrichmentLookalikeScore, EnrichmentModels, EnrichmentUserContact,
-                         EnrichmentUser, EnrichmentVoterRecord, EnrichmentUsersEmails, EnrichmentPersonalProfiles, EnrichmentEmails, EnrichmentPostal)
+from .enrichment import (
+    EnrichmentEmploymentHistory,
+    EnrichmentFinancialRecord,
+    EnrichmentLifestyle,
+    EnrichmentLookalikeScore,
+    EnrichmentModels,
+    EnrichmentUserContact,
+    EnrichmentUser,
+    EnrichmentVoterRecord,
+    EnrichmentUsersEmails,
+    EnrichmentPersonalProfiles,
+    EnrichmentEmails,
+    EnrichmentPostal,
+)
 
 
 from .audience_phones_verification import AudiencePhoneVerification
@@ -55,7 +66,9 @@ from .leads_visits import LeadsVisits
 from .partner import Partner
 from .partners_asset import PartnersAsset
 from .plans import SubscriptionPlan
-from .enrichment.enrichment_professional_profiles import EnrichmentProfessionalProfile
+from .enrichment.enrichment_professional_profiles import (
+    EnrichmentProfessionalProfile,
+)
 from .referral_discount_codes import ReferralDiscountCode
 from .referral_payouts import ReferralPayouts
 from .referral_users import ReferralUser
@@ -159,5 +172,5 @@ __all__ = [
     "AudienceLinkedinVerification",
     "AudiencePostalVerification",
     "EnrichmentPersonalProfiles",
-    "AdminInvitation"
+    "AdminInvitation",
 ]

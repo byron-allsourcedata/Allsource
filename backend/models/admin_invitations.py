@@ -7,11 +7,11 @@ from .base import Base
 
 
 class AdminInvitation(Base):
-    __tablename__ = 'admin_invitations'
+    __tablename__ = "admin_invitations"
 
     id = Column(
         BigInteger,
-        Sequence('team_members_id_seq', metadata=Base.metadata),
+        Sequence("team_members_id_seq", metadata=Base.metadata),
         primary_key=True,
         nullable=False,
     )
@@ -19,23 +19,17 @@ class AdminInvitation(Base):
         VARCHAR(64),
         nullable=False,
     )
-    email = Column(
-        VARCHAR(64),
+    email = Column(VARCHAR(64), nullable=False, unique=True)
+    date_invited_at = Column(
+        TIMESTAMP,
         nullable=False,
-        unique=True
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
-    date_invited_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     invited_by_id = Column(
-        BigInteger,
-        ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=False
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    token = Column(
-        VARCHAR(64),
-        nullable=False
-    )
+    token = Column(VARCHAR(64), nullable=False)
     __table_args__ = (
-        Index('admin_invitations_token_idx', token),
-        Index('admin_invitations_email_idx', email),
+        Index("admin_invitations_token_idx", token),
+        Index("admin_invitations_email_idx", email),
     )
-

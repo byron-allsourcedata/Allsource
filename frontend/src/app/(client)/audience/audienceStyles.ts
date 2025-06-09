@@ -1,84 +1,86 @@
-import { SxProps, Theme } from '@mui/system';
+import { SxProps, Theme } from "@mui/system";
 
 export const audienceStyles: { [key: string]: SxProps<Theme> } = {
-    mainContent: {
-        display:'flex',
-        flexDirection: 'column',
-        width: '100%',
-        padding: 0,
-        margin: 0,
-        alignItems: 'center',
-        justifyContent: 'center',
-        '@media (min-width: 900px)': {
-            paddingLeft: '2.5rem',
-            paddingRight: '2.5rem'
-        },
-        '@media (max-width: 440px)': {
-            marginTop: '-60px',
-            padding: '0',
-        },
-    },
-    container: {
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100%',
-        alignItems: 'center',
-        justifyContent: 'center',
-        margin: '0 auto',
-        position: 'relative',
-        boxShadow: '0rem 2px 8px 0px #00000033',
-        borderRadius: '0.625rem',
-        border: '0.0625rem solid transparent',
-        textAlign: 'center',
-        maxWidth: '464px',
-        minHeight: '481px',
-        marginTop: '143px',
-        marginBottom: '143px',
-        '@media (min-width: 1400px)': {
-            marginTop: '130px',
-            marginBottom: '130px',
-        },
-        '@media (max-width: 440px)': {
-            boxShadow: '0rem 0px 0px 0px #00000033',
-            border: 'none',
-            marginTop: '0',
-            marginBottom: '0',
-            maxWidth: '100%',
-        },
-        '@media (max-width: 380px)': {
-            marginTop: '76px',
-        }
-    },
-    titleBox: {
-        display: 'flex',
-        alignItems: 'center',
-        width: '100%',
-        flexDirection: 'row',
-        margin: '0 auto',
-    },
-      collectionRules: {
-        backgroundColor: '#fff',
-        width: '100%',
-        padding: '10px',
-        borderRadius: '8px',
-        boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)',
-      },
-      table_column: {
-        fontFamily: 'Nunito Sans', fontSize: '12px', fontWeight: '600',
-        lineHeight: '16px',
-        textAlign: 'left',
-        textWrap: 'nowrap',
-        color: '#202124',
-        '&::after': {
-          content: '""',
-          display: 'block',
-          position: 'absolute',
-          top: '15px', // Space from the top
-          bottom: '15px', // Space from the bottom
-          right: 0, // Position the border at the right edge
-          width: '1px',
-          height: 'calc(100% - 30px)', // Full height minus top and bottom spacing
-          backgroundColor: 'rgba(235, 235, 235, 1)', // Border color
-      }
-    }
+	mainContent: {
+		display: "flex",
+		flexDirection: "column",
+		width: "100%",
+		padding: 0,
+		margin: 0,
+		alignItems: "center",
+		justifyContent: "center",
+		"@media (min-width: 900px)": {
+			paddingLeft: "2.5rem",
+			paddingRight: "2.5rem",
+		},
+		"@media (max-width: 440px)": {
+			marginTop: "-60px",
+			padding: "0",
+		},
+	},
+	container: {
+		display: "flex",
+		flexDirection: "column",
+		width: "100%",
+		alignItems: "center",
+		justifyContent: "center",
+		margin: "0 auto",
+		position: "relative",
+		boxShadow: "0rem 2px 8px 0px #00000033",
+		borderRadius: "0.625rem",
+		border: "0.0625rem solid transparent",
+		textAlign: "center",
+		maxWidth: "464px",
+		minHeight: "481px",
+		marginTop: "143px",
+		marginBottom: "143px",
+		"@media (min-width: 1400px)": {
+			marginTop: "130px",
+			marginBottom: "130px",
+		},
+		"@media (max-width: 440px)": {
+			boxShadow: "0rem 0px 0px 0px #00000033",
+			border: "none",
+			marginTop: "0",
+			marginBottom: "0",
+			maxWidth: "100%",
+		},
+		"@media (max-width: 380px)": {
+			marginTop: "76px",
+		},
+	},
+	titleBox: {
+		display: "flex",
+		alignItems: "center",
+		width: "100%",
+		flexDirection: "row",
+		margin: "0 auto",
+	},
+	collectionRules: {
+		backgroundColor: "#fff",
+		width: "100%",
+		padding: "10px",
+		borderRadius: "8px",
+		boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
+	},
+	table_column: {
+		fontFamily: "Nunito Sans",
+		fontSize: "12px",
+		fontWeight: "600",
+		lineHeight: "16px",
+		textAlign: "left",
+		textWrap: "nowrap",
+		color: "#202124",
+		"&::after": {
+			content: '""',
+			display: "block",
+			position: "absolute",
+			top: "15px", // Space from the top
+			bottom: "15px", // Space from the bottom
+			right: 0, // Position the border at the right edge
+			width: "1px",
+			height: "calc(100% - 30px)", // Full height minus top and bottom spacing
+			backgroundColor: "rgba(235, 235, 235, 1)", // Border color
+		},
+	},
 };

@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field
 from typing import Optional
 from schemas.users import ShopifyPayloadModel, UtmParams
 
+
 class AuthGoogleData(BaseModel):
     token: str
     is_with_card: bool = Field(default=False)
@@ -18,6 +19,4 @@ class AuthGoogleData(BaseModel):
     referral: Optional[str] = None
     shop_hash: Optional[str] = None
     utm_params: Optional[UtmParams] = None
-    source_platform:Optional[str] = None
-
-    
+    source_platform: Optional[str] = None

@@ -30,10 +30,7 @@ class UpdateContactStatusRequest(BaseModel):
     properties: NewContactStatus
 
     @classmethod
-    def new(
-        cls,
-        status: HubspotLeadStatus
-    ):
+    def new(cls, status: HubspotLeadStatus):
         return cls(properties=NewContactStatus(hs_lead_status=status))
 
 

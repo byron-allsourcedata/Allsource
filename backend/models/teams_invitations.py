@@ -7,43 +7,32 @@ from .base import Base
 
 
 class TeamInvitation(Base):
-    __tablename__ = 'teams_invitations'
+    __tablename__ = "teams_invitations"
     __table_args__ = (
-        Index('teams_invitations_mail_team_owner_id_idx', 'mail', 'team_owner_id'),
-        Index('teams_invitations_md5_hash_idx', 'token'),
+        Index(
+            "teams_invitations_mail_team_owner_id_idx", "mail", "team_owner_id"
+        ),
+        Index("teams_invitations_md5_hash_idx", "token"),
     )
 
     id = Column(
         BigInteger,
-        Sequence('team_members_id_seq', metadata=Base.metadata),
+        Sequence("team_members_id_seq", metadata=Base.metadata),
         primary_key=True,
         nullable=False,
     )
-    mail = Column(
-        VARCHAR(64),
-        nullable=True
+    mail = Column(VARCHAR(64), nullable=True)
+    access_level = Column(VARCHAR(64), nullable=True)
+    status = Column(VARCHAR(32), nullable=True)
+    date_invited_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
-    access_level = Column(
-        VARCHAR(64),
-        nullable=True
-    )
-    status = Column(
-        VARCHAR(32),
-        nullable=True
-    )
-    date_invited_at = Column(TIMESTAMP, nullable=False, default=lambda: datetime.now(timezone.utc).replace(tzinfo=None))
     invited_by_id = Column(
-        BigInteger,
-        ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=True
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
     team_owner_id = Column(
-        BigInteger,
-        ForeignKey('users.id', ondelete='CASCADE'),
-        nullable=True
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
-    token = Column(
-        VARCHAR(64),
-        nullable=True
-    )
-
+    token = Column(VARCHAR(64), nullable=True)

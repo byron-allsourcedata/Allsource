@@ -3,7 +3,7 @@ from .base import Base
 
 
 class Lead(Base):
-    __tablename__ = 'leads'
+    __tablename__ = "leads"
 
     id = Column(Integer, primary_key=True)
     first_name = Column(VARCHAR, nullable=True)

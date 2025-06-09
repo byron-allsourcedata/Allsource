@@ -1,124 +1,123 @@
 import React from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  IconButton,
-  Typography,
-  Button,
-  Box,
-  Backdrop,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	IconButton,
+	Typography,
+	Button,
+	Box,
+	Backdrop,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 type WelcomePopupProps = {
-  open: boolean;
-  onClose: () => void;
+	open: boolean;
+	onClose: () => void;
 };
 
 const WelcomePopup: React.FC<WelcomePopupProps> = ({ open, onClose }) => {
+	return (
+		<>
+			<Backdrop
+				open={open}
+				onClick={onClose}
+				sx={{
+					zIndex: 3200,
+					color: "#fff",
+					backdropFilter: "blur(12px)",
+					backgroundColor: "#0000001A",
+				}}
+			/>
+			<Dialog
+				open={open}
+				onClose={onClose}
+				maxWidth="sm"
+				fullWidth
+				sx={{
+					zIndex: 3300,
+					"& .MuiPaper-root": {
+						borderRadius: "6px",
+						padding: "24px 32px 12px",
+					},
+				}}
+			>
+				<DialogTitle
+					sx={{
+						p: 0,
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center",
+						mb: 2,
+						borderBottom: "1px solid rgba(228, 228, 228, 1)",
+						pb: 3,
+					}}
+				>
+					<Typography
+						sx={{
+							fontWeight: 500,
+							fontSize: "20px",
+							fontFamily: "Nunito Sans",
+						}}
+					>
+						Website Pixel Successfully Installed! 🎉
+					</Typography>
+					<IconButton onClick={onClose}>
+						<CloseIcon />
+					</IconButton>
+				</DialogTitle>
 
-  return (
-    <>
-      <Backdrop
-        open={open}
-        onClick={onClose}
-        sx={{
-          zIndex: 3200,
-          color: "#fff",
-          backdropFilter: "blur(12px)",
-          backgroundColor: "#0000001A",
-        }}
-      />
-      <Dialog
-        open={open}
-        onClose={onClose}
-        maxWidth="sm"
-        fullWidth
-        sx={{
-          zIndex: 3300,
-          "& .MuiPaper-root": {
-            borderRadius: "6px",
-            padding: "24px 32px 12px",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            p: 0,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 2,
-            borderBottom: "1px solid rgba(228, 228, 228, 1)",
-            pb: 3,
-          }}
-        >
-          <Typography
-            sx={{
-              fontWeight: 500,
-              fontSize: "20px",
-              fontFamily: "Nunito Sans",
-            }}
-          >
-            Website Pixel Successfully Installed! 🎉
-          </Typography>
-          <IconButton onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
-        </DialogTitle>
+				<DialogContent sx={{ pt: 4, pl: 0, pr: 0, textAlign: "center" }}>
+					<Image
+						src="/pixel_success.svg"
+						alt="Success"
+						width={468}
+						height={201}
+						style={{ margin: 0 }}
+					/>
 
-        <DialogContent sx={{ pt: 4, pl: 0, pr: 0, textAlign: "center" }}>
-          <Image
-            src="/pixel_success.svg"
-            alt="Success"
-            width={468}
-            height={201}
-            style={{ margin: 0 }}
-          />
+					<Typography
+						sx={{
+							fontSize: "16px",
+							color: "#5f6368",
+							mb: 4,
+							pt: 4,
+							textAlign: "left",
+							fontFamily: "Nunito Sans",
+						}}
+					>
+						Great news — your tracking pixel is active! Now we&apos;ll start
+						collecting data from your website visitors to build your audience.
+					</Typography>
 
-          <Typography
-            sx={{
-              fontSize: "16px",
-              color: "#5f6368",
-              mb: 4,
-              pt: 4,
-              textAlign: "left",
-              fontFamily: "Nunito Sans",
-            }}
-          >
-            Great news — your tracking pixel is active! Now we&apos;ll start
-            collecting data from your website visitors to build your audience.
-          </Typography>
-
-          <Button
-            variant="contained"
-            onClick={onClose}
-            fullWidth
-            sx={{
-              backgroundColor: "#3898FC",
-              textTransform: "none",
-              fontSize: "16px",
-              padding: "12px",
-              fontWeight: 600,
-              borderRadius: "8px",
-              fontFamily: "Nunito Sans",
-              "&:hover": {
-                backgroundColor: "#1E88E5",
-              },
-              "&:active": {
-                backgroundColor: "#74B7FD",
-              },
-            }}
-          >
-            Continue
-          </Button>
-        </DialogContent>
-      </Dialog>
-    </>
-  );
+					<Button
+						variant="contained"
+						onClick={onClose}
+						fullWidth
+						sx={{
+							backgroundColor: "#3898FC",
+							textTransform: "none",
+							fontSize: "16px",
+							padding: "12px",
+							fontWeight: 600,
+							borderRadius: "8px",
+							fontFamily: "Nunito Sans",
+							"&:hover": {
+								backgroundColor: "#1E88E5",
+							},
+							"&:active": {
+								backgroundColor: "#74B7FD",
+							},
+						}}
+					>
+						Continue
+					</Button>
+				</DialogContent>
+			</Dialog>
+		</>
+	);
 };
 
 export default WelcomePopup;

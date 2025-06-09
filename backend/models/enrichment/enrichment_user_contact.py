@@ -1,17 +1,27 @@
-from sqlalchemy import Column, TEXT, UUID, TIMESTAMP, ForeignKey, text, Boolean, Index, inspect
+from sqlalchemy import (
+    Column,
+    TEXT,
+    UUID,
+    TIMESTAMP,
+    ForeignKey,
+    text,
+    Boolean,
+    Index,
+    inspect,
+)
 from sqlalchemy.orm import relationship
 
 from models.base import Base
 
 
 class EnrichmentUserContact(Base):
-    __tablename__ = 'enrichment_users_contacts'
+    __tablename__ = "enrichment_users_contacts"
 
     id = Column(
         UUID(as_uuid=True),
         primary_key=True,
         nullable=False,
-        server_default=text("gen_random_uuid()")
+        server_default=text("gen_random_uuid()"),
     )
 
     asid = Column(
@@ -38,7 +48,7 @@ class EnrichmentUserContact(Base):
     personal_email_validation_status = Column(TEXT, nullable=True)
     linkedin_url = Column(TEXT, nullable=True)
     email = Column(TEXT, nullable=True)
-    
+
     __table_args__ = (
         Index("ix_enrichment_users_contacts_asid", asid, unique=True),
     )
@@ -56,6 +66,7 @@ class EnrichmentUserContact(Base):
     def get_headers(cls, exclude_fields=None):
         fields = cls.get_fields(exclude_fields=exclude_fields)
         return [field.replace("_", " ").title() for field in fields]
+
 
 from .enrichment_users import EnrichmentUser
 

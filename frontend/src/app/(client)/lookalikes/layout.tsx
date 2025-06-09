@@ -1,13 +1,10 @@
 "use client";
 import { LookalikeHintsProvider } from "./context/LookalikesHintsContext";
 
-
-export default function Layout({children}: {
-  children: React.ReactNode;
+export default function Layout({
+	children,
+}: {
+	children: React.ReactNode;
 }) {
-  return (
-    <LookalikeHintsProvider>
-        {children}
-    </LookalikeHintsProvider>
-  );
+	return <LookalikeHintsProvider>{children}</LookalikeHintsProvider>;
 }

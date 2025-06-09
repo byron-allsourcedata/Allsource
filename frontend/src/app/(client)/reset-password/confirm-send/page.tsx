@@ -1,66 +1,82 @@
-'use client';
-import React, { useState, useEffect } from 'react';
-import { useRouter} from 'next/navigation';
-import Image from 'next/image';
-import { Box, Button, TextField, Typography, Link, IconButton, InputAdornment } from '@mui/material';
-import { confirmStyles } from './confirmStyles';
-
-
+"use client";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import {
+	Box,
+	Button,
+	TextField,
+	Typography,
+	Link,
+	IconButton,
+	InputAdornment,
+} from "@mui/material";
+import { confirmStyles } from "./confirmStyles";
 
 const ConfirmSend: React.FC = () => {
-  const router = useRouter();
-  const [email, setEmail] = useState<string | null>(null);
-  
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
-  }, []);
+	const router = useRouter();
+	const [email, setEmail] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const storedMe = sessionStorage.getItem('me');
-      setEmail(storedMe ? JSON.parse(storedMe)?.email : null);
-    }
-  }, []);
+	useEffect(() => {
+		document.body.style.overflow = "hidden";
+		return () => {
+			document.body.style.overflow = "auto";
+		};
+	}, []);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    router.push('/signin');
-  };
-  
-  return (
-    <>
-      <Box sx={confirmStyles.logoContainer}>
-        <Image src='/logo.svg' alt='logo' height={30} width={130} />
-      </Box>
-      <Box sx={confirmStyles.mainContent}>
-        <Box sx={confirmStyles.container}>
-          <Typography variant="h4" component="h1" className='heading-text' sx={confirmStyles.title}>
-          Help is on the way
-          </Typography>
-          <Typography className='second-sub-title' sx={confirmStyles.text}>
-          Please check your email {email}. If you run into any hiccups, our support team is ready to rock &apos;n&apos; roll and help you out.
-          </Typography>
-          <Typography className='second-sub-title' sx={confirmStyles.text}>
-            Please check your spam folder or <Link href="/reset-password" sx={confirmStyles.loginLink}>try sending again.</Link>
-          </Typography>
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			const storedMe = sessionStorage.getItem("me");
+			setEmail(storedMe ? JSON.parse(storedMe)?.email : null);
+		}
+	}, []);
 
-          <Box component="form" onSubmit={handleSubmit} sx={confirmStyles.form}>
-            <Button className='hyperlink-red'
-              type="submit"
-              variant="contained"
-              sx={confirmStyles.submitButton}
-              fullWidth
-            >
-              Back to login
-            </Button>
-          </Box>
-        </Box>
-      </Box>
-    </>
-  );
+	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+		router.push("/signin");
+	};
+
+	return (
+		<>
+			<Box sx={confirmStyles.logoContainer}>
+				<Image src="/logo.svg" alt="logo" height={30} width={130} />
+			</Box>
+			<Box sx={confirmStyles.mainContent}>
+				<Box sx={confirmStyles.container}>
+					<Typography
+						variant="h4"
+						component="h1"
+						className="heading-text"
+						sx={confirmStyles.title}
+					>
+						Help is on the way
+					</Typography>
+					<Typography className="second-sub-title" sx={confirmStyles.text}>
+						Please check your email {email}. If you run into any hiccups, our
+						support team is ready to rock &apos;n&apos; roll and help you out.
+					</Typography>
+					<Typography className="second-sub-title" sx={confirmStyles.text}>
+						Please check your spam folder or{" "}
+						<Link href="/reset-password" sx={confirmStyles.loginLink}>
+							try sending again.
+						</Link>
+					</Typography>
+
+					<Box component="form" onSubmit={handleSubmit} sx={confirmStyles.form}>
+						<Button
+							className="hyperlink-red"
+							type="submit"
+							variant="contained"
+							sx={confirmStyles.submitButton}
+							fullWidth
+						>
+							Back to login
+						</Button>
+					</Box>
+				</Box>
+			</Box>
+		</>
+	);
 };
 
 export default ConfirmSend;

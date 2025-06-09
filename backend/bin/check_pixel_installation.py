@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 import asyncio
 import logging
@@ -28,16 +27,26 @@ INTERVAL_HOURS = 3
 async def check_and_update_pixel_installations(db_session):
     try:
         sendgrid_persistence_service = SendgridPersistence(db_session)
-        pixel_service = PixelInstallationService(db_session, sendgrid_persistence_service)
+        pixel_service = PixelInstallationService(
+            db_session, sendgrid_persistence_service
+        )
 
-        domains = db_session.query(UserDomains).filter(UserDomains.is_pixel_installed == False).all()
+        domains = (
+            db_session.query(UserDomains)
+            .filter(UserDomains.is_pixel_installed == False)
+            .all()
+        )
 
         for domain in domains:
             company_website = domain.domain
             if company_website:
-                result = pixel_service.check_pixel_installed_via_parse(company_website, domain.__dict__)
-                if result['success']:
-                    logger.info(f"Pixel confirmed for user {domain.id}. Subscription updated.")
+                result = pixel_service.check_pixel_installed_via_parse(
+                    company_website, domain.__dict__
+                )
+                if result["success"]:
+                    logger.info(
+                        f"Pixel confirmed for user {domain.id}. Subscription updated."
+                    )
                 else:
                     logger.info(f"Pixel not confirmed for user {domain.id}.")
             else:

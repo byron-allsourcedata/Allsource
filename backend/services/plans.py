@@ -11,48 +11,68 @@ WITHOUT_CARD_PLAN_ID = 15
 
 
 class PlansService:
-
-    def __init__(self, plans_persistence: PlansPersistence,
-                 subscription_service: SubscriptionService):
+    def __init__(
+        self,
+        plans_persistence: PlansPersistence,
+        subscription_service: SubscriptionService,
+    ):
         self.plans_persistence = plans_persistence
         self.subscription_service = subscription_service
 
-    def get_customer_id(self, user):
-        return user.get('customer_id')
+    def get_customer_id(self, user: dict):
+        return user.get("customer_id")
 
     def is_had_trial_period(self, user):
-        return not self.subscription_service.is_had_trial_period(user.get('id'))
+        return not self.subscription_service.is_had_trial_period(user.get("id"))
 
     def get_user_subscription_authorization_status(self, user):
-        if not user.get('is_with_card'):
-            if not user.get('is_email_confirmed'):
+        if not user.get("is_with_card"):
+            if not user.get("is_email_confirmed"):
                 return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
-            if not user.get('is_company_details_filled'):
+            if not user.get("is_company_details_filled"):
                 return UserAuthorizationStatus.FILL_COMPANY_DETAILS
         return UserAuthorizationStatus.SUCCESS
 
     def get_additional_credits_price_id(self):
         return self.subscription_service.get_additional_credits_price_id()
 
-    def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
-        self.plans_persistence.save_reason_unsubscribe(reason_unsubscribe, user_id, cancel_scheduled_at)
-        
+    def save_reason_unsubscribe(
+        self, reason_unsubscribe, user_id, cancel_scheduled_at
+    ):
+        self.plans_persistence.save_reason_unsubscribe(
+            reason_unsubscribe, user_id, cancel_scheduled_at
+        )
+
     def get_subscription_plans(self, user: dict):
-        if user.get('source_platform') == SourcePlatformEnum.SHOPIFY.value:
-            stripe_plans = self.plans_persistence.get_stripe_plans(SourcePlatformEnum.SHOPIFY.value)
+        if user.get("source_platform") == SourcePlatformEnum.SHOPIFY.value:
+            stripe_plans = self.plans_persistence.get_stripe_plans(
+                SourcePlatformEnum.SHOPIFY.value
+            )
         else:
-            stripe_plans = self.plans_persistence.get_stripe_plans(SourcePlatformEnum.MAXIMIZ.value)
-            
-        user_subscription = self.plans_persistence.get_user_subscription(user_id=user.get('id'))    
-        current_plan = self.plans_persistence.get_current_plan(user_id=user.get('id'))
+            stripe_plans = self.plans_persistence.get_stripe_plans(
+                SourcePlatformEnum.MAXIMIZ.value
+            )
+
+        user_subscription = self.plans_persistence.get_user_subscription(
+            user_id=user.get("id")
+        )
+        current_plan = self.plans_persistence.get_current_plan(
+            user_id=user.get("id")
+        )
         if current_plan and current_plan.is_free_trial:
             stripe_plans.append(current_plan)
         stripe_plans.sort(key=lambda plan: plan.priority)
         response = {"stripe_plans": []}
-        
+
         for stripe_plan in stripe_plans:
             is_active = (
-                        current_plan.id == stripe_plan.id and user_subscription.status == 'active') if user_subscription else False
+                (
+                    current_plan.id == stripe_plan.id
+                    and user_subscription.status == "active"
+                )
+                if user_subscription
+                else False
+            )
             response["stripe_plans"].append(
                 {
                     "interval": stripe_plan.interval,
@@ -66,7 +86,7 @@ class PlansService:
                     "leads_credits": stripe_plan.leads_credits,
                     "prospect_credits": stripe_plan.prospect_credits,
                     "features": stripe_plan.features,
-                    "is_active": is_active
+                    "is_active": is_active,
                 }
             )
         return response
@@ -75,10 +95,14 @@ class PlansService:
         return self.subscription_service.get_subscription_by_price_id(price_id)
 
     def save_downgrade_price_id(self, price_id, subscription):
-        self.subscription_service.save_downgrade_price_id(price_id, subscription)
+        self.subscription_service.save_downgrade_price_id(
+            price_id, subscription
+        )
 
     def get_current_price(self, current_subscription_id):
-        return self.plans_persistence.get_current_price(current_subscription_id=current_subscription_id)
+        return self.plans_persistence.get_current_price(
+            current_subscription_id=current_subscription_id
+        )
 
     def get_plan_price(self, price_id):
         return self.plans_persistence.get_plan_by_price_id(price_id=price_id)

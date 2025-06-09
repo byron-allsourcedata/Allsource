@@ -11,7 +11,7 @@ class ShopifyCustomer(BaseModel):
     last_name: Optional[str] = None
     orders_count: int
     state: Optional[str] = None
-    total_spent: Optional[str] = '0.00'
+    total_spent: Optional[str] = "0.00"
     last_order_id: Optional[int] = None
     note: Optional[str] = None
     verified_email: bool
@@ -19,7 +19,7 @@ class ShopifyCustomer(BaseModel):
     tax_exempt: bool
     tags: Optional[str] = None
     last_order_name: Optional[str] = None
-    currency: Optional[str] = 'GBP'
+    currency: Optional[str] = "GBP"
     phone: Optional[str] = None
     accepts_marketing: bool
     accepts_marketing_updated_at: Optional[str] = None
@@ -48,22 +48,26 @@ class ShopifyCustomer(BaseModel):
 
 class ShopifyOrderAPI(BaseModel):
     order_shopify_id: Optional[int] = None
-    shopify_user_id: Optional[str]= None
+    shopify_user_id: Optional[str] = None
     total_price: Optional[float] = None
     created_at_shopify: Optional[str] = None
     email: Optional[EmailStr] = None
     currency_code: Optional[str] = None
-    
+
+
 class ShopifyCredentials(BaseModel):
     access_token: str
-    
+
+
 class ShopifyLandingResponse(BaseModel):
     token: Optional[str]
     message: Optional[str]
-    
+
+
 class GenericEcommerceResponse(BaseModel):
     message: str
-    
+
+
 class ShopifyShopRedactForm(BaseModel):
     shop_id: int
     shop_domain: str

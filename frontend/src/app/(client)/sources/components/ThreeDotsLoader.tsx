@@ -1,10 +1,10 @@
 const ThreeDotsLoader = () => {
-  return (
-    <div className="dots-loader">
-      <span className="dot"></span>
-      <span className="dot"></span>
-      <span className="dot"></span>
-      <style jsx>{`
+	return (
+		<div className="dots-loader">
+			<span className="dot"></span>
+			<span className="dot"></span>
+			<span className="dot"></span>
+			<style jsx>{`
         .dots-loader {
           display: flex;
           align-items: center;
@@ -43,8 +43,8 @@ const ThreeDotsLoader = () => {
           }
         }
       `}</style>
-    </div>
-  );
+		</div>
+	);
 };
 
 export default ThreeDotsLoader;

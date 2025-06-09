@@ -1,18 +1,18 @@
 import { useEffect, useState } from "react";
 import {
-  Box,
-  Typography,
-  IconButton,
-  Collapse,
-  Checkbox,
-  FormControl,
-  Select,
-  MenuItem,
-  Chip,
-  Divider,
-  Button,
-  LinearProgress,
-  FormControlLabel
+	Box,
+	Typography,
+	IconButton,
+	Collapse,
+	Checkbox,
+	FormControl,
+	Select,
+	MenuItem,
+	Chip,
+	Divider,
+	Button,
+	LinearProgress,
+	FormControlLabel,
 } from "@mui/material";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -22,1669 +22,1791 @@ import CloseIcon from "@mui/icons-material/Close";
 import { smartAudiences } from "../../smartAudiences";
 import ValidationPopup from "./SkipValidationPopup";
 import { useRouter } from "next/navigation";
-import axiosInstance from '@/axios/axiosInterceptorInstance';
+import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { useHints } from "@/context/HintsContext";
 import HintCard from "../../../components/HintCard";
 import { builderHintCards } from "../../context/hintsCardsContent";
 import { useSmartsHints } from "../../context/SmartsHintsContext";
-import { BuilderKey } from '../../context/hintsCardsContent';
+import { BuilderKey } from "../../context/hintsCardsContent";
 
 interface ExpandableFilterProps {
-  block8Ref: React.RefObject<HTMLDivElement>;
-  targetAudience: string;
-  useCaseType: string;
-  onSkip: () => void;
-  scrollToNewBlock: () => void;
-  scrollToEveryOtherBlock: () => void;
-  onValidate: (data: FilterData) => void;
-  onEdit: () => void;
-  setPersentsData: (value: number) => void;
+	block8Ref: React.RefObject<HTMLDivElement>;
+	targetAudience: string;
+	useCaseType: string;
+	onSkip: () => void;
+	scrollToNewBlock: () => void;
+	scrollToEveryOtherBlock: () => void;
+	onValidate: (data: FilterData) => void;
+	onEdit: () => void;
+	setPersentsData: (value: number) => void;
 }
 
 interface Recency {
-  days: number;
+	days: number;
 }
 
 interface EmailValidation {
-  recency?: Recency;
-  mx?: {};
-  delivery?: {};
+	recency?: Recency;
+	mx?: {};
+	delivery?: {};
 }
 
 interface PhoneValidation {
-  last_update_date?: {};
-  confirmation?: {};
+	last_update_date?: {};
+	confirmation?: {};
 }
 
 interface PostalValidation {
-  cas_office_address?: {};
-  cas_home_address?: {};
+	cas_office_address?: {};
+	cas_home_address?: {};
 }
 
 interface LinkedInValidation {
-  job_validation?: {};
+	job_validation?: {};
 }
 
 interface FilterData {
-  personal_email: EmailValidation[];
-  business_email: EmailValidation[];
-  phone: PhoneValidation[];
-  postal_cas_verification: PostalValidation[];
-  linked_in: LinkedInValidation[];
+	personal_email: EmailValidation[];
+	business_email: EmailValidation[];
+	phone: PhoneValidation[];
+	postal_cas_verification: PostalValidation[];
+	linked_in: LinkedInValidation[];
 }
 
 const AllFilters: React.FC<ExpandableFilterProps> = ({
-  block8Ref,
-  scrollToNewBlock,
-  scrollToEveryOtherBlock,
-  targetAudience,
-  useCaseType,
-  onSkip,
-  onValidate,
-  onEdit,
-  setPersentsData
+	block8Ref,
+	scrollToNewBlock,
+	scrollToEveryOtherBlock,
+	targetAudience,
+	useCaseType,
+	onSkip,
+	onValidate,
+	onEdit,
+	setPersentsData,
 }) => {
-  const router = useRouter();
-  const { changeSmartsBuilderHint, smartsBuilderHints } = useSmartsHints();
-  const [isOpenPersonalEmail, setIsOpenPersonalEmail] = useState(false);
-  const [isOpenBusinessEmail, setIsOpenBusinessEmail] = useState(false);
-  const [isOpenPhone, setIsOpenPhone] = useState(false);
-  const [isOpenPostalCAS, setIsOpenPostalCAS] = useState(false);
-  const [isOpenLinkedIn, setIsOpenLinkedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+	const router = useRouter();
+	const { changeSmartsBuilderHint, smartsBuilderHints } = useSmartsHints();
+	const [isOpenPersonalEmail, setIsOpenPersonalEmail] = useState(false);
+	const [isOpenBusinessEmail, setIsOpenBusinessEmail] = useState(false);
+	const [isOpenPhone, setIsOpenPhone] = useState(false);
+	const [isOpenPostalCAS, setIsOpenPostalCAS] = useState(false);
+	const [isOpenLinkedIn, setIsOpenLinkedIn] = useState(false);
+	const [isLoading, setIsLoading] = useState(true);
 
-  const [selectedOptionsPersonalEmail, setSelectedOptionsPersonalEmail] =
-    useState<string[]>([]);
-  const [selectedOptionsBusinessEmail, setSelectedOptionsBusinessEmail] =
-    useState<string[]>([]);
-  const [selectedOptionsPhone, setSelectedOptionsPhone] = useState<string[]>(
-    []
-  );
-  const [selectedOptionsPostalCAS, setSelectedOptionsPostalCAS] = useState<
-    string[]
-  >([]);
-  const [selectedOptionsLinkedIn, setSelectedOptionsLinkedIn] = useState<
-    string[]
-  >([]);
+	const [selectedOptionsPersonalEmail, setSelectedOptionsPersonalEmail] =
+		useState<string[]>([]);
+	const [selectedOptionsBusinessEmail, setSelectedOptionsBusinessEmail] =
+		useState<string[]>([]);
+	const [selectedOptionsPhone, setSelectedOptionsPhone] = useState<string[]>(
+		[],
+	);
+	const [selectedOptionsPostalCAS, setSelectedOptionsPostalCAS] = useState<
+		string[]
+	>([]);
+	const [selectedOptionsLinkedIn, setSelectedOptionsLinkedIn] = useState<
+		string[]
+	>([]);
 
-  const [nestedSelections, setNestedSelections] = useState<{
-    [key: string]: string;
-  }>({});
-  const [expandedNested, setExpandedNested] = useState<{
-    [key: string]: boolean;
-  }>({});
+	const [nestedSelections, setNestedSelections] = useState<{
+		[key: string]: string;
+	}>({});
+	const [expandedNested, setExpandedNested] = useState<{
+		[key: string]: boolean;
+	}>({});
 
-  const [openPopup, setOpenPopup] = useState(false);
-  const [isValidate, setValidate] = useState(false);
+	const [openPopup, setOpenPopup] = useState(false);
+	const [isValidate, setValidate] = useState(false);
 
-  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+	const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
-  const toggleFilter = (
-    setter: React.Dispatch<React.SetStateAction<boolean>>,
-    state: boolean
-  ) => {
-    if (!isValidate) setter(!state);
-  };
+	const toggleFilter = (
+		setter: React.Dispatch<React.SetStateAction<boolean>>,
+		state: boolean,
+	) => {
+		if (!isValidate) setter(!state);
+	};
 
-  const handleOptionClick = (
-    setter: React.Dispatch<React.SetStateAction<string[]>>,
-    option: string
-  ) => {
-    if (!isValidate) {
-      setter((prev) =>
-        prev.includes(option)
-          ? prev.filter((item) => item !== option)
-          : [...prev, option]
-      );
-    }
-  };
+	const handleOptionClick = (
+		setter: React.Dispatch<React.SetStateAction<string[]>>,
+		option: string,
+	) => {
+		if (!isValidate) {
+			setter((prev) =>
+				prev.includes(option)
+					? prev.filter((item) => item !== option)
+					: [...prev, option],
+			);
+		}
+	};
 
-  const toggleDotHintClick = (key: BuilderKey) => {
-    changeSmartsBuilderHint(key, "showBody", "toggle")
-  };
+	const toggleDotHintClick = (key: BuilderKey) => {
+		changeSmartsBuilderHint(key, "showBody", "toggle");
+	};
 
-  const closeDotHintClick = (key: BuilderKey) => {
-    changeSmartsBuilderHint(key, "show", "close")
-  };
+	const closeDotHintClick = (key: BuilderKey) => {
+		changeSmartsBuilderHint(key, "show", "close");
+	};
 
-  const openDotHintClick = (key: BuilderKey) => {
-    changeSmartsBuilderHint(key, "show", "open")
-  };
+	const openDotHintClick = (key: BuilderKey) => {
+		changeSmartsBuilderHint(key, "show", "open");
+	};
 
-  const getEstimatePredictable = async (validations: string[]) => {
-    setIsLoading(true);
-    try {
-      const response = await axiosInstance.get(`/audience-smarts/estimates-predictable-validation?validations=${validations}`);
-      if (response.status === 200 && response.data) {
-        setPersentsData(response.data)
-      }
-    } catch {
-    } finally {
-      setIsLoading(false);
-    }
-  };
+	const getEstimatePredictable = async (validations: string[]) => {
+		setIsLoading(true);
+		try {
+			const response = await axiosInstance.get(
+				`/audience-smarts/estimates-predictable-validation?validations=${validations}`,
+			);
+			if (response.status === 200 && response.data) {
+				setPersentsData(response.data);
+			}
+		} catch {
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
-  const handleNestedSelect = (option: string, value: string) => {
-    if (!isValidate) {
-      setNestedSelections((prev) => ({
-        ...prev,
-        [option]: value,
-      }));
-      if (
-        value &&
-        !selectedOptionsPersonalEmail.includes(option) &&
-        !selectedOptionsBusinessEmail.includes(option)
-      ) {
-        if (option === "Recency") {
-          setSelectedOptionsPersonalEmail((prev) => [...prev, option]);
-        } else if (option === "RecencyBusiness") {
-          setSelectedOptionsBusinessEmail((prev) => [...prev, option]);
-        }
-      }
-    }
-  };
+	const handleNestedSelect = (option: string, value: string) => {
+		if (!isValidate) {
+			setNestedSelections((prev) => ({
+				...prev,
+				[option]: value,
+			}));
+			if (
+				value &&
+				!selectedOptionsPersonalEmail.includes(option) &&
+				!selectedOptionsBusinessEmail.includes(option)
+			) {
+				if (option === "Recency") {
+					setSelectedOptionsPersonalEmail((prev) => [...prev, option]);
+				} else if (option === "RecencyBusiness") {
+					setSelectedOptionsBusinessEmail((prev) => [...prev, option]);
+				}
+			}
+		}
+	};
 
-  const toggleNestedExpand = (label: string) => {
-    if (!isValidate) {
-      // Разрешаем открывать/закрывать только если isValidate === false
-      setExpandedNested((prev) => ({
-        ...prev,
-        [label]: !prev[label],
-      }));
-    }
-  };
+	const toggleNestedExpand = (label: string) => {
+		if (!isValidate) {
+			// Разрешаем открывать/закрывать только если isValidate === false
+			setExpandedNested((prev) => ({
+				...prev,
+				[label]: !prev[label],
+			}));
+		}
+	};
 
-  const removeChip = (setState: Function, option: string) => {
-    if (!isValidate) {
-      setState((prev: string[]) => prev.filter((item) => item !== option));
-      setNestedSelections((prev) => {
-        const updated = { ...prev };
-        delete updated[option];
-        return updated;
-      });
-    }
-  };
+	const removeChip = (setState: Function, option: string) => {
+		if (!isValidate) {
+			setState((prev: string[]) => prev.filter((item) => item !== option));
+			setNestedSelections((prev) => {
+				const updated = { ...prev };
+				delete updated[option];
+				return updated;
+			});
+		}
+	};
 
-  const getChipStyle = (label: string) => {
-    if (label === "Recency" || label === "RecencyBusiness") {
-      return {
-        backgroundColor: "rgba(234, 248, 221, 1)",
-        color: "rgba(43, 91, 0, 1)",
-        borderRadius: "3px",
-        maxHeight: "20px",
-        cursor: isValidate ? "default" : "pointer",
-      };
-    } else if (label === "MX" || label === "Delivery") {
-      return {
-        backgroundColor: "rgba(255, 255, 255, 1)",
-        color: "rgba(95, 99, 104, 1)",
-        borderRadius: "3px",
-        border: "1px solid rgba(200, 200, 200, 1)",
-        cursor: isValidate ? "default" : "pointer",
-        maxHeight: "20px",
-      };
-    }
-    return {
-      backgroundColor: "rgba(255, 255, 255, 1)",
-      color: "rgba(95, 99, 104, 1)",
-      borderRadius: "3px",
-      border: "1px solid rgba(200, 200, 200, 1)",
-      cursor: isValidate ? "default" : "pointer",
-      maxHeight: "20px",
-    };
-  };
+	const getChipStyle = (label: string) => {
+		if (label === "Recency" || label === "RecencyBusiness") {
+			return {
+				backgroundColor: "rgba(234, 248, 221, 1)",
+				color: "rgba(43, 91, 0, 1)",
+				borderRadius: "3px",
+				maxHeight: "20px",
+				cursor: isValidate ? "default" : "pointer",
+			};
+		} else if (label === "MX" || label === "Delivery") {
+			return {
+				backgroundColor: "rgba(255, 255, 255, 1)",
+				color: "rgba(95, 99, 104, 1)",
+				borderRadius: "3px",
+				border: "1px solid rgba(200, 200, 200, 1)",
+				cursor: isValidate ? "default" : "pointer",
+				maxHeight: "20px",
+			};
+		}
+		return {
+			backgroundColor: "rgba(255, 255, 255, 1)",
+			color: "rgba(95, 99, 104, 1)",
+			borderRadius: "3px",
+			border: "1px solid rgba(200, 200, 200, 1)",
+			cursor: isValidate ? "default" : "pointer",
+			maxHeight: "20px",
+		};
+	};
 
-  const toSnakeCase = (str: string) => {
-    return str.split(" ").join("_").toLowerCase();
-  };
+	const toSnakeCase = (str: string) => {
+		return str.split(" ").join("_").toLowerCase();
+	};
 
-  const convertStrInObject = (el: string) => {
-    return { [toSnakeCase(el)]: {} };
-  };
+	const convertStrInObject = (el: string) => {
+		return { [toSnakeCase(el)]: {} };
+	};
 
-  const convertValidation = (array: string[]) => {
-    return array.map(convertStrInObject);
-  };
+	const convertValidation = (array: string[]) => {
+		return array.map(convertStrInObject);
+	};
 
-  const convertValidationWithRecency = (array: string[], value: string) => {
-    if (!value) return convertValidation(array);
+	const convertValidationWithRecency = (array: string[], value: string) => {
+		if (!value) return convertValidation(array);
 
-    const filteredArray = array
-      .filter((name) => !["Recency", "RecencyBusiness"].includes(name))
-      .map(convertStrInObject);
+		const filteredArray = array
+			.filter((name) => !["Recency", "RecencyBusiness"].includes(name))
+			.map(convertStrInObject);
 
-    const recencyObject = {
-      recency: { days: Number(value.replace(/[^\d]/g, "")) },
-    };
+		const recencyObject = {
+			recency: { days: Number(value.replace(/[^\d]/g, "")) },
+		};
 
-    return [...filteredArray, recencyObject];
-  };
+		return [...filteredArray, recencyObject];
+	};
 
-  const handleValidate = () => {
-    setValidate(true);
-    setIsOpenPersonalEmail(false);
-    setIsOpenBusinessEmail(false);
-    setIsOpenPhone(false);
-    setIsOpenPostalCAS(false);
-    setIsOpenLinkedIn(false);
-    const validations = {
-      personal_email: convertValidationWithRecency(
-        selectedOptionsPersonalEmail,
-        nestedSelections["Recency"]
-      ),
-      business_email: convertValidationWithRecency(
-        selectedOptionsBusinessEmail,
-        nestedSelections["RecencyBusiness"]
-      ),
-      phone: convertValidation(selectedOptionsPhone),
-      postal_cas_verification: convertValidation(selectedOptionsPostalCAS),
-      linked_in: convertValidation(selectedOptionsLinkedIn),
-    }
-    onValidate(validations);
-    getEstimatePredictable([
-      ...selectedOptionsPersonalEmail.map(el => `personal_email-${toSnakeCase(el)}`),
-      ...selectedOptionsBusinessEmail.map(el => (el === "RecencyBusiness") ? `business_email-recency` : `personal_email-${toSnakeCase(el)}`),
-      ...selectedOptionsPhone.map(el => `phone-${toSnakeCase(el)}`),
-      ...selectedOptionsPostalCAS.map(el => `postal_cas_verification-${toSnakeCase(el)}`),
-      ...selectedOptionsLinkedIn.map(el => `linked_in-${toSnakeCase(el)}`),])
-  };
+	const handleValidate = () => {
+		setValidate(true);
+		setIsOpenPersonalEmail(false);
+		setIsOpenBusinessEmail(false);
+		setIsOpenPhone(false);
+		setIsOpenPostalCAS(false);
+		setIsOpenLinkedIn(false);
+		const validations = {
+			personal_email: convertValidationWithRecency(
+				selectedOptionsPersonalEmail,
+				nestedSelections["Recency"],
+			),
+			business_email: convertValidationWithRecency(
+				selectedOptionsBusinessEmail,
+				nestedSelections["RecencyBusiness"],
+			),
+			phone: convertValidation(selectedOptionsPhone),
+			postal_cas_verification: convertValidation(selectedOptionsPostalCAS),
+			linked_in: convertValidation(selectedOptionsLinkedIn),
+		};
+		onValidate(validations);
+		getEstimatePredictable([
+			...selectedOptionsPersonalEmail.map(
+				(el) => `personal_email-${toSnakeCase(el)}`,
+			),
+			...selectedOptionsBusinessEmail.map((el) =>
+				el === "RecencyBusiness"
+					? `business_email-recency`
+					: `personal_email-${toSnakeCase(el)}`,
+			),
+			...selectedOptionsPhone.map((el) => `phone-${toSnakeCase(el)}`),
+			...selectedOptionsPostalCAS.map(
+				(el) => `postal_cas_verification-${toSnakeCase(el)}`,
+			),
+			...selectedOptionsLinkedIn.map((el) => `linked_in-${toSnakeCase(el)}`),
+		]);
+	};
 
-  const handleSkip = () => {
-    setOpenPopup(true);
-  };
+	const handleSkip = () => {
+		setOpenPopup(true);
+	};
 
-  const handleEdit = () => {
-    setValidate(false);
-    onEdit();
-  };
+	const handleEdit = () => {
+		setValidate(false);
+		onEdit();
+	};
 
-  const handleSkipPopup = () => {
-    setSelectedOptionsPersonalEmail([]);
-    setSelectedOptionsBusinessEmail([]);
-    setSelectedOptionsPhone([]);
-    setSelectedOptionsPostalCAS([]);
-    setSelectedOptionsLinkedIn([]);
-    setNestedSelections({});
-    setOpenPopup(false);
-    onSkip(), setValidate(true);
-  };
+	const handleSkipPopup = () => {
+		setSelectedOptionsPersonalEmail([]);
+		setSelectedOptionsBusinessEmail([]);
+		setSelectedOptionsPhone([]);
+		setSelectedOptionsPostalCAS([]);
+		setSelectedOptionsLinkedIn([]);
+		setNestedSelections({});
+		setOpenPopup(false);
+		onSkip(), setValidate(true);
+	};
 
-  useEffect(() => {
-    setSelectedOptionsPersonalEmail([]);
-    setSelectedOptionsBusinessEmail([]);
-    setSelectedOptionsPhone([]);
-    setSelectedOptionsPostalCAS([]);
-    setSelectedOptionsLinkedIn([]);
-    setNestedSelections({});
-    onEdit();
+	useEffect(() => {
+		setSelectedOptionsPersonalEmail([]);
+		setSelectedOptionsBusinessEmail([]);
+		setSelectedOptionsPhone([]);
+		setSelectedOptionsPostalCAS([]);
+		setSelectedOptionsLinkedIn([]);
+		setNestedSelections({});
+		onEdit();
 
-    if (
-      (targetAudience === "B2C" || targetAudience === "Both") &&
-      useCaseType === "Email"
-    ) {
-      setNestedSelections((prev) => ({ ...prev, Recency: "30 days" }));
-      setSelectedOptionsPersonalEmail(["MX", "Delivery", "Recency"]);
-      setValidate(false);
-    }
+		if (
+			(targetAudience === "B2C" || targetAudience === "Both") &&
+			useCaseType === "Email"
+		) {
+			setNestedSelections((prev) => ({ ...prev, Recency: "30 days" }));
+			setSelectedOptionsPersonalEmail(["MX", "Delivery", "Recency"]);
+			setValidate(false);
+		}
 
-    if (
-      (targetAudience === "B2B" || targetAudience === "Both") &&
-      useCaseType === "Email"
-    ) {
-      setNestedSelections((prev) => ({ ...prev, RecencyBusiness: "30 days" }));
-      setSelectedOptionsBusinessEmail(["MX", "Delivery", "RecencyBusiness"]);
-      setValidate(false);
-    }
+		if (
+			(targetAudience === "B2B" || targetAudience === "Both") &&
+			useCaseType === "Email"
+		) {
+			setNestedSelections((prev) => ({ ...prev, RecencyBusiness: "30 days" }));
+			setSelectedOptionsBusinessEmail(["MX", "Delivery", "RecencyBusiness"]);
+			setValidate(false);
+		}
 
-    if (useCaseType === "Tele Marketing") {
-      if (targetAudience === "Both" || targetAudience === "B2B") {
-        setSelectedOptionsPhone(["Confirmation", "DNC filter",]);
-        // setSelectedOptionsPhone(["Last updated date", "Confirmation", "DNC filter",]);
-      } else if (targetAudience === "B2C") {
-        // setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
-        setSelectedOptionsPhone(["DNC filter"]);
-      }
-      setValidate(false);
-    }
+		if (useCaseType === "Tele Marketing") {
+			if (targetAudience === "Both" || targetAudience === "B2B") {
+				setSelectedOptionsPhone(["Confirmation", "DNC filter"]);
+				// setSelectedOptionsPhone(["Last updated date", "Confirmation", "DNC filter",]);
+			} else if (targetAudience === "B2C") {
+				// setSelectedOptionsPhone(["Last updated date", "DNC filter"]);
+				setSelectedOptionsPhone(["DNC filter"]);
+			}
+			setValidate(false);
+		}
 
-    if (useCaseType === "Postal") {
-      if (targetAudience === "Both") {
-        setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
-      } else if (targetAudience === "B2C") {
-        setSelectedOptionsPostalCAS(["CAS home address"]);
-      } else if (targetAudience === "B2B") {
-        setSelectedOptionsPostalCAS(["CAS office address"]);
-      }
-      setValidate(false);
-    }
+		if (useCaseType === "Postal") {
+			if (targetAudience === "Both") {
+				setSelectedOptionsPostalCAS(["CAS office address", "CAS home address"]);
+			} else if (targetAudience === "B2C") {
+				setSelectedOptionsPostalCAS(["CAS home address"]);
+			} else if (targetAudience === "B2B") {
+				setSelectedOptionsPostalCAS(["CAS office address"]);
+			}
+			setValidate(false);
+		}
 
-    if (
-      (targetAudience === "B2B" || targetAudience === "Both") &&
-      useCaseType === "LinkedIn"
-    ) {
-      setSelectedOptionsLinkedIn(["Job validation"]);
-      setValidate(false);
-    }
-  }, [targetAudience, useCaseType]);
+		if (
+			(targetAudience === "B2B" || targetAudience === "Both") &&
+			useCaseType === "LinkedIn"
+		) {
+			setSelectedOptionsLinkedIn(["Job validation"]);
+			setValidate(false);
+		}
+	}, [targetAudience, useCaseType]);
 
-  const isAnyFilterSelected =
-    selectedOptionsPersonalEmail.length > 0 ||
-    selectedOptionsBusinessEmail.length > 0 ||
-    selectedOptionsPhone.length > 0 ||
-    selectedOptionsPostalCAS.length > 0 ||
-    selectedOptionsLinkedIn.length > 0 ||
-    Object.keys(nestedSelections).length > 0;
+	const isAnyFilterSelected =
+		selectedOptionsPersonalEmail.length > 0 ||
+		selectedOptionsBusinessEmail.length > 0 ||
+		selectedOptionsPhone.length > 0 ||
+		selectedOptionsPostalCAS.length > 0 ||
+		selectedOptionsLinkedIn.length > 0 ||
+		Object.keys(nestedSelections).length > 0;
 
-  return (
-    <Box ref={block8Ref}>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          gap: 2,
-          minWidth: "100%",
-          flexGrow: 1,
-          position: "relative",
-          flexWrap: "wrap",
-          border: "1px solid rgba(228, 228, 228, 1)",
-          borderRadius: "6px",
-          padding: "20px",
-          mt: 2,
-        }}
-      >
-        {uploadProgress !== null && (
-          <Box
-            sx={{
-              width: "100%",
-              position: "absolute",
-              top: 0,
-              left: 0,
-              zIndex: 1200,
-            }}
-          >
-            <LinearProgress
-              variant="determinate"
-              value={uploadProgress}
-              sx={{
-                borderRadius: "6px",
-                backgroundColor: "#c6dafc",
-                "& .MuiLinearProgress-bar": {
-                  borderRadius: 5,
-                  backgroundColor: "#4285f4",
-                },
-              }}
-            />
-          </Box>
-        )}
-        <Box sx={{ gap: 2, display: "flex", flexDirection: "column" }}>
-          <Box
-            sx={{
-              display: "flex",
-              width: "100%",
-              flexDirection: "row",
-              justifyContent: "space-between",
-              gap: 1,
-            }}
-          >
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-              <Typography
-                sx={{
-                  fontFamily: "Nunito Sans",
-                  fontSize: "16px",
-                  fontWeight: 500,
-                }}
-              >
-                Validation
-              </Typography>
-            </Box>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, position: "relative" }}>
-              <Typography
-                className="table-data"
-                sx={{
-                  color: "rgba(43, 91, 0, 1) !important",
-                  fontSize: "14px !important",
-                  backgroundColor: "rgba(234, 248, 221, 1) !important",
-                  padding: "4px 12px",
-                }}
-              >
-                Recommended
-              </Typography>
+	return (
+		<Box ref={block8Ref}>
+			<Box
+				sx={{
+					display: "flex",
+					flexDirection: "column",
+					gap: 2,
+					minWidth: "100%",
+					flexGrow: 1,
+					position: "relative",
+					flexWrap: "wrap",
+					border: "1px solid rgba(228, 228, 228, 1)",
+					borderRadius: "6px",
+					padding: "20px",
+					mt: 2,
+				}}
+			>
+				{uploadProgress !== null && (
+					<Box
+						sx={{
+							width: "100%",
+							position: "absolute",
+							top: 0,
+							left: 0,
+							zIndex: 1200,
+						}}
+					>
+						<LinearProgress
+							variant="determinate"
+							value={uploadProgress}
+							sx={{
+								borderRadius: "6px",
+								backgroundColor: "#c6dafc",
+								"& .MuiLinearProgress-bar": {
+									borderRadius: 5,
+									backgroundColor: "#4285f4",
+								},
+							}}
+						/>
+					</Box>
+				)}
+				<Box sx={{ gap: 2, display: "flex", flexDirection: "column" }}>
+					<Box
+						sx={{
+							display: "flex",
+							width: "100%",
+							flexDirection: "row",
+							justifyContent: "space-between",
+							gap: 1,
+						}}
+					>
+						<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+							<Typography
+								sx={{
+									fontFamily: "Nunito Sans",
+									fontSize: "16px",
+									fontWeight: 500,
+								}}
+							>
+								Validation
+							</Typography>
+						</Box>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "column",
+								gap: 0.5,
+								position: "relative",
+							}}
+						>
+							<Typography
+								className="table-data"
+								sx={{
+									color: "rgba(43, 91, 0, 1) !important",
+									fontSize: "14px !important",
+									backgroundColor: "rgba(234, 248, 221, 1) !important",
+									padding: "4px 12px",
+								}}
+							>
+								Recommended
+							</Typography>
 
-              {smartsBuilderHints["validation"].show &&
-              <HintCard
-                  card={builderHintCards["validation"]}
-                  positionLeft={-325}
-                  positionTop={90}
-                  rightSide={true}
-                  isOpenBody={smartsBuilderHints["validation"].showBody}
-                  toggleClick={() => {
-                    if (smartsBuilderHints["skipValidation"].showBody) {
-                      closeDotHintClick("skipValidation")
-                    }
-                    toggleDotHintClick("validation")
-                  }}
-                  closeClick={() => changeSmartsBuilderHint("validation", "showBody", "close")}
-              />
-              } 
-            </Box>
-          </Box>
-          <Typography
-            sx={{
-              fontFamily: "Roboto",
-              fontSize: "12px",
-              color: "rgba(95, 99, 104, 1)",
-            }}
-          >
-            Choose parameters that you want to validate.
-          </Typography>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1}}>
-            {/* Personal Email Filter */}
-            <Box sx={ValidationStyle.main_filter_form}>
-              <Box
-                sx={{
-                  ...ValidationStyle.filter_form,
-                  alignItems: "center",
-                  borderBottom: isOpenPersonalEmail
-                    ? "1px solid rgba(235, 235, 235, 1)"
-                    : "",
-                  cursor: isValidate ? "default" : "pointer",
-                }}
-                onClick={() =>
-                  toggleFilter(setIsOpenPersonalEmail, isOpenPersonalEmail)
-                }
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "start",
-                    gap: 1.5,
-                    alignItems: "start",
-                  }}
-                >
-                  <Typography sx={ValidationStyle.filter_name}>
-                    Personal email
-                  </Typography>
-                  {selectedOptionsPersonalEmail.map((option) => (
-                    <Chip
-                      key={option}
-                      label={
-                        nestedSelections[option]
-                          ? `${option} ${nestedSelections[option]}`
-                          : option
-                      }
-                      onDelete={
-                        isValidate
-                          ? undefined
-                          : () =>
-                            removeChip(
-                              setSelectedOptionsPersonalEmail,
-                              option
-                            )
-                      }
-                      deleteIcon={
-                        !isValidate ? (
-                          <CloseIcon
-                            sx={{
-                              color: "rgba(32, 33, 36, 1)",
-                              fontSize: "16px",
-                            }}
-                          />
-                        ) : undefined
-                      }
-                      sx={{ margin: 0, padding: 0, ...getChipStyle(option) }}
-                    />
-                  ))}
-                </Box>
-                <IconButton
-                  sx={{ cursor: isValidate ? "default" : "pointer" }}
-                  onClick={() =>
-                    toggleFilter(setIsOpenPersonalEmail, isOpenPersonalEmail)
-                  }
-                  aria-label="toggle-content"
-                >
-                  {isOpenPersonalEmail ? (
-                    <ExpandLessIcon />
-                  ) : (
-                    <ExpandMoreIcon />
-                  )}
-                </IconButton>
-              </Box>
-              <Collapse in={isOpenPersonalEmail}>
-                  <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 1,
-                    pt: 2,
-                    pl: 2,
-                    pb: 0.75,
-                  }}
-                >
-                  {/* MX Checkbox */}
-                  <Box>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              size="small"
-                              disabled={isValidate}
-                              checked={selectedOptionsPersonalEmail.includes("MX")}
-                              onChange={() =>
-                                handleOptionClick(
-                                  setSelectedOptionsPersonalEmail,
-                                  "MX"
-                                )
-                              }
-                              sx={{
-                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
-                              }}
-                            />
-                          }
-                          label={
-                            <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 2 }}>
-                              <Typography className="form-input">MX</Typography>
-                              {(targetAudience === "B2B" || targetAudience === "Both") &&
-                                useCaseType === "Email" && (
-                                  <Typography
-                                    className="table-data"
-                                    sx={{
-                                      color: "rgba(43, 91, 0, 1) !important",
-                                      fontSize: "14px !important",
-                                      backgroundColor: "rgba(234, 248, 221, 1) !important",
-                                      borderRadius: "3px",
-                                      padding: "4px 12px",
-                                    }}
-                                  >
-                                    Recommended
-                                  </Typography>
-                                )}
-                              <Typography
-                                className="table-data"
-                                sx={{
-                                  color: "rgba(0, 129, 251, 1) !important",
-                                  fontSize: "14px !important",
-                                  backgroundColor: "rgba(204, 230, 254, 1) !important",
-                                  borderRadius: "3px",
-                                  padding: "4px 12px",
-                                }}
-                              >
-                                Free
-                              </Typography>
-                            </Box>
-                          }
-                          sx={{ userSelect: "none", cursor: "pointer" }}
-                        />
-                      </Box>
-                    </Box>
-                    <Divider sx={{ my: 1 }} />
-                  </Box>
+							{smartsBuilderHints["validation"].show && (
+								<HintCard
+									card={builderHintCards["validation"]}
+									positionLeft={-325}
+									positionTop={90}
+									rightSide={true}
+									isOpenBody={smartsBuilderHints["validation"].showBody}
+									toggleClick={() => {
+										if (smartsBuilderHints["skipValidation"].showBody) {
+											closeDotHintClick("skipValidation");
+										}
+										toggleDotHintClick("validation");
+									}}
+									closeClick={() =>
+										changeSmartsBuilderHint("validation", "showBody", "close")
+									}
+								/>
+							)}
+						</Box>
+					</Box>
+					<Typography
+						sx={{
+							fontFamily: "Roboto",
+							fontSize: "12px",
+							color: "rgba(95, 99, 104, 1)",
+						}}
+					>
+						Choose parameters that you want to validate.
+					</Typography>
+					<Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+						{/* Personal Email Filter */}
+						<Box sx={ValidationStyle.main_filter_form}>
+							<Box
+								sx={{
+									...ValidationStyle.filter_form,
+									alignItems: "center",
+									borderBottom: isOpenPersonalEmail
+										? "1px solid rgba(235, 235, 235, 1)"
+										: "",
+									cursor: isValidate ? "default" : "pointer",
+								}}
+								onClick={() =>
+									toggleFilter(setIsOpenPersonalEmail, isOpenPersonalEmail)
+								}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "start",
+										gap: 1.5,
+										alignItems: "start",
+									}}
+								>
+									<Typography sx={ValidationStyle.filter_name}>
+										Personal email
+									</Typography>
+									{selectedOptionsPersonalEmail.map((option) => (
+										<Chip
+											key={option}
+											label={
+												nestedSelections[option]
+													? `${option} ${nestedSelections[option]}`
+													: option
+											}
+											onDelete={
+												isValidate
+													? undefined
+													: () =>
+															removeChip(
+																setSelectedOptionsPersonalEmail,
+																option,
+															)
+											}
+											deleteIcon={
+												!isValidate ? (
+													<CloseIcon
+														sx={{
+															color: "rgba(32, 33, 36, 1)",
+															fontSize: "16px",
+														}}
+													/>
+												) : undefined
+											}
+											sx={{ margin: 0, padding: 0, ...getChipStyle(option) }}
+										/>
+									))}
+								</Box>
+								<IconButton
+									sx={{ cursor: isValidate ? "default" : "pointer" }}
+									onClick={() =>
+										toggleFilter(setIsOpenPersonalEmail, isOpenPersonalEmail)
+									}
+									aria-label="toggle-content"
+								>
+									{isOpenPersonalEmail ? (
+										<ExpandLessIcon />
+									) : (
+										<ExpandMoreIcon />
+									)}
+								</IconButton>
+							</Box>
+							<Collapse in={isOpenPersonalEmail}>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "column",
+										gap: 1,
+										pt: 2,
+										pl: 2,
+										pb: 0.75,
+									}}
+								>
+									{/* MX Checkbox */}
+									<Box>
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "space-between",
+											}}
+										>
+											<Box
+												sx={{ display: "flex", alignItems: "center", gap: 1 }}
+											>
+												<FormControlLabel
+													control={
+														<Checkbox
+															size="small"
+															disabled={isValidate}
+															checked={selectedOptionsPersonalEmail.includes(
+																"MX",
+															)}
+															onChange={() =>
+																handleOptionClick(
+																	setSelectedOptionsPersonalEmail,
+																	"MX",
+																)
+															}
+															sx={{
+																"&.Mui-checked": {
+																	color: "rgba(56, 152, 252, 1)",
+																},
+															}}
+														/>
+													}
+													label={
+														<Box
+															sx={{
+																display: "flex",
+																flexDirection: "row",
+																alignItems: "center",
+																gap: 2,
+															}}
+														>
+															<Typography className="form-input">MX</Typography>
+															{(targetAudience === "B2B" ||
+																targetAudience === "Both") &&
+																useCaseType === "Email" && (
+																	<Typography
+																		className="table-data"
+																		sx={{
+																			color: "rgba(43, 91, 0, 1) !important",
+																			fontSize: "14px !important",
+																			backgroundColor:
+																				"rgba(234, 248, 221, 1) !important",
+																			borderRadius: "3px",
+																			padding: "4px 12px",
+																		}}
+																	>
+																		Recommended
+																	</Typography>
+																)}
+															<Typography
+																className="table-data"
+																sx={{
+																	color: "rgba(0, 129, 251, 1) !important",
+																	fontSize: "14px !important",
+																	backgroundColor:
+																		"rgba(204, 230, 254, 1) !important",
+																	borderRadius: "3px",
+																	padding: "4px 12px",
+																}}
+															>
+																Free
+															</Typography>
+														</Box>
+													}
+													sx={{ userSelect: "none", cursor: "pointer" }}
+												/>
+											</Box>
+										</Box>
+										<Divider sx={{ my: 1 }} />
+									</Box>
 
-                  {/* Last seen Checkbox with Expand */}
-                  <Box>
-                    <Box
-                      onClick={() => toggleNestedExpand("Last seen Personal")}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1}}
-                      >
-                        <Checkbox
-                          size="small"
-                          disabled={isValidate}
-                          checked={selectedOptionsPersonalEmail.includes(
-                            "Recency"
-                          )}
-                          onChange={(event) => {
-                            const isChecked = event.target.checked;
+									{/* Last seen Checkbox with Expand */}
+									<Box>
+										<Box
+											onClick={() => toggleNestedExpand("Last seen Personal")}
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "space-between",
+												cursor: "pointer",
+											}}
+										>
+											<Box
+												sx={{ display: "flex", alignItems: "center", gap: 1 }}
+											>
+												<Checkbox
+													size="small"
+													disabled={isValidate}
+													checked={selectedOptionsPersonalEmail.includes(
+														"Recency",
+													)}
+													onChange={(event) => {
+														const isChecked = event.target.checked;
 
-                            handleOptionClick(
-                              setSelectedOptionsPersonalEmail,
-                              "Recency"
-                            );
+														handleOptionClick(
+															setSelectedOptionsPersonalEmail,
+															"Recency",
+														);
 
-                            if (!isChecked) {
-                              handleNestedSelect("Recency", "");
-                            }
-                          }}
-                          sx={{
-                            padding: 0,
-                            "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
-                          }}
-                        />
+														if (!isChecked) {
+															handleNestedSelect("Recency", "");
+														}
+													}}
+													sx={{
+														padding: 0,
+														"&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
+													}}
+												/>
 
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 2,
-                          }}
-                        >
-                          <Typography className="form-input">
-                            Last seen
-                          </Typography>
-                          {(targetAudience === "B2C" ||
-                            targetAudience === "Both") &&
-                            useCaseType === "Email" && (
-                              <Typography
-                                className="table-data"
-                                sx={{
-                                  color: "rgba(43, 91, 0, 1) !important",
-                                  fontSize: "14px !important",
-                                  backgroundColor:
-                                    "rgba(234, 248, 221, 1) !important",
-                                  borderRadius: "3px",
-                                  padding: "4px 12px",
-                                }}
-                              >
-                                Recommended
-                              </Typography>
-                            )}
-                        </Box>
-                      </Box>
+												<Box
+													sx={{
+														display: "flex",
+														flexDirection: "row",
+														alignItems: "center",
+														gap: 2,
+													}}
+												>
+													<Typography className="form-input">
+														Last seen
+													</Typography>
+													{(targetAudience === "B2C" ||
+														targetAudience === "Both") &&
+														useCaseType === "Email" && (
+															<Typography
+																className="table-data"
+																sx={{
+																	color: "rgba(43, 91, 0, 1) !important",
+																	fontSize: "14px !important",
+																	backgroundColor:
+																		"rgba(234, 248, 221, 1) !important",
+																	borderRadius: "3px",
+																	padding: "4px 12px",
+																}}
+															>
+																Recommended
+															</Typography>
+														)}
+												</Box>
+											</Box>
 
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleNestedExpand("Last seen Personal");
-                        }}
-                      >
-                        {expandedNested["Last seen Personal"] ? (
-                          <ExpandLessIcon />
-                        ) : (
-                          <ExpandMoreIcon />
-                        )}
-                      </IconButton>
-                    </Box>
-                    {expandedNested["Last seen Personal"] && (
-                      <Box
-                        sx={{
-                          pl: 6,
-                          pt: 2,
-                          display: "flex",
-                          gap: 1,
-                          flexDirection: "column",
-                          borderTop: "1px solid rgba(235, 235, 235, 1)",
-                        }}
-                      >
-                        <Typography className="form-input">Recency</Typography>
-                        <FormControl variant="outlined" size="small">
-                          <Select
-                            value={nestedSelections["Recency"] || ""}
-                            onChange={(e) =>
-                              handleNestedSelect("Recency", e.target.value)
-                            }
-                            displayEmpty
-                            className="second-sub-title"
-                            sx={{
-                              width: "200px",
-                              color: "rgba(112, 112, 113, 1) !important",
-                            }}
-                          >
-                            <MenuItem
-                              className="second-sub-title"
-                              value=""
-                              sx={{ display: "none", mt: 0 }}
-                              disabled
-                            >
-                              Select recency
-                            </MenuItem>
-                            {["30 days", "60 days", "90 days"].map(
-                              (selectOption: string) => (
-                                <MenuItem
-                                  className="second-sub-title"
-                                  key={selectOption}
-                                  value={selectOption}
-                                >
-                                  {selectOption}
-                                </MenuItem>
-                              )
-                            )}
-                          </Select>
-                        </FormControl>
-                      </Box>
-                    )}
-                    <Divider sx={{ my: 1 }} />
-                  </Box>
+											<IconButton
+												onClick={(e) => {
+													e.stopPropagation();
+													toggleNestedExpand("Last seen Personal");
+												}}
+											>
+												{expandedNested["Last seen Personal"] ? (
+													<ExpandLessIcon />
+												) : (
+													<ExpandMoreIcon />
+												)}
+											</IconButton>
+										</Box>
+										{expandedNested["Last seen Personal"] && (
+											<Box
+												sx={{
+													pl: 6,
+													pt: 2,
+													display: "flex",
+													gap: 1,
+													flexDirection: "column",
+													borderTop: "1px solid rgba(235, 235, 235, 1)",
+												}}
+											>
+												<Typography className="form-input">Recency</Typography>
+												<FormControl variant="outlined" size="small">
+													<Select
+														value={nestedSelections["Recency"] || ""}
+														onChange={(e) =>
+															handleNestedSelect("Recency", e.target.value)
+														}
+														displayEmpty
+														className="second-sub-title"
+														sx={{
+															width: "200px",
+															color: "rgba(112, 112, 113, 1) !important",
+														}}
+													>
+														<MenuItem
+															className="second-sub-title"
+															value=""
+															sx={{ display: "none", mt: 0 }}
+															disabled
+														>
+															Select recency
+														</MenuItem>
+														{["30 days", "60 days", "90 days"].map(
+															(selectOption: string) => (
+																<MenuItem
+																	className="second-sub-title"
+																	key={selectOption}
+																	value={selectOption}
+																>
+																	{selectOption}
+																</MenuItem>
+															),
+														)}
+													</Select>
+												</FormControl>
+											</Box>
+										)}
+										<Divider sx={{ my: 1 }} />
+									</Box>
 
-                  {/* Delivery Checkbox */}
-                  <Box>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              size="small"
-                              disabled={isValidate}
-                              checked={selectedOptionsPersonalEmail.includes("Delivery")}
-                              onChange={() =>
-                                handleOptionClick(
-                                  setSelectedOptionsPersonalEmail,
-                                  "Delivery"
-                                )
-                              }
-                              sx={{
-                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
-                              }}
-                            />
-                          }
-                          label={
-                            <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 2 }}>
-                              <Typography className="form-input">Delivery</Typography>
-                              {(targetAudience === "B2B" || targetAudience === "Both") &&
-                                useCaseType === "Email" && (
-                                  <Typography
-                                    className="table-data"
-                                    sx={{
-                                      color: "rgba(43, 91, 0, 1) !important",
-                                      fontSize: "14px !important",
-                                      backgroundColor: "rgba(234, 248, 221, 1) !important",
-                                      borderRadius: "3px",
-                                      padding: "4px 12px",
-                                    }}
-                                  >
-                                    Recommended
-                                  </Typography>
-                                )}
-                              <Typography
-                                className="table-data"
-                                sx={{
-                                  color: "rgba(0, 129, 251, 1) !important",
-                                  fontSize: "14px !important",
-                                  backgroundColor: "rgba(204, 230, 254, 1) !important",
-                                  borderRadius: "3px",
-                                  padding: "4px 12px",
-                                }}
-                              >
-                                Free
-                              </Typography>
-                            </Box>
-                          }
-                          sx={{ userSelect: "none", cursor: "pointer" }}
-                        />
-                      </Box>
-                    </Box>
-                  </Box>
+									{/* Delivery Checkbox */}
+									<Box>
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "space-between",
+											}}
+										>
+											<Box
+												sx={{ display: "flex", alignItems: "center", gap: 1 }}
+											>
+												<FormControlLabel
+													control={
+														<Checkbox
+															size="small"
+															disabled={isValidate}
+															checked={selectedOptionsPersonalEmail.includes(
+																"Delivery",
+															)}
+															onChange={() =>
+																handleOptionClick(
+																	setSelectedOptionsPersonalEmail,
+																	"Delivery",
+																)
+															}
+															sx={{
+																"&.Mui-checked": {
+																	color: "rgba(56, 152, 252, 1)",
+																},
+															}}
+														/>
+													}
+													label={
+														<Box
+															sx={{
+																display: "flex",
+																flexDirection: "row",
+																alignItems: "center",
+																gap: 2,
+															}}
+														>
+															<Typography className="form-input">
+																Delivery
+															</Typography>
+															{(targetAudience === "B2B" ||
+																targetAudience === "Both") &&
+																useCaseType === "Email" && (
+																	<Typography
+																		className="table-data"
+																		sx={{
+																			color: "rgba(43, 91, 0, 1) !important",
+																			fontSize: "14px !important",
+																			backgroundColor:
+																				"rgba(234, 248, 221, 1) !important",
+																			borderRadius: "3px",
+																			padding: "4px 12px",
+																		}}
+																	>
+																		Recommended
+																	</Typography>
+																)}
+															<Typography
+																className="table-data"
+																sx={{
+																	color: "rgba(0, 129, 251, 1) !important",
+																	fontSize: "14px !important",
+																	backgroundColor:
+																		"rgba(204, 230, 254, 1) !important",
+																	borderRadius: "3px",
+																	padding: "4px 12px",
+																}}
+															>
+																Free
+															</Typography>
+														</Box>
+													}
+													sx={{ userSelect: "none", cursor: "pointer" }}
+												/>
+											</Box>
+										</Box>
+									</Box>
+								</Box>
+							</Collapse>
+						</Box>
 
-                  </Box>
-              </Collapse>
-            </Box>
+						{/* Business Email Filter */}
+						<Box sx={ValidationStyle.main_filter_form}>
+							<Box
+								sx={ValidationStyle.filter_form}
+								onClick={() =>
+									toggleFilter(setIsOpenBusinessEmail, isOpenBusinessEmail)
+								}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "start",
+										gap: 1.5,
+										alignItems: "center",
+										cursor: isValidate ? "default" : "pointer",
+									}}
+								>
+									<Typography sx={ValidationStyle.filter_name}>
+										Business email
+									</Typography>
+									{selectedOptionsBusinessEmail.map((option) => (
+										<Chip
+											key={option}
+											label={
+												nestedSelections[option]
+													? `${
+															option === "RecencyBusiness" ? "Recency" : option
+														}: ${nestedSelections[option]}`
+													: option === "RecencyBusiness"
+														? "Recency"
+														: option
+											}
+											onDelete={
+												isValidate
+													? undefined
+													: () =>
+															removeChip(
+																setSelectedOptionsBusinessEmail,
+																option,
+															)
+											}
+											deleteIcon={
+												<CloseIcon
+													sx={{
+														backgroundColor: "transparent",
+														color: "#828282 !important",
+														fontSize: "14px !important",
+													}}
+												/>
+											}
+											sx={{ margin: "2px", ...getChipStyle(option) }}
+										/>
+									))}
+								</Box>
+								<IconButton
+									sx={{ cursor: isValidate ? "default" : "pointer" }}
+									onClick={() =>
+										toggleFilter(setIsOpenBusinessEmail, isOpenBusinessEmail)
+									}
+									aria-label="toggle-content"
+								>
+									{isOpenBusinessEmail ? (
+										<ExpandLessIcon />
+									) : (
+										<ExpandMoreIcon />
+									)}
+								</IconButton>
+							</Box>
+							<Collapse in={isOpenBusinessEmail}>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "column",
+										gap: 2,
+										pt: 1,
+										pl: 2,
+										pb: 0.75,
+									}}
+								>
+									{/* MX Checkbox */}
+									<Box>
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "space-between",
+											}}
+										>
+											<Box
+												sx={{ display: "flex", alignItems: "center", gap: 1 }}
+											>
+												<FormControlLabel
+													control={
+														<Checkbox
+															size="small"
+															disabled={isValidate}
+															checked={selectedOptionsBusinessEmail.includes(
+																"MX",
+															)}
+															onChange={() =>
+																handleOptionClick(
+																	setSelectedOptionsBusinessEmail,
+																	"MX",
+																)
+															}
+															sx={{
+																"&.Mui-checked": {
+																	color: "rgba(56, 152, 252, 1)",
+																},
+															}}
+														/>
+													}
+													label={
+														<Box
+															sx={{
+																display: "flex",
+																flexDirection: "row",
+																alignItems: "center",
+																gap: 2,
+															}}
+														>
+															<Typography className="form-input">MX</Typography>
+															{(targetAudience === "B2B" ||
+																targetAudience === "Both") &&
+																useCaseType === "Email" && (
+																	<Typography
+																		className="table-data"
+																		sx={{
+																			color: "rgba(43, 91, 0, 1) !important",
+																			fontSize: "14px !important",
+																			backgroundColor:
+																				"rgba(234, 248, 221, 1) !important",
+																			borderRadius: "3px",
+																			padding: "4px 12px",
+																		}}
+																	>
+																		Recommended
+																	</Typography>
+																)}
+															<Typography
+																className="table-data"
+																sx={{
+																	color: "rgba(0, 129, 251, 1) !important",
+																	fontSize: "14px !important",
+																	backgroundColor:
+																		"rgba(204, 230, 254, 1) !important",
+																	borderRadius: "3px",
+																	padding: "4px 12px",
+																}}
+															>
+																Free
+															</Typography>
+														</Box>
+													}
+													sx={{ userSelect: "none", cursor: "pointer" }}
+												/>
+											</Box>
+										</Box>
+										<Divider sx={{ my: 1 }} />
+									</Box>
 
-            {/* Business Email Filter */}
-            <Box sx={ValidationStyle.main_filter_form}>
-              <Box
-                sx={ValidationStyle.filter_form}
-                onClick={() =>
-                  toggleFilter(setIsOpenBusinessEmail, isOpenBusinessEmail)
-                }
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "start",
-                    gap: 1.5,
-                    alignItems: "center",
-                    cursor: isValidate ? "default" : "pointer",
-                  }}
-                >
-                  <Typography sx={ValidationStyle.filter_name}>
-                    Business email
-                  </Typography>
-                  {selectedOptionsBusinessEmail.map((option) => (
-                    <Chip
-                      key={option}
-                      label={
-                        nestedSelections[option]
-                          ? `${option === "RecencyBusiness" ? "Recency" : option
-                          }: ${nestedSelections[option]}`
-                          : option === "RecencyBusiness"
-                            ? "Recency"
-                            : option
-                      }
-                      onDelete={
-                        isValidate
-                          ? undefined
-                          : () =>
-                            removeChip(
-                              setSelectedOptionsBusinessEmail,
-                              option
-                            )
-                      }
-                      deleteIcon={
-                        <CloseIcon
-                          sx={{
-                            backgroundColor: "transparent",
-                            color: "#828282 !important",
-                            fontSize: "14px !important",
-                          }}
-                        />
-                      }
-                      sx={{ margin: "2px", ...getChipStyle(option) }}
-                    />
-                  ))}
-                </Box>
-                <IconButton
-                  sx={{ cursor: isValidate ? "default" : "pointer" }}
-                  onClick={() =>
-                    toggleFilter(setIsOpenBusinessEmail, isOpenBusinessEmail)
-                  }
-                  aria-label="toggle-content"
-                >
-                  {isOpenBusinessEmail ? (
-                    <ExpandLessIcon />
-                  ) : (
-                    <ExpandMoreIcon />
-                  )}
-                </IconButton>
-              </Box>
-              <Collapse in={isOpenBusinessEmail}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    pt: 1,
-                    pl: 2,
-                    pb: 0.75,
-                  }}
-                >
-                  {/* MX Checkbox */}
-                  <Box>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              size="small"
-                              disabled={isValidate}
-                              checked={selectedOptionsBusinessEmail.includes("MX")}
-                              onChange={() =>
-                                handleOptionClick(
-                                  setSelectedOptionsBusinessEmail,
-                                  "MX"
-                                )
-                              }
-                              sx={{
-                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
-                              }}
-                            />
-                          }
-                          label={
-                            <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", gap: 2 }}>
-                              <Typography className="form-input">MX</Typography>
-                              {(targetAudience === "B2B" || targetAudience === "Both") &&
-                                useCaseType === "Email" && (
-                                  <Typography
-                                    className="table-data"
-                                    sx={{
-                                      color: "rgba(43, 91, 0, 1) !important",
-                                      fontSize: "14px !important",
-                                      backgroundColor: "rgba(234, 248, 221, 1) !important",
-                                      borderRadius: "3px",
-                                      padding: "4px 12px",
-                                    }}
-                                  >
-                                    Recommended
-                                  </Typography>
-                                )}
-                              <Typography
-                                className="table-data"
-                                sx={{
-                                  color: "rgba(0, 129, 251, 1) !important",
-                                  fontSize: "14px !important",
-                                  backgroundColor: "rgba(204, 230, 254, 1) !important",
-                                  borderRadius: "3px",
-                                  padding: "4px 12px",
-                                }}
-                              >
-                                Free
-                              </Typography>
-                            </Box>
-                          }
-                          sx={{ userSelect: "none", cursor: "pointer" }}
-                        />
-                      </Box>
-                    </Box>
-                    <Divider sx={{ my: 1 }} />
-                  </Box>
+									{/* Last seen Checkbox with Expand */}
+									<Box>
+										<Box
+											onClick={() => toggleNestedExpand("Last seen Business")}
+											sx={{
+												display: "flex",
+												cursor: "pointer",
+												alignItems: "center",
+												justifyContent: "space-between",
+											}}
+										>
+											<Box
+												sx={{ display: "flex", alignItems: "center", gap: 1 }}
+											>
+												<Checkbox
+													size="small"
+													disabled={isValidate}
+													checked={selectedOptionsBusinessEmail.includes(
+														"RecencyBusiness",
+													)}
+													onChange={(event) => {
+														const isChecked = event.target.checked;
 
-                  {/* Last seen Checkbox with Expand */}
-                  <Box>
-                    <Box
-                      onClick={() => toggleNestedExpand("Last seen Business")}
-                      sx={{
-                        display: "flex",
-                        cursor: "pointer",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Checkbox
-                          size="small"
-                          disabled={isValidate}
-                          checked={selectedOptionsBusinessEmail.includes(
-                            "RecencyBusiness"
-                          )}
-                          onChange={(event) => {
-                            const isChecked = event.target.checked;
+														handleOptionClick(
+															setSelectedOptionsBusinessEmail,
+															"RecencyBusiness",
+														);
 
-                            handleOptionClick(
-                              setSelectedOptionsBusinessEmail,
-                              "RecencyBusiness"
-                            );
+														if (!isChecked) {
+															handleNestedSelect("RecencyBusiness", "");
+														}
+													}}
+													sx={{
+														padding: 0,
+														"&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
+													}}
+												/>
+												<Box
+													sx={{
+														display: "flex",
+														flexDirection: "row",
+														alignItems: "center",
+														gap: 2,
+													}}
+												>
+													<Typography className="form-input">
+														Last seen
+													</Typography>
+													{(targetAudience === "B2B" ||
+														targetAudience === "Both") &&
+														useCaseType === "Email" && (
+															<Typography
+																className="table-data"
+																sx={{
+																	color: "rgba(43, 91, 0, 1) !important",
+																	fontSize: "14px !important",
+																	backgroundColor:
+																		"rgba(234, 248, 221, 1) !important",
+																	borderRadius: "3px",
+																	padding: "4px 12px",
+																}}
+															>
+																Recommended
+															</Typography>
+														)}
+												</Box>
+											</Box>
+											<IconButton
+												onClick={(e) => {
+													e.stopPropagation();
+													toggleNestedExpand("Last seen Business");
+												}}
+											>
+												{expandedNested["Last seen Business"] ? (
+													<ExpandLessIcon />
+												) : (
+													<ExpandMoreIcon />
+												)}
+											</IconButton>
+										</Box>
+										{expandedNested["Last seen Business"] && (
+											<Box
+												sx={{
+													pl: 6,
+													pt: 2,
+													display: "flex",
+													gap: 1,
+													flexDirection: "column",
+													borderTop: "1px solid rgba(235, 235, 235, 1)",
+												}}
+											>
+												<Typography className="form-input">Recency</Typography>
+												<FormControl variant="outlined" size="small">
+													<Select
+														value={nestedSelections["RecencyBusiness"] || ""}
+														onChange={(e) =>
+															handleNestedSelect(
+																"RecencyBusiness",
+																e.target.value,
+															)
+														}
+														displayEmpty
+														className="second-sub-title"
+														sx={{
+															width: "200px",
+															color: "rgba(112, 112, 113, 1) !important",
+														}}
+													>
+														<MenuItem
+															className="second-sub-title"
+															value=""
+															sx={{ display: "none", mt: 0 }}
+															disabled
+														>
+															Select recency
+														</MenuItem>
+														{["30 days", "60 days", "90 days"].map(
+															(selectOption: string) => (
+																<MenuItem
+																	className="second-sub-title"
+																	key={selectOption}
+																	value={selectOption}
+																>
+																	{selectOption}
+																</MenuItem>
+															),
+														)}
+													</Select>
+												</FormControl>
+											</Box>
+										)}
+										<Divider sx={{ my: 1 }} />
+									</Box>
 
-                            if (!isChecked) {
-                              handleNestedSelect("RecencyBusiness", "");
-                            }
-                          }}
-                          sx={{
-                            padding: 0,
-                            "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
-                          }}
-                        />
-                        <Box
-                          sx={{
-                            display: "flex",
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 2,
-                          }}
-                        >
-                          <Typography className="form-input">
-                            Last seen
-                          </Typography>
-                          {(targetAudience === "B2B" ||
-                            targetAudience === "Both") &&
-                            useCaseType === "Email" && (
-                              <Typography
-                                className="table-data"
-                                sx={{
-                                  color: "rgba(43, 91, 0, 1) !important",
-                                  fontSize: "14px !important",
-                                  backgroundColor:
-                                    "rgba(234, 248, 221, 1) !important",
-                                  borderRadius: "3px",
-                                  padding: "4px 12px",
-                                }}
-                              >
-                                Recommended
-                              </Typography>
-                            )}
-                        </Box>
-                      </Box>
-                      <IconButton
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleNestedExpand("Last seen Business");
-                        }}
-                      >
-                        {expandedNested["Last seen Business"] ? (
-                          <ExpandLessIcon />
-                        ) : (
-                          <ExpandMoreIcon />
-                        )}
-                      </IconButton>
-                    </Box>
-                    {expandedNested["Last seen Business"] && (
-                      <Box
-                        sx={{
-                          pl: 6,
-                          pt: 2,
-                          display: "flex",
-                          gap: 1,
-                          flexDirection: "column",
-                          borderTop: "1px solid rgba(235, 235, 235, 1)",
-                        }}
-                      >
-                        <Typography className="form-input">Recency</Typography>
-                        <FormControl variant="outlined" size="small">
-                          <Select
-                            value={nestedSelections["RecencyBusiness"] || ""}
-                            onChange={(e) =>
-                              handleNestedSelect(
-                                "RecencyBusiness",
-                                e.target.value
-                              )
-                            }
-                            displayEmpty
-                            className="second-sub-title"
-                            sx={{
-                              width: "200px",
-                              color: "rgba(112, 112, 113, 1) !important",
-                            }}
-                          >
-                            <MenuItem
-                              className="second-sub-title"
-                              value=""
-                              sx={{ display: "none", mt: 0 }}
-                              disabled
-                            >
-                              Select recency
-                            </MenuItem>
-                            {["30 days", "60 days", "90 days"].map(
-                              (selectOption: string) => (
-                                <MenuItem
-                                  className="second-sub-title"
-                                  key={selectOption}
-                                  value={selectOption}
-                                >
-                                  {selectOption}
-                                </MenuItem>
-                              )
-                            )}
-                          </Select>
-                        </FormControl>
-                      </Box>
-                    )}
-                    <Divider sx={{ my: 1 }} />
-                  </Box>
+									{/* Delivery Checkbox */}
+									<Box>
+										<Box
+											sx={{
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "space-between",
+											}}
+										>
+											<Box
+												sx={{ display: "flex", alignItems: "center", gap: 1 }}
+											>
+												<FormControlLabel
+													control={
+														<Checkbox
+															size="small"
+															disabled={isValidate}
+															checked={selectedOptionsBusinessEmail.includes(
+																"Delivery",
+															)}
+															onChange={() =>
+																handleOptionClick(
+																	setSelectedOptionsBusinessEmail,
+																	"Delivery",
+																)
+															}
+															sx={{
+																"&.Mui-checked": {
+																	color: "rgba(56, 152, 252, 1)",
+																},
+															}}
+														/>
+													}
+													label={
+														<Box
+															sx={{
+																display: "flex",
+																flexDirection: "row",
+																alignItems: "center",
+																gap: 2,
+															}}
+														>
+															<Typography className="form-input">
+																Delivery
+															</Typography>
+															{(targetAudience === "B2B" ||
+																targetAudience === "Both") &&
+																useCaseType === "Email" && (
+																	<Typography
+																		className="table-data"
+																		sx={{
+																			color: "rgba(43, 91, 0, 1) !important",
+																			fontSize: "14px !important",
+																			backgroundColor:
+																				"rgba(234, 248, 221, 1) !important",
+																			borderRadius: "3px",
+																			padding: "4px 12px",
+																		}}
+																	>
+																		Recommended
+																	</Typography>
+																)}
+														</Box>
+													}
+													sx={{ userSelect: "none", cursor: "pointer" }}
+												/>
+											</Box>
+										</Box>
+									</Box>
+								</Box>
+							</Collapse>
+						</Box>
 
-                  {/* Delivery Checkbox */}
-                  <Box>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <FormControlLabel
-                          control={
-                            <Checkbox
-                              size="small"
-                              disabled={isValidate}
-                              checked={selectedOptionsBusinessEmail.includes("Delivery")}
-                              onChange={() =>
-                                handleOptionClick(
-                                  setSelectedOptionsBusinessEmail,
-                                  "Delivery"
-                                )
-                              }
-                              sx={{
-                                "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
-                              }}
-                            />
-                          }
-                          label={
-                            <Box
-                              sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
-                                gap: 2,
-                              }}
-                            >
-                              <Typography className="form-input">
-                                Delivery
-                              </Typography>
-                              {(targetAudience === "B2B" || targetAudience === "Both") &&
-                                useCaseType === "Email" && (
-                                  <Typography
-                                    className="table-data"
-                                    sx={{
-                                      color: "rgba(43, 91, 0, 1) !important",
-                                      fontSize: "14px !important",
-                                      backgroundColor:
-                                        "rgba(234, 248, 221, 1) !important",
-                                      borderRadius: "3px",
-                                      padding: "4px 12px",
-                                    }}
-                                  >
-                                    Recommended
-                                  </Typography>
-                                )}
-                            </Box>
-                          }
-                          sx={{ userSelect: "none", cursor: "pointer" }}
-                        />
-                      </Box>
-                    </Box>
-                  </Box>
-                </Box>
-              </Collapse>
-            </Box>
+						{/* Phone Filter */}
+						<Box sx={ValidationStyle.main_filter_form}>
+							<Box
+								sx={ValidationStyle.filter_form}
+								onClick={() => toggleFilter(setIsOpenPhone, isOpenPhone)}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "start",
+										gap: 1.5,
+										alignItems: "center",
+										cursor: isValidate ? "default" : "pointer",
+									}}
+								>
+									<Typography sx={ValidationStyle.filter_name}>
+										Phone
+									</Typography>
+									{selectedOptionsPhone.map((option) => (
+										<Chip
+											key={option}
+											label={option}
+											onDelete={
+												isValidate
+													? undefined
+													: () => removeChip(setSelectedOptionsPhone, option)
+											}
+											deleteIcon={
+												<CloseIcon
+													sx={{
+														backgroundColor: "transparent",
+														color: "#828282 !important",
+														fontSize: "14px !important",
+													}}
+												/>
+											}
+											sx={{ margin: 0, ...getChipStyle(option) }}
+										/>
+									))}
+								</Box>
+								<IconButton
+									onClick={() => toggleFilter(setIsOpenPhone, isOpenPhone)}
+									aria-label="toggle-content"
+								>
+									{isOpenPhone ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+								</IconButton>
+							</Box>
+							<Collapse in={isOpenPhone}>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "column",
+										gap: 2,
+										pt: 1,
+										pl: 2,
+										pb: 0.75,
+									}}
+								>
+									{["Last updated date", "Confirmation", "DNC filter"].map(
+										(option, index) => {
+											const isRecommended =
+												useCaseType === "Tele Marketing" &&
+												(targetAudience === "Both" ||
+													targetAudience === "B2B" ||
+													(targetAudience === "B2C" &&
+														option === "Last updated date"));
 
-            {/* Phone Filter */}
-            <Box sx={ValidationStyle.main_filter_form}>
-              <Box
-                sx={ValidationStyle.filter_form}
-                onClick={() => toggleFilter(setIsOpenPhone, isOpenPhone)}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "start",
-                    gap: 1.5,
-                    alignItems: "center",
-                    cursor: isValidate ? "default" : "pointer",
-                  }}
-                >
-                  <Typography sx={ValidationStyle.filter_name}>
-                    Phone
-                  </Typography>
-                  {selectedOptionsPhone.map((option) => (
-                    <Chip
-                      key={option}
-                      label={option}
-                      onDelete={
-                        isValidate
-                          ? undefined
-                          : () => removeChip(setSelectedOptionsPhone, option)
-                      }
-                      deleteIcon={
-                        <CloseIcon
-                          sx={{
-                            backgroundColor: "transparent",
-                            color: "#828282 !important",
-                            fontSize: "14px !important",
-                          }}
-                        />
-                      }
-                      sx={{ margin: 0, ...getChipStyle(option) }}
-                    />
-                  ))}
-                </Box>
-                <IconButton
-                  onClick={() => toggleFilter(setIsOpenPhone, isOpenPhone)}
-                  aria-label="toggle-content"
-                >
-                  {isOpenPhone ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </IconButton>
-              </Box>
-              <Collapse in={isOpenPhone}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    pt: 1,
-                    pl: 2,
-                    pb: 0.75,
-                  }}
-                >
-                  {["Last updated date", "Confirmation", "DNC filter"].map(
-                    (option, index) => {
-                      const isRecommended =
-                        useCaseType === "Tele Marketing" &&
-                        (targetAudience === "Both" ||
-                          targetAudience === "B2B" ||
-                          (targetAudience === "B2C" &&
-                            option === "Last updated date"));
+											return (
+												<React.Fragment key={option}>
+													<Box
+														sx={{
+															display: "flex",
+															alignItems: "center",
+															justifyContent: "space-between",
+														}}
+													>
+														<Box
+															sx={{
+																display: "flex",
+																alignItems: "center",
+																gap: 1,
+															}}
+														>
+															<FormControlLabel
+																control={
+																	<Checkbox
+																		size="small"
+																		// disabled={isValidate}
+																		disabled={option === "Last updated date"}
+																		checked={selectedOptionsPhone.includes(
+																			option,
+																		)}
+																		onChange={() =>
+																			handleOptionClick(
+																				setSelectedOptionsPhone,
+																				option,
+																			)
+																		}
+																		sx={{
+																			pr: 1,
+																			"&.Mui-checked": {
+																				color: "rgba(56, 152, 252, 1)",
+																			},
+																		}}
+																	/>
+																}
+																label={
+																	<Box
+																		sx={{
+																			display: "flex",
+																			alignItems: "center",
+																			gap: 1,
+																		}}
+																	>
+																		<Typography
+																			className="form-input"
+																			sx={{ pb: index === 2 ? 1 : 0 }}
+																		>
+																			{option}
+																		</Typography>
+																		{isRecommended && (
+																			<Typography
+																				className="table-data"
+																				sx={smartAudiences.labelText}
+																			>
+																				Recommended
+																			</Typography>
+																		)}
+																	</Box>
+																}
+																sx={{ userSelect: "none", cursor: "pointer" }}
+															/>
+														</Box>
+													</Box>
+													{(index === 0 || index === 1) && <Divider />}
+												</React.Fragment>
+											);
+										},
+									)}
+								</Box>
+							</Collapse>
+						</Box>
 
-                      return (
-                        <React.Fragment key={option}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
-                            >
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    size="small"
-                                    // disabled={isValidate}
-                                    disabled={option === 'Last updated date'}
-                                    checked={selectedOptionsPhone.includes(option)}
-                                    onChange={() => handleOptionClick(setSelectedOptionsPhone, option)}
-                                    sx={{
-                                      pr: 1,
-                                      "&.Mui-checked": { color: "rgba(56, 152, 252, 1)" },
-                                    }}
-                                  />
-                                }
+						{/* Postal CAS Verification Filter */}
+						<Box sx={ValidationStyle.main_filter_form}>
+							<Box
+								sx={ValidationStyle.filter_form}
+								onClick={() =>
+									toggleFilter(setIsOpenPostalCAS, isOpenPostalCAS)
+								}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "start",
+										gap: 1.5,
+										alignItems: "center",
+									}}
+								>
+									<Typography sx={ValidationStyle.filter_name}>
+										Postal CAS verification
+									</Typography>
+									{selectedOptionsPostalCAS.map((option) => (
+										<Chip
+											key={option}
+											label={option}
+											onDelete={
+												isValidate
+													? undefined
+													: () =>
+															removeChip(setSelectedOptionsPostalCAS, option)
+											}
+											deleteIcon={
+												<CloseIcon
+													sx={{
+														backgroundColor: "transparent",
+														color: "#828282 !important",
+														fontSize: "14px !important",
+													}}
+												/>
+											}
+											sx={{ margin: "2px", ...getChipStyle(option) }}
+										/>
+									))}
+								</Box>
+								<IconButton
+									onClick={() =>
+										toggleFilter(setIsOpenPostalCAS, isOpenPostalCAS)
+									}
+									aria-label="toggle-content"
+								>
+									{isOpenPostalCAS ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+								</IconButton>
+							</Box>
+							<Collapse in={isOpenPostalCAS}>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "column",
+										gap: 2,
+										pt: 1,
+										pl: 2,
+										pb: 0.75,
+									}}
+								>
+									{["CAS office address", "CAS home address"].map(
+										(option, index) => {
+											const isRecommended =
+												useCaseType === "Postal" &&
+												(targetAudience === "Both" ||
+													(targetAudience === "B2C" &&
+														option === "CAS home address") ||
+													(targetAudience === "B2B" &&
+														option === "CAS office address"));
 
-                                label={
-                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <Typography className="form-input" sx={{ pb: index === 2 ? 1 : 0 }}>
-                                      {option}
-                                    </Typography>
-                                    {isRecommended && (
-                                      <Typography className="table-data" sx={smartAudiences.labelText}>
-                                        Recommended
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                }
-                                sx={{ userSelect: "none", cursor: "pointer" }}
-                              />
-                            </Box>
-                          </Box>
-                          {(index === 0 || index === 1) && <Divider />}
-                        </React.Fragment>
-                      );
-                    }
-                  )}
-                </Box>
-              </Collapse>
-            </Box>
+											return (
+												<React.Fragment key={option}>
+													<Box
+														sx={{
+															display: "flex",
+															alignItems: "center",
+															justifyContent: "space-between",
+														}}
+													>
+														<Box
+															sx={{
+																display: "flex",
+																alignItems: "center",
+																gap: 1,
+															}}
+														>
+															<FormControlLabel
+																control={
+																	<Checkbox
+																		size="small"
+																		disabled={isValidate}
+																		checked={selectedOptionsPostalCAS.includes(
+																			option,
+																		)}
+																		onChange={() =>
+																			handleOptionClick(
+																				setSelectedOptionsPostalCAS,
+																				option,
+																			)
+																		}
+																		sx={{
+																			"&.Mui-checked": {
+																				color: "rgba(56, 152, 252, 1)",
+																			},
+																		}}
+																	/>
+																}
+																label={
+																	<Box
+																		sx={{
+																			display: "flex",
+																			alignItems: "center",
+																			gap: 1,
+																		}}
+																	>
+																		<Typography className="form-input">
+																			{option}
+																		</Typography>
+																		{isRecommended && (
+																			<Typography
+																				className="table-data"
+																				sx={smartAudiences.labelText}
+																			>
+																				Recommended
+																			</Typography>
+																		)}
+																	</Box>
+																}
+																sx={{
+																	padding: 0,
+																	"&.Mui-checked": {
+																		color: "rgba(56, 152, 252, 1)",
+																	},
+																	userSelect: "none",
+																	cursor: "pointer",
+																}}
+															/>
+														</Box>
+													</Box>
+													{index === 0 && <Divider />}
+												</React.Fragment>
+											);
+										},
+									)}
+								</Box>
+							</Collapse>
+						</Box>
+						{/* LinkedIn Filter */}
+						<Box sx={ValidationStyle.main_filter_form}>
+							<Box
+								sx={ValidationStyle.filter_form}
+								onClick={() => toggleFilter(setIsOpenLinkedIn, isOpenLinkedIn)}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "start",
+										gap: 1.5,
+										alignItems: "end",
+									}}
+								>
+									<Typography sx={ValidationStyle.filter_name}>
+										LinkedIn
+									</Typography>
+									{selectedOptionsLinkedIn.map((option) => (
+										<Chip
+											key={option}
+											label={option}
+											onDelete={
+												isValidate
+													? undefined
+													: () => removeChip(setSelectedOptionsLinkedIn, option)
+											}
+											deleteIcon={
+												<CloseIcon
+													sx={{
+														backgroundColor: "transparent",
+														color: "#828282 !important",
+														fontSize: "14px !important",
+													}}
+												/>
+											}
+											sx={{ margin: "2px", ...getChipStyle(option) }}
+										/>
+									))}
+								</Box>
+								<IconButton
+									onClick={() =>
+										toggleFilter(setIsOpenLinkedIn, isOpenLinkedIn)
+									}
+									aria-label="toggle-content"
+								>
+									{isOpenLinkedIn ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+								</IconButton>
+							</Box>
 
-            {/* Postal CAS Verification Filter */}
-            <Box sx={ValidationStyle.main_filter_form}>
-              <Box
-                sx={ValidationStyle.filter_form}
-                onClick={() =>
-                  toggleFilter(setIsOpenPostalCAS, isOpenPostalCAS)
-                }
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "start",
-                    gap: 1.5,
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography sx={ValidationStyle.filter_name}>
-                    Postal CAS verification
-                  </Typography>
-                  {selectedOptionsPostalCAS.map((option) => (
-                    <Chip
-                      key={option}
-                      label={option}
-                      onDelete={
-                        isValidate
-                          ? undefined
-                          : () =>
-                            removeChip(setSelectedOptionsPostalCAS, option)
-                      }
-                      deleteIcon={
-                        <CloseIcon
-                          sx={{
-                            backgroundColor: "transparent",
-                            color: "#828282 !important",
-                            fontSize: "14px !important",
-                          }}
-                        />
-                      }
-                      sx={{ margin: "2px", ...getChipStyle(option) }}
-                    />
-                  ))}
-                </Box>
-                <IconButton
-                  onClick={() =>
-                    toggleFilter(setIsOpenPostalCAS, isOpenPostalCAS)
-                  }
-                  aria-label="toggle-content"
-                >
-                  {isOpenPostalCAS ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </IconButton>
-              </Box>
-              <Collapse in={isOpenPostalCAS}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 2,
-                    pt: 1,
-                    pl: 2,
-                    pb: 0.75,
-                  }}
-                >
-                  {["CAS office address", "CAS home address"].map(
-                    (option, index) => {
-                      const isRecommended =
-                        useCaseType === "Postal" &&
-                        (targetAudience === "Both" ||
-                          (targetAudience === "B2C" &&
-                            option === "CAS home address") ||
-                          (targetAudience === "B2B" &&
-                            option === "CAS office address"));
+							<Collapse in={isOpenLinkedIn}>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "column",
+										pt: 1,
+										pl: 2,
+										pb: 0.75,
+									}}
+								>
+									<FormControlLabel
+										control={
+											<Checkbox
+												disabled={isValidate}
+												size="small"
+												checked={selectedOptionsLinkedIn.includes(
+													"Job validation",
+												)}
+												sx={{
+													"&.Mui-checked": {
+														color: "rgba(56, 152, 252, 1)",
+													},
+												}}
+											/>
+										}
+										label={
+											<Box
+												sx={{ display: "flex", alignItems: "center", gap: 1 }}
+											>
+												<Typography className="form-input">
+													Job validation
+												</Typography>
+												{(targetAudience === "B2B" ||
+													targetAudience === "Both") &&
+													useCaseType === "LinkedIn" && (
+														<Typography
+															className="table-data"
+															sx={smartAudiences.labelText}
+														>
+															Recommended
+														</Typography>
+													)}
+											</Box>
+										}
+										onChange={() =>
+											handleOptionClick(
+												setSelectedOptionsLinkedIn,
+												"Job validation",
+											)
+										}
+										sx={{ userSelect: "none", cursor: "pointer" }}
+									/>
+								</Box>
+							</Collapse>
+						</Box>
+						<Box
+							sx={{
+								width: "100%",
+								display: "flex",
+								justifyContent: "end",
+								mt: 1.5,
+							}}
+						>
+							{isValidate ? (
+								<Button
+									variant="contained"
+									onClick={handleEdit}
+									sx={{
+										...smartAudiences.buttonform,
+										backgroundColor: "rgba(255, 255, 255, 1)",
+										border: "1px solid rgba(56, 152, 252, 1)",
+										boxShadow: 0,
+										width: "120px",
+										":hover": {
+											backgroundColor: "rgba(255, 255, 255, 1)",
+										},
+									}}
+								>
+									<Typography
+										sx={{
+											...smartAudiences.textButton,
+											color: "rgba(56, 152, 252, 1)",
+										}}
+									>
+										Edit
+									</Typography>
+								</Button>
+							) : (
+								<Box sx={{ position: "relative" }}>
+									<Button
+										variant="contained"
+										onClick={handleSkip}
+										sx={{
+											...smartAudiences.buttonform,
+											backgroundColor: "rgba(255, 255, 255, 1)",
+											border: "1px solid rgba(56, 152, 252, 1)",
+											boxShadow: 0,
+											width: "120px",
+											":hover": {
+												backgroundColor: "rgba(255, 255, 255, 1)",
+											},
+										}}
+									>
+										<Typography
+											sx={{
+												...smartAudiences.textButton,
+												color: "rgba(56, 152, 252, 1)",
+											}}
+										>
+											Skip
+										</Typography>
+									</Button>
 
-                      return (
-                        <React.Fragment key={option}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                            }}
-                          >
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                              }}
-                            >
-                              <FormControlLabel
-                                control={
-                                  <Checkbox
-                                    size="small"
-                                    disabled={isValidate}
-                                    checked={selectedOptionsPostalCAS.includes(option)}
-                                    onChange={() => handleOptionClick(setSelectedOptionsPostalCAS, option)}
-                                    sx={{
-                                     
-                                      "&.Mui-checked": {
-                                        color: "rgba(56, 152, 252, 1)",
-                                      },
-                                    }}
-                                  />
-                                }
-                                label={
-                                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                    <Typography className="form-input">{option}</Typography>
-                                    {isRecommended && (
-                                      <Typography
-                                        className="table-data"
-                                        sx={smartAudiences.labelText}
-                                      >
-                                        Recommended
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                }
+									{smartsBuilderHints["skipValidation"].show && (
+										<HintCard
+											card={builderHintCards["skipValidation"]}
+											positionLeft={-420}
+											positionTop={20}
+											rightSide={true}
+											isOpenBody={smartsBuilderHints["skipValidation"].showBody}
+											toggleClick={() => {
+												if (smartsBuilderHints["validation"].showBody) {
+													closeDotHintClick("validation");
+												}
+												toggleDotHintClick("skipValidation");
+											}}
+											closeClick={() =>
+												changeSmartsBuilderHint(
+													"skipValidation",
+													"showBody",
+													"close",
+												)
+											}
+										/>
+									)}
+								</Box>
+							)}
+						</Box>
+					</Box>
+				</Box>
+			</Box>
 
-                                sx={{
-                                  padding: 0,
-                                  "&.Mui-checked": {
-                                    color: "rgba(56, 152, 252, 1)",
-                                  },
-                                  userSelect: "none",
-                                  cursor: "pointer",
-                                }}
-                              />
-                            </Box>
-                          </Box>
-                          {index === 0 && <Divider />}
-                        </React.Fragment>
-                      );
-                    }
-                  )}
-                </Box>
-              </Collapse>
-            </Box>
-            {/* LinkedIn Filter */}
-            <Box sx={ValidationStyle.main_filter_form}>
-              <Box
-                sx={ValidationStyle.filter_form}
-                onClick={() => toggleFilter(setIsOpenLinkedIn, isOpenLinkedIn)}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "start",
-                    gap: 1.5,
-                    alignItems: "end",
-                  }}
-                >
-                  <Typography sx={ValidationStyle.filter_name}>
-                    LinkedIn
-                  </Typography>
-                  {selectedOptionsLinkedIn.map((option) => (
-                    <Chip
-                      key={option}
-                      label={option}
-                      onDelete={
-                        isValidate
-                          ? undefined
-                          : () => removeChip(setSelectedOptionsLinkedIn, option)
-                      }
-                      deleteIcon={
-                        <CloseIcon
-                          sx={{
-                            backgroundColor: "transparent",
-                            color: "#828282 !important",
-                            fontSize: "14px !important",
-                          }}
-                        />
-                      }
-                      sx={{ margin: "2px", ...getChipStyle(option) }}
-                    />
-                  ))}
-                </Box>
-                <IconButton
-                  onClick={() =>
-                    toggleFilter(setIsOpenLinkedIn, isOpenLinkedIn)
-                  }
-                  aria-label="toggle-content"
-                >
-                  {isOpenLinkedIn ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </IconButton>
-              </Box>
-
-              <Collapse in={isOpenLinkedIn}>
-                <Box sx={{ display: "flex", flexDirection: "column", pt: 1, pl: 2, pb: 0.75}}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        disabled={isValidate}
-                        size="small"
-                        checked={selectedOptionsLinkedIn.includes("Job validation")}
-                        sx={{
-                         
-                          "&.Mui-checked": {
-                            color: "rgba(56, 152, 252, 1)",
-                          },
-                        }}
-                      />
-                    }
-                    label={
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                        <Typography className="form-input">
-                          Job validation
-                        </Typography>
-                        {(targetAudience === "B2B" || targetAudience === "Both") &&
-                          useCaseType === "LinkedIn" && (
-                            <Typography
-                              className="table-data"
-                              sx={smartAudiences.labelText}
-                            >
-                              Recommended
-                            </Typography>
-                          )}
-                      </Box>
-                    }
-                    onChange={() =>
-                      handleOptionClick(setSelectedOptionsLinkedIn, "Job validation")
-                    }
-                    sx={{ userSelect: "none", cursor: "pointer" }}
-                  />
-                </Box>
-              </Collapse>
-
-            </Box>
-            <Box
-              sx={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "end",
-                mt: 1.5,
-              }}
-            >
-              {isValidate ? (
-                <Button
-                  variant="contained"
-                  onClick={handleEdit}
-                  sx={{
-                    ...smartAudiences.buttonform,
-                    backgroundColor: "rgba(255, 255, 255, 1)",
-                    border: "1px solid rgba(56, 152, 252, 1)",
-                    boxShadow: 0,
-                    width: "120px",
-                    ":hover": {
-                      backgroundColor: "rgba(255, 255, 255, 1)",
-                    },
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      ...smartAudiences.textButton,
-                      color: "rgba(56, 152, 252, 1)",
-                    }}
-                  >
-                    Edit
-                  </Typography>
-                </Button>
-              ) : (
-                <Box sx={{position: "relative"}}>
-                <Button
-                  variant="contained"
-                  onClick={handleSkip}
-                  sx={{
-                    ...smartAudiences.buttonform,
-                    backgroundColor: "rgba(255, 255, 255, 1)",
-                    border: "1px solid rgba(56, 152, 252, 1)",
-                    boxShadow: 0,
-                    width: "120px",
-                    ":hover": {
-                      backgroundColor: "rgba(255, 255, 255, 1)",
-                    },
-                  }}
-                >
-                  <Typography
-                    sx={{
-                      ...smartAudiences.textButton,
-                      color: "rgba(56, 152, 252, 1)",
-                    }}
-                  >
-                    Skip
-                  </Typography>
-                </Button>
-
-                {smartsBuilderHints["skipValidation"].show &&
-                  <HintCard
-                      card={builderHintCards["skipValidation"]}
-                      positionLeft={-420}
-                      positionTop={20}
-                      rightSide={true}
-                      isOpenBody={smartsBuilderHints["skipValidation"].showBody}
-                      toggleClick={() => {
-                        if (smartsBuilderHints["validation"].showBody) {
-                          closeDotHintClick("validation")
-                        }
-                        toggleDotHintClick("skipValidation")
-                      }}
-                      closeClick={() => changeSmartsBuilderHint("skipValidation", "showBody", "close")}
-                  />
-                }
-                  </Box>
-              )}
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-
-      {!isValidate && (
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            flexWrap: "wrap",
-            mt: 2,
-            justifyContent: "flex-end",
-            borderRadius: "6px",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
-            <Button
-              onClick={() => router.push("/smart-audiences")}
-              variant="outlined"
-              sx={{
-                ...smartAudiences.buttonform,
-                borderColor: "rgba(56, 152, 252, 1)",
-                width: "92px",
-              }}
-            >
-              <Typography
-                sx={{
-                  ...smartAudiences.textButton,
-                  color: "rgba(56, 152, 252, 1)",
-                }}
-              >
-                Cancel
-              </Typography>
-            </Button>
-            <Button
-              variant="contained"
-              disabled={!isAnyFilterSelected}
-              onClick={() => {
-                handleValidate()
-                scrollToNewBlock()
-                closeDotHintClick("validation")
-                closeDotHintClick("skipValidation")
-                openDotHintClick("generateActiveSegment")
-              }}
-              sx={{
-                ...smartAudiences.buttonform,
-                backgroundColor: "rgba(56, 152, 252, 1)",
-                width: "237px",
-                ":hover": {
-                  backgroundColor: "rgba(56, 152, 252, 1)",
-                },
-              }}
-            >
-              <Typography
-                sx={{
-                  ...smartAudiences.textButton,
-                  color: "rgba(255, 255, 255, 1)",
-                }}
-              >
-                Set validation Package
-              </Typography>
-            </Button>
-          </Box>
-        </Box>
-      )}
-      <ValidationPopup
-        open={openPopup}
-        onClose={() => setOpenPopup(false)}
-        onContinue={() => setOpenPopup(false)}
-        onSkip={ () => {
-          handleSkipPopup()
-          closeDotHintClick("validation")
-          closeDotHintClick("skipValidation")
-          openDotHintClick("name")
-          scrollToEveryOtherBlock()
-        }}
-      />
-    </Box>
-  );
+			{!isValidate && (
+				<Box
+					sx={{
+						display: "flex",
+						gap: 2,
+						flexWrap: "wrap",
+						mt: 2,
+						justifyContent: "flex-end",
+						borderRadius: "6px",
+					}}
+				>
+					<Box sx={{ display: "flex", alignItems: "center", gap: 3 }}>
+						<Button
+							onClick={() => router.push("/smart-audiences")}
+							variant="outlined"
+							sx={{
+								...smartAudiences.buttonform,
+								borderColor: "rgba(56, 152, 252, 1)",
+								width: "92px",
+							}}
+						>
+							<Typography
+								sx={{
+									...smartAudiences.textButton,
+									color: "rgba(56, 152, 252, 1)",
+								}}
+							>
+								Cancel
+							</Typography>
+						</Button>
+						<Button
+							variant="contained"
+							disabled={!isAnyFilterSelected}
+							onClick={() => {
+								handleValidate();
+								scrollToNewBlock();
+								closeDotHintClick("validation");
+								closeDotHintClick("skipValidation");
+								openDotHintClick("generateActiveSegment");
+							}}
+							sx={{
+								...smartAudiences.buttonform,
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								width: "237px",
+								":hover": {
+									backgroundColor: "rgba(56, 152, 252, 1)",
+								},
+							}}
+						>
+							<Typography
+								sx={{
+									...smartAudiences.textButton,
+									color: "rgba(255, 255, 255, 1)",
+								}}
+							>
+								Set validation Package
+							</Typography>
+						</Button>
+					</Box>
+				</Box>
+			)}
+			<ValidationPopup
+				open={openPopup}
+				onClose={() => setOpenPopup(false)}
+				onContinue={() => setOpenPopup(false)}
+				onSkip={() => {
+					handleSkipPopup();
+					closeDotHintClick("validation");
+					closeDotHintClick("skipValidation");
+					openDotHintClick("name");
+					scrollToEveryOtherBlock();
+				}}
+			/>
+		</Box>
+	);
 };
 
 export default AllFilters;

@@ -2,6 +2,7 @@ from pydantic import BaseModel, EmailStr
 from typing import Optional, Any
 from datetime import datetime
 
+
 class BigCommerceInfo(BaseModel):
     id: str
     account_uuid: str
@@ -11,6 +12,7 @@ class BigCommerceInfo(BaseModel):
     admin_email: str
     order_email: str
 
+
 class BigCommerceOrderAPI(BaseModel):
     bigceoid: Optional[int] = None
     bigcommerce_user_id: Optional[str] = None
@@ -18,4 +20,3 @@ class BigCommerceOrderAPI(BaseModel):
     total_price: Optional[float] = None
     email: Optional[EmailStr] = None
     currency_code: Optional[str] = None
-

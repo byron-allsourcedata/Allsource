@@ -1,11 +1,14 @@
 import math
 import os
 import certifi
-from typing import List
+from typing import List, Optional
 
 import stripe
 import logging
-os.environ['SSL_CERT_FILE'] = certifi.where()
+
+from resolver import injectable
+
+os.environ["SSL_CERT_FILE"] = certifi.where()
 
 from config.stripe import StripeConfig
 from schemas.users import UserSignUpForm
@@ -15,6 +18,8 @@ stripe.api_key = StripeConfig.api_key
 logging.getLogger("stripe").setLevel(logging.WARNING)
 TRIAL_PERIOD_WITH_COUPON = 7
 
+
+@injectable
 class StripeService:
     def __init__(self):
         pass
@@ -27,7 +32,7 @@ class StripeService:
             logging.error(f"Permission error: {e.user_message}")
             return None
         except stripe.error.InvalidRequestError as e:
-            if e.code == 'resource_missing':
+            if e.code == "resource_missing":
                 logging.error(f"Stripe account not found: {e.user_message}")
                 return None
             else:
@@ -36,21 +41,42 @@ class StripeService:
         except stripe.error.AuthenticationError as e:
             logging.error(f"Authentication error: {e.user_message}")
             return None
-    
+
     def create_stripe_transfer(self, amount: int, destination_account: str):
         transfer = stripe.Transfer.create(
             amount=int(amount * 100),
-            currency='usd',
+            currency="usd",
             destination=destination_account,
         )
         return transfer
+
+    def create_checkout_session(
+        self,
+        customer_id: str,
+        price_id: str,
+        mode: str,
+        metadata: dict = {},
+        payment_intent_data: Optional[dict] = None,
+    ):
+        session = stripe.checkout.Session.create(
+            success_url=StripeConfig.success_url,
+            cancel_url=StripeConfig.cancel_url,
+            customer=customer_id,
+            payment_method_types=["card"],
+            payment_intent_data=payment_intent_data,
+            line_items=[{"price": price_id, "quantity": 1}],
+            mode=mode,
+            metadata=metadata,
+        )
+
+        return session.url
 
 
 def create_customer(user: UserSignUpForm):
     customer = stripe.Customer.create(
         email=user.email,
         description="User form web app signup form",
-        name=f"{user.full_name}"
+        name=f"{user.full_name}",
     )
     customer_id = customer.get("id")
     return customer_id
@@ -58,17 +84,18 @@ def create_customer(user: UserSignUpForm):
 
 def get_default_payment_method(customer_id):
     customer = stripe.Customer.retrieve(customer_id)
-    default_payment_method_id = customer.invoice_settings.get('default_payment_method')
+    default_payment_method_id = customer.invoice_settings.get(
+        "default_payment_method"
+    )
     return default_payment_method_id
 
 
 def renew_subscription(new_price_id, customer_id):
     new_subscription = stripe.Subscription.create(
-        customer=customer_id,
-        items=[{"price": new_price_id}]
+        customer=customer_id, items=[{"price": new_price_id}]
     )
-    if new_subscription.status == 'trialing':
-        return 'active'
+    if new_subscription.status == "trialing":
+        return "active"
     return new_subscription.status
 
 
@@ -76,7 +103,7 @@ def create_customer_google(user: dict):
     customer = stripe.Customer.create(
         email=user.get("email"),
         description="User form web app signup form",
-        name=user.get("full_name")
+        name=user.get("full_name"),
     )
     customer_id = customer.get("id")
     return customer_id
@@ -85,22 +112,23 @@ def create_customer_google(user: dict):
 def get_card_details_by_customer_id(customer_id):
     customer = stripe.Customer.retrieve(customer_id)
     payment_methods = stripe.PaymentMethod.list(
-        customer=customer_id,
-        type='card'
+        customer=customer_id, type="card"
     )
 
     card_details = []
 
-    default_payment_method_id = customer.invoice_settings.get('default_payment_method')
+    default_payment_method_id = customer.invoice_settings.get(
+        "default_payment_method"
+    )
 
     for pm in payment_methods.auto_paging_iter():
         card_info = {
-            'id': pm.id,
-            'last4': pm.card.last4,
-            'brand': pm.card.brand,
-            'exp_month': pm.card.exp_month,
-            'exp_year': pm.card.exp_year,
-            'is_default': pm.id == default_payment_method_id
+            "id": pm.id,
+            "last4": pm.card.last4,
+            "brand": pm.card.brand,
+            "exp_month": pm.card.exp_month,
+            "exp_year": pm.card.exp_year,
+            "is_default": pm.id == default_payment_method_id,
         }
         card_details.append(card_info)
 
@@ -110,92 +138,59 @@ def get_card_details_by_customer_id(customer_id):
 def add_card_to_customer(customer_id, payment_method_id):
     try:
         payment_method = stripe.PaymentMethod.attach(
-            payment_method_id,
-            customer=customer_id
+            payment_method_id, customer=customer_id
         )
         return {
-            'status': 'SUCCESS',
-            'card_details': {
-                'id': payment_method.id,
-                'last4': payment_method.card.last4,
-                'brand': payment_method.card.brand,
-                'exp_month': payment_method.card.exp_month,
-                'exp_year': payment_method.card.exp_year,
-                'is_default': False
-            }
+            "status": "SUCCESS",
+            "card_details": {
+                "id": payment_method.id,
+                "last4": payment_method.card.last4,
+                "brand": payment_method.card.brand,
+                "exp_month": payment_method.card.exp_month,
+                "exp_year": payment_method.card.exp_year,
+                "is_default": False,
+            },
         }
     except stripe.error.StripeError as e:
-        return {
-            'status': 'ERROR',
-            'message': e.user_message
-        }
+        return {"status": "ERROR", "message": e.user_message}
 
 
 def get_billing_by_invoice_id(invoice_id):
     try:
         invoice = stripe.Invoice.retrieve(invoice_id)
-        return {
-            'status': 'SUCCESS',
-            'data': invoice
-        }
+        return {"status": "SUCCESS", "data": invoice}
     except stripe.error.InvalidRequestError as e:
-        return {
-            'status': 'ERROR',
-            'message': 'Invalid request: ' + str(e)
-        }
+        return {"status": "ERROR", "message": "Invalid request: " + str(e)}
     except stripe.error.AuthenticationError as e:
-        return {
-            'status': 'ERROR',
-            'message': 'Authentication error: ' + str(e)
-        }
+        return {"status": "ERROR", "message": "Authentication error: " + str(e)}
     except stripe.error.RateLimitError as e:
-        return {
-            'status': 'ERROR',
-            'message': 'Rate limit exceeded: ' + str(e)
-        }
+        return {"status": "ERROR", "message": "Rate limit exceeded: " + str(e)}
     except stripe.error.APIError as e:
-        return {
-            'status': 'ERROR',
-            'message': 'Stripe API error: ' + str(e)
-        }
+        return {"status": "ERROR", "message": "Stripe API error: " + str(e)}
     except Exception as e:
         return {
-            'status': 'ERROR',
-            'message': 'An unexpected error occurred: ' + str(e)
+            "status": "ERROR",
+            "message": "An unexpected error occurred: " + str(e),
         }
 
 
 def detach_card_from_customer(payment_method_id):
     try:
         stripe.PaymentMethod.detach(payment_method_id)
-        return {
-            'status': 'SUCCESS',
-            'message': 'Card successfully removed'
-        }
+        return {"status": "SUCCESS", "message": "Card successfully removed"}
     except stripe.error.StripeError as e:
-        return {
-            'status': 'ERROR',
-            'message': e.user_message
-        }
+        return {"status": "ERROR", "message": e.user_message}
 
 
 def set_default_card_for_customer(customer_id, payment_method_id):
     try:
         stripe.Customer.modify(
             customer_id,
-            invoice_settings={
-                'default_payment_method': payment_method_id
-            }
+            invoice_settings={"default_payment_method": payment_method_id},
         )
-        return {
-            'status': 'SUCCESS',
-            'message': 'Default card successfully set'
-        }
+        return {"status": "SUCCESS", "message": "Default card successfully set"}
     except stripe.error.StripeError as e:
-        return {
-            'status': 'ERROR',
-            'message': e.user_message
-        }
+        return {"status": "ERROR", "message": e.user_message}
 
 
 def determine_plan_name_from_product_id(product_id):
@@ -205,23 +200,28 @@ def determine_plan_name_from_product_id(product_id):
 
 def cancel_subscription_at_period_end(subscription_id):
     subscription = stripe.Subscription.retrieve(subscription_id)
-    if subscription['schedule']:
-        subscription_schedule_id = subscription['schedule']
-        schedule = stripe.SubscriptionSchedule.retrieve(subscription_schedule_id)
+    if subscription["schedule"]:
+        subscription_schedule_id = subscription["schedule"]
+        schedule = stripe.SubscriptionSchedule.retrieve(
+            subscription_schedule_id
+        )
         stripe.SubscriptionSchedule.release(schedule.id)
     return stripe.Subscription.modify(
-        subscription_id,
-        cancel_at_period_end=True
+        subscription_id, cancel_at_period_end=True
     )
 
 
 def cancel_downgrade(platform_subscription_id):
-    current_subscription = stripe.Subscription.retrieve(platform_subscription_id)
+    current_subscription = stripe.Subscription.retrieve(
+        platform_subscription_id
+    )
     if current_subscription.get("schedule"):
-        subscription_schedule_id = current_subscription['schedule']
-        schedule = stripe.SubscriptionSchedule.retrieve(subscription_schedule_id)
+        subscription_schedule_id = current_subscription["schedule"]
+        schedule = stripe.SubscriptionSchedule.retrieve(
+            subscription_schedule_id
+        )
         stripe.SubscriptionSchedule.release(schedule.id)
-        return 'SUCCESS'
+        return "SUCCESS"
 
 
 def save_payment_details_in_stripe(customer_id):
@@ -246,13 +246,12 @@ def save_payment_details_in_stripe(customer_id):
 
 
 def get_billing_details_by_userid(customer_id):
-    subscriptions = stripe.Subscription.list(
-        customer=customer_id,
-        limit=100
-    )
+    subscriptions = stripe.Subscription.list(customer=customer_id, limit=100)
 
     if subscriptions.data:
-        latest_subscription = max(subscriptions.data, key=lambda sub: sub.created)
+        latest_subscription = max(
+            subscriptions.data, key=lambda sub: sub.created
+        )
         return latest_subscription
     else:
         return None
@@ -267,12 +266,13 @@ def get_product_from_price_id(price_id):
 def get_price_from_price_id(price_id):
     return stripe.Price.retrieve(price_id)
 
+
 def get_last_payment_intent(customer_id):
     params = {
-        'limit': 1,
+        "limit": 1,
     }
     if customer_id:
-        params['customer'] = customer_id
+        params["customer"] = customer_id
 
     intents = stripe.PaymentIntent.list(**params)
 
@@ -280,16 +280,19 @@ def get_last_payment_intent(customer_id):
         return intents.data[0]
     return None
 
+
 def purchase_product(customer_id, price_id, quantity, product_description):
-    result = {
-        'success': False
-    }
+    result = {"success": False}
     try:
         customer = stripe.Customer.retrieve(customer_id)
-        default_payment_method_id = customer.invoice_settings.default_payment_method
+        default_payment_method_id = (
+            customer.invoice_settings.default_payment_method
+        )
 
         if not default_payment_method_id:
-            result['error'] = "The customer doesn't have a default payment method."
+            result["error"] = (
+                "The customer doesn't have a default payment method."
+            )
             return result
 
         price = stripe.Price.retrieve(price_id)
@@ -301,25 +304,25 @@ def purchase_product(customer_id, price_id, quantity, product_description):
             payment_method=default_payment_method_id,
             confirm=True,
             automatic_payment_methods={
-                'enabled': True,
-                'allow_redirects': 'never'
+                "enabled": True,
+                "allow_redirects": "never",
             },
             metadata={
-                'product_description': product_description,
-                'quantity': quantity
+                "product_description": product_description,
+                "quantity": quantity,
             },
-            description=f"Purchase of {quantity} x {product_description}"
+            description=f"Purchase of {quantity} x {product_description}",
         )
-        if payment_intent.status == 'succeeded':
-            result['success'] = True
-            result['stripe_payload'] = payment_intent
+        if payment_intent.status == "succeeded":
+            result["success"] = True
+            result["stripe_payload"] = payment_intent
             return result
         else:
-            result['error'] = (f"Unknown payment status: {payment_intent.status}")
+            result["error"] = f"Unknown payment status: {payment_intent.status}"
             return payment_intent
 
     except Exception as e:
-        result['error'] = (f"Mistake when buying an item: {e}")
+        result["error"] = f"Mistake when buying an item: {e}"
         return result
 
 
@@ -329,9 +332,7 @@ def fetch_last_id_of_previous_page(customer_id, per_page, page):
 
     while current_page < page:
         invoices = stripe.Invoice.list(
-            customer=customer_id,
-            limit=per_page,
-            starting_after=starting_after
+            customer=customer_id, limit=per_page, starting_after=starting_after
         )
         if invoices.data:
             starting_after = invoices.data[-1].id
@@ -341,34 +342,36 @@ def fetch_last_id_of_previous_page(customer_id, per_page, page):
 
     return starting_after
 
+
 def get_stripe_payment_url(customer_id, stripe_payment_hash):
     stripe_payment_url = create_stripe_checkout_session(
         customer_id=customer_id,
-        line_items=[{"price": stripe_payment_hash['stripe_price_id'], "quantity": 1}],
+        line_items=[
+            {"price": stripe_payment_hash["stripe_price_id"], "quantity": 1}
+        ],
         mode="subscription",
-        coupon=stripe_payment_hash['coupon'],
-        trial_period = stripe_payment_hash.get('trial_period', 0)
+        coupon=stripe_payment_hash["coupon"],
+        trial_period=stripe_payment_hash.get("trial_period", 0),
     )
-    return stripe_payment_url.get('link')
+    return stripe_payment_url.get("link")
 
-def create_stripe_checkout_session(customer_id: str,
-                                   line_items: List[dict],
-                                   mode: str,
-                                   trial_period: int = 0,
-                                   coupon: str = None):
+
+def create_stripe_checkout_session(
+    customer_id: str,
+    line_items: List[dict],
+    mode: str,
+    trial_period: int = 0,
+    coupon: str = None,
+):
     if trial_period > 0:
         if coupon:
             trial_period = TRIAL_PERIOD_WITH_COUPON
-        subscription_data = {
-            'trial_period_days': trial_period
-        }
+        subscription_data = {"trial_period_days": trial_period}
     else:
-        subscription_data = {
-            'trial_period_days': None
-        }
+        subscription_data = {"trial_period_days": None}
 
-    discounts = [{'coupon': coupon}] if coupon else None
-    
+    discounts = [{"coupon": coupon}] if coupon else None
+
     try:
         session = stripe.checkout.Session.create(
             success_url=StripeConfig.success_url,
@@ -378,7 +381,7 @@ def create_stripe_checkout_session(customer_id: str,
             line_items=line_items,
             mode=mode,
             subscription_data=subscription_data,
-            discounts=discounts
+            discounts=discounts,
         )
     except stripe.error.InvalidRequestError as e:
         if "Coupon" in str(e) and "is expired" in str(e):
@@ -390,12 +393,13 @@ def create_stripe_checkout_session(customer_id: str,
                 line_items=line_items,
                 mode=mode,
                 subscription_data=subscription_data,
-                discounts=None
+                discounts=None,
             )
         else:
             raise
 
     return {"link": session.url}
+
 
 def get_billing_history_by_userid(customer_id, page, per_page):
     billing_history = []
@@ -405,9 +409,11 @@ def get_billing_history_by_userid(customer_id, page, per_page):
 
     charges = stripe.Charge.list(customer=customer_id, limit=per_page).data
     non_subscription_charges = [
-        charge for charge in charges
-        if getattr(charge, 'invoice', None) is None
-        and getattr(charge, 'metadata', {}).get('product_description') == 'leads_credits'
+        charge
+        for charge in charges
+        if getattr(charge, "invoice", None) is None
+        and getattr(charge, "metadata", {}).get("product_description")
+        == "leads_credits"
     ]
     billing_history.extend(non_subscription_charges)
 
