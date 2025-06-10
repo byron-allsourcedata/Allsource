@@ -48,7 +48,7 @@ const klaviyoStyles = {
 		lineHeight: "16px",
 		color: "rgba(17, 17, 19, 0.60)",
 		"&.Mui-focused": {
-			color: "#0000FF",
+			color: "rgba(56, 152, 252, 1)",
 		},
 	},
 	formInput: {
@@ -69,7 +69,7 @@ const klaviyoStyles = {
 				borderColor: "#A3B0C2",
 			},
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#0000FF",
+				borderColor: "rgba(56, 152, 252, 1)",
 			},
 		},
 		"&+.MuiFormHelperText-root": {
@@ -269,7 +269,7 @@ const ZapierConnectPopup = ({
 								<Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
 									<Image
 										src="/logo-icon.svg"
-										alt="Maximiz"
+										alt="AllSource"
 										height={26}
 										width={32}
 									/>

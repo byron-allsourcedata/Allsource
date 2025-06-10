@@ -61,7 +61,7 @@ const klaviyoStyles = {
 		lineHeight: "16px",
 		color: "rgba(17, 17, 19, 0.60)",
 		"&.Mui-focused": {
-			color: "#0000FF",
+			color: "rgba(56, 152, 252, 1)",
 		},
 	},
 	formInput: {
@@ -82,10 +82,10 @@ const klaviyoStyles = {
 				borderColor: "#A3B0C2",
 			},
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#0000FF",
+				borderColor: "rgba(56, 152, 252, 1)",
 			},
 			"&.Mui-error .MuiOutlinedInput-notchedOutline": {
-				borderColor: "red",
+				borderColor: "rgba(224, 49, 48, 1)",
 			},
 		},
 		"&+.MuiFormHelperText-root": {
@@ -221,8 +221,16 @@ const S3Connect = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -467,7 +475,7 @@ const S3Connect = ({
 										InputProps={{
 											sx: {
 												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key ? "red" : "inherit",
+												borderColor: invalid_api_key ? "rgba(224, 49, 48, 1)" : "inherit",
 											},
 										}}
 									/>
@@ -484,7 +492,7 @@ const S3Connect = ({
 										InputProps={{
 											sx: {
 												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key ? "red" : "inherit",
+												borderColor: invalid_api_key ? "rgba(224, 49, 48, 1)" : "inherit",
 											},
 										}}
 									/>

@@ -392,7 +392,7 @@ const FormUploadAssetPopup: React.FC<FormUploadPopupProps> = ({
 								fontFamily: "Nunito Sans",
 								fontSize: "12px",
 								lineHeight: "22px",
-								color: fileSizeError ? "red" : "#000",
+								color: fileSizeError ? "rgba(224, 49, 48, 1)" : "#000",
 								fontWeight: fileSizeError ? "600" : "400",
 							}}
 						>

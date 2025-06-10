@@ -354,7 +354,7 @@ const AlivbleIntagrationsSlider = ({
 										</ListItem>
 									)}
 								{/* bingAds */}
-								{filteredIntegrations.some(
+								{/* {filteredIntegrations.some(
 									(integration) => integration.service_name === "bing_ads",
 								) &&
 									!integrationsCredentials.some(
@@ -401,7 +401,7 @@ const AlivbleIntagrationsSlider = ({
 												/>
 											</ListItemButton>
 										</ListItem>
-									)}
+									)} */}
 								{/* salesForce */}
 								{filteredIntegrations.some(
 									(integration) => integration.service_name === "sales_force",
