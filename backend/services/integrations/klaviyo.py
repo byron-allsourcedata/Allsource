@@ -111,7 +111,7 @@ class KlaviyoIntegrationsService:
             "access_token": api_key,
             "full_name": user.get("full_name"),
             "service_name": SourcePlatformEnum.KLAVIYO.value,
-            "limit": IntegrationLimit.KLAVIYO.value
+            "limit": IntegrationLimit.KLAVIYO.value,
         }
 
         if common_integration:
@@ -339,7 +339,7 @@ class KlaviyoIntegrationsService:
 
     async def process_data_sync_lead(
         self,
-            user_integration: UserIntegration,
+        user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         five_x_five_users: List[FiveXFiveUser],
     ):
@@ -347,7 +347,11 @@ class KlaviyoIntegrationsService:
         if not bulk_profiles:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        return self.bulk_subscribe_profiles(api_key=user_integration.access_token, profiles=bulk_profiles, list_id=integration_data_sync.list_id)
+        return self.bulk_subscribe_profiles(
+            api_key=user_integration.access_token,
+            profiles=bulk_profiles,
+            list_id=integration_data_sync.list_id,
+        )
 
     def is_supported_region(self, phone_number: str) -> bool:
         return phone_number.startswith("+1")
@@ -499,7 +503,9 @@ class KlaviyoIntegrationsService:
                 "email": profile.email,
             }
 
-    def bulk_subscribe_profiles(self, api_key: str, profiles: List[dict], list_id: str):
+    def bulk_subscribe_profiles(
+        self, api_key: str, profiles: List[dict], list_id: str
+    ):
         url = "https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs"
         payload = {
             "data": {

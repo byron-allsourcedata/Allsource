@@ -571,7 +571,9 @@ class MetaIntegrationsService:
         return ProccessDataSyncResult.SUCCESS.value
 
     def __hash_mapped_meta_user_lead(self, five_x_five_user: FiveXFiveUser):
-        first_email = get_valid_email(five_x_five_user, self.million_verifier_integrations)
+        first_email = get_valid_email(
+            five_x_five_user, self.million_verifier_integrations
+        )
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -607,7 +609,7 @@ class MetaIntegrationsService:
             hash_value(five_x_five_user.personal_state),  # ST
             hash_value(five_x_five_user.personal_city),  # CT
             hash_value(five_x_five_user.personal_zip),  # ZIP
-            hash_value('USA'),  # COUNTRY
+            hash_value("USA"),  # COUNTRY
         ]
 
     def __hash_mapped_meta_user(
