@@ -183,13 +183,10 @@ const Cards = ({
 }: {
 	values: {
 		total_contacts_collected: number;
-		total_new_leads: number;
-		total_returning_visitors: number;
-		total_page_views: number;
-		total_visitors?: number;
-		total_view_products?: number;
-		total_abandoned_cart?: number;
-		total_converted_sale?: number;
+		total_visitors: number;
+		total_view_products: number;
+		total_abandoned_cart: number;
+		total_converted_sale: number;
 	};
 	typeBusiness: string;
 }) => {
@@ -233,24 +230,6 @@ const Cards = ({
 					<Grid item xs={12} md={3}>
 						<TotalLeadsCard
 							value={values.total_contacts_collected}
-							typeBusiness={typeBusiness}
-						/>
-					</Grid>
-					<Grid item xs={12} md={3}>
-						<NewCustomersCard
-							value={values.total_new_leads}
-							typeBusiness={typeBusiness}
-						/>
-					</Grid>
-					<Grid item xs={12} md={3}>
-						<DemographicsCard
-							value={values.total_returning_visitors}
-							typeBusiness={typeBusiness}
-						/>
-					</Grid>
-					<Grid item xs={12} md={3}>
-						<AbandonedCart
-							value={values.total_page_views}
 							typeBusiness={typeBusiness}
 						/>
 					</Grid>
