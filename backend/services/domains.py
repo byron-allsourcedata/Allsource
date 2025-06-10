@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import HTTPException
 import uuid
 import os
@@ -68,6 +70,11 @@ class UserDomainsService:
             self.domain_mapped(domain)
             for i, domain in enumerate(sorted_domains)
         ]
+
+    def get_verify_domains(self) -> List[str]:
+        domains = self.domain_persistence.get_verify_domains()
+        domain_list_name = [domain.domain for domain in domains]
+        return domain_list_name
 
     def pixel_installed_anywhere(self, user):
         domains = self.domain_persistence.get_domains_by_user(user.get("id"))

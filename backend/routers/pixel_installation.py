@@ -1,6 +1,7 @@
 import logging
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
+import os
 
 from dependencies import (
     get_pixel_installation_service,
@@ -11,13 +12,14 @@ from dependencies import (
     UserDomainsService,
 )
 from enums import PixelStatus, BaseEnum
-from typing import Optional
+from typing import Optional, List
 from models.users import User
 from schemas.pixel_installation import (
     PixelInstallationRequest,
     EmailFormRequest,
     ManualFormResponse,
     PixelInstallationResponse,
+    DomainsListResponse,
 )
 from schemas.users import PixelFormResponse
 from schemas.domains import UpdateDomain
@@ -25,6 +27,7 @@ from services.pixel_installation import PixelInstallationService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 
 @router.get("/manually", response_model=ManualFormResponse)
@@ -107,3 +110,14 @@ async def check_pixel_installation_status(
     return pixel_installation_service.check_pixel_installation_status(
         user, domain
     )
+
+
+@router.get("/verify", response_model=DomainsListResponse)
+def get_verify_domains(
+    secret_key: str = Query(..., description="The secret key to verify access"),
+    domain_service: UserDomainsService = Depends(get_domain_service),
+):
+    if secret_key != SECRET_KEY:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    domain_list_name = domain_service.get_verify_domains()
+    return DomainsListResponse(domains=domain_list_name)
