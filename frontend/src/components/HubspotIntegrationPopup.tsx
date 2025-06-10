@@ -167,7 +167,7 @@ const HubspotIntegrationPopup = ({
 			text: 'Navigate to "Integrations" and select "Private Apps".',
 		},
 		{ id: "unique-id-4", text: 'Click on "Create a private app".' },
-		{ id: "unique-id-5", text: 'Enter "Maximiz" as the app name.' },
+		{ id: "unique-id-5", text: 'Enter "Allsource" as the app name.' },
 		{
 			id: "unique-id-6",
 			text: 'Assign full access permissions to "CRM", "Contacts", and "Objects".',
@@ -178,7 +178,7 @@ const HubspotIntegrationPopup = ({
 		},
 		{
 			id: "unique-id-8",
-			text: "Copy the generated API key and paste it into the API Key field in the Maximiz Hubspot section.",
+			text: "Copy the generated API key and paste it into the API Key field in the Allsource Hubspot section.",
 		},
 		{
 			id: "unique-id-9",
@@ -504,13 +504,6 @@ const HubspotIntegrationPopup = ({
 										value="1"
 										sx={{ ...hubspotStyles.tabHeading, cursor: "pointer" }}
 									/>
-									{!fromAudience && (
-										<Tab
-											label="Suppression Sync"
-											value="2"
-											sx={{ ...hubspotStyles.tabHeading, cursor: "pointer" }}
-										/>
-									)}
 								</Tabs>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>

@@ -12,7 +12,7 @@ export const integrationHintCards: Record<IntegrationKey, HintCardInterface> = {
 			`Use this search box to filter your list of connected platforms by name or keyword. ` +
 			`It helps you jump straight to the integration you need without scrolling through the entire list.`,
 		linkToLoadMore:
-			"https://allsourceio.zohodesk.com/portal/en/kb/articles/search-integrations",
+			"https://allsourceio.zohodesk.com/portal/en/kb/articles/search-for-integrations",
 	},
 	integration: {
 		title: "Integration",

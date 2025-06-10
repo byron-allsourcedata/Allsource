@@ -205,7 +205,7 @@ async def send_error_msg(
         notification_persistence.get_account_notification_by_title(title)
     )
     notification_text = account_notification.text.format(service_name)
-    notification = notification_persistence.find_account_with_notification(
+    notification = notification_persistence.find_account_notifications(
         user_id=user_id, account_notification_id=account_notification.id
     )
     if not notification:
