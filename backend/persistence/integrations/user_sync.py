@@ -188,7 +188,6 @@ class IntegrationsUserSyncPersistence:
                     "platform": sync.service_name.lower(),
                     "integration_id": sync.integration_id,
                     "dataSync": sync.is_active,
-                    "status": "Syncing",
                     "suppression": sync.is_with_suppression,
                     "contacts": sync.no_of_contacts,
                     "createdBy": sync.created_by,

@@ -173,9 +173,9 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 				height: "100%",
 				padding: "1rem",
 				border: "1px solid #e4e4e4",
-				borderRadius: "8px",
+				borderRadius: "4px",
 				backgroundColor: "rgba(255, 255, 255, 1)",
-				boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.08)",
+				boxShadow: "0px 2px 10px 0px rgba(0, 0, 0, 0.08)",
 				marginBottom: "2rem",
 				"@media (max-width: 900px)": {
 					height: "auto",
@@ -184,14 +184,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 		>
 			{loading && <CustomizedProgressBar />}
 			<Box sx={{ display: "flex", alignItems: "center", gap: 1, pb: "4px" }}>
-				<Typography
-					sx={{
-						fontFamily: "Nunito Sans",
-						fontWeight: 700,
-						fontSize: "16px",
-						color: "#1c1c1c",
-					}}
-				>
+				<Typography className="first-sub-title">
 					1. Choose your domain
 				</Typography>
 				<CustomTooltip

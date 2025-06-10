@@ -288,10 +288,10 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
 					border: "1px solid rgba(184, 184, 184, 1)",
 					borderRadius: "4px",
 					padding: "6px 12px",
-					width: "50%",
+					width: "45%",
 					justifyContent: "space-between",
 					"@media (max-width: 600px)": {
-						width: "75%",
+						width: "60%",
 					},
 				}}
 			>
@@ -348,6 +348,7 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
 							"&:hover .delete-icon": {
 								opacity: 1,
 							},
+							pr: 0.5,
 							borderTop: "0.5px solid #CDCDCD",
 							borderBottom: "0.5px solid #CDCDCD",
 							"& .delete-icon": {
@@ -362,7 +363,7 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
 								justifyContent: "space-between",
 								alignItems: "center",
 								cursor: domain.enable ? "pointer" : "not-allowed",
-								width: "20rem",
+								width: "100%",
 								// color: domain.enable ? 'inherit' : 'rgba(32,  33, 36, 0.3) !important'
 							}}
 						>

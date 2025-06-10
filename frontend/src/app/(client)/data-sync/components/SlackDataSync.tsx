@@ -383,7 +383,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 			lineHeight: "16px",
 			color: "rgba(17, 17, 19, 0.60)",
 			"&.Mui-focused": {
-				color: "#0000FF",
+				color: "rgba(56, 152, 252, 1)",
 			},
 		},
 		formInput: {
@@ -404,7 +404,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 					borderColor: "#A3B0C2",
 				},
 				"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-					borderColor: "#0000FF",
+					borderColor: "rgba(56, 152, 252, 1)",
 				},
 			},
 			"&+.MuiFormHelperText-root": {
@@ -1048,7 +1048,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 															letterSpacing: "0.06px",
 															top: "5px",
 															"&.Mui-focused": {
-																color: "#0000FF",
+																color: "rgba(56, 152, 252, 1)",
 															},
 														},
 													}}
@@ -1190,7 +1190,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 																				fontWeight: "400",
 																				color: "rgba(17, 17, 19, 0.60)",
 																				"&.Mui-focused": {
-																					color: "#0000FF",
+																					color: "rgba(56, 152, 252, 1)",
 																					top: 0,
 																				},
 																			},
@@ -1232,7 +1232,8 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 																						},
 																					"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																						{
-																							borderColor: "#0000FF",
+																							borderColor:
+																								"rgba(56, 152, 252, 1)",
 																						},
 																				},
 																				"&+.MuiFormHelperText-root": {
@@ -1439,7 +1440,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1467,7 +1468,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1533,7 +1534,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1561,7 +1562,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1601,7 +1602,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1629,7 +1630,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1683,7 +1684,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1710,7 +1711,7 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 																},
 																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																	{
-																		borderColor: "#0000FF",
+																		borderColor: "rgba(56, 152, 252, 1)",
 																	},
 															},
 														}}

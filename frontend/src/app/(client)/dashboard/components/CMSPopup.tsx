@@ -98,8 +98,8 @@ const typographyGoogle = {
 	textTransform: "none",
 	color: "rgba(74, 74, 74, 1) !important",
 	textWrap: "wrap",
-	paddingTop: "1em",
-	paddingBottom: "0.25em",
+	paddingTop: "0.25em",
+	paddingBottom: "0.75em",
 };
 
 const maintext = {
@@ -604,7 +604,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												justifyContent: "start",
 											}}
 										>
-											<Image src="/2.svg" alt="1" width={20} height={20} />
+											<Image src="/2.svg" alt="2" width={20} height={20} />
 											{sourcePlatform !== "shopify" && (
 												<Typography
 													className="first-sub-title"
@@ -734,8 +734,8 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 											{cmsHints["enterShopifyAccessToken"]?.show && (
 												<HintCard
 													card={cmsHintCards["enterShopifyAccessToken"]}
-													positionLeft={660}
-													positionTop={35}
+													positionLeft={680}
+													positionTop={0}
 													isOpenBody={
 														cmsHints["enterShopifyAccessToken"].showBody
 													}
@@ -778,8 +778,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												>
 													Once you have submitted the required information, our
 													system will automatically install the script on your
-													Shopify store. You don’t need to take any further
-													action.
+													Shopify store.
 												</Typography>
 											</Box>
 										)}
@@ -788,7 +787,6 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												display: "flex",
 												flexDirection: "column",
 												justifyContent: "flex-end",
-												padding: "0em 2.25em",
 												overflow: "visible",
 											}}
 										>
@@ -808,7 +806,10 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													Pixel Installed
 												</Typography>
 											) : (
-												<Box position="relative">
+												<Box
+													position="relative"
+													sx={{ display: "flex", justifyContent: "flex-end" }}
+												>
 													<Button
 														fullWidth
 														variant="contained"
@@ -835,7 +836,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													{cmsHints["installScript"]?.show && (
 														<HintCard
 															card={cmsHintCards["installScript"]}
-															positionLeft={110}
+															positionLeft={560}
 															positionTop={15}
 															isOpenBody={cmsHints["installScript"].showBody}
 															toggleClick={() =>
@@ -1185,8 +1186,8 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 											{cmsHints["enterStoreHash"]?.show && (
 												<HintCard
 													card={cmsHintCards["enterStoreHash"]}
-													positionLeft={660}
-													positionTop={35}
+													positionLeft={675}
+													positionTop={5}
 													isOpenBody={cmsHints["enterStoreHash"].showBody}
 													toggleClick={() =>
 														changeCMSHint(
@@ -1224,8 +1225,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												>
 													Once you have submitted the required information, our
 													system will automatically install the script on your
-													Bigcommerce store. You don’t need to take any further
-													action.
+													Bigcommerce store.
 												</Typography>
 											</Box>
 										)}
@@ -1235,7 +1235,6 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												flexDirection: "column",
 												justifyContent: "flex-end",
 												maxHeight: "100%",
-												padding: "0em 1em",
 												pl: 4.25,
 											}}
 										>
@@ -1256,7 +1255,10 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													Pixel Installed
 												</Typography>
 											) : (
-												<Box position="relative">
+												<Box
+													position="relative"
+													sx={{ display: "flex", justifyContent: "flex-end" }}
+												>
 													<Button
 														fullWidth
 														variant="contained"
@@ -1280,7 +1282,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													{cmsHints["scriptInstallation"]?.show && (
 														<HintCard
 															card={cmsHintCards["scriptInstallation"]}
-															positionLeft={110}
+															positionLeft={525}
 															positionTop={15}
 															isOpenBody={
 																cmsHints["scriptInstallation"].showBody

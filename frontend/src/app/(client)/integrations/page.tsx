@@ -745,19 +745,19 @@ const UserIntegrationsList = ({
 	};
 
 	const integrationsAvailable = [
-		// { image: "klaviyo.svg", service_name: "klaviyo" },
+		{ image: "klaviyo.svg", service_name: "klaviyo" },
 		{ image: "meta-icon.svg", service_name: "meta" },
-		// { image: "omnisend_icon_black.svg", service_name: "omnisend" },
+		{ image: "omnisend_icon_black.svg", service_name: "omnisend" },
 		{ image: "mailchimp-icon.svg", service_name: "mailchimp" },
-		// { image: "sendlane-icon.svg", service_name: "sendlane" },
-		// { image: "zapier-icon.svg", service_name: "zapier" },
-		// { image: "slack-icon.svg", service_name: "slack" },
-		// { image: "webhook-icon.svg", service_name: "webhook" },
+		{ image: "sendlane-icon.svg", service_name: "sendlane" },
+		{ image: "zapier-icon.svg", service_name: "zapier" },
+		{ image: "slack-icon.svg", service_name: "slack" },
+		{ image: "webhook-icon.svg", service_name: "webhook" },
 		{ image: "hubspot.svg", service_name: "hubspot" },
 		{ image: "google-ads.svg", service_name: "google_ads" },
 		{ image: "salesforce-icon.svg", service_name: "sales_force" },
 		// { image: "bing-ads.svg", service_name: "bing_ads" },
-		// { image: "s3-icon.svg", service_name: "s3" },
+		{ image: "s3-icon.svg", service_name: "s3" },
 		// { image: "linkedin-icon.svg", service_name: "linkedin" },
 	];
 

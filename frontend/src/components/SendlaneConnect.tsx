@@ -69,7 +69,7 @@ const klaviyoStyles = {
 		lineHeight: "16px",
 		color: "rgba(17, 17, 19, 0.60)",
 		"&.Mui-focused": {
-			color: "#0000FF",
+			color: "rgba(56, 152, 252, 1)",
 		},
 	},
 	formInput: {
@@ -90,10 +90,10 @@ const klaviyoStyles = {
 				borderColor: "#A3B0C2",
 			},
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#0000FF",
+				borderColor: "rgba(56, 152, 252, 1)",
 			},
 			"&.Mui-error .MuiOutlinedInput-notchedOutline": {
-				borderColor: "red",
+				borderColor: "rgba(224, 49, 48, 1)",
 			},
 		},
 		"&+.MuiFormHelperText-root": {
@@ -143,10 +143,10 @@ const SendlaneConnect = ({
 	const instructions: any[] = [
 		// { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
 		// { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
+		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to AllSource.' },
 		// { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
 		// { id: 'unique-id-5', text: 'Click Create.' },
-		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
+		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in AllSource Klaviyo section.' },
 		// { id: 'unique-id-7', text: 'Click Connect.' },
 	];
 
@@ -206,7 +206,7 @@ const SendlaneConnect = ({
 					});
 				}
 				triggerSync();
-				handleNextTab();
+				handleClose();
 			}
 		} catch (error) {
 		} finally {
@@ -261,8 +261,16 @@ const SendlaneConnect = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -449,11 +457,11 @@ const SendlaneConnect = ({
 										value="1"
 										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
 									/>
-									<Tab
+									{/* <Tab
 										label="Suppression Sync"
 										value="2"
 										sx={klaviyoStyles.tabHeading}
-									/>
+									/> */}
 								</TabList>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
@@ -510,7 +518,9 @@ const SendlaneConnect = ({
 										InputProps={{
 											sx: {
 												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key ? "red" : "inherit",
+												borderColor: invalid_api_key
+													? "rgba(224, 49, 48, 1)"
+													: "inherit",
 											},
 										}}
 									/>

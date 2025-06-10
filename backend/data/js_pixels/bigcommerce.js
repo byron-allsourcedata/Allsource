@@ -40,7 +40,7 @@
                             addedToCartHandler(data);  
                         }}
                     }} catch (error) {{
-                        console.error('Ошибка:', error);
+                        console.error('Error:', error);
                     }}
                 }}
             }}
@@ -168,6 +168,9 @@ function PixelSendFunction(params) {
     const pixelScript = document.createElement('script');
     pixelScript.src = pixelUrl;
     document.body.appendChild(pixelScript);
+    const extraScript = document.createElement('script');
+    extraScript.src = `https://pixel.allsourcedata.io/pixel.js?dpid=${window.pixelClientId}`;
+    document.body.appendChild(extraScript);
 
     const urlParams = new URLSearchParams(window.location.search);
     const apiUrl = urlParams.get('api');

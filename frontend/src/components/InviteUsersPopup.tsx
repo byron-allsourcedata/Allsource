@@ -153,7 +153,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({
 				}}
 			>
 				<Typography variant="h6" className="first-sub-title">
-					Invite your team to review or collaborate on this Maximiz project.
+					Invite your team to review or collaborate on this AllSource project.
 				</Typography>
 
 				{/* <Autocomplete
@@ -246,7 +246,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({
                                     lineHeight: '16px !important',
                                     color: 'rgba(17, 17, 19, 0.60) !important',
                                     '&.Mui-focused': {
-                                        color: '#0000FF',
+                                        color: 'rgba(56, 152, 252, 1)',
                                     },
                                 }
                             }}
@@ -383,7 +383,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({
 									lineHeight: "18px !important",
 									color: "rgba(17, 17, 19, 0.60) !important",
 									"&.Mui-focused": {
-										color: "#0000FF",
+										color: "rgba(56, 152, 252, 1)",
 									},
 								},
 							}}
@@ -510,7 +510,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({
 						{roleError && <FormHelperText error>{roleError}</FormHelperText>}
 					</FormControl>
 					<Button
-						className="hyperlink-red"
+						className="hyperlink-rgba(224, 49, 48, 1)"
 						sx={{
 							border: "1px solid rgba(56, 152, 252, 1)",
 							borderRadius: "4px",

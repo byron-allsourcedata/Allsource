@@ -17,7 +17,7 @@ const builderHintCards: Record<BuilderKey, HintCardInterface> = {
 			"This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
 		title: "Source Type",
 		linkToLoadMore:
-			"https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+			"https://allsourceio.zohodesk.com/portal/en/kb/articles/import-source",
 	},
 	pixelDomain: {
 		description:
@@ -69,7 +69,7 @@ const tableHintCards: Record<TableKey, HintCardInterface> = {
 			"This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
 		title: "Actions",
 		linkToLoadMore:
-			"https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+			"https://allsourceio.zohodesk.com/portal/en/kb/articles/actions-for-sources",
 	},
 	builder: {
 		description:

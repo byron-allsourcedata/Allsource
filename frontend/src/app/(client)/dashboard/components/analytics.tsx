@@ -285,7 +285,7 @@ export const PixelAnalytics: React.FC<Props> = (props) => {
 											"Indicates the count of resolved identities and revenue figures for the specified time"
 										}
 										linkText="Learn more"
-										linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-main"
+										linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/analytics-dashboard"
 									/>
 								</Box>
 								<Box maxHeight={"40px"}>

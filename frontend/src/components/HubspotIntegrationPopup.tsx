@@ -82,7 +82,7 @@ const hubspotStyles = {
 		left: "2px",
 		color: "rgba(17, 17, 19, 0.60)",
 		"&.Mui-focused": {
-			color: "#0000FF",
+			color: "rgba(56, 152, 252, 1)",
 		},
 	},
 	formInput: {
@@ -103,10 +103,10 @@ const hubspotStyles = {
 				borderColor: "#A3B0C2",
 			},
 			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-				borderColor: "#0000FF",
+				borderColor: "rgba(56, 152, 252, 1)",
 			},
 			"&.Mui-error .MuiOutlinedInput-notchedOutline": {
-				borderColor: "red",
+				borderColor: "rgba(224, 49, 48, 1)",
 			},
 		},
 		"&+.MuiFormHelperText-root": {
@@ -167,7 +167,7 @@ const HubspotIntegrationPopup = ({
 			text: 'Navigate to "Integrations" and select "Private Apps".',
 		},
 		{ id: "unique-id-4", text: 'Click on "Create a private app".' },
-		{ id: "unique-id-5", text: 'Enter "Maximiz" as the app name.' },
+		{ id: "unique-id-5", text: 'Enter "Allsource" as the app name.' },
 		{
 			id: "unique-id-6",
 			text: 'Assign full access permissions to "CRM", "Contacts", and "Objects".',
@@ -178,7 +178,7 @@ const HubspotIntegrationPopup = ({
 		},
 		{
 			id: "unique-id-8",
-			text: "Copy the generated API key and paste it into the API Key field in the Maximiz Hubspot section.",
+			text: "Copy the generated API key and paste it into the API Key field in the Allsource Hubspot section.",
 		},
 		{
 			id: "unique-id-9",
@@ -242,11 +242,7 @@ const HubspotIntegrationPopup = ({
 				}
 				showToast("Integration Hubspot Successfully");
 				triggerSync();
-				if (fromAudience) {
-					handleClose();
-				} else {
-					handleNextTab();
-				}
+				handleClose();
 			} else {
 				showErrorToast("Invalid API Key");
 			}
@@ -315,8 +311,16 @@ const HubspotIntegrationPopup = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -504,13 +508,6 @@ const HubspotIntegrationPopup = ({
 										value="1"
 										sx={{ ...hubspotStyles.tabHeading, cursor: "pointer" }}
 									/>
-									{!fromAudience && (
-										<Tab
-											label="Suppression Sync"
-											value="2"
-											sx={{ ...hubspotStyles.tabHeading, cursor: "pointer" }}
-										/>
-									)}
 								</Tabs>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
@@ -567,7 +564,9 @@ const HubspotIntegrationPopup = ({
 										InputProps={{
 											sx: {
 												...hubspotStyles.formInput,
-												borderColor: invalid_api_key ? "red" : "inherit",
+												borderColor: invalid_api_key
+													? "rgba(224, 49, 48, 1)"
+													: "inherit",
 											},
 										}}
 									/>
