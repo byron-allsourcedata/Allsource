@@ -220,7 +220,7 @@ const OmnisendConnect = ({
 					});
 				}
 				triggerSync();
-				handleClose()
+				handleClose();
 			}
 			if (response.data === "CREDENTIALS_INVALID") {
 				showErrorToast("Invalid API Key, please, try another");

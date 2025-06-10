@@ -325,7 +325,7 @@ const AlivbleIntagrationsSlider = ({
 											<ListItemButton
 												onClick={() => {
 													// onClose()
-													setOpenKlaviyoConnect(true)
+													setOpenKlaviyoConnect(true);
 												}}
 												sx={{
 													p: 0,
@@ -426,7 +426,7 @@ const AlivbleIntagrationsSlider = ({
 											<ListItemButton
 												onClick={() => {
 													// onClose()
-													setOpenSalesForceConnect(true)
+													setOpenSalesForceConnect(true);
 												}}
 												sx={{
 													p: 0,
@@ -625,7 +625,7 @@ const AlivbleIntagrationsSlider = ({
 											<ListItemButton
 												onClick={() => {
 													// onClose()
-													setOpenMetaConnect(true)
+													setOpenMetaConnect(true);
 												}}
 												sx={{
 													p: 0,
@@ -676,7 +676,7 @@ const AlivbleIntagrationsSlider = ({
 											<ListItemButton
 												onClick={() => {
 													// onClose()
-													setOpenOmnisendConnect(true)
+													setOpenOmnisendConnect(true);
 												}}
 												sx={{
 													p: 0,
@@ -727,7 +727,7 @@ const AlivbleIntagrationsSlider = ({
 											<ListItemButton
 												onClick={() => {
 													// onClose()
-													setOpenMailchimpConnect(true)
+													setOpenMailchimpConnect(true);
 												}}
 												sx={{
 													p: 0,
@@ -782,7 +782,7 @@ const AlivbleIntagrationsSlider = ({
 											<ListItemButton
 												onClick={() => {
 													// onClose()
-													setOpenBigcommerceConnect(true)
+													setOpenBigcommerceConnect(true);
 												}}
 												sx={{
 													p: 0,
@@ -930,7 +930,7 @@ const AlivbleIntagrationsSlider = ({
 											<ListItemButton
 												onClick={() => {
 													// onClose()
-													setOPenZapierComnect(true)
+													setOPenZapierComnect(true);
 												}}
 												sx={{
 													p: 0,
@@ -981,7 +981,7 @@ const AlivbleIntagrationsSlider = ({
 											<ListItemButton
 												onClick={() => {
 													// onClose()
-													setOpenWebhookConnect(true)
+													setOpenWebhookConnect(true);
 												}}
 												sx={{
 													p: 0,
@@ -1032,7 +1032,7 @@ const AlivbleIntagrationsSlider = ({
 											<ListItemButton
 												onClick={() => {
 													// onClose()
-													setOpenSlackConnect(true)
+													setOpenSlackConnect(true);
 												}}
 												sx={{
 													p: 0,
@@ -1082,7 +1082,7 @@ const AlivbleIntagrationsSlider = ({
 										>
 											<ListItemButton
 												onClick={() => {
-													setOpenHubspotConnect(true)
+													setOpenHubspotConnect(true);
 													// onClose()
 												}}
 												sx={{
@@ -1134,7 +1134,7 @@ const AlivbleIntagrationsSlider = ({
 											<ListItemButton
 												onClick={() => {
 													// onClose()
-													setOpenGoogleAdsConnect(true)
+													setOpenGoogleAdsConnect(true);
 												}}
 												sx={{
 													p: 0,

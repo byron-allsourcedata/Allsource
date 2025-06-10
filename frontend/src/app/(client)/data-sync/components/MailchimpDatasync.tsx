@@ -1351,7 +1351,8 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																						},
 																					"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																						{
-																							borderColor: "rgba(56, 152, 252, 1)",
+																							borderColor:
+																								"rgba(56, 152, 252, 1)",
 																						},
 																				},
 																				"&+.MuiFormHelperText-root": {

@@ -1269,7 +1269,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 																						},
 																					"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																						{
-																							borderColor: "rgba(56, 152, 252, 1)",
+																							borderColor:
+																								"rgba(56, 152, 252, 1)",
 																						},
 																				},
 																				"&+.MuiFormHelperText-root": {
@@ -1339,7 +1340,8 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 																						},
 																					"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																						{
-																							borderColor: "rgba(56, 152, 252, 1)",
+																							borderColor:
+																								"rgba(56, 152, 252, 1)",
 																						},
 																				},
 																				"&+.MuiFormHelperText-root": {

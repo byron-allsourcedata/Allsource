@@ -222,7 +222,7 @@ const MailchimpConnect = ({
 					});
 				}
 				triggerSync();
-				handleClose()
+				handleClose();
 			} else {
 				showErrorToast("Invalid API Key");
 			}
