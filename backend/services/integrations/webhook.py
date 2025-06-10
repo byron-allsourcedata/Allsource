@@ -1,5 +1,7 @@
 import logging
 from datetime import datetime
+
+from models import UserIntegration
 from utils import format_phone_number
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from persistence.domains import UserDomainsPersistence
@@ -18,7 +20,12 @@ from persistence.integrations.integrations_persistence import (
     IntegrationsPresistence,
 )
 from fastapi import HTTPException
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import (
+    IntegrationsStatus,
+    SourcePlatformEnum,
+    ProccessDataSyncResult,
+    DataSyncType,
+)
 from httpx import Client
 from utils import extract_first_email
 
@@ -171,6 +178,8 @@ class WebhookIntegrationService:
                 "domain_id": domain_id,
                 "leads_type": leads_type,
                 "data_map": data_map,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "created_by": created_by,
                 "hook_url": webhook_url,
                 "method": method,
@@ -178,11 +187,14 @@ class WebhookIntegrationService:
         )
         return sync
 
-    async def process_data_sync(
-        self, five_x_five_user, access_token, integration_data_sync, lead_user
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
     ):
         profile = self.__create_profile(
-            five_x_five_user, integration_data_sync, lead_user
+            five_x_five_users=five_x_five_users, integration_data_sync=integration_data_sync
         )
         if profile in (
             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
@@ -194,18 +206,23 @@ class WebhookIntegrationService:
         return ProccessDataSyncResult.SUCCESS.value
 
     def __create_profile(
-        self, five_x_five_user, sync: IntegrationUserSync, lead_user
+        self,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
     ):
-        data = self.__mapped_lead(five_x_five_user, sync.data_map, lead_user)
-        if data in (
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return data
+        results = []
+        for five_x_five_user in five_x_five_users:
+            data = self.__mapped_lead(five_x_five_user=five_x_five_user, data_map=integration_data_sync.data_map)
+            if data in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                return data
+            results.append(data)
 
-        logger.info(f"sending data: {data}")
+            logger.info(f"sending data: {data}")
         response = self.__handle_request(
-            url=sync.hook_url, method=sync.method, json=data
+            url=integration_data_sync.hook_url, method=integration_data_sync.method, json=results
         )
         if not response or response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
@@ -351,7 +368,9 @@ class WebhookIntegrationService:
         return properties
 
     def __mapped_lead(
-        self, five_x_five_user: FiveXFiveUser, data_map, lead_user
+        self,
+        five_x_five_user: FiveXFiveUser,
+        data_map
     ):
         properties = {}
         if all(
@@ -380,39 +399,6 @@ class WebhookIntegrationService:
             else:
                 properties[mapping["value"]] = ""
 
-        if "urls_visited" in mapped_fields:
-            page_time = self.leads_persistence.get_latest_page_time(
-                lead_user.id
-            )
-            page_time_array = [
-                {
-                    "page": row.page,
-                    "total_spent_time": str(row.total_spent_time),
-                    "count": row.count,
-                }
-                for row in page_time
-            ]
-            for mapping in data_map:
-                if mapping["type"] == "urls_visited":
-                    properties[mapping["value"]] = page_time_array
-
-        if "urls_visited_with_parameters" in mapped_fields:
-            page_time = self.leads_persistence.get_latest_page_time(
-                lead_user.id
-            )
-            page_time_array = [
-                {
-                    "page": self.build_full_url(
-                        row.page, row.page_parameters.replace(", ", "&")
-                    ),
-                    "total_spent_time": str(row.total_spent_time),
-                    "count": row.count,
-                }
-                for row in page_time
-            ]
-            for mapping in data_map:
-                if mapping["type"] == "urls_visited_with_parameters":
-                    properties[mapping["value"]] = page_time_array
 
         if "time_on_site" in mapped_fields or "url_visited" in mapped_fields:
             time_on_site, url_visited = self.leads_persistence.get_visit_stats(

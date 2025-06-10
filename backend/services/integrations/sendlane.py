@@ -1,3 +1,4 @@
+from models import UserIntegration, IntegrationUserSync
 from utils import validate_and_format_phone
 from typing import List
 from fastapi import HTTPException
@@ -240,25 +241,42 @@ class SendlaneIntegrationService:
         )
         return sync
 
-    async def process_data_sync(
+    async def process_data_sync_lead(
         self,
-        five_x_five_user,
-        user_integration,
-        integration_data_sync,
-        lead_user,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
     ):
-        profile = self.__create_contact(
-            five_x_five_user,
-            user_integration.access_token,
-            integration_data_sync.list_id,
-        )
-        if profile in (
-            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return profile
+        return self.bulk_add_contacts(five_x_five_users=five_x_five_users,access_token=user_integration.access_token, list_id=integration_data_sync.list_id)
 
+    def bulk_add_contacts(self, five_x_five_users, access_token, list_id: int):
+        chunks = [
+            five_x_five_users[i : i + 100]
+            for i in range(0, len(five_x_five_users), 100)
+        ]
+
+        for chunk in chunks:
+            contacts = [
+                {
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                }
+                for user in chunk
+            ]
+
+            data = {"contacts": contacts}
+            response = self.__handle_request(
+                f"/lists/{list_id}/contacts",
+                api_key=access_token,
+                json=data,
+                method="POST",
+            )
+
+            if response.status_code == 401:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            else:
+                return ProccessDataSyncResult.INCORRECT_FORMAT.value
         return ProccessDataSyncResult.SUCCESS.value
 
     def __create_contact(self, five_x_five_user, access_token, list_id: int):

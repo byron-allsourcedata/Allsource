@@ -9,7 +9,9 @@ from urllib.parse import unquote
 import base64
 import os
 from datetime import datetime, timedelta
-from utils import extract_first_email
+
+from models import UserIntegration, IntegrationUserSync
+from utils import extract_first_email, get_valid_email
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
@@ -18,7 +20,12 @@ from slack_sdk.oauth import AuthorizeUrlGenerator
 from models.five_x_five_users import FiveXFiveUser
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult
+from enums import (
+    SourcePlatformEnum,
+    IntegrationsStatus,
+    ProccessDataSyncResult,
+    DataSyncType,
+)
 from persistence.integrations.integrations_persistence import (
     IntegrationsPresistence,
 )
@@ -93,6 +100,8 @@ class SlackService:
         integration_data = {
             "access_token": access_token,
             "full_name": user.get("full_name"),
+            "sent_contacts": -1,
+            "sync_type": DataSyncType.CONTACT.value,
             "service_name": SourcePlatformEnum.SLACK.value,
             "slack_team_id": team_id,
         }
@@ -250,80 +259,36 @@ class SlackService:
     def get_first_visited_url(self, lead_user):
         return self.lead_persistence.get_first_visited_url(lead_user)
 
-    async def process_data_sync(
-        self, five_x_five_user, user_integration, data_sync, lead_user
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
     ):
-        visited_url = self.get_first_visited_url(lead_user)
-        user_text = self.generate_user_text(five_x_five_user, visited_url)
-        if user_text in (
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return user_text
+        for five_x_five_user in five_x_five_users:
+            user_text = self.generate_user_text(five_x_five_user)
+            if user_text in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                continue
 
-        return self.send_message_to_channels(
-            user_text, user_integration.access_token, data_sync.list_id
-        )
+            result = self.send_message_to_channels(
+                user_text, user_integration.access_token, integration_data_sync.list_id
+            )
+            if result != ProccessDataSyncResult.SUCCESS.value:
+                return result
+        return ProccessDataSyncResult.SUCCESS.value
 
     def generate_user_text(
-        self, five_x_five_user: FiveXFiveUser, visited_url
+        self, five_x_five_user: FiveXFiveUser
     ) -> str:
         if not five_x_five_user.linkedin_url:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        email_fields = [
-            "business_email",
-            "personal_emails",
-            "additional_personal_emails",
-        ]
-
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if (
-                            e
-                            and field == "business_email"
-                            and five_x_five_user.business_email_last_seen
-                        ):
-                            if (
-                                five_x_five_user.business_email_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and field == "personal_emails"
-                            and five_x_five_user.personal_emails_last_seen
-                        ):
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            )
-                            if (
-                                personal_emails_last_seen_str
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and self.million_verifier_integrations.is_email_verify(
-                                email=e.strip()
-                            )
-                        ):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        first_email = get_valid_email(five_x_five_user)
+        first_email = get_valid_email(
+            five_x_five_user, self.million_verifier_integrations
+        )
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -340,7 +305,6 @@ class SlackService:
             f"{five_x_five_user.company_revenue or 'Unknown Revenue'} | "
             f"{five_x_five_user.primary_industry or 'Unknown Industry'}",
             "Email": first_email,
-            "Visited URL": visited_url,
             "Location": (
                 f"{five_x_five_user.professional_city}, {five_x_five_user.professional_state}".strip(
                     ", "
