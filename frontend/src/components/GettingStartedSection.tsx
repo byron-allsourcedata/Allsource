@@ -54,11 +54,18 @@ const GettingStartedSection: React.FC = () => {
 		},
 	]);
 
-	const handleInstallStatusChange = (status: "success" | "failed") => {
+	const handleInstallStatusChange = (status: "success" | "failed" | null) => {
 		setInstallationStatus(status);
 
 		const updatedStepData = [...stepData];
-		updatedStepData[2].status = "active";
+		if (status === "success") {
+			updatedStepData[1].status = "completed";
+			updatedStepData[2].status = "active";
+		} else {
+			updatedStepData[1].status = "active";
+			updatedStepData[2].status = "default";
+		}
+
 		setStepData(updatedStepData);
 	};
 
@@ -152,6 +159,15 @@ const GettingStartedSection: React.FC = () => {
 		}
 	};
 
+	const shouldShowVerifyComponent =
+		selectedDomain !== "" && selectedMethod !== "" && selectedMethod !== null;
+
+	const isGoogleOrManualMethod =
+		selectedMethod === "google" || selectedMethod === "manual";
+
+	const shouldRenderBasedOnStatus =
+		!isGoogleOrManualMethod || installationStatus === "success";
+
 	return (
 		<>
 			<GetStartedHintsProvider>
@@ -192,17 +208,12 @@ const GettingStartedSection: React.FC = () => {
 							/>
 						)}
 
-						{selectedDomain !== "" &&
-							selectedMethod !== "" &&
-							selectedMethod !== null &&
-							(selectedMethod === "google"
-								? installationStatus === "success"
-								: true) && (
-								<VerifyPixelIntegration
-									domain={selectedDomain}
-									showHint={showHintVerify}
-								/>
-							)}
+						{shouldShowVerifyComponent && shouldRenderBasedOnStatus && (
+							<VerifyPixelIntegration
+								domain={selectedDomain}
+								showHint={showHintVerify}
+							/>
+						)}
 					</Grid>
 					<Grid
 						item
@@ -229,17 +240,12 @@ const GettingStartedSection: React.FC = () => {
 									}}
 								/>
 							)}
-							{selectedDomain !== "" &&
-								selectedMethod !== "" &&
-								selectedMethod !== null &&
-								(selectedMethod === "google"
-									? installationStatus === "success"
-									: true) && (
-									<VerifyPixelIntegration
-										domain={selectedDomain}
-										showHint={showHintVerify}
-									/>
-								)}
+							{shouldShowVerifyComponent && shouldRenderBasedOnStatus && (
+								<VerifyPixelIntegration
+									domain={selectedDomain}
+									showHint={showHintVerify}
+								/>
+							)}
 						</Box>
 					</Grid>
 					<Grid

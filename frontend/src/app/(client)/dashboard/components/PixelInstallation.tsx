@@ -28,7 +28,7 @@ interface CmsData {
 }
 interface PixelInstallationProps {
 	onInstallSelected: (method: "manual" | "google" | "cms" | null) => void;
-	onInstallStatusChange: (status: "success" | "failed") => void;
+	onInstallStatusChange: (status: "success" | "failed" | null) => void;
 }
 
 const PixelInstallation: React.FC<PixelInstallationProps> = ({
@@ -49,24 +49,33 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 	const [installStatus, setInstallStatus] = useState<
 		"success" | "failed" | null
 	>(null);
+	const [installMethod, setInstallMethod] = useState<
+		"manual" | "google" | "cms" | null
+	>(null);
 	const manualRef = useRef<HTMLDivElement | null>(null);
 	const googleRef = useRef<HTMLDivElement | null>(null);
 	const cmsRef = useRef<HTMLDivElement | null>(null);
 
-	const UpdateInstallStatus = (status: "success" | "failed") => {
+	const UpdateInstallStatus = (status: "success" | "failed" | null) => {
 		setInstallStatus(status);
 		onInstallStatusChange(status);
+	};
+
+	const UpdateInstallMethod = (method: "manual" | "google" | "cms" | null) => {
+		onInstallSelected(method);
+		setInstallMethod(method);
 	};
 
 	const installManually = async () => {
 		if (showManualInline) {
 			setShowManualInline(false);
-			onInstallSelected(null);
+			UpdateInstallMethod(null);
+			UpdateInstallStatus(null);
 			setShowHint(false);
 			return;
 		}
-
-		onInstallSelected("manual");
+		UpdateInstallMethod("manual");
+		UpdateInstallStatus("failed");
 		setShowHint(true);
 		try {
 			setShowGoogleInline(false);
@@ -102,11 +111,13 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 	const installGoogleTag = async () => {
 		if (showGoogleInline) {
 			setShowGoogleInline(false);
-			onInstallSelected(null);
+			UpdateInstallMethod(null);
+			UpdateInstallStatus(null);
 			setShowHint(false);
 			return;
 		}
-		onInstallSelected("google");
+		UpdateInstallMethod("google");
+		UpdateInstallStatus(null);
 		setShowHint(true);
 		try {
 			setShowCMSInline(false);
@@ -159,7 +170,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 			const installBigcommerce = query.get("install_bigcommerce");
 			if (installBigcommerce) {
 				setShowCMSInline(true);
-				onInstallSelected("cms");
+				UpdateInstallMethod("cms");
 				setCMSOpen(true);
 				if (installBigcommerce == "true") {
 					showToast("Connect to Bigcommerce Successfully. Pixel Installed");
@@ -174,7 +185,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 				try {
 					setGoogleOpen(true);
 					setShowGoogleInline(true);
-					onInstallSelected("google");
+					UpdateInstallMethod("google");
 				} catch (error) {}
 			}
 		};
@@ -189,12 +200,14 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 	const installCMS = async () => {
 		if (showCMSInline) {
 			setShowCMSInline(false);
-			onInstallSelected(null);
+			UpdateInstallMethod(null);
+			UpdateInstallStatus(null);
 			setShowHint(false);
 			return;
 		}
 
-		onInstallSelected("cms");
+		UpdateInstallMethod("cms");
+		UpdateInstallStatus(null);
 		setShowHint(true);
 		try {
 			setShowGoogleInline(false);
@@ -331,7 +344,10 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 							onClick={installGoogleTag}
 							sx={{
 								...buttonGoogle(showGoogleInline),
-								pointerEvents: installStatus !== null ? "none" : "initial",
+								pointerEvents:
+									installStatus !== null && installMethod === "google"
+										? "none"
+										: "initial",
 								...((sourcePlatform === "shopify" ||
 									sourcePlatform === "big_commerce") && {
 									color: "grey",
@@ -394,7 +410,10 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 							onClick={installManually}
 							sx={{
 								...buttonStyles(showManualInline),
-								opacity: installStatus !== null ? "0.5" : "1",
+								opacity:
+									installStatus !== null && installMethod === "google"
+										? "0.5"
+										: "1",
 								...((sourcePlatform === "shopify" ||
 									sourcePlatform === "big_commerce") && {
 									color: "grey",
@@ -406,7 +425,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 							disabled={
 								sourcePlatform === "shopify" ||
 								sourcePlatform === "big_commerce" ||
-								installStatus !== null
+								(installStatus !== null && installMethod === "google")
 							}
 						>
 							<Box
@@ -452,9 +471,12 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 							onClick={installCMS}
 							sx={{
 								...buttonStyles(showCMSInline),
-								opacity: installStatus !== null ? "0.5" : "1",
+								opacity:
+									installStatus !== null && installMethod === "google"
+										? "0.5"
+										: "1",
 							}}
-							disabled={installStatus !== null}
+							disabled={installStatus !== null && installMethod === "google"}
 						>
 							<Box
 								sx={{
@@ -548,6 +570,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 							open={openmanually}
 							handleClose={handleManualClose}
 							pixelCode={pixelCode}
+							onInstallStatusChange={UpdateInstallStatus}
 						/>
 					</Box>
 				)}

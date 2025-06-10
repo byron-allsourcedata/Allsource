@@ -41,9 +41,10 @@ const Dashboard: React.FC = () => {
 	const [welcomePopup, setWelcomePopup] = useState<string | null>(null);
 	const [values, setValues] = useState<DashboardContacts>({
 		total_contacts_collected: 0,
-		total_new_leads: 0,
-		total_page_views: 0,
-		total_returning_visitors: 0,
+		total_visitors: 0,
+		total_view_products: 0,
+		total_abandoned_cart: 0,
+		total_converted_sale: 0,
 	});
 
 	const isMobile = useMediaQuery("(max-width:600px)");
