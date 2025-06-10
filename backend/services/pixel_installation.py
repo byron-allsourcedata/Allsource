@@ -53,19 +53,19 @@ class PixelInstallationService:
             )
             self.db.commit()
 
-        script = f'''
-            <script type="text/javascript">
-            (function(s, p, i, c, e) {{
-                s[e] = s[e] || function() {{ (s[e].a = s[e].a || []).push(arguments); }};
-                s[e].l = 1 * new Date();
-                var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];
-                k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);
-                s.pixelClientId = i;
-            }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");
-            </script>
+        script = (
+            '<script src="https://pixel.allsourcedata.io/pixel.js?dpid={client_id}"></script>' '\n'
+            '<script type="text/javascript">' '\n'
+            '    (function(s, p, i, c, e) {{' '\n'
+            '    s[e] = s[e] || function() {{ (s[e].a = s[e].a || []).push(arguments); }};' '\n'
+            '    s[e].l = 1 * new Date();' '\n'
+            '    var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];' '\n'
+            '    k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);' '\n'
+            '    s.pixelClientId = i;' '\n'
+            '    }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");' '\n'
+            '</script>'
+        )
 
-            <script src="https://pixel.allsourcedata.io/pixel.js?dpid={client_id}"></script>
-        '''
 
         return script, client_id
 
