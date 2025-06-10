@@ -58,7 +58,6 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 		}
 	};
 
-
 	return (
 		<Box
 			sx={{

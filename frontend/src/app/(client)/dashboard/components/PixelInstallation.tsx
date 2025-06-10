@@ -142,7 +142,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 				try {
 					const parsed = JSON.parse(savedMe);
 					return parsed.source_platform || "";
-				} catch (error) { }
+				} catch (error) {}
 			}
 		}
 		return "";
@@ -175,7 +175,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 					setGoogleOpen(true);
 					setShowGoogleInline(true);
 					onInstallSelected("google");
-				} catch (error) { }
+				} catch (error) {}
 			}
 		};
 
@@ -599,7 +599,7 @@ const buttonStyles = (showManualInline: boolean) => ({
 	alignItems: "self-start",
 	padding: "0.875rem",
 	borderColor: "rgba(228, 228, 228, 1)",
-	boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.08)',
+	boxShadow: "0px 2px 10px 0px rgba(0, 0, 0, 0.08)",
 	border: showManualInline
 		? "1px solid rgba(56, 152, 252, 1)"
 		: "1px solid rgba(228, 228, 228, 1)",
@@ -619,7 +619,7 @@ const buttonGoogle = (showGoogleInline: boolean) => ({
 	gap: 1,
 	pt: 1,
 	borderColor: "rgba(228, 228, 228, 1)",
-	boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.08)',
+	boxShadow: "0px 2px 10px 0px rgba(0, 0, 0, 0.08)",
 	border: showGoogleInline
 		? "1px solid rgba(56, 152, 252, 1)"
 		: "1px solid rgba(228, 228, 228, 1)",

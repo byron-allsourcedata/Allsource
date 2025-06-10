@@ -181,7 +181,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 				`https://www.googleapis.com/tagmanager/v2/accounts/${accountId}/containers/${containerId}/workspaces/${workspaceId}/triggers`,
 				{ headers: { Authorization: `Bearer ${accessToken}` } },
 			);
-			console.log(response)
+			console.log(response);
 			return response.data.trigger || [];
 		} catch (error) {
 			throw error;
@@ -235,7 +235,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 						`https://www.googleapis.com/tagmanager/v2/accounts/${selectedAccount}/containers`,
 						{ headers: { Authorization: `Bearer ${session.token}` } },
 					);
-					console.log(response)
+					console.log(response);
 					setContainers(response.data.container || []);
 				} catch (e) {
 					if (axios.isAxiosError(e)) {

@@ -363,7 +363,7 @@ export const SimpleDomainSelector: React.FC<SimpleDomainSelectorProps> = ({
 								justifyContent: "space-between",
 								alignItems: "center",
 								cursor: domain.enable ? "pointer" : "not-allowed",
-								width: '100%'
+								width: "100%",
 								// color: domain.enable ? 'inherit' : 'rgba(32,  33, 36, 0.3) !important'
 							}}
 						>
