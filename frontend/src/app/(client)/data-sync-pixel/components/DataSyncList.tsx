@@ -80,48 +80,14 @@ interface IntegrationsCredentials {
 	is_failed?: boolean;
 }
 
-export interface DataMapItem {
-	type: string;
-	value: string;
-}
-
-export interface Integration {
-	id: number;
-	createdDate: string;
-	name: string;
-	lastSync: string | null;
-	type: string;
-	platform: string;
-	integration_id: number;
-	dataSync: boolean;
-	suppression: boolean | null;
-	contacts: number;
-	createdBy: string;
-	status: string;
-	accountId: number | null;
-	campaign_id: number | null;
-	campaign_name: string | null;
-	data_map: DataMapItem[];
-	syncStatus: boolean;
-	integration_is_failed: boolean;
-	type_error: string | null;
-	customer_id: number | null;
-	list_id: string | null;
-	hook_url: string | null;
-	method: string | null;
-	active_segments: string | null;
-	records_synced: string | null;
-	list_name: string | null;
-}
-
 const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const { needsSync, setNeedsSync } = useIntegrationContext();
 	const [order, setOrder] = useState<"asc" | "desc" | undefined>(undefined);
 	const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
 	const [isLoading, setIsLoading] = useState(false);
 	const [Loading, setLoading] = useState(false);
-	const [data, setData] = useState<Integration[]>([]);
-	const [allData, setAllData] = useState<Integration[]>([]);
+	const [data, setData] = useState<any[]>([]);
+	const [allData, setAllData] = useState<any[]>([]);
 	const [klaviyoIconPopupOpen, setKlaviyoIconPopupOpen] = useState(false);
 	const [salesForceIconPopupOpen, setSalesForceIconPopupOpen] = useState(false);
 	const [metaIconPopupOpen, setMetaIconPopupOpen] = useState(false);
@@ -256,17 +222,11 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						Visitor: "visitor",
 					};
 					return Object.values(allData).filter((item) => {
-						const lastSyncTimestamp = item.lastSync
-							? new Date(item.lastSync).getTime() / 1000
-							: null;
-
+						const lastSync = new Date(item.lastSync).getTime() / 1000;
 						const dateMatch =
 							filters.from_date === null ||
 							filters.to_date === null ||
-							(lastSyncTimestamp !== null &&
-								lastSyncTimestamp >= filters.from_date &&
-								lastSyncTimestamp <= filters.to_date);
-
+							(lastSync >= filters.from_date && lastSync <= filters.to_date);
 						const platformMatch =
 							filters.selected_status.length === 0 ||
 							filters.selected_status
@@ -666,8 +626,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			const foundItem = data.find((item) => item.id === selectedId);
 			const dataSyncPlatform = foundItem ? foundItem.platform : null;
 			if (
-				foundItem?.type_error === "Invalid API Key" ||
-				foundItem?.integration_is_failed
+				foundItem.type_error === "Invalid API Key" ||
+				foundItem.integration_is_failed
 			) {
 				setIsInvalidApiKey(true);
 				if (dataSyncPlatform) {
@@ -731,17 +691,23 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		return <CustomizedProgressBar />;
 	}
 
-	const formatStatusText = (row: Integration) => {
+	const formatStatusText = (row: any) => {
 		if (row.dataSync === false) {
 			return "Disabled";
 		}
 		if (row.syncStatus === false) {
 			return "Failed";
 		}
-		return "In Progress";
+		if (row.is_progress === true) {
+			return "In Progress";
+		}
+		if (row.is_progress === false) {
+			return "Synced";
+		}
+		return "--";
 	};
 
-	const getStatusStyle = (row: Integration) => {
+	const getStatusStyle = (row: any) => {
 		if (row.dataSync === false) {
 			return {
 				background: "rgba(219, 219, 219, 1)",
@@ -752,6 +718,18 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			return {
 				background: "rgba(252, 205, 200, 1)",
 				color: "rgba(200, 62, 46, 1) !important",
+			};
+		}
+		if (row.is_progress) {
+			return {
+				background: "rgba(0, 129, 251, 0.2)",
+				color: "rgba(0, 129, 251, 1)!important",
+			};
+		}
+		if (row.is_progress === false) {
+			return {
+				background: "rgba(234, 248, 221, 1)",
+				color: "rgba(43, 91, 0, 1) !important",
 			};
 		}
 		return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
@@ -1167,10 +1145,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												}}
 												tooltipOptions={{
 													content:
-														row?.active_segments === -1
+														row.active_segments === -1
 															? "unlimit"
 															: new Intl.NumberFormat("en-US").format(
-																	row?.active_segments,
+																	row.active_segments,
 																) || "--",
 												}}
 											>
@@ -1185,11 +1163,11 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												}}
 												tooltipOptions={{
 													content: new Intl.NumberFormat("en-US").format(
-														row?.records_synced,
+														row.records_synced,
 													),
 												}}
 											>
-												{row?.list_name ?? "--"}
+												{row.list_name ?? "--"}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
