@@ -98,8 +98,8 @@ const typographyGoogle = {
 	textTransform: "none",
 	color: "rgba(74, 74, 74, 1) !important",
 	textWrap: "wrap",
-	paddingTop: "1em",
-	paddingBottom: "0.25em",
+	paddingTop: "0.25em",
+	paddingBottom: "0.75em",
 };
 
 const maintext = {
@@ -163,7 +163,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 				try {
 					const parsed = JSON.parse(savedMe);
 					return parsed.source_platform || "";
-				} catch (error) {}
+				} catch (error) { }
 			}
 		}
 		return "";
@@ -191,7 +191,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 						setAccessTokenExists(true);
 					}
 				}
-			} catch (error) {}
+			} catch (error) { }
 			try {
 				const response_big_commerce = await axiosInstance.get(
 					"/integrations/credentials/bigcommerce",
@@ -202,7 +202,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 						setAccessTokenExists(true);
 					}
 				}
-			} catch (error) {}
+			} catch (error) { }
 
 			if (sourcePlatform === "shopify") {
 				setSelectedCMS("Shopify");
@@ -604,7 +604,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												justifyContent: "start",
 											}}
 										>
-											<Image src="/2.svg" alt="1" width={20} height={20} />
+											<Image src="/2.svg" alt="2" width={20} height={20} />
 											{sourcePlatform !== "shopify" && (
 												<Typography
 													className="first-sub-title"
@@ -644,9 +644,9 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 															: ""
 														: shop_domain
 															? `https://${shop_domain.replace(
-																	/^https?:\/\//,
-																	"",
-																)}`
+																/^https?:\/\//,
+																"",
+															)}`
 															: "https://"
 												}
 												sx={styles.formField}
@@ -734,8 +734,8 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 											{cmsHints["enterShopifyAccessToken"]?.show && (
 												<HintCard
 													card={cmsHintCards["enterShopifyAccessToken"]}
-													positionLeft={660}
-													positionTop={35}
+													positionLeft={680}
+													positionTop={0}
 													isOpenBody={
 														cmsHints["enterShopifyAccessToken"].showBody
 													}
@@ -776,10 +776,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 														"@media (max-width: 600px)": { padding: "1em" },
 													}}
 												>
-													Once you have submitted the required information, our
-													system will automatically install the script on your
-													Shopify store. You don’t need to take any further
-													action.
+													Once you have submitted the required information, our system will automatically install the script on your Shopify store.
 												</Typography>
 											</Box>
 										)}
@@ -788,7 +785,6 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 												display: "flex",
 												flexDirection: "column",
 												justifyContent: "flex-end",
-												padding: "0em 2.25em",
 												overflow: "visible",
 											}}
 										>
@@ -808,7 +804,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													Pixel Installed
 												</Typography>
 											) : (
-												<Box position="relative">
+												<Box position="relative" sx={{ display: 'flex', justifyContent: 'flex-end' }}>
 													<Button
 														fullWidth
 														variant="contained"
@@ -835,7 +831,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													{cmsHints["installScript"]?.show && (
 														<HintCard
 															card={cmsHintCards["installScript"]}
-															positionLeft={110}
+															positionLeft={560}
 															positionTop={15}
 															isOpenBody={cmsHints["installScript"].showBody}
 															toggleClick={() =>
@@ -1128,30 +1124,30 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 									>
 										{(sourcePlatform !== "big_commerce" ||
 											!accessTokenExists) && (
-											<Box
-												sx={{
-													display: "flex",
-													flexDirection: "row",
-													alignItems: "center",
-													padding: 0,
-													justifyContent: "start",
-												}}
-											>
-												<Image src="/2.svg" alt="2" width={20} height={20} />
-												<Typography
-													className="first-sub-title"
+												<Box
 													sx={{
-														...maintext,
-														textAlign: "left",
-														padding: "1em 0em 1em 1em",
-														fontWeight: "500",
+														display: "flex",
+														flexDirection: "row",
+														alignItems: "center",
+														padding: 0,
+														justifyContent: "start",
 													}}
 												>
-													Enter your Bigcommerce store hash in the designated
-													field. This allows our system to identify your store.
-												</Typography>
-											</Box>
-										)}
+													<Image src="/2.svg" alt="2" width={20} height={20} />
+													<Typography
+														className="first-sub-title"
+														sx={{
+															...maintext,
+															textAlign: "left",
+															padding: "1em 0em 1em 1em",
+															fontWeight: "500",
+														}}
+													>
+														Enter your Bigcommerce store hash in the designated
+														field. This allows our system to identify your store.
+													</Typography>
+												</Box>
+											)}
 
 										<Box
 											component="pre"
@@ -1185,8 +1181,8 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 											{cmsHints["enterStoreHash"]?.show && (
 												<HintCard
 													card={cmsHintCards["enterStoreHash"]}
-													positionLeft={660}
-													positionTop={35}
+													positionLeft={675}
+													positionTop={5}
 													isOpenBody={cmsHints["enterStoreHash"].showBody}
 													toggleClick={() =>
 														changeCMSHint(
@@ -1203,44 +1199,40 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 										</Box>
 										{(sourcePlatform !== "big_commerce" ||
 											!accessTokenExists) && (
-											<Box
-												sx={{
-													display: "flex",
-													flexDirection: "row",
-													alignItems: "center",
-													justifyContent: "start",
-												}}
-											>
-												<Image src="/3.svg" alt="3" width={20} height={20} />
-												<Typography
-													className="first-sub-title"
+												<Box
 													sx={{
-														...maintext,
-														textAlign: "left",
-														padding: "2em 1em 1em",
-														fontWeight: "500",
-														"@media (max-width: 600px)": { padding: "1em" },
+														display: "flex",
+														flexDirection: "row",
+														alignItems: "center",
+														justifyContent: "start",
 													}}
 												>
-													Once you have submitted the required information, our
-													system will automatically install the script on your
-													Bigcommerce store. You don’t need to take any further
-													action.
-												</Typography>
-											</Box>
-										)}
+													<Image src="/3.svg" alt="3" width={20} height={20} />
+													<Typography
+														className="first-sub-title"
+														sx={{
+															...maintext,
+															textAlign: "left",
+															padding: "2em 1em 1em",
+															fontWeight: "500",
+															"@media (max-width: 600px)": { padding: "1em" },
+														}}
+													>
+														Once you have submitted the required information, our system will automatically install the script on your Bigcommerce store.
+													</Typography>
+												</Box>
+											)}
 										<Box
 											sx={{
 												display: "flex",
 												flexDirection: "column",
 												justifyContent: "flex-end",
 												maxHeight: "100%",
-												padding: "0em 1em",
 												pl: 4.25,
 											}}
 										>
 											{sourcePlatform === "big_commerce" &&
-											accessTokenExists ? (
+												accessTokenExists ? (
 												<Typography
 													sx={{
 														color: "#333",
@@ -1256,7 +1248,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													Pixel Installed
 												</Typography>
 											) : (
-												<Box position="relative">
+												<Box position="relative" sx={{ display: 'flex', justifyContent: 'flex-end' }}>
 													<Button
 														fullWidth
 														variant="contained"
@@ -1280,7 +1272,7 @@ const Popup: React.FC<PopupProps> = ({ open, pixelCode, pixel_client_id }) => {
 													{cmsHints["scriptInstallation"]?.show && (
 														<HintCard
 															card={cmsHintCards["scriptInstallation"]}
-															positionLeft={110}
+															positionLeft={525}
 															positionTop={15}
 															isOpenBody={
 																cmsHints["scriptInstallation"].showBody

@@ -58,15 +58,6 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 		}
 	};
 
-	const hintCards: HintCardInterface[] = [
-		{
-			description:
-				"Click to add your website domain. After entering the domain, you’ll be able to install the tracking pixel.",
-			title: "Verify Pixel",
-			linkToLoadMore:
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/verify-pixel",
-		},
-	];
 
 	return (
 		<Box
@@ -74,7 +65,7 @@ const VerifyPixelIntegration: React.FC<VerifyPixelIntegrationProps> = ({
 				padding: "1rem",
 				mb: 5,
 				border: "1px solid #e4e4e4",
-				borderRadius: "8px",
+				borderRadius: "4px",
 				position: "relative",
 				backgroundColor: "rgba(255, 255, 255, 1)",
 				boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.08)",

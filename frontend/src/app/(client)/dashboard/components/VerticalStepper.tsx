@@ -37,6 +37,7 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
 				p: 3,
 				borderRadius: "4px",
 				ml: 2,
+				boxShadow: '0px 2px 10px 0px rgba(0, 0, 0, 0.08)',
 				backgroundColor: "rgba(255, 255, 255, 1)",
 				"@media (max-width: 1200px)": { ml: 0 },
 				"@media (max-width: 900px)": {
@@ -45,7 +46,7 @@ export const VerticalStepper: React.FC<VerticalStepperProps> = ({ steps }) => {
 				},
 			}}
 		>
-			<Typography className="second-sub-title" mb={2}>
+			<Typography className="first-sub-title" mb={2}>
 				Installation steps
 			</Typography>
 			<Stepper
