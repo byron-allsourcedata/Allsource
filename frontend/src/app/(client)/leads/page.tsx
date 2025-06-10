@@ -1510,7 +1510,7 @@ const Leads: React.FC = () => {
 												"Contacts automatically sync across devices and platforms."
 											}
 											linkText="Learn more"
-											linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/company"
+											linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/resolved-contacts"
 										/>
 									</Box>
 									<DomainButtonSelect />

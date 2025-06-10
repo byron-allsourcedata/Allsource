@@ -502,7 +502,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 									</ListItem>
 
 									{/* Suppressions */}
-									<ListItem
+									{/* <ListItem
 										button
 										onClick={() => handleNavigation("/suppressions")}
 										sx={
@@ -515,7 +515,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 											<FeaturedPlayListIcon />
 										</ListItemIcon>
 										<ListItemText primary="Suppressions" />
-									</ListItem>
+									</ListItem> */}
 
 									{/* Data sync */}
 									<ListItem

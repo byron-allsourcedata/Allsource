@@ -318,9 +318,9 @@ async def process_payment_unlocked_five_x_five_user(
         and user.leads_credits - AMOUNT_CREDITS < 0
     ):
         if user.is_leads_auto_charging is False:
-            await handle_inactive_leads_notification(
-                user, leads_persistence, notification_persistence
-            )
+            # await handle_inactive_leads_notification(
+            #     user, leads_persistence, notification_persistence
+            # )
             logging.debug(f"User leads_auto_charging is False")
         lead_user.is_active = False
         return
