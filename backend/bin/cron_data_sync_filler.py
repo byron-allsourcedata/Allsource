@@ -7,7 +7,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
-from sqlalchemy import create_engine, and_, or_
+from sqlalchemy import create_engine, and_, or_, select
 from dotenv import load_dotenv
 from models.leads_visits import LeadsVisits
 from sqlalchemy.orm import sessionmaker, Session
@@ -216,7 +216,7 @@ async def send_leads_to_rmq(
     data_sync,
     user_integrations_service_name,
 ):
-    enrichment_user_ids = [lead_user.id for lead_user in lead_users]
+    lead_ids = [lead_user.id for lead_user in lead_users]
     users_id = lead_users[-1].user_id
     records = [
         {
@@ -227,7 +227,7 @@ async def send_leads_to_rmq(
             "created_at": datetime.now(timezone.utc),
             "updated_at": datetime.now(timezone.utc),
         }
-        for eid in enrichment_user_ids
+        for eid in lead_ids
     ]
     stmt = (
         insert(DataSyncImportedLead)
@@ -235,12 +235,15 @@ async def send_leads_to_rmq(
         .on_conflict_do_nothing(
             index_elements=["lead_users_id", "data_sync_id"]
         )
-        .returning(DataSyncImportedLead.id)
     )
 
-    result = session.execute(stmt)
+    session.execute(stmt)
     session.commit()
-
+    result = session.execute(
+        select(DataSyncImportedLead.id)
+        .where(DataSyncImportedLead.lead_users_id.in_(lead_ids))
+        .where(DataSyncImportedLead.data_sync_id == data_sync.id)
+    )
     data_sync_imported_ids = [row.id for row in result]
 
     processed_lead = {
@@ -293,7 +296,6 @@ async def process_user_integrations(rmq_connection, session):
         lead_users = get_previous_imported_leads(session, data_sync.id)
         logging.info(f"Re imported leads= {len(lead_users)}")
         data_sync_limit = user_integrations[i].limit
-
         if data_sync_limit - len(lead_users) > 0:
             additional_leads = fetch_leads_by_domain(
                 session,

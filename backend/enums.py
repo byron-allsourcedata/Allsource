@@ -64,6 +64,7 @@ class IntegrationLimit(Enum):
     META = 5000
     HUBSPOT = 100
     S3 = 10000
+    KLAVIYO = 1000
 
 
 class BusinessType(Enum):

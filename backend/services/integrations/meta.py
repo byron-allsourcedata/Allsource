@@ -30,7 +30,6 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 from schemas.integrations.integrations import (
     IntegrationCredentials,
-    DataMap,
     ListFromIntegration,
 )
 from schemas.integrations.meta import AdAccountScheme
@@ -38,7 +37,7 @@ from services.integrations.commonIntegration import resolve_main_email_and_phone
 from services.integrations.million_verifier import (
     MillionVerifierIntegrationsService,
 )
-from utils import extract_first_email, format_phone_number
+from utils import get_valid_email, format_phone_number
 
 APP_SECRET = MetaConfig.app_secret
 APP_ID = MetaConfig.app_piblic
@@ -572,65 +571,20 @@ class MetaIntegrationsService:
         return ProccessDataSyncResult.SUCCESS.value
 
     def __hash_mapped_meta_user_lead(self, five_x_five_user: FiveXFiveUser):
-        email_fields = [
-            "business_email",
-            "personal_emails",
-            "additional_personal_emails",
-        ]
-
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if (
-                            e
-                            and field == "business_email"
-                            and five_x_five_user.business_email_last_seen
-                        ):
-                            if (
-                                five_x_five_user.business_email_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and field == "personal_emails"
-                            and five_x_five_user.personal_emails_last_seen
-                        ):
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            )
-                            if (
-                                personal_emails_last_seen_str
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and self.million_verifier_integrations.is_email_verify(
-                                email=e.strip()
-                            )
-                        ):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        first_email = get_valid_email(five_x_five_user)
+        first_email = get_valid_email(five_x_five_user, self.million_verifier_integrations)
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return first_email
+            return None
+
+        def hash_value(value):
+            return (
+                hashlib.sha256(value.encode("utf-8")).hexdigest()
+                if value
+                else ""
+            )
 
         first_phone = (
             getattr(five_x_five_user, "mobile_phone")
@@ -640,22 +594,20 @@ class MetaIntegrationsService:
         )
         first_phone = format_phone_number(first_phone)
 
-        def hash_value(value):
-            return (
-                hashlib.sha256(value.encode("utf-8")).hexdigest()
-                if value
-                else ""
-            )
-
         return [
             hash_value(first_email),  # EMAIL
             hash_value(first_phone),  # PHONE
             hash_value(five_x_five_user.gender),  # GEN
-            hash_value(five_x_five_user.last_name),  # LN
+            hash_value(""),  # DOBY
+            hash_value(""),  # DOBM
+            hash_value(""),  # DOBD
             hash_value(five_x_five_user.first_name),  # FN
+            hash_value(five_x_five_user.last_name),  # LN
+            hash_value(five_x_five_user.first_name[0].lower()),  # FI
             hash_value(five_x_five_user.personal_state),  # ST
             hash_value(five_x_five_user.personal_city),  # CT
             hash_value(five_x_five_user.personal_zip),  # ZIP
+            hash_value('USA'),  # COUNTRY
         ]
 
     def __hash_mapped_meta_user(
