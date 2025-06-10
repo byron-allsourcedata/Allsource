@@ -58,7 +58,7 @@ from .jwt_service import (
     decode_jwt_data,
 )
 from .sendgrid import SendgridHandler
-from .stripe_service import get_stripe_payment_url
+from .stripe_service import get_stripe_payment_url, NewStripeCustomer
 from .subscriptions import SubscriptionService
 from encryption_utils import decrypt_data
 from .user_name import UserNamesService
@@ -717,7 +717,12 @@ class UsersAuth:
                 "is_success": True,
                 "status": SignUpStatus.EMAIL_ALREADY_EXISTS,
             }
-        customer_id = stripe_service.create_customer(user_form)
+        customer_id = stripe_service.create_customer(
+            NewStripeCustomer(
+                email=user_form.email, full_name=user_form.full_name
+            )
+        )
+
         user_data = {
             "email": user_form.email,
             "full_name": user_form.full_name,
