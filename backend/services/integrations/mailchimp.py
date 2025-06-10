@@ -425,7 +425,10 @@ class MailchimpIntegrationsService:
         return ProccessDataSyncResult.SUCCESS.value
 
     def __create_profile(
-        self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, profiles: List[dict]
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        profiles: List[dict],
     ):
         self.client.set_config(
             {

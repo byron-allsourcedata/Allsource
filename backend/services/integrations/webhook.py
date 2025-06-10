@@ -194,7 +194,8 @@ class WebhookIntegrationService:
         five_x_five_users: List[FiveXFiveUser],
     ):
         profile = self.__create_profile(
-            five_x_five_users=five_x_five_users, integration_data_sync=integration_data_sync
+            five_x_five_users=five_x_five_users,
+            integration_data_sync=integration_data_sync,
         )
         if profile in (
             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
@@ -212,7 +213,10 @@ class WebhookIntegrationService:
     ):
         results = []
         for five_x_five_user in five_x_five_users:
-            data = self.__mapped_lead(five_x_five_user=five_x_five_user, data_map=integration_data_sync.data_map)
+            data = self.__mapped_lead(
+                five_x_five_user=five_x_five_user,
+                data_map=integration_data_sync.data_map,
+            )
             if data in (
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
                 ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
@@ -222,7 +226,9 @@ class WebhookIntegrationService:
 
             logger.info(f"sending data: {data}")
         response = self.__handle_request(
-            url=integration_data_sync.hook_url, method=integration_data_sync.method, json=results
+            url=integration_data_sync.hook_url,
+            method=integration_data_sync.method,
+            json=results,
         )
         if not response or response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
@@ -367,11 +373,7 @@ class WebhookIntegrationService:
                     properties["personal_phone"] = None
         return properties
 
-    def __mapped_lead(
-        self,
-        five_x_five_user: FiveXFiveUser,
-        data_map
-    ):
+    def __mapped_lead(self, five_x_five_user: FiveXFiveUser, data_map):
         properties = {}
         if all(
             item.get("type") == "" and item.get("value") == ""
@@ -398,7 +400,6 @@ class WebhookIntegrationService:
                     properties[mapping["value"]] = value_field
             else:
                 properties[mapping["value"]] = ""
-
 
         if "time_on_site" in mapped_fields or "url_visited" in mapped_fields:
             time_on_site, url_visited = self.leads_persistence.get_visit_stats(

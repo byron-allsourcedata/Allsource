@@ -274,15 +274,15 @@ class SlackService:
                 continue
 
             result = self.send_message_to_channels(
-                user_text, user_integration.access_token, integration_data_sync.list_id
+                user_text,
+                user_integration.access_token,
+                integration_data_sync.list_id,
             )
             if result != ProccessDataSyncResult.SUCCESS.value:
                 return result
         return ProccessDataSyncResult.SUCCESS.value
 
-    def generate_user_text(
-        self, five_x_five_user: FiveXFiveUser
-    ) -> str:
+    def generate_user_text(self, five_x_five_user: FiveXFiveUser) -> str:
         if not five_x_five_user.linkedin_url:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 

@@ -166,7 +166,9 @@ class OmnisendIntegrationService:
         five_x_five_users: List[FiveXFiveUser],
     ):
         profile = self.__create_bulk_profiles(
-            five_x_five_users, user_integration.access_token, integration_data_sync.data_map
+            five_x_five_users,
+            user_integration.access_token,
+            integration_data_sync.data_map,
         )
 
         if profile in (
@@ -241,9 +243,7 @@ class OmnisendIntegrationService:
         ):
             return None
 
-        return Identifiers(
-            id=first_email
-        )
+        return Identifiers(id=first_email)
 
     def __mapped_profile(
         self, five_x_five_user: FiveXFiveUser

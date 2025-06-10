@@ -108,7 +108,9 @@ class ZapierIntegrationService:
         integration_data_sync: IntegrationUserSync,
         five_x_five_users: List[FiveXFiveUser],
     ):
-        profile = self.__create_profile(five_x_five_users, integration_data_sync)
+        profile = self.__create_profile(
+            five_x_five_users, integration_data_sync
+        )
         if profile in (
             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -118,7 +120,9 @@ class ZapierIntegrationService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __create_profile(self, five_x_five_users: List[FiveXFiveUser], sync: IntegrationUserSync):
+    def __create_profile(
+        self, five_x_five_users: List[FiveXFiveUser], sync: IntegrationUserSync
+    ):
         for five_x_five_user in five_x_five_users:
             data = self.__mapped_lead(five_x_five_user)
             if data in (

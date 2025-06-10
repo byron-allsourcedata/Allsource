@@ -247,7 +247,11 @@ class SendlaneIntegrationService:
         integration_data_sync: IntegrationUserSync,
         five_x_five_users: List[FiveXFiveUser],
     ):
-        return self.bulk_add_contacts(five_x_five_users=five_x_five_users,access_token=user_integration.access_token, list_id=integration_data_sync.list_id)
+        return self.bulk_add_contacts(
+            five_x_five_users=five_x_five_users,
+            access_token=user_integration.access_token,
+            list_id=integration_data_sync.list_id,
+        )
 
     def bulk_add_contacts(self, five_x_five_users, access_token, list_id: int):
         chunks = [
