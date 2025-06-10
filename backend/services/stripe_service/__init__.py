@@ -7,6 +7,7 @@ import stripe
 import logging
 
 from resolver import injectable
+from services.stripe_service.schemas import NewStripeCustomer
 
 os.environ["SSL_CERT_FILE"] = certifi.where()
 
@@ -71,8 +72,11 @@ class StripeService:
 
         return session.url
 
+    def create_customer(self, user: NewStripeCustomer):
+        return create_customer(user)
 
-def create_customer(user: UserSignUpForm):
+
+def create_customer(user: NewStripeCustomer):
     customer = stripe.Customer.create(
         email=user.email,
         description="User form web app signup form",
