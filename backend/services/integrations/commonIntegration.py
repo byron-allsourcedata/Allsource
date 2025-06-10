@@ -1,13 +1,37 @@
+from pydantic import BaseModel
+
 from config.folders import Folders
 from pandas import DataFrame
 import re
-from typing import Optional
+from typing import Optional, TypedDict
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 import pandas as pd
 
+from persistence.integrations.mailchimp import MailchimpContactData
+from persistence.integrations.s3 import PersonalProfiles, ProfessionalProfile
+
+
+class MainPhoneContext(TypedDict):
+    main_phone: Optional[str]
+
+class CompanyContext(TypedDict):
+    professional_profiles: Optional[str]
+
+
+class TotalContext(MainPhoneContext, CompanyContext, TypedDict):
+    pass
+
+def process_phone(result, context: MainPhoneContext):
+    add_phone(result, context['main_phone'])
+
+def process_company(result, ctx):
+    add_company(result, ctx['professional_profiles'])
+
+
+
 FIELD_FILLERS = {
-    'phone': lambda result, ctx: add_phone(result, ctx['main_phone']),
-    'company': lambda result, ctx: add_company(result, ctx['professional_profiles']),
+    'phone': process_phone,
+    'company': process_company,
     'city': lambda result, ctx: add_city(result, ctx['postal']),
     'state': lambda result, ctx: add_state(result, ctx['postal']),
     'zip_code': lambda result, ctx: add_zip(result, ctx['personal_profiles']),
@@ -21,10 +45,35 @@ FIELD_FILLERS = {
 }
 
 
+class UserPostalInfo(BaseModel):
+    home_city: str
+    business_city: str
+    home_state: str
+    business_state: str
+    home_country: str
+    business_country: str
+
+
+class UserContacts(BaseModel):
+    first_name: str
+    last_name: str
+    business_email: str
+    personal_email: str
+    other_emails: str
+    phone_mobile1: str
+    phone_mobile2: str
+    linkedin_url: Optional[str]
+
+
+class UserData(BaseModel):
+    contacts: Optional[UserContacts]
+    postal: Optional[UserPostalInfo]
+
+
 def get_states_dataframe() -> DataFrame:
-        path = Folders.data('uszips.csv')
-        dataframe = pd.read_csv(path, usecols=["zip", "city", "state_name"], dtype={"zip": str})
-        return dataframe
+    path = Folders.data('uszips.csv')
+    dataframe = pd.read_csv(path, usecols=["zip", "city", "state_name"], dtype={"zip": str})
+    return dataframe
 
 def normalize_phone(phone: Optional[str]) -> Optional[str]:
     if not phone:
@@ -62,7 +111,7 @@ def get_phone_by_phones(phone_mobile1, phone_mobile2):
 
 
 def resolve_main_email_and_phone(
-    enrichment_contacts,
+    enrichment_contacts: MailchimpContactData,
     validations: dict,
     target_schema: Optional[str],
     business_email: str, 
@@ -123,44 +172,68 @@ def add_personal_email(result: dict, personal_email: Optional[str]) -> None:
     if personal_email:
         result['personal_email'] = personal_email
         
-def add_linkedin_url(result: dict, enrichment_contacts: EnrichmentUserContact) -> None:
+def add_linkedin_url(
+    result: dict,
+    enrichment_contacts: UserContacts
+) -> None:
     if enrichment_contacts:
         result['linkedin_url'] = enrichment_contacts.linkedin_url
 
-def add_company(result: dict, professional_profiles) -> None:
+def add_company(
+    result: dict,
+    professional_profiles: ProfessionalProfile
+) -> None:
     if professional_profiles and professional_profiles.current_company_name:
         result['company_name'] = professional_profiles.current_company_name
 
 
-def add_city(result: dict, postal) -> None:
+def add_city(
+    result: dict,
+    postal: UserPostalInfo
+) -> None:
     if postal:
         city = postal.home_city or postal.business_city
         if city:
             result['city'] = city
 
 
-def add_state(result: dict, postal) -> None:
+def add_state(
+    result: dict,
+    postal: UserPostalInfo
+) -> None:
     if postal:
         state = postal.home_state or postal.business_state
         if state:
             result['state'] = state
             
-def add_country_code(result: dict, postal) -> None:
+def add_country_code(
+    result: dict,
+    postal: UserPostalInfo
+) -> None:
     if postal:
         country_code = postal.home_country or postal.business_country
         if country_code:
             result['country_code'] = country_code      
 
-def add_zip(result: dict, personal_profiles) -> None:
+def add_zip(
+    result: dict,
+    personal_profiles: PersonalProfiles
+) -> None:
     if personal_profiles and personal_profiles.zip_code5:
         result['zip'] = str(personal_profiles.zip_code5)
 
 
-def add_gender(result: dict, personal_profiles) -> None:
+def add_gender(
+    result: dict,
+    personal_profiles: PersonalProfiles
+) -> None:
     if personal_profiles and personal_profiles.gender in (1, 2):
         result['gender'] = 'm' if personal_profiles.gender == 1 else 'f'
         
-def add_business_email_last_seen_date(result: dict, enrichment_contacts: EnrichmentUserContact) -> None:
+def add_business_email_last_seen_date(
+    result: dict,
+    enrichment_contacts: EnrichmentUserContact
+) -> None:
     if enrichment_contacts:
         business_email_last_seen_date = enrichment_contacts.business_email_last_seen_date
         if business_email_last_seen_date:

@@ -1,33 +1,24 @@
-import logging
-import os
-import sys
 import asyncio
 import functools
 import json
-import boto3
-import random
+import logging
+import os
+import sys
+
 import requests
-from datetime import datetime
+from aio_pika import IncomingMessage
+from dotenv import load_dotenv
 from rapidfuzz import fuzz
-from sqlalchemy import update
-from aio_pika import IncomingMessage, Message
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
-from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from utils import send_sse
 from models.audience_smarts import AudienceSmart
-from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
-from models.enrichment.enrichment_users import EnrichmentUser
-from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_linkedin_verification import AudienceLinkedinVerification
-from models.enrichment.enrichment_employment_history import EnrichmentEmploymentHistory
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message_with_channel
 
 load_dotenv()

@@ -11,7 +11,7 @@ from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
-from services.integrations.commonIntegration import resolve_main_email_and_phone
+from services.integrations.commonIntegration import resolve_main_email_and_phone, UserData
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
@@ -30,6 +30,9 @@ from utils import validate_and_format_phone
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
+
+
+
 
 class GoogleAdsIntegrationsService:
 
@@ -154,7 +157,14 @@ class GoogleAdsIntegrationsService:
         })
         return sync
 
-    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
+    async def process_data_sync(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        enrichment_users: List[EnrichmentUser],
+        target_schema: str,
+        validations: dict
+    ):
         profiles = []
         for enrichment_user in enrichment_users:
             result = self.__mapped_googleads_profile(enrichment_user, target_schema, validations)
@@ -281,8 +291,14 @@ class GoogleAdsIntegrationsService:
             self.integrations_persistence.db.commit()
             return {'message': 'successfuly'}
     
-    def __mapped_googleads_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict) -> GoogleAdsProfile:
-        enrichment_contacts = enrichment_user.contacts
+    def __mapped_googleads_profile(
+        self,
+        enrichment_user: EnrichmentUser,
+        target_schema: str,
+        validations: dict
+    ) -> Optional[GoogleAdsProfile]:
+        enrichment_data = self.get_data(enrichment_user)
+        enrichment_contacts = enrichment_data.contacts
         if not enrichment_contacts:
             return None
         
@@ -294,7 +310,7 @@ class GoogleAdsIntegrationsService:
         if not main_email or not first_name or not last_name:
             return None
                 
-        enrichment_user_postal = enrichment_user.postal
+        enrichment_user_postal = enrichment_data.postal
         city = None
         state = None
         country_code = None
@@ -318,7 +334,14 @@ class GoogleAdsIntegrationsService:
             city=city,
             state=state,
             country_code=country_code
-            )
+        )
+
+    #TODO: move
+    def get_data(self, enrichment_user: EnrichmentUser) -> Optional[UserData]:
+        contacts = enrichment_user.contacts
+        postal = enrichment_user.postal
+
+        return UserData(contacts=contacts, postal=postal)
         
     def get_google_ads_client(self, refresh_token):
         credentials = Credentials(

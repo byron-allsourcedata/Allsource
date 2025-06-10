@@ -294,7 +294,7 @@ class SalesForceIntegrationsService:
             raise HTTPException(status_code=400, detail={'status': "Profiles from Klaviyo could not be retrieved"})
         return [self.__mapped_profile_from_klaviyo(profile) for profile in response.json().get('data')]
     
-    def __mapped_sales_force_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict, data_map: list) -> dict:
+    def __mapped_sales_force_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict, data_map: list) -> Optional[dict]:
         enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
             return None

@@ -1,15 +1,13 @@
-import httpx
-import os
-import logging
 from typing import List
 from fastapi import HTTPException
 import httpx
 import os
-import re
 import csv
 import logging
 import tempfile
 import uuid
+
+from persistence.integrations.s3 import S3IntegrationPersistence
 from services.integrations.commonIntegration import *
 from models.integrations.users_domains_integrations import UserIntegration
 from models.integrations.integrations_users_sync import IntegrationUserSync
@@ -17,7 +15,6 @@ from datetime import datetime, timezone
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult, IntegrationLimit, DataSyncType
 from models.enrichment.enrichment_users import EnrichmentUser
 from uuid import UUID
-from faker import Faker
 from services.integrations.million_verifier import MillionVerifierIntegrationsService
 from schemas.integrations.integrations import DataMap, IntegrationCredentials
 from persistence.domains import UserDomainsPersistence
@@ -32,14 +29,23 @@ logger = logging.getLogger(__name__)
 
 class S3IntegrationService:
 
-    def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence, leads_persistence: LeadsPersistence,
-                 sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client, million_verifier_integrations: MillionVerifierIntegrationsService):
+    def __init__(
+        self,
+        domain_persistence: UserDomainsPersistence,
+        integrations_persistence: IntegrationsPresistence,
+        leads_persistence: LeadsPersistence,
+        sync_persistence: IntegrationsUserSyncPersistence,
+        client: httpx.Client,
+        million_verifier_integrations: MillionVerifierIntegrationsService,
+        repo: S3IntegrationPersistence
+    ):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.sync_persistence = sync_persistence
         self.client = client
+        self.repo = repo
 
     def get_credentials(self, domain_id: int, user_id: int):
         return self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.S3.value)
@@ -183,7 +189,7 @@ class S3IntegrationService:
         })
         return sync
 
-    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: List[EnrichmentUser], target_schema: str, validations: dict):
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__mapped_s3_contact(enrichment_user, target_schema, validations, integration_data_sync.data_map)
@@ -239,14 +245,28 @@ class S3IntegrationService:
 
         return result
     
-    def __mapped_s3_contact(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict, data_map: list):
+    def __mapped_s3_contact(
+        self,
+        enrichment_user: EnrichmentUser,
+        target_schema: str,
+        validations: dict,
+        data_map: list
+    ) -> Optional[dict]:
+        enrichment_user = self.repo.get_user_data(enrichment_user.id)
         enrichment_contacts = enrichment_user.contacts
+
         if not enrichment_contacts:
             return None
         
         business_email, personal_email, phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
-        main_email, main_phone = resolve_main_email_and_phone(enrichment_contacts=enrichment_contacts, validations=validations, target_schema=target_schema, 
-                                                              business_email=business_email, personal_email=personal_email, phone=phone)
+        main_email, main_phone = resolve_main_email_and_phone(
+            enrichment_contacts=enrichment_contacts,
+            validations=validations,
+            target_schema=target_schema,
+            business_email=business_email,
+            personal_email=personal_email,
+            phone=phone
+        )
         first_name = enrichment_contacts.first_name
         last_name = enrichment_contacts.last_name
         
