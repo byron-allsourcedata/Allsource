@@ -25,7 +25,9 @@ async def lifespan(app: FastAPI):
     yield
     logger.info("Application shutdown.")
 
+
 app = FastAPI(lifespan=lifespan)
+
 
 @app.get("/pixel.js")
 async def read_item(request: Request, background_tasks: BackgroundTasks):
@@ -50,9 +52,3 @@ async def read_item(request: Request, background_tasks: BackgroundTasks):
     except Exception as e:
         logger.error(f"An error occurred while processing /pixel.js: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
-
-@app.get("/referer-cache/")
-async def get_referer_cache():
-    logger.info("Fetching referer_cache")
-    js_content = f"let refererCache = {list(valid_domain_cache)};"
-    return PlainTextResponse(content=js_content, media_type="application/javascript")

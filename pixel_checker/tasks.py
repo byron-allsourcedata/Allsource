@@ -15,6 +15,7 @@ GET_DOMAINS_URL = os.getenv("GET_DOMAINS_URL")
 SECRET_KEY = os.getenv("SECRET_KEY")
 CHECK_PIXEL_URL = os.getenv("GET_CHECK_PIXEL_INSTALLATION_STATUS")
 
+
 async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
     async with httpx.AsyncClient() as client:
         try:
@@ -22,8 +23,8 @@ async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
             response.raise_for_status()
             data = response.json()
 
-            if isinstance(data, dict) and 'domains' in data:
-                return DomainsListResponse(domains=data['domains'])
+            if isinstance(data, dict) and "domains" in data:
+                return DomainsListResponse(domains=data["domains"])
 
             logger.error(f"Unexpected response format: {data}")
             return None
@@ -33,6 +34,7 @@ async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
         except Exception as e:
             logger.error(f"An error occurred: {str(e)}")
             return None
+
 
 async def fetch_external_data(domain: str) -> None:
     async with httpx.AsyncClient() as client:
