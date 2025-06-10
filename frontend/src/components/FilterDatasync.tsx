@@ -35,17 +35,20 @@ interface FilterPopupProps {
 	open: boolean;
 	onClose: () => void;
 	onApply: (filters: any) => void;
+	dataSyncType: string;
 }
 
 const FilterPopup: React.FC<FilterPopupProps> = ({
 	open,
 	onClose,
 	onApply,
+	dataSyncType,
 }) => {
 	const [isVisitedDateOpen, setIsVisitedDateOpen] = useState(false);
 	const [isLeadFunnel, setIsLeadFunnel] = useState(false);
 	const [isListType, setIsListType] = useState(false);
 	const [contacts, setContacts] = useState<{ name: string }[]>([]);
+	const [destinations, setDestinations] = useState<string[]>([]);
 	const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>(
 		{
 			visitedDate: [],
@@ -399,6 +402,16 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 		}
 	}, [open]);
 
+	useEffect(() => {
+    const fetchDestinations = async () => {
+      const response = await axiosInstance.get(`/data-sync/destinations?type=${dataSyncType}`);
+			if (response.status === 200) {
+      	setDestinations(response.data)
+			}
+    };
+    if (open) fetchDestinations();
+  }, [open, dataSyncType]);
+
 	const handleApply = () => {
 		const filters = handleFilters();
 		onApply(filters);
@@ -585,7 +598,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 						}}
 					>
 						<TextField
-							placeholder="Search by lookalikes name, source or creator"
+							placeholder="Search by list name or creator"
 							variant="outlined"
 							fullWidth
 							value={searchQuery}
@@ -1057,17 +1070,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   </Box>
                 </Box> */}
 
-								{[
-									"CSV",
-									"S3",
-									"Meta",
-									"Google Ads",
-									"Bing Ads",
-									"Hubsplot",
-									"Salesforce",
-									"Mailchimp",
-									"LinkedIn",
-								].map((label) => {
+								{destinations.map((label) => {
 									const isSelected = selectedDestination.includes(label);
 									return (
 										<Button
