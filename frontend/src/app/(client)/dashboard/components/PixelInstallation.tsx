@@ -230,7 +230,7 @@ const PixelInstallation: React.FC<PixelInstallationProps> = ({
 			sx={{
 				padding: "1.25em",
 				border: "1px solid #e4e4e4",
-				borderRadius: "8px",
+				borderRadius: "4px",
 				width: "100%",
 				backgroundColor: "rgba(255, 255, 255, 1)",
 				boxShadow: "0px 2px 10px rgba(0, 0, 0, 0.08)",
@@ -599,6 +599,7 @@ const buttonStyles = (showManualInline: boolean) => ({
 	alignItems: "self-start",
 	padding: "0.875rem",
 	borderColor: "rgba(228, 228, 228, 1)",
+	boxShadow: "0px 2px 10px 0px rgba(0, 0, 0, 0.08)",
 	border: showManualInline
 		? "1px solid rgba(56, 152, 252, 1)"
 		: "1px solid rgba(228, 228, 228, 1)",
@@ -618,6 +619,7 @@ const buttonGoogle = (showGoogleInline: boolean) => ({
 	gap: 1,
 	pt: 1,
 	borderColor: "rgba(228, 228, 228, 1)",
+	boxShadow: "0px 2px 10px 0px rgba(0, 0, 0, 0.08)",
 	border: showGoogleInline
 		? "1px solid rgba(56, 152, 252, 1)"
 		: "1px solid rgba(228, 228, 228, 1)",
