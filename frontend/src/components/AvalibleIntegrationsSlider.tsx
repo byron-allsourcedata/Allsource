@@ -392,7 +392,7 @@ const AlivbleIntagrationsSlider = ({
 													/>
 												</ListItemIcon>
 												<ListItemText
-													primary="bingads"
+													primary="BingAds"
 													primaryTypographyProps={{
 														sx: {
 															...intergrations.integrate,
@@ -441,7 +441,7 @@ const AlivbleIntagrationsSlider = ({
 													/>
 												</ListItemIcon>
 												<ListItemText
-													primary="salesforce"
+													primary="Salesforce"
 													primaryTypographyProps={{
 														sx: {
 															...intergrations.integrate,
@@ -843,7 +843,7 @@ const AlivbleIntagrationsSlider = ({
 											</ListItemButton>
 										</ListItem>
 									)}
-								{filteredIntegrations.some(
+								{/* {filteredIntegrations.some(
 									(integration) => integration.service_name === "s3",
 								) &&
 									!integrationsCredentials.some(
@@ -874,7 +874,7 @@ const AlivbleIntagrationsSlider = ({
 											>
 												<ListItemIcon sx={{ minWidth: "auto" }}>
 													<Image
-														src="/s3-icon.svg"
+														src="/s3.svg"
 														alt="sendlane"
 														height={24}
 														width={24}
@@ -890,7 +890,7 @@ const AlivbleIntagrationsSlider = ({
 												/>
 											</ListItemButton>
 										</ListItem>
-									)}
+									)} */}
 
 								{filteredIntegrations.some(
 									(integration) => integration.service_name === "zapier",
