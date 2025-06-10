@@ -106,6 +106,20 @@ class IntegrationService:
             "hasAnySync": has_any_sync,
         }
 
+    def has_integration_and_contacts(self, user: dict, domain: dict) -> dict:
+        has_integration = (
+            self.integration_persistence.has_pixel_integration_and_data_sync(
+                user_id=user.get("id"),
+            )
+        )
+        has_contacts_in_domain = self.integration_persistence.has_contacts_in_domain(
+            user_id=user.get("id"), domain_id=domain.id
+        )
+        return {
+            "hasIntegration": has_integration,
+            "hasContacts": has_contacts_in_domain,
+        }
+
     def delete_integration(self, service_name: str, domain, user: dict):
         self.integration_persistence.delete_integration(
             None if domain is None else domain.id, service_name, user.get("id")

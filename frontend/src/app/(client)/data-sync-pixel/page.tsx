@@ -53,6 +53,9 @@ const DataSync = () => {
 	const [filterPopup, setFilterPopup] = useState(false);
 	const [filters, setFilters] = useState<any>();
 	const [openCreateDataSyncPopup, setOpenCreateDataSyncPopup] = useState(false);
+	const [hasContacts, setHasContacts] = useState(false);
+	const [hasIntegrations, setHasIntegrations] = useState(false);
+
 	const handleFilterPopupOpen = () => {
 		setFilterPopup(true);
 	};
@@ -81,6 +84,26 @@ const DataSync = () => {
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
 	};
+
+	useEffect(() => {
+		const fetchIntegrations = async () => {
+			try {
+				setIsLoading(true);
+				const response = await axiosInstance.get(
+					"/data-sync/has-integration-and-contacts",
+				);
+				setHasIntegrations(response.data.hasIntegration);
+				setHasContacts(response.data.hasContacts);
+			} catch (err) {
+				console.error("Error checking integrations:", err);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchIntegrations();
+	}, []);
+
 
 	if (isLoading) {
 		return <CustomizedProgressBar />;

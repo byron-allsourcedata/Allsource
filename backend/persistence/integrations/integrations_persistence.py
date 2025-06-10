@@ -5,6 +5,7 @@ from models.integrations.users_domains_integrations import (
 )
 from models.integrations.external_apps_installations import ExternalAppsInstall
 from models.kajabi import Kajabi
+from models.leads_users import LeadUser
 from sqlalchemy.orm import Session
 from typing import Optional
 from sqlalchemy import and_, or_
@@ -45,8 +46,24 @@ class IntegrationsPresistence:
     def has_integration_and_data_sync(self, user_id: int) -> bool:
         row = (
             self.db.query(UserIntegration)
+            .join(
+                Integration, Integration.service_name == UserIntegration.service_name,
+            )
             .filter(
-                UserIntegration.user_id == user_id,
+                UserIntegration.user_id == user_id, Integration.for_audience == True
+            )
+            .first()
+        )
+        return row is not None
+
+    def has_pixel_integration_and_data_sync(self, user_id: int) -> bool:
+        row = (
+            self.db.query(UserIntegration)
+            .join(
+                Integration, Integration.service_name == UserIntegration.service_name,
+            )
+            .filter(
+                UserIntegration.user_id == user_id, Integration.for_pixel == True
             )
             .first()
         )
@@ -61,6 +78,29 @@ class IntegrationsPresistence:
             )
             .filter(
                 UserIntegration.user_id == user_id,
+            )
+            .first()
+        )
+        return row is not None
+    def has_any_sync(self, user_id: int) -> bool:
+        row = (
+            self.db.query(UserIntegration)
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.integration_id == UserIntegration.id,
+            )
+            .filter(
+                UserIntegration.user_id == user_id,
+            )
+            .first()
+        )
+        return row is not None
+
+    def has_contacts_in_domain(self, user_id: int, domain_id: int) -> bool:
+        row = (
+            self.db.query(LeadUser)
+            .filter(
+                LeadUser.user_id == user_id, LeadUser.domain_id == domain_id
             )
             .first()
         )
