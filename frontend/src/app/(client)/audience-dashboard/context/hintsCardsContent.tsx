@@ -10,14 +10,14 @@ const audienceDashboardCards: Record<AudienceDashboardKey, HintCardInterface> =
 				"This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
 			title: "Pixel",
 			linkToLoadMore:
-				"https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-audience#1__Pixel_Contacts",
 		},
 		audience: {
 			description:
 				"This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
 			title: "Audience",
 			linkToLoadMore:
-				"https://allsourceio.zohodesk.com/portal/en/kb/articles/builder",
+				"https://allsourceio.zohodesk.com/portal/en/kb/articles/dashboard-audience#2__Sources",
 		},
 	};
 
@@ -27,14 +27,14 @@ const pixelContactsCards: Record<PixelContactsKey, HintCardInterface> = {
 			"This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
 		title: "Domain",
 		linkToLoadMore:
-			"https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+			"https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-1",
 	},
 	calendar: {
 		description:
 			"This data source contains users who completed valuable actions (purchases, sign-ups, downloads, etc.). Use it to analyze your most profitable user journeys and build high-value lookalike audiences",
 		title: "Calendar",
 		linkToLoadMore:
-			"https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-2",
+			"https://maximizai.zohodesk.eu/portal/en/kb/maximiz-ai/get-started/installation-and-setup-3",
 	},
 	type: {
 		description:

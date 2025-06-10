@@ -271,7 +271,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 			lineHeight: "16px",
 			color: "rgba(17, 17, 19, 0.60)",
 			"&.Mui-focused": {
-				color: "#0000FF",
+				color: "rgba(56, 152, 252, 1)",
 			},
 		},
 		formInput: {
@@ -292,7 +292,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 					borderColor: "#A3B0C2",
 				},
 				"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-					borderColor: "#0000FF",
+					borderColor: "rgba(56, 152, 252, 1)",
 				},
 			},
 			"&+.MuiFormHelperText-root": {
@@ -382,8 +382,16 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -1029,7 +1037,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1058,7 +1066,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1124,7 +1132,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1153,7 +1161,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1317,7 +1325,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 																top: "-5px",
 																left: "3px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1346,7 +1354,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1400,7 +1408,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1427,7 +1435,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 																},
 																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																	{
-																		borderColor: "#0000FF",
+																		borderColor: "rgba(56, 152, 252, 1)",
 																	},
 															},
 														}}

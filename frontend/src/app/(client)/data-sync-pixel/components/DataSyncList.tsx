@@ -691,47 +691,47 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		return <CustomizedProgressBar />;
 	}
 
-	const formatStatusText = (row: string) => {
-		// if (row.dataSync === false) {
-		// 	return "Disabled";
-		// }
-		// if (row.syncStatus === false) {
-		// 	return "Failed";
-		// }
-		// if (row.is_progress === true) {
-		// 	return "In Progress";
-		// }
-		// if (row.is_progress === false) {
-		// 	return "Synced";
-		// }
+	const formatStatusText = (row: any) => {
+		if (row.dataSync === false) {
+			return "Disabled";
+		}
+		if (row.syncStatus === false) {
+			return "Failed";
+		}
+		if (row.is_progress === true) {
+			return "In Progress";
+		}
+		if (row.is_progress === false) {
+			return "Synced";
+		}
 		return "--";
 	};
 
-	const getStatusStyle = (row: string) => {
-		// if (row.dataSync === false) {
-		// 	return {
-		// 		background: "rgba(219, 219, 219, 1)",
-		// 		color: "rgba(74, 74, 74, 1) !important",
-		// 	};
-		// }
-		// if (row.syncStatus === false) {
-		// 	return {
-		// 		background: "rgba(252, 205, 200, 1)",
-		// 		color: "rgba(200, 62, 46, 1) !important",
-		// 	};
-		// }
-		// if (row.is_progress) {
-		// 	return {
-		// 		background: "rgba(0, 129, 251, 0.2)",
-		// 		color: "rgba(0, 129, 251, 1)!important",
-		// 	};
-		// }
-		// if (row.is_progress === false) {
-		// 	return {
-		// 		background: "rgba(234, 248, 221, 1)",
-		// 		color: "rgba(43, 91, 0, 1) !important",
-		// 	};
-		// }
+	const getStatusStyle = (row: any) => {
+		if (row.dataSync === false) {
+			return {
+				background: "rgba(219, 219, 219, 1)",
+				color: "rgba(74, 74, 74, 1) !important",
+			};
+		}
+		if (row.syncStatus === false) {
+			return {
+				background: "rgba(252, 205, 200, 1)",
+				color: "rgba(200, 62, 46, 1) !important",
+			};
+		}
+		if (row.is_progress) {
+			return {
+				background: "rgba(0, 129, 251, 0.2)",
+				color: "rgba(0, 129, 251, 1)!important",
+			};
+		}
+		if (row.is_progress === false) {
+			return {
+				background: "rgba(234, 248, 221, 1)",
+				color: "rgba(43, 91, 0, 1) !important",
+			};
+		}
 		return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
 	};
 
@@ -786,9 +786,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 
 	const columns = [
 		{
-			key: "list_name",
-			label: "List Name",
-			widths: { width: "20vw", minWidth: "20vw", maxWidth: "20vw" },
+			key: "list_type",
+			label: "List Type",
+			widths: { width: "10vw", minWidth: "155px", maxWidth: "20vw" },
+		},
+		{
+			key: "platform",
+			label: "Sync",
+			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
 		},
 		{
 			key: "created",
@@ -799,12 +804,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		{
 			key: "last_sync",
 			label: "Last Sync",
-			widths: { width: "12vw", minWidth: "190px", maxWidth: "20vw" },
-		},
-		{
-			key: "platform",
-			label: "Sync",
-			widths: { width: "13vw", minWidth: "13vw", maxWidth: "20vw" },
+			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
 		},
 		{
 			key: "data_sync",
@@ -812,8 +812,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
 		},
 		{
-			key: "list_type",
-			label: "List Type",
+			key: "list_name",
+			label: "List Name",
 			widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
 		},
 		{
@@ -931,7 +931,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 									{columns.map((col) => {
 										const { key, label, sortable = false, widths } = col;
 
-										const isNameColumn = key === "list_name";
+										const isNameColumn = key === "list_type";
 										const isActionsColumn = key === "action";
 										const hideDivider =
 											(isNameColumn && isScrolledX) || isActionsColumn;
@@ -1069,10 +1069,29 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													},
 													hideDivider: isScrolledX,
 												}}
-												tooltipOptions={{ content: row.list_name || "--" }}
+												tooltipOptions={{ content: row.type || "--" }}
 											>
-												{row.list_name || "--"}
+												{formatListName(row.type) || "--"}
 											</SmartCell>
+
+											<SmartCell
+												cellOptions={{
+													sx: {
+														position: "relative",
+													},
+												}}
+												tooltipOptions={{ content: row.platform || "--" }}
+											>
+												<Box
+													sx={{
+														display: "flex",
+														justifyContent: "center",
+													}}
+												>
+													{platformIcon(row.platform) || "--"}
+												</Box>
+											</SmartCell>
+
 											<SmartCell
 												cellOptions={{
 													sx: {
@@ -1124,23 +1143,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														position: "relative",
 													},
 												}}
-												tooltipOptions={{ content: row.platform || "--" }}
-											>
-												<Box
-													sx={{
-														display: "flex",
-														justifyContent: "center",
-													}}
-												>
-													{platformIcon(row.platform) || "--"}
-												</Box>
-											</SmartCell>
-											<SmartCell
-												cellOptions={{
-													sx: {
-														position: "relative",
-													},
-												}}
 												tooltipOptions={{
 													content:
 														row.active_segments === -1
@@ -1165,7 +1167,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													),
 												}}
 											>
-												{formatListName(row.type)}
+												{row.list_name ?? "--"}
 											</SmartCell>
 											<SmartCell
 												cellOptions={{
@@ -1192,9 +1194,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														}}
 													>
 														{(() => {
-															const { color, background } = getStatusStyle(
-																row.status,
-															);
+															const { color, background } = getStatusStyle(row);
 															return (
 																<Typography
 																	className="paragraph"
@@ -1213,7 +1213,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																		borderRadius: "2px",
 																	}}
 																>
-																	{row.status}
+																	{formatStatusText(row)}
 																</Typography>
 															);
 														})()}

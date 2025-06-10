@@ -451,7 +451,7 @@ class GoogleAdsIntegrationsService:
 
     def __mapped_googleads_profile_lead(
         self, five_x_five_user: FiveXFiveUser
-    ) -> str | GoogleAdsProfile:
+    ) -> GoogleAdsProfile | None:
         first_email = get_valid_email(
             five_x_five_user, self.million_verifier_integrations
         )
@@ -460,7 +460,7 @@ class GoogleAdsIntegrationsService:
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return first_email
+            return None
 
         first_phone = get_valid_phone(five_x_five_user)
 
@@ -652,7 +652,7 @@ class GoogleAdsIntegrationsService:
         )
 
     def build_offline_user_data_job_operations(
-        self, client, profiles: GoogleAdsProfile
+        self, client, profiles: List[GoogleAdsProfile]
     ):
         raw_records = []
         for profile in profiles:
