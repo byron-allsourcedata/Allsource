@@ -691,7 +691,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		return <CustomizedProgressBar />;
 	}
 
-	const formatStatusText = (row: string) => {
+	const formatStatusText = (row: any) => {
 		if (row.dataSync === false) {
 			return "Disabled";
 		}
@@ -707,7 +707,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		return "--";
 	};
 
-	const getStatusStyle = (row: string) => {
+	const getStatusStyle = (row: any) => {
 		if (row.dataSync === false) {
 			return {
 				background: "rgba(219, 219, 219, 1)",
