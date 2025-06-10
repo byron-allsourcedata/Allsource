@@ -5,23 +5,7 @@ from pydantic import BaseModel
 
 from db_dependencies import Db
 from resolver import injectable
-from services.integrations.commonIntegration import UserContacts, UserPostalInfo
-
-
-class ProfessionalProfile(BaseModel):
-    current_company_name: Optional[str]
-
-
-class PersonalProfiles(BaseModel):
-    zip_code5: Optional[str]
-    gender: Optional[str]
-
-
-class User(BaseModel):
-    contacts: Optional[UserContacts]
-    postal: Optional[UserPostalInfo]
-    personal_profiles: Optional[PersonalProfiles]
-    professional_profiles: Optional[ProfessionalProfile]
+from services.integrations.commonIntegration import User
 
 
 @injectable

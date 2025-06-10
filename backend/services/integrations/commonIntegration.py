@@ -8,7 +8,6 @@ from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 import pandas as pd
 
 from persistence.integrations.mailchimp import MailchimpContactData
-from persistence.integrations.s3 import PersonalProfiles, ProfessionalProfile
 
 
 class MainPhoneContext(TypedDict):
@@ -64,11 +63,35 @@ class UserContacts(BaseModel):
     phone_mobile2: str
     linkedin_url: Optional[str]
 
+    class Config:
+        orm_mode = True
+
+class ProfessionalProfile(BaseModel):
+    current_company_name: Optional[str]
+
+    class Config:
+        orm_mode = True
+
+
+class PersonalProfiles(BaseModel):
+    zip_code5: Optional[str]
+    gender: Optional[str]
+
+    class Config:
+        orm_mode = True
 
 class UserData(BaseModel):
     contacts: Optional[UserContacts]
     postal: Optional[UserPostalInfo]
 
+class User(BaseModel):
+    contacts: Optional[UserContacts]
+    postal: Optional[UserPostalInfo]
+    personal_profiles: Optional[PersonalProfiles]
+    professional_profiles: Optional[ProfessionalProfile]
+
+    class Config:
+        orm_mode = True
 
 def get_states_dataframe() -> DataFrame:
     path = Folders.data('uszips.csv')

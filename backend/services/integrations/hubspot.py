@@ -5,6 +5,7 @@ from pydantic import EmailStr
 
 from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 from persistence.domains import UserDomainsPersistence
+from persistence.integrations.hubspot import HubspotPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -25,11 +26,13 @@ from uuid import UUID
 class HubspotIntegrationsService:
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence,
                  leads_persistence: LeadsPersistence,
+                 repo: HubspotPersistence,
                  sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client,
                  million_verifier_integrations: MillionVerifierIntegrationsService):
         self.domain_persistence = domain_persistence
-        self.integrations_persisntece = integrations_persistence
+        self.integrations_persistence = integrations_persistence
         self.leads_persistence = leads_persistence
+        self.repo = repo
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
@@ -52,11 +55,11 @@ class HubspotIntegrationsService:
         return response
 
     def get_credentials(self, domain_id: int, user_id: int):
-        credential = self.integrations_persisntece.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
+        credential = self.integrations_persistence.get_credentials_for_service(domain_id=domain_id, user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
         return credential
 
     def get_smart_credentials(self, user_id: int):
-        credential = self.integrations_persisntece.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
+        credential = self.integrations_persistence.get_smart_credentials_for_service(user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value)
         return credential
 
     def __save_integrations(self, api_key: str, domain_id: int, user: dict):
@@ -65,7 +68,7 @@ class HubspotIntegrationsService:
             credential.access_token = api_key
             credential.is_failed = False
             credential.error_message = None
-            self.integrations_persisntece.db.commit()
+            self.integrations_persistence.db.commit()
             return credential
               
         common_integration = os.getenv('COMMON_INTEGRATION') == 'True'
@@ -81,7 +84,7 @@ class HubspotIntegrationsService:
         else:
             integration_data['domain_id'] = domain_id
             
-        integration = self.integrations_persisntece.create_integration(integration_data)
+        integration = self.integrations_persistence.create_integration(integration_data)
         
         
         if not integration:
@@ -157,7 +160,7 @@ class HubspotIntegrationsService:
 
         return sync
 
-    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: EnrichmentUser, target_schema: str, validations: dict):
+    async def process_data_sync(self, user_integration: UserIntegration, integration_data_sync: IntegrationUserSync, enrichment_users: List[EnrichmentUser], target_schema: str, validations: dict):
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__mapped_profile(enrichment_user, target_schema, validations, integration_data_sync.data_map)
@@ -246,31 +249,42 @@ class HubspotIntegrationsService:
 
     
     def __mapped_profile(self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict, data_map: list) -> dict:
-        enrichment_contacts = enrichment_user.contacts
-        if not enrichment_contacts:
+        user_data: User = self.repo.get_user_data(enrichment_user.asid)
+
+        if not user_data:
             return None
-        
-        business_email, personal_email, phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
-        main_email, main_phone = resolve_main_email_and_phone(enrichment_contacts=enrichment_contacts, validations=validations, target_schema=target_schema, 
-                                                              business_email=business_email, personal_email=personal_email, phone=phone)
-        first_name = enrichment_contacts.first_name
-        last_name = enrichment_contacts.last_name
-        
+
+        business_email, personal_email, phone = \
+            self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+
+        main_email, main_phone = resolve_main_email_and_phone(
+            enrichment_contacts=user_data.contacts,
+            validations=validations,
+            target_schema=target_schema,
+            business_email=business_email,
+            personal_email=personal_email,
+            phone=phone
+        )
+
+        first_name = user_data.contacts.first_name
+        last_name = user_data.contacts.last_name
+
         if not main_email or not first_name or not last_name:
             return None
 
         result = {
-            'email': main_email,
-            'firstname': first_name,
-            'lastname': last_name
+            "email": main_email,
+            "firstname": first_name,
+            "lastname": last_name,
         }
         
-        required_types = {m['type'] for m in data_map}
+        required_types = {m["type"] for m in data_map}
+
         context = {
-            'main_phone': main_phone,
-            'professional_profiles': enrichment_user.professional_profiles,
-            'postal': enrichment_user.postal,
-            'personal_profiles': enrichment_user.personal_profiles
+            "main_phone": main_phone,
+            "professional_profiles": user_data.professional_profiles,
+            "postal": user_data.postal,
+            "personal_profiles": user_data.personal_profiles,
         }
 
         for field_type in required_types:
