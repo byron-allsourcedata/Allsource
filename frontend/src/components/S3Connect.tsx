@@ -475,7 +475,9 @@ const S3Connect = ({
 										InputProps={{
 											sx: {
 												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key ? "rgba(224, 49, 48, 1)" : "inherit",
+												borderColor: invalid_api_key
+													? "rgba(224, 49, 48, 1)"
+													: "inherit",
 											},
 										}}
 									/>
@@ -492,7 +494,9 @@ const S3Connect = ({
 										InputProps={{
 											sx: {
 												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key ? "rgba(224, 49, 48, 1)" : "inherit",
+												borderColor: invalid_api_key
+													? "rgba(224, 49, 48, 1)"
+													: "inherit",
 											},
 										}}
 									/>

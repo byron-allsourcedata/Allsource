@@ -248,13 +248,13 @@ const ZapierConnectPopup = ({
 									sx={klaviyoStyles.tabHeading}
 									onClick={() => setValue("1")}
 								/>
-								<Tab
+								{/* <Tab
 									label="Suppression Sync"
 									value="2"
 									className="tab-heading"
 									sx={klaviyoStyles.tabHeading}
 									onClick={() => setValue("2")}
-								/>
+								/> */}
 							</TabList>
 						</Box>
 						<TabPanel value="1" sx={{ p: 0 }}>

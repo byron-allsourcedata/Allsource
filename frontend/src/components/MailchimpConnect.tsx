@@ -222,11 +222,7 @@ const MailchimpConnect = ({
 					});
 				}
 				triggerSync();
-				if (fromAudience) {
-					handleClose();
-				} else {
-					handleNextTab();
-				}
+				handleClose()
 			} else {
 				showErrorToast("Invalid API Key");
 			}
@@ -478,13 +474,13 @@ const MailchimpConnect = ({
 										value="1"
 										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
 									/>
-									{!fromAudience && (
+									{/* {!fromAudience && (
 										<Tab
 											label="Suppression Sync"
 											value="2"
 											sx={klaviyoStyles.tabHeading}
 										/>
-									)}
+									)} */}
 								</TabList>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>

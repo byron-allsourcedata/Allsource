@@ -298,7 +298,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 			lineHeight: "16px",
 			color: "rgba(17, 17, 19, 0.60)",
 			"&.Mui-focused": {
-				color: "#0000FF",
+				color: "rgba(56, 152, 252, 1)",
 			},
 		},
 		formInput: {
@@ -319,7 +319,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 					borderColor: "#A3B0C2",
 				},
 				"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-					borderColor: "#0000FF",
+					borderColor: "rgba(56, 152, 252, 1)",
 				},
 			},
 			"&+.MuiFormHelperText-root": {
@@ -1105,7 +1105,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1134,7 +1134,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1200,7 +1200,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1229,7 +1229,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1393,7 +1393,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 																top: "-5px",
 																left: "3px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1422,7 +1422,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1476,7 +1476,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1503,7 +1503,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 																},
 																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																	{
-																		borderColor: "#0000FF",
+																		borderColor: "rgba(56, 152, 252, 1)",
 																	},
 															},
 														}}

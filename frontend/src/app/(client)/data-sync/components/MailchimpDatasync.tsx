@@ -443,7 +443,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 			lineHeight: "16px",
 			color: "rgba(17, 17, 19, 0.60)",
 			"&.Mui-focused": {
-				color: "#0000FF",
+				color: "rgba(56, 152, 252, 1)",
 			},
 		},
 		formInput: {
@@ -1170,7 +1170,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 															letterSpacing: "0.06px",
 															top: "5px",
 															"&.Mui-focused": {
-																color: "#0000FF",
+																color: "rgba(56, 152, 252, 1)",
 															},
 														},
 													}}
@@ -1310,7 +1310,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																				fontWeight: "400",
 																				color: "rgba(17, 17, 19, 0.60)",
 																				"&.Mui-focused": {
-																					color: "#0000FF",
+																					color: "rgba(56, 152, 252, 1)",
 																				},
 																			},
 																		}}
@@ -1351,7 +1351,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																						},
 																					"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																						{
-																							borderColor: "#0000FF",
+																							borderColor: "rgba(56, 152, 252, 1)",
 																						},
 																				},
 																				"&+.MuiFormHelperText-root": {
@@ -1556,7 +1556,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1584,7 +1584,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1650,7 +1650,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1678,7 +1678,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1841,7 +1841,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1869,7 +1869,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1923,7 +1923,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1950,7 +1950,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 																},
 																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																	{
-																		borderColor: "#0000FF",
+																		borderColor: "rgba(56, 152, 252, 1)",
 																	},
 															},
 														}}

@@ -206,7 +206,7 @@ const SendlaneConnect = ({
 					});
 				}
 				triggerSync();
-				handleNextTab();
+				handleClose();
 			}
 		} catch (error) {
 		} finally {
@@ -457,11 +457,11 @@ const SendlaneConnect = ({
 										value="1"
 										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
 									/>
-									<Tab
+									{/* <Tab
 										label="Suppression Sync"
 										value="2"
 										sx={klaviyoStyles.tabHeading}
-									/>
+									/> */}
 								</TabList>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
@@ -518,7 +518,9 @@ const SendlaneConnect = ({
 										InputProps={{
 											sx: {
 												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key ? "rgba(224, 49, 48, 1)" : "inherit",
+												borderColor: invalid_api_key
+													? "rgba(224, 49, 48, 1)"
+													: "inherit",
 											},
 										}}
 									/>

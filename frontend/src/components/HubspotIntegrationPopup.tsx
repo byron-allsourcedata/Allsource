@@ -242,11 +242,7 @@ const HubspotIntegrationPopup = ({
 				}
 				showToast("Integration Hubspot Successfully");
 				triggerSync();
-				if (fromAudience) {
-					handleClose();
-				} else {
-					handleNextTab();
-				}
+				handleClose();
 			} else {
 				showErrorToast("Invalid API Key");
 			}
@@ -315,8 +311,16 @@ const HubspotIntegrationPopup = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -560,7 +564,9 @@ const HubspotIntegrationPopup = ({
 										InputProps={{
 											sx: {
 												...hubspotStyles.formInput,
-												borderColor: invalid_api_key ? "rgba(224, 49, 48, 1)" : "inherit",
+												borderColor: invalid_api_key
+													? "rgba(224, 49, 48, 1)"
+													: "inherit",
 											},
 										}}
 									/>

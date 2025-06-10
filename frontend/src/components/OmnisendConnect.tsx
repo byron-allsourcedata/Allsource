@@ -219,8 +219,8 @@ const OmnisendConnect = ({
 						access_token: apiKey,
 					});
 				}
-				handleNextTab();
 				triggerSync();
+				handleClose()
 			}
 			if (response.data === "CREDENTIALS_INVALID") {
 				showErrorToast("Invalid API Key, please, try another");
@@ -474,11 +474,11 @@ const OmnisendConnect = ({
 										value="1"
 										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
 									/>
-									<Tab
+									{/* <Tab
 										label="Suppression Sync"
 										value="2"
 										sx={klaviyoStyles.tabHeading}
-									/>
+									/> */}
 								</TabList>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
@@ -535,7 +535,9 @@ const OmnisendConnect = ({
 										InputProps={{
 											sx: {
 												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key ? "rgba(224, 49, 48, 1)" : "inherit",
+												borderColor: invalid_api_key
+													? "rgba(224, 49, 48, 1)"
+													: "inherit",
 											},
 										}}
 									/>

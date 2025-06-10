@@ -232,7 +232,7 @@ const KlaviyoIntegrationPopup = ({
 				}
 				showToast("Integration Klaviyo Successfully");
 				triggerSync();
-				handleNextTab();
+				handleClose();
 			}
 		} catch (error) {
 		} finally {
@@ -495,11 +495,11 @@ const KlaviyoIntegrationPopup = ({
 										value="1"
 										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
 									/>
-									<Tab
+									{/* <Tab
 										label="Suppression Sync"
 										value="2"
 										sx={{ ...klaviyoStyles.tabHeading, cursor: "pointer" }}
-									/>
+									/> */}
 								</Tabs>
 							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
@@ -556,7 +556,9 @@ const KlaviyoIntegrationPopup = ({
 										InputProps={{
 											sx: {
 												...klaviyoStyles.formInput,
-												borderColor: invalid_api_key ? "rgba(224, 49, 48, 1)" : "inherit",
+												borderColor: invalid_api_key
+													? "rgba(224, 49, 48, 1)"
+													: "inherit",
 											},
 										}}
 									/>
