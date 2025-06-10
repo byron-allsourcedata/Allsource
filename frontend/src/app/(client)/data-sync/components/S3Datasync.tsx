@@ -325,7 +325,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 			lineHeight: "16px",
 			color: "rgba(17, 17, 19, 0.60)",
 			"&.Mui-focused": {
-				color: "#0000FF",
+				color: "rgba(56, 152, 252, 1)",
 			},
 		},
 		formInput: {
@@ -957,7 +957,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 															letterSpacing: "0.06px",
 															top: "5px",
 															"&.Mui-focused": {
-																color: "#0000FF",
+																color: "rgba(56, 152, 252, 1)",
 															},
 														},
 													}}
@@ -1174,7 +1174,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1202,7 +1202,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1268,7 +1268,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1296,7 +1296,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1459,7 +1459,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1487,7 +1487,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 																	},
 																	"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																		{
-																			borderColor: "#0000FF",
+																			borderColor: "rgba(56, 152, 252, 1)",
 																		},
 																},
 																"&+.MuiFormHelperText-root": {
@@ -1541,7 +1541,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 																color: "rgba(17, 17, 19, 0.60)",
 																top: "-5px",
 																"&.Mui-focused": {
-																	color: "#0000FF",
+																	color: "rgba(56, 152, 252, 1)",
 																	top: 0,
 																},
 																"&.MuiInputLabel-shrink": {
@@ -1568,7 +1568,7 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 																},
 																"&.Mui-focused .MuiOutlinedInput-notchedOutline":
 																	{
-																		borderColor: "#0000FF",
+																		borderColor: "rgba(56, 152, 252, 1)",
 																	},
 															},
 														}}
