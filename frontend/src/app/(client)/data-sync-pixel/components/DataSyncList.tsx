@@ -1073,7 +1073,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 											>
 												{formatListName(row.type) || "--"}
 											</SmartCell>
-											
+
 											<SmartCell
 												cellOptions={{
 													sx: {

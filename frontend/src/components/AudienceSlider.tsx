@@ -652,7 +652,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 												/>
 											</ListItemIcon>
 											<ListItemText
-												primary="hubspot"
+												primary="Hubspot"
 												primaryTypographyProps={{
 													sx: {
 														fontFamily: "Nunito Sans",
@@ -1093,7 +1093,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											<ListItemIcon sx={{ minWidth: "auto" }}>
 												<Image
 													src="/google-ads.svg"
-													alt="Slack"
+													alt="GoogleAds"
 													height={26}
 													width={32}
 												/>
