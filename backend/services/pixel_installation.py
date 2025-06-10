@@ -63,6 +63,8 @@ class PixelInstallationService:
                 s.pixelClientId = i;
             }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");
             </script>
+
+            <script src="https://pixel.allsourcedata.io/pixel.js?dpid={client_id}"></script>
         '''
 
         return script, client_id
