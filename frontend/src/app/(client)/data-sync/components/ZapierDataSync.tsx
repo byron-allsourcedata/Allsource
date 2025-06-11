@@ -124,7 +124,7 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
 		{ id: "unique-id-6", text: "Run a new zap" },
 		{
 			id: "unique-id-7",
-			text: "A new Data Sync is automatically created in Maximiz",
+			text: "A new Data Sync is automatically created in AllSource",
 		},
 	];
 

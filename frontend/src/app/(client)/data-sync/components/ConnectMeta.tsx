@@ -1886,7 +1886,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																				color="textSecondary"
 																				paragraph
 																			>
-																				We will not run your campaign. Maximiz
+																				We will not run your campaign. AllSource
 																				will create a campaign template in your
 																				ad account. We won&apos;t run anything
 																				without your confirmation.

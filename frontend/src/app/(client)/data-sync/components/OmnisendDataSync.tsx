@@ -383,7 +383,7 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 		},
 		{
 			id: "unique-id-3",
-			text: "Click Create Private API Key Name to Maximiz.",
+			text: "Click Create Private API Key Name to AllSource.",
 		},
 		{
 			id: "unique-id-4",
@@ -392,12 +392,12 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 		{ id: "unique-id-5", text: "Click Create." },
 		{
 			id: "unique-id-6",
-			text: "Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.",
+			text: "Copy the API key in the next screen and paste to API Key field located in AllSource Klaviyo section.",
 		},
 		{ id: "unique-id-7", text: "Click Connect." },
 		{
 			id: "unique-id-8",
-			text: "Select the existing list or create a new one to integrate with Maximiz.",
+			text: "Select the existing list or create a new one to integrate with AllSource.",
 		},
 		{ id: "unique-id-9", text: "Click Export." },
 	];

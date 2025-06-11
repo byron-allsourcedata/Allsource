@@ -516,12 +516,12 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 	const instructions: any[] = [
 		// { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
 		// { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
+		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to AllSource.' },
 		// { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
 		// { id: 'unique-id-5', text: 'Click Create.' },
-		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
+		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in AllSource Klaviyo section.' },
 		// { id: 'unique-id-7', text: 'Click Connect.' },
-		// { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Maximiz.' },
+		// { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with AllSource.' },
 		// { id: 'unique-id-9', text: 'Click Export.' },
 	];
 
