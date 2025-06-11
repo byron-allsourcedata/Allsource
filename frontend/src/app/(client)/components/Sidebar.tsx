@@ -530,7 +530,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 										<ListItemIcon sx={sidebarStyles.listItemIcon}>
 											<CategoryIcon />
 										</ListItemIcon>
-										<ListItemText primary="Data Sync" />
+										<ListItemText primary="Pixel Sync" />
 									</ListItem>
 								</List>
 							</Collapse>
