@@ -190,9 +190,9 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 					triggerSync();
 				}
 			}
-			handlePopupClose()
+			handlePopupClose();
 			if (onCloseCreateSync) {
-				onCloseCreateSync()
+				onCloseCreateSync();
 			}
 		} finally {
 			setLoading(false);
