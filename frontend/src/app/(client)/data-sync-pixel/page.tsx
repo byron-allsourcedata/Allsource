@@ -96,7 +96,6 @@ const DataSync = () => {
 				setHasDataSync(response.data.hasDataSync);
 				setHasContacts(response.data.hasContacts);
 
-				console.log(response.data);
 			} catch (err) {
 				console.error("Error checking integrations:", err);
 			} finally {
