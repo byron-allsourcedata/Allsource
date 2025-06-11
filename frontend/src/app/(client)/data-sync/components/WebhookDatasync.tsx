@@ -37,6 +37,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectWebhookPopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit: boolean;
 }
@@ -48,6 +49,7 @@ type WebhookList = {
 const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -116,11 +118,6 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 		{ type: "time_on_site", value: "time_on_site" },
 		{ type: "url_visited", value: "url_visited" },
 		{ type: "business_email", value: "business_email" },
-		{ type: "urls_visited", value: "urls_visited" },
-		{
-			type: "urls_visited_with_parameters",
-			value: "urls_visited_with_parameters",
-		},
 		{ type: "linkedin_url", value: "linkedin_url" },
 	]);
 	useEffect(() => {
@@ -336,6 +333,10 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 					showToast("Data sync created successfully");
 					triggerSync();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} finally {
 			setLoading(false);
@@ -656,13 +657,20 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 							"@media (max-width: 600px)": { gap: "8px" },
 						}}
 					>
-						{/* <Link href="#" className="main-text" sx={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            color: 'rgba(56, 152, 252, 1)',
-                            textDecorationColor: 'rgba(56, 152, 252, 1)'
-                        }}>Tutorial</Link> */}
+						<Link
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-webhook"
+							target="_blank"
+							className="main-text"
+							sx={{
+								fontSize: "14px",
+								fontWeight: "600",
+								lineHeight: "20px",
+								color: "rgba(56, 152, 252, 1)",
+								textDecorationColor: "rgba(56, 152, 252, 1)",
+							}}
+						>
+							Tutorial
+						</Link>
 						<IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
 							<CloseIcon sx={{ width: "20px", height: "20px" }} />
 						</IconButton>

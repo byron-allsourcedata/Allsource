@@ -31,6 +31,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface OnmisendDataSyncProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data?: any;
 	isEdit?: boolean;
 	boxShadow?: string;
@@ -39,6 +40,7 @@ interface OnmisendDataSyncProps {
 const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data = null,
 	isEdit,
 	boxShadow,
@@ -187,6 +189,10 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 					showToast("Data sync created successfully");
 					triggerSync();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} finally {
 			setLoading(false);
@@ -632,7 +638,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-hubspot"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-hubspot"
 							className="main-text"
 							target="_blank"
 							rel="noopener referrer"

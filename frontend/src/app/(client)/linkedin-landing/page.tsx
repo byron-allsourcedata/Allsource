@@ -66,7 +66,7 @@ const LinkedinLandingInner = () => {
 			<Link
 				display={"flex"}
 				sx={{ alignItems: "center", textDecoration: "none" }}
-				href="https://maximiz.ai"
+				href="https://allsourcedata.io"
 			>
 				<Image src={"/logo.svg"} width={61} height={39} alt="Maximiz" />
 				<Typography

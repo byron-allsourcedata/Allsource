@@ -74,7 +74,7 @@ const BingAdsLanding = () => {
 				src={"/app_intalled.svg"}
 				width={330}
 				height={246}
-				alt="AllSource installed"
+				alt="Allsource installed"
 			/>
 			<Typography variant="h6" fontSize={"16px"} fontWeight={400} mt={2}>
 				Wait for BingAds token verification

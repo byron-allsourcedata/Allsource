@@ -52,7 +52,7 @@ class IntegrationUserSync(Base):
         nullable=False,
         server_default=text("'pixel'::data_sync_type"),
     )
-    is_active = Column(Boolean, nullable=True, server_default=text("true"))
+    is_active = Column(Boolean, nullable=False, server_default=text("true"))
     created_at = Column(
         TIMESTAMP(timezone=False),
         default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
@@ -68,8 +68,8 @@ class IntegrationUserSync(Base):
     data_map = Column(JSON, nullable=True)
     leads_type = Column(VARCHAR, nullable=True)
     platform_user_id = Column(BigInteger, nullable=True)
-    sync_status = Column(Boolean, nullable=True, server_default=text("true"))
-    no_of_contacts = Column(Integer, nullable=True, server_default=text("0"))
+    sync_status = Column(Boolean, nullable=False, server_default=text("true"))
+    no_of_contacts = Column(Integer, nullable=False, server_default=text("0"))
     created_by = Column(String(256), nullable=True)
     last_lead_sync_id = Column(
         BigInteger, ForeignKey("leads_users.id"), nullable=True

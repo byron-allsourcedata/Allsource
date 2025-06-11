@@ -97,7 +97,6 @@ const DataSync = () => {
 					},
 				);
 				setHasIntegrations(response.data.hasIntegration);
-				console.log(response.data.hasIntegration);
 				setHasDataSync(response.data.hasAnySync);
 			} catch (err) {
 				console.error("Error checking integrations:", err);
@@ -419,6 +418,7 @@ const DataSync = () => {
 				open={filterPopup}
 				onClose={handleFilterPopupClose}
 				onApply={onApply}
+				dataSyncType="audience"
 			/>
 			<AudiencePopup
 				open={openCreateDataSyncPopup}

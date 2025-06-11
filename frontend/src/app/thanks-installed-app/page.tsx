@@ -17,14 +17,14 @@ const ThanksInstalledApp = () => {
 				display={"flex"}
 				sx={{ alignItems: "center", textDecoration: "none" }}
 			>
-				<Image src={"/logo-icon.svg"} width={61} height={39} alt="AllSource" />
+				<Image src={"/logo-icon.svg"} width={61} height={39} alt="Allsource" />
 				<Typography
 					variant="h1"
 					color={"#002868"}
 					fontSize={"51.21px"}
 					fontWeight={400}
 				>
-					AllSource
+					Allsource
 				</Typography>
 			</Link>
 			<Image
@@ -34,7 +34,7 @@ const ThanksInstalledApp = () => {
 				alt="Maximiz installed"
 			/>
 			<Typography variant="h6" fontSize={"16px"} fontWeight={400} mt={2}>
-				AllSource installed! Get ready to supercharge your store’s success!
+				Allsource installed! Get ready to supercharge your store’s success!
 			</Typography>
 		</Box>
 	);

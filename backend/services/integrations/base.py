@@ -22,6 +22,7 @@ from persistence.audience_persistence import AudiencePersistence
 from persistence.integrations.external_apps_installations import (
     ExternalAppsInstallationsPersistence,
 )
+from enums import DataSyncType
 from .attentive import AttentiveIntegrationsService
 from .hubspot import HubspotIntegrationsService
 from .shopify import ShopifyIntegrationService
@@ -98,12 +99,28 @@ class IntegrationService:
                 user_id=user.get("id"),
             )
         )
-        has_any_sync = self.integration_persistence.has_any_sync(
-            user_id=user.get("id"),
+        has_any_sync = self.integration_persistence.has_data_sync(
+            user_id=user.get("id"), type=DataSyncType.AUDIENCE.value
         )
         return {
             "hasIntegration": has_integration,
             "hasAnySync": has_any_sync,
+        }
+
+    def has_data_sync_and_contacts(self, user: dict, domain: dict) -> dict:
+        has_data_sync = self.integration_persistence.has_data_sync(
+            user_id=user.get("id"),
+            domain_id=domain.id,
+            type=DataSyncType.CONTACT.value,
+        )
+        has_contacts_in_domain = (
+            self.integration_persistence.has_contacts_in_domain(
+                user_id=user.get("id"), domain_id=domain.id
+            )
+        )
+        return {
+            "hasDataSync": has_data_sync,
+            "hasContacts": has_contacts_in_domain,
         }
 
     def delete_integration(self, service_name: str, domain, user: dict):
@@ -121,6 +138,14 @@ class IntegrationService:
             domain_id=domain_id,
             service_name=service_name,
             integrations_users_sync_id=integrations_users_sync_id,
+        )
+
+    def get_destinations(
+        self,
+        type: str,
+    ):
+        return self.integrations_user_sync_persistence.get_destinations(
+            type=type
         )
 
     def get_all_audience_sync(

@@ -118,7 +118,7 @@ const AudienceSynergyPreview: FC<AudienceSynergyPreviewProps> = ({
 					{caption}
 				</Typography>
 
-				<Box sx={{ display: "flex", justifyContent: "center" }}>
+				<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
 					<Button
 						variant="contained"
 						onClick={onBegin}

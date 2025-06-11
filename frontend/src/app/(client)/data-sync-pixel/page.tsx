@@ -11,6 +11,7 @@ import { AxiosError } from "axios";
 import DataSyncList from "./components/DataSyncList";
 import { useRouter } from "next/navigation";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
+import { EmptyAnalyticsPlaceholder } from "../dashboard/components/placeholders/EmptyPlaceholder";
 
 const centerContainerStyles = {
 	display: "flex",
@@ -40,6 +41,7 @@ import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import DomainButtonSelect from "../components/NavigationDomainButton";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
 	service_name?: string;
@@ -48,11 +50,16 @@ interface DataSyncProps {
 const DataSync = () => {
 	const router = useRouter();
 	const { hasNotification } = useNotification();
+	const { needsSync } = useIntegrationContext();
 	const [status, setStatus] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [filterPopup, setFilterPopup] = useState(false);
 	const [filters, setFilters] = useState<any>();
 	const [openCreateDataSyncPopup, setOpenCreateDataSyncPopup] = useState(false);
+	const [hasContacts, setHasContacts] = useState(false);
+	const [hasDataSync, setHasDataSync] = useState(false);
+	const [needReload, setNeedReload] = useState(false);
+
 	const handleFilterPopupOpen = () => {
 		setFilterPopup(true);
 	};
@@ -82,6 +89,25 @@ const DataSync = () => {
 		setPopupOpen(true);
 	};
 
+	useEffect(() => {
+		const fetchIntegrations = async () => {
+			try {
+				setIsLoading(true);
+				const response = await axiosInstance.get(
+					"/data-sync/has-data-sync-and-contacts",
+				);
+				setHasDataSync(response.data.hasDataSync);
+				setHasContacts(response.data.hasContacts);
+			} catch (err) {
+				console.error("Error checking integrations:", err);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchIntegrations();
+	}, [needsSync]);
+
 	if (isLoading) {
 		return <CustomizedProgressBar />;
 	}
@@ -98,6 +124,10 @@ const DataSync = () => {
 							alignItems: "center",
 							justifyContent: "space-between",
 							width: "100%",
+							zIndex: 100,
+							position: "sticky",
+							bgcolor: "#fff",
+							top: 0,
 							pr: 2,
 							"@media (max-width: 900px)": {
 								pt: hasNotification ? 5 : 0,
@@ -114,6 +144,7 @@ const DataSync = () => {
 								flexDirection: "row",
 								alignItems: "center",
 								pl: "0.5rem",
+								mt: 2.05,
 								gap: 1,
 								"@media (max-width: 900px)": { mb: 2 },
 							}}
@@ -128,11 +159,11 @@ const DataSync = () => {
 									color: "#202124",
 								}}
 							>
-								Data Sync
+								Pixel Sync
 							</Typography>
 							<CustomTooltip
 								title={
-									"How data synch works and to customise your sync settings."
+									"How data sync works and to customise your sync settings."
 								}
 								linkText="Learn more"
 								linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync-contacts"
@@ -145,82 +176,85 @@ const DataSync = () => {
 								<DomainButtonSelect />
 							</Box>
 						</Box>
-						<Box
-							sx={{
-								display: "flex",
-								flexDirection: "row",
-								alignItems: "center",
-								justifyContent: "end",
-								mt: 2.05,
-								gap: "15px",
-								"@media (max-width: 900px)": {
-									gap: "8px",
-								},
-							}}
-						>
-							<Button
-								onClick={handleAudiencePopupOpen}
-								aria-haspopup="true"
-								disabled={status === "PIXEL_INSTALLATION_NEEDED"}
+						{hasContacts && hasDataSync && (
+							<Box
 								sx={{
-									textTransform: "none",
-									color:
-										status === "PIXEL_INSTALLATION_NEEDED"
-											? "rgba(128, 128, 128, 1)"
-											: "rgba(56, 152, 252, 1)",
-									border: "1px solid rgba(56, 152, 252, 1)",
-									borderRadius: "4px",
-									padding: "9px 16px",
-									opacity: status === "PIXEL_INSTALLATION_NEEDED" ? "0.4" : "1",
-									minWidth: "auto",
+									display: "flex",
+									flexDirection: "row",
+									alignItems: "center",
+									justifyContent: "end",
+									mt: 2.05,
+									gap: "15px",
 									"@media (max-width: 900px)": {
-										display: "none",
+										gap: "8px",
 									},
 								}}
 							>
-								<Typography
-									className="second-sub-title"
+								<Button
+									onClick={handleAudiencePopupOpen}
+									aria-haspopup="true"
+									disabled={status === "PIXEL_INSTALLATION_NEEDED"}
 									sx={{
-										marginRight: "0.5em",
-										padding: 0.2,
-										textAlign: "left",
-										color: "rgba(56, 152, 252, 1) !important",
+										textTransform: "none",
+										color:
+											status === "PIXEL_INSTALLATION_NEEDED"
+												? "rgba(128, 128, 128, 1)"
+												: "rgba(56, 152, 252, 1)",
+										border: "1px solid rgba(56, 152, 252, 1)",
+										borderRadius: "4px",
+										padding: "9px 16px",
+										opacity:
+											status === "PIXEL_INSTALLATION_NEEDED" ? "0.4" : "1",
+										minWidth: "auto",
+										"@media (max-width: 900px)": {
+											display: "none",
+										},
 									}}
 								>
-									Create Contact Sync
-								</Typography>
-							</Button>
-							<Button
-								onClick={handleFilterPopupOpen}
-								aria-haspopup="true"
-								sx={{
-									textTransform: "none",
-									color: "rgba(128, 128, 128, 1)",
-									border:
-										filters?.length > 0
-											? "1px solid rgba(56, 152, 252, 1)"
-											: "1px solid rgba(184, 184, 184, 1)",
-									borderRadius: "4px",
-									padding: "8px",
-									minWidth: "auto",
-									position: "relative",
-									"@media (max-width: 900px)": {
-										border: "none",
-										padding: 0,
-									},
-								}}
-							>
-								<FilterListIcon
-									fontSize="medium"
+									<Typography
+										className="second-sub-title"
+										sx={{
+											marginRight: "0.5em",
+											padding: 0.2,
+											textAlign: "left",
+											color: "rgba(56, 152, 252, 1) !important",
+										}}
+									>
+										Create Contact Sync
+									</Typography>
+								</Button>
+								<Button
+									onClick={handleFilterPopupOpen}
+									aria-haspopup="true"
 									sx={{
-										color:
+										textTransform: "none",
+										color: "rgba(128, 128, 128, 1)",
+										border:
 											filters?.length > 0
-												? "rgba(56, 152, 252, 1)"
-												: "rgba(128, 128, 128, 1)",
+												? "1px solid rgba(56, 152, 252, 1)"
+												: "1px solid rgba(184, 184, 184, 1)",
+										borderRadius: "4px",
+										padding: "8px",
+										minWidth: "auto",
+										position: "relative",
+										"@media (max-width: 900px)": {
+											border: "none",
+											padding: 0,
+										},
 									}}
-								/>
-							</Button>
-						</Box>
+								>
+									<FilterListIcon
+										fontSize="medium"
+										sx={{
+											color:
+												filters?.length > 0
+													? "rgba(56, 152, 252, 1)"
+													: "rgba(128, 128, 128, 1)",
+										}}
+									/>
+								</Button>
+							</Box>
+						)}
 					</Box>
 					<Box
 						sx={{
@@ -286,10 +320,111 @@ const DataSync = () => {
 									Setup Pixel
 								</Button>
 							</Box>
-						) : (
+						) : !isLoading ? (
 							<>
-								<DataSyncList filters={filters} />
+								{!hasContacts && <EmptyAnalyticsPlaceholder />}
+								{hasContacts && !hasDataSync && (
+									<Box sx={{ mt: 2 }}>
+										<FirstTimeScreenCommonVariant1
+											Header={{
+												TextTitle: "Pixel Sync",
+												TextSubtitle: "Customise your sync settings",
+												link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync",
+											}}
+											WarningNotification={{
+												condition: false,
+												ctaUrl: "/integrations",
+												ctaLabel: "Add Integration",
+												message:
+													"You need to create at least one integration before you can sync your audience",
+											}}
+											InfoNotification={{
+												Text: "This page shows real-time synchronization status across all your integrated platforms. Monitor data flows, troubleshoot delays, and ensure all systems are updating properly.",
+											}}
+											Content={
+												<>
+													<AudienceSynergyPreview
+														tableSrc="/pixel_sync_FTS.svg"
+														headerTitle="Sync Audience to Any Platform"
+														caption="Send your pixel contacts segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
+														onOpenPopup={handleOpenPopup}
+														onBegin={() => handleAudiencePopupOpen()}
+														// beginDisabled={!hasIntegrations}
+														buttonLabel="Create Pixel Sync"
+													/>
+												</>
+											}
+											HelpCard={{
+												headline: "Need Help with Data Synchronization?",
+												description:
+													"Book a free 30-minute session to troubleshoot, optimize, or automate your data flows.",
+												helpPoints: [
+													{
+														title: "Connection Setup",
+														description: "Configure integrations correctly",
+													},
+													{
+														title: "Sync Diagnostics",
+														description: "Fix failed data transfers",
+													},
+													{
+														title: "Mapping Assistance",
+														description: "Align your data fields",
+													},
+												],
+											}}
+											LeftMenu={{
+												header: "Fix & Optimize Your Data Flows",
+												subtitle: "Free 30-Min Sync Audit",
+												image: {
+													url: "/data_sync_FTS.svg",
+													width: 600,
+													height: 300,
+												},
+												items: [
+													{
+														Icon: SettingsIcon,
+														title: "Connection Setup",
+														subtitle: `We’ll ensure your integrations are properly configured for reliable data flow.`,
+													},
+													{
+														Icon: SpeedIcon,
+														title: "Sync Diagnostics",
+														subtitle: `Identify and resolve synchronization failures in real-time.`,
+													},
+													{
+														Icon: MovingIcon,
+														title: "Mapping Assistance",
+														subtitle:
+															"Align your source and destination fields perfectly.",
+													},
+												],
+											}}
+											ContentStyleSX={{
+												display: "flex",
+												flexDirection: "column",
+												justifyContent: "center",
+												alignItems: "center",
+												maxWidth: "840px",
+												margin: "0 auto",
+												mt: 2,
+											}}
+										/>
+										{popupOpen && !hasDataSync && (
+											<WelcomePopup
+												open={popupOpen}
+												onClose={() => setPopupOpen(false)}
+												variant="integration"
+											/>
+										)}
+									</Box>
+								)}
+								{hasContacts && hasDataSync && (
+									<DataSyncList filters={filters} />
+								)}
 							</>
+						) : (
+							<></>
 						)}
 					</Box>
 				</Box>
@@ -298,6 +433,7 @@ const DataSync = () => {
 				open={filterPopup}
 				onClose={handleFilterPopupClose}
 				onApply={onApply}
+				dataSyncType="pixel"
 			/>
 			<AudiencePopup
 				open={openCreateDataSyncPopup}

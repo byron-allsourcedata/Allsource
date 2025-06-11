@@ -167,6 +167,7 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
 					<Box
 						sx={{
 							mt: bannerVisible ? 3 : 0,
+							width: "100%",
 						}}
 					>
 						{typeof Content === "function"

@@ -42,6 +42,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface BingAdsDataSyncProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit: boolean;
 }
@@ -70,6 +71,7 @@ type Customers = {
 const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -437,6 +439,10 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 					triggerSync();
 					onClose();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} catch (error) {
 			console.error("Error during sync:", error);
@@ -1970,7 +1976,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																			color="textSecondary"
 																			paragraph
 																		>
-																			We will not run your campaign. Maximiz
+																			We will not run your campaign. Allsource
 																			will create a campaign template in your ad
 																			account. We won&apos;t run anything
 																			without your confirmation.

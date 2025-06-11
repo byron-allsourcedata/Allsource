@@ -197,6 +197,7 @@ const GettingStartedSection: React.FC = () => {
 							onDomainSelected={(domain) => {
 								setSelectedDomain(domain ? domain.domain : "");
 							}}
+							selectedDomainProp={selectedDomain}
 						/>
 						{selectedDomain !== "" && (
 							<PixelInstallation
@@ -229,6 +230,7 @@ const GettingStartedSection: React.FC = () => {
 								onDomainSelected={(domain) => {
 									setSelectedDomain(domain ? domain.domain : "");
 								}}
+								selectedDomainProp={selectedDomain}
 							/>
 							{selectedDomain !== "" && (
 								<PixelInstallation

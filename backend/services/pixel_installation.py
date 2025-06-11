@@ -54,18 +54,26 @@ class PixelInstallationService:
             self.db.commit()
 
         script = (
-            '<script src="https://pixel.allsourcedata.io/pixel.js?dpid={client_id}"></script>' '\n'
-            '<script type="text/javascript">' '\n'
-            '    (function(s, p, i, c, e) {{' '\n'
-            '    s[e] = s[e] || function() {{ (s[e].a = s[e].a || []).push(arguments); }};' '\n'
-            '    s[e].l = 1 * new Date();' '\n'
-            '    var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];' '\n'
-            '    k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);' '\n'
-            '    s.pixelClientId = i;' '\n'
-            '    }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");' '\n'
-            '</script>'
+            f'<script src="https://pixel.allsourcedata.io/pixel.js?dpid={client_id}"></script>'
+            "\n"
+            '<script type="text/javascript">'
+            "\n"
+            "    (function(s, p, i, c, e) {"
+            "\n"
+            "    s[e] = s[e] || function() { (s[e].a = s[e].a || []).push(arguments); };"
+            "\n"
+            "    s[e].l = 1 * new Date();"
+            "\n"
+            '    var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];'
+            "\n"
+            "    k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);"
+            "\n"
+            "    s.pixelClientId = i;"
+            "\n"
+            f'    }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");'
+            "\n"
+            "</script>"
         )
-
 
         return script, client_id
 
@@ -136,7 +144,7 @@ class PixelInstallationService:
         result["user_id"] = user.get("id")
         return result
 
-    def check_pixel_installed_via_api(self, pixelClientId, url):
+    def verify_and_mark_pixel(self, pixelClientId, url):
         result = {"status": PixelStatus.INCORRECT_PROVIDER_ID.value}
         domain = (
             self.db.query(UserDomains)

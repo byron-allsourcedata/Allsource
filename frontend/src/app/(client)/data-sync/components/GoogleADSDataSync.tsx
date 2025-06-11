@@ -39,6 +39,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectGoogleAdsPopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit: boolean;
 }
@@ -56,6 +57,7 @@ type Customers = {
 const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -349,6 +351,10 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 					triggerSync();
 					onClose();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} catch (error) {
 			console.error("Error during sync:", error);
@@ -740,7 +746,8 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-googleads"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-googleads"
+							target="_blank"
 							className="main-text"
 							sx={{
 								fontSize: "14px",

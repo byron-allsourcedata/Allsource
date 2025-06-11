@@ -31,6 +31,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface SalesForceDataSyncProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data?: any;
 	isEdit?: boolean;
 	boxShadow?: string;
@@ -39,6 +40,7 @@ interface SalesForceDataSyncProps {
 const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data = null,
 	isEdit,
 	boxShadow,
@@ -142,6 +144,10 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 					showToast("Data sync created successfully");
 					triggerSync();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} finally {
 			setLoading(false);

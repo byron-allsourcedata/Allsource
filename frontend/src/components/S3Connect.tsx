@@ -152,6 +152,10 @@ const S3Connect = ({
 				{ params: { service_name: "s3" } },
 			);
 			if (response.status === 200) {
+				if (response.data.status !== "SUCCESS") {
+					showErrorToast(response.data.message);
+					return;
+				}
 				showToast("Integration S3 Successfully");
 				if (onSave) {
 					const access_token = JSON.stringify({
@@ -175,13 +179,7 @@ const S3Connect = ({
 		} catch (error) {
 			if (error instanceof AxiosError) {
 				if (error.response?.status === 400) {
-					if (error.response.data.status === "CREDENTIALS_MISSING") {
-						showErrorToast(error.response.data.message);
-					} else if (error.response.data.status === "CREDENTIALS_INCOMPLETE") {
-						showErrorToast(error.response.data.message);
-					} else {
-						showErrorToast(error.response.data.message);
-					}
+					showErrorToast(error.response.data.message);
 				}
 			}
 		} finally {

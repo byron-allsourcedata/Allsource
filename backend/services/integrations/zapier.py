@@ -1,5 +1,8 @@
 from datetime import datetime
-from utils import format_phone_number
+from typing import List
+
+from models import UserIntegration
+from utils import format_phone_number, get_valid_email
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from persistence.domains import UserDomainsPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -13,7 +16,12 @@ from persistence.integrations.integrations_persistence import (
     IntegrationsPresistence,
 )
 from fastapi import HTTPException
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import (
+    IntegrationsStatus,
+    SourcePlatformEnum,
+    ProccessDataSyncResult,
+    DataSyncType,
+)
 from httpx import Client
 from utils import extract_first_email
 
@@ -73,6 +81,8 @@ class ZapierIntegrationService:
                 "domain_id": domain_id,
                 "list_name": list_name,
                 "leads_type": leads_type,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "created_by": created_by,
                 "integration_id": credentials.id,
                 "hook_url": hook_url,
@@ -92,10 +102,15 @@ class ZapierIntegrationService:
         )
         return
 
-    async def process_data_sync(
-        self, five_x_five_user, access_token, integration_data_sync, lead_user
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
     ):
-        profile = self.__create_profile(five_x_five_user, integration_data_sync)
+        profile = self.__create_profile(
+            five_x_five_users, integration_data_sync
+        )
         if profile in (
             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -105,18 +120,20 @@ class ZapierIntegrationService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __create_profile(self, five_x_five_user, sync: IntegrationUserSync):
-        data = self.__mapped_lead(five_x_five_user)
-        if data in (
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return data
-        response = self.client.post(url=sync.hook_url, json=data)
-        if response.status_code == 400:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        if response.status_code == 401:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+    def __create_profile(
+        self, five_x_five_users: List[FiveXFiveUser], sync: IntegrationUserSync
+    ):
+        for five_x_five_user in five_x_five_users:
+            data = self.__mapped_lead(five_x_five_user)
+            if data in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                continue
+            response = self.client.post(url=sync.hook_url, json=data)
+            if response.status_code == 401:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+        return ProccessDataSyncResult.SUCCESS.value
 
     def __mapped_leads_type(self, lead_type):
         if lead_type:
@@ -134,59 +151,9 @@ class ZapierIntegrationService:
         return "allContacts"
 
     def __mapped_lead(self, five_x_five_user: FiveXFiveUser):
-        email_fields = [
-            "business_email",
-            "personal_emails",
-            "additional_personal_emails",
-        ]
-
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if (
-                            e
-                            and field == "business_email"
-                            and five_x_five_user.business_email_last_seen
-                        ):
-                            if (
-                                five_x_five_user.business_email_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and field == "personal_emails"
-                            and five_x_five_user.personal_emails_last_seen
-                        ):
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            )
-                            if (
-                                personal_emails_last_seen_str
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and self.million_verifier_integrations.is_email_verify(
-                                email=e.strip()
-                            )
-                        ):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        first_email = get_valid_email(five_x_five_user)
+        first_email = get_valid_email(
+            five_x_five_user, self.million_verifier_integrations
+        )
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,

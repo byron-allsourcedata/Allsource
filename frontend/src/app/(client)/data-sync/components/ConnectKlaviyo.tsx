@@ -49,6 +49,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectKlaviyoPopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit?: boolean;
 }
@@ -61,6 +62,7 @@ type KlaviyoList = {
 const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -342,6 +344,10 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 					showToast("Data sync created successfully");
 					triggerSync();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} finally {
 			setLoading(false);
@@ -725,7 +731,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-klaviyo"
 							target="_blank"
 							rel="noopener referrer"
 							className="main-text"

@@ -184,7 +184,7 @@ const ZapierConnectPopup = ({
 					}}
 				>
 					<Link
-						href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+						href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-zapier"
 						target="_blank"
 						rel="noopener noreferrer"
 						sx={{
@@ -269,7 +269,7 @@ const ZapierConnectPopup = ({
 								<Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
 									<Image
 										src="/logo-icon.svg"
-										alt="AllSource"
+										alt="Allsource"
 										height={26}
 										width={32}
 									/>
