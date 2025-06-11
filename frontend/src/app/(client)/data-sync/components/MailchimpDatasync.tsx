@@ -332,7 +332,6 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 			if (onCloseCreateSync) {
 				onCloseCreateSync();
 			}
-			console.log("pisya");
 			triggerSync();
 		} finally {
 			setLoading(false);
