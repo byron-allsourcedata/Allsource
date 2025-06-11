@@ -1308,10 +1308,10 @@ const PixelManagment = () => {
 							</Typography>
 							<CustomTooltip
 								title={
-									"How data synch works and to customise your sync settings"
+									"How data sync works and to customise your sync settings"
 								}
 								linkText="Learn more"
-								linkUrl="https://maximiz.ai"
+								linkUrl="https://allsourcedata.io"
 							/>
 						</Box>
 					</Box>
