@@ -1405,8 +1405,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 										width: "15.875rem",
 										boxShadow: 0,
 										borderRadius: "8px",
-										border:
-											"0.5px solid rgba(175, 175, 175, 1)",
+										border: "0.5px solid rgba(175, 175, 175, 1)",
 									},
 								},
 							}}
@@ -1421,35 +1420,27 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							>
 								Confirm Deletion
 							</Typography>
-							<DialogContent
-								sx={{ padding: 2 }}
-							>
+							<DialogContent sx={{ padding: 2 }}>
 								<DialogContentText className="table-data">
-									Are you sure you want to
-									delete this data sync?
+									Are you sure you want to delete this data sync?
 								</DialogContentText>
 							</DialogContent>
 							<DialogActions>
 								<Button
 									className="second-sub-title"
-									onClick={
-										handleCloseConfirmDialog
-									}
+									onClick={handleCloseConfirmDialog}
 									sx={{
 										backgroundColor: "#fff",
-										color:
-											"rgba(56, 152, 252, 1) !important",
+										color: "rgba(56, 152, 252, 1) !important",
 										fontSize: "14px",
 										textTransform: "none",
 										padding: "0.75em 1em",
-										border:
-											"1px solid rgba(56, 152, 252, 1)",
+										border: "1px solid rgba(56, 152, 252, 1)",
 										maxWidth: "50px",
 										maxHeight: "30px",
 										"&:hover": {
 											backgroundColor: "#fff",
-											boxShadow:
-												"0 2px 2px rgba(0, 0, 0, 0.3)",
+											boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
 										},
 									}}
 								>
@@ -1459,21 +1450,17 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 									className="second-sub-title"
 									onClick={handleDelete}
 									sx={{
-										backgroundColor:
-											"rgba(56, 152, 252, 1)",
+										backgroundColor: "rgba(56, 152, 252, 1)",
 										color: "#fff !important",
 										fontSize: "14px",
 										textTransform: "none",
 										padding: "0.75em 1em",
-										border:
-											"1px solid rgba(56, 152, 252, 1)",
+										border: "1px solid rgba(56, 152, 252, 1)",
 										maxWidth: "60px",
 										maxHeight: "30px",
 										"&:hover": {
-											backgroundColor:
-												"rgba(56, 152, 252, 1)",
-											boxShadow:
-												"0 2px 2px rgba(0, 0, 0, 0.3)",
+											backgroundColor: "rgba(56, 152, 252, 1)",
+											boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
 										},
 									}}
 								>
