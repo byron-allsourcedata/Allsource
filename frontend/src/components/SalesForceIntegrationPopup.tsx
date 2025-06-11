@@ -123,7 +123,7 @@ const SalesForceIntegrationPopup = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-salesforce"
 							target="_blank"
 							rel="noopener noreferrer"
 							sx={{

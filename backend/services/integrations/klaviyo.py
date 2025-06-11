@@ -343,15 +343,30 @@ class KlaviyoIntegrationsService:
         integration_data_sync: IntegrationUserSync,
         five_x_five_users: List[FiveXFiveUser],
     ):
-        bulk_profiles = self.build_bulk_profiles(five_x_five_users)
-        if not bulk_profiles:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+        for five_x_five_user in five_x_five_users:
+            profile = self.__create_profile(
+                five_x_five_user,
+                user_integration.access_token,
+                integration_data_sync.data_map,
+            )
+            if profile in (
+                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                continue
 
-        return self.bulk_subscribe_profiles(
-            api_key=user_integration.access_token,
-            profiles=bulk_profiles,
-            list_id=integration_data_sync.list_id,
-        )
+            list_response = self.__add_profile_to_list(
+                integration_data_sync.list_id,
+                profile["id"],
+                user_integration.access_token,
+                profile["email"],
+                profile["phone_number"],
+            )
+            if list_response.status_code == 404:
+                return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+
+        return ProccessDataSyncResult.SUCCESS.value
 
     def is_supported_region(self, phone_number: str) -> bool:
         return phone_number.startswith("+1")
@@ -370,32 +385,26 @@ class KlaviyoIntegrationsService:
             phone_number = (
                 phone_number.split(", ")[-1] if phone_number else None
             )
-
-            data = {
+            json_data = {
                 "type": "profile",
                 "attributes": {
                     "email": profile.email,
-                    "subscriptions": {
-                        "email": {
-                            "marketing": {
-                                "consent": "SUBSCRIBED",
-                                "consented_at": "2025-06-01T12:00:00Z",
-                            }
-                        },
-                    },
+                    "phone_number": phone_number,
+                    "first_name": profile.first_name or None,
+                    "last_name": profile.last_name or None,
+                    "organization": profile.organization or None,
+                    "location": profile.location or None,
+                    "title": profile.title or None,
+                    # "properties": properties,
                 },
             }
+            json_data["attributes"] = {
+                k: v
+                for k, v in json_data["attributes"].items()
+                if v is not None
+            }
 
-            if phone_number and self.is_supported_region(phone_number):
-                data["attributes"]["phone_number"] = phone_number
-                data["attributes"]["subscriptions"]["sms"] = {
-                    "marketing": {
-                        "consent": "SUBSCRIBED",
-                        "consented_at": "2025-06-01T12:00:00Z",
-                    }
-                }
-
-            profiles.append(data)
+            profiles.append(json_data)
         return profiles
 
     def get_count_profiles(self, list_id: str, api_key: str):
@@ -502,37 +511,6 @@ class KlaviyoIntegrationsService:
                 "phone_number": phone_number,
                 "email": profile.email,
             }
-
-    def bulk_subscribe_profiles(
-        self, api_key: str, profiles: List[dict], list_id: str
-    ):
-        url = "https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs"
-        payload = {
-            "data": {
-                "type": "profile-subscription-bulk-create-job",
-                "attributes": {
-                    "profiles": {"data": profiles},
-                    "historical_import": True,
-                },
-                "relationships": {
-                    "list": {"data": {"type": "list", "id": f"{list_id}"}}
-                },
-            }
-        }
-        response = self.__handle_request(
-            method="POST",
-            url=url,
-            api_key=api_key,
-            json=payload,
-        )
-        if response.status_code in (200, 201, 202):
-            return ProccessDataSyncResult.SUCCESS.value
-        if response.status_code == 400:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        if response.status_code == 404:
-            return ProccessDataSyncResult.LIST_NOT_EXISTS.value
-        if response.status_code == 401:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
     def __add_profile_to_list(
         self, list_id: str, profile_id: str, api_key: str, email, phone_number

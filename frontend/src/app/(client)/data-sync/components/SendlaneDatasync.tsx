@@ -816,7 +816,8 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 						}}
 					>
 						<Link
-							href="#"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-sendlane"
+							target="_blank"
 							className="main-text"
 							sx={{
 								fontSize: "14px",

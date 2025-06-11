@@ -832,7 +832,8 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-mailchimp"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-mailchimp"
+							target="_blank"
 							className="main-text"
 							sx={{
 								fontSize: "14px",

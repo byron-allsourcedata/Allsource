@@ -229,7 +229,7 @@ class IntegrationsPresistence:
                 query = query.filter_by(**{key: value})
         return (
             query.order_by(Integration.service_name.asc())
-            .filter(Integration.data_sync == True)
+            .filter(Integration.for_pixel == True)
             .all()
         )
 

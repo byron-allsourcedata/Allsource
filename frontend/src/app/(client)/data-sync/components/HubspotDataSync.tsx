@@ -638,7 +638,7 @@ const HubspotDataSync: React.FC<OnmisendDataSyncProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-hubspot"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-hubspot"
 							className="main-text"
 							target="_blank"
 							rel="noopener referrer"

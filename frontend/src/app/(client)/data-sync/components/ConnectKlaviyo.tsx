@@ -731,7 +731,7 @@ const ConnectKlaviyo: React.FC<ConnectKlaviyoPopupProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-klaviyo"
 							target="_blank"
 							rel="noopener referrer"
 							className="main-text"
