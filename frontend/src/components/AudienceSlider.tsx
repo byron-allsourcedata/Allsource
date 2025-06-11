@@ -1502,6 +1502,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 			<HubspotDataSync
 				open={hubspotIconPopupOpen}
 				onClose={handleHubspotIconPopupOpenClose}
+				onCloseCreateSync={onClose}
 				isEdit={false}
 				data={null}
 			/>
