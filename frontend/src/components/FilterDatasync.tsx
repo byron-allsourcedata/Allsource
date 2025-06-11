@@ -403,14 +403,25 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 	}, [open]);
 
 	useEffect(() => {
-    const fetchDestinations = async () => {
-      const response = await axiosInstance.get(`/data-sync/destinations?type=${dataSyncType}`);
+		const fetchDestinations = async () => {
+		const response = await axiosInstance.get(`/data-sync/destinations?type=${dataSyncType}`);
 			if (response.status === 200) {
-      	setDestinations(response.data)
+				const services = response.data
+				const formattedServices = toFormatName(services)
+				setDestinations(formattedServices)
 			}
-    };
-    if (open) fetchDestinations();
-  }, [open, dataSyncType]);
+		};
+		if (open) fetchDestinations();
+	}, [open, dataSyncType]);
+
+	const toFormatName = (services: string[]) => {
+		return services.map((item) =>
+			item
+				.split("_")
+				.map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+				.join(" "),
+		)
+	}
 
 	const handleApply = () => {
 		const filters = handleFilters();
@@ -540,7 +551,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 					sx: {
 						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						"@media (max-width: 37.5rem)": {
@@ -634,6 +644,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								},
 							}}
 							sx={{
+								"& input": {
+									paddingLeft: 0,
+								},
 								padding: "1em 1em 0em 1em",
 								"& .MuiInputBase-input::placeholder": {
 									fontFamily: "Roboto",
