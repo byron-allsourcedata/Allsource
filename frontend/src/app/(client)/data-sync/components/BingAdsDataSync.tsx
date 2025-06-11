@@ -1976,7 +1976,7 @@ const BingAdsDataSync: React.FC<BingAdsDataSyncProps> = ({
 																			color="textSecondary"
 																			paragraph
 																		>
-																			We will not run your campaign. AllSource
+																			We will not run your campaign. Allsource
 																			will create a campaign template in your ad
 																			account. We won&apos;t run anything
 																			without your confirmation.
