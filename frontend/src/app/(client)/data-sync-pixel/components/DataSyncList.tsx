@@ -64,6 +64,9 @@ import { useDataSyncHints } from "../context/dataSyncHintsContext";
 import { useNotification } from "@/context/NotificationContext";
 import { SmartCell } from "@/components/table";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
+import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
+import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -148,6 +151,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		setOrder(isAsc ? "desc" : "asc");
 		setOrderBy(property);
 	};
+	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
 	const { hints, cards, changeDataSyncHint, resetDataSyncHints } =
 		useDataSyncHints();
@@ -211,40 +215,44 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		}
 	};
 
+	const toSnakeCase = (service: string) => {
+		return service.split(" ").join("_").toLowerCase();
+	};
+
 	useEffect(() => {
 		if (allData.length !== 0) {
 			if (filters) {
 				const filterData = () => {
-					const typeMapping: Record<string, string> = {
-						"All Contacts": "allContats",
-						"View Product": "viewed_product",
-						"Abandoned cart": "abandoned_cart",
-						Visitor: "visitor",
-					};
 					return Object.values(allData).filter((item) => {
-						const lastSync = new Date(item.lastSync).getTime() / 1000;
+						const createDate = new Date(item.createdDate).getTime() / 1000;
 						const dateMatch =
 							filters.from_date === null ||
 							filters.to_date === null ||
-							(lastSync >= filters.from_date && lastSync <= filters.to_date);
-						const platformMatch =
+							(createDate >= filters.from_date &&
+								createDate <= filters.to_date);
+
+						const statusMatch =
 							filters.selected_status.length === 0 ||
 							filters.selected_status
 								.map((funnel: string) => funnel.toLowerCase())
-								.includes(item.platform.toLowerCase());
+								.includes(item.status.toLowerCase());
 
-						const itemType = item.type ? item.type.toLowerCase() : null;
+						const searchMatch =
+							filters.searchQuery.length === 0 ||
+							item.createdBy
+								.toLowerCase()
+								.includes(filters.searchQuery.toLowerCase()) ||
+							item.name
+								?.toLowerCase()
+								.includes(filters.searchQuery.toLowerCase());
 
-						const listTypeMatch =
+						const platformMatch =
 							filters.selected_destination.length === 0 ||
 							filters.selected_destination
-								.map(
-									(funnel: any) =>
-										typeMapping[funnel]?.toLowerCase() || funnel.toLowerCase(),
-								)
-								.includes(itemType);
+								.map((service: string) => toSnakeCase(service))
+								.includes(item.platform.toLowerCase());
 
-						return dateMatch && platformMatch && listTypeMatch;
+						return searchMatch && dateMatch && statusMatch && platformMatch;
 					});
 				};
 				setData(filterData());
@@ -391,10 +399,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setData((prevData) =>
 							prevData.map((item) =>
 								item.id === selectedId
-									? {
-											...item,
-											dataSync: response.data.data_sync,
-										}
+									? { ...item, dataSync: response.data.data_sync }
 									: item,
 							),
 						);
@@ -575,6 +580,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
 		setConfirmAnchorEl(event.currentTarget);
 		setIsConfirmOpen(true);
+	};
+
+	const handleOpenConfirmDialog = () => {
+		setOpenConfirmDialog(true);
+	};
+
+	const handleCloseConfirmDialog = () => {
+		setOpenConfirmDialog(false);
 	};
 
 	const handleDelete = async () => {
@@ -831,14 +844,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		},
 	];
 
-	const formatListName = (name: string) => {
-		if (!name) return "--";
-
-		return name
-			.replace(/([a-z])([A-Z])/g, "$1 $2")
-			.replace(/^./, (str) => str.toUpperCase());
-	};
-
 	return (
 		<>
 			{isLoading && <CustomizedProgressBar />}
@@ -846,12 +851,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				<>
 					<Box
 						display={"flex"}
-						sx={{
-							alignItems: "center",
-							mt: 2,
-							mb: "16px",
-							height: "100%",
-						}}
+						sx={{ alignItems: "center", mt: 2, mb: "16px", height: "100%" }}
 					>
 						<Box
 							sx={{
@@ -1020,12 +1020,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 															}
 														/>
 													)}
-													{sortable && orderBy === key && (
-														<IconButton size="small" sx={{ ml: 1 }}>
-															{order === "asc" ? (
-																<ArrowUpwardIcon fontSize="inherit" />
+													{sortable && (
+														<IconButton size="small">
+															{orderBy === key ? (
+																order === "asc" ? (
+																	<ArrowUpwardRoundedIcon fontSize="inherit" />
+																) : (
+																	<ArrowDownwardRoundedIcon fontSize="inherit" />
+																)
 															) : (
-																<ArrowDownwardIcon fontSize="inherit" />
+																<SwapVertIcon fontSize="inherit" />
 															)}
 														</IconButton>
 													)}
@@ -1077,11 +1081,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													},
 													hideDivider: isScrolledX,
 												}}
-												tooltipOptions={{
-													content: row.type || "--",
-												}}
+												tooltipOptions={{ content: row.type || "--" }}
 											>
-												{formatListName(row.type) || "--"}
+												{listType(row.type) || "--"}
 											</SmartCell>
 
 											<SmartCell
@@ -1090,9 +1092,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														position: "relative",
 													},
 												}}
-												tooltipOptions={{
-													content: row.platform || "--",
-												}}
+												tooltipOptions={{ content: row.platform || "--" }}
 											>
 												<Box
 													sx={{
@@ -1114,10 +1114,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												tooltipOptions={{
 													content: (
 														<Box
-															sx={{
-																display: "flex",
-																flexDirection: "column",
-															}}
+															sx={{ display: "flex", flexDirection: "column" }}
 														>
 															<span>{row.createdBy || "--"}</span>
 															<span>{row.createdDate || "--"}</span>
@@ -1132,18 +1129,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														lineHeight: 1.4,
 													}}
 												>
-													<Typography
-														sx={{
-															...datasyncStyle.table_array,
-														}}
-													>
+													<Typography sx={{ ...datasyncStyle.table_array }}>
 														{row.createdBy || "--"}
 													</Typography>
-													<Typography
-														sx={{
-															...datasyncStyle.table_array,
-														}}
-													>
+													<Typography sx={{ ...datasyncStyle.table_array }}>
 														{row.createdDate || "--"}
 													</Typography>
 												</Box>
@@ -1155,9 +1144,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														position: "relative",
 													},
 												}}
-												tooltipOptions={{
-													content: row.lastSync || "--",
-												}}
+												tooltipOptions={{ content: row.lastSync || "--" }}
 											>
 												{row.lastSync || "--"}
 											</SmartCell>
@@ -1219,67 +1206,26 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														}}
 													>
 														{(() => {
-															const isEnable = row.dataSync;
-															const notError = row.syncStatus;
 															const { color, background } = getStatusStyle(row);
-															// 1) isEnable && notError  → Syncing with tooltip
-															if (isEnable && notError) {
-																return (
-																	<Typography
-																		className="paragraph"
-																		sx={{
-																			fontFamily: "Roboto",
-																			fontSize: "12px",
-																			color: "rgb(43, 91, 0)",
-																			backgroundColor: "rgba(234, 248, 221, 1)",
-																			padding: "3px 12px",
-																			borderRadius: "2px",
-																			height: "24px",
-																			display: "flex",
-																			alignItems: "center",
-																			justifyContent: "center",
-																		}}
-																	>
-																		Syncing
-																	</Typography>
-																);
-															}
-															// 2) isEnable && !notError → icon with error
-															if (isEnable && !notError) {
-																return (
-																	<Box
-																		sx={{
-																			display: "flex",
-																			alignItems: "center",
-																		}}
-																	>
-																		<Image
-																			src="/danger-icon.svg"
-																			width={16}
-																			height={16}
-																			alt="error"
-																		/>
-																	</Box>
-																);
-															}
-															// 3–4) !isEnable → Disabled
 															return (
 																<Typography
 																	className="paragraph"
 																	sx={{
 																		fontFamily: "Roboto",
 																		fontSize: "12px",
-																		color: "rgba(74, 74, 74, 1)",
-																		backgroundColor: "rgba(219, 219, 219, 1)",
+																		color: color,
+																		backgroundColor: background,
 																		padding: "3px 12px",
-																		borderRadius: "2px",
 																		height: "24px",
 																		display: "flex",
 																		alignItems: "center",
 																		justifyContent: "center",
+																		width: "100%",
+																		boxSizing: "border-box",
+																		borderRadius: "2px",
 																	}}
 																>
-																	Disabled
+																	{formatStatusText(row)}
 																</Typography>
 															);
 														})()}
@@ -1412,7 +1358,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 										backgroundColor: "background: rgba(80, 82, 178, 0.1)",
 									},
 								}}
-								onClick={handleDelete}
+								onClick={() => {
+									handleOpenConfirmDialog();
+								}}
 							>
 								Delete
 							</Button>
@@ -1438,6 +1386,88 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 								</Button>
 							)}
 						</Box>
+						<Popover
+							open={openConfirmDialog}
+							onClose={handleCloseConfirmDialog}
+							anchorEl={anchorEl}
+							anchorOrigin={{
+								vertical: "bottom",
+								horizontal: "right",
+							}}
+							transformOrigin={{
+								vertical: "top",
+								horizontal: "center",
+							}}
+							slotProps={{
+								paper: {
+									sx: {
+										padding: "0.125rem",
+										width: "15.875rem",
+										boxShadow: 0,
+										borderRadius: "8px",
+										border: "0.5px solid rgba(175, 175, 175, 1)",
+									},
+								},
+							}}
+						>
+							<Typography
+								className="first-sub-title"
+								sx={{
+									paddingLeft: 2,
+									pt: 1,
+									pb: 0,
+								}}
+							>
+								Confirm Deletion
+							</Typography>
+							<DialogContent sx={{ padding: 2 }}>
+								<DialogContentText className="table-data">
+									Are you sure you want to delete this data sync?
+								</DialogContentText>
+							</DialogContent>
+							<DialogActions>
+								<Button
+									className="second-sub-title"
+									onClick={handleCloseConfirmDialog}
+									sx={{
+										backgroundColor: "#fff",
+										color: "rgba(56, 152, 252, 1) !important",
+										fontSize: "14px",
+										textTransform: "none",
+										padding: "0.75em 1em",
+										border: "1px solid rgba(56, 152, 252, 1)",
+										maxWidth: "50px",
+										maxHeight: "30px",
+										"&:hover": {
+											backgroundColor: "#fff",
+											boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+										},
+									}}
+								>
+									Cancel
+								</Button>
+								<Button
+									className="second-sub-title"
+									onClick={handleDelete}
+									sx={{
+										backgroundColor: "rgba(56, 152, 252, 1)",
+										color: "#fff !important",
+										fontSize: "14px",
+										textTransform: "none",
+										padding: "0.75em 1em",
+										border: "1px solid rgba(56, 152, 252, 1)",
+										maxWidth: "60px",
+										maxHeight: "30px",
+										"&:hover": {
+											backgroundColor: "rgba(56, 152, 252, 1)",
+											boxShadow: "0 2px 2px rgba(0, 0, 0, 0.3)",
+										},
+									}}
+								>
+									Delete
+								</Button>
+							</DialogActions>
+						</Popover>
 					</Popover>
 					{totalRows && totalRows > 10 ? (
 						<Box

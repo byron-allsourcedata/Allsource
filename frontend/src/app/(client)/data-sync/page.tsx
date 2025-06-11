@@ -419,6 +419,7 @@ const DataSync = () => {
 				open={filterPopup}
 				onClose={handleFilterPopupClose}
 				onApply={onApply}
+				dataSyncType="audience"
 			/>
 			<AudiencePopup
 				open={openCreateDataSyncPopup}
