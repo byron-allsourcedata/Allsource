@@ -134,6 +134,7 @@ class SourcePlatformEnum(Enum):
     S3 = "s3"
     LINKEDIN = "linkedin"
 
+
 class UserPaymentStatusEnum(Enum):
     COMPLETE = "COMPLETE"
     ONGOING = "ONGOING"
