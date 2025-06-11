@@ -512,39 +512,6 @@ class KlaviyoIntegrationsService:
                 "email": profile.email,
             }
 
-    def bulk_subscribe_profiles(
-        self, api_key: str, profiles: List[dict], list_id: str
-    ):
-        url = "https://a.klaviyo.com/api/profile-subscription-bulk-create-jobs"
-        payload = {
-            "data": {
-                "type": "profile-subscription-bulk-create-job",
-                "attributes": {
-                    "profiles": {"data": profiles},
-                    "historical_import": False,
-                },
-                "relationships": {
-                    "list": {"data": {"type": "list", "id": f"{list_id}"}}
-                },
-            }
-        }
-        response = self.__handle_request(
-            method="POST",
-            url=url,
-            api_key=api_key,
-            json=payload,
-        )
-        print(response.text)
-        raise 123
-        if response.status_code in (200, 201, 202):
-            return ProccessDataSyncResult.SUCCESS.value
-        if response.status_code == 400:
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-        if response.status_code == 404:
-            return ProccessDataSyncResult.LIST_NOT_EXISTS.value
-        if response.status_code == 401:
-            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
-
     def __add_profile_to_list(
         self, list_id: str, profile_id: str, api_key: str, email, phone_number
     ):
