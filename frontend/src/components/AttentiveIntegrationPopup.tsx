@@ -140,7 +140,7 @@ const AttentiveIntegrationPopup = ({
 		},
 		{
 			id: "unique-id-3",
-			text: "Click Create Private API Key Name to AllSource.",
+			text: "Click Create Private API Key Name to Allsource.",
 		},
 		{
 			id: "unique-id-4",
@@ -149,7 +149,7 @@ const AttentiveIntegrationPopup = ({
 		{ id: "unique-id-5", text: "Click Create." },
 		{
 			id: "unique-id-6",
-			text: "Copy the API key in the next screen and paste to API Key field located in AllSource Attentive section.",
+			text: "Copy the API key in the next screen and paste to API Key field located in Allsource Attentive section.",
 		},
 		{ id: "unique-id-7", text: "Click Connect." },
 	];

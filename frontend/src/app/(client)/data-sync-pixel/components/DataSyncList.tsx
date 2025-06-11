@@ -358,7 +358,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleChangeRowsPerPage = (
 		event: React.ChangeEvent<HTMLInputElement>,
 	) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
+		setRowsPerPage(Number.parseInt(event.target.value, 10));
 		setPage(0);
 	};
 
@@ -714,11 +714,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		if (row.syncStatus === false) {
 			return "Failed";
 		}
-		if (row.is_progress === true) {
+		if (row.dataSync === true) {
 			return "In Progress";
-		}
-		if (row.is_progress === false) {
-			return "Synced";
 		}
 		return "--";
 	};
@@ -736,16 +733,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 				color: "rgba(200, 62, 46, 1) !important",
 			};
 		}
-		if (row.is_progress) {
+		if (row.dataSync) {
 			return {
 				background: "rgba(0, 129, 251, 0.2)",
 				color: "rgba(0, 129, 251, 1)!important",
-			};
-		}
-		if (row.is_progress === false) {
-			return {
-				background: "rgba(234, 248, 221, 1)",
-				color: "rgba(43, 91, 0, 1) !important",
 			};
 		}
 		return { background: "transparent", color: "rgba(74, 74, 74, 1)" };

@@ -153,7 +153,7 @@ export const InviteUsersPopup: React.FC<InviteUsersPopupProps> = ({
 				}}
 			>
 				<Typography variant="h6" className="first-sub-title">
-					Invite your team to review or collaborate on this AllSource project.
+					Invite your team to review or collaborate on this Allsource project.
 				</Typography>
 
 				{/* <Autocomplete

@@ -1068,7 +1068,7 @@ const MetaContactSyncTab: React.FC<MetaContactSyncTabProps> = ({
 												color="textSecondary"
 												paragraph
 											>
-												We will not run your campaign. AllSource will create a
+												We will not run your campaign. Allsource will create a
 												campaign template in your ad account. We won&apos;t run
 												anything without your confirmation.
 											</Typography>
