@@ -58,9 +58,9 @@ class PixelInstallationService:
             "\n"
             '<script type="text/javascript">'
             "\n"
-            "    (function(s, p, i, c, e) {{"
+            "    (function(s, p, i, c, e) {"
             "\n"
-            "    s[e] = s[e] || function() {{ (s[e].a = s[e].a || []).push(arguments); }};"
+            "    s[e] = s[e] || function() { (s[e].a = s[e].a || []).push(arguments); };"
             "\n"
             "    s[e].l = 1 * new Date();"
             "\n"
@@ -70,7 +70,7 @@ class PixelInstallationService:
             "\n"
             "    s.pixelClientId = i;"
             "\n"
-            f'    }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");'
+            f'    })(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");'
             "\n"
             "</script>"
         )
