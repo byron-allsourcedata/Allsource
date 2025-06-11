@@ -877,7 +877,7 @@ const LinkedinDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 											}}
 										>
 											<Typography variant="subtitle1" className="paragraph">
-												Synchronise all data in real-time from this moment
+												Synchronize all data in real-time from this moment
 												forward for seamless integration and continuous updates.
 											</Typography>
 											<FormControl sx={{ gap: "16px" }} error={tab2Error}>

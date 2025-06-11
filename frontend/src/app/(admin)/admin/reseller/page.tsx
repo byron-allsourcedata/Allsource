@@ -16,7 +16,8 @@ import {
 } from "@mui/material";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { resellerStyle } from "./resellerStyle";
 import PersonIcon from "@mui/icons-material/Person";
 import FreeTrialLabel from "../../../(client)/components/FreeTrialLabel";
