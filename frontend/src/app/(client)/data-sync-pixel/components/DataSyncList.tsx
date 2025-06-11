@@ -814,7 +814,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		{
 			key: "created",
 			label: "Created",
-			sortable: true,
+			sortable: false,
 			widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
 		},
 		{

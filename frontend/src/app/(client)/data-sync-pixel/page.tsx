@@ -98,6 +98,10 @@ const DataSync = () => {
 							alignItems: "center",
 							justifyContent: "space-between",
 							width: "100%",
+							zIndex: 100,
+							position: "sticky",
+							bgcolor: "#fff",
+							top: 0,
 							pr: 2,
 							"@media (max-width: 900px)": {
 								pt: hasNotification ? 5 : 0,
