@@ -7,7 +7,7 @@ import logging
 import tempfile
 import uuid
 
-from persistence.integrations.s3 import S3IntegrationPersistence
+from persistence.integrations.common_integration_persistence import CommonIntegrationPersistence, IntegrationContext
 from services.integrations.commonIntegration import *
 from models.integrations.users_domains_integrations import UserIntegration
 from models.integrations.integrations_users_sync import IntegrationUserSync
@@ -37,7 +37,7 @@ class S3IntegrationService:
         sync_persistence: IntegrationsUserSyncPersistence,
         client: httpx.Client,
         million_verifier_integrations: MillionVerifierIntegrationsService,
-        repo: S3IntegrationPersistence
+        repo: CommonIntegrationPersistence
     ):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
@@ -252,25 +252,23 @@ class S3IntegrationService:
         validations: dict,
         data_map: list
     ) -> Optional[dict]:
-        enrichment_user = self.repo.get_user_data(enrichment_user.id)
-        enrichment_contacts = enrichment_user.contacts
-
-        if not enrichment_contacts:
+        user_data: User = self.repo.get_user_data(enrichment_user.asid)
+        if not user_data or not user_data.contacts:
             return None
         
         business_email, personal_email, phone = self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
         main_email, main_phone = resolve_main_email_and_phone(
-            enrichment_contacts=enrichment_contacts,
+            enrichment_contacts=user_data.contacts,
             validations=validations,
             target_schema=target_schema,
             business_email=business_email,
             personal_email=personal_email,
             phone=phone
         )
-        first_name = enrichment_contacts.first_name
-        last_name = enrichment_contacts.last_name
-        
-        if not main_email or not first_name or not last_name:
+
+        first_name = user_data.contacts.first_name
+        last_name = user_data.contacts.last_name
+        if not (main_email and first_name and last_name):
             return None
 
         result = {
@@ -278,26 +276,34 @@ class S3IntegrationService:
             'firstname': first_name,
             'lastname': last_name
         }
-        
-        required_types = {m['type'] for m in data_map}
-        context = {
-            'main_phone': main_phone,
-            'professional_profiles': enrichment_user.professional_profiles,
-            'postal': enrichment_user.postal,
-            'personal_profiles': enrichment_user.personal_profiles,
-            'business_email': business_email,
-            'personal_email': personal_email,
-            'country_code': enrichment_user.postal,
-            'gender': enrichment_user.personal_profiles,
-            'zip_code': enrichment_user.personal_profiles,
-            'state': enrichment_user.postal,
-            'city': enrichment_user.postal,
-            'company': enrichment_user.professional_profiles,
-            'business_email_last_seen_date': enrichment_contacts,
-            'personal_email_last_seen': enrichment_contacts,
-            'linkedin_url': enrichment_contacts
-        }
 
+        context: IntegrationContext = self.repo.build_integration_context(
+            enrichment_user=user_data,
+            main_phone=main_phone,
+            business_email=business_email,
+            personal_email=personal_email,
+        )
+
+        #TODO Delete comment
+        # context = {
+        #     'main_phone': main_phone,
+        #     'professional_profiles': enrichment_user.professional_profiles,
+        #     'postal': enrichment_user.postal,
+        #     'personal_profiles': enrichment_user.personal_profiles,
+        #     'business_email': business_email,
+        #     'personal_email': personal_email,
+        #     'country_code': enrichment_user.postal,
+        #     'gender': enrichment_user.personal_profiles,
+        #     'zip_code': enrichment_user.personal_profiles,
+        #     'state': enrichment_user.postal,
+        #     'city': enrichment_user.postal,
+        #     'company': enrichment_user.professional_profiles,
+        #     'business_email_last_seen_date': enrichment_contacts,
+        #     'personal_email_last_seen': enrichment_contacts,
+        #     'linkedin_url': enrichment_contacts
+        # }
+
+        required_types = {m['type'] for m in data_map}
         for field_type in required_types:
             filler = FIELD_FILLERS.get(field_type)
             if filler:

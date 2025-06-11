@@ -5,7 +5,7 @@ from pydantic import EmailStr
 
 from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult, DataSyncType, IntegrationLimit
 from persistence.domains import UserDomainsPersistence
-from persistence.integrations.hubspot import HubspotPersistence
+from persistence.integrations.common_integration_persistence import CommonIntegrationPersistence, IntegrationContext
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
@@ -26,7 +26,7 @@ from uuid import UUID
 class HubspotIntegrationsService:
     def __init__(self, domain_persistence: UserDomainsPersistence, integrations_persistence: IntegrationsPresistence,
                  leads_persistence: LeadsPersistence,
-                 repo: HubspotPersistence,
+                 repo: CommonIntegrationPersistence,
                  sync_persistence: IntegrationsUserSyncPersistence, client: httpx.Client,
                  million_verifier_integrations: MillionVerifierIntegrationsService):
         self.domain_persistence = domain_persistence
@@ -277,16 +277,21 @@ class HubspotIntegrationsService:
             "firstname": first_name,
             "lastname": last_name,
         }
-        
+
+        context: IntegrationContext = self.repo.build_integration_context(
+            enrichment_user=enrichment_user,
+            main_phone=main_phone,
+        )
+
+        #TODO DELETE COMMENT
+        # context = {
+        #     "main_phone": main_phone,
+        #     "professional_profiles": user_data.professional_profiles,
+        #     "postal": user_data.postal,
+        #     "personal_profiles": user_data.personal_profiles,
+        # }
+
         required_types = {m["type"] for m in data_map}
-
-        context = {
-            "main_phone": main_phone,
-            "professional_profiles": user_data.professional_profiles,
-            "postal": user_data.postal,
-            "personal_profiles": user_data.personal_profiles,
-        }
-
         for field_type in required_types:
             filler = FIELD_FILLERS.get(field_type)
             if filler:
