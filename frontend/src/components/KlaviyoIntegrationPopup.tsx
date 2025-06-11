@@ -233,8 +233,13 @@ const KlaviyoIntegrationPopup = ({
 				showToast("Integration Klaviyo Successfully");
 				triggerSync();
 				handleClose();
+			} else {
+				showErrorToast("Invalid API Key");
+				setApiKeyError(true);
 			}
 		} catch (error) {
+			showErrorToast("Invalid API Key");
+			setApiKeyError(true);
 		} finally {
 			setDisableButton(false);
 		}
