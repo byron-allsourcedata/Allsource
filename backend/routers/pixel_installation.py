@@ -27,7 +27,7 @@ from services.pixel_installation import PixelInstallationService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_PIXEL_KEY = os.getenv("SECRET_PIXEL_KEY")
 
 
 @router.get("/manually", response_model=ManualFormResponse)
@@ -112,12 +112,12 @@ async def check_pixel_installation_status(
     )
 
 
-@router.get("/verify", response_model=DomainsListResponse)
+@router.get("/verified_domains", response_model=DomainsListResponse)
 def get_verify_domains(
     secret_key: str = Query(..., description="The secret key to verify access"),
     domain_service: UserDomainsService = Depends(get_domain_service),
 ):
-    if secret_key != SECRET_KEY:
+    if secret_key != SECRET_PIXEL_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
     domain_list_name = domain_service.get_verify_domains()
     return DomainsListResponse(domains=domain_list_name)

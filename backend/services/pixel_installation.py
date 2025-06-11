@@ -136,7 +136,7 @@ class PixelInstallationService:
         result["user_id"] = user.get("id")
         return result
 
-    def check_pixel_installed_via_api(self, pixelClientId, url):
+    def verify_and_mark_pixel(self, pixelClientId, url):
         result = {"status": PixelStatus.INCORRECT_PROVIDER_ID.value}
         domain = (
             self.db.query(UserDomains)
