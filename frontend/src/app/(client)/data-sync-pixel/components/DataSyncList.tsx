@@ -64,6 +64,9 @@ import { useDataSyncHints } from "../context/dataSyncHintsContext";
 import { useNotification } from "@/context/NotificationContext";
 import { SmartCell } from "@/components/table";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
+import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
+import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 
 interface DataSyncProps {
 	service_name?: string | null;
@@ -148,6 +151,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		setOrder(isAsc ? "desc" : "asc");
 		setOrderBy(property);
 	};
+	const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
 	const { hints, cards, changeDataSyncHint, resetDataSyncHints } =
 		useDataSyncHints();
@@ -578,6 +582,14 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		setIsConfirmOpen(true);
 	};
 
+	const handleOpenConfirmDialog = () => {
+		setOpenConfirmDialog(true);
+	};
+
+	const handleCloseConfirmDialog = () => {
+		setOpenConfirmDialog(false);
+	};
+
 	const handleDelete = async () => {
 		try {
 			setIsLoading(true);
@@ -832,14 +844,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		},
 	];
 
-	const formatListName = (name: string) => {
-		if (!name) return "--";
-
-		return name
-			.replace(/([a-z])([A-Z])/g, "$1 $2")
-			.replace(/^./, (str) => str.toUpperCase());
-	};
-
 	return (
 		<>
 			{isLoading && <CustomizedProgressBar />}
@@ -1016,12 +1020,16 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 															}
 														/>
 													)}
-													{sortable && orderBy === key && (
-														<IconButton size="small" sx={{ ml: 1 }}>
-															{order === "asc" ? (
-																<ArrowUpwardIcon fontSize="inherit" />
+													{sortable && (
+														<IconButton size="small">
+															{orderBy === key ? (
+																order === "asc" ? (
+																	<ArrowUpwardRoundedIcon fontSize="inherit" />
+																) : (
+																	<ArrowDownwardRoundedIcon fontSize="inherit" />
+																)
 															) : (
-																<ArrowDownwardIcon fontSize="inherit" />
+																<SwapVertIcon fontSize="inherit" />
 															)}
 														</IconButton>
 													)}
@@ -1075,7 +1083,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												}}
 												tooltipOptions={{ content: row.type || "--" }}
 											>
-												{formatListName(row.type) || "--"}
+												{listType(row.type) || "--"}
 											</SmartCell>
 
 											<SmartCell
@@ -1350,7 +1358,9 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 										backgroundColor: "background: rgba(80, 82, 178, 0.1)",
 									},
 								}}
-								onClick={handleDelete}
+								onClick={() => {
+									handleOpenConfirmDialog();
+								}}
 							>
 								Delete
 							</Button>
@@ -1376,6 +1386,101 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 								</Button>
 							)}
 						</Box>
+						<Popover
+							open={openConfirmDialog}
+							onClose={handleCloseConfirmDialog}
+							anchorEl={anchorEl}
+							anchorOrigin={{
+								vertical: "bottom",
+								horizontal: "right",
+							}}
+							transformOrigin={{
+								vertical: "top",
+								horizontal: "center",
+							}}
+							slotProps={{
+								paper: {
+									sx: {
+										padding: "0.125rem",
+										width: "15.875rem",
+										boxShadow: 0,
+										borderRadius: "8px",
+										border:
+											"0.5px solid rgba(175, 175, 175, 1)",
+									},
+								},
+							}}
+						>
+							<Typography
+								className="first-sub-title"
+								sx={{
+									paddingLeft: 2,
+									pt: 1,
+									pb: 0,
+								}}
+							>
+								Confirm Deletion
+							</Typography>
+							<DialogContent
+								sx={{ padding: 2 }}
+							>
+								<DialogContentText className="table-data">
+									Are you sure you want to
+									delete this data sync?
+								</DialogContentText>
+							</DialogContent>
+							<DialogActions>
+								<Button
+									className="second-sub-title"
+									onClick={
+										handleCloseConfirmDialog
+									}
+									sx={{
+										backgroundColor: "#fff",
+										color:
+											"rgba(56, 152, 252, 1) !important",
+										fontSize: "14px",
+										textTransform: "none",
+										padding: "0.75em 1em",
+										border:
+											"1px solid rgba(56, 152, 252, 1)",
+										maxWidth: "50px",
+										maxHeight: "30px",
+										"&:hover": {
+											backgroundColor: "#fff",
+											boxShadow:
+												"0 2px 2px rgba(0, 0, 0, 0.3)",
+										},
+									}}
+								>
+									Cancel
+								</Button>
+								<Button
+									className="second-sub-title"
+									onClick={handleDelete}
+									sx={{
+										backgroundColor:
+											"rgba(56, 152, 252, 1)",
+										color: "#fff !important",
+										fontSize: "14px",
+										textTransform: "none",
+										padding: "0.75em 1em",
+										border:
+											"1px solid rgba(56, 152, 252, 1)",
+										maxWidth: "60px",
+										maxHeight: "30px",
+										"&:hover": {
+											backgroundColor:
+												"rgba(56, 152, 252, 1)",
+											boxShadow:
+												"0 2px 2px rgba(0, 0, 0, 0.3)",
+										},
+									}}
+								>
+									Delete
+								</Button>
+							</DialogActions>
+						</Popover>
 					</Popover>
 					{totalRows && totalRows > 10 ? (
 						<Box
