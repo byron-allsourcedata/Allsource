@@ -100,7 +100,7 @@ class IntegrationService:
             )
         )
         has_any_sync = self.integration_persistence.has_data_sync(
-            user_id=user.get("id"), type="audience"
+            user_id=user.get("id"), type=DataSyncType.AUDIENCE.value
         )
         return {
             "hasIntegration": has_integration,
