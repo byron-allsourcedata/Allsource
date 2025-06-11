@@ -256,10 +256,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 			);
 			if (newListResponse.data.status === "CREATED_IS_FAILED") {
 				showErrorToast(
-					"You've hit your audience limit. You already have the max amount of audiences allowed in your plan.",
-				);
-				throw new Error(
-					"You've hit your audience limit. You already have the max amount of audiences allowed in your plan.",
+					"You've hit your list limit. You already have the max amount of lists allowed in your plan.",
 				);
 			} else if (newListResponse.data.status === "CREDENTIALS_INVALID") {
 				showErrorToast("Credentials invalid, try updating the key.");
