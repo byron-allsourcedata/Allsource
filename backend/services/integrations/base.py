@@ -123,6 +123,14 @@ class IntegrationService:
             integrations_users_sync_id=integrations_users_sync_id,
         )
 
+    def get_destinations(
+        self,
+        type: str,
+    ):
+        return self.integrations_user_sync_persistence.get_destinations(
+            type=type
+        )
+
     def get_all_audience_sync(
         self,
         user: dict,
