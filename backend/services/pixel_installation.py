@@ -70,7 +70,7 @@ class PixelInstallationService:
             "\n"
             "    s.pixelClientId = i;"
             "\n"
-            f'    })(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");'
+            f'    }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");'
             "\n"
             "</script>"
         )
