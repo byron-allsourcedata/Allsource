@@ -181,7 +181,7 @@ class IntegrationsUserSyncPersistence:
                     "createdDate": sync.created_at.strftime("%b %d, %Y")
                     if sync.created_at
                     else None,
-                    "name": sync.list_name,
+                    "list_name": sync.list_name,
                     "lastSync": sync.last_sync_date.strftime("%b %d, %Y")
                     if sync.last_sync_date
                     else None,
@@ -213,7 +213,7 @@ class IntegrationsUserSyncPersistence:
                 "createdDate": sync.created_at.strftime("%b %d, %Y")
                 if sync.created_at
                 else None,
-                "name": sync.list_name,
+                "list_name": sync.list_name,
                 "lastSync": sync.last_sync_date.strftime("%b %d, %Y")
                 if sync.last_sync_date
                 else None,
