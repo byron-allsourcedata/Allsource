@@ -59,7 +59,7 @@ class IntegrationsPresistence:
         )
         return row is not None
 
-    def has_data_sync(self, user_id: int, domain_id: int, type: str) -> bool:
+    def has_data_sync(self, user_id: int, type: str, domain_id: int = None) -> bool:
         query = (
             self.db.query(UserIntegration)
             .join(
@@ -72,16 +72,18 @@ class IntegrationsPresistence:
             )
         )
 
+        query = query.filter(
+            UserIntegration.user_id == user_id,
+            IntegrationUserSync.sync_type == type,
+        )
+
         if type == DataSyncType.AUDIENCE.value:
             query = query.filter(Integration.for_audience == True)
         elif type == DataSyncType.PIXEL.value:
             query = query.filter(Integration.for_pixel == True)
 
-        query = query.filter(
-            UserIntegration.user_id == user_id,
-            IntegrationUserSync.domain_id == domain_id,
-            IntegrationUserSync.sync_type == type,
-        )
+        if domain_id: 
+            query = query.filter(IntegrationUserSync.domain_id == domain_id),
 
         return query.first() is not None
 
