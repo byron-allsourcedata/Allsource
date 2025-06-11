@@ -715,7 +715,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			return "Failed";
 		}
 		if (row.dataSync === true) {
-			return "In Progress";
+			return "Syncing";
 		}
 		return "--";
 	};
@@ -735,8 +735,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		}
 		if (row.dataSync) {
 			return {
-				background: "rgba(0, 129, 251, 0.2)",
-				color: "rgba(0, 129, 251, 1)!important",
+				background: "rgba(234, 248, 221, 1)",
+				color: "rgba(43, 91, 0, 1)",
 			};
 		}
 		return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
