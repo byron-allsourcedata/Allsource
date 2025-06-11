@@ -211,40 +211,40 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		}
 	};
 
+	const toSnakeCase = (service: string) => {
+		return service.split(" ").join("_").toLowerCase();
+	};
+
 	useEffect(() => {
 		if (allData.length !== 0) {
 			if (filters) {
 				const filterData = () => {
-					const typeMapping: Record<string, string> = {
-						"All Contacts": "allContats",
-						"View Product": "viewed_product",
-						"Abandoned cart": "abandoned_cart",
-						Visitor: "visitor",
-					};
 					return Object.values(allData).filter((item) => {
-						const lastSync = new Date(item.lastSync).getTime() / 1000;
+						const createDate = new Date(item.createdDate).getTime() / 1000;
 						const dateMatch =
 							filters.from_date === null ||
 							filters.to_date === null ||
-							(lastSync >= filters.from_date && lastSync <= filters.to_date);
-						const platformMatch =
+							(createDate >= filters.from_date && createDate <= filters.to_date);
+						
+						const statusMatch =
 							filters.selected_status.length === 0 ||
 							filters.selected_status
 								.map((funnel: string) => funnel.toLowerCase())
-								.includes(item.platform.toLowerCase());
+								.includes(item.status.toLowerCase());
+						
+						const searchMatch =
+							filters.searchQuery.length === 0 ||
+							item.createdBy.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
+							item.name?.toLowerCase().includes(filters.searchQuery.toLowerCase());
+														
 
-						const itemType = item.type ? item.type.toLowerCase() : null;
-
-						const listTypeMatch =
+						const platformMatch =
 							filters.selected_destination.length === 0 ||
 							filters.selected_destination
-								.map(
-									(funnel: any) =>
-										typeMapping[funnel]?.toLowerCase() || funnel.toLowerCase(),
-								)
-								.includes(itemType);
+							.map((service: string) => toSnakeCase(service))
+							.includes(item.platform.toLowerCase());
 
-						return dateMatch && platformMatch && listTypeMatch;
+						return searchMatch && dateMatch && statusMatch && platformMatch;
 					});
 				};
 				setData(filterData());

@@ -30,6 +30,7 @@ import Image from "next/image";
 import { filterStyles } from "../css/filterSlider";
 import debounce from "lodash/debounce";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import InsertInvitationIcon from "@mui/icons-material/InsertInvitation";
 
 interface FilterPopupProps {
 	open: boolean;
@@ -710,7 +711,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								}}
 							/>
 							<AllInboxIcon
-								sx={{ color: "rgba(95, 99, 104, 1)", fontSize: "18px" }}
+								sx={{ color: "rgba(95, 99, 104, 1)", fontSize: "20px" }}
 							/>
 							<Typography
 								sx={{
@@ -1146,7 +1147,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								}}
 							/>
 							<DnsIcon
-								sx={{ color: "rgba(95, 99, 104, 1)", fontSize: "18px" }}
+								sx={{ color: "rgba(95, 99, 104, 1)", fontSize: "20px" }}
 							/>
 							<Typography
 								sx={{
@@ -1180,7 +1181,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									pl: 2,
 								}}
 							>
-								{["Synced", "Failed", "In Progress", "Disabled"].map(
+								{["Syncing", "Failed", "Disabled"].map(
 									(label) => {
 										const isSelected = selectedStatus.includes(label);
 										return (
@@ -1256,12 +1257,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									visibility: isDateFilterActive() ? "visible" : "hidden",
 								}}
 							/>
-							<Image
-								src="/calendar-2.svg"
-								alt="calendar"
-								width={18}
-								height={18}
-							/>
+							<InsertInvitationIcon sx={{ fontSize: 20, color: "rgba(95, 99, 104, 1)" }} />
 							<Typography
 								sx={{
 									...filterStyles.filter_name,
