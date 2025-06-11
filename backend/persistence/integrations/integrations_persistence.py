@@ -85,7 +85,7 @@ class IntegrationsPresistence:
             query = query.filter(Integration.for_pixel == True)
 
         if domain_id:
-            query = (query.filter(IntegrationUserSync.domain_id == domain_id),)
+            query = query.filter(IntegrationUserSync.domain_id == domain_id)
 
         return query.first() is not None
 
