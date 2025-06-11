@@ -11,15 +11,16 @@ from schemas import DomainsListResponse
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-GET_DOMAINS_URL = os.getenv("GET_DOMAINS_URL")
-SECRET_KEY = os.getenv("SECRET_KEY")
-CHECK_PIXEL_URL = os.getenv("GET_CHECK_PIXEL_INSTALLATION_STATUS")
+API_BASE_URL = os.getenv("ORIGIN_URL")
+SECRET_PIXEL_KEY   = os.getenv("SECRET_PIXEL_KEY")
 
+GET_DOMAINS_URL = f"{API_BASE_URL}/api/install-pixel/verified_domains"
+CHECK_PIXEL_INSTALLATION_URL = f"{API_BASE_URL}/external_api/install-pixel/check-pixel-installed"
 
 async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
     async with httpx.AsyncClient() as client:
         try:
-            response = await client.get(GET_DOMAINS_URL, params={"secret_key": SECRET_KEY})
+            response = await client.get(GET_DOMAINS_URL, params={"secret_key": SECRET_PIXEL_KEY})
             response.raise_for_status()
             data = response.json()
 
@@ -38,7 +39,7 @@ async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
 
 async def fetch_external_data(domain: str) -> None:
     async with httpx.AsyncClient() as client:
-        response = await client.get(CHECK_PIXEL_URL, params={"domain": domain})
+        response = await client.get(CHECK_PIXEL_INSTALLATION_URL, params={"domain": domain})
         if response.status_code == 200:
             logger.info(f"Successfully fetched pixel installation status for domain: {domain}")
         else:
