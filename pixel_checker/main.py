@@ -1,9 +1,11 @@
 import logging
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, BackgroundTasks, HTTPException
+from fastapi import FastAPI, Request, BackgroundTasks, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from contextlib import asynccontextmanager
+
+from schemas import PixelInstallationRequest
 from tasks import fetch_external_data, fetch_domains_with_secret
 from utils import get_domain_from_headers
 
@@ -30,7 +32,12 @@ app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/pixel.js")
-async def read_item(request: Request, background_tasks: BackgroundTasks):
+async def read_item(
+    request: Request,
+    background_tasks: BackgroundTasks,
+    pixel_client_id: str = Query(..., alias="dpid"),
+    need_reload_page: bool = Query(False, alias="need_reload_page"),
+):
     try:
         referer = request.headers.get("Referer")
         origin = request.headers.get("Origin")
@@ -40,7 +47,13 @@ async def read_item(request: Request, background_tasks: BackgroundTasks):
         if domain_to_check:
             if domain_to_check not in valid_domain_cache:
                 logger.info(f"Domain {domain_to_check} not found in cache, fetching external data...")
-                background_tasks.add_task(fetch_external_data, domain_to_check)
+                background_tasks.add_task(
+                    fetch_external_data, PixelInstallationRequest(
+                        pixelClientId=pixel_client_id,
+                        url=domain_to_check,
+                        need_reload_page=need_reload_page
+                    )
+                )
                 valid_domain_cache.add(domain_to_check)
                 logger.info(f"Added {domain_to_check} to referer_cache")
             else:
