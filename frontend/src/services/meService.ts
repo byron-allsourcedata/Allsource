@@ -61,6 +61,7 @@ export const fetchUserData = async (
 						domains: responseData.user_domains,
 						get_started: getStartedInfo,
 						price: userPlan.price,
+						plan_alias: userPlan.plan_alias,
 						currency: userPlan.currency,
 					}),
 				);
