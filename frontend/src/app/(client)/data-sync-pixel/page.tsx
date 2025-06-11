@@ -95,8 +95,6 @@ const DataSync = () => {
 				);
 				setHasDataSync(response.data.hasDataSync);
 				setHasContacts(response.data.hasContacts);
-
-				console.log(response.data);
 			} catch (err) {
 				console.error("Error checking integrations:", err);
 			} finally {
@@ -322,7 +320,7 @@ const DataSync = () => {
 						) : !isLoading ? (
 							<>
 								{!hasContacts && <EmptyAnalyticsPlaceholder />}
-								{hasContacts && (
+								{hasContacts && !hasDataSync && (
 									<Box sx={{ mt: 2 }}>
 										<FirstTimeScreenCommonVariant1
 											Header={{
@@ -420,11 +418,12 @@ const DataSync = () => {
 										)}
 									</Box>
 								)}
+								{hasContacts && hasDataSync && (
+									<DataSyncList filters={filters} />
+								)}
 							</>
 						) : (
-							<>
-								<DataSyncList filters={filters} />
-							</>
+							<></>
 						)}
 					</Box>
 				</Box>
