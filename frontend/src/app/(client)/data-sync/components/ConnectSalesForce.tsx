@@ -31,7 +31,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface SalesForceDataSyncProps {
 	open: boolean;
 	onClose: () => void;
-	onCloseCreateSync?: () => void
+	onCloseCreateSync?: () => void;
 	data?: any;
 	isEdit?: boolean;
 	boxShadow?: string;

@@ -37,7 +37,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectS3PopupProps {
 	open: boolean;
 	onClose: () => void;
-	onCloseCreateSync?: () => void
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit: boolean;
 }

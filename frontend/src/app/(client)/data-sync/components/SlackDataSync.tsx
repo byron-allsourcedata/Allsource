@@ -40,7 +40,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectSlackPopupProps {
 	open: boolean;
 	onClose: () => void;
-	onCloseCreateSync?: () => void
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit: boolean;
 }

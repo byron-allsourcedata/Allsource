@@ -48,7 +48,7 @@ interface DataSyncProps {
 }
 
 const DataSync = () => {
-	const router = useRouter()
+	const router = useRouter();
 	const { hasNotification } = useNotification();
 	const { needsSync } = useIntegrationContext();
 	const [status, setStatus] = useState<string | null>(null);
@@ -348,9 +348,7 @@ const DataSync = () => {
 														headerTitle="Sync Audience to Any Platform"
 														caption="Send your pixel contacts segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
 														onOpenPopup={handleOpenPopup}
-														onBegin={() =>
-															handleAudiencePopupOpen()
-														}
+														onBegin={() => handleAudiencePopupOpen()}
 														// beginDisabled={!hasIntegrations}
 														buttonLabel="Create Pixel Sync"
 													/>

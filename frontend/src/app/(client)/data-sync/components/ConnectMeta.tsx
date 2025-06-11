@@ -43,7 +43,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectMetaPopupProps {
 	open: boolean;
 	onClose: () => void;
-	onCloseCreateSync?: () => void
+	onCloseCreateSync?: () => void;
 	isEdit?: boolean;
 	data: any;
 }
