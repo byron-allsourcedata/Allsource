@@ -651,13 +651,20 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 							"@media (max-width: 600px)": { gap: "8px" },
 						}}
 					>
-						{/* <Link href="#" className="main-text" sx={{
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            lineHeight: '20px',
-                            color: 'rgba(56, 152, 252, 1)',
-                            textDecorationColor: 'rgba(56, 152, 252, 1)'
-                        }}>Tutorial</Link> */}
+						<Link
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-webhook"
+							target="_blank"
+							className="main-text"
+							sx={{
+								fontSize: "14px",
+								fontWeight: "600",
+								lineHeight: "20px",
+								color: "rgba(56, 152, 252, 1)",
+								textDecorationColor: "rgba(56, 152, 252, 1)",
+							}}
+						>
+							Tutorial
+						</Link>
 						<IconButton onClick={handlePopupClose} sx={{ p: 0 }}>
 							<CloseIcon sx={{ width: "20px", height: "20px" }} />
 						</IconButton>

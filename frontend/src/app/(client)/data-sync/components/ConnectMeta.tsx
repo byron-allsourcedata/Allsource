@@ -871,7 +871,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-meta"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-meta"
 							className="main-text"
 							target="_blank"
 							rel="noopener referrer"

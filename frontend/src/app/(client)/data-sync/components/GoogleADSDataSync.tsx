@@ -740,7 +740,8 @@ const GoogleAdsDataSync: React.FC<ConnectGoogleAdsPopupProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-googleads"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-googleads"
+							target="_blank"
 							className="main-text"
 							sx={{
 								fontSize: "14px",
