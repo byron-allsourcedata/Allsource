@@ -413,7 +413,7 @@ const OmnisendConnect = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-omnisend"
 							target="_blank"
 							rel="noopener referrer"
 							sx={{

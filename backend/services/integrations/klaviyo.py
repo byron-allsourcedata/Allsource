@@ -375,25 +375,25 @@ class KlaviyoIntegrationsService:
                 "type": "profile",
                 "attributes": {
                     "email": profile.email,
-                    # "subscriptions": {
-                    #     "email": {
-                    #         "marketing": {
-                    #             "consent": "SUBSCRIBED",
-                    #             "consented_at": "2025-06-01T12:00:00Z",
-                    #         }
-                    #     },
-                    # },
+                    "subscriptions": {
+                        "email": {
+                            "marketing": {
+                                "consent": "SUBSCRIBED",
+                                "consented_at": "2025-06-01T12:00:00Z",
+                            }
+                        },
+                    },
                 },
             }
 
             if phone_number and self.is_supported_region(phone_number):
                 data["attributes"]["phone_number"] = phone_number
-                # data["attributes"]["subscriptions"]["sms"] = {
-                #     "marketing": {
-                #         "consent": "SUBSCRIBED",
-                #         "consented_at": "2025-06-01T12:00:00Z",
-                #     }
-                # }
+                data["attributes"]["subscriptions"]["sms"] = {
+                    "marketing": {
+                        "consent": "SUBSCRIBED",
+                        "consented_at": "2025-06-01T12:00:00Z",
+                    }
+                }
 
             profiles.append(data)
         return profiles
@@ -512,7 +512,7 @@ class KlaviyoIntegrationsService:
                 "type": "profile-subscription-bulk-create-job",
                 "attributes": {
                     "profiles": {"data": profiles},
-                    "historical_import": False,
+                    "historical_import": True,
                 },
                 "relationships": {
                     "list": {"data": {"type": "list", "id": f"{list_id}"}}

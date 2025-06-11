@@ -179,7 +179,7 @@ const WebhookConnectPopup = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-webhook"
 							target="_blank"
 							rel="noopener refferer"
 							sx={{
