@@ -1,26 +1,14 @@
-from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
-from persistence.integrations.integrations_persistence import (
-    IntegrationsPresistence,
-)
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from persistence.domains import UserDomainsPersistence
-from services.integrations.million_verifier import (
-    MillionVerifierIntegrationsService,
-)
-from schemas.integrations.integrations import *
-from schemas.integrations.klaviyo import *
 import hashlib
-import os
-from faker import Faker
-import re
-from services.integrations.commonIntegration import *
-from models.integrations.users_domains_integrations import UserIntegration
-from models.integrations.integrations_users_sync import IntegrationUserSync
+import json
 import logging
-from models.enrichment.enrichment_users import EnrichmentUser
+import os
+from typing import List
+from uuid import UUID
+
+import mailchimp_marketing as MailchimpMarketing
 from fastapi import HTTPException
-from datetime import datetime, timedelta
-from schemas.integrations.mailchimp import MailchimpProfile
+from mailchimp_marketing.api_client import ApiClientError
+
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
@@ -28,13 +16,21 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
-import json
-from utils import format_phone_number
-from utils import extract_first_email, validate_and_format_phone
-from typing import List
-import mailchimp_marketing as MailchimpMarketing
-from mailchimp_marketing.api_client import ApiClientError
-from uuid import UUID
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import UserIntegration
+from persistence.domains import UserDomainsPersistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
+from schemas.integrations.integrations import *
+from services.integrations.commonIntegration import *
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from utils import format_phone_number, get_valid_email
 
 
 class MailchimpIntegrationsService:
@@ -87,8 +83,8 @@ class MailchimpIntegrationsService:
                 "country": "US",
             },
             "campaign_defaults": {
-                "from_name": "Maximiz",
-                "from_email": "login@maximiz.ai",
+                "from_name": "Allsource",
+                "from_email": "noreply@allsourcedata.io",
                 "subject": "Welcome to Our Updates",
                 "language": "en",
             },
@@ -402,10 +398,10 @@ class MailchimpIntegrationsService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def sync_contacts_bulk(self, list_id: str, profiles_list: list):
+    def sync_contacts_bulk(self, list_id: str, profiles_list: List[dict]):
         operations = []
         for profile in profiles_list:
-            email = profile.get("email_address")
+            email = profile["email_address"]
             subscriber_hash = hashlib.md5(email.lower().encode()).hexdigest()
 
             props = {k: v for k, v in profile.items() if v is not None}
@@ -429,7 +425,10 @@ class MailchimpIntegrationsService:
         return ProccessDataSyncResult.SUCCESS.value
 
     def __create_profile(
-        self, user_integration, integration_data_sync, profiles: dict
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        profiles: List[dict],
     ):
         self.client.set_config(
             {
@@ -460,6 +459,7 @@ class MailchimpIntegrationsService:
         except ApiClientError as error:
             if error.status_code == 404:
                 return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+
         try:
             response = self.sync_contacts_bulk(
                 integration_data_sync.list_id, profiles
@@ -601,65 +601,15 @@ class MailchimpIntegrationsService:
     def __mapped_member_into_list_lead(
         self, five_x_five_user: FiveXFiveUser, data_map: list
     ):
-        email_fields = [
-            "business_email",
-            "personal_emails",
-            "additional_personal_emails",
-        ]
-
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if (
-                            e
-                            and field == "business_email"
-                            and five_x_five_user.business_email_last_seen
-                        ):
-                            if (
-                                five_x_five_user.business_email_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and field == "personal_emails"
-                            and five_x_five_user.personal_emails_last_seen
-                        ):
-                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
-                                "%Y-%m-%d %H:%M:%S"
-                            )
-                            if (
-                                personal_emails_last_seen_str
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and self.million_verifier_integrations.is_email_verify(
-                                email=e.strip()
-                            )
-                        ):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        first_email = get_valid_email(five_x_five_user)
+        first_email = get_valid_email(
+            five_x_five_user, self.million_verifier_integrations
+        )
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return first_email
+            return None
 
         first_phone = (
             getattr(five_x_five_user, "mobile_phone")
@@ -678,11 +628,13 @@ class MailchimpIntegrationsService:
             "zip": getattr(five_x_five_user, "personal_zip")
             or getattr(five_x_five_user, "company_zip", None),
         }
+
         time_on_site, url_visited = self.leads_persistence.get_visit_stats(
             five_x_five_user.id
         )
-        return {
-            "email": first_email,
+
+        result = {
+            "email_address": first_email,
             "phone_number": format_phone_number(first_phone),
             "first_name": getattr(five_x_five_user, "first_name", None),
             "last_name": getattr(five_x_five_user, "last_name", None),
@@ -697,8 +649,16 @@ class MailchimpIntegrationsService:
             "merge_fields": {
                 "FNAME": getattr(five_x_five_user, "first_name", None),
                 "LNAME": getattr(five_x_five_user, "last_name", None),
-                "ORG": getattr(five_x_five_user, "company_name", None),
-                "JOB": getattr(five_x_five_user, "job_title", None),
-                "COMPANY": getattr(five_x_five_user, "company_name", None),
             },
         }
+
+        def replace_none_with_na(d):
+            for k, v in d.items():
+                if isinstance(v, dict):
+                    replace_none_with_na(v)
+                else:
+                    if v is None:
+                        d[k] = "N/A"
+
+        replace_none_with_na(result)
+        return result

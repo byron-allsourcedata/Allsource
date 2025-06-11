@@ -394,7 +394,7 @@ const SendlaneConnect = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-sendlane"
 							target="_blank"
 							rel="noopener noreferrer"
 							sx={{

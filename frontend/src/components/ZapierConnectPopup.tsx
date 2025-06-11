@@ -184,7 +184,7 @@ const ZapierConnectPopup = ({
 					}}
 				>
 					<Link
-						href="https://allsourceio.zohodesk.com/portal/en/kb/allsource"
+						href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-zapier"
 						target="_blank"
 						rel="noopener noreferrer"
 						sx={{
