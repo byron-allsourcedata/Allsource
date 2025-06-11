@@ -37,6 +37,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectWebhookPopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void
 	data: any;
 	isEdit: boolean;
 }
@@ -48,6 +49,7 @@ type WebhookList = {
 const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -331,6 +333,10 @@ const WebhookDatasync: React.FC<ConnectWebhookPopupProps> = ({
 					showToast("Data sync created successfully");
 					triggerSync();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} finally {
 			setLoading(false);

@@ -31,6 +31,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface OnmisendDataSyncProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void
 	data?: any;
 	isEdit?: boolean;
 	boxShadow?: string;
@@ -39,6 +40,7 @@ interface OnmisendDataSyncProps {
 const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data = null,
 	isEdit,
 	boxShadow,
@@ -206,6 +208,10 @@ const OnmisendDataSync: React.FC<OnmisendDataSyncProps> = ({
 					showToast("Data sync created successfully");
 					triggerSync();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} finally {
 			setLoading(false);

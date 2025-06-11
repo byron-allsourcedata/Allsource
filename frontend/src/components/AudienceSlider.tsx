@@ -8,6 +8,7 @@ import {
 	ListItem,
 	ListItemIcon,
 	ListItemButton,
+	Backdrop,
 	ListItemText,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -48,6 +49,7 @@ import HubspotIntegrationPopup from "./HubspotIntegrationPopup";
 
 interface AudiencePopupProps {
 	open: boolean;
+	reloadPixelSync?: () => void;
 	onClose: () => void;
 	selectedLeads?: number[];
 }
@@ -467,6 +469,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 
 	return (
 		<>
+			<Backdrop open={open} sx={{ zIndex: 100, color: "#fff" }} />
 			<Drawer
 				anchor="right"
 				open={open}
@@ -486,7 +489,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				slotProps={{
 					backdrop: {
 						sx: {
-							backgroundColor: "rgba(0, 0, 0, 0.125)",
+							backgroundColor: "rgba(0, 0, 0, 0.01)",
 						},
 					},
 				}}
@@ -1475,6 +1478,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				data={null}
 				open={klaviyoIconPopupOpen}
 				onClose={handleKlaviyoIconPopupClose}
+				onCloseCreateSync={onClose}
 			/>
 			<BingAdsDataSync
 				open={bingAdsIconPopupOpen}
@@ -1486,16 +1490,19 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				data={null}
 				open={salesForceIconPopupOpen}
 				onClose={handleSalesForceIconPopupClose}
+				onCloseCreateSync={onClose}
 			/>
 			<ConnectMeta
 				data={null}
 				open={metaIconPopupOpen}
 				onClose={handleMetaIconPopupClose}
+				onCloseCreateSync={onClose}
 				isEdit={false}
 			/>
 			<OnmisendDataSync
 				open={omnisendIconPopupOpen}
 				onClose={handleOmnisendIconPopupOpenClose}
+				onCloseCreateSync={onClose}
 				isEdit={false}
 				data={null}
 			/>
@@ -1509,41 +1516,48 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 			<SendlaneDatasync
 				open={openSendlaneIconPopupOpen}
 				onClose={handleSendlaneIconPopupClose}
+				onCloseCreateSync={onClose}
 				data={null}
 				isEdit={false}
 			/>
 			<S3Datasync
 				open={openS3IconPopupOpen}
 				onClose={handleS3IconPopupClose}
+				onCloseCreateSync={onClose}
 				data={null}
 				isEdit={false}
 			/>
 			<WebhookDatasync
 				open={openWebhookIconPopupOpen}
 				onClose={handleWebhookIconPopupClose}
+				onCloseCreateSync={onClose}
 				data={null}
 				isEdit={false}
 			/>
 			<MailchimpDatasync
 				open={mailchimpIconPopupOpen}
 				onClose={handleMailchimpIconPopupIconClose}
+				onCloseCreateSync={onClose}
 				data={null}
 			/>
 			<SlackDatasync
 				open={slackIconPopupOpen}
 				onClose={handleSlackIconPopupIconClose}
+				onCloseCreateSync={onClose}
 				data={null}
 				isEdit={false}
 			/>
 			<GoogleADSDatasync
 				open={googleAdsIconPopupOpen}
 				onClose={handleGoogleAdsIconPopupIconClose}
+				onCloseCreateSync={onClose}
 				data={null}
 				isEdit={false}
 			/>
 			<LinkedinDataSync
 				open={linkedinIconPopupOpen}
 				onClose={handleLinkedinIconPopupIconClose}
+				onCloseCreateSync={onClose}
 				data={null}
 				isEdit={false}
 			/>

@@ -39,6 +39,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectMailChimpPopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit?: boolean;
 }
@@ -56,6 +57,7 @@ type KlaviyoTags = {
 const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -326,6 +328,12 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 					}
 				}
 			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
+			}
+			console.log("pisya")
+			triggerSync()
 		} finally {
 			setLoading(false);
 		}
@@ -553,8 +561,16 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
