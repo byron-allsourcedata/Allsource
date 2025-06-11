@@ -103,6 +103,7 @@ const Leads: React.FC = () => {
 
 	useEffect(() => {
 		if (searchParams.get("pixel_installed")) setPixelPopup(true);
+		if (searchParams.get("create_sync")) setAudiencePopupOpen(true);
 	}, []);
 
 	const handleClosePixel = () => {
