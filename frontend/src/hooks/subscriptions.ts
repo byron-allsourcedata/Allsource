@@ -34,7 +34,6 @@ export function usePlanAlias(): string | null {
 		setPlanAlias(alias);
 	}, []);
 
-	// return "pro";
 	return planAlias;
 }
 

@@ -123,11 +123,13 @@ const marks = [
 ];
 
 export const SettingsSubscription: React.FC = () => {
-	const [plans, setPlans] = useState<Plan[]>([]);
+	const [tabValue, setTabValue] = useState(1);
+	const visiblePlans = usePlans(tabValue === 0 ? "month" : "year");
+	const [plans, setPlans] = useState<Plan[]>(visiblePlans);
 	const [allPlans, setAllPlans] = useState<any[]>([]);
 	const [credits, setCredits] = useState<number>(50000);
 	const [selectedPlan, setSelectedPlan] = useState<any>(null);
-	const [tabValue, setTabValue] = useState(1);
+	
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
 	const [cancelSubscriptionPlanPopupOpen, setCancelSubscriptionPlanPopupOpen] =
@@ -144,7 +146,7 @@ export const SettingsSubscription: React.FC = () => {
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
 
-	const visiblePlans = usePlans(tabValue === 0 ? "month" : "year");
+	
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
@@ -350,7 +352,7 @@ export const SettingsSubscription: React.FC = () => {
 						const period_plans = response.data.stripe_plans.filter(
 							(plan: any) => plan.interval === interval,
 						);
-						setPlans(period_plans);
+						setPlans(visiblePlans);
 					} catch (error) {
 					} finally {
 						setIsLoading(false);
