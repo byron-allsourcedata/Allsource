@@ -1,5 +1,6 @@
 from models.audience_smarts import AudienceSmart
 from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import Integration
 from sqlalchemy.orm import Session, aliased
 from models.users import Users
 from enums import SourcePlatformEnum, DataSyncType
@@ -420,6 +421,18 @@ class IntegrationsUserSyncPersistence:
                 return True
 
         return False
+
+    def get_destinations(self, type: str):
+        query = self.db.query(Integration.service_name)
+
+        if type == DataSyncType.AUDIENCE.value:
+            query = query.filter(Integration.for_audience == True)
+        elif type == DataSyncType.PIXEL.value:
+            query = query.filter(Integration.for_pixel == True)
+
+        result = [row[0] for row in query.all()]
+
+        return result
 
     def get_integration_by_sync_id(self, sync_id: int):
         return (

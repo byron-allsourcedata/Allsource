@@ -298,6 +298,7 @@ const DataSync = () => {
 				open={filterPopup}
 				onClose={handleFilterPopupClose}
 				onApply={onApply}
+				dataSyncType="pixel"
 			/>
 			<AudiencePopup
 				open={openCreateDataSyncPopup}

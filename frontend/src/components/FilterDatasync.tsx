@@ -30,22 +30,26 @@ import Image from "next/image";
 import { filterStyles } from "../css/filterSlider";
 import debounce from "lodash/debounce";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
+import InsertInvitationIcon from "@mui/icons-material/InsertInvitation";
 
 interface FilterPopupProps {
 	open: boolean;
 	onClose: () => void;
 	onApply: (filters: any) => void;
+	dataSyncType: string;
 }
 
 const FilterPopup: React.FC<FilterPopupProps> = ({
 	open,
 	onClose,
 	onApply,
+	dataSyncType,
 }) => {
 	const [isVisitedDateOpen, setIsVisitedDateOpen] = useState(false);
 	const [isLeadFunnel, setIsLeadFunnel] = useState(false);
 	const [isListType, setIsListType] = useState(false);
 	const [contacts, setContacts] = useState<{ name: string }[]>([]);
+	const [destinations, setDestinations] = useState<string[]>([]);
 	const [selectedTags, setSelectedTags] = useState<{ [key: string]: string[] }>(
 		{
 			visitedDate: [],
@@ -399,6 +403,29 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 		}
 	}, [open]);
 
+	useEffect(() => {
+		const fetchDestinations = async () => {
+			const response = await axiosInstance.get(
+				`/data-sync/destinations?type=${dataSyncType}`,
+			);
+			if (response.status === 200) {
+				const services = response.data;
+				const formattedServices = toFormatName(services);
+				setDestinations(formattedServices);
+			}
+		};
+		if (open) fetchDestinations();
+	}, [open, dataSyncType]);
+
+	const toFormatName = (services: string[]) => {
+		return services.map((item) =>
+			item
+				.split("_")
+				.map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+				.join(" "),
+		);
+	};
+
 	const handleApply = () => {
 		const filters = handleFilters();
 		onApply(filters);
@@ -527,7 +554,6 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 					sx: {
 						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						"@media (max-width: 37.5rem)": {
@@ -585,7 +611,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 						}}
 					>
 						<TextField
-							placeholder="Search by lookalikes name, source or creator"
+							placeholder="Search by list name or creator"
 							variant="outlined"
 							fullWidth
 							value={searchQuery}
@@ -621,6 +647,9 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								},
 							}}
 							sx={{
+								"& input": {
+									paddingLeft: 0,
+								},
 								padding: "1em 1em 0em 1em",
 								"& .MuiInputBase-input::placeholder": {
 									fontFamily: "Roboto",
@@ -682,7 +711,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								}}
 							/>
 							<AllInboxIcon
-								sx={{ color: "rgba(95, 99, 104, 1)", fontSize: "18px" }}
+								sx={{ color: "rgba(95, 99, 104, 1)", fontSize: "20px" }}
 							/>
 							<Typography
 								sx={{
@@ -1057,17 +1086,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
                   </Box>
                 </Box> */}
 
-								{[
-									"CSV",
-									"S3",
-									"Meta",
-									"Google Ads",
-									"Bing Ads",
-									"Hubsplot",
-									"Salesforce",
-									"Mailchimp",
-									"LinkedIn",
-								].map((label) => {
+								{destinations.map((label) => {
 									const isSelected = selectedDestination.includes(label);
 									return (
 										<Button
@@ -1128,7 +1147,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 								}}
 							/>
 							<DnsIcon
-								sx={{ color: "rgba(95, 99, 104, 1)", fontSize: "18px" }}
+								sx={{ color: "rgba(95, 99, 104, 1)", fontSize: "20px" }}
 							/>
 							<Typography
 								sx={{
@@ -1162,53 +1181,51 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									pl: 2,
 								}}
 							>
-								{["Synced", "Failed", "In Progress", "Disabled"].map(
-									(label) => {
-										const isSelected = selectedStatus.includes(label);
-										return (
-											<Button
-												key={label}
-												className="second-sub-title"
-												onClick={() => handleButtonLeadFunnelClick(label)}
-												sx={{
-													width: "calc(25% - .5rem)",
-													height: "2em",
-													textTransform: "none",
-													gap: "0rem",
-													padding: "1em 2em",
-													textWrap: "nowrap",
-													textAlign: "center",
-													borderRadius: ".25rem",
-													fontFamily: "Nunito",
-													opacity: 1,
-													display: "flex",
-													alignItems: "center",
-													justifyContent: "center",
-													border: isSelected
-														? ".0625rem solid rgba(56, 152, 252, 1)"
-														: ".0625rem solid rgba(220, 220, 239, 1)",
-													color: isSelected
-														? "rgba(56, 152, 252, 1) !important"
-														: "#5F6368 !important",
-													backgroundColor: isSelected
-														? "rgba(237, 237, 247, 1)"
-														: "rgba(255, 255, 255, 1)",
-													lineHeight: "1.25rem !important",
-													"@media (max-width:68.75rem)": {
-														width: "48%",
-														height: "auto",
-														maxHeight: "0.5em",
-													},
-													"@media (max-width:37.5rem)": {
-														width: "48%",
-													},
-												}}
-											>
-												{label}
-											</Button>
-										);
-									},
-								)}
+								{["Syncing", "Failed", "Disabled"].map((label) => {
+									const isSelected = selectedStatus.includes(label);
+									return (
+										<Button
+											key={label}
+											className="second-sub-title"
+											onClick={() => handleButtonLeadFunnelClick(label)}
+											sx={{
+												width: "calc(25% - .5rem)",
+												height: "2em",
+												textTransform: "none",
+												gap: "0rem",
+												padding: "1em 2em",
+												textWrap: "nowrap",
+												textAlign: "center",
+												borderRadius: ".25rem",
+												fontFamily: "Nunito",
+												opacity: 1,
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "center",
+												border: isSelected
+													? ".0625rem solid rgba(56, 152, 252, 1)"
+													: ".0625rem solid rgba(220, 220, 239, 1)",
+												color: isSelected
+													? "rgba(56, 152, 252, 1) !important"
+													: "#5F6368 !important",
+												backgroundColor: isSelected
+													? "rgba(237, 237, 247, 1)"
+													: "rgba(255, 255, 255, 1)",
+												lineHeight: "1.25rem !important",
+												"@media (max-width:68.75rem)": {
+													width: "48%",
+													height: "auto",
+													maxHeight: "0.5em",
+												},
+												"@media (max-width:37.5rem)": {
+													width: "48%",
+												},
+											}}
+										>
+											{label}
+										</Button>
+									);
+								})}
 							</Box>
 						</Collapse>
 					</Box>
@@ -1238,11 +1255,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 									visibility: isDateFilterActive() ? "visible" : "hidden",
 								}}
 							/>
-							<Image
-								src="/calendar-2.svg"
-								alt="calendar"
-								width={18}
-								height={18}
+							<InsertInvitationIcon
+								sx={{ fontSize: 20, color: "rgba(95, 99, 104, 1)" }}
 							/>
 							<Typography
 								sx={{

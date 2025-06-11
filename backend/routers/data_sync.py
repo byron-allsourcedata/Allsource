@@ -221,6 +221,14 @@ async def get_tags(
         return service.get_tags(domain.id, user)
 
 
+@router.get("/destinations")
+def get_destinations(
+    type: str = Query(...),
+    integration_service: IntegrationService = Depends(get_integration_service),
+):
+    return integration_service.get_destinations(type=type)
+
+
 @router.post("/sync/tags")
 async def create_tag(
     tag_data: CreateListOrTags,
