@@ -63,6 +63,7 @@ class UsersService:
                 "is_trial": result["subscription"].is_trial,
                 "plan_end": result["subscription"].plan_end,
                 "lead_credits": result["lead_credits"],
+                "plan_alias": result["alias"]
             }
         return {"is_trial_pending": True}
 
