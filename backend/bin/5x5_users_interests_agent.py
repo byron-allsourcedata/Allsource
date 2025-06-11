@@ -21,43 +21,46 @@ from dotenv import load_dotenv
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
-BUCKET_NAME = 'trovo-coop-shakespeare'
-QUEUE_USERS_FILES = '5x5_users_interests'
-QUEUE_USERS_ROWS = '5x5_users_interests_rows'
+BUCKET_NAME = "trovo-coop-shakespeare"
+QUEUE_USERS_FILES = "5x5_users_interests"
+QUEUE_USERS_ROWS = "5x5_users_interests_rows"
 
 
 def create_sts_client(key_id, key_secret):
     return boto3.client(
-        'sts',
+        "sts",
         aws_access_key_id=key_id,
         aws_secret_access_key=key_secret,
-        region_name='us-west-2'
+        region_name="us-west-2",
     )
 
 
 def assume_role(role_arn, sts_client):
     credentials = sts_client.assume_role(
-        RoleArn=role_arn,
-        RoleSessionName="create-use-assume-role-scenario"
-    )['Credentials']
+        RoleArn=role_arn, RoleSessionName="create-use-assume-role-scenario"
+    )["Credentials"]
     logging.info(f"Assumed role '{role_arn}', got temporary credentials.")
     return credentials
 
 
 async def on_message_received(message, s3_session, rmq_connection):
     try:
-        sts_client = create_sts_client(os.getenv('S3_KEY_ID'), os.getenv('S3_KEY_SECRET'))
-        credentials = assume_role(os.getenv('S3_ROLE_ARN'), sts_client)
+        sts_client = create_sts_client(
+            os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET")
+        )
+        credentials = assume_role(os.getenv("S3_ROLE_ARN"), sts_client)
         message_json = json.loads(message.body)
         logging.info(f"{message_json['file_name']} started")
         async with s3_session.client(
-                's3',
-                region_name='us-west-2',
-                aws_access_key_id=credentials['AccessKeyId'],
-                aws_secret_access_key=credentials['SecretAccessKey'],
-                aws_session_token=credentials['SessionToken']
+            "s3",
+            region_name="us-west-2",
+            aws_access_key_id=credentials["AccessKeyId"],
+            aws_secret_access_key=credentials["SecretAccessKey"],
+            aws_session_token=credentials["SessionToken"],
         ) as s3:
-            s3_obj = await s3.get_object(Bucket=BUCKET_NAME, Key=message_json['file_name'])
+            s3_obj = await s3.get_object(
+                Bucket=BUCKET_NAME, Key=message_json["file_name"]
+            )
             async with s3_obj["Body"] as body:
                 with tempfile.NamedTemporaryFile(delete=True) as temp_file:
                     file_data = await body.read()
@@ -69,7 +72,7 @@ async def on_message_received(message, s3_session, rmq_connection):
                         await publish_rabbitmq_message(
                             connection=rmq_connection,
                             queue_name=QUEUE_USERS_ROWS,
-                            message_body={'interest': row.to_dict()}
+                            message_body={"interest": row.to_dict()},
                         )
                         rows_counter += 1
                     logging.info(f"{rows_counter} rows processed")
@@ -79,7 +82,6 @@ async def on_message_received(message, s3_session, rmq_connection):
         logging.error("excepted message. error", exc_info=True)
         await asyncio.sleep(5)
         await message.reject(requeue=True)
-
 
 
 async def main():
@@ -93,24 +95,27 @@ async def main():
             name=QUEUE_USERS_FILES,
             durable=True,
             arguments={
-                'x-consumer-timeout': 3600000,
-            }
+                "x-consumer-timeout": 3600000,
+            },
         )
         await channel.declare_queue(
             name=QUEUE_USERS_ROWS,
             durable=True,
             arguments={
-                'x-consumer-timeout': 3600000,
-            }
+                "x-consumer-timeout": 3600000,
+            },
         )
         session = aioboto3.Session()
         await queue.consume(
-            functools.partial(on_message_received, s3_session=session,
-                              rmq_connection=connection)
+            functools.partial(
+                on_message_received,
+                s3_session=session,
+                rmq_connection=connection,
+            )
         )
         await asyncio.Future()
     except Exception as err:
-        logging.error('Unhandled Exception:', exc_info=True)
+        logging.error("Unhandled Exception:", exc_info=True)
 
 
 if __name__ == "__main__":

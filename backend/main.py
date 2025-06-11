@@ -18,8 +18,8 @@ import sentry_sdk
 
 logging.basicConfig(
     level=logging.WARNING,
-    format='%(asctime)s.%(msecs)03d %(levelname)s: %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="%(asctime)s.%(msecs)03d %(levelname)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,9 @@ try:
     HubspotConfig.init()
     logger.warning("Hubspot CRM integration is enabled")
 except EnvVarError as e:
-    logger.warning(f"Error initializing Hubspot: {e}\n\t\tHubspot CRM integration is disabled")
+    logger.warning(
+        f"Error initializing Hubspot: {e}\n\t\tHubspot CRM integration is disabled"
+    )
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 external_api = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
@@ -45,12 +47,11 @@ external_api = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 @external_api.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    if exc.status_code is not None and not (exc.status_code == 403 or exc.status_code == 401):
+    if exc.status_code is not None and not (
+        exc.status_code == 403 or exc.status_code == 401
+    ):
         logger.error(f"HTTP Exception: {exc.detail}\n{traceback.format_exc()}")
-    return JSONResponse(
-        status_code=exc.status_code,
-        content=exc.detail
-    )
+    return JSONResponse(status_code=exc.status_code, content=exc.detail)
 
 
 @external_api.exception_handler(Exception)
@@ -59,30 +60,34 @@ async def http_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={
-            'status': 'Internal Server Error',
-            'detail': {'error': str(exc)}
-        }
+            "status": "Internal Server Error",
+            "detail": {"error": str(exc)},
+        },
     )
 
 
 @external_api.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logger.error(f"Validation Exception: {exc.errors()}\n{traceback.format_exc()}")
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
+    logger.error(
+        f"Validation Exception: {exc.errors()}\n{traceback.format_exc()}"
+    )
     return JSONResponse(
         status_code=400,
         content={
-            'status': status_code,
-            'detail': {'error': traceback.format_exc()}
-        }
+            "status": status_code,
+            "detail": {"error": traceback.format_exc()},
+        },
     )
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origins=["*"],
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 external_api.add_middleware(
@@ -90,9 +95,9 @@ external_api.add_middleware(
     allow_origins=Base.allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS", "PUT", "DELETE"],
-    allow_headers=["*"]
+    allow_headers=["*"],
 )
 
 app.include_router(subapi_router)
 external_api.include_router(main_router)
-app.mount('/api', external_api)
+app.mount("/api", external_api)

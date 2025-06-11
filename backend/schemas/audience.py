@@ -4,21 +4,26 @@ from datetime import datetime
 from enums import LeadStatus
 from uuid import UUID
 
+
 class AudienceRequest(BaseModel):
     data_source: str
     audience_type: str
     audience_threshold: int
-    
+
+
 class HeadingSubstitutionRequest(BaseModel):
     source_type: str
     headings: List[str]
+
 
 class Row(BaseModel):
     type: str
     value: str
 
+
 class SourceIDs(BaseModel):
     sources_ids: List[str]
+
 
 class NewSource(BaseModel):
     target_schema: str
@@ -41,10 +46,12 @@ class AudienceResponse(BaseModel):
     created_at: datetime
     exported_on: Optional[datetime] = None
 
+
 class DataSource(BaseModel):
     name: str
     source_type: str
     size: int
+
 
 class ValidationHistory(BaseModel):
     type_validation: str
@@ -52,13 +59,16 @@ class ValidationHistory(BaseModel):
     count_validated: int
     count_cost: float
 
+
 class DataSourcesResponse(BaseModel):
     includes: List[DataSource]
     excludes: List[DataSource]
 
+
 class DomainsSourceResponse(BaseModel):
     domains: List[str]
     has_more: bool
+
 
 class DomainsLeads(BaseModel):
     id: int
@@ -69,6 +79,7 @@ class DomainsLeads(BaseModel):
     visitor_count: int
     abandoned_cart_count: int
     total_count: int
+
 
 class SourceResponse(BaseModel):
     id: UUID
@@ -84,9 +95,8 @@ class SourceResponse(BaseModel):
     matched_records_status: str
     processed_records: int
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
+
 
 class SmartsResponse(BaseModel):
     id: UUID
@@ -101,9 +111,7 @@ class SmartsResponse(BaseModel):
     status: str
     integrations: Optional[List[str]]
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = {"from_attributes": True}
 
 
 class DataSource(BaseModel):
@@ -115,16 +123,20 @@ class DataSourcesFormat(BaseModel):
     lookalike_ids: DataSource
     source_ids: DataSource
 
+
 class SourcesObjectResponse(BaseModel):
     source_list: List[SourceResponse]
     count: int
+
 
 class SmartsAudienceObjectResponse(BaseModel):
     audience_smarts_list: List[SmartsResponse]
     count: int
 
+
 class UpdateSmartAudienceRequest(BaseModel):
     new_name: str
+
 
 class CreateSmartAudienceRequest(BaseModel):
     smart_audience_name: str

@@ -1,21 +1,21 @@
 "use client";
 import {
-  Box,
-  Typography,
-  Button,
-  Tabs,
-  Tab,
-  Link,
-  TableContainer,
-  IconButton,
-  InputAdornment,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
+	Box,
+	Typography,
+	Button,
+	Tabs,
+	Tab,
+	Link,
+	TableContainer,
+	IconButton,
+	InputAdornment,
+	Paper,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableRow,
+	TextField,
 } from "@mui/material";
 import React, { useState, useEffect, Suspense } from "react";
 import CustomTooltip from "@/components/customToolTip";
@@ -36,630 +36,672 @@ import ReportProblemOutlinedIcon from "@mui/icons-material/ReportProblemOutlined
 import NotificationBanner from "@/components/first-time-screens/NotificationWarningBanner";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
 import {
-  CardsSection,
-  FirstTimeScreenCommonVariant1,
+	CardsSection,
+	FirstTimeScreenCommonVariant1,
 } from "@/components/first-time-screens";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import { useInsightsHints } from "./context/IntegrationsHintsContext";
 import HintCard from "../components/HintCard";
 
 type TableData = {
-  id: string;
-  data_source_type: string;
-  name: string;
-  type: string;
-  size: number;
-  created_date: string;
+	id: string;
+	data_source_type: string;
+	name: string;
+	type: string;
+	size: number;
+	created_date: string;
 };
 
 type CardData = {
-  title: string;
-  description: string;
-  icon: string;
-  onClick?: () => void;
-  isClickable?: boolean;
+	title: string;
+	description: string;
+	icon: string;
+	onClick?: () => void;
+	isClickable?: boolean;
 };
 
 const Insights = () => {
-  const router = useRouter();
-  const { insightsHints, cardsInsights, changeInsightsHint, resetInsightsHints } = useInsightsHints();
-  const { hasNotification } = useNotification();
-  const [tabIndex, setTabIndex] = useState(0);
-  const [search, setSearch] = useState("");
-  const [isTableVisible, setIsTableVisible] = useState(false);
-  const [sourceData, setSourceData] = useState<TableData[]>([]);
-  const [lookalikeData, setLookalikeData] = useState<TableData[]>([]);
-  const [allData, setAllData] = useState<TableData[]>([]);
-  const [filteredData, setFilteredData] = useState<TableData[]>([]);
-  const [showNotification, setShowNotification] = useState(true);
+	const router = useRouter();
+	const {
+		insightsHints,
+		cardsInsights,
+		changeInsightsHint,
+		resetInsightsHints,
+	} = useInsightsHints();
+	const { hasNotification } = useNotification();
+	const [tabIndex, setTabIndex] = useState(0);
+	const [search, setSearch] = useState("");
+	const [isTableVisible, setIsTableVisible] = useState(false);
+	const [sourceData, setSourceData] = useState<TableData[]>([]);
+	const [lookalikeData, setLookalikeData] = useState<TableData[]>([]);
+	const [allData, setAllData] = useState<TableData[]>([]);
+	const [filteredData, setFilteredData] = useState<TableData[]>([]);
+	const [showNotification, setShowNotification] = useState(true);
 
-  const [status, setStatus] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loading, setLoading] = useState(false);
+	const [status, setStatus] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
 
-  const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
-    setTabIndex(newIndex);
-  };
+	const handleTabChange = (event: React.SyntheticEvent, newIndex: number) => {
+		setTabIndex(newIndex);
+	};
 
-  const cardData: CardData[] = [
-    {
-      title: "Sources Insights",
-      description:
-        "Analyze your audience sources to identify high-performing segments and optimize targeting strategies.",
-      icon: "/source.svg",
-      onClick: () => {
-        router.push("/sources/builder?type=pixel");
-      },
-      isClickable: true,
-    },
-    {
-      title: "Lookalikes Insights",
-      description:
-        "View the aggregated profile of your generated lookalike audience, showing different insights characteristics.",
-      icon: "/lookalike.svg",
-      onClick: () => {
-        router.push("/sources/builder?type=customer-conversions");
-      },
-      isClickable: true,
-    },
-  ];
+	const cardData: CardData[] = [
+		{
+			title: "Sources Insights",
+			description:
+				"Analyze your audience sources to identify high-performing segments and optimize targeting strategies.",
+			icon: "/source.svg",
+			onClick: () => {
+				router.push("/sources/builder?type=pixel");
+			},
+			isClickable: true,
+		},
+		{
+			title: "Lookalikes Insights",
+			description:
+				"View the aggregated profile of your generated lookalike audience, showing different insights characteristics.",
+			icon: "/lookalike.svg",
+			onClick: () => {
+				router.push("/sources/builder?type=customer-conversions");
+			},
+			isClickable: true,
+		},
+	];
 
-  const [popupOpen, setPopupOpen] = useState(false);
+	const [popupOpen, setPopupOpen] = useState(false);
 
-  const handleOpenPopup = () => {
-    setPopupOpen(true);
-  };
+	const handleOpenPopup = () => {
+		setPopupOpen(true);
+	};
 
-  const toNormalText = (sourceType: string) =>
-    sourceType
-      .split(",")
-      .map((item) =>
-        item
-          .split("_")
-          .map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
-          .join(" ")
-      )
-      .join(", ");
+	const toNormalText = (sourceType: string) =>
+		sourceType
+			.split(",")
+			.map((item) =>
+				item
+					.split("_")
+					.map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
+					.join(" "),
+			)
+			.join(", ");
 
-  const handleSelectRow = (row: any) => {
-    router.push(`/insights/${row.data_source_type}/${row.id}`);
-  };
+	const handleSelectRow = (row: any) => {
+		router.push(`/insights/${row.data_source_type}/${row.id}`);
+	};
 
-  const handleSourceData = async () => {
-    try {
-      const response = await axiosInstance.get(
-        "/audience-insights/get-data-sources"
-      );
+	const handleSourceData = async () => {
+		try {
+			const response = await axiosInstance.get(
+				"/audience-insights/get-data-sources",
+			);
 
-      const sources = Array.isArray(response.data.source)
-        ? response.data.source
-        : [response.data.source];
-      const lookalikes = Array.isArray(response.data.lookalike)
-        ? response.data.lookalike
-        : [response.data.lookalike];
+			const sources = Array.isArray(response.data.source)
+				? response.data.source
+				: [response.data.source];
+			const lookalikes = Array.isArray(response.data.lookalike)
+				? response.data.lookalike
+				: [response.data.lookalike];
 
-      const combined = [...sources, ...lookalikes];
+			const combined = [...sources, ...lookalikes];
 
-      combined.sort(
-        (a, b) =>
-          new Date(b.created_date).getTime() -
-          new Date(a.created_date).getTime()
-      );
+			combined.sort(
+				(a, b) =>
+					new Date(b.created_date).getTime() -
+					new Date(a.created_date).getTime(),
+			);
 
-      setAllData(combined);
-      setSourceData(sources);
-      setLookalikeData(lookalikes);
-    } catch {
-      showErrorToast(
-        "An error occurred while loading data sources. Please try again later."
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
+			setAllData(combined);
+			setSourceData(sources);
+			setLookalikeData(lookalikes);
+		} catch {
+			showErrorToast(
+				"An error occurred while loading data sources. Please try again later.",
+			);
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
-  const handleSearch = async (query: string) => {
-    if (!query) return;
+	const handleSearch = async (query: string) => {
+		if (!query) return;
 
-    try {
-      setLoading(true);
-      const response = await axiosInstance.get(
-        `/audience-insights/search-data-sources?query=${encodeURIComponent(
-          query
-        )}`
-      );
+		try {
+			setLoading(true);
+			const response = await axiosInstance.get(
+				`/audience-insights/search-data-sources?query=${encodeURIComponent(
+					query,
+				)}`,
+			);
 
-      const sources = Array.isArray(response.data.source)
-        ? response.data.source
-        : [response.data.source];
-      const lookalikes = Array.isArray(response.data.lookalike)
-        ? response.data.lookalike
-        : [response.data.lookalike];
+			const sources = Array.isArray(response.data.source)
+				? response.data.source
+				: [response.data.source];
+			const lookalikes = Array.isArray(response.data.lookalike)
+				? response.data.lookalike
+				: [response.data.lookalike];
 
-      const combined = [...sources, ...lookalikes];
-      combined.sort(
-        (a, b) =>
-          new Date(b.created_date).getTime() -
-          new Date(a.created_date).getTime()
-      );
+			const combined = [...sources, ...lookalikes];
+			combined.sort(
+				(a, b) =>
+					new Date(b.created_date).getTime() -
+					new Date(a.created_date).getTime(),
+			);
 
-      setFilteredData(combined);
-    } catch {
-      showErrorToast("Search failed. Try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+			setFilteredData(combined);
+		} catch {
+			showErrorToast("Search failed. Try again.");
+		} finally {
+			setLoading(false);
+		}
+	};
 
-  const dataToShow = search.trim() ? filteredData : allData;
+	const dataToShow = search.trim() ? filteredData : allData;
 
-  useEffect(() => {
-    resetInsightsHints();
-    handleSourceData();
-  }, []);
+	useEffect(() => {
+		resetInsightsHints();
+		handleSourceData();
+	}, []);
 
-  useEffect(() => {
-    const delayDebounce = setTimeout(() => {
-      if (search.trim() !== "") {
-        handleSearch(search);
-      }
-    }, 300);
+	useEffect(() => {
+		const delayDebounce = setTimeout(() => {
+			if (search.trim() !== "") {
+				handleSearch(search);
+			}
+		}, 300);
 
-    return () => clearTimeout(delayDebounce);
-  }, [search]);
+		return () => clearTimeout(delayDebounce);
+	}, [search]);
 
-  if (isLoading) {
-    return <CustomizedProgressBar />;
-  }
+	if (isLoading) {
+		return <CustomizedProgressBar />;
+	}
 
+	return (
+		<Box
+			sx={{
+				width: "100%",
+				height: "calc(100vh - 4.25rem)",
+				pr: 3,
+				flexGrow: 1,
+				pt: 2,
+			}}
+		>
+			<Box
+				sx={{
+					flex: 1,
+					display: "flex",
+					flexDirection: "column",
+					gap: 2,
+				}}
+			>
+				{sourceData.length > 0 || lookalikeData.length > 0 ? (
+					<Box
+						sx={{
+							display: "flex",
+							alignItems: "center",
+							// justifyContent: "flex-start",
+							flexDirection: "column",
+						}}
+					>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "column",
+								alignItems: "center",
+								width: "100%",
+								flexWrap: "wrap",
+								gap: "15px",
+							}}
+						>
+							<Box
+								sx={{
+									width: "55%",
+									display: "flex",
+									alignItems: "center",
+									justifyContent: "flex-start",
+									gap: 1,
+									"@media (max-width: 1100px)": {
+										width: "70%",
+									},
+									"@media (max-width: 900px)": {
+										width: "100%",
+										padding: 1,
+									},
+								}}
+							>
+								<Typography className="first-sub-title">Insights</Typography>
+								<CustomToolTip
+									title={"Insights."}
+									linkText="Learn more"
+									linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/insights"
+								/>
+							</Box>
+						</Box>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "column",
+								flexGrow: 1,
+								pt: 2,
+								mb: 1,
+								width: "55%",
+								"@media (max-width: 1100px)": {
+									width: "70%",
+								},
+								"@media (max-width: 900px)": {
+									width: "100%",
+									padding: 1,
+								},
+							}}
+						>
+							<Box
+								sx={{
+									display: "flex",
+									flexDirection: "column",
+									alignItems: "start",
+									gap: 1,
+								}}
+							>
+								<Typography className="first-sub-title">
+									Select your Audience
+								</Typography>
+								<Typography className="paragraph">
+									Select a source or lookalike audience to uncover key
+									statistics, trends, and actionable data—helping you refine
+									your targeting and maximize results.
+								</Typography>
+							</Box>
+							<Box sx={{ position: "relative" }}>
+								<Box
+									sx={{
+										display: "flex",
+										width: "100%",
+										flexDirection: "column",
+										pt: 2,
+										gap: 2,
+										position: "relative",
+									}}
+								>
+									<Box
+										sx={{
+											width: "100%",
+											position: "relative",
+										}}
+									>
+										<HintCard
+											card={cardsInsights.select_audience}
+											positionTop={20}
+											positionLeft={230}
+											rightSide={false}
+											isOpenBody={insightsHints.select_audience.showBody}
+											toggleClick={() =>
+												changeInsightsHint(
+													"select_audience",
+													"showBody",
+													"toggle",
+												)
+											}
+											closeClick={() =>
+												changeInsightsHint(
+													"select_audience",
+													"showBody",
+													"close",
+												)
+											}
+										/>
+										<Box
+											sx={{
+												width: "100%",
+												border: "1px solid rgba(224, 224, 224, 1)",
+												borderRadius: 1,
+												padding: "5.5px 14px",
+												display: "flex",
+												alignItems: "center",
+												justifyContent: "space-between",
+												cursor: "pointer",
+												backgroundColor: "#fff",
+												"&:hover": {
+													borderColor: "rgba(56, 152, 252, 1)",
+												},
+											}}
+											onClick={() => setIsTableVisible(!isTableVisible)}
+										>
+											<Typography
+												className="paragraph"
+												sx={{
+													fontSize: "14px !important",
+												}}
+											>
+												Select source or lookalike
+											</Typography>
 
+											<IconButton size="small">
+												{isTableVisible ? (
+													<ExpandLessIcon />
+												) : (
+													<ExpandMoreIcon />
+												)}
+											</IconButton>
+										</Box>
 
-  return (
-    <Box sx={{ width: "100%", height: "calc(100vh - 4.25rem)", pr: 3, flexGrow: 1, pt: 2 }}>
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}>
-        {sourceData.length > 0 || lookalikeData.length > 0 ? (
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            // justifyContent: "flex-start",
-            flexDirection: 'column',
-          }}>
-            <Box
-              sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                width: '100%',
-                flexWrap: "wrap",
-                gap: "15px",
-              }}
-            >
-              <Box
-                sx={{
-                  width: '55%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  gap: 1,
-                  "@media (max-width: 900px)": {
-                    paddingLeft: 1,
-                  },
-                }}
-              >
-                <Typography className="first-sub-title">Insights</Typography>
-                <CustomToolTip
-                  title={"Insights."}
-                  linkText="Learn more"
-                  linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/insights"
-                />
-              </Box>
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                flexGrow: 1,
-                pt: 2,
-                mb: 1,
-                width: "55%",
-                "@media (max-width: 1100px)": {
-                  width: "70%",
-                },
-                "@media (max-width: 900px)": {
-                  width: "100%",
-                  padding: 1,
-                },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "start",
-                  gap: 1,
-                }}
-              >
-                <Typography className="first-sub-title">
-                  Select your Audience
-                </Typography>
-                <Typography className="paragraph">
-                  Select a source or lookalike audience to uncover key
-                  statistics, trends, and actionable data—helping you refine
-                  your targeting and maximize results.
-                </Typography>
-              </Box>
-              <Box sx={{ position: "relative" }}>
+										{isTableVisible && (
+											<Box sx={{ width: "100%" }}>
+												<Box
+													sx={{
+														padding: 2,
+														border: "1px solid rgba(228, 228, 228, 1)",
+													}}
+												>
+													<TextField
+														fullWidth
+														variant="outlined"
+														placeholder="Search"
+														value={search}
+														onChange={(e) => {
+															setSearch(e.target.value);
+														}}
+														InputLabelProps={{
+															sx: {
+																fontFamily: "Nunito Sans",
+																fontSize: "15px",
+																lineHeight: "16px",
+																color: "rgba(17, 17, 19, 0.60)",
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    width: "100%",
-                    flexDirection: "column",
-                    pt: 2,
-                    gap: 2,
-                    position: "relative"
-                  }}
-                >
-                  <Box sx={{ width: "100%", position: "relative" }}>
-                    <HintCard
-                      card={cardsInsights.select_audience}
-                      positionTop={20}
-                      positionLeft={230}
-                      rightSide={false}
-                      isOpenBody={insightsHints.select_audience.showBody}
-                      toggleClick={() =>
-                        changeInsightsHint("select_audience", "showBody", "toggle")
-                      }
-                      closeClick={() =>
-                        changeInsightsHint("select_audience", "showBody", "close")
-                      }
-                    />
-                    <Box
-                      sx={{
-                        width: "100%",
-                        border: "1px solid rgba(224, 224, 224, 1)",
-                        borderRadius: 1,
-                        padding: "5.5px 14px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        cursor: "pointer",
-                        backgroundColor: "#fff",
-                        "&:hover": {
-                          borderColor: "rgba(56, 152, 252, 1)",
-                        },
-                      }}
-                      onClick={() => setIsTableVisible(!isTableVisible)}
-                    >
-                      <Typography
-                        className="paragraph"
-                        sx={{ fontSize: "14px !important" }}
-                      >
-                        Select source or lookalike
-                      </Typography>
+																padding: 0,
+																margin: 0,
+																left: "3px",
+																"&.Mui-focused": {
+																	color: "#0000FF",
+																},
+															},
+														}}
+														InputProps={{
+															startAdornment: (
+																<InputAdornment position="start">
+																	<SearchIcon />
+																</InputAdornment>
+															),
+															endAdornment: loading && (
+																<InputAdornment position="end">
+																	<CircularProgress size={20} />
+																</InputAdornment>
+															),
+															style: {
+																color: "rgba(17, 17, 19, 1)",
+																fontFamily: "Nunito Sans",
+																fontWeight: 400,
+																fontSize: "14px",
+															},
+														}}
+														sx={{
+															pb: "2px",
+															"& input::placeholder": {
+																fontSize: "14px",
+																color: "rgba(32, 33, 36, 1)",
+															},
+														}}
+													/>
+												</Box>
+												<TableContainer
+													component={Paper}
+													sx={{
+														maxHeight: "35vh",
+														overflow: "scroll",
+													}}
+												>
+													<Table>
+														<TableBody>
+															{dataToShow.map((row, index) => {
+																const isRowDisabled = row.size === 0;
+																return (
+																	<TableRow
+																		key={index}
+																		hover={!isRowDisabled}
+																		sx={{
+																			cursor: isRowDisabled
+																				? "not-allowed"
+																				: "pointer",
+																			opacity: isRowDisabled ? 0.5 : 1,
+																			pointerEvents: isRowDisabled
+																				? "none"
+																				: "auto",
+																			display: "flex",
+																			justifyContent: "space-between",
+																			width: "100%",
+																			padding: 0,
+																			margin: 0,
+																			flexWrap: "wrap",
+																		}}
+																		onClick={() =>
+																			!isRowDisabled && handleSelectRow(row)
+																		}
+																	>
+																		{/* NAME & TYPE */}
+																		<TableCell
+																			sx={{
+																				flex: 1,
+																				minWidth: 280,
+																				padding: "12px 16px",
+																				borderBottom: "1px solid #e0e0e0",
+																			}}
+																		>
+																			<Box
+																				sx={{
+																					display: "flex",
+																					flexDirection: "column",
+																					alignItems: "flex-start",
+																					justifyContent: "center",
+																				}}
+																			>
+																				<Typography className="paragraph">
+																					{row.data_source_type === "lookalikes"
+																						? "Lookalike"
+																						: "Source"}
+																				</Typography>
 
-                      <IconButton size="small">
-                        {isTableVisible ? (
-                          <ExpandLessIcon />
-                        ) : (
-                          <ExpandMoreIcon />
-                        )}
-                      </IconButton>
-                    </Box>
+																				<Typography
+																					className="black-table-header"
+																					sx={{
+																						whiteSpace: "nowrap",
+																						overflow: "hidden",
+																						textOverflow: "ellipsis",
+																						width: "100%",
+																					}}
+																				>
+																					{row.name}
+																				</Typography>
+																			</Box>
+																		</TableCell>
 
-                    {isTableVisible && (
-                      <Box sx={{ width: "100%" }}>
-                        <Box
-                          sx={{
-                            padding: 2,
-                            border: "1px solid rgba(228, 228, 228, 1)",
-                          }}
-                        >
-                          <TextField
-                            fullWidth
-                            variant="outlined"
-                            placeholder="Search"
-                            value={search}
-                            onChange={(e) => {
-                              setSearch(e.target.value);
-                            }}
-                            InputLabelProps={{
-                              sx: {
-                                fontFamily: "Nunito Sans",
-                                fontSize: "15px",
-                                lineHeight: "16px",
-                                color: "rgba(17, 17, 19, 0.60)",
+																		{/* TYPE */}
+																		<TableCell
+																			sx={{
+																				flex: 1,
+																				minWidth: 240,
+																				padding: "12px 16px",
+																				borderBottom: "1px solid #e0e0e0",
+																			}}
+																		>
+																			<Box
+																				sx={{
+																					display: "flex",
+																					flexDirection: "column",
+																					alignItems: "flex-start",
+																					justifyContent: "center",
+																				}}
+																			>
+																				<Typography className="paragraph">
+																					Type
+																				</Typography>
+																				<Typography
+																					variant="body2"
+																					className="black-table-header"
+																					sx={{
+																						whiteSpace: "nowrap",
+																						overflow: "hidden",
+																						textOverflow: "ellipsis",
+																						width: "100%",
+																					}}
+																				>
+																					{toNormalText(row.type)}
+																				</Typography>
+																			</Box>
+																		</TableCell>
 
-                                padding: 0,
-                                margin: 0,
-                                left: "3px",
-                                "&.Mui-focused": {
-                                  color: "#0000FF",
-                                },
-                              },
-                            }}
-                            InputProps={{
-                              startAdornment: (
-                                <InputAdornment position="start">
-                                  <SearchIcon />
-                                </InputAdornment>
-                              ),
-                              endAdornment: loading && (
-                                <InputAdornment position="end">
-                                  <CircularProgress size={20} />
-                                </InputAdornment>
-                              ),
-                              style: {
-                                color: "rgba(17, 17, 19, 1)",
-                                fontFamily: "Nunito Sans",
-                                fontWeight: 400,
-                                fontSize: "14px",
-                              },
-                            }}
-                            sx={{
-                              pb: "2px",
-                              "& input::placeholder": {
-                                fontSize: "14px",
-                                color: "rgba(32, 33, 36, 1)",
-                              },
-                            }}
-                          />
-                        </Box>
-                        <TableContainer
-                          component={Paper}
-                          sx={{ maxHeight: "35vh", overflow: "scroll" }}
-                        >
-                          <Table>
-                            <TableBody>
-                              {dataToShow.map((row, index) => {
-                                const isRowDisabled = row.size === 0;
-                                return (
-                                  <TableRow
-                                    key={index}
-                                    hover={!isRowDisabled}
-                                    sx={{
-                                      cursor: isRowDisabled
-                                        ? "not-allowed"
-                                        : "pointer",
-                                      opacity: isRowDisabled ? 0.5 : 1,
-                                      pointerEvents: isRowDisabled
-                                        ? "none"
-                                        : "auto",
-                                      display: "flex",
-                                      justifyContent: "space-between",
-                                      width: "100%",
-                                      padding: 0,
-                                      margin: 0,
-                                      flexWrap: "wrap",
-                                    }}
-                                    onClick={() =>
-                                      !isRowDisabled && handleSelectRow(row)
-                                    }
-                                  >
-                                    {/* NAME & TYPE */}
-                                    <TableCell
-                                      sx={{
-                                        flex: 1,
-                                        minWidth: 280,
-                                        padding: "12px 16px",
-                                        borderBottom: "1px solid #e0e0e0",
-                                      }}
-                                    >
-                                      <Box
-                                        sx={{
-                                          display: "flex",
-                                          flexDirection: "column",
-                                          alignItems: "flex-start",
-                                          justifyContent: "center",
-                                        }}
-                                      >
-                                        <Typography className="paragraph">
-                                          {row.data_source_type === "lookalikes"
-                                            ? "Lookalike"
-                                            : "Source"}
-                                        </Typography>
-
-                                        <Typography
-                                          className="black-table-header"
-                                          sx={{
-                                            whiteSpace: "nowrap",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            width: "100%",
-                                          }}
-                                        >
-                                          {row.name}
-                                        </Typography>
-                                      </Box>
-                                    </TableCell>
-
-                                    {/* TYPE */}
-                                    <TableCell
-                                      sx={{
-                                        flex: 1,
-                                        minWidth: 240,
-                                        padding: "12px 16px",
-                                        borderBottom: "1px solid #e0e0e0",
-                                      }}
-                                    >
-                                      <Box
-                                        sx={{
-                                          display: "flex",
-                                          flexDirection: "column",
-                                          alignItems: "flex-start",
-                                          justifyContent: "center",
-                                        }}
-                                      >
-                                        <Typography className="paragraph">
-                                          Type
-                                        </Typography>
-                                        <Typography
-                                          variant="body2"
-                                          className="black-table-header"
-                                          sx={{
-                                            whiteSpace: "nowrap",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            width: "100%",
-                                          }}
-                                        >
-                                          {toNormalText(row.type)}
-                                        </Typography>
-                                      </Box>
-                                    </TableCell>
-
-                                    {/* SIZE */}
-                                    <TableCell
-                                      sx={{
-                                        flex: 1,
-                                        minWidth: 120,
-                                        padding: "12px 16px",
-                                        borderBottom: "1px solid #e0e0e0",
-                                        textAlign: "right",
-                                        "@media (max-width: 600px)": {
-                                          textAlign: "left",
-                                        },
-                                      }}
-                                    >
-                                      <Box
-                                        sx={{
-                                          display: "flex",
-                                          flexDirection: "column",
-                                          alignItems: "flex-start",
-                                          justifyContent: "center",
-                                        }}
-                                      >
-                                        <Typography className="paragraph">
-                                          Size
-                                        </Typography>
-                                        <Typography className="black-table-header">
-                                          {row.size.toLocaleString("en-US")}
-                                        </Typography>
-                                      </Box>
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              })}
-                            </TableBody>
-                          </Table>
-                        </TableContainer>
-                      </Box>
-                    )}
-                  </Box>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-        ) : (
-          <>
-            <FirstTimeScreenCommonVariant1
-              Header={{
-                TextTitle: "Insights",
-                TextSubtitle:
-                  "Uncover key statistics, trends, and actionable data—it will help you refine your targeting and maximize results",
-                link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/insights",
-              }}
-              InfoNotification={{
-                Text: "This page reveals powerful audience intelligence from your pixel data - discover top demographics, interests, behaviors, and purchase patterns to refine your targeting.",
-              }}
-              WarningNotification={{
-                condition:
-                  sourceData.length === 0 && lookalikeData.length === 0,
-                ctaUrl: "/sources",
-                ctaLabel: "Import Source",
-                message:
-                  "You need to have at least one source or lookalike to unlock this option",
-              }}
-              Content={
-                <CardsSection
-                  items={[
-                    {
-                      title: "Sources Insights",
-                      subtitle:
-                        "Analyze your audience sources to identify high-performing segments and optimize targeting strategies",
-                      imageSrc: "/source.svg",
-                      onClick: handleOpenPopup,
-                      showRecommended: false,
-                      img_height: 170
-                    },
-                    {
-                      title: "Lookalikes Insights",
-                      subtitle:
-                        "View the aggregated profile of your generated lookalike audience, showing different insights characteristics",
-                      imageSrc: "/lookalike.svg",
-                      onClick: handleOpenPopup,
-                      showRecommended: false,
-                      img_height: 170
-                    },
-                  ]}
-                />
-              }
-              HelpCard={{
-                headline: "Feeling Overwhelmed by Analytics?",
-                description:
-                  "Get a free 30-minute session to analyze your audience data and improve targeting.",
-                helpPoints: [
-                  {
-                    title: "Audience Profile Review",
-                    description: "Understand demographics & interests",
-                  },
-                  {
-                    title: "Behavior Analysis",
-                    description: "Interpret engagement patterns",
-                  },
-                  {
-                    title: "Targeting Recommendations",
-                    description: "Optimize based on your data",
-                  },
-                ],
-              }}
-              LeftMenu={{
-                header: "Decode Your Audience Insights Like a Pro",
-                subtitle: "Free 30-Min Strategy Session",
-                image: {
-                  url: "/source.svg",
-                  width: 600,
-                  height: 300
-                },
-                items: [
-                  {
-                    Icon: SettingsIcon,
-                    title: "Audience Profile Review",
-                    subtitle: `We’ll analyze your audience composition to uncover hidden opportunities and gaps.`,
-                  },
-                  {
-                    Icon: SpeedIcon,
-                    title: "Behavior Analysis",
-                    subtitle: `Understand what your audience actually does – not just who they are.`,
-                  },
-                  {
-                    Icon: MovingIcon,
-                    title: "Targeting Recommendations",
-                    subtitle: "Get customized suggestions to refine your audience strategy.",
-                  },
-                ],
-              }}
-              ContentStyleSX={{
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                maxWidth: "840px",
-                margin: "0 auto",
-                mt: 2,
-              }}
-            />
-            {popupOpen && (
-              <WelcomePopup
-                open={popupOpen}
-                onClose={() => setPopupOpen(false)}
-              />
-            )}
-          </>
-        )}
-      </Box>
-    </Box>
-  );
+																		{/* SIZE */}
+																		<TableCell
+																			sx={{
+																				flex: 1,
+																				minWidth: 120,
+																				padding: "12px 16px",
+																				borderBottom: "1px solid #e0e0e0",
+																				textAlign: "right",
+																				"@media (max-width: 600px)": {
+																					textAlign: "left",
+																				},
+																			}}
+																		>
+																			<Box
+																				sx={{
+																					display: "flex",
+																					flexDirection: "column",
+																					alignItems: "flex-start",
+																					justifyContent: "center",
+																				}}
+																			>
+																				<Typography className="paragraph">
+																					Size
+																				</Typography>
+																				<Typography className="black-table-header">
+																					{row.size.toLocaleString("en-US")}
+																				</Typography>
+																			</Box>
+																		</TableCell>
+																	</TableRow>
+																);
+															})}
+														</TableBody>
+													</Table>
+												</TableContainer>
+											</Box>
+										)}
+									</Box>
+								</Box>
+							</Box>
+						</Box>
+					</Box>
+				) : (
+					<>
+						<FirstTimeScreenCommonVariant1
+							Header={{
+								TextTitle: "Insights",
+								TextSubtitle:
+									"Uncover key statistics, trends, and actionable data—it will help you refine your targeting and maximize results",
+								link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/insights",
+							}}
+							InfoNotification={{
+								Text: "This page reveals powerful audience intelligence from your pixel data - discover top demographics, interests, behaviors, and purchase patterns to refine your targeting.",
+							}}
+							WarningNotification={{
+								condition:
+									sourceData.length === 0 && lookalikeData.length === 0,
+								ctaUrl: "/sources",
+								ctaLabel: "Import Source",
+								message:
+									"You need to have at least one source or lookalike to unlock this option",
+							}}
+							Content={
+								<CardsSection
+									items={[
+										{
+											title: "Sources Insights",
+											subtitle:
+												"Analyze your audience sources to identify high-performing segments and optimize targeting strategies",
+											imageSrc: "/source.svg",
+											onClick: handleOpenPopup,
+											showRecommended: false,
+											img_height: 170,
+										},
+										{
+											title: "Lookalikes Insights",
+											subtitle:
+												"View the aggregated profile of your generated lookalike audience, showing different insights characteristics",
+											imageSrc: "/lookalike.svg",
+											onClick: handleOpenPopup,
+											showRecommended: false,
+											img_height: 170,
+										},
+									]}
+								/>
+							}
+							HelpCard={{
+								headline: "Feeling Overwhelmed by Analytics?",
+								description:
+									"Get a free 30-minute session to analyze your audience data and improve targeting.",
+								helpPoints: [
+									{
+										title: "Audience Profile Review",
+										description: "Understand demographics & interests",
+									},
+									{
+										title: "Behavior Analysis",
+										description: "Interpret engagement patterns",
+									},
+									{
+										title: "Targeting Recommendations",
+										description: "Optimize based on your data",
+									},
+								],
+							}}
+							LeftMenu={{
+								header: "Decode Your Audience Insights Like a Pro",
+								subtitle: "Free 30-Min Strategy Session",
+								image: {
+									url: "/source.svg",
+									width: 600,
+									height: 300,
+								},
+								items: [
+									{
+										Icon: SettingsIcon,
+										title: "Audience Profile Review",
+										subtitle: `We’ll analyze your audience composition to uncover hidden opportunities and gaps.`,
+									},
+									{
+										Icon: SpeedIcon,
+										title: "Behavior Analysis",
+										subtitle: `Understand what your audience actually does – not just who they are.`,
+									},
+									{
+										Icon: MovingIcon,
+										title: "Targeting Recommendations",
+										subtitle:
+											"Get customized suggestions to refine your audience strategy.",
+									},
+								],
+							}}
+							ContentStyleSX={{
+								display: "flex",
+								flexDirection: "column",
+								justifyContent: "center",
+								alignItems: "center",
+								maxWidth: "840px",
+								margin: "0 auto",
+								mt: 2,
+							}}
+						/>
+						{popupOpen && (
+							<WelcomePopup
+								open={popupOpen}
+								onClose={() => setPopupOpen(false)}
+							/>
+						)}
+					</>
+				)}
+			</Box>
+		</Box>
+	);
 };
 
 export default Insights;

@@ -1,1 +1,1 @@
-export * from "@/types/lookalike/builder"
+export * from "@/types/lookalike/builder";

@@ -10,7 +10,9 @@ from urllib.parse import urlparse, parse_qs
 import logging
 from enums import ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from config.rmq_connection import publish_rabbitmq_message_with_channel
 
 logger = logging.getLogger(__name__)
@@ -21,10 +23,7 @@ def get_utc_aware_date():
 
 
 def get_md5_hash(email):
-    md5_token_info = {
-        'user_mail': email,
-        'salt': os.getenv('SECRET_SALT')
-    }
+    md5_token_info = {"user_mail": email, "salt": os.getenv("SECRET_SALT")}
     json_string = json.dumps(md5_token_info, sort_keys=True)
     md5_hash = hashlib.md5(json_string.encode()).hexdigest()
     return md5_hash
@@ -38,28 +37,50 @@ def timestamp_to_date(timestamp):
     return datetime.fromtimestamp(timestamp)
 
 
-def get_valid_email(user: FiveXFiveUser, million_verifier_integrations: MillionVerifierIntegrationsService) -> str:
+def get_valid_email(
+    user: FiveXFiveUser,
+    million_verifier_integrations: MillionVerifierIntegrationsService,
+) -> str:
     email_fields = [
-        'business_email',
-        'personal_emails',
-        'additional_personal_emails',
+        "business_email",
+        "personal_emails",
+        "additional_personal_emails",
     ]
     thirty_days_ago = datetime.now() - timedelta(days=30)
-    thirty_days_ago_str = thirty_days_ago.strftime('%Y-%m-%d %H:%M:%S')
+    thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
     verity = 0
     for field in email_fields:
         email = getattr(user, field, None)
         if email:
             emails = extract_first_email(email)
             for e in emails:
-                if e and field == 'business_email' and user.business_email_last_seen:
-                    if user.business_email_last_seen.strftime('%Y-%m-%d %H:%M:%S') > thirty_days_ago_str:
+                if (
+                    e
+                    and field == "business_email"
+                    and user.business_email_last_seen
+                ):
+                    if (
+                        user.business_email_last_seen.strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
+                        > thirty_days_ago_str
+                    ):
                         return e.strip()
-                if e and field == 'personal_emails' and user.personal_emails_last_seen:
-                    personal_emails_last_seen_str = user.personal_emails_last_seen.strftime('%Y-%m-%d %H:%M:%S')
+                if (
+                    e
+                    and field == "personal_emails"
+                    and user.personal_emails_last_seen
+                ):
+                    personal_emails_last_seen_str = (
+                        user.personal_emails_last_seen.strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
+                    )
                     if personal_emails_last_seen_str > thirty_days_ago_str:
                         return e.strip()
-                if e and million_verifier_integrations.is_email_verify(email=e.strip()):
+                if e and million_verifier_integrations.is_email_verify(
+                    email=e.strip()
+                ):
                     return e.strip()
                 verity += 1
     if verity > 0:
@@ -69,9 +90,9 @@ def get_valid_email(user: FiveXFiveUser, million_verifier_integrations: MillionV
 
 def get_valid_email_without_million(user: FiveXFiveUser) -> str:
     email_fields = [
-        'business_email',
-        'personal_emails',
-        'additional_personal_emails',
+        "business_email",
+        "personal_emails",
+        "additional_personal_emails",
     ]
     for field in email_fields:
         email = getattr(user, field, None)
@@ -85,7 +106,7 @@ def get_valid_email_without_million(user: FiveXFiveUser) -> str:
 
 def format_phone_number(phones):
     if phones:
-        phone_list = phones.split(',')
+        phone_list = phones.split(",")
         formatted_phones = []
         for phone in phone_list:
             phone_str = phone.strip()
@@ -95,7 +116,7 @@ def format_phone_number(phones):
                 phone_str = f"+{phone_str}"
             formatted_phones.append(phone_str)
 
-        return ', '.join(formatted_phones)
+        return ", ".join(formatted_phones)
 
 
 def extract_first_email(text: str) -> str:
@@ -106,7 +127,7 @@ def extract_first_email(text: str) -> str:
 def create_company_alias(company_name):
     if company_name:
         company_name = company_name.strip()
-        alias = regex.sub(r'[\p{Z}\s]+', ' ', company_name)
+        alias = regex.sub(r"[\p{Z}\s]+", " ", company_name)
         alias = company_name.replace(" ", "_")
         alias = alias.lower()
         return alias
@@ -116,31 +137,36 @@ def validate_and_format_phone(phone_numbers: str) -> str | None:
     if not phone_numbers:
         return None
 
-    phone_pattern = r'\+[\d\s\-\(\)]+'
+    phone_pattern = r"\+[\d\s\-\(\)]+"
     matches = re.findall(phone_pattern, phone_numbers)
 
     formatted_numbers = []
     for phone_number in matches:
-        cleaned_phone_number = re.sub(r'\D', '', phone_number)
+        cleaned_phone_number = re.sub(r"\D", "", phone_number)
         if len(cleaned_phone_number) == 10:
-            formatted_phone_number = '+1' + cleaned_phone_number
+            formatted_phone_number = "+1" + cleaned_phone_number
             formatted_numbers.append(formatted_phone_number)
-        elif len(cleaned_phone_number) == 11 and cleaned_phone_number.startswith('1'):
-            formatted_phone_number = '+' + cleaned_phone_number
+        elif len(
+            cleaned_phone_number
+        ) == 11 and cleaned_phone_number.startswith("1"):
+            formatted_phone_number = "+" + cleaned_phone_number
             formatted_numbers.append(formatted_phone_number)
         else:
             continue
 
     unique_numbers = sorted(set(formatted_numbers))
     if unique_numbers:
-        return ', '.join(unique_numbers)
+        return ", ".join(unique_numbers)
     else:
         return None
 
 
-def get_valid_location(user: FiveXFiveUser) -> tuple[Any | None, Any | None, Any | None, Any | None]:
+def get_valid_location(
+    user: FiveXFiveUser,
+) -> tuple[Any | None, Any | None, Any | None, Any | None]:
     return (
-        getattr(user, "personal_address") or getattr(user, "company_address", None),
+        getattr(user, "personal_address")
+        or getattr(user, "company_address", None),
         getattr(user, "personal_city") or getattr(user, "company_city", None),
         getattr(user, "personal_state") or getattr(user, "company_state", None),
         getattr(user, "personal_zip") or getattr(user, "company_zip", None),
@@ -149,10 +175,10 @@ def get_valid_location(user: FiveXFiveUser) -> tuple[Any | None, Any | None, Any
 
 def get_valid_phone(user: FiveXFiveUser) -> Optional[str]:
     return (
-            getattr(user, 'mobile_phone') or
-            getattr(user, 'personal_phone') or
-            getattr(user, 'direct_number') or
-            getattr(user, 'company_phone', None)
+        getattr(user, "mobile_phone")
+        or getattr(user, "personal_phone")
+        or getattr(user, "direct_number")
+        or getattr(user, "company_phone", None)
     )
 
 
@@ -172,33 +198,38 @@ def normalize_url(url):
     if not url:
         return url
 
-    url = url.replace('http://', '').replace('https://', '').replace('www.', '').strip('/')
+    url = (
+        url.replace("http://", "")
+        .replace("https://", "")
+        .replace("www.", "")
+        .strip("/")
+    )
 
-    scheme_end = url.find('://')
+    scheme_end = url.find("://")
     if scheme_end != -1:
         scheme_end += 3
         scheme = url[:scheme_end]
         remainder = url[scheme_end:]
     else:
-        scheme = ''
+        scheme = ""
         remainder = url
 
-    path_end = remainder.find('?')
+    path_end = remainder.find("?")
     if path_end != -1:
         path = remainder[:path_end]
     else:
         path = remainder
 
-    path = path.rstrip('/')
+    path = path.rstrip("/")
     normalized_url = scheme + path
     return normalized_url
 
 
 def check_certain_urls(page, activate_certain_urls):
-    page_path = re.sub(r'^(https?://)?(www\.)?', '', page).strip('/')
-    urls_to_check = activate_certain_urls.split(', ')
+    page_path = re.sub(r"^(https?://)?(www\.)?", "", page).strip("/")
+    urls_to_check = activate_certain_urls.split(", ")
     for url in urls_to_check:
-        url = re.sub(r'^(https?://)?(www\.)?', '', url.strip()).strip('/')
+        url = re.sub(r"^(https?://)?(www\.)?", "", url.strip()).strip("/")
         if (page_path == url) or (url in page_path):
             return True
     return False
@@ -209,11 +240,11 @@ async def send_sse(channel, user_id: int, data: dict):
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message_with_channel(
             channel=channel,
-            queue_name=f'sse_events_{str(user_id)}',
+            queue_name=f"sse_events_{str(user_id)}",
             message_body={
-                "status": 'AUDIENCE_VALIDATION_PROGRESS',
-                "data": data
-            }
+                "status": "AUDIENCE_VALIDATION_PROGRESS",
+                "data": data,
+            },
         )
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")

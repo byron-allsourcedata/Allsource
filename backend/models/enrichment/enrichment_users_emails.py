@@ -12,30 +12,29 @@ class EnrichmentUsersEmails(Base):
     __tablename__ = "enrichment_users_emails"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), primary_key=True,
-        server_default=text("gen_random_uuid()")
+        UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
     )
     enrichment_user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey(
-            EnrichmentUser.id,
-            ondelete="CASCADE",
-            onupdate="CASCADE"
-        ),
-        nullable=False
+        ForeignKey(EnrichmentUser.id, ondelete="CASCADE", onupdate="CASCADE"),
+        nullable=False,
     )
     email_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey(
-            "enrichment_emails.id",
-            ondelete="CASCADE",
-            onupdate="CASCADE"
+            "enrichment_emails.id", ondelete="CASCADE", onupdate="CASCADE"
         ),
-        nullable=False
+        nullable=False,
     )
-    
+
     __table_args__ = (
-        UniqueConstraint(enrichment_user_id, email_id, name="uq_enrichment_users_emails_user_email"),
+        UniqueConstraint(
+            enrichment_user_id,
+            email_id,
+            name="uq_enrichment_users_emails_user_email",
+        ),
         Index("ix_enrichment_users_emails_email_id", email_id),
         Index("ix_enrichment_users_emails_user_id", enrichment_user_id),
     )

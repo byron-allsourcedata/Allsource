@@ -7,6 +7,10 @@ class SendgridPersistence:
         self.db = db
 
     def get_template_by_alias(self, alias):
-        template = self.db.query(SendgridTemplate).filter(SendgridTemplate.alias == alias).first()
+        template = (
+            self.db.query(SendgridTemplate)
+            .filter(SendgridTemplate.alias == alias)
+            .first()
+        )
         if template:
             return template.template_id

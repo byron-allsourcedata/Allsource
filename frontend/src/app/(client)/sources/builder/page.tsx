@@ -1,10 +1,10 @@
 "use client";
 import React, {
-  ChangeEvent,
-  useState,
-  useEffect,
-  useRef,
-  Suspense,
+	ChangeEvent,
+	useState,
+	useEffect,
+	useRef,
+	Suspense,
 } from "react";
 import {
   Box,
@@ -39,61 +39,58 @@ import { useSourcesHints } from "../context/SourcesHintsContext";
 import { builderHintCards } from "../context/hintsCardsContent";
 import { fetchUserData } from "@/services/meService";
 import { useSidebar } from "@/context/SidebarContext";
-import { BuilderKey } from '../context/hintsCardsContent';
-import { useTimeout } from "usehooks-ts";
-
+import { BuilderKey } from "../context/hintsCardsContent";
 
 interface Row {
-  id: number;
-  type: string;
-  value: string;
-  canDelete: boolean;
-  isHidden: boolean;
+	id: number;
+	type: string;
+	value: string;
+	canDelete: boolean;
+	isHidden: boolean;
 }
 
 interface EventTypeInterface {
-  id: number;
-  name: string;
-  title: string;
+	id: number;
+	name: string;
+	title: string;
 }
 
 interface InterfaceMappingRowsSourceType {
-  "Failed Leads": Row[];
-  "Interest": Row[];
-  "Customer Conversions": Row[];
+	"Failed Leads": Row[];
+	Interest: Row[];
+	"Customer Conversions": Row[];
 }
 
 interface NewSource {
-  target_schema: string;
-  source_type: string;
-  source_origin: string;
-  source_name: string;
-  file_url?: string;
-  rows?: { type: string; value: string }[];
-  domain_id?: number;
+	target_schema: string;
+	source_type: string;
+	source_origin: string;
+	source_name: string;
+	file_url?: string;
+	rows?: { type: string; value: string }[];
+	domain_id?: number;
 }
 
 interface DomainsLeads {
-  id: number;
-  name: string;
-  pixel_installed: boolean;
-  converted_sales_count: number;
-  viewed_product_count: number;
-  visitor_count: number;
-  abandoned_cart_count: number;
-  total_count: number;
+	id: number;
+	name: string;
+	pixel_installed: boolean;
+	converted_sales_count: number;
+	viewed_product_count: number;
+	visitor_count: number;
+	abandoned_cart_count: number;
+	total_count: number;
 }
 
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
-  height: 4,
-  borderRadius: 0,
-  backgroundColor: "#c6dafc",
-  "& .MuiLinearProgress-bar": {
-    borderRadius: 5,
-    backgroundColor: "#4285f4",
-  },
+	height: 4,
+	borderRadius: 0,
+	backgroundColor: "#c6dafc",
+	"& .MuiLinearProgress-bar": {
+		borderRadius: 5,
+		backgroundColor: "#4285f4",
+	},
 }));
-
 
 const SourcesImport: React.FC = () => {
   const { changeSourcesBuilderHint, sourcesBuilderHints, resetSourcesBuilderHints } = useSourcesHints();
@@ -2218,11 +2215,11 @@ const SourcesImport: React.FC = () => {
 };
 
 const SourceBuilder: React.FC = () => {
-  return (
-    <Suspense fallback={<ProgressBar />}>
-      <SourcesImport />
-    </Suspense>
-  );
+	return (
+		<Suspense fallback={<ProgressBar />}>
+			<SourcesImport />
+		</Suspense>
+	);
 };
 
 export default SourceBuilder;

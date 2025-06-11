@@ -25,5 +25,5 @@ __all__ = [
     "EnrichmentPersonalProfiles",
     "EnrichmentEmails",
     "EnrichmentProfessionalProfile",
-    "EnrichmentPostal"
+    "EnrichmentPostal",
 ]

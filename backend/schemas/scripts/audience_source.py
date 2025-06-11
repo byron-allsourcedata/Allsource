@@ -10,6 +10,7 @@ class PersonEntry(BaseModel):
     count: int
     recency: float
 
+
 class DataForNormalize(BaseModel):
     matched_size: int
     all_size: int
@@ -41,6 +42,7 @@ class DataBodyFromSource(BaseModel):
     persons: List[PersonRow]
     source_id: str
     user_id: int
+
 
 class MessageBody(BaseModel):
     type: str

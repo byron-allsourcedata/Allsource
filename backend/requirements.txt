@@ -142,6 +142,7 @@ requests-oauthlib==2.0.0
 requests-toolbelt==1.0.0
 rich==13.7.1
 rsa==4.9
+ruff==0.11.13
 s3transfer==0.10.2
 scikit-learn==1.6.1
 scipy==1.15.2

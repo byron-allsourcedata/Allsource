@@ -18,58 +18,78 @@ sys.path.append(parent_dir)
 
 from config.folders import Folders
 
-from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService, \
-    map_letter_to_number, map_credit_rating, map_net_worth_code
+from services.similar_audiences.audience_data_normalization import (
+    AudienceDataNormalizationService,
+    map_letter_to_number,
+    map_credit_rating,
+    map_net_worth_code,
+)
 
 from schemas.similar_audiences import AudienceData, NormalizationConfig
 from services.similar_audiences import SimilarAudienceService
-from services.similar_audiences.audience_data_normalization import AudienceDataNormalizationService
+from services.similar_audiences.audience_data_normalization import (
+    AudienceDataNormalizationService,
+)
 
 
 def read_csv_transactions(file_path: str):
     user_profiles = []
 
-    with open(file_path, mode='r', newline='') as file:
+    with open(file_path, mode="r", newline="") as file:
         reader = csv.DictReader(file)
         for row in reader:
-            children = 0 if row['NumberOfChildren'] == '' else int(row['NumberOfChildren'])
+            children = (
+                0
+                if row["NumberOfChildren"] == ""
+                else int(row["NumberOfChildren"])
+            )
             # in real code provide amount calculated from transactions
             # amount = 100
             amount = children * random.randint(0, 5) * 50 + 100
-            user_profiles.append(AudienceData(**row, customer_value=Decimal(amount)))
+            user_profiles.append(
+                AudienceData(**row, customer_value=Decimal(amount))
+            )
 
     return user_profiles
 
+
 async def main():
-    config =  NormalizationConfig(
-        numerical_features=['PersonExactAge', 'NumberOfChildren', 'LengthOfResidenceYears'],
+    config = NormalizationConfig(
+        numerical_features=[
+            "PersonExactAge",
+            "NumberOfChildren",
+            "LengthOfResidenceYears",
+        ],
         unordered_features=[
-            'PersonGender', 'HasChildren', 'HomeownerStatus', 'MaritalStatus'
+            "PersonGender",
+            "HasChildren",
+            "HomeownerStatus",
+            "MaritalStatus",
         ],
         ordered_features={
-            'EstimatedHouseholdIncomeCode': map_letter_to_number,
-            'EstimatedCurrentHomeValueCode': map_letter_to_number,
-            'CreditRating': map_credit_rating,
-            'NetWorthCode': map_net_worth_code
-        }
+            "EstimatedHouseholdIncomeCode": map_letter_to_number,
+            "EstimatedCurrentHomeValueCode": map_letter_to_number,
+            "CreditRating": map_credit_rating,
+            "NetWorthCode": map_net_worth_code,
+        },
     )
 
-    transactions = read_csv_transactions(Folders.data('enrichment.csv'))
+    transactions = read_csv_transactions(Folders.data("enrichment.csv"))
     normalizer = AudienceDataNormalizationService()
-    service = SimilarAudienceService(audience_data_normalization_service=normalizer)
+    service = SimilarAudienceService(
+        audience_data_normalization_service=normalizer
+    )
 
     dict_enrichment = [v.__dict__ for v in transactions]
 
     try:
-        scores = service.get_audience_feature_importance_with_config(dict_enrichment, config)
+        scores = service.get_audience_feature_importance_with_config(
+            dict_enrichment, config
+        )
         print(scores)
     except CatBoostError as e:
         if "All train targets are equal" in str(e):
             print("All train targets are equal")
-
-
-
-
 
 
 if __name__ == "__main__":

@@ -10,7 +10,6 @@ load_dotenv()
 
 
 class SqlConfigBase(Base):
-
     def __init__(self):
         super().__init__()
         self.host: str = os.getenv("DB_HOST")
@@ -35,4 +34,6 @@ engine = create_engine(
     pool_timeout=10,
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
+SessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, bind=engine, expire_on_commit=False
+)

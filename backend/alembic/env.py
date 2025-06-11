@@ -12,18 +12,23 @@ config = context.config
 database_url = f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
 
 if not database_url:
-    raise RuntimeError("database_url не задан в .env или окружении нет переменных")
+    raise RuntimeError(
+        "database_url не задан в .env или окружении нет переменных"
+    )
 config.set_main_option("sqlalchemy.url", database_url)
 
 fileConfig(config.config_file_name)
 
 from models.base import *
+
 target_metadata = Base.metadata
+
 
 def run_migrations_offline():
     context.configure(
         url=database_url,
         target_metadata=target_metadata,
+        compare_server_default=True,
         literal_binds=True,
     )
     with context.begin_transaction():
@@ -37,7 +42,11 @@ def run_migrations_online():
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_server_default=True,
+        )
         with context.begin_transaction():
             context.run_migrations()
 

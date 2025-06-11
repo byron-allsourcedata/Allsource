@@ -16,12 +16,16 @@ from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources import AudienceSource
-from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
+from models.audience_data_sync_imported_persons import (
+    AudienceDataSyncImportedPersons,
+)
 from models.users import Users
 from models.state import States
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
+from models.enrichment.enrichment_personal_profiles import (
+    EnrichmentPersonalProfiles,
+)
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
@@ -29,21 +33,22 @@ from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
-class AudienceSmartsPersistence:    
+
+class AudienceSmartsPersistence:
     def __init__(self, db: Session):
         self.db = db
 
     def get_use_case_id_by_alias(self, use_case_alias: str):
         use_case = (
             self.db.query(AudienceSmartsUseCase.id)
-                .filter(AudienceSmartsUseCase.alias == use_case_alias)
-                .first()
+            .filter(AudienceSmartsUseCase.alias == use_case_alias)
+            .first()
         )
         return use_case[0] if use_case else None
-    
-    def calculate_smart_audience(self, data: DataSourcesFormat) -> int:   
+
+    def calculate_smart_audience(self, data: DataSourcesFormat) -> int:
         Lalp = aliased(AudienceLookalikesPerson)
-        Smp  = aliased(AudienceSourcesMatchedPerson)
+        Smp = aliased(AudienceSourcesMatchedPerson)
 
         lalp_q = (
             self.db.query(Lalp.enrichment_user_id.label("uid"))
@@ -55,26 +60,29 @@ class AudienceSmartsPersistence:
             .filter(Smp.source_id.in_(data["source_ids"]["include"]))
             .filter(Smp.source_id.notin_(data["source_ids"]["exclude"]))
         )
-        
+
         combined_subq = lalp_q.union(smp_q).subquery()
         count_q = (
             self.db.query(func.count(EnrichmentUser.id))
             .select_from(EnrichmentUser)
-            .join(combined_subq,
-                combined_subq.c.uid == EnrichmentUser.id)
-            .join(EnrichmentUserContact,
-                EnrichmentUserContact.asid == EnrichmentUser.asid)
+            .join(combined_subq, combined_subq.c.uid == EnrichmentUser.id)
+            .join(
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
+            )
         )
 
         if data.get("use_case") == "linkedin":
-            count_q = count_q.filter(EnrichmentUserContact.linkedin_url.isnot(None))
+            count_q = count_q.filter(
+                EnrichmentUserContact.linkedin_url.isnot(None)
+            )
 
         return count_q.scalar()
 
     def create_audience_smarts_data_sources(
-            self,
-            smart_audience_id: str,
-            data_sources: List[dict],
+        self,
+        smart_audience_id: str,
+        data_sources: List[dict],
     ) -> None:
         new_data_sources = []
 
@@ -82,33 +90,37 @@ class AudienceSmartsPersistence:
             data_entry = AudienceSmartsDataSources(
                 smart_audience_id=smart_audience_id,
                 data_type=source["includeExclude"],
-                source_id=source["selectedSourceId"] if source["sourceLookalike"] == "Source" else None,
-                lookalike_id=source["selectedSourceId"] if source["sourceLookalike"] == "Lookalike" else None,
+                source_id=source["selectedSourceId"]
+                if source["sourceLookalike"] == "Source"
+                else None,
+                lookalike_id=source["selectedSourceId"]
+                if source["sourceLookalike"] == "Lookalike"
+                else None,
             )
             new_data_sources.append(data_entry)
-
 
         self.db.bulk_save_objects(new_data_sources)
         self.db.flush()
 
     def create_audience_smart(
-            self,
-            name: str,
-            user_id: int,
-            created_by_user_id: int,
-            use_case_alias: str,
-            data_sources: List[dict],
-            total_records: int,
-            status: str,
-            target_schema: str,
-            validation_params: Optional[dict],
-            active_segment_records: int,
-            need_validate: bool
+        self,
+        name: str,
+        user_id: int,
+        created_by_user_id: int,
+        use_case_alias: str,
+        data_sources: List[dict],
+        total_records: int,
+        status: str,
+        target_schema: str,
+        validation_params: Optional[dict],
+        active_segment_records: int,
+        need_validate: bool,
     ) -> AudienceSmart:
-
         use_case_id = self.get_use_case_id_by_alias(use_case_alias)
         if not use_case_id:
-            raise ValueError(f"Use case with alias '{use_case_alias}' not found.")
+            raise ValueError(
+                f"Use case with alias '{use_case_alias}' not found."
+            )
 
         new_audience = AudienceSmart(
             name=name,
@@ -118,9 +130,9 @@ class AudienceSmartsPersistence:
             validations=validation_params if need_validate else json.dumps({}),
             total_records=total_records,
             target_schema=target_schema,
-            validated_records = 0 if need_validate else active_segment_records,
+            validated_records=0 if need_validate else active_segment_records,
             active_segment_records=active_segment_records,
-            status=status
+            status=status,
         )
 
         self.db.add(new_audience)
@@ -134,19 +146,18 @@ class AudienceSmartsPersistence:
         return new_audience
 
     def get_audience_smarts(
-            self,
-            user_id: int,
-            page: int,
-            per_page: int,
-            from_date: Optional[int] = None, 
-            to_date: Optional[int] = None, 
-            sort_by: Optional[str] = None,
-            sort_order: Optional[str] = None,
-            search_query: Optional[str] = None,
-            statuses: Optional[List[str]] = None, 
-            use_cases: Optional[List[str]] = None
+        self,
+        user_id: int,
+        page: int,
+        per_page: int,
+        from_date: Optional[int] = None,
+        to_date: Optional[int] = None,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = None,
+        search_query: Optional[str] = None,
+        statuses: Optional[List[str]] = None,
+        use_cases: Optional[List[str]] = None,
     ) -> Tuple[List[Row], int]:
-
         query = (
             self.db.query(
                 AudienceSmart.id,
@@ -161,14 +172,17 @@ class AudienceSmartsPersistence:
                 AudienceSmartsUseCase.integrations,
                 AudienceSmart.processed_active_segment_records,
             )
-                .join(Users, Users.id == AudienceSmart.created_by_user_id)
-                .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)
-                .filter(AudienceSmart.user_id == user_id)
+            .join(Users, Users.id == AudienceSmart.created_by_user_id)
+            .join(
+                AudienceSmartsUseCase,
+                AudienceSmartsUseCase.id == AudienceSmart.use_case_id,
+            )
+            .filter(AudienceSmart.user_id == user_id)
         )
-        
+
         if statuses:
             query = query.filter(AudienceSmart.status.in_(statuses))
-        
+
         if use_cases:
             query = query.filter(AudienceSmartsUseCase.alias.in_(use_cases))
 
@@ -178,38 +192,37 @@ class AudienceSmartsPersistence:
 
             query = query.filter(
                 AudienceSmart.created_at >= start_date,
-                AudienceSmart.created_at <= end_date
+                AudienceSmart.created_at <= end_date,
             )
-        
+
         if search_query:
             query = query.filter(
                 or_(
                     AudienceSmart.name.ilike(f"%{search_query}%"),
-                    Users.full_name.ilike(f"%{search_query}%")
+                    Users.full_name.ilike(f"%{search_query}%"),
                 )
             )
 
         sort_options = {
-            'number_of_customers': AudienceSmart.total_records,
-            'created_date': AudienceSmart.created_at,
-            'active_segment_records': AudienceSmart.active_segment_records,
+            "number_of_customers": AudienceSmart.total_records,
+            "created_date": AudienceSmart.created_at,
+            "active_segment_records": AudienceSmart.active_segment_records,
         }
         if sort_by in sort_options:
             sort_column = sort_options[sort_by]
             query = query.order_by(
-                asc(sort_column) if sort_order == 'asc' else desc(sort_column),
+                asc(sort_column) if sort_order == "asc" else desc(sort_column),
             )
         else:
-            query = query.order_by(AudienceSmart.created_at.desc()) 
+            query = query.order_by(AudienceSmart.created_at.desc())
 
         offset = (page - 1) * per_page
         smarts = query.limit(per_page).offset(offset).all()
         count = query.count()
-        
-        return smarts, count
-    
 
-    def get_datasources_by_aud_smart_id(self, id: UUID) -> Tuple[List[Row]]: 
+        return smarts, count
+
+    def get_datasources_by_aud_smart_id(self, id: UUID) -> Tuple[List[Row]]:
         query = (
             self.db.query(
                 AudienceSmartsDataSources.data_type,
@@ -217,115 +230,153 @@ class AudienceSmartsPersistence:
                 AudienceLookalikes.size.label("lookalike_size"),
                 AudienceSource.name.label("source_name"),
                 AudienceSource.source_type,
-                AudienceSource.matched_records
+                AudienceSource.matched_records,
             )
-                .select_from(AudienceSmart)
-                .join(AudienceSmartsDataSources, AudienceSmartsDataSources.smart_audience_id == AudienceSmart.id)
-                .outerjoin(AudienceLookalikes, AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id)
-                .outerjoin(AudienceSource, (AudienceSmartsDataSources.source_id == AudienceSource.id) | (AudienceLookalikes.source_uuid == AudienceSource.id)) 
-                .filter(AudienceSmart.id == id)
+            .select_from(AudienceSmart)
+            .join(
+                AudienceSmartsDataSources,
+                AudienceSmartsDataSources.smart_audience_id == AudienceSmart.id,
+            )
+            .outerjoin(
+                AudienceLookalikes,
+                AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id,
+            )
+            .outerjoin(
+                AudienceSource,
+                (AudienceSmartsDataSources.source_id == AudienceSource.id)
+                | (AudienceLookalikes.source_uuid == AudienceSource.id),
+            )
+            .filter(AudienceSmart.id == id)
         )
         return query.all()
-    
 
-    def get_validations_by_aud_smart_id(self, id: UUID) -> Tuple[List[Row]]: 
-        query = (
-            self.db.query(AudienceSmart.validations).filter(AudienceSmart.id == id)
+    def get_validations_by_aud_smart_id(self, id: UUID) -> Tuple[List[Row]]:
+        query = self.db.query(AudienceSmart.validations).filter(
+            AudienceSmart.id == id
         )
         return query.first()
 
-
     def search_audience_smart(self, start_letter: str, user_id: int):
         query = (
-            self.db.query(
-                AudienceSmart.name,
-                Users.full_name
-            )
-                .join(Users, Users.id == AudienceSmart.created_by_user_id)
-                .filter(AudienceSmart.user_id == user_id)
+            self.db.query(AudienceSmart.name, Users.full_name)
+            .join(Users, Users.id == AudienceSmart.created_by_user_id)
+            .filter(AudienceSmart.user_id == user_id)
         )
 
         if start_letter:
             query = query.filter(
                 or_(
                     AudienceSmart.name.ilike(f"{start_letter}%"),
-                    Users.full_name.ilike(f"{start_letter}%")
+                    Users.full_name.ilike(f"{start_letter}%"),
                 )
             )
 
         smarts = query.all()
         return smarts
-    
 
     def delete_audience_smart(self, id: int) -> int:
-        deleted_count = self.db.query(AudienceSmart).filter(
-            AudienceSmart.id == id
-        ).delete()
+        deleted_count = (
+            self.db.query(AudienceSmart).filter(AudienceSmart.id == id).delete()
+        )
         self.db.commit()
         return deleted_count
-    
+
     def update_audience_smart(self, id, new_name) -> int:
-        updated_count = self.db.query(AudienceSmart).filter(
-            AudienceSmart.id == id
-        ).update({AudienceSmart.name: new_name}, synchronize_session=False)
+        updated_count = (
+            self.db.query(AudienceSmart)
+            .filter(AudienceSmart.id == id)
+            .update({AudienceSmart.name: new_name}, synchronize_session=False)
+        )
         self.db.commit()
         return updated_count
 
     def set_data_syncing_status(self, id, status) -> int:
-        updated_count = self.db.query(AudienceSmart).filter(
-            AudienceSmart.id == id
-        ).update({AudienceSmart.status: status}, synchronize_session=False)
+        updated_count = (
+            self.db.query(AudienceSmart)
+            .filter(AudienceSmart.id == id)
+            .update({AudienceSmart.status: status}, synchronize_session=False)
+        )
         self.db.commit()
         return updated_count
 
-
-    def get_persons_by_smart_aud_id(self, smart_audience_id, sent_contacts, fields):
+    def get_persons_by_smart_aud_id(
+        self, smart_audience_id, sent_contacts, fields
+    ):
         contact_fields = [
             getattr(EnrichmentUserContact, field)
-            for field in fields if hasattr(EnrichmentUserContact, field)
+            for field in fields
+            if hasattr(EnrichmentUserContact, field)
         ]
 
         profile_fields = [
             getattr(EnrichmentPersonalProfiles, field)
-            for field in fields if hasattr(EnrichmentPersonalProfiles, field)
+            for field in fields
+            if hasattr(EnrichmentPersonalProfiles, field)
         ]
 
         query = (
             self.db.query(*contact_fields, *profile_fields)
-                .select_from(AudienceSmartPerson)
-                .join(EnrichmentUser, EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id)
-                .join(EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid)
-                .join(EnrichmentPersonalProfiles, EnrichmentPersonalProfiles.asid == EnrichmentUser.asid)
-                .filter(AudienceSmartPerson.smart_audience_id == smart_audience_id, AudienceSmartPerson.is_valid == True)
+            .select_from(AudienceSmartPerson)
+            .join(
+                EnrichmentUser,
+                EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
+            )
+            .join(
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
+            )
+            .join(
+                EnrichmentPersonalProfiles,
+                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid,
+            )
+            .filter(
+                AudienceSmartPerson.smart_audience_id == smart_audience_id,
+                AudienceSmartPerson.is_valid == True,
+            )
         )
-
 
         smarts = query.limit(sent_contacts).all()
         return smarts
-    
-    def get_synced_persons_by_smart_aud_id(self, data_sync_id, enrichment_field_names):
+
+    def get_synced_persons_by_smart_aud_id(
+        self, data_sync_id, enrichment_field_names
+    ):
         enrichment_fields = [
-            getattr(EnrichmentUserContact, field) for field in enrichment_field_names
+            getattr(EnrichmentUserContact, field)
+            for field in enrichment_field_names
         ]
 
         fields = [
             *enrichment_fields,
             States.state_name.label("state"),
-            EnrichmentPersonalProfiles.gender
+            EnrichmentPersonalProfiles.gender,
         ]
 
         query = (
-            self.db.query(
-                *fields
+            self.db.query(*fields)
+            .select_from(AudienceDataSyncImportedPersons)
+            .join(
+                EnrichmentUser,
+                EnrichmentUser.id
+                == AudienceDataSyncImportedPersons.enrichment_user_id,
             )
-                .select_from(AudienceDataSyncImportedPersons)
-                .join(EnrichmentUser, EnrichmentUser.id == AudienceDataSyncImportedPersons.enrichment_user_id)
-                .outerjoin(EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid)
-                .outerjoin(EnrichmentPersonalProfiles, EnrichmentPersonalProfiles.asid == EnrichmentUser.asid)
-                .outerjoin(States, func.lower(States.state_code) == func.lower(EnrichmentPersonalProfiles.state_abbr))  
-                .filter(AudienceDataSyncImportedPersons.data_sync_id == data_sync_id)
+            .outerjoin(
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
+            )
+            .outerjoin(
+                EnrichmentPersonalProfiles,
+                EnrichmentPersonalProfiles.asid == EnrichmentUser.asid,
+            )
+            .outerjoin(
+                States,
+                func.lower(States.state_code)
+                == func.lower(EnrichmentPersonalProfiles.state_abbr),
+            )
+            .filter(
+                AudienceDataSyncImportedPersons.data_sync_id == data_sync_id
+            )
         )
-
 
         return query.all()
 
@@ -344,7 +395,10 @@ class AudienceSmartsPersistence:
                 AudienceSmart.status,
             )
             .join(Users, Users.id == AudienceSmart.created_by_user_id)
-            .join(AudienceSmartsUseCase, AudienceSmartsUseCase.id == AudienceSmart.use_case_id)
+            .join(
+                AudienceSmartsUseCase,
+                AudienceSmartsUseCase.id == AudienceSmart.use_case_id,
+            )
             .filter(AudienceSmart.id == id)
         ).first()
         return query

@@ -1,181 +1,183 @@
 import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Typography,
-  Link,
-  IconButton,
-  Backdrop,
-  SxProps,
+	Box,
+	Typography,
+	Link,
+	IconButton,
+	Backdrop,
+	SxProps,
 } from "@mui/material";
 import PulsingDotComponent from "./PulsingDot";
 import { CloseIcon } from "@/icon";
 import { useHints } from "@/context/HintsContext";
 import { useTimeout } from "usehooks-ts";
-import { HintCardInterface } from '@/utils/hintsUtils';
+import { HintCardInterface } from "@/utils/hintsUtils";
 
 interface HintCardProps {
-  card: HintCardInterface;
-  positionLeft?: number;
-  positionTop?: number;
-  rightSide?: boolean;
-  onDrawer?: boolean;
-  isOpenBody: boolean;
-  sx?: SxProps;
-  toggleClick: () => void;
-  closeClick: () => void;
+	card: HintCardInterface;
+	positionLeft?: number;
+	positionTop?: number;
+	rightSide?: boolean;
+	onDrawer?: boolean;
+	isOpenBody: boolean;
+	sx?: SxProps;
+	toggleClick: () => void;
+	closeClick: () => void;
 }
 
 const HintCard: React.FC<HintCardProps> = ({
-  card,
-  positionLeft,
-  positionTop,
-  toggleClick,
-  closeClick,
-  isOpenBody,
-  rightSide,
-  onDrawer,
-  sx,
+	card,
+	positionLeft,
+	positionTop,
+	toggleClick,
+	closeClick,
+	isOpenBody,
+	rightSide,
+	onDrawer,
+	sx,
 }) => {
-  const [showHint, setShowHint] = useState(false);
-  const { showHints } = useHints();
-  const [hintTimeout, setHintTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [autoOpenTimeout, setAutoOpenTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [isManualClick, setIsManualClick] = useState(false);
+	const [showHint, setShowHint] = useState(false);
+	const { showHints } = useHints();
+	const [hintTimeout, setHintTimeout] = useState<NodeJS.Timeout | null>(null);
+	const [autoOpenTimeout, setAutoOpenTimeout] = useState<NodeJS.Timeout | null>(
+		null,
+	);
+	const [isManualClick, setIsManualClick] = useState(false);
 
-  const showBody = (isManual = false) => {
-    if (hintTimeout) {
-      clearTimeout(hintTimeout);
-    }
-    setShowHint(true);
+	const showBody = (isManual = false) => {
+		if (hintTimeout) {
+			clearTimeout(hintTimeout);
+		}
+		setShowHint(true);
 
-    if (!isManual) {
-      const closeTimeout = setTimeout(() => {
-        setShowHint(false);
-        closeClick()
-      }, 3000);
-  
-      setHintTimeout(closeTimeout);
-    }
-  };
+		if (!isManual) {
+			const closeTimeout = setTimeout(() => {
+				setShowHint(false);
+				closeClick();
+			}, 3000);
 
-  const handleDotClick = () => {
-    setIsManualClick(true);
-    if (autoOpenTimeout) {
-      clearTimeout(autoOpenTimeout);
-    }
-    showBody(true);
-    toggleClick();
-  };
+			setHintTimeout(closeTimeout);
+		}
+	};
 
-  useEffect(() => {
-    if (showHints && !isManualClick) {
-      const openTimeout = setTimeout(() => {
-        showBody();
-      }, 2000);
-      
-      setAutoOpenTimeout(openTimeout);
+	const handleDotClick = () => {
+		setIsManualClick(true);
+		if (autoOpenTimeout) {
+			clearTimeout(autoOpenTimeout);
+		}
+		showBody(true);
+		toggleClick();
+	};
 
-      return () => {
-        if (openTimeout) {
-          clearTimeout(openTimeout);
-        }
-      };
-    }
-  }, [showHints, isManualClick]);
+	useEffect(() => {
+		if (showHints && !isManualClick) {
+			const openTimeout = setTimeout(() => {
+				showBody();
+			}, 2000);
 
-  useEffect(() => {
-    if (!isOpenBody) {
-      setIsManualClick(false);
-    }
-  }, [isOpenBody]);
+			setAutoOpenTimeout(openTimeout);
 
-  return (
-    <>
-      {showHints && (
-        <>
-          <Backdrop
-            open={isOpenBody}
-            onClick={closeClick}
-            sx={{
-              zIndex: 1,
-              color: "#fff",
-              backgroundColor: "transparent",
-            }}
-          />
-          <Box
-            sx={{
-              position: "absolute",
-              left: positionLeft,
-              top: positionTop ?? 10,
-              width: 400,
-              pointerEvents: isOpenBody ? undefined : "none",
-              ...sx,
-            }}
-          >
-            {showHint && (
-              <Box
-                sx={{
-                  visibility: isOpenBody ? "visible" : "hidden",
-                  position: "relative",
-                  right: 0,
-                  maxWidth: 400,
-                  zIndex: onDrawer ? 2600 : 1200,
-                  p: 2,
-                  border: "1px solid #e0e0e0",
-                  borderRadius: 2,
-                  boxShadow: "0 2px 4px #00000026",
-                  bgcolor: "#fff",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <Typography className="first-sub-title" mb={1}>
-                    {card.title}
-                  </Typography>
-                  <IconButton size="small" onClick={closeClick}>
-                    <CloseIcon />
-                  </IconButton>
-                </Box>
-                <Typography
-                  className="fiveth-sub-title"
-                  mb={2}
-                  style={{ textWrap: "balance" }}
-                >
-                  {card.description}
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "end",
-                  }}
-                >
-                  <Link
-                    href={card.linkToLoadMore}
-                    underline="hover"
-                    className="second-sub-title"
-                    style={{ color: "#3898FC" }}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Learn more
-                  </Link>
-                </Box>
-              </Box>
-            )}
-            <PulsingDotComponent
-              toggleClick={handleDotClick}
-              rightSide={rightSide}
-            />
-          </Box>
-        </>
-      )}
-    </>
-  );
+			return () => {
+				if (openTimeout) {
+					clearTimeout(openTimeout);
+				}
+			};
+		}
+	}, [showHints, isManualClick]);
+
+	useEffect(() => {
+		if (!isOpenBody) {
+			setIsManualClick(false);
+		}
+	}, [isOpenBody]);
+
+	return (
+		<>
+			{showHints && (
+				<>
+					<Backdrop
+						open={isOpenBody}
+						onClick={closeClick}
+						sx={{
+							zIndex: 1,
+							color: "#fff",
+							backgroundColor: "transparent",
+						}}
+					/>
+					<Box
+						sx={{
+							position: "absolute",
+							left: positionLeft,
+							top: positionTop ?? 10,
+							width: 400,
+							pointerEvents: isOpenBody ? undefined : "none",
+							...sx,
+						}}
+					>
+						{showHint && (
+							<Box
+								sx={{
+									visibility: isOpenBody ? "visible" : "hidden",
+									position: "relative",
+									right: 0,
+									maxWidth: 400,
+									zIndex: onDrawer ? 2600 : 1200,
+									p: 2,
+									border: "1px solid #e0e0e0",
+									borderRadius: 2,
+									boxShadow: "0 2px 4px #00000026",
+									bgcolor: "#fff",
+								}}
+							>
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "space-between",
+										alignItems: "center",
+									}}
+								>
+									<Typography className="first-sub-title" mb={1}>
+										{card.title}
+									</Typography>
+									<IconButton size="small" onClick={closeClick}>
+										<CloseIcon />
+									</IconButton>
+								</Box>
+								<Typography
+									className="fiveth-sub-title"
+									mb={2}
+									style={{ textWrap: "balance" }}
+								>
+									{card.description}
+								</Typography>
+								<Box
+									sx={{
+										display: "flex",
+										justifyContent: "end",
+									}}
+								>
+									<Link
+										href={card.linkToLoadMore}
+										underline="hover"
+										className="second-sub-title"
+										style={{ color: "#3898FC" }}
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										Learn more
+									</Link>
+								</Box>
+							</Box>
+						)}
+						<PulsingDotComponent
+							toggleClick={handleDotClick}
+							rightSide={rightSide}
+						/>
+					</Box>
+				</>
+			)}
+		</>
+	);
 };
 
 export default HintCard;

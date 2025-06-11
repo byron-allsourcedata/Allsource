@@ -2,10 +2,12 @@ from pydantic import BaseModel
 from typing import Optional, Union, List
 from datetime import datetime
 
+
 class ErrorResponse(BaseModel):
     code: int
     message: str
-    
+
+
 class PartnersResponse(BaseModel):
     id: int
     partner_name: str
@@ -24,11 +26,13 @@ class PartnersResponse(BaseModel):
     reward_payout_date: Optional[datetime] = None
     isActive: bool = False
 
+
 class PartnersObjectResponse(BaseModel):
     status: Optional[bool] = False
     error: Optional[ErrorResponse] = None
     message: Optional[str] = None
     data: Optional[Union[List[PartnersResponse], PartnersResponse]] = None
+
 
 class PartnerCreateRequest(BaseModel):
     name: str
@@ -38,14 +42,17 @@ class PartnerCreateRequest(BaseModel):
     is_master: Optional[bool] = False
     master_id: Optional[int] = None
 
+
 class OpportunityStatus(BaseModel):
     status: bool
     message: Optional[str] = None
 
-class PartnerUpdateRequest(BaseModel):    
+
+class PartnerUpdateRequest(BaseModel):
     commission: int
     name: str
     company_name: str
+
 
 class PartnerUserData(BaseModel):
     subscription: Optional[str] = None

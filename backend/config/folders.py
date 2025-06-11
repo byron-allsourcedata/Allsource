@@ -6,8 +6,9 @@ from .util import getenv
 
 load_dotenv()
 
+
 class FoldersConfig:
-    data = getenv('DATA_FOLDER')
+    data = getenv("DATA_FOLDER")
 
 
 class Folders:

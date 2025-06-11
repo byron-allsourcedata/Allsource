@@ -25,19 +25,23 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO)
 
 # Configuration
-QUEUE_HEMS_EXPORT = '5x5_hems_export'
+QUEUE_HEMS_EXPORT = "5x5_hems_export"
 
 
 async def on_message_received(message, db_session):
     try:
         message_json = json.loads(message.body)
-        hem_json = message_json['hem']
-        five_x_five_hems = insert(FiveXFiveHems).values(
-            up_id=str(hem_json.get('UP_ID', None)),
-            sha256_lc_hem=str(hem_json.get('SHA256_LC_HEM', None)),
-            md5_lc_hem=str(hem_json.get('MD5_LC_HEM', None)),
-            sha1_lc_hem=str(hem_json.get('SHA1_LC_HEM', None))
-        ).on_conflict_do_nothing()
+        hem_json = message_json["hem"]
+        five_x_five_hems = (
+            insert(FiveXFiveHems)
+            .values(
+                up_id=str(hem_json.get("UP_ID", None)),
+                sha256_lc_hem=str(hem_json.get("SHA256_LC_HEM", None)),
+                md5_lc_hem=str(hem_json.get("MD5_LC_HEM", None)),
+                sha1_lc_hem=str(hem_json.get("SHA1_LC_HEM", None)),
+            )
+            .on_conflict_do_nothing()
+        )
         db_session.execute(five_x_five_hems)
         db_session.commit()
 
@@ -58,8 +62,8 @@ async def main():
             name=QUEUE_HEMS_EXPORT,
             durable=True,
             arguments={
-            'x-consumer-timeout': 7200000,
-            }
+                "x-consumer-timeout": 7200000,
+            },
         )
 
         engine = create_engine(
@@ -73,9 +77,9 @@ async def main():
         )
         await asyncio.Future()
     except Exception as err:
-        logging.error('Unhandled Exception:', exc_info=True)
+        logging.error("Unhandled Exception:", exc_info=True)
     finally:
-        logging.info('Shutting down...')
+        logging.info("Shutting down...")
         await rabbitmq_connection.close()
 
 
