@@ -224,25 +224,29 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						const dateMatch =
 							filters.from_date === null ||
 							filters.to_date === null ||
-							(createDate >= filters.from_date && createDate <= filters.to_date);
-						
+							(createDate >= filters.from_date &&
+								createDate <= filters.to_date);
+
 						const statusMatch =
 							filters.selected_status.length === 0 ||
 							filters.selected_status
 								.map((funnel: string) => funnel.toLowerCase())
 								.includes(item.status.toLowerCase());
-						
+
 						const searchMatch =
 							filters.searchQuery.length === 0 ||
-							item.createdBy.toLowerCase().includes(filters.searchQuery.toLowerCase()) ||
-							item.name?.toLowerCase().includes(filters.searchQuery.toLowerCase());
-														
+							item.createdBy
+								.toLowerCase()
+								.includes(filters.searchQuery.toLowerCase()) ||
+							item.name
+								?.toLowerCase()
+								.includes(filters.searchQuery.toLowerCase());
 
 						const platformMatch =
 							filters.selected_destination.length === 0 ||
 							filters.selected_destination
-							.map((service: string) => toSnakeCase(service))
-							.includes(item.platform.toLowerCase());
+								.map((service: string) => toSnakeCase(service))
+								.includes(item.platform.toLowerCase());
 
 						return searchMatch && dateMatch && statusMatch && platformMatch;
 					});
