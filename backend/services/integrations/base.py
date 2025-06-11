@@ -22,6 +22,7 @@ from persistence.audience_persistence import AudiencePersistence
 from persistence.integrations.external_apps_installations import (
     ExternalAppsInstallationsPersistence,
 )
+from enums import DataSyncType
 from .attentive import AttentiveIntegrationsService
 from .hubspot import HubspotIntegrationsService
 from .shopify import ShopifyIntegrationService
@@ -108,7 +109,9 @@ class IntegrationService:
 
     def has_data_sync_and_contacts(self, user: dict, domain: dict) -> dict:
         has_data_sync = self.integration_persistence.has_data_sync(
-            user_id=user.get("id"), type="pixel"
+            user_id=user.get("id"),
+            domain_id=domain.id,
+            type=DataSyncType.CONTACT.value,
         )
         has_contacts_in_domain = (
             self.integration_persistence.has_contacts_in_domain(

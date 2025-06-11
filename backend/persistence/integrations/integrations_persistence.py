@@ -59,7 +59,7 @@ class IntegrationsPresistence:
         )
         return row is not None
 
-    def has_data_sync(self, user_id: int, type: str) -> bool:
+    def has_data_sync(self, user_id: int, domain_id: int, type: str) -> bool:
         query = (
             self.db.query(UserIntegration)
             .join(
@@ -79,6 +79,7 @@ class IntegrationsPresistence:
 
         query = query.filter(
             UserIntegration.user_id == user_id,
+            IntegrationUserSync.domain_id == domain_id,
             IntegrationUserSync.sync_type == type,
         )
 

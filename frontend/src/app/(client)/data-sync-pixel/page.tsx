@@ -322,7 +322,7 @@ const DataSync = () => {
 						) : !isLoading ? (
 							<>
 								{!hasContacts && <EmptyAnalyticsPlaceholder />}
-								{hasContacts && (
+								{hasContacts && !hasDataSync && (
 									<Box sx={{ mt: 2 }}>
 										<FirstTimeScreenCommonVariant1
 											Header={{
@@ -420,11 +420,12 @@ const DataSync = () => {
 										)}
 									</Box>
 								)}
+								{hasContacts && hasDataSync && (
+									<DataSyncList filters={filters} />
+								)}
 							</>
 						) : (
-							<>
-								<DataSyncList filters={filters} />
-							</>
+							<></>
 						)}
 					</Box>
 				</Box>
