@@ -99,8 +99,7 @@ class IntegrationService:
             )
         )
         has_any_sync = self.integration_persistence.has_data_sync(
-            user_id=user.get("id"),
-            type="audience"
+            user_id=user.get("id"), type="audience"
         )
         return {
             "hasIntegration": has_integration,
@@ -108,14 +107,13 @@ class IntegrationService:
         }
 
     def has_data_sync_and_contacts(self, user: dict, domain: dict) -> dict:
-        has_data_sync = (
-            self.integration_persistence.has_data_sync(
-                user_id=user.get("id"),
-                type="pixel"
-            )
+        has_data_sync = self.integration_persistence.has_data_sync(
+            user_id=user.get("id"), type="pixel"
         )
-        has_contacts_in_domain = self.integration_persistence.has_contacts_in_domain(
-            user_id=user.get("id"), domain_id=domain.id
+        has_contacts_in_domain = (
+            self.integration_persistence.has_contacts_in_domain(
+                user_id=user.get("id"), domain_id=domain.id
+            )
         )
         return {
             "hasDataSync": has_data_sync,

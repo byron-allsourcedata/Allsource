@@ -48,29 +48,41 @@ class IntegrationsPresistence:
         row = (
             self.db.query(UserIntegration)
             .join(
-                Integration, Integration.service_name == UserIntegration.service_name,
+                Integration,
+                Integration.service_name == UserIntegration.service_name,
             )
             .filter(
-                UserIntegration.user_id == user_id, Integration.for_audience == True
+                UserIntegration.user_id == user_id,
+                Integration.for_audience == True,
             )
             .first()
         )
         return row is not None
 
     def has_data_sync(self, user_id: int, type: str) -> bool:
-        query = self.db.query(UserIntegration).join(
-            Integration, Integration.service_name == UserIntegration.service_name,
-        ).join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id)
+        query = (
+            self.db.query(UserIntegration)
+            .join(
+                Integration,
+                Integration.service_name == UserIntegration.service_name,
+            )
+            .join(
+                IntegrationUserSync,
+                IntegrationUserSync.integration_id == UserIntegration.id,
+            )
+        )
 
         if type == DataSyncType.AUDIENCE.value:
             query = query.filter(Integration.for_audience == True)
         elif type == DataSyncType.PIXEL.value:
             query = query.filter(Integration.for_pixel == True)
 
-        query = query.filter(UserIntegration.user_id == user_id, IntegrationUserSync.sync_type == type)
+        query = query.filter(
+            UserIntegration.user_id == user_id,
+            IntegrationUserSync.sync_type == type,
+        )
 
         return query.first() is not None
-
 
     def has_contacts_in_domain(self, user_id: int, domain_id: int) -> bool:
         row = (

@@ -55,7 +55,9 @@ def has_data_sync_and_contacts(
     domain: dict = Depends(check_domain),
     integration_service: IntegrationService = Depends(get_integration_service),
 ):
-    return integration_service.has_data_sync_and_contacts(user=user, domain=domain)
+    return integration_service.has_data_sync_and_contacts(
+        user=user, domain=domain
+    )
 
 
 @router.post("/sync/switch-toggle-smart-audience-sync")
