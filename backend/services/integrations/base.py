@@ -98,25 +98,27 @@ class IntegrationService:
                 user_id=user.get("id"),
             )
         )
-        has_any_sync = self.integration_persistence.has_any_sync(
+        has_any_sync = self.integration_persistence.has_data_sync(
             user_id=user.get("id"),
+            type="audience"
         )
         return {
             "hasIntegration": has_integration,
             "hasAnySync": has_any_sync,
         }
 
-    def has_integration_and_contacts(self, user: dict, domain: dict) -> dict:
-        has_integration = (
-            self.integration_persistence.has_pixel_integration_and_data_sync(
+    def has_data_sync_and_contacts(self, user: dict, domain: dict) -> dict:
+        has_data_sync = (
+            self.integration_persistence.has_data_sync(
                 user_id=user.get("id"),
+                type="pixel"
             )
         )
         has_contacts_in_domain = self.integration_persistence.has_contacts_in_domain(
             user_id=user.get("id"), domain_id=domain.id
         )
         return {
-            "hasIntegration": has_integration,
+            "hasDataSync": has_data_sync,
             "hasContacts": has_contacts_in_domain,
         }
 

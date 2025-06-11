@@ -49,13 +49,13 @@ def has_integration_and_data_sync(
     return integration_service.has_integration_and_data_sync(user=user)
 
 
-@router.get("/has-integration-and-contacts")
-def has_integration_and_contacts(
+@router.get("/has-data-sync-and-contacts")
+def has_data_sync_and_contacts(
     user: dict = Depends(check_user_authorization_without_pixel),
     domain: dict = Depends(check_domain),
     integration_service: IntegrationService = Depends(get_integration_service),
 ):
-    return integration_service.has_integration_and_contacts(user=user, domain=domain)
+    return integration_service.has_data_sync_and_contacts(user=user, domain=domain)
 
 
 @router.post("/sync/switch-toggle-smart-audience-sync")

@@ -11,6 +11,7 @@ import { AxiosError } from "axios";
 import DataSyncList from "./components/DataSyncList";
 import { useRouter } from "next/navigation";
 import WelcomePopup from "@/components/first-time-screens/CreatePixelSourcePopup";
+import { EmptyAnalyticsPlaceholder } from "../dashboard/components/placeholders/EmptyPlaceholder"
 
 const centerContainerStyles = {
 	display: "flex",
@@ -54,7 +55,7 @@ const DataSync = () => {
 	const [filters, setFilters] = useState<any>();
 	const [openCreateDataSyncPopup, setOpenCreateDataSyncPopup] = useState(false);
 	const [hasContacts, setHasContacts] = useState(false);
-	const [hasIntegrations, setHasIntegrations] = useState(false);
+	const [hasDataSync, setHasDataSync] = useState(false);
 
 	const handleFilterPopupOpen = () => {
 		setFilterPopup(true);
@@ -90,10 +91,12 @@ const DataSync = () => {
 			try {
 				setIsLoading(true);
 				const response = await axiosInstance.get(
-					"/data-sync/has-integration-and-contacts",
+					"/data-sync/has-data-sync-and-contacts",
 				);
-				setHasIntegrations(response.data.hasIntegration);
+				setHasDataSync(response.data.hasDataSync);
 				setHasContacts(response.data.hasContacts);
+
+				console.log(response.data)
 			} catch (err) {
 				console.error("Error checking integrations:", err);
 			} finally {
@@ -137,6 +140,7 @@ const DataSync = () => {
 								flexDirection: "row",
 								alignItems: "center",
 								pl: "0.5rem",
+								mt: 2.05,
 								gap: 1,
 								"@media (max-width: 900px)": { mb: 2 },
 							}}
@@ -168,7 +172,7 @@ const DataSync = () => {
 								<DomainButtonSelect />
 							</Box>
 						</Box>
-						<Box
+						{hasContacts && hasDataSync && <Box
 							sx={{
 								display: "flex",
 								flexDirection: "row",
@@ -243,7 +247,7 @@ const DataSync = () => {
 									}}
 								/>
 							</Button>
-						</Box>
+						</Box>}
 					</Box>
 					<Box
 						sx={{
@@ -309,6 +313,104 @@ const DataSync = () => {
 									Setup Pixel
 								</Button>
 							</Box>
+						) : !isLoading ? (
+							<>
+								{!hasContacts && <EmptyAnalyticsPlaceholder />}
+								{hasContacts && <Box sx={{ mt: 2 }}>
+									<FirstTimeScreenCommonVariant1
+										Header={{
+											TextTitle: "Pixel Sync",
+											TextSubtitle: "Customise your sync settings",
+											link: "https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync",
+										}}
+										WarningNotification={{
+											condition: false,
+											ctaUrl: "/integrations",
+											ctaLabel: "Add Integration",
+											message:
+												"You need to create at least one integration before you can sync your audience",
+										}}
+										InfoNotification={{
+											Text: "This page shows real-time synchronization status across all your integrated platforms. Monitor data flows, troubleshoot delays, and ensure all systems are updating properly.",
+										}}
+										Content={
+											<>
+												<AudienceSynergyPreview
+													tableSrc="/pixel_sync_FTS.svg"
+													headerTitle="Sync Audience to Any Platform"
+													caption="Send your pixel contacts segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
+													onOpenPopup={handleOpenPopup}
+													onBegin={() => router.push(`/leads?create_sync=true`)}
+													// beginDisabled={!hasIntegrations}
+													buttonLabel="Create Data Sync"
+												/>
+											</>
+										}
+										HelpCard={{
+											headline: "Need Help with Data Synchronization?",
+											description:
+												"Book a free 30-minute session to troubleshoot, optimize, or automate your data flows.",
+											helpPoints: [
+												{
+													title: "Connection Setup",
+													description: "Configure integrations correctly",
+												},
+												{
+													title: "Sync Diagnostics",
+													description: "Fix failed data transfers",
+												},
+												{
+													title: "Mapping Assistance",
+													description: "Align your data fields",
+												},
+											],
+										}}
+										LeftMenu={{
+											header: "Fix & Optimize Your Data Flows",
+											subtitle: "Free 30-Min Sync Audit",
+											image: {
+												url: "/data_sync_FTS.svg",
+												width: 600,
+												height: 300,
+											},
+											items: [
+												{
+													Icon: SettingsIcon,
+													title: "Connection Setup",
+													subtitle: `We’ll ensure your integrations are properly configured for reliable data flow.`,
+												},
+												{
+													Icon: SpeedIcon,
+													title: "Sync Diagnostics",
+													subtitle: `Identify and resolve synchronization failures in real-time.`,
+												},
+												{
+													Icon: MovingIcon,
+													title: "Mapping Assistance",
+													subtitle:
+														"Align your source and destination fields perfectly.",
+												},
+											],
+										}}
+										ContentStyleSX={{
+											display: "flex",
+											flexDirection: "column",
+											justifyContent: "center",
+											alignItems: "center",
+											maxWidth: "840px",
+											margin: "0 auto",
+											mt: 2,
+										}}
+									/>
+									{popupOpen && !hasDataSync && (
+										<WelcomePopup
+											open={popupOpen}
+											onClose={() => setPopupOpen(false)}
+											variant="integration"
+										/>
+									)}
+								</Box>}
+							</>
 						) : (
 							<>
 								<DataSyncList filters={filters} />

@@ -8,6 +8,7 @@ from models.kajabi import Kajabi
 from models.leads_users import LeadUser
 from sqlalchemy.orm import Session
 from typing import Optional
+from enums import DataSyncType
 from sqlalchemy import and_, or_
 
 
@@ -56,45 +57,20 @@ class IntegrationsPresistence:
         )
         return row is not None
 
-    def has_pixel_integration_and_data_sync(self, user_id: int) -> bool:
-        row = (
-            self.db.query(UserIntegration)
-            .join(
-                Integration, Integration.service_name == UserIntegration.service_name,
-            )
-            .filter(
-                UserIntegration.user_id == user_id, Integration.for_pixel == True
-            )
-            .first()
-        )
-        return row is not None
+    def has_data_sync(self, user_id: int, type: str) -> bool:
+        query = self.db.query(UserIntegration).join(
+            Integration, Integration.service_name == UserIntegration.service_name,
+        ).join(IntegrationUserSync, IntegrationUserSync.integration_id == UserIntegration.id)
 
-    def has_any_sync(self, user_id: int) -> bool:
-        row = (
-            self.db.query(UserIntegration)
-            .join(
-                IntegrationUserSync,
-                IntegrationUserSync.integration_id == UserIntegration.id,
-            )
-            .filter(
-                UserIntegration.user_id == user_id,
-            )
-            .first()
-        )
-        return row is not None
-    def has_any_sync(self, user_id: int) -> bool:
-        row = (
-            self.db.query(UserIntegration)
-            .join(
-                IntegrationUserSync,
-                IntegrationUserSync.integration_id == UserIntegration.id,
-            )
-            .filter(
-                UserIntegration.user_id == user_id,
-            )
-            .first()
-        )
-        return row is not None
+        if type == DataSyncType.AUDIENCE.value:
+            query = query.filter(Integration.for_audience == True)
+        elif type == DataSyncType.PIXEL.value:
+            query = query.filter(Integration.for_pixel == True)
+
+        query = query.filter(UserIntegration.user_id == user_id, IntegrationUserSync.sync_type == type)
+
+        return query.first() is not None
+
 
     def has_contacts_in_domain(self, user_id: int, domain_id: int) -> bool:
         row = (
