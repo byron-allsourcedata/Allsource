@@ -7,7 +7,6 @@ from sqlalchemy import (
     VARCHAR,
     ForeignKey,
     Index,
-    UniqueConstraint,
     event,
 )
 
@@ -46,13 +45,14 @@ class DataSyncImportedLead(Base):
     __table_args__ = (
         Index(
             "data_sync_imported_leads_data_sync_id_status_idx",
-            "data_sync_id",
-            "status",
+            data_sync_id,
+            status,
         ),
         Index(
             "data_sync_imported_leads_lead_users_id_data_sync_id_idx",
-            "lead_users_id",
-            "data_sync_id",
+            lead_users_id,
+            data_sync_id,
+            unique=True,
         ),
     )
 
