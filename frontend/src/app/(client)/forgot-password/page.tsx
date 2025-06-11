@@ -153,7 +153,7 @@ const ForgotPassword: React.FC = () => {
 							break;
 						default:
 							showErrorToast(
-								"Unexpected status: Service is not available now, try again or contact us at support@maximiz.ai",
+								"Unexpected status: Service is not available now, try again or contact us at support@allsourcedata.io",
 							);
 					}
 				} else {

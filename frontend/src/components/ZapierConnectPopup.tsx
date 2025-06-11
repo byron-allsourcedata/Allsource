@@ -269,7 +269,7 @@ const ZapierConnectPopup = ({
 								<Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
 									<Image
 										src="/logo-icon.svg"
-										alt="AllSource"
+										alt="Allsource"
 										height={26}
 										width={32}
 									/>
