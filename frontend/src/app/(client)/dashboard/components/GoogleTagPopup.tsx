@@ -31,7 +31,7 @@ interface GTMAccount {
 interface PopupProps {
 	open: boolean;
 	handleClose: () => void;
-	onInstallStatusChange: (status: "success" | "failed") => void;
+	onInstallStatusChange: (status: "success" | "failed" | null) => void;
 }
 
 const inputLabelStyles = {
@@ -624,7 +624,7 @@ const GoogleTagPopup: React.FC<PopupProps> = ({
 			setSelectedContainer("");
 			setSelectedWorkspace("");
 			setInstallCompleted(false);
-			onInstallStatusChange("failed");
+			onInstallStatusChange(null);
 			setLastTagContext(null);
 		} catch (error) {
 			showErrorToast("Failed to reconnect.");

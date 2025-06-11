@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
 	Box,
 	Button,
@@ -47,15 +47,25 @@ interface PopupProps {
 	open: boolean;
 	handleClose: () => void;
 	pixelCode: string;
+	onInstallStatusChange: (status: "success" | "failed") => void;
 }
 
-const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
+const Popup: React.FC<PopupProps> = ({
+	open,
+	handleClose,
+	pixelCode,
+	onInstallStatusChange,
+}) => {
 	const { manualInstallHints, resetManualInstall, changeManualInstallHint } =
 		useGetStartedHints();
 	const [email, setEmail] = useState("");
+	const verifyRef = useRef<HTMLDivElement | null>(null);
+
 	const handleCopy = () => {
 		navigator.clipboard.writeText(pixelCode);
 		showToast("Copied to clipboard");
+		onInstallStatusChange("success");
+		scrollToBottom();
 	};
 
 	const handleButtonClick = () => {
@@ -65,6 +75,14 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
 				showToast("Successfully send email");
 			})
 			.catch((error) => {});
+		onInstallStatusChange("success");
+		scrollToBottom();
+	};
+
+	const scrollToBottom = () => {
+		setTimeout(() => {
+			verifyRef.current?.scrollIntoView({ behavior: "smooth" });
+		}, 1000);
 	};
 
 	return (
@@ -217,6 +235,7 @@ const Popup: React.FC<PopupProps> = ({ open, handleClose, pixelCode }) => {
 						Send this to my developer
 					</Typography>
 					<Box
+						ref={verifyRef}
 						display="flex"
 						alignItems="center"
 						justifyContent="space-between"

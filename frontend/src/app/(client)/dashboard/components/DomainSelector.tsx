@@ -338,7 +338,7 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 					{domainSelectorHints["selectDomain"]?.show && !selectedDomain && (
 						<HintCard
 							card={domainSelectorHintCards["selectDomain"]}
-							positionLeft={400}
+							positionLeft={350}
 							positionTop={15}
 							isOpenBody={domainSelectorHints["selectDomain"].showBody}
 							toggleClick={() =>

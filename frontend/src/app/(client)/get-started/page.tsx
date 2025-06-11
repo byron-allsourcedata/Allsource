@@ -112,6 +112,15 @@ const GetStarted: React.FC = () => {
 		setTabIndex(1);
 	};
 
+	const handleClickSource = () => {
+		setShowHeading(false);
+		const params = new URLSearchParams(searchParams.toString());
+		params.set("source", "true");
+
+		router.replace(`?${params.toString()}`);
+		setTabIndex(2);
+	};
+
 	if (loading) {
 		return <CustomizedProgressBar />;
 	}
@@ -209,8 +218,7 @@ const GetStarted: React.FC = () => {
 									onClick: sourceImported
 										? undefined
 										: () => {
-												setTabIndex(2);
-												setShowHeading(false);
+												handleClickSource();
 											},
 									showRecommended: false,
 									showInstalled: sourceImported,

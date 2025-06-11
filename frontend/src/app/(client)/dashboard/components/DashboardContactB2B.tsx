@@ -33,9 +33,13 @@ interface AppliedDates {
 
 export type DashboardContacts = {
 	total_contacts_collected: number;
-	total_new_leads: number;
-	total_returning_visitors: number;
-	total_page_views: number;
+	total_visitors: number;
+	total_view_products: number;
+	total_abandoned_cart: number;
+	total_converted_sale: number;
+	total_new_leads?: number;
+	total_page_views?: number;
+	total_returning_visitors?: number;
 };
 
 interface DashboardContactProps {
@@ -87,62 +91,79 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 
 				const {
 					total_contacts_collected,
-					total_new_leads,
-					total_returning_visitors,
-					total_page_views,
+					total_visitors,
+					total_view_products,
+					total_abandoned_cart,
+					total_converted_sale,
 				} = response.data.total_counts;
 				setValues({
 					total_contacts_collected: total_contacts_collected,
-					total_new_leads: total_new_leads,
-					total_returning_visitors: total_returning_visitors,
-					total_page_views: total_page_views,
+					total_visitors: total_visitors,
+					total_view_products: total_view_products,
+					total_abandoned_cart: total_abandoned_cart,
+					total_converted_sale: total_converted_sale,
+					total_new_leads: 0,
+					total_page_views: 0,
+					total_returning_visitors: 0,
 				});
 				const { daily_data } = response.data;
 				const days = Object.keys(daily_data).sort(
 					(a, b) => new Date(a).getTime() - new Date(b).getTime(),
 				);
 
-				const contacts_collected = days.map(
-					(day) => daily_data[day].contacts_collected || 0,
+				const revenueData = days.map((day) => daily_data[day].total_leads || 0);
+				const visitorsData = days.map((day) => daily_data[day].visitors || 0);
+				const viewedProductData = days.map(
+					(day) => daily_data[day].view_products || 0,
 				);
-				const new_leads = days.map((day) => daily_data[day].new_leads || 0);
-				const returning_visitors = days.map(
-					(day) => daily_data[day].returning_visitors || 0,
+				const abandonedCartData = days.map(
+					(day) => daily_data[day].abandoned_cart || 0,
 				);
-				const page_views = days.map((day) => daily_data[day].page_views || 0);
+				const convertedSaleData = days.map(
+					(day) => daily_data[day].converted_sale || 0,
+				);
 
 				setSeries([
 					{
-						id: "total_leads",
-						label: "Total Leads",
-						data: contacts_collected,
+						id: "total_contacts_collected",
+						label: "Total Contacts Collected",
+						data: revenueData,
 						curve: "linear",
 						showMark: false,
 						area: false,
 						stackOrder: "ascending",
 					},
 					{
-						id: "new_leads",
-						label: "New leads",
-						data: new_leads,
+						id: "total_visitors",
+						label: "Total Visitors",
+						data: visitorsData,
 						curve: "linear",
 						showMark: false,
 						area: false,
 						stackOrder: "ascending",
 					},
 					{
-						id: "returning_visitors",
-						label: "Returning Visitors",
-						data: returning_visitors,
+						id: "viewed_product",
+						label: "View Products",
+						data: viewedProductData,
 						curve: "linear",
 						showMark: false,
 						area: false,
 						stackOrder: "ascending",
 					},
 					{
-						id: "page_views",
-						label: "Page Views",
-						data: page_views,
+						id: "abandoned_cart",
+						label: "Abandoned to Cart",
+						data: abandonedCartData,
+						curve: "linear",
+						showMark: false,
+						area: false,
+						stackOrder: "ascending",
+					},
+					{
+						id: "converted_sale",
+						label: "Converted Sale",
+						data: convertedSaleData,
 						curve: "linear",
 						showMark: false,
 						area: false,
@@ -172,24 +193,27 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 	];
 
 	const colorMapping = {
-		total_leads: "rgba(244, 87, 69, 1)",
-		new_leads: "rgba(56, 152, 252, 1)",
-		returning_visitors: "rgba(224, 176, 5, 1)",
-		page_views: "rgba(144, 190, 109, 1)",
+		total_contacts_collected: "rgba(244, 87, 69, 1)",
+		total_visitors: "rgba(56, 152, 252, 1)",
+		viewed_product: "rgba(224, 176, 5, 1)",
+		abandoned_cart: "rgba(144, 190, 109, 1)",
+		converted_sale: "rgba(5, 115, 234, 1)",
 	};
 
 	type VisibleSeries = {
-		total_leads: boolean;
-		new_leads: boolean;
-		returning_visitors: boolean;
-		page_views: boolean;
+		total_contacts_collected: boolean;
+		total_visitors: boolean;
+		viewed_product: boolean;
+		abandoned_cart: boolean;
+		converted_sale: boolean;
 	};
 
 	const [visibleSeries, setVisibleSeries] = useState<VisibleSeries>({
-		total_leads: true,
-		new_leads: true,
-		returning_visitors: true,
-		page_views: true,
+		total_contacts_collected: true,
+		total_visitors: true,
+		viewed_product: true,
+		abandoned_cart: true,
+		converted_sale: true,
 	});
 
 	const handleChipClick = (seriesId: keyof VisibleSeries) => {
@@ -200,14 +224,31 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 	};
 
 	const options = [
-		{ id: "total_leads", label: "Total Leads", color: "rgba(244, 87, 69, 1)" },
-		{ id: "new_leads", label: "New Leads", color: "rgba(56, 152, 252, 1)" },
 		{
-			id: "returning_visitors",
-			label: "Returning Visitors",
+			id: "total_contacts_collected",
+			label: "Total Contacts Collected",
+			color: "rgba(244, 87, 69, 1)",
+		},
+		{
+			id: "total_visitors",
+			label: "Total Visitors",
+			color: "rgba(56, 152, 252, 1)",
+		},
+		{
+			id: "viewed_product",
+			label: "View Products",
 			color: "rgba(224, 176, 5, 1)",
 		},
-		{ id: "page_views", label: "Page Views", color: "rgba(144, 190, 109, 1)" },
+		{
+			id: "abandoned_cart",
+			label: "Abandoned cart",
+			color: "rgba(144, 190, 109, 1)",
+		},
+		{
+			id: "converted_sale",
+			label: "Converted Sale",
+			color: "rgba(5, 115, 234, 1)",
+		},
 	];
 
 	const selectedGraphs = options
@@ -254,8 +295,8 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 	>(
 		[
 			{
-				id: "total_leads" as keyof typeof colorMapping,
-				label: "Total Leads",
+				id: "total_contacts_collected" as keyof typeof colorMapping,
+				label: "Total Contacts Collected",
 				curve: "linear",
 				showMark: false,
 				area: false,
@@ -263,8 +304,8 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 				data: [],
 			},
 			{
-				id: "new_leads" as keyof typeof colorMapping,
-				label: "New Leads",
+				id: "total_visitors" as keyof typeof colorMapping,
+				label: "Total Visitors",
 				curve: "linear",
 				showMark: false,
 				area: false,
@@ -272,8 +313,8 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 				data: [0],
 			},
 			{
-				id: "returning_visitors" as keyof typeof colorMapping,
-				label: "Returning Visitors",
+				id: "viewed_product" as keyof typeof colorMapping,
+				label: "View Products",
 				curve: "linear",
 				showMark: false,
 				area: false,
@@ -281,8 +322,17 @@ const DashboardContactB2B: React.FC<DashboardContactProps> = ({
 				data: [0],
 			},
 			{
-				id: "page_views" as keyof typeof colorMapping,
-				label: "Page Views",
+				id: "abandoned_cart" as keyof typeof colorMapping,
+				label: "Abandoned to Cart",
+				curve: "linear",
+				showMark: false,
+				area: false,
+				stackOrder: "ascending",
+				data: [0],
+			},
+			{
+				id: "converted_sale" as keyof typeof colorMapping,
+				label: "Converted Sale",
 				curve: "linear",
 				showMark: false,
 				area: false,
