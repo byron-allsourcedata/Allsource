@@ -45,7 +45,7 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import AlivbleIntagrationsSlider from "@/components/AvalibleIntegrationsSlider";
 import ShopifySettings from "@/components/ShopifySettings";
-import PixelInstallation from "@/app/(client)/dashboard/components/PixelInstallation";
+import PixelInstallation from "@/app/(client)/analytics/components/PixelInstallation";
 import VerifyPixelIntegration from "@/components/VerifyPixelIntegration";
 import DataSyncList from "@/app/(client)/data-sync/components/DataSyncList";
 import BCommerceConnect from "@/components/Bcommerce";

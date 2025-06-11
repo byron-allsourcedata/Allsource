@@ -58,7 +58,7 @@ import { companyTableCards } from "./context/hintsCardsContent";
 import DomainButtonSelect from "../components/NavigationDomainButton";
 import { useScrollShadow } from "@/hooks/useScrollShadow";
 import { SmartCell } from "@/components/table";
-import { EmptyAnalyticsPlaceholder } from "../dashboard/components/placeholders/EmptyPlaceholder";
+import { EmptyAnalyticsPlaceholder } from "../analytics/components/placeholders/EmptyPlaceholder";
 import { CalendarButton } from "./CalendarButton";
 import { FilterButton } from "./FilterButton";
 import { SelectedFilter } from "./schemas";
