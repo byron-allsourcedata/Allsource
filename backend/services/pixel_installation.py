@@ -54,7 +54,7 @@ class PixelInstallationService:
             self.db.commit()
 
         script = (
-            '<script src="https://pixel.allsourcedata.io/pixel.js?dpid={client_id}"></script>'
+            f'<script src="https://pixel.allsourcedata.io/pixel.js?dpid={client_id}"></script>'
             "\n"
             '<script type="text/javascript">'
             "\n"
@@ -70,7 +70,7 @@ class PixelInstallationService:
             "\n"
             "    s.pixelClientId = i;"
             "\n"
-            '    }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");'
+            f'    }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");'
             "\n"
             "</script>"
         )
