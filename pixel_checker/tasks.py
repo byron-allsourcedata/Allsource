@@ -4,7 +4,7 @@ from typing import Optional
 from dotenv import load_dotenv
 import httpx
 
-from schemas import DomainsListResponse
+from schemas import DomainsListResponse, PixelInstallationRequest
 from utils import get_env, get_http_client
 
 load_dotenv()
@@ -34,10 +34,23 @@ async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
             return None
 
 
-async def fetch_external_data(domain: str) -> None:
+async def fetch_external_data(request_data: PixelInstallationRequest) -> None:
     async with get_http_client() as client:
-        response = await client.get("/external_api/install-pixel/check-pixel-installed", params={"domain": domain})
+        response = await client.post(
+            "/external_api/install-pixel/check-pixel-installed",
+            json=request_data.dict()
+        )
         if response.status_code == 200:
-            logger.info(f"Successfully fetched pixel installation status for domain: {domain}")
+            logger.info(
+                "Pixel check succeeded for client_id=%s, domain=%s",
+                request_data.pixelClientId,
+                request_data.url
+            )
         else:
-            logger.error(f"Failed to fetch pixel installation status for domain: {domain}")
+            logger.error(
+                "Pixel check failed for client_id=%s, domain=%s: %d %s",
+                request_data.pixelClientId,
+                request_data.url,
+                response.status_code,
+                response.text
+            )
