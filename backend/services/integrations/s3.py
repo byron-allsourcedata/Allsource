@@ -228,25 +228,23 @@ class S3IntegrationService:
                 secret_id=credentials.s3.secret_id,
                 secret_key=credentials.s3.secret_key,
             )
-            return {
-                'status': IntegrationsStatus.SUCCESS.value
-            }
+            return {"status": IntegrationsStatus.SUCCESS.value}
         except NoCredentialsError:
             return {
-                    "status": "CREDENTIALS_MISSING",
-                    "message": "Missing AWS credentials",
-                }
+                "status": "CREDENTIALS_MISSING",
+                "message": "Missing AWS credentials",
+            }
         except PartialCredentialsError:
             return {
-                    "status": "CREDENTIALS_INCOMPLETE",
-                    "message": "Incomplete AWS credentials",
-                }
+                "status": "CREDENTIALS_INCOMPLETE",
+                "message": "Incomplete AWS credentials",
+            }
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
             return {
-                    "status": "CREDENTIALS_INVALID",
-                    "message": f"AWS error: {error_code}",
-                }
+                "status": "CREDENTIALS_INVALID",
+                "message": f"AWS error: {error_code}",
+            }
 
         return self.__save_integrations(
             secret_id=credentials.s3.secret_id,

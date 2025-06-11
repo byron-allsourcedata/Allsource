@@ -344,7 +344,11 @@ class KlaviyoIntegrationsService:
         five_x_five_users: List[FiveXFiveUser],
     ):
         for five_x_five_user in five_x_five_users:
-            profile = self.__create_profile(five_x_five_user, user_integration.access_token, integration_data_sync.data_map)
+            profile = self.__create_profile(
+                five_x_five_user,
+                user_integration.access_token,
+                integration_data_sync.data_map,
+            )
             if profile in (
                 ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
                 ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -382,17 +386,17 @@ class KlaviyoIntegrationsService:
                 phone_number.split(", ")[-1] if phone_number else None
             )
             json_data = {
-                    "type": "profile",
-                    "attributes": {
-                        "email": profile.email,
-                        "phone_number": phone_number,
-                        "first_name": profile.first_name or None,
-                        "last_name": profile.last_name or None,
-                        "organization": profile.organization or None,
-                        "location": profile.location or None,
-                        "title": profile.title or None,
-                        # "properties": properties,
-                    }
+                "type": "profile",
+                "attributes": {
+                    "email": profile.email,
+                    "phone_number": phone_number,
+                    "first_name": profile.first_name or None,
+                    "last_name": profile.last_name or None,
+                    "organization": profile.organization or None,
+                    "location": profile.location or None,
+                    "title": profile.title or None,
+                    # "properties": properties,
+                },
             }
             json_data["attributes"] = {
                 k: v
