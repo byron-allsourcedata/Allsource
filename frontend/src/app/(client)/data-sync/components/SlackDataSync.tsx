@@ -40,6 +40,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectSlackPopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit: boolean;
 }
@@ -57,6 +58,7 @@ interface CustomField {
 const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -286,6 +288,10 @@ const SlackDataSync: React.FC<ConnectSlackPopupProps> = ({
 					showToast("Data sync created successfully");
 					triggerSync();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} catch (error) {
 			console.error("Error during sync:", error);

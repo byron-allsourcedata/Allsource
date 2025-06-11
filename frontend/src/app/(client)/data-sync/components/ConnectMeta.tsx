@@ -43,6 +43,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectMetaPopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	isEdit?: boolean;
 	data: any;
 }
@@ -72,6 +73,7 @@ interface FormValues {
 const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -741,6 +743,10 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 					showToast("Data sync created successfully");
 					triggerSync();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} finally {
 			setLoading(false);
@@ -1880,7 +1886,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																				color="textSecondary"
 																				paragraph
 																			>
-																				We will not run your campaign. Maximiz
+																				We will not run your campaign. Allsource
 																				will create a campaign template in your
 																				ad account. We won&apos;t run anything
 																				without your confirmation.

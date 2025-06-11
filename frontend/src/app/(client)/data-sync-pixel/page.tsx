@@ -41,6 +41,7 @@ import { FirstTimeScreenCommonVariant1 } from "@/components/first-time-screens";
 import AudienceSynergyPreview from "@/components/first-time-screens/AudienceSynergyPreview";
 import { MovingIcon, SettingsIcon, SpeedIcon } from "@/icon";
 import DomainButtonSelect from "../components/NavigationDomainButton";
+import { useIntegrationContext } from "@/context/IntegrationContext";
 
 interface DataSyncProps {
 	service_name?: string;
@@ -49,6 +50,7 @@ interface DataSyncProps {
 const DataSync = () => {
 	const router = useRouter();
 	const { hasNotification } = useNotification();
+	const { needsSync } = useIntegrationContext();
 	const [status, setStatus] = useState<string | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [filterPopup, setFilterPopup] = useState(false);
@@ -56,6 +58,7 @@ const DataSync = () => {
 	const [openCreateDataSyncPopup, setOpenCreateDataSyncPopup] = useState(false);
 	const [hasContacts, setHasContacts] = useState(false);
 	const [hasDataSync, setHasDataSync] = useState(false);
+	const [needReload, setNeedReload] = useState(false);
 
 	const handleFilterPopupOpen = () => {
 		setFilterPopup(true);
@@ -103,7 +106,7 @@ const DataSync = () => {
 		};
 
 		fetchIntegrations();
-	}, []);
+	}, [needsSync]);
 
 	if (isLoading) {
 		return <CustomizedProgressBar />;
@@ -156,11 +159,11 @@ const DataSync = () => {
 									color: "#202124",
 								}}
 							>
-								Data Sync
+								Pixel Sync
 							</Typography>
 							<CustomTooltip
 								title={
-									"How data synch works and to customise your sync settings."
+									"How data sync works and to customise your sync settings."
 								}
 								linkText="Learn more"
 								linkUrl="https://allsourceio.zohodesk.com/portal/en/kb/articles/data-sync-contacts"
@@ -345,11 +348,9 @@ const DataSync = () => {
 														headerTitle="Sync Audience to Any Platform"
 														caption="Send your pixel contacts segments to connected platforms like Meta Ads, Google Ads, and Mailchimp with one click."
 														onOpenPopup={handleOpenPopup}
-														onBegin={() =>
-															router.push(`/leads?create_sync=true`)
-														}
+														onBegin={() => handleAudiencePopupOpen()}
 														// beginDisabled={!hasIntegrations}
-														buttonLabel="Create Data Sync"
+														buttonLabel="Create Pixel Sync"
 													/>
 												</>
 											}

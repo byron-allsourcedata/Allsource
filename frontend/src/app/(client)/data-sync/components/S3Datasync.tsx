@@ -37,6 +37,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectS3PopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit: boolean;
 }
@@ -44,6 +45,7 @@ interface ConnectS3PopupProps {
 const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -261,6 +263,10 @@ const S3Datasync: React.FC<ConnectS3PopupProps> = ({
 					showToast("Data sync created successfully");
 					triggerSync();
 				}
+			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
 			}
 		} finally {
 			setLoading(false);
