@@ -30,10 +30,12 @@ interface Domain {
 
 interface DomainSelectorProps {
 	onDomainSelected: (domain: Domain | null) => void;
+	selectedDomainProp: string;
 }
 
 const DomainSelector: React.FC<DomainSelectorProps> = ({
 	onDomainSelected,
+	selectedDomainProp,
 }) => {
 	const {
 		domainSelectorHints,
@@ -106,6 +108,15 @@ const DomainSelector: React.FC<DomainSelectorProps> = ({
 
 		return () => clearInterval(interval);
 	}, []);
+
+	useEffect(() => {
+		if (selectedDomainProp) {
+			const matched = domains.find((d) => d.domain === selectedDomainProp);
+			if (matched) {
+				setSelectedDomain(matched);
+			}
+		}
+	}, [selectedDomainProp, domains]);
 
 	const validateDomain = (input: string): boolean => {
 		const domainPattern = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}$/i;
