@@ -799,7 +799,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		},
 		{
 			key: "platform",
-			label: "Sync",
+			label: "Destination",
 			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
 		},
 		{
