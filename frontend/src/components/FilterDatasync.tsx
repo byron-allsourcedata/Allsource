@@ -404,11 +404,13 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 
 	useEffect(() => {
 		const fetchDestinations = async () => {
-		const response = await axiosInstance.get(`/data-sync/destinations?type=${dataSyncType}`);
+			const response = await axiosInstance.get(
+				`/data-sync/destinations?type=${dataSyncType}`,
+			);
 			if (response.status === 200) {
-				const services = response.data
-				const formattedServices = toFormatName(services)
-				setDestinations(formattedServices)
+				const services = response.data;
+				const formattedServices = toFormatName(services);
+				setDestinations(formattedServices);
 			}
 		};
 		if (open) fetchDestinations();
@@ -420,8 +422,8 @@ const FilterPopup: React.FC<FilterPopupProps> = ({
 				.split("_")
 				.map((subItem) => subItem.charAt(0).toUpperCase() + subItem.slice(1))
 				.join(" "),
-		)
-	}
+		);
+	};
 
 	const handleApply = () => {
 		const filters = handleFilters();

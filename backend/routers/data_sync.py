@@ -226,9 +226,7 @@ def get_destinations(
     type: str = Query(...),
     integration_service: IntegrationService = Depends(get_integration_service),
 ):
-    return integration_service.get_destinations(
-        type=type
-    )
+    return integration_service.get_destinations(type=type)
 
 
 @router.post("/sync/tags")
