@@ -91,6 +91,7 @@ export const PlanCard: React.FC<{
 			sx={{
 				position: "relative",
 				width: "100%",
+				maxWidth: "500px",
 				display: "flex",
 				flexDirection: "column",
 			}}

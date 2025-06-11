@@ -27,7 +27,12 @@ import {
 } from "../../../../components/ToastNotification";
 import axios from "axios";
 import { getCalendlyPopupUrl } from "@/services/booking";
-import { plans as defaultPlans, monthlyPlans, type Plan } from "./plans";
+import {
+	yearlyPlans as defaultPlans,
+	monthlyPlans,
+	usePlans,
+	type Plan,
+} from "./plans";
 import { fetchUserData } from "@/services/meService";
 import { BookACallPopup } from "../../components/BookACallPopup";
 
@@ -53,6 +58,7 @@ const subscriptionStyles = {
 	formWrapper: {
 		display: "flex",
 		alignItems: "end",
+		justifyContent: "center",
 		"@media (min-width: 901px)": {
 			width: "100%",
 		},
@@ -138,6 +144,8 @@ export const SettingsSubscription: React.FC = () => {
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
 
+	const visiblePlans = usePlans(tabValue === 0 ? "month" : "year");
+
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
 	};
@@ -165,7 +173,7 @@ export const SettingsSubscription: React.FC = () => {
 		const period_plans = allPlans.filter(
 			(plan: any) => plan.interval === period,
 		);
-		setPlans(newValue === 0 ? monthlyPlans : defaultPlans);
+		setPlans(visiblePlans);
 		// setPlans(period_plans);
 	};
 
@@ -237,7 +245,7 @@ export const SettingsSubscription: React.FC = () => {
 				const period_plans = response.data.stripe_plans.filter(
 					(plan: any) => plan.interval === interval,
 				);
-				setPlans(defaultPlans);
+				setPlans(visiblePlans);
 			} catch (error) {
 			} finally {
 				setIsLoading(false);
@@ -271,10 +279,6 @@ export const SettingsSubscription: React.FC = () => {
 		} finally {
 			setIsLoading(false);
 		}
-	};
-
-	const handleBuyCredits = () => {
-		// Логика для покупки кредитов
 	};
 
 	const fetchPrefillData = async () => {
@@ -467,7 +471,15 @@ export const SettingsSubscription: React.FC = () => {
 			}}
 		>
 			{/* Plans Section */}
-			<Box sx={{ marginBottom: 4 }}>
+			<Box
+				sx={{
+					marginBottom: 4,
+					display: "flex",
+					flexDirection: "column",
+					width: "100%",
+					justifyContent: "center",
+				}}
+			>
 				<Box
 					sx={{
 						display: "flex",
@@ -583,8 +595,19 @@ export const SettingsSubscription: React.FC = () => {
 								}
 							}
 
+							if (plan.isActive) {
+								buttonText = "Current Plan";
+								disabled = true;
+							}
+
 							return (
-								<Box key={plan.title} sx={subscriptionStyles.formWrapper}>
+								<Box
+									key={plan.title}
+									sx={{
+										...subscriptionStyles.formWrapper,
+										pt: filteredPlans.length === 1 ? 1 : undefined,
+									}}
+								>
 									<PlanCard
 										plan={plan}
 										activePlanTitle={activePlan?.title || ""}
