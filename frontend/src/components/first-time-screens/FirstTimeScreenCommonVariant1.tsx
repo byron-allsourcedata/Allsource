@@ -125,30 +125,6 @@ const FirstTimeScreenCommon1: React.FC<TimeScreenProps> = ({
 									</Typography>
 								</Box>
 							)}
-							<Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-								<Button
-									onClick={handleOpenPopup}
-									variant="contained"
-									sx={{
-										backgroundColor: "rgba(56,152,252,1)",
-										textTransform: "none",
-										padding: "10px 24px",
-										color: "#fff !important",
-										"&:hover": {
-											backgroundColor: "rgba(30,136,229,1)",
-										},
-										"&:active": {
-											backgroundColor: "rgba(116,183,253,1)",
-										},
-										"&.Mui-disabled": {
-											backgroundColor: "rgba(56,152,252,1)",
-											color: "#fff !important",
-										},
-									}}
-								>
-									Request a Demo
-								</Button>
-							</Box>
 						</Box>
 					</Box>
 				)}
