@@ -36,6 +36,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectKlaviyoPopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data: any;
 	isEdit: boolean;
 }
@@ -53,6 +54,7 @@ type KlaviyoTags = {
 const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -332,6 +334,10 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 					triggerSync();
 				}
 			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -514,12 +520,12 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 	const instructions: any[] = [
 		// { id: 'unique-id-1', text: 'Go to the Klaviyo website and log into your account.' },
 		// { id: 'unique-id-2', text: 'Click on the Settings option located in your Klaviyo account options.' },
-		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Maximiz.' },
+		// { id: 'unique-id-3', text: 'Click Create Private API Key Name to Allsource.' },
 		// { id: 'unique-id-4', text: 'Assign full access permissions to Lists and Profiles, and read access permissions to Metrics, Events, and Templates for your Klaviyo key.' },
 		// { id: 'unique-id-5', text: 'Click Create.' },
-		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Maximiz Klaviyo section.' },
+		// { id: 'unique-id-6', text: 'Copy the API key in the next screen and paste to API Key field located in Allsource Klaviyo section.' },
 		// { id: 'unique-id-7', text: 'Click Connect.' },
-		// { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Maximiz.' },
+		// { id: 'unique-id-8', text: 'Select the existing list or create a new one to integrate with Allsource.' },
 		// { id: 'unique-id-9', text: 'Click Export.' },
 	];
 
@@ -559,8 +565,16 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -585,8 +599,16 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -758,9 +780,8 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 				onClose={handlePopupClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						msOverflowStyle: "none",
@@ -810,7 +831,8 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 						}}
 					>
 						<Link
-							href="#"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-sendlane"
+							target="_blank"
 							className="main-text"
 							sx={{
 								fontSize: "14px",
@@ -897,7 +919,7 @@ const SendlaneDatasync: React.FC<ConnectKlaviyoPopupProps> = ({
 										}}
 									>
 										<Typography variant="subtitle1" className="paragraph">
-											Synchronise all data in real-time from this moment forward
+											Synchronize all data in real-time from this moment forward
 											for seamless integration and continuous updates.
 										</Typography>
 										<FormControl sx={{ gap: "16px" }} error={tab2Error}>

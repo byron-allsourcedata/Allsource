@@ -358,7 +358,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 	const handleChangeRowsPerPage = (
 		event: React.ChangeEvent<HTMLInputElement>,
 	) => {
-		setRowsPerPage(parseInt(event.target.value, 10));
+		setRowsPerPage(Number.parseInt(event.target.value, 10));
 		setPage(0);
 	};
 
@@ -609,6 +609,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 						setData((prevData) =>
 							prevData.filter((item) => item.id !== selectedId),
 						);
+						handleIntegrationsSync();
 						break;
 					case "FAILED":
 						showErrorToast("Integrations sync delete failed");
@@ -629,6 +630,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			setIsLoading(false);
 			setSelectedId(null);
 			handleClose();
+			handleCloseConfirmDialog();
 		}
 	};
 
@@ -666,7 +668,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					} else if (dataSyncPlatform === "webhook") {
 						setOpenWebhookConnect(true);
 					} else if (dataSyncPlatform === "hubspot") {
-						setOpenWebhookConnect(true);
+						setOpenHubspotIconPopup(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setOpenSalesForceConnect(true);
 					}
@@ -691,7 +693,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					} else if (dataSyncPlatform === "webhook") {
 						setOpenWebhookIconPopup(true);
 					} else if (dataSyncPlatform === "hubspot") {
-						setOpenWebhookConnect(true);
+						setOpenHubspotIconPopup(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setSalesForceIconPopupOpen(true);
 					}
@@ -714,11 +716,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		if (row.syncStatus === false) {
 			return "Failed";
 		}
-		if (row.is_progress === true) {
-			return "In Progress";
-		}
-		if (row.is_progress === false) {
-			return "Synced";
+		if (row.dataSync === true) {
+			return "Syncing";
 		}
 		return "--";
 	};
@@ -728,24 +727,28 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			return {
 				background: "rgba(219, 219, 219, 1)",
 				color: "rgba(74, 74, 74, 1) !important",
+				toolTipText: "Pixel sync is disabled",
 			};
 		}
 		if (row.syncStatus === false) {
 			return {
 				background: "rgba(252, 205, 200, 1)",
 				color: "rgba(200, 62, 46, 1) !important",
+				toolTipText: "You have an error, ",
 			};
 		}
-		if (row.is_progress) {
-			return {
-				background: "rgba(0, 129, 251, 0.2)",
-				color: "rgba(0, 129, 251, 1)!important",
-			};
-		}
-		if (row.is_progress === false) {
+		if (row.dataSync) {
 			return {
 				background: "rgba(234, 248, 221, 1)",
-				color: "rgba(43, 91, 0, 1) !important",
+				color: "rgba(43, 91, 0, 1)",
+				toolTipText: "Your contacts are being synced every 10 minutes",
+			};
+		}
+		if (row.dataSync) {
+			return {
+				background: "rgba(234, 248, 221, 1)",
+				color: "rgba(43, 91, 0, 1)",
+				toolTipText: "All your contacts have been synced",
 			};
 		}
 		return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
@@ -807,14 +810,19 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "10vw", minWidth: "155px", maxWidth: "20vw" },
 		},
 		{
+			key: "list_name",
+			label: "List Name",
+			widths: { width: "14vw", minWidth: "14vw", maxWidth: "14vw" },
+		},
+		{
 			key: "platform",
-			label: "Sync",
+			label: "Destination",
 			widths: { width: "115px", minWidth: "115px", maxWidth: "20vw" },
 		},
 		{
 			key: "created",
 			label: "Created",
-			sortable: true,
+			sortable: false,
 			widths: { width: "115px", minWidth: "115px", maxWidth: "115px" },
 		},
 		{
@@ -828,11 +836,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
 		},
 		{
-			key: "list_name",
-			label: "List Name",
-			widths: { width: "17vw", minWidth: "17vw", maxWidth: "17vw" },
-		},
-		{
 			key: "sync_status",
 			label: "Status",
 			widths: { width: "12vw", minWidth: "12vw", maxWidth: "12vw" },
@@ -844,6 +847,12 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 		},
 	];
 
+	function toCamelCase(platform: string): string {
+		return platform
+			.split("_")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(" ");
+	}
 	return (
 		<>
 			{isLoading && <CustomizedProgressBar />}
@@ -1051,7 +1060,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												paddingBottom: "18px",
 											}}
 										>
-											No data synchronization available
+											No pixel synchronization available
 										</TableCell>
 									</TableRow>
 								) : (
@@ -1081,9 +1090,22 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 													},
 													hideDivider: isScrolledX,
 												}}
-												tooltipOptions={{ content: row.type || "--" }}
+												tooltipOptions={{ content: listType(row.type) || "--" }}
 											>
 												{listType(row.type) || "--"}
+											</SmartCell>
+
+											<SmartCell
+												cellOptions={{
+													sx: {
+														position: "relative",
+													},
+												}}
+												tooltipOptions={{
+													content: row.list_name ?? "--",
+												}}
+											>
+												{row.list_name ?? "--"}
 											</SmartCell>
 
 											<SmartCell
@@ -1100,7 +1122,48 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														justifyContent: "center",
 													}}
 												>
-													{platformIcon(row.platform) || "--"}
+													<Tooltip
+														title={
+															<Box
+																sx={{
+																	backgroundColor: "#fff",
+																	margin: 0,
+																	padding: 0,
+																	display: "flex",
+																	flexDirection: "row",
+																	alignItems: "center",
+																}}
+															>
+																<Typography
+																	className="table-data"
+																	component="div"
+																	sx={{ fontSize: "12px !important" }}
+																>
+																	{toCamelCase(row.platform) || "--"}
+																</Typography>
+															</Box>
+														}
+														componentsProps={{
+															tooltip: {
+																sx: {
+																	backgroundColor: "#fff",
+																	color: "#000",
+																	boxShadow:
+																		"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+																	border: "0.5px solid rgba(225, 225, 225, 1)",
+																	borderRadius: "4px",
+																	maxHeight: "100%",
+																	maxWidth: "500px",
+																	padding: "11px 10px",
+																	marginLeft: "0.5rem !important",
+																},
+															},
+														}}
+														enterDelay={100}
+													>
+														{platformIcon(row.platform) ?? <span>--</span>}
+													</Tooltip>
+													{/* {platformIcon(row.platform) || "--"} */}
 												</Box>
 											</SmartCell>
 
@@ -1171,20 +1234,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 												cellOptions={{
 													sx: {
 														position: "relative",
-													},
-												}}
-												tooltipOptions={{
-													content: new Intl.NumberFormat("en-US").format(
-														row.records_synced,
-													),
-												}}
-											>
-												{row.list_name ?? "--"}
-											</SmartCell>
-											<SmartCell
-												cellOptions={{
-													sx: {
-														position: "relative",
 														padding: 0,
 														textAlign: "center",
 													},
@@ -1206,27 +1255,87 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														}}
 													>
 														{(() => {
-															const { color, background } = getStatusStyle(row);
+															const { color, background, toolTipText } =
+																getStatusStyle(row);
 															return (
-																<Typography
-																	className="paragraph"
-																	sx={{
-																		fontFamily: "Roboto",
-																		fontSize: "12px",
-																		color: color,
-																		backgroundColor: background,
-																		padding: "3px 12px",
-																		height: "24px",
-																		display: "flex",
-																		alignItems: "center",
-																		justifyContent: "center",
-																		width: "100%",
-																		boxSizing: "border-box",
-																		borderRadius: "2px",
+																<Tooltip
+																	title={
+																		<Box
+																			sx={{
+																				backgroundColor: "#fff",
+																				margin: 0,
+																				padding: 0,
+																				display: "flex",
+																				flexDirection: "row",
+																				alignItems: "center",
+																			}}
+																		>
+																			<Typography
+																				className="table-data"
+																				component="div"
+																				sx={{ fontSize: "12px !important" }}
+																			>
+																				{toolTipText}
+																				{!row.syncStatus && (
+																					<Box
+																						component="span"
+																						onClick={handleRepairSync}
+																						style={{
+																							textTransform: "none",
+																							background: "none",
+																							border: "none",
+																							color: "rgba(56, 152, 252, 1)",
+																							textDecoration: "underline",
+																							cursor: "pointer",
+																							padding: 0,
+																							fontSize: "inherit",
+																						}}
+																					>
+																						repair
+																					</Box>
+																				)}
+																			</Typography>
+																		</Box>
+																	}
+																	componentsProps={{
+																		tooltip: {
+																			sx: {
+																				backgroundColor: "#fff",
+																				color: "#000",
+																				boxShadow:
+																					"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+																				border:
+																					"0.5px solid rgba(225, 225, 225, 1)",
+																				borderRadius: "4px",
+																				maxHeight: "100%",
+																				maxWidth: "500px",
+																				padding: "11px 10px",
+																				marginLeft: "0.5rem !important",
+																			},
+																		},
 																	}}
+																	enterDelay={100}
 																>
-																	{formatStatusText(row)}
-																</Typography>
+																	<Typography
+																		className="paragraph"
+																		sx={{
+																			fontFamily: "Roboto",
+																			fontSize: "12px",
+																			color: color,
+																			backgroundColor: background,
+																			padding: "3px 12px",
+																			height: "24px",
+																			display: "flex",
+																			alignItems: "center",
+																			justifyContent: "center",
+																			width: "100%",
+																			boxSizing: "border-box",
+																			borderRadius: "2px",
+																		}}
+																	>
+																		{formatStatusText(row)}
+																	</Typography>
+																</Tooltip>
 															);
 														})()}
 													</Box>
@@ -1422,7 +1531,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 							</Typography>
 							<DialogContent sx={{ padding: 2 }}>
 								<DialogContentText className="table-data">
-									Are you sure you want to delete this data sync?
+									Are you sure you want to delete this pixel sync?
 								</DialogContentText>
 							</DialogContent>
 							<DialogActions>

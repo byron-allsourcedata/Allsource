@@ -352,7 +352,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 		isActive("/leads") ||
 		isActive("/company") ||
 		isActive("/suppressions") ||
-		isActive("/dashboard") ||
+		isActive("/analytics") ||
 		isActive("/data-sync-pixel");
 	const handleClick = () => {
 		setOpen(!open);
@@ -407,12 +407,12 @@ const Sidebar: React.FC<SidebarProps> = ({
 						<ListItemText primary="Get Started" />
 					</ListItem>
 				)}
-				{/* Audience-dashboard */}
+				{/* Dashboard */}
 				<ListItem
 					button
-					onClick={() => handleNavigation("/audience-dashboard")}
+					onClick={() => handleNavigation("/dashboard")}
 					sx={
-						isActive("/audience-dashboard")
+						isActive("/dashboard")
 							? sidebarStyles.activeItem
 							: sidebarStyles.ListItem
 					}
@@ -456,9 +456,9 @@ const Sidebar: React.FC<SidebarProps> = ({
 									{/* Insights */}
 									<ListItem
 										button
-										onClick={() => handleNavigation("/dashboard")}
+										onClick={() => handleNavigation("/analytics")}
 										sx={
-											isActive("/dashboard")
+											isActive("/analytics")
 												? { ...sidebarStyles.activeItem, pl: 4 }
 												: { ...sidebarStyles.ListItem, pl: 4 }
 										}
@@ -530,7 +530,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 										<ListItemIcon sx={sidebarStyles.listItemIcon}>
 											<CategoryIcon />
 										</ListItemIcon>
-										<ListItemText primary="Data Sync" />
+										<ListItemText primary="Pixel Sync" />
 									</ListItem>
 								</List>
 							</Collapse>

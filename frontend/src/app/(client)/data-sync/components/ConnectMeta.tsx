@@ -43,6 +43,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface ConnectMetaPopupProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	isEdit?: boolean;
 	data: any;
 }
@@ -72,6 +73,7 @@ interface FormValues {
 const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data,
 	isEdit,
 }) => {
@@ -493,8 +495,16 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -519,8 +529,16 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -742,6 +760,10 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 					triggerSync();
 				}
 			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -824,9 +846,8 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 				onClose={handlePopupClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1300,
 						top: 0,
 						bottom: 0,
 						"@media (max-width: 600px)": {
@@ -871,7 +892,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-meta"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-meta"
 							className="main-text"
 							target="_blank"
 							rel="noopener referrer"
@@ -971,7 +992,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 										}}
 									>
 										<Typography variant="subtitle1" className="paragraph">
-											Synchronise all data in real-time from this moment forward
+											Synchronize all data in real-time from this moment forward
 											for seamless integration and continuous updates.
 										</Typography>
 
@@ -1880,7 +1901,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 																				color="textSecondary"
 																				paragraph
 																			>
-																				We will not run your campaign. Maximiz
+																				We will not run your campaign. Allsource
 																				will create a campaign template in your
 																				ad account. We won&apos;t run anything
 																				without your confirmation.
@@ -2351,7 +2372,7 @@ const ConnectMeta: React.FC<ConnectMetaPopupProps> = ({
 								bottom: 0,
 								right: 0,
 								background: "#fff",
-								width: "620px",
+								width: "40%",
 								"@media (max-width: 600px)": {
 									width: "100%",
 								},

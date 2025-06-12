@@ -8,12 +8,14 @@ import {
 	IconButton,
 	Button,
 	Link,
+	Tab,
 } from "@mui/material";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAxiosHook } from "@/hooks/AxiosHooks";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import TabList from "@mui/lab/TabList";
 
 interface CreateSalesForceProps {
 	handleClose: () => void;
@@ -35,6 +37,63 @@ interface IntegrationsCredentials {
 	is_with_suppression?: boolean;
 }
 
+const metaStyles = {
+	tabHeading: {
+		fontFamily: "Nunito Sans",
+		fontSize: "14px",
+		color: "#707071",
+		fontWeight: "500",
+		lineHeight: "20px",
+		textTransform: "none",
+		cursor: "pointer",
+		padding: 0,
+		minWidth: "auto",
+		px: 2,
+		"@media (max-width: 600px)": {
+			alignItems: "flex-start",
+			p: 0,
+		},
+		"&.Mui-selected": {
+			color: "rgba(56, 152, 252, 1)",
+			fontWeight: "700",
+		},
+	},
+	inputLabel: {
+		fontFamily: "Nunito Sans",
+		fontSize: "12px",
+		lineHeight: "16px",
+		color: "rgba(17, 17, 19, 0.60)",
+		"&.Mui-focused": {
+			color: "rgba(56, 152, 252, 1)",
+		},
+	},
+	formInput: {
+		"&.MuiOutlinedInput-root": {
+			height: "48px",
+			"& .MuiOutlinedInput-input": {
+				padding: "12px 16px 13px 16px",
+				fontFamily: "Roboto",
+				color: "#202124",
+				fontSize: "14px",
+				lineHeight: "20px",
+				fontWeight: "400",
+			},
+			"& .MuiOutlinedInput-notchedOutline": {
+				borderColor: "#A3B0C2",
+			},
+			"&:hover .MuiOutlinedInput-notchedOutline": {
+				borderColor: "#A3B0C2",
+			},
+			"&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+				borderColor: "rgba(56, 152, 252, 1)",
+			},
+		},
+		"&+.MuiFormHelperText-root": {
+			marginLeft: "0",
+		},
+	},
+};
+
 const SalesForceIntegrationPopup = ({
 	handleClose,
 	open,
@@ -46,6 +105,10 @@ const SalesForceIntegrationPopup = ({
 	const [apiKey, setApiKey] = useState("");
 
 	const [value, setValue] = useState("1");
+
+	const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
+		setValue(newValue);
+	};
 
 	useEffect(() => {
 		setApiKey(initApiKey || "");
@@ -66,9 +129,8 @@ const SalesForceIntegrationPopup = ({
 				onClose={handleClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						boxShadow: boxShadow
@@ -79,7 +141,7 @@ const SalesForceIntegrationPopup = ({
 						"&::-webkit-scrollbar": {
 							display: "none",
 						},
-						"@media (max-width: 600px)": {
+						"@media (max-width: 900px)": {
 							width: "100%",
 						},
 					},
@@ -113,7 +175,7 @@ const SalesForceIntegrationPopup = ({
 							lineHeight: "normal",
 						}}
 					>
-						Connect to SalesForce
+						Connect to Sales Force
 					</Typography>
 					<Box
 						sx={{
@@ -123,7 +185,7 @@ const SalesForceIntegrationPopup = ({
 						}}
 					>
 						<Link
-							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/connect-to-salesforce"
+							href="https://allsourceio.zohodesk.com/portal/en/kb/articles/pixel-sync-to-salesforce"
 							target="_blank"
 							rel="noopener noreferrer"
 							sx={{
@@ -159,6 +221,36 @@ const SalesForceIntegrationPopup = ({
 						}}
 					>
 						<TabContext value={value}>
+							<Box sx={{ pb: 4 }}>
+								<TabList
+									centered
+									aria-label="Connect to Slack Tabs"
+									TabIndicatorProps={{
+										sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
+									}}
+									sx={{
+										"& .MuiTabs-scroller": {
+											overflowX: "auto !important",
+										},
+										"& .MuiTabs-flexContainer": {
+											justifyContent: "center",
+											"@media (max-width: 600px)": {
+												gap: "16px",
+												justifyContent: "flex-start",
+											},
+										},
+									}}
+									onChange={handleChangeTab}
+								>
+									<Tab
+										label="Connection"
+										value="1"
+										className="tab-heading"
+										sx={metaStyles.tabHeading}
+										onClick={() => setValue("1")}
+									/>
+								</TabList>
+							</Box>
 							<TabPanel value="1" sx={{ p: 0 }}>
 								<Box
 									sx={{
@@ -189,7 +281,7 @@ const SalesForceIntegrationPopup = ({
 												lineHeight: "normal",
 											}}
 										>
-											Login to your SalesForce
+											Login to your Sales Force
 										</Typography>
 									</Box>
 									<Box>
@@ -222,7 +314,7 @@ const SalesForceIntegrationPopup = ({
 												border: "1px solid #f24e1e",
 											}}
 										>
-											Connect to SalesForce
+											Connect to Sales Force
 										</Button>
 										{invalid_api_key && (
 											<Typography

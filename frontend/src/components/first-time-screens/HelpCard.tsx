@@ -1,11 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Card, Typography, Box, Avatar, Stack } from "@mui/material";
 import { CheckCircleIcon } from "@/icon";
 import { PopupButton, useCalendlyEventListener } from "react-calendly";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { showToast } from "../ToastNotification";
 import DemoFeedbackCard from "./DemoFeedbackCard";
-import DemoFollowup, { FollowupLink } from "./DemoFollowup";
+import DemoFollowup, { type FollowupLink } from "./DemoFollowup";
 import { useBookingUrl } from "@/services/booking";
 
 interface HelpPoint {
@@ -186,7 +187,7 @@ export const DashboardHelpCard: React.FC<DashboardHelpCardProps> = ({
 
 						<Stack spacing={1} mt={2}>
 							{helpPoints.map((point, index) => (
-								<Box key={index} display="flex" alignItems="center">
+								<Box key={point.title} display="flex" alignItems="center">
 									<CheckCircleIcon
 										sx={{ color: "mediumseagreen", mr: 1, mt: "4px" }}
 									/>

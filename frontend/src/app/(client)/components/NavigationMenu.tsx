@@ -380,9 +380,9 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 
 					<ListItem
 						button
-						onClick={() => handleNavigation("/audience-dashboard")}
+						onClick={() => handleNavigation("/dashboard")}
 						sx={{
-							...(isActive("/audience-dashboard")
+							...(isActive("/dashboard")
 								? navigationmenuStyles.activeItem
 								: {}),
 							...navigationmenuStyles.mobileDrawerList,
@@ -398,7 +398,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						onClick={handleTogglePixel}
 						sx={{
 							...(isActive("/pixel") ||
-							isActive("/dashboard") ||
+							isActive("/analytics") ||
 							isActive("/leads") ||
 							isActive("/company") ||
 							isActive("/supression") ||
@@ -422,9 +422,9 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						<List component="div" disablePadding>
 							<ListItem
 								button
-								onClick={() => handleNavigation("/dashboard")}
+								onClick={() => handleNavigation("/analytics")}
 								sx={{
-									...(isActive("/dashboard")
+									...(isActive("/analytics")
 										? navigationmenuStyles.activeItem
 										: {}),
 									...navigationmenuStyles.mobileDrawerList,
@@ -498,7 +498,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 								<ListItemIcon>
 									<CategoryIcon />
 								</ListItemIcon>
-								<ListItemText primary="Data Sync" />
+								<ListItemText primary="Pixel Sync" />
 							</ListItem>
 						</List>
 					</Collapse>
@@ -580,7 +580,7 @@ const NavigationMenu: React.FC<NavigationProps> = ({
 						<ListItemIcon>
 							<CategoryIcon />
 						</ListItemIcon>
-						<ListItemText primary="Data Sync" />
+						<ListItemText primary="Pixel Sync" />
 					</ListItem>
 					{/* <ListItem button onClick={() => handleNavigation('/prospect')}
           sx={{

@@ -1,12 +1,12 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { Box, Link as MuiLink, Grid, Typography } from "@mui/material";
-import { dashboardStyles } from "@/app/(client)/dashboard/dashboardStyles";
+import { dashboardStyles } from "@/app/(client)/analytics/dashboardStyles";
 import {
 	type StepConfig,
 	VerticalStepper,
-} from "@/app/(client)/dashboard/components/VerticalStepper";
-import PixelInstallation from "@/app/(client)/dashboard/components/PixelInstallation";
+} from "@/app/(client)/analytics/components/VerticalStepper";
+import PixelInstallation from "@/app/(client)/analytics/components/PixelInstallation";
 import VerifyPixelIntegration from "../components/VerifyPixelIntegration";
 import RevenueTracking from "@/components/RevenueTracking";
 import CustomTooltip from "@/components/customToolTip";
@@ -14,8 +14,8 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DomainVerificationOutlinedIcon from "@mui/icons-material/DomainVerificationOutlined";
 import OpenInBrowserOutlinedIcon from "@mui/icons-material/OpenInBrowserOutlined";
 import VerifiedIcon from "@mui/icons-material/Verified";
-import DomainSelector from "@/app/(client)/dashboard/components/DomainSelector";
-import { GetStartedHintsProvider } from "@/app/(client)/dashboard/components/context/PixelInstallHintsContext";
+import DomainSelector from "@/app/(client)/analytics/components/DomainSelector";
+import { GetStartedHintsProvider } from "@/app/(client)/analytics/components/context/PixelInstallHintsContext";
 
 const GettingStartedSection: React.FC = () => {
 	const [selectedDomain, setSelectedDomain] = useState("");
@@ -197,6 +197,7 @@ const GettingStartedSection: React.FC = () => {
 							onDomainSelected={(domain) => {
 								setSelectedDomain(domain ? domain.domain : "");
 							}}
+							selectedDomainProp={selectedDomain}
 						/>
 						{selectedDomain !== "" && (
 							<PixelInstallation
@@ -229,6 +230,7 @@ const GettingStartedSection: React.FC = () => {
 								onDomainSelected={(domain) => {
 									setSelectedDomain(domain ? domain.domain : "");
 								}}
+								selectedDomainProp={selectedDomain}
 							/>
 							{selectedDomain !== "" && (
 								<PixelInstallation

@@ -31,6 +31,7 @@ import { useIntegrationContext } from "@/context/IntegrationContext";
 interface SalesForceDataSyncProps {
 	open: boolean;
 	onClose: () => void;
+	onCloseCreateSync?: () => void;
 	data?: any;
 	isEdit?: boolean;
 	boxShadow?: string;
@@ -39,6 +40,7 @@ interface SalesForceDataSyncProps {
 const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 	open,
 	onClose,
+	onCloseCreateSync,
 	data = null,
 	isEdit,
 	boxShadow,
@@ -143,6 +145,10 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 					triggerSync();
 				}
 			}
+			handlePopupClose();
+			if (onCloseCreateSync) {
+				onCloseCreateSync();
+			}
 		} finally {
 			setLoading(false);
 		}
@@ -219,8 +225,16 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -245,8 +259,16 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 							textTransform: "none",
 							padding: "10px 24px",
 							boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-							"&:hover": {
+							":hover": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+							},
+							":active": {
 								backgroundColor: "rgba(56, 152, 252, 1)",
+							},
+							":disabled": {
+								backgroundColor: "rgba(56, 152, 252, 1)",
+								color: "#fff",
+								opacity: 0.6,
 							},
 							borderRadius: "4px",
 						}}
@@ -390,9 +412,8 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 				onClose={handlePopupClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						boxShadow: boxShadow
@@ -533,7 +554,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 										}}
 									>
 										<Typography variant="subtitle1" className="paragraph">
-											Synchronise all data in real-time from this moment forward
+											Synchronize all data in real-time from this moment forward
 											for seamless integration and continuous updates.
 										</Typography>
 										<FormControl sx={{ gap: "16px" }} error={tab2Error}>
@@ -862,7 +883,6 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 															sx: {
 																"&.MuiOutlinedInput-root": {
 																	height: "36px",
-																	width: "200px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
 																		fontFamily: "Roboto",
@@ -957,7 +977,6 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 															sx: {
 																"&.MuiOutlinedInput-root": {
 																	height: "36px",
-																	width: "200px",
 																	"& .MuiOutlinedInput-input": {
 																		padding: "6.5px 8px",
 																		fontFamily: "Roboto",
@@ -1125,7 +1144,7 @@ const SalesForceDataSync: React.FC<SalesForceDataSyncProps> = ({
 							right: 0,
 							background: "#fff",
 							zIndex: "1",
-							width: "620px",
+							width: "40%",
 							"@media (max-width: 600px)": {
 								width: "100%",
 							},

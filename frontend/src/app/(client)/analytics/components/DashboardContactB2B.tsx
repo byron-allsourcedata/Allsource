@@ -18,7 +18,7 @@ import CustomizedProgressBar from "../../../../components/CustomizedProgressBar"
 import { ShowChart, BarChart as IconBarChart } from "@mui/icons-material";
 import { LineChart } from "@mui/x-charts/LineChart";
 import { BarChart } from "@mui/x-charts/BarChart";
-import StatsCard from "@/app/(client)/dashboard/components/StatCardContact";
+import StatsCard from "@/app/(client)/analytics/components/StatCardContact";
 import dayjs from "dayjs";
 import { EmptyAnalyticsPlaceholder } from "./placeholders/EmptyPlaceholder";
 

@@ -124,7 +124,7 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
 		{ id: "unique-id-6", text: "Run a new zap" },
 		{
 			id: "unique-id-7",
-			text: "A new Data Sync is automatically created in Maximiz",
+			text: "A new Data Sync is automatically created in Allsource",
 		},
 	];
 
@@ -226,9 +226,8 @@ const ZapierDataSync = ({ handleClose, open }: CreateKlaviyoProps) => {
 				onClose={handleClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						msOverflowStyle: "none",

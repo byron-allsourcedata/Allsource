@@ -42,7 +42,7 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<head>
-				<title>{pageTitle ? `AllSource | ${pageTitle} ` : "AllSource"}</title>
+				<title>{pageTitle ? `Allsource | ${pageTitle} ` : "Allsource"}</title>
 				<meta name="description" content={`Page: ${pageTitle}`} />
 				<meta
 					httpEquiv="Content-Security-Policy"

@@ -45,7 +45,7 @@ import axiosInterceptorInstance from "@/axios/axiosInterceptorInstance";
 import { showErrorToast, showToast } from "@/components/ToastNotification";
 import AlivbleIntagrationsSlider from "@/components/AvalibleIntegrationsSlider";
 import ShopifySettings from "@/components/ShopifySettings";
-import PixelInstallation from "@/app/(client)/dashboard/components/PixelInstallation";
+import PixelInstallation from "@/app/(client)/analytics/components/PixelInstallation";
 import VerifyPixelIntegration from "@/components/VerifyPixelIntegration";
 import DataSyncList from "@/app/(client)/data-sync/components/DataSyncList";
 import BCommerceConnect from "@/components/Bcommerce";
@@ -750,8 +750,8 @@ const UserIntegrationsList = ({
 		{ image: "omnisend_icon_black.svg", service_name: "omnisend" },
 		{ image: "mailchimp-icon.svg", service_name: "mailchimp" },
 		{ image: "sendlane-icon.svg", service_name: "sendlane" },
-		{ image: "zapier-icon.svg", service_name: "zapier" },
-		{ image: "slack-icon.svg", service_name: "slack" },
+		// { image: "zapier-icon.svg", service_name: "zapier" },
+		// { image: "slack-icon.svg", service_name: "slack" },
 		{ image: "webhook-icon.svg", service_name: "webhook" },
 		{ image: "hubspot.svg", service_name: "hubspot" },
 		{ image: "google-ads.svg", service_name: "google_ads" },
@@ -1308,10 +1308,10 @@ const PixelManagment = () => {
 							</Typography>
 							<CustomTooltip
 								title={
-									"How data synch works and to customise your sync settings"
+									"How data sync works and to customise your sync settings"
 								}
 								linkText="Learn more"
-								linkUrl="https://maximiz.ai"
+								linkUrl="https://allsourcedata.io"
 							/>
 						</Box>
 					</Box>

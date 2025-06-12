@@ -2,8 +2,8 @@
 import { Box, Typography, Button, BoxClassKey } from "@mui/material";
 import React, { useState, useEffect } from "react";
 import HintCard from "@/app/(client)/components/HintCard";
-import { verifyPixelIntegrationHintCards } from "@/app/(client)/dashboard/components/context/hintsCardsContent";
-import { useGetStartedHints } from "@/app/(client)/dashboard/components/context/PixelInstallHintsContext";
+import { verifyPixelIntegrationHintCards } from "@/app/(client)/analytics/components/context/hintsCardsContent";
+import { useGetStartedHints } from "@/app/(client)/analytics/components/context/PixelInstallHintsContext";
 
 type VerifyPixelIntegrationProps = {
 	domain: string;

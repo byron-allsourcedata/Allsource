@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session
+
+from db_dependencies import Db
 from models.referral_payouts import ReferralPayouts
 from datetime import datetime, timezone
 from sqlalchemy import extract, or_, func, case, and_, asc, desc
@@ -9,9 +11,12 @@ from models.referral_discount_codes import ReferralDiscountCode
 import math
 import pytz
 
+from resolver import injectable
 
+
+@injectable
 class ReferralPayoutsPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def create_referral_payouts(

@@ -1,25 +1,23 @@
-import os
-import time
 import logging
 from typing import Optional
 
 from dotenv import load_dotenv
 import httpx
 
-from schemas import DomainsListResponse
+from schemas import DomainsListResponse, PixelInstallationRequest
+from utils import get_env, get_http_client
 
 load_dotenv()
+
 logger = logging.getLogger(__name__)
 
-GET_DOMAINS_URL = os.getenv("GET_DOMAINS_URL")
-SECRET_KEY = os.getenv("SECRET_KEY")
-CHECK_PIXEL_URL = os.getenv("GET_CHECK_PIXEL_INSTALLATION_STATUS")
+SECRET_PIXEL_KEY = get_env("SECRET_PIXEL_KEY")
 
 
 async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
-    async with httpx.AsyncClient() as client:
+    async with get_http_client() as client:
         try:
-            response = await client.get(GET_DOMAINS_URL, params={"secret_key": SECRET_KEY})
+            response = await client.get("/api/install-pixel/verified_domains", params={"secret_key": SECRET_PIXEL_KEY})
             response.raise_for_status()
             data = response.json()
 
@@ -36,10 +34,23 @@ async def fetch_domains_with_secret() -> Optional[DomainsListResponse]:
             return None
 
 
-async def fetch_external_data(domain: str) -> None:
-    async with httpx.AsyncClient() as client:
-        response = await client.get(CHECK_PIXEL_URL, params={"domain": domain})
+async def fetch_external_data(request_data: PixelInstallationRequest) -> None:
+    async with get_http_client() as client:
+        response = await client.post(
+            "/external_api/install-pixel/check-pixel-installed",
+            json=request_data.dict()
+        )
         if response.status_code == 200:
-            logger.info(f"Successfully fetched pixel installation status for domain: {domain}")
+            logger.info(
+                "Pixel check succeeded for client_id=%s, domain=%s",
+                request_data.pixelClientId,
+                request_data.url
+            )
         else:
-            logger.error(f"Failed to fetch pixel installation status for domain: {domain}")
+            logger.error(
+                "Pixel check failed for client_id=%s, domain=%s: %d %s",
+                request_data.pixelClientId,
+                request_data.url,
+                response.status_code,
+                response.text
+            )

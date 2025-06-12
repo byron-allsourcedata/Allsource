@@ -6,6 +6,7 @@ import {
 	IconButton,
 	Link,
 	TextField,
+	Tab,
 	Typography,
 } from "@mui/material";
 import Image from "next/image";
@@ -14,6 +15,9 @@ import { useEffect, useState } from "react";
 import { showErrorToast, showToast } from "./ToastNotification";
 import axiosInstance from "@/axios/axiosInterceptorInstance";
 import { useIntegrationContext } from "@/context/IntegrationContext";
+import TabPanel from "@mui/lab/TabPanel";
+import TabList from "@mui/lab/TabList";
+import TabContext from "@mui/lab/TabContext";
 
 interface MetaConnectPopupProps {
 	open: boolean;
@@ -141,6 +145,12 @@ const MetaConnectButton = ({
 	const appID = process.env.NEXT_PUBLIC_META_APP_ID;
 	const configID = process.env.NEXT_PUBLIC_META_LOGIN_CONFIG;
 
+	const [value, setValue] = useState("1");
+
+	const handleChangeTab = (event: React.SyntheticEvent, newValue: string) => {
+		setValue(newValue);
+	};
+
 	useEffect(() => {
 		const loadFacebookSDK = () => {
 			window.fbAsyncInit = () => {
@@ -223,9 +233,8 @@ const MetaConnectButton = ({
 			onClose={onClose}
 			PaperProps={{
 				sx: {
-					width: "620px",
+					width: "40%",
 					position: "fixed",
-					zIndex: 1301,
 					top: 0,
 					bottom: 0,
 					boxShadow: boxShadow
@@ -236,7 +245,7 @@ const MetaConnectButton = ({
 					"&::-webkit-scrollbar": {
 						display: "none",
 					},
-					"@media (max-width: 600px)": {
+					"@media (max-width: 900px)": {
 						width: "100%",
 					},
 				},
@@ -305,107 +314,149 @@ const MetaConnectButton = ({
 			</Box>
 			<Box
 				sx={{
-					display: "flex",
-					flexDirection: "column",
-					justifyContent: "space-between",
-					alignItems: "center",
-					height: "100%",
-					"@media (max-width: 480px)": {
-						height: "auto",
-					},
+					width: "100%",
+					padding: "16px 24px 24px 24px",
+					position: "relative",
 				}}
 			>
-				<Box
-					sx={{
-						width: "100%",
-						padding: "16px 24px 24px 24px",
-						position: "relative",
-						height: "100%",
-						marginBottom: "100px",
-						"@media (max-width: 480px)": {
-							height: "auto",
-						},
-					}}
-				>
-					<Box
-						sx={{
-							display: "flex",
-							flexDirection: "column",
-							gap: "12px",
-							p: 2,
-							border: "1px solid #f0f0f0",
-							borderRadius: "4px",
-							boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
-						}}
-					>
-						<Image
-							src="/meta-icon.svg"
-							alt="meta-icon"
-							height={24}
-							width={36}
-						/>
-						<Typography
-							variant="h6"
+				<TabContext value={value}>
+					<Box sx={{ pb: 4 }}>
+						<TabList
+							centered
+							aria-label="Connect to Slack Tabs"
+							TabIndicatorProps={{
+								sx: { backgroundColor: "rgba(56, 152, 252, 1)" },
+							}}
 							sx={{
-								fontFamily: "Nunito Sans",
-								fontSize: "16px",
-								fontWeight: "600",
-								color: "#202124",
-								marginTop: "12px",
-								lineHeight: "normal",
+								"& .MuiTabs-scroller": {
+									overflowX: "auto !important",
+								},
+								"& .MuiTabs-flexContainer": {
+									justifyContent: "center",
+									"@media (max-width: 600px)": {
+										gap: "16px",
+										justifyContent: "flex-start",
+									},
+								},
+							}}
+							onChange={handleChangeTab}
+						>
+							<Tab
+								label="Connection"
+								value="1"
+								className="tab-heading"
+								sx={metaStyles.tabHeading}
+								onClick={() => setValue("1")}
+							/>
+						</TabList>
+					</Box>
+					<TabPanel value="1" sx={{ p: 0 }}>
+						<Box
+							sx={{
+								display: "flex",
+								flexDirection: "column",
+								justifyContent: "space-between",
+								alignItems: "center",
+								height: "100%",
+								"@media (max-width: 480px)": {
+									height: "auto",
+								},
 							}}
 						>
-							Login to your Facebook
-						</Typography>
-						<Box>
-							<Button
-								fullWidth
-								onClick={handleLogin}
-								variant="contained"
-								startIcon={
-									<Image
-										src="/facebook-icon.svg"
-										alt="facebook"
-										height={24}
-										width={24}
-									/>
-								}
+							<Box
 								sx={{
-									backgroundColor: "#0066ff",
-									fontFamily: "Nunito Sans",
-									fontSize: "14px",
-									fontWeight: "600",
-									lineHeight: "17px",
-									letterSpacing: "0.25px",
-									color: "#fff",
-									textTransform: "none",
-									padding: "14.5px 24px",
-									"&:hover": {
-										backgroundColor: "#0066ff",
+									width: "100%",
+									position: "relative",
+									height: "100%",
+									marginBottom: "100px",
+									"@media (max-width: 480px)": {
+										height: "auto",
 									},
-									borderRadius: "6px",
-									border: "1px solid #0066ff",
 								}}
 							>
-								Connect to Facebook
-							</Button>
+								<Box
+									sx={{
+										display: "flex",
+										flexDirection: "column",
+										gap: "12px",
+										p: 2,
+										border: "1px solid #f0f0f0",
+										borderRadius: "4px",
+										boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+									}}
+								>
+									<Image
+										src="/meta-icon.svg"
+										alt="meta-icon"
+										height={24}
+										width={36}
+									/>
+									<Typography
+										variant="h6"
+										sx={{
+											fontFamily: "Nunito Sans",
+											fontSize: "16px",
+											fontWeight: "600",
+											color: "#202124",
+											marginTop: "12px",
+											lineHeight: "normal",
+										}}
+									>
+										Login to your Facebook
+									</Typography>
+									<Box>
+										<Button
+											fullWidth
+											onClick={handleLogin}
+											variant="contained"
+											startIcon={
+												<Image
+													src="/facebook-icon.svg"
+													alt="facebook"
+													height={24}
+													width={24}
+												/>
+											}
+											sx={{
+												backgroundColor: "#0066ff",
+												fontFamily: "Nunito Sans",
+												fontSize: "14px",
+												fontWeight: "600",
+												lineHeight: "17px",
+												letterSpacing: "0.25px",
+												color: "#fff",
+												textTransform: "none",
+												padding: "14.5px 24px",
+												"&:hover": {
+													backgroundColor: "#0066ff",
+												},
+												borderRadius: "6px",
+												border: "1px solid #0066ff",
+											}}
+										>
+											Connect to Facebook
+										</Button>
+									</Box>
+									{invalid_api_key && (
+										<Typography
+											color="error"
+											sx={{
+												fontFamily: "Nunito Sans",
+												fontSize: "14px",
+												fontWeight: "600",
+												lineHeight: "21.82px",
+												marginTop: "10px",
+											}}
+										>
+											Invalid API Key detected. Please reconnect to Meta and try
+											again
+										</Typography>
+									)}
+								</Box>
+							</Box>
 						</Box>
-						{invalid_api_key && (
-							<Typography
-								color="error"
-								sx={{
-									fontFamily: "Nunito Sans",
-									fontSize: "14px",
-									fontWeight: "600",
-									lineHeight: "21.82px",
-									marginTop: "10px",
-								}}
-							>
-								Invalid API Key detected. Please reconnect to Meta and try again
-							</Typography>
-						)}
-					</Box>
-				</Box>
+					</TabPanel>
+				</TabContext>
 			</Box>
 		</Drawer>
 	);

@@ -152,6 +152,10 @@ const S3Connect = ({
 				{ params: { service_name: "s3" } },
 			);
 			if (response.status === 200) {
+				if (response.data.status !== "SUCCESS") {
+					showErrorToast(response.data.message);
+					return;
+				}
 				showToast("Integration S3 Successfully");
 				if (onSave) {
 					const access_token = JSON.stringify({
@@ -175,13 +179,7 @@ const S3Connect = ({
 		} catch (error) {
 			if (error instanceof AxiosError) {
 				if (error.response?.status === 400) {
-					if (error.response.data.status === "CREDENTIALS_MISSING") {
-						showErrorToast(error.response.data.message);
-					} else if (error.response.data.status === "CREDENTIALS_INCOMPLETE") {
-						showErrorToast(error.response.data.message);
-					} else {
-						showErrorToast(error.response.data.message);
-					}
+					showErrorToast(error.response.data.message);
 				}
 			}
 		} finally {
@@ -297,9 +295,8 @@ const S3Connect = ({
 				onClose={handleClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						boxShadow: boxShadow
 							? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
@@ -310,7 +307,7 @@ const S3Connect = ({
 						"&::-webkit-scrollbar": {
 							display: "none",
 						},
-						"@media (max-width: 600px)": {
+						"@media (max-width: 900px)": {
 							width: "100%",
 						},
 					},
