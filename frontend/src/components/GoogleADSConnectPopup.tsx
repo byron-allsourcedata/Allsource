@@ -125,9 +125,8 @@ const GoogleADSConnectPopup = ({
 			onClose={handlePopupClose}
 			PaperProps={{
 				sx: {
-					width: "620px",
+					width: "40%",
 					position: "fixed",
-					zIndex: 1301,
 					top: 0,
 					boxShadow: boxShadow
 						? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
@@ -138,7 +137,7 @@ const GoogleADSConnectPopup = ({
 					"&::-webkit-scrollbar": {
 						display: "none",
 					},
-					"@media (max-width: 600px)": {
+					"@media (max-width: 900px)": {
 						width: "100%",
 					},
 				},
@@ -462,36 +461,6 @@ const GoogleADSConnectPopup = ({
 							</Box>
 						</TabPanel>
 					</TabContext>
-				</Box>
-				<Box
-					sx={{ px: 2, py: 2, width: "100%", borderTop: "1px solid #e4e4e4" }}
-				>
-					<Box
-						sx={{ width: "100%", display: "flex", justifyContent: "flex-end" }}
-					>
-						<Button
-							variant="contained"
-							onClick={handlePopupClose}
-							sx={{
-								backgroundColor: "rgba(56, 152, 252, 1)",
-								fontFamily: "Nunito Sans",
-								fontSize: "14px",
-								fontWeight: "600",
-								lineHeight: "20px",
-								letterSpacing: "normal",
-								color: "#fff",
-								textTransform: "none",
-								padding: "10px 24px",
-								boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.25)",
-								"&:hover": {
-									backgroundColor: "rgba(56, 152, 252, 1)",
-								},
-								borderRadius: "4px",
-							}}
-						>
-							Close
-						</Button>
-					</Box>
 				</Box>
 			</Box>
 		</Drawer>

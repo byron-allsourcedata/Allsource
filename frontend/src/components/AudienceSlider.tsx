@@ -46,6 +46,8 @@ import ZapierDataSync from "../app/(client)/data-sync/components/ZapierDataSync"
 import ConnectHubspot from "../app/(client)/data-sync/components/HubspotDataSync";
 import HubspotDataSync from "../app/(client)/data-sync/components/HubspotDataSync";
 import HubspotIntegrationPopup from "./HubspotIntegrationPopup";
+import IntegrationBox from "../app/(client)/smart-audiences/components/IntegrationBox";
+import { UpgradePlanPopup } from "@/app/(client)/components/UpgradePlanPopup";
 
 interface AudiencePopupProps {
 	open: boolean;
@@ -75,6 +77,23 @@ interface Integrations {
 	service_name: string;
 	data_sync: boolean;
 }
+
+type ServiceHandlers = {
+	hubspot: () => void;
+	mailchimp: () => void;
+	sales_force: () => void;
+	google_ads: () => void;
+	s3: () => void;
+	klaviyo: () => void;
+	omnisend: () => void;
+	sendlane: () => void;
+	zapier: () => void;
+	slack: () => void;
+	webhook: () => void;
+	linkedin: () => void;
+	meta: () => void;
+	bing_ads: () => void;
+};
 
 const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	open,
@@ -122,6 +141,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	const [openBingAdsConnect, setOpenBingAdsConnect] = useState(false);
 	const [omnisendIconPopupOpen, setOpenOmnisendIconPopupOpen] = useState(false);
 	const [hubspotIconPopupOpen, setOpenHubspotIconPopupOpen] = useState(false);
+	const [integratedServices, setIntegratedServices] = useState<string[]>([]);
+	const [upgradePlanPopup, setUpgradePlanPopup] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -141,6 +163,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				const response = await axiosInstance.get("/integrations/credentials/");
 				if (response.status === 200) {
 					setIntegrationsCredentials(response.data);
+					setIntegratedServices(
+						response.data.map((cred: any) => cred.service_name),
+					);
 				}
 			} catch (error) {}
 		};
@@ -184,13 +209,11 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleOmnisendConnectOpen = () => {
-		setIsInvalidApiKey(true);
 		setOpenOmnisendConnect(true);
 	};
 
 	const handleOmnisendConnectClose = () => {
 		setOpenOmnisendConnect(false);
-		handleOmnisendIconPopupOpen();
 	};
 
 	const handleOmnisendIconPopupOpen = () => {
@@ -212,7 +235,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleOpenMailchimpConnect = () => {
-		setIsInvalidApiKey(true);
 		setOpenmailchimpConnect(true);
 	};
 
@@ -233,17 +255,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleCreateSlackOpen = () => {
-		setIsInvalidApiKey(true);
 		setCreateSlack(true);
 	};
 
 	const handleCreateGoogleAdsOpen = () => {
-		setIsInvalidApiKey(true);
 		setCreateGoogleAds(true);
 	};
 
 	const handleCreateLinkedinOpen = () => {
-		setIsInvalidApiKey(true);
 		setCreateLinkedin(true);
 	};
 
@@ -301,41 +320,41 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				return [...prevIntegrations, newIntegration];
 			}
 		});
-		const service = newIntegration.service_name;
-		switch (service) {
-			case "meta":
-				handleMetaIconPopupOpen();
-				break;
-			// case 'klaviyo':
-			//     handleKlaviyoIconPopupOpen()
-			//     break
-			case "bing_ads":
-				handleBingAdsIconPopupOpen();
-				break;
-			case "mailchimp":
-				handleMailchimpIconPopupIconOpen();
-				break;
-			// case 'omnisend':
-			//     handleOmnisendIconPopupOpen()
-			//     break
-			// case 'sendlane':
-			//     handleSendlaneIconPopupOpen()
-			//     break
-			case "s3":
-				handleS3IconPopupOpen();
-				break;
-			// case 'slack':
-			//     handleSlackIconPopupIconOpen()
-			//     break
-			case "google_ads":
-				handleGoogleAdsIconPopupIconOpen();
-			// case 'webhook':
-			//     handleWebhookIconPopupOpen()
-			//     break
-			case "hubspot":
-				handleHubspotIconPopupOpen();
-				break;
-		}
+		// const service = newIntegration.service_name;
+		// switch (service) {
+		// 	case "meta":
+		// 		handleMetaIconPopupOpen();
+		// 		break;
+		// 	// case 'klaviyo':
+		// 	//     handleKlaviyoIconPopupOpen()
+		// 	//     break
+		// 	case "bing_ads":
+		// 		handleBingAdsIconPopupOpen();
+		// 		break;
+		// 	case "mailchimp":
+		// 		handleMailchimpIconPopupIconOpen();
+		// 		break;
+		// 	// case 'omnisend':
+		// 	//     handleOmnisendIconPopupOpen()
+		// 	//     break
+		// 	// case 'sendlane':
+		// 	//     handleSendlaneIconPopupOpen()
+		// 	//     break
+		// 	case "s3":
+		// 		handleS3IconPopupOpen();
+		// 		break;
+		// 	// case 'slack':
+		// 	//     handleSlackIconPopupIconOpen()
+		// 	//     break
+		// 	case "google_ads":
+		// 		handleGoogleAdsIconPopupIconOpen();
+		// 	// case 'webhook':
+		// 	//     handleWebhookIconPopupOpen()
+		// 	//     break
+		// 	case "hubspot":
+		// 		handleHubspotIconPopupOpen();
+		// 		break;
+		// }
 	};
 
 	const handleSendlaneIconPopupOpen = () => {
@@ -363,7 +382,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleSendlaneConnectOpen = () => {
-		setIsInvalidApiKey(true);
 		setOpenSendlaneConnect(true);
 	};
 
@@ -372,7 +390,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleS3ConnectOpen = () => {
-		setIsInvalidApiKey(true);
 		setOpenS3Connect(true);
 	};
 
@@ -381,12 +398,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleCreateKlaviyoOpen = () => {
-		setIsInvalidApiKey(true);
 		setCreateKlaviyo(true);
 	};
 
 	const handleCreateBingAdsOpen = () => {
-		setIsInvalidApiKey(true);
 		setCreateBingAds(true);
 	};
 
@@ -395,22 +410,18 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleCreateHubspotOpen = () => {
-		setIsInvalidApiKey(true);
 		setCreateHubspot(true);
 	};
 
 	const handleCreateMetaOpen = () => {
-		setIsInvalidApiKey(true);
 		setMetaConnectApp(true);
 	};
 
 	const handleCreateSalesForceOpen = () => {
-		setIsInvalidApiKey(true);
 		setCreateSalesForce(true);
 	};
 
 	const handleCreateKlaviyoClose = () => {
-		setIsInvalidApiKey(false);
 		setCreateKlaviyo(false);
 	};
 
@@ -419,12 +430,10 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleCreateWebhookOpen = () => {
-		setIsInvalidApiKey(true);
 		setCreateWebhook(true);
 	};
 
 	const handleCreateWebhookClose = () => {
-		setIsInvalidApiKey(false);
 		setCreateWebhook(false);
 	};
 
@@ -445,7 +454,6 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleOpenZapierConnect = () => {
-		setIsInvalidApiKey(true);
 		setOpenZapierConnect(true);
 	};
 
@@ -458,13 +466,101 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 	};
 
 	const handleCloseMetaConnectApp = () => {
-		setIntegrationsCredentials((prevIntegratiosn) => [
-			...prevIntegratiosn,
-			{
-				service_name: "meta",
-			},
-		]);
+		// setIntegrationsCredentials((prevIntegratiosn) => [
+		// 	...prevIntegratiosn,
+		// 	{
+		// 		service_name: "meta",
+		// 	},
+		// ]);
 		setMetaConnectApp(false);
+	};
+
+	const toCamelCase = (name: string) => {
+		const updatedName = name
+			?.split("_")
+			.map((word, index) =>
+				index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1),
+			)
+			.join("");
+		return updatedName;
+	};
+
+	const integrationsImage = [
+		{ image: "csv-icon.svg", service_name: "CSV" },
+		{ image: "meta-icon.svg", service_name: "meta" },
+		{ image: "mailchimp-icon.svg", service_name: "mailchimp" },
+		{ image: "hubspot.svg", service_name: "hubspot" },
+		{ image: "google-ads.svg", service_name: "google_ads" },
+		{ image: "bing.svg", service_name: "bing_ads" },
+		{ image: "salesforce-icon.svg", service_name: "sales_force" },
+		{ image: "webhook-icon.svg", service_name: "webhook" },
+		{ image: "slack-icon.svg", service_name: "slack" },
+		{ image: "zapier-icon.svg", service_name: "zapier" },
+		{ image: "omnisend_icon_black.svg", service_name: "omnisend" },
+		{ image: "sendlane-icon.svg", service_name: "sendlane" },
+		{ image: "klaviyo.svg", service_name: "klaviyo" },
+		{ image: "s3.svg", service_name: "s3" },
+	];
+
+	const handleAddIntegration = async (service_name: string) => {
+		try {
+			setIsLoading(true);
+			const response = await axiosInstance.get(
+				"/integrations/check-limit-reached",
+			);
+			if (response.status === 200 && response.data) {
+				setUpgradePlanPopup(true);
+				return;
+			}
+		} catch {
+		} finally {
+			setIsLoading(false);
+		}
+
+		const isIntegrated = integrationsCredentials.some(
+			(integration_cred) => integration_cred.service_name === service_name,
+		);
+		if (isIntegrated) return;
+
+		if (service_name === "meta") {
+			setMetaConnectApp(true);
+		} else if (service_name in integrationsHandlers) {
+			integrationsHandlers[service_name as keyof ServiceHandlers]();
+		}
+	};
+
+	const integrationsHandlers: ServiceHandlers = {
+		hubspot: handleCreateHubspotOpen,
+		mailchimp: handleOpenMailchimpConnect,
+		sales_force: handleCreateSalesForceOpen,
+		google_ads: handleCreateGoogleAdsOpen,
+		s3: handleS3ConnectOpen,
+		slack: handleCreateSlackOpen,
+		klaviyo: handleCreateKlaviyoOpen,
+		omnisend: handleOmnisendConnectOpen,
+		sendlane: handleSendlaneConnectOpen,
+		zapier: handleOpenZapierConnect,
+		webhook: handleCreateWebhookOpen,
+		linkedin: handleCreateLinkedinOpen,
+		meta: handleCreateMetaOpen,
+		bing_ads: handleCreateBingAdsOpen,
+	};
+
+	const syncHandlers: ServiceHandlers = {
+		hubspot: handleHubspotIconPopupOpen,
+		mailchimp: handleMailchimpIconPopupIconOpen,
+		sales_force: handleSalesForceIconPopupOpen,
+		google_ads: handleGoogleAdsIconPopupIconOpen,
+		s3: handleS3IconPopupOpen,
+		slack: handleSlackIconPopupIconOpen,
+		klaviyo: handleKlaviyoIconPopupOpen,
+		omnisend: handleOmnisendIconPopupOpen,
+		sendlane: handleSendlaneIconPopupOpen,
+		zapier: handleOpenZapierDataSync,
+		webhook: handleWebhookIconPopupOpen,
+		linkedin: handleLinkedinIconPopupIconOpen,
+		meta: handleMetaIconPopupOpen,
+		bing_ads: handleBingAdsIconPopupOpen,
 	};
 
 	return (
@@ -476,9 +572,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				onClose={onClose}
 				PaperProps={{
 					sx: {
-						width: "620px",
+						width: "40%",
 						position: "fixed",
-						zIndex: 1301,
 						top: 0,
 						bottom: 0,
 						"@media (max-width: 600px)": {
@@ -529,24 +624,104 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 						height: "100%",
 					}}
 				>
-					<Box sx={{ px: 3, py: 2, width: "100%" }}>
+					<Box sx={{ p: 0, width: "100%" }}>
 						<Box
 							sx={{
-								px: 2,
-								py: 3,
-								border: "1px solid #f0f0f0",
-								borderRadius: "4px",
-								boxShadow: "0px 2px 8px 0px rgba(0, 0, 0, 0.20)",
+								px: 3,
+								py: 2,
+								display: "flex",
+								flexDirection: "column",
+								gap: 3,
+								width: "100%",
 							}}
 						>
 							<Typography variant="h6" className="first-sub-title">
 								Choose from integrated platform
 							</Typography>
 							<List
-								sx={{ display: "flex", gap: "16px", py: 2, flexWrap: "wrap" }}
+								sx={{
+									display: "flex",
+									gap: 2,
+									p: 0,
+									border: "none",
+									flexWrap: "wrap",
+								}}
 							>
+								{integrations
+									.sort((a, b) => {
+										const isIntegratedA = integratedServices.includes(
+											a.service_name,
+										);
+										const isIntegratedB = integratedServices.includes(
+											b.service_name,
+										);
+
+										if (isIntegratedA && !isIntegratedB) return -1;
+										if (!isIntegratedA && isIntegratedB) return 1;
+										return 0;
+									})
+									.map((integration) => {
+										const integrationCred = integrationsCredentials.find(
+											(cred) => cred.service_name === integration.service_name,
+										);
+										let isIntegrated = integratedServices.includes(
+											integration.service_name,
+										);
+
+										const activeService =
+											integration.service_name.toLowerCase();
+
+										return (
+											<Box
+												key={integration.service_name}
+												onClick={() =>
+													!isIntegrated
+														? handleAddIntegration(integration.service_name)
+														: integrationCred?.is_failed
+															? integrationsHandlers[
+																	integration.service_name as keyof ServiceHandlers
+																]()
+															: // handleSaveSettings(integration.service_name)
+																syncHandlers[
+																	integration.service_name as keyof ServiceHandlers
+																]()
+												}
+												sx={{
+													width: `calc((100% - (${integrations.length} - 1) * 16px) / ${integrations.length})`,
+													minWidth: "135px",
+												}}
+											>
+												<IntegrationBox
+													image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
+													serviceName={toCamelCase(integration.service_name)}
+													active={activeService === integration.service_name}
+													isAvalible={
+														isIntegrated || integrationCred?.is_failed
+													}
+													isFailed={integrationCred?.is_failed}
+													isIntegrated={isIntegrated}
+												/>
+											</Box>
+										);
+									})}
+
+								{/* <IntegrationBox
+									image={`/${integrationsImage.filter((item) => item.service_name === integration.service_name)[0]?.image}`}
+									serviceName={toCamelCase(
+										integration.service_name,
+									)}
+									active={
+										activeService === integration.service_name
+									}
+									isAvalible={
+										isIntegrated || integrationCred?.is_failed
+									}
+									isFailed={integrationCred?.is_failed}
+									isIntegrated={isIntegrated}
+								/> */}
+
 								{/* Meta */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "meta",
 								) && (
 									<ListItem
@@ -604,9 +779,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* HubSpot */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "hubspot",
 								) && (
 									<ListItem
@@ -668,9 +843,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* Klaviyo */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "klaviyo",
 								) && (
 									<ListItem
@@ -732,9 +907,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* BingAds */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "bing_ads",
 								) && (
 									<ListItem
@@ -796,9 +971,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* SalesForce */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "sales_force",
 								) && (
 									<ListItem
@@ -860,9 +1035,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* Webhook */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "webhook",
 								) && (
 									<ListItem
@@ -924,9 +1099,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* Omnisend */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "omnisend",
 								) && (
 									<ListItem
@@ -988,9 +1163,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* Slack */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "slack",
 								) && (
 									<ListItem
@@ -1051,9 +1226,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* GoogleAds */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "google_ads",
 								) && (
 									<ListItem
@@ -1115,9 +1290,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* Linkedin */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "linkedin",
 								) && (
 									<ListItem
@@ -1179,9 +1354,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* Mailchimp */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "mailchimp",
 								) && (
 									<ListItem
@@ -1243,9 +1418,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* Sendlane */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "sendlane",
 								) && (
 									<ListItem
@@ -1307,9 +1482,9 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
+								)} */}
 								{/* S3 */}
-								{integrationsCredentials.some(
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "s3",
 								) && (
 									<ListItem
@@ -1370,8 +1545,8 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
-								{integrationsCredentials.some(
+								)} */}
+								{/* {integrationsCredentials.some(
 									(integration) => integration.service_name === "zapier",
 								) && (
 									<ListItem
@@ -1433,40 +1608,7 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 											/>
 										</ListItemButton>
 									</ListItem>
-								)}
-								<ListItem
-									sx={{
-										p: 0,
-										borderRadius: "4px",
-										border: "1px dotted rgba(56, 152, 252, 1)",
-										width: "auto",
-										"@media (max-width:600px)": {
-											flexBasis: "calc(50% - 8px)",
-										},
-									}}
-								>
-									<ListItemButton
-										onClick={handlePlusIconPopupOpen}
-										sx={{
-											p: 0,
-											flexDirection: "column",
-											px: 3,
-											py: 1.5,
-											width: "102px",
-											height: "72px",
-											justifyContent: "center",
-										}}
-									>
-										<ListItemIcon sx={{ minWidth: "auto" }}>
-											<Image
-												src="/add-square.svg"
-												alt="add-square"
-												height={36}
-												width={40}
-											/>
-										</ListItemIcon>
-									</ListItemButton>
-								</ListItem>
+								)} */}
 							</List>
 						</Box>
 					</Box>
@@ -1567,14 +1709,14 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 			/>
 
 			{/* Add Integration */}
-			<AlivbleIntagrationsSlider
+			{/* <AlivbleIntagrationsSlider
 				open={plusIconPopupOpen}
 				onClose={handlePlusIconPopupClose}
 				isContactSync={true}
 				integrations={integrations}
 				integrationsCredentials={integrationsCredentials}
 				handleSaveSettings={handleSaveSettings}
-			/>
+			/> */}
 			<SlackConnectPopup
 				open={createSlack}
 				handlePopupClose={handleCreateSlackClose}
@@ -1718,6 +1860,12 @@ const AudiencePopup: React.FC<AudiencePopupProps> = ({
 				onClose={handleCloseMetaConnectApp}
 				invalid_api_key={isInvalidApiKey}
 				onSave={handleSaveSettings}
+			/>
+
+			<UpgradePlanPopup
+				open={upgradePlanPopup}
+				limitName={"domain"}
+				handleClose={() => setUpgradePlanPopup(false)}
 			/>
 		</>
 	);

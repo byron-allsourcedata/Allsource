@@ -138,7 +138,7 @@ export const SettingsSubscription: React.FC = () => {
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
 
-	plans = visiblePlans;
+  plans = visiblePlans;
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);

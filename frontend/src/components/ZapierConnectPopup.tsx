@@ -128,9 +128,8 @@ const ZapierConnectPopup = ({
 			onClose={handlePopupClose}
 			PaperProps={{
 				sx: {
-					width: "620px",
+					width: "40%",
 					position: "fixed",
-					zIndex: 1301,
 					top: 0,
 					boxShadow: boxShadow
 						? "0px 8px 10px -5px rgba(0, 0, 0, 0.2), 0px 16px 24px 2px rgba(0, 0, 0, 0.14), 0px 6px 30px 5px rgba(0, 0, 0, 0.12)"
