@@ -71,12 +71,11 @@ class IntegrationUserSync(Base):
     sync_status = Column(Boolean, nullable=False, server_default=text("true"))
     no_of_contacts = Column(Integer, nullable=False, server_default=text("0"))
     created_by = Column(String(256), nullable=True)
-    last_lead_sync_id = Column(
-        BigInteger, ForeignKey("leads_users.id"), nullable=True
-    )
     hook_url = Column(VARCHAR, nullable=True)
     last_sent_lead_id = Column(
-        BigInteger, ForeignKey("leads_users.id"), nullable=True
+        BigInteger,
+        ForeignKey("leads_users.id", ondelete="CASCADE"),
+        nullable=True,
     )
     method = Column(String(8), nullable=True)
     customer_id = Column(VARCHAR, nullable=True)
