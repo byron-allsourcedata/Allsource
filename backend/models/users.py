@@ -89,7 +89,9 @@ class Users(Base):
     )
     leads_credits = Column(Integer, nullable=False, server_default=text("0"))
     prospect_credits = Column(Integer, nullable=False, server_default=text("0"))
-    overage_leads_count = Column(Integer, nullable=False, server_default=text("0"))
+    overage_leads_count = Column(
+        Integer, nullable=False, server_default=text("0")
+    )
     validation_funds = Column(
         DECIMAL(10, 2), nullable=False, server_default=text("0")
     )

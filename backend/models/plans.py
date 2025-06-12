@@ -71,4 +71,6 @@ class SubscriptionPlan(Base):
         ForeignKey("subscription_plans.id", ondelete="SET NULL"),
         nullable=True,
     )
-    overage_enabled = Column(Boolean, nullable=False, server_default=text("true"))
+    overage_enabled = Column(
+        Boolean, nullable=False, server_default=text("true")
+    )

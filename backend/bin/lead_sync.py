@@ -226,6 +226,7 @@ async def handle_payment_notification(
             },
         )
 
+
 async def handle_overage_leads_notification(
     user: Users, notification_persistence: NotificationPersistence
 ):
@@ -234,9 +235,11 @@ async def handle_overage_leads_notification(
             NotificationTitles.OVERAGE_LEADS.value
         )
     )
-    find_notification = notification_persistence.find_account_notifications(user_id=user.id, account_notification_id=account_notification.id)
+    find_notification = notification_persistence.find_account_notifications(
+        user_id=user.id, account_notification_id=account_notification.id
+    )
     if find_notification:
-        logging.debug('Notification already sent')
+        logging.debug("Notification already sent")
         return
 
     queue_name = f"sse_events_{str(user.id)}"
@@ -256,6 +259,7 @@ async def handle_overage_leads_notification(
         },
     )
 
+
 async def handle_inactive_leads_notification(
     user: Users, notification_persistence: NotificationPersistence
 ):
@@ -264,9 +268,11 @@ async def handle_inactive_leads_notification(
             NotificationTitles.PLAN_LIMIT_EXCEEDED.value
         )
     )
-    find_notification = notification_persistence.find_account_notifications(user_id=user.id, account_notification_id=account_notification.id)
+    find_notification = notification_persistence.find_account_notifications(
+        user_id=user.id, account_notification_id=account_notification.id
+    )
     if find_notification:
-        logging.debug('Notification already sent')
+        logging.debug("Notification already sent")
         return
 
     queue_name = f"sse_events_{str(user.id)}"
@@ -321,7 +327,7 @@ async def process_payment_unlocked_five_x_five_user(
     notification_persistence: NotificationPersistence,
     overage_enabled: bool,
     plan_leads_credits: int,
-    contact_credit_price: int
+    contact_credit_price: int,
 ):
     users_unlocked_five_x_five_user = (
         session.query(UsersUnlockedFiveXFiveUser)
@@ -343,7 +349,9 @@ async def process_payment_unlocked_five_x_five_user(
             await handle_overage_leads_notification(
                 user=user, notification_persistence=notification_persistence
             )
-            logging.debug("The message about exceeding the limits has been sent")
+            logging.debug(
+                "The message about exceeding the limits has been sent"
+            )
             lead_user.is_active = True
             user.overage_leads_count += 1
             session.flush()
@@ -375,6 +383,7 @@ async def process_payment_unlocked_five_x_five_user(
     )
     session.flush()
     return
+
 
 def check_activate_based_urls(page, suppression_rule):
     parsed_url = urlparse(page)
@@ -774,7 +783,11 @@ async def process_user_data(
         if user_subscription:
             ContactCredits = aliased(SubscriptionPlan)
             result_query = (
-                session.query(SubscriptionPlan.overage_enabled, SubscriptionPlan.leads_credits, ContactCredits.price)
+                session.query(
+                    SubscriptionPlan.overage_enabled,
+                    SubscriptionPlan.leads_credits,
+                    ContactCredits.price,
+                )
                 .outerjoin(
                     ContactCredits,
                     SubscriptionPlan.contact_credit_plan_id
@@ -783,7 +796,9 @@ async def process_user_data(
                 .filter(SubscriptionPlan.id == user_subscription.plan_id)
                 .first()
             )
-            overage_enabled, plan_leads_credits, contact_credit_price = result_query
+            overage_enabled, plan_leads_credits, contact_credit_price = (
+                result_query
+            )
             await process_payment_unlocked_five_x_five_user(
                 session=session,
                 five_x_five_user_up_id=five_x_five_user.up_id,
@@ -793,7 +808,7 @@ async def process_user_data(
                 notification_persistence=notification_persistence,
                 overage_enabled=overage_enabled,
                 plan_leads_credits=plan_leads_credits,
-                contact_credit_price=contact_credit_price
+                contact_credit_price=contact_credit_price,
             )
 
         else:

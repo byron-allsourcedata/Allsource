@@ -35,7 +35,7 @@ class NotificationPersistence:
             .filter(
                 UserAccountNotification.user_id == user_id,
                 UserAccountNotification.notification_id
-                == account_notification_id
+                == account_notification_id,
             )
             .order_by(desc(UserAccountNotification.id))
             .limit(5)
