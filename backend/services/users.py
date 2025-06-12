@@ -1,6 +1,8 @@
 import logging
+from typing import Optional
 
 from enums import UpdatePasswordStatus
+from models import Users
 from persistence.user_persistence import UserPersistence
 from persistence.plans_persistence import PlansPersistence
 from schemas.users import UpdatePassword, MeetingData
@@ -149,3 +151,6 @@ class UsersService:
         return self.user_persistence_service.has_sources_for_user(
             self.user.get("id")
         )
+
+    def by_email(self, email: str) -> Optional[Users]:
+        return self.user_persistence_service.by_email(email)

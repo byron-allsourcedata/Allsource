@@ -6,6 +6,9 @@ import pytz
 from sqlalchemy import and_, or_, desc, asc, Integer, distinct, select
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
+
+from db_dependencies import Db
+from resolver import injectable
 from utils import format_phone_number
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
@@ -88,8 +91,9 @@ def normalize_profession(profession: str) -> str:
     return profession.lower().replace(" ", "-")
 
 
+@injectable
 class LeadsPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def filter_leads(

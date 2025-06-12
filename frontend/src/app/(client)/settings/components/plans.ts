@@ -1,5 +1,6 @@
 import { useIsFreeTrial, usePlanAlias } from "@/hooks/subscriptions";
 import type { Advantage } from "./PlanCard/Advantages";
+import { useEffect, useState } from "react";
 
 export type Plan = {
 	title: string;
@@ -209,27 +210,37 @@ export const monthlyPlans: Plan[] = [
 
 export type PlanPeriod = "month" | "year";
 
-export function usePlans(period: PlanPeriod): Plan[] {
+export function usePlans(period: PlanPeriod): [Plan[], string | null] {
+	const [visiblePlans, setVisiblePlans] = useState<Plan[]>([]);
+
 	const currentPlanAlias = usePlanAlias();
 	const freeTrial = useIsFreeTrial();
 
-	let plans = period === "month" ? monthlyPlans : yearlyPlans;
+	useEffect(() => {
+		let plans = period === "month" ? monthlyPlans : yearlyPlans;
 
-	if (freeTrial) {
-		plans = [{ ...freeTrialPlan, isActive: true }, ...plans];
-	}
+		if (freeTrial) {
+			plans = [{ ...freeTrialPlan, isActive: true }, ...plans];
+		}
 
-	const planIndex = plans.findIndex((plan) => plan.alias === currentPlanAlias);
+		const planIndex = plans.findIndex(
+			(plan) => plan.alias === currentPlanAlias,
+		);
 
-	if (planIndex === -1) {
-		return plans;
-	}
+		if (planIndex === -1) {
+			return setVisiblePlans(plans);
+		}
 
-	return [
-		{
-			...plans[planIndex],
-			isActive: true,
-		},
-		...plans.slice(planIndex + 1),
-	];
+		const newPlans = [
+			{
+				...plans[planIndex],
+				isActive: true,
+			},
+			...plans.slice(planIndex + 1),
+		];
+
+		setVisiblePlans(newPlans);
+	}, [currentPlanAlias, freeTrial, period]);
+
+	return [visiblePlans, currentPlanAlias];
 }
