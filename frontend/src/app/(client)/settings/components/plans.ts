@@ -209,7 +209,7 @@ export const monthlyPlans: Plan[] = [
 
 export type PlanPeriod = "month" | "year";
 
-export function usePlans(period: PlanPeriod): Plan[] {
+export function usePlans(period: PlanPeriod): [Plan[], string | null] {
 	const currentPlanAlias = usePlanAlias();
 	const freeTrial = useIsFreeTrial();
 
@@ -222,14 +222,17 @@ export function usePlans(period: PlanPeriod): Plan[] {
 	const planIndex = plans.findIndex((plan) => plan.alias === currentPlanAlias);
 
 	if (planIndex === -1) {
-		return plans;
+		return [plans, currentPlanAlias];
 	}
 
 	return [
-		{
-			...plans[planIndex],
-			isActive: true,
-		},
-		...plans.slice(planIndex + 1),
-	];
+		[
+			{
+				...plans[planIndex],
+				isActive: true,
+			},
+			...plans.slice(planIndex + 1),
+		],
+		currentPlanAlias,
+	] as const;
 }
