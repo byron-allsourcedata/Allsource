@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import type React from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
 	Box,
 	Typography,
@@ -7,11 +8,8 @@ import {
 	Tabs,
 	Tab,
 	TextField,
-	Slider,
 	IconButton,
 	Drawer,
-	Divider,
-	Chip,
 	Link,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -26,13 +24,7 @@ import {
 	showToast,
 } from "../../../../components/ToastNotification";
 import axios from "axios";
-import { getCalendlyPopupUrl } from "@/services/booking";
-import {
-	yearlyPlans as defaultPlans,
-	monthlyPlans,
-	usePlans,
-	type Plan,
-} from "./plans";
+import { usePlans, type Plan } from "./plans";
 import { fetchUserData } from "@/services/meService";
 import { BookACallPopup } from "../../components/BookACallPopup";
 
@@ -124,8 +116,8 @@ const marks = [
 
 export const SettingsSubscription: React.FC = () => {
 	const [tabValue, setTabValue] = useState(1);
-	const visiblePlans = usePlans(tabValue === 0 ? "month" : "year");
-	const [plans, setPlans] = useState<Plan[]>(visiblePlans);
+	const [visiblePlans, planAlias] = usePlans(tabValue === 0 ? "month" : "year");
+	let [plans, setPlans] = useState<Plan[]>(visiblePlans);
 	const [allPlans, setAllPlans] = useState<any[]>([]);
 	const [credits, setCredits] = useState<number>(50000);
 	const [selectedPlan, setSelectedPlan] = useState<any>(null);
@@ -145,6 +137,8 @@ export const SettingsSubscription: React.FC = () => {
 	const [activePlan, setActivePlan] = useState<any>(null);
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
+
+	plans = visiblePlans;
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);

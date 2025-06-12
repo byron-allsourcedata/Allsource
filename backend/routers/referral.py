@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from dependencies import (
-    get_referral_service,
     check_user_authentication,
     check_user_setting_access,
 )
@@ -13,7 +12,7 @@ router = APIRouter(dependencies=[Depends(check_user_setting_access)])
 
 @router.get("/overview", response_model=OverviewResponse)
 def get_overview_info(
-    referral_service: ReferralService = Depends(get_referral_service),
+    referral_service: ReferralService,
     user: dict = Depends(check_user_authentication),
 ):
     return referral_service.get_overview_info(user)
@@ -21,7 +20,7 @@ def get_overview_info(
 
 @router.get("/rewards")
 def get_rewards_info(
-    referral_service: ReferralService = Depends(get_referral_service),
+    referral_service: ReferralService,
     user: dict = Depends(check_user_authentication),
     year: Optional[str] = Query(None),
     month: Optional[int] = Query(None),
@@ -34,7 +33,7 @@ def get_rewards_info(
 
 @router.get("/details", response_model=ReferralDetailsResponse)
 def get_referral_details(
-    referral_service: ReferralService = Depends(get_referral_service),
+    referral_service: ReferralService,
     user: dict = Depends(check_user_authentication),
     discount_code_id: Optional[int] = Query(None),
 ):
@@ -48,7 +47,7 @@ def get_referral_details(
 @router.get("/generate-token")
 async def generate_token(
     user_account_id: int,
-    referral_service: ReferralService = Depends(get_referral_service),
+    referral_service: ReferralService,
     user: dict = Depends(check_user_authentication),
 ):
     token = referral_service.generate_access_token(

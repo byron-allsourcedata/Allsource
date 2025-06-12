@@ -1,14 +1,18 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import asc
+
+from db_dependencies import Db
 from models.referral_users import ReferralUser
 from models.users import Users
 from datetime import datetime, timezone
 from enums import ProgramType
 from models.referral_discount_codes import ReferralDiscountCode
+from resolver import injectable
 
 
+@injectable
 class ReferralDiscountCodesPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_referral_discount_codes(self):

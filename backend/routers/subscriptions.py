@@ -17,8 +17,6 @@ from dependencies import (
     get_webhook,
     check_user_authentication,
     check_user_authorization_without_pixel,
-    get_subscription_service,
-    get_leads_persistence,
     check_pixel_install_domain,
     AuthUser,
 )
@@ -44,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 @router.get("/stripe-plans")
 async def get_subscription_plans(
-    plans_service: PlansService = Depends(get_plans_service),
+    plans_service: PlansService,
     user: Users = Depends(check_user_authentication),
 ):
     return plans_service.get_subscription_plans(user=user)
@@ -74,7 +72,7 @@ async def create_customer_session(
 async def test(
     user: AuthUser,
     basic_plan_service: BasicPlanService,
-    plans_service: PlansService = Depends(get_plans_service),
+    plans_service: PlansService,
 ):
     customer_id = plans_service.get_customer_id(user)
     session_url = basic_plan_service.get_basic_plan_payment_url(
@@ -353,9 +351,7 @@ async def shopify_billing_update_webhook(
 
 @router.get("/check-credit-status")
 def get_status_credits(
-    subscription_service: SubscriptionService = Depends(
-        get_subscription_service
-    ),
+    subscription_service: SubscriptionService,
     user: Users = Depends(check_user_authentication),
 ):
     return subscription_service.get_status_credits(user)
@@ -364,12 +360,10 @@ def get_status_credits(
 @router.put("/charge-credit")
 def charge_credit(
     payload: ChargeCreditInfo,
+    lead_persistence: LeadsPersistence,
+    subscription_service: SubscriptionService,
     user: Users = Depends(check_user_authentication),
-    lead_persistence: LeadsPersistence = Depends(get_leads_persistence),
     domain: UserDomains = Depends(check_pixel_install_domain),
-    subscription_service: SubscriptionService = Depends(
-        get_subscription_service
-    ),
 ):
     return subscription_service.charge_credit(
         payload.five_x_five_id, user, lead_persistence, domain
