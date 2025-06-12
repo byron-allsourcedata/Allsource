@@ -116,6 +116,7 @@ const SourcesImport: React.FC = () => {
   const [headersinCSV, setHeadersinCSV] = useState<string[]>([]);
   const { hasNotification } = useNotification();
   const [targetAudience, setTargetAudience] = useState<string>("");
+  const [openSourceTypeSelect, setOpenSourceTypeSelect] = useState(false);
 
   const [eventType, setEventType] = useState<number[]>([]);
   const [domains, setDomains] = useState<DomainsLeads[]>([]);
@@ -271,6 +272,10 @@ const SourcesImport: React.FC = () => {
     }
   };
 
+  const handleOpenSourceTypeSelect = () => {
+    setOpenSourceTypeSelect(true);
+  };
+
   useEffect(() => {
     resetSourcesBuilderHints()
   }, []);
@@ -280,10 +285,8 @@ const SourcesImport: React.FC = () => {
     if (typeFromSearchParams) {
       closeDotHintClick("sourceType");
       let newType = "";
-      if (typeFromSearchParams === "customer-conversions")
-        newType = "Customer Conversions";
-      if (typeFromSearchParams === "failed-leads") newType = "Failed Leads";
-      if (typeFromSearchParams === "interests") newType = "Interest";
+      if (typeFromSearchParams === "csv")
+        handleOpenSourceTypeSelect()
       if (typeFromSearchParams === "pixel") {
         newType = "Website - Pixel";
         setTimeout(() => {
@@ -294,13 +297,13 @@ const SourcesImport: React.FC = () => {
         setSourceMethod(2);
         openDotHintClick("pixelDomain");
       } else {
-        openDotHintClick("sourceFile");
-        setMappingRows([...defaultMapping, ...mappingRowsSourceType[newType as keyof InterfaceMappingRowsSourceType]]);
-        setSourceMethod(1);
-        setTimeout(() => {
-          scrollToBlock(block2Ref);
-        }, 0);
-        closeSkeleton("sourceFile")
+        // openDotHintClick("sourceFile");
+        // setMappingRows([...defaultMapping, ...mappingRowsSourceType[newType as keyof InterfaceMappingRowsSourceType]]);
+        // setSourceMethod(1);
+        // setTimeout(() => {
+        //   scrollToBlock(block2Ref);
+        // }, 0);
+        // closeSkeleton("sourceFile")
       }
 
       setSourceType(newType);
@@ -861,6 +864,9 @@ const SourcesImport: React.FC = () => {
                   >
                     <FormControl variant="outlined">
                       <Select
+                        open={openSourceTypeSelect}
+                        onOpen={() => setOpenSourceTypeSelect(true)}
+                        onClose={() => setOpenSourceTypeSelect(false)}
                         value={sourceType}
                         onChange={handleChangeSourceType}
                         displayEmpty

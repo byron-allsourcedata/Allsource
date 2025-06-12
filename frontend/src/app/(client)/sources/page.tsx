@@ -1057,43 +1057,22 @@ const Sources: React.FC = () => {
 														<CardsSection
 															items={[
 																{
-																	title: "Pixel",
+																	title: "Import Source from Tracking Pixel",
 																	subtitle:
-																		"Install Pixel on your website to automatically collect visitor information in real-time.",
+																		"Automatically collected visitor information from your website.",
 																	imageSrc: "/pixel.svg",
 																	onClick: () =>
 																		router.push("/sources/builder?type=pixel"),
 																	showRecommended: false,
 																},
 																{
-																	title: "Customer Conversions (CSV)",
+																	title: "Import Source from CSV file",
 																	subtitle:
-																		"This file should contains users who succesfully completed target actions.",
-																	imageSrc: "/converted-sale.svg",
+																		"Manually upload CSV file containing your existing customer data. ",
+																	imageSrc: "/audience.svg",
 																	onClick: () =>
 																		router.push(
-																			"/sources/builder?type=customer-conversions",
-																		),
-																	showRecommended: false,
-																},
-																{
-																	title: "Failed Leads (CSV)",
-																	subtitle: `This file should contains users who engaged but didn't convert, so you can exclude them later.`,
-																	imageSrc: "/failed-leads.svg",
-																	onClick: () =>
-																		router.push(
-																			"/sources/builder?type=failed-leads",
-																		),
-																	showRecommended: false,
-																},
-																{
-																	title: "Interests (CSV)",
-																	subtitle:
-																		"This file should contain users who recently engaged with specific topics. ",
-																	imageSrc: "/interests.svg",
-																	onClick: () =>
-																		router.push(
-																			"/sources/builder?type=interests",
+																			"/sources/builder?type=csv",
 																		),
 																	showRecommended: false,
 																},
