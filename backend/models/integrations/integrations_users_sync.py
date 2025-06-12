@@ -73,7 +73,10 @@ class IntegrationUserSync(Base):
     created_by = Column(String(256), nullable=True)
     hook_url = Column(VARCHAR, nullable=True)
     last_sent_lead_id = Column(
-        BigInteger, ForeignKey("leads_users.id"), nullable=True, ondelete="CASCADE"
+        BigInteger,
+        ForeignKey("leads_users.id"),
+        nullable=True,
+        ondelete="CASCADE",
     )
     method = Column(String(8), nullable=True)
     customer_id = Column(VARCHAR, nullable=True)
