@@ -327,6 +327,7 @@ class DomainStatus(Enum):
 
 
 class NotificationTitles(Enum):
+    OVERAGE_LEADS = "overage_leads"
     PLAN_LIMIT_EXCEEDED = "plan_limit_exceeded"
     AUTHENTICATION_INTEGRATION_FAILED = "authentication_integration_failed"
     PAYMENT_INTEGRATION_REQUIRED = "payment_integration_required"
@@ -339,6 +340,7 @@ class NotificationTitles(Enum):
     NO_CREDITS = "no_credits"
     TOO_MANY_REQUESTS = "too_many_requests"
     QUOTA_EXHAUSTED = "quota_exhausted"
+    PAYMENT_REQUIRED = "payment_required"
 
 
 class CreditsStatus(Enum):

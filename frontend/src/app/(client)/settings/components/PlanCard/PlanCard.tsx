@@ -1,11 +1,12 @@
-import React from "react";
+import type React from "react";
 import { Box, Typography, Button, Divider, styled } from "@mui/material";
 
 import { PlanProperties } from "./Properties";
 import { CardGiftcard, HistoryToggleOff, Update } from "@mui/icons-material";
-import { Plan } from "../plans";
+import type { Plan } from "../plans";
 import { Row } from "@/components/Row";
 import { CustomButton } from "@/components/ui";
+import { Column } from "@/components/Column";
 
 const PlanTitle = styled(Typography)`
     font-family: Nunito Sans;
@@ -176,10 +177,8 @@ export const PlanCard: React.FC<{
 							marginRight: "-8px",
 						}}
 					/>
-					<Box
+					<Column
 						sx={{
-							display: "flex",
-							flexDirection: "column",
 							justifyContent: "space-between",
 							gap: "30px",
 							marginTop: "24px",
@@ -190,6 +189,7 @@ export const PlanCard: React.FC<{
 								onClick={() => buttonProps.onChoose(alias)}
 								disabled={buttonProps.disabled ?? false}
 								sx={{
+									fontSize: "16px",
 									width: "100%",
 								}}
 								variant={buttonProps.variant ?? "contained"}
@@ -197,12 +197,10 @@ export const PlanCard: React.FC<{
 								{buttonProps.text}
 							</CustomButton>
 						</Box>
-					</Box>
-					<Box
+					</Column>
+					<Column
 						sx={{
 							my: 2,
-							display: "flex",
-							flexDirection: "column",
 							gap: "16px",
 						}}
 					>
@@ -224,7 +222,7 @@ export const PlanCard: React.FC<{
 							advantages={plan.giftedFunds}
 							showLastDivider={false}
 						/>
-					</Box>
+					</Column>
 				</Box>
 			</Box>
 		</Box>
