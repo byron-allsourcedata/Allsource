@@ -629,7 +629,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			setIsLoading(false);
 			setSelectedId(null);
 			handleClose();
-			handleCloseConfirmDialog()
+			handleCloseConfirmDialog();
 		}
 	};
 
@@ -733,21 +733,21 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 			return {
 				background: "rgba(252, 205, 200, 1)",
 				color: "rgba(200, 62, 46, 1) !important",
-				toolTipText: "You have an error, "
+				toolTipText: "You have an error, ",
 			};
 		}
 		if (row.dataSync) {
 			return {
 				background: "rgba(234, 248, 221, 1)",
 				color: "rgba(43, 91, 0, 1)",
-				toolTipText: "Your contacts are being synced every 10 minutes"
+				toolTipText: "Your contacts are being synced every 10 minutes",
 			};
 		}
 		if (row.dataSync) {
 			return {
 				background: "rgba(234, 248, 221, 1)",
 				color: "rgba(43, 91, 0, 1)",
-				toolTipText: "All your contacts have been synced"
+				toolTipText: "All your contacts have been synced",
 			};
 		}
 		return { background: "transparent", color: "rgba(74, 74, 74, 1)" };
@@ -1206,7 +1206,8 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 														}}
 													>
 														{(() => {
-															const { color, background, toolTipText } = getStatusStyle(row);
+															const { color, background, toolTipText } =
+																getStatusStyle(row);
 															return (
 																<Tooltip
 																	title={
@@ -1226,22 +1227,24 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																				sx={{ fontSize: "12px !important" }}
 																			>
 																				{toolTipText}
-																				{!row.syncStatus && <Box
-																					component="span"
-																					onClick={handleRepairSync}
-																					style={{
-																						textTransform: "none",
-																						background: "none",
-																						border: "none",
-																						color: "rgba(56, 152, 252, 1)",
-																						textDecoration: "underline",
-																						cursor: "pointer",
-																						padding: 0,
-																						fontSize: "inherit",
-																					}}
-																				>
-																					repair
-																				</Box>}
+																				{!row.syncStatus && (
+																					<Box
+																						component="span"
+																						onClick={handleRepairSync}
+																						style={{
+																							textTransform: "none",
+																							background: "none",
+																							border: "none",
+																							color: "rgba(56, 152, 252, 1)",
+																							textDecoration: "underline",
+																							cursor: "pointer",
+																							padding: 0,
+																							fontSize: "inherit",
+																						}}
+																					>
+																						repair
+																					</Box>
+																				)}
 																			</Typography>
 																		</Box>
 																	}
@@ -1250,8 +1253,10 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																			sx: {
 																				backgroundColor: "#fff",
 																				color: "#000",
-																				boxShadow: "0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
-																				border: "0.5px solid rgba(225, 225, 225, 1)",
+																				boxShadow:
+																					"0px 4px 4px 0px rgba(0, 0, 0, 0.12)",
+																				border:
+																					"0.5px solid rgba(225, 225, 225, 1)",
 																				borderRadius: "4px",
 																				maxHeight: "100%",
 																				maxWidth: "500px",
@@ -1280,7 +1285,6 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 																		}}
 																	>
 																		{formatStatusText(row)}
-																		
 																	</Typography>
 																</Tooltip>
 															);

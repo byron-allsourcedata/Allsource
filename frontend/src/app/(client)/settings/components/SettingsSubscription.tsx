@@ -129,7 +129,7 @@ export const SettingsSubscription: React.FC = () => {
 	const [allPlans, setAllPlans] = useState<any[]>([]);
 	const [credits, setCredits] = useState<number>(50000);
 	const [selectedPlan, setSelectedPlan] = useState<any>(null);
-	
+
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [customPlanPopupOpen, setCustomPlanPopupOpen] = useState(false);
 	const [cancelSubscriptionPlanPopupOpen, setCancelSubscriptionPlanPopupOpen] =
@@ -145,8 +145,6 @@ export const SettingsSubscription: React.FC = () => {
 	const [activePlan, setActivePlan] = useState<any>(null);
 	const [isTrial, setIsTrial] = useState<boolean | null>(null);
 	const [popupOpen, setPopupOpen] = useState(false);
-
-	
 
 	const handleOpenPopup = () => {
 		setPopupOpen(true);
