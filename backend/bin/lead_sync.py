@@ -202,6 +202,12 @@ async def handle_payment_notification(
                 NotificationTitles.CONTACT_LIMIT_APPROACHING.value
             )
         )
+        find_notification = notification_persistence.find_account_notifications(
+            user_id=user.id, account_notification_id=account_notification.id
+        )
+        if find_notification:
+            logging.debug("Notification already sent")
+            return
         notification_text = account_notification.text.format(
             int(credit_usage_percentage), contact_credit_price
         )
@@ -227,7 +233,7 @@ async def handle_payment_notification(
         )
 
 
-async def handle_overage_leads_notification(
+async def send_overage_leads_notification(
     user: Users, notification_persistence: NotificationPersistence
 ):
     account_notification = (
@@ -259,8 +265,7 @@ async def handle_overage_leads_notification(
         },
     )
 
-
-async def handle_inactive_leads_notification(
+async def send_inactive_leads_notification(
     user: Users, notification_persistence: NotificationPersistence
 ):
     account_notification = (
@@ -346,7 +351,7 @@ async def process_payment_unlocked_five_x_five_user(
 
     if user.leads_credits - AMOUNT_CREDITS < 0:
         if overage_enabled:
-            await handle_overage_leads_notification(
+            await send_overage_leads_notification(
                 user=user, notification_persistence=notification_persistence
             )
             logging.debug(
@@ -357,7 +362,7 @@ async def process_payment_unlocked_five_x_five_user(
             session.flush()
             return
 
-        await handle_inactive_leads_notification(
+        await send_inactive_leads_notification(
             user=user, notification_persistence=notification_persistence
         )
         lead_user.is_active = False
@@ -382,7 +387,6 @@ async def process_payment_unlocked_five_x_five_user(
         contact_credit_price,
     )
     session.flush()
-    return
 
 
 def check_activate_based_urls(page, suppression_rule):
@@ -562,6 +566,23 @@ def get_first_lead_user_by_company_and_domain(session, company_id, domain_id):
         )
         .first()
     )
+
+def get_subscription_plan_info(session, plan_id):
+    ContactCredits = aliased(SubscriptionPlan)
+    return (
+        session.query(
+            SubscriptionPlan.overage_enabled,
+            SubscriptionPlan.leads_credits,
+            ContactCredits.price,
+        )
+        .outerjoin(
+            ContactCredits,
+            SubscriptionPlan.contact_credit_plan_id == ContactCredits.id,
+        )
+        .filter(SubscriptionPlan.id == plan_id)
+        .first()
+    )
+
 
 
 async def process_user_data(
@@ -781,24 +802,7 @@ async def process_user_data(
 
         user_subscription = subscription_service.get_user_subscription(user.id)
         if user_subscription:
-            ContactCredits = aliased(SubscriptionPlan)
-            result_query = (
-                session.query(
-                    SubscriptionPlan.overage_enabled,
-                    SubscriptionPlan.leads_credits,
-                    ContactCredits.price,
-                )
-                .outerjoin(
-                    ContactCredits,
-                    SubscriptionPlan.contact_credit_plan_id
-                    == ContactCredits.id,
-                )
-                .filter(SubscriptionPlan.id == user_subscription.plan_id)
-                .first()
-            )
-            overage_enabled, plan_leads_credits, contact_credit_price = (
-                result_query
-            )
+            overage_enabled, plan_leads_credits, contact_credit_price = get_subscription_plan_info(session, user_subscription.plan_id)
             await process_payment_unlocked_five_x_five_user(
                 session=session,
                 five_x_five_user_up_id=five_x_five_user.up_id,
