@@ -12,18 +12,29 @@ import pytz
 import regex
 from dateutil.relativedelta import relativedelta
 
+from sqlalchemy import create_engine, desc
+from sqlalchemy.orm import sessionmaker, Session, aliased
+
+from dotenv import load_dotenv
+from sqlalchemy.dialects.postgresql import insert
+from datetime import datetime, timedelta, timezone
+
+
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
+
 
 from utils import normalize_url, get_url_params_list, check_certain_urls
 from enums import NotificationTitles, PlanAlias
 from persistence.leads_persistence import LeadsPersistence
 from persistence.notification import NotificationPersistence
-from models.plans import SubscriptionPlan
+
 from utils import create_company_alias
-from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from urllib.parse import urlparse, parse_qs
+
+from models.plans import SubscriptionPlan
+from models.five_x_five_cookie_sync_file import FiveXFiveCookieSyncFile
 from models.leads_requests import LeadsRequests
 from models.users_domains import UserDomains
 from models.suppression_rule import SuppressionRule
@@ -38,23 +49,19 @@ from models.five_x_five_hems import FiveXFiveHems
 from models.suppressions_list import SuppressionList
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from models.integrations.suppressed_contact import SuppressedContact
-from sqlalchemy import create_engine, desc
-from sqlalchemy.orm import sessionmaker, Session, aliased
 from models.five_x_five_users import FiveXFiveUser
 from models.leads_users import LeadUser
 from models.users import Users
 from models.leads_orders import LeadOrders
 from models.integrations.leads_suppresions import LeadsSupperssion
-from dotenv import load_dotenv
-from sqlalchemy.dialects.postgresql import insert
-from datetime import datetime, timedelta, timezone
-from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from models.integrations.users_domains_integrations import UserIntegration
+
+from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
+from services.referral import ReferralService
 from dependencies import (
     SubscriptionService,
     UserPersistence,
     PlansPersistence,
-    ReferralService,
     PartnersPersistence,
     ReferralDiscountCodesPersistence,
     StripeService,
