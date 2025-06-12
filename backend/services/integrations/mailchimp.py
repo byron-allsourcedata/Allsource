@@ -14,8 +14,8 @@ from models.enrichment.enrichment_users import EnrichmentUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from persistence.domains import UserDomainsPersistence
+from persistence.integrations.common_integration_persistence import CommonIntegrationPersistence
 from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from persistence.integrations.mailchimp import MailchimpIntegrationPersistence, IntegrationContext
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 from schemas.integrations.integrations import *
@@ -31,7 +31,7 @@ class MailchimpIntegrationsService:
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
-        repo: MailchimpIntegrationPersistence,
+        repo: CommonIntegrationPersistence,
         million_verifier_integrations: MillionVerifierIntegrationsService
     ):
         self.repo = repo
@@ -429,11 +429,8 @@ class MailchimpIntegrationsService:
         validations: dict,
         data_map: list
     ):
-        enrichment_user = self.repo.get_user_data(enrichment_user.id)
+        enrichment_user = self.repo.get_user_data(enrichment_user.asid)
         enrichment_contacts = enrichment_user.contacts
-        personal_profiles = enrichment_user.personal_profiles
-        postal = enrichment_user.postal
-        professional_profiles = enrichment_user.professional_profiles
         user_id = enrichment_user.user_id
 
         if not enrichment_contacts:
@@ -464,30 +461,30 @@ class MailchimpIntegrationsService:
             },
         }
 
-        required_types = {m['type'] for m in data_map}
-
-        context = self.repo.get_integration_context(
-            user_data=enrichment_user
+        context = self.repo.build_integration_context(
+            enrichment_user=enrichment_user
         )
-        context = IntegrationContext(
-            main_phone=main_phone,
-            professional_profiles=professional_profiles,
-            postal=postal,
-            personal_profiles=personal_profiles,
-            business_email=business_email,
-            personal_email=personal_email,
-            country_code=postal,
-            gender=personal_profiles,
-            zip_code=personal_profiles,
-            state=postal,
-            city=postal,
-            company=professional_profiles,
-            business_email_last_seen_date=enrichment_contacts,
-            personal_email_last_seen=enrichment_contacts,
-            linkedin_url=enrichment_contacts
-        )
+        #TODO DELETE COMMENT
+        # context = IntegrationContext(
+        #     main_phone=main_phone,
+        #     professional_profiles=professional_profiles,
+        #     postal=postal,
+        #     personal_profiles=personal_profiles,
+        #     business_email=business_email,
+        #     personal_email=personal_email,
+        #     country_code=postal,
+        #     gender=personal_profiles,
+        #     zip_code=personal_profiles,
+        #     state=postal,
+        #     city=postal,
+        #     company=professional_profiles,
+        #     business_email_last_seen_date=enrichment_contacts,
+        #     personal_email_last_seen=enrichment_contacts,
+        #     linkedin_url=enrichment_contacts
+        # )
 
         result_map = {}
+        required_types = {m['type'] for m in data_map}
         for field_type in required_types:
             filler = FIELD_FILLERS.get(field_type)
             if filler:
