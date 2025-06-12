@@ -1,20 +1,20 @@
 import uuid
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     Column,
-    Integer,
     TIMESTAMP,
     ForeignKey,
     UUID,
     Boolean,
     text,
     Index,
-    Text,
+    event,
 )
+
 from models.audience_smarts import AudienceSmart
 from models.enrichment.enrichment_users import EnrichmentUser
-from .base import Base
-from sqlalchemy.sql import func
+from .base import Base, update_timestamps
 
 
 class AudienceSmartPerson(Base):
@@ -27,10 +27,17 @@ class AudienceSmartPerson(Base):
             "smart_audience_id",
         ),
         Index(
-            "au_sm_ps_is_valid_smart_audience_id_idx", "is_valid", "smart_audience_id"
+            "au_sm_ps_is_valid_smart_audience_id_idx",
+            "is_valid",
+            "smart_audience_id",
         ),
-        Index("audience_smarts_persons_smart_audience_id_idx", "smart_audience_id"),
-        Index("audience_smarts_persons_enrichment_user_id_idx", "enrichment_user_id"),
+        Index(
+            "audience_smarts_persons_smart_audience_id_idx", "smart_audience_id"
+        ),
+        Index(
+            "audience_smarts_persons_enrichment_user_id_idx",
+            "enrichment_user_id",
+        ),
     )
 
     id = Column(
@@ -52,7 +59,16 @@ class AudienceSmartPerson(Base):
     is_validation_processed = Column(
         Boolean, nullable=True, server_default=text("true")
     )
-    created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
-    updated_at = Column(
-        TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now()
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
+    updated_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+
+
+event.listen(AudienceSmartPerson, "before_update", update_timestamps)

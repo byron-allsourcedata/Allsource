@@ -2,7 +2,11 @@ import logging
 from urllib.parse import unquote
 from persistence.user_persistence import UserPersistence
 from persistence.partners_persistence import PartnersPersistence
-from schemas.accounts import AccountResponse, AccountsObjectResponse, AccountUserData
+from schemas.accounts import (
+    AccountResponse,
+    AccountsObjectResponse,
+    AccountUserData,
+)
 from datetime import datetime
 from persistence.referral_user import ReferralUserPersistence
 from persistence.plans_persistence import PlansPersistence
@@ -23,28 +27,46 @@ class AccountsService:
         self.partner_persistence = partner_persistence
 
     def get_partner_accounts(
-        self, id, search, start_date, end_date, page, rowsPerPage, order_by, order
+        self,
+        id,
+        search,
+        start_date,
+        end_date,
+        page,
+        rowsPerPage,
+        order_by,
+        order,
     ):
         offset = page * rowsPerPage
         limit = rowsPerPage
 
         search_term = f"%{search}%" if search else None
 
-        accounts, total_count = self.referral_user_persistence.get_referral_users(
-            user_id=id,
-            search_term=search_term,
-            start_date=start_date,
-            end_date=end_date,
-            offset=offset,
-            limit=limit,
-            order_by=order_by,
-            order=order,
+        accounts, total_count = (
+            self.referral_user_persistence.get_referral_users(
+                user_id=id,
+                search_term=search_term,
+                start_date=start_date,
+                end_date=end_date,
+                offset=offset,
+                limit=limit,
+                order_by=order_by,
+                order=order,
+            )
         )
 
         return {"items": accounts, "totalCount": total_count}
 
     def get_partner_by_id_accounts(
-        self, id, search, start_date, end_date, page, rowsPerPage, order_by, order
+        self,
+        id,
+        search,
+        start_date,
+        end_date,
+        page,
+        rowsPerPage,
+        order_by,
+        order,
     ):
         partner = self.partner_persistence.get_partner_by_id(id)
         return self.get_partner_accounts(

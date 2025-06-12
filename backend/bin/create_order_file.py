@@ -107,7 +107,9 @@ def fetch_and_export_users_to_csv(db_session):
             "Fee Details",
         ]
 
-        with open(CSV_FILE_PATH, mode="w", newline="", encoding="utf-8") as file:
+        with open(
+            CSV_FILE_PATH, mode="w", newline="", encoding="utf-8"
+        ) as file:
             writer = csv.DictWriter(file, fieldnames=fieldnames)
             writer.writeheader()
 

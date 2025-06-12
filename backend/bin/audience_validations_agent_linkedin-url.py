@@ -1,24 +1,39 @@
-import asyncio
-import functools
-import json
 import logging
 import os
 import sys
-
+import asyncio
+import functools
+import json
+import boto3
+import random
 import requests
-from aio_pika import IncomingMessage
-from dotenv import load_dotenv
+from datetime import datetime
 from rapidfuzz import fuzz
+from sqlalchemy import update
+from decimal import Decimal
+from aio_pika import IncomingMessage, Message, Channel
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
+from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from utils import send_sse
 from models.audience_smarts import AudienceSmart
+from models.audience_settings import AudienceSetting
 from models.audience_smarts_persons import AudienceSmartPerson
+from persistence.user_persistence import UserPersistence
+from models.enrichment.enrichment_users import EnrichmentUser
+from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 from models.audience_linkedin_verification import AudienceLinkedinVerification
+from models.enrichment.enrichment_employment_history import (
+    EnrichmentEmploymentHistory,
+)
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -53,19 +68,24 @@ def setup_logging(level):
 async def process_rmq_message(
     message: IncomingMessage,
     db_session: Session,
-    channel,
+    channel: Channel,
+    user_persistence: UserPersistence,
 ):
     try:
         body = json.loads(message.body)
         user_id = body.get("user_id")
         aud_smart_id = body.get("aud_smart_id")
         batch = body.get("batch", [])
-        count_persons_before_validation = body.get("count_persons_before_validation")
+        count_persons_before_validation = body.get(
+            "count_persons_before_validation"
+        )
         validation_type = body.get("validation_type")
+        validation_cost = body.get("validation_cost")
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         failed_ids: list[int] = []
         verifications: list[AudienceLinkedinVerification] = []
+        write_off_funds = Decimal(0)
 
         for rec in batch:
             pid = rec.get("audience_smart_person_id")
@@ -77,6 +97,7 @@ async def process_rmq_message(
                 failed_ids.append(pid)
                 continue
 
+            write_off_funds += Decimal(validation_cost)
             ev = (
                 db_session.query(AudienceLinkedinVerification)
                 .filter_by(linkedin_url=url)
@@ -87,7 +108,10 @@ async def process_rmq_message(
             if ev is None:
                 resp = requests.get(
                     REVERSE_CONTACT_API_URL,
-                    params={"linkedInUrl": url, "apikey": REVERSE_CONTACT_API_KEY},
+                    params={
+                        "linkedInUrl": url,
+                        "apikey": REVERSE_CONTACT_API_KEY,
+                    },
                 )
                 data = resp.json()
                 if resp.status_code == 402 or (
@@ -128,6 +152,14 @@ async def process_rmq_message(
         ]
         logging.info(f"Success ids: len{len(success_ids)}")
 
+        if write_off_funds:
+            user_persistence.deduct_validation_funds(user_id, write_off_funds)
+            # if not resultOperation:
+            #     logging.error("Not enough validation funds")
+            #     await message.reject(requeue=True)
+            #     return
+            db_session.flush()
+
         if verifications:
             db_session.bulk_save_objects(verifications)
             db_session.flush()
@@ -136,7 +168,11 @@ async def process_rmq_message(
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
                 [
-                    {"id": pid, "is_validation_processed": False, "is_valid": False}
+                    {
+                        "id": pid,
+                        "is_validation_processed": False,
+                        "is_valid": False,
+                    }
                     for pid in failed_ids
                 ],
             )
@@ -145,7 +181,10 @@ async def process_rmq_message(
         if success_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
-                [{"id": pid, "is_validation_processed": False} for pid in success_ids],
+                [
+                    {"id": pid, "is_validation_processed": False}
+                    for pid in success_ids
+                ],
             )
             db_session.flush()
 
@@ -182,6 +221,7 @@ async def process_rmq_message(
                             rule[key]["count_submited"] = (
                                 count_persons_before_validation
                             )
+                            rule[key]["count_cost"] = str(write_off_funds)
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -242,13 +282,18 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
+        user_persistence = UserPersistence(db_session)
+
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_LINKEDIN_API,
             durable=True,
         )
         await queue.consume(
             functools.partial(
-                process_rmq_message, channel=channel, db_session=db_session
+                process_rmq_message,
+                channel=channel,
+                db_session=db_session,
+                user_persistence=user_persistence,
             )
         )
 

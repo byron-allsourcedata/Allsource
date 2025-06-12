@@ -15,7 +15,9 @@ from sqlalchemy.orm import sessionmaker
 from models.five_x_five_interests import FiveXFiveInterest
 
 load_dotenv()
-FILE_PATH = os.path.join(os.path.dirname(__file__), "..", "tmp", "consumer_taxo.xlsx")
+FILE_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "tmp", "consumer_taxo.xlsx"
+)
 
 
 def check_and_print_excel(session):

@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Query
 from models.users import User
 from services.suppression import SuppressionService
-from dependencies import get_suppression_service, check_user_authorization, check_domain
+from dependencies import (
+    get_suppression_service,
+    check_user_authorization,
+    check_domain,
+)
 from fastapi.responses import FileResponse
 from enums import SuppressionStatus
 from schemas.suppressions import SuppressionRequest, CollectionRuleRequest
@@ -136,7 +140,9 @@ async def process_certain_urls(
     domain=Depends(check_domain),
     user: User = Depends(check_user_authorization),
 ):
-    return suppression_service.process_certain_urls(suppression_request.data, domain.id)
+    return suppression_service.process_certain_urls(
+        suppression_request.data, domain.id
+    )
 
 
 @router.post("/delete-contacts")
@@ -164,7 +170,9 @@ async def process_based_urls(
     domain=Depends(check_domain),
     user: User = Depends(check_user_authorization),
 ):
-    return suppression_service.process_based_urls(suppression_request.data, domain.id)
+    return suppression_service.process_based_urls(
+        suppression_request.data, domain.id
+    )
 
 
 @router.post("/contacts-days")

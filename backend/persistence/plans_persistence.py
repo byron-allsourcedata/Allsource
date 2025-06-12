@@ -1,13 +1,19 @@
+from typing import Optional
+
 from sqlalchemy.orm import Session
 from sqlalchemy import case
+
+from db_dependencies import Db
 from models import SubscriptionPlan
 from models.subscriptions import UserSubscriptions
 from models.users import User
 from enums import SourcePlatformEnum
+from resolver import injectable
 
 
+@injectable
 class PlansPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_stripe_plans(self, platform):
@@ -22,7 +28,9 @@ class PlansPersistence:
         )
         return query.all()
 
-    def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
+    def save_reason_unsubscribe(
+        self, reason_unsubscribe, user_id, cancel_scheduled_at
+    ):
         subscription = self.get_user_subscription(user_id)
         subscription.downgrade_price_id = None
         subscription.downgrade_at = None
@@ -44,7 +52,8 @@ class PlansPersistence:
         plan = (
             self.db.query(SubscriptionPlan)
             .filter(
-                SubscriptionPlan.title == title, SubscriptionPlan.interval == interval
+                SubscriptionPlan.title == title,
+                SubscriptionPlan.interval == interval,
             )
             .first()
         )
@@ -53,14 +62,13 @@ class PlansPersistence:
         else:
             return None
 
-    def get_plan_by_alias(self, alias: str):
+    def get_plan_by_alias(self, alias: str) -> Optional[SubscriptionPlan]:
         plan = (
             self.db.query(SubscriptionPlan)
             .filter(SubscriptionPlan.alias == alias)
             .first()
         )
-        if plan:
-            return plan
+        return plan
 
     def get_plan_by_title_price(self, plan_name: str, payment_amount: str):
         plan = (
@@ -108,7 +116,10 @@ class PlansPersistence:
     def get_current_price(self, current_subscription_id):
         subscription_plan = (
             self.db.query(SubscriptionPlan)
-            .join(UserSubscriptions, UserSubscriptions.plan_id == SubscriptionPlan.id)
+            .join(
+                UserSubscriptions,
+                UserSubscriptions.plan_id == SubscriptionPlan.id,
+            )
             .filter(UserSubscriptions.id == current_subscription_id)
             .first()
         )
@@ -131,10 +142,15 @@ class PlansPersistence:
                 SubscriptionPlan.currency,
                 SubscriptionPlan.price,
                 SubscriptionPlan.alias,
+                SubscriptionPlan.leads_credits,
             )
             .join(User, User.current_subscription_id == UserSubscriptions.id)
-            .join(SubscriptionPlan, SubscriptionPlan.id == UserSubscriptions.plan_id)
+            .join(
+                SubscriptionPlan,
+                SubscriptionPlan.id == UserSubscriptions.plan_id,
+            )
             .filter(User.id == user_id)
+            .order_by(UserSubscriptions.id.desc())
             .first()
         )
 
@@ -151,7 +167,10 @@ class PlansPersistence:
     def get_current_plan(self, user_id):
         return (
             self.db.query(SubscriptionPlan)
-            .join(UserSubscriptions, UserSubscriptions.plan_id == SubscriptionPlan.id)
+            .join(
+                UserSubscriptions,
+                UserSubscriptions.plan_id == SubscriptionPlan.id,
+            )
             .join(User, User.current_subscription_id == UserSubscriptions.id)
             .filter(User.id == user_id)
             .first()

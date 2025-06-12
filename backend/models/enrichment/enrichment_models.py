@@ -1,8 +1,10 @@
-from sqlalchemy import UUID, Column, ForeignKey, TIMESTAMP, event, text
+from datetime import datetime, timezone
+
+from sqlalchemy import UUID, Column, ForeignKey, TIMESTAMP, text
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.orm import mapped_column, Mapped
 
-from models.base import Base, create_timestamps
+from models.base import Base
 
 
 class EnrichmentModels(Base):
@@ -20,7 +22,8 @@ class EnrichmentModels(Base):
         nullable=False,
     )
     model: Mapped[bytes] = mapped_column(BYTEA, nullable=False)
-    created_at = Column(TIMESTAMP, nullable=True)
-
-
-event.listen(EnrichmentModels, "before_insert", create_timestamps)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )

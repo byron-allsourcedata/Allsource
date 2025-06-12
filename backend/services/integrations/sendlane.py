@@ -1,3 +1,4 @@
+from models import UserIntegration, IntegrationUserSync
 from utils import validate_and_format_phone
 from typing import List
 from fastapi import HTTPException
@@ -7,7 +8,9 @@ from datetime import datetime, timedelta
 from utils import format_phone_number
 from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from schemas.integrations.sendlane import SendlaneContact, SendlaneSender
 from schemas.integrations.integrations import (
     DataMap,
@@ -16,7 +19,9 @@ from schemas.integrations.integrations import (
 )
 from persistence.domains import UserDomainsPersistence
 from utils import extract_first_email
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 
@@ -100,7 +105,9 @@ class SendlaneIntegrationService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integrations_persisntece.create_integration(
+            integration_data
+        )
 
         if not integartion:
             raise HTTPException(
@@ -151,7 +158,9 @@ class SendlaneIntegrationService:
             return
         return [self.__mapped_list(list) for list in lists.json().get("data")]
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         lists = self.__get_list(credentials.sendlane.api_key)
         if lists.status_code == 401:
             raise HTTPException(
@@ -178,7 +187,10 @@ class SendlaneIntegrationService:
             credential.error_message = "Invalid API Key"
             self.integrations_persisntece.db.commit()
             return
-        return [self.__mapped_sender(sender) for sender in senders.json().get("data")]
+        return [
+            self.__mapped_sender(sender)
+            for sender in senders.json().get("data")
+        ]
 
     def create_list(self, list, domain_id: int, user_id: int):
         credential = self.get_credentials(domain_id, user_id)
@@ -198,7 +210,8 @@ class SendlaneIntegrationService:
             return
         if response.status_code == 422:
             raise HTTPException(
-                status_code=422, detail={"status": response.json().get("message")}
+                status_code=422,
+                detail={"status": response.json().get("message")},
             )
         return self.__mapped_list(response.json().get("data"))
 
@@ -212,7 +225,9 @@ class SendlaneIntegrationService:
         created_by: str,
         user: dict,
     ):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get("id"))
+        credentials = self.get_credentials(
+            domain_id=domain_id, user_id=user.get("id")
+        )
         sync = self.sync_persistence.create_sync(
             {
                 "integration_id": credentials.id,
@@ -226,21 +241,46 @@ class SendlaneIntegrationService:
         )
         return sync
 
-    async def process_data_sync(
-        self, five_x_five_user, user_integration, integration_data_sync, lead_user
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
     ):
-        profile = self.__create_contact(
-            five_x_five_user,
-            user_integration.access_token,
-            integration_data_sync.list_id,
+        return self.bulk_add_contacts(
+            five_x_five_users=five_x_five_users,
+            access_token=user_integration.access_token,
+            list_id=integration_data_sync.list_id,
         )
-        if profile in (
-            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return profile
 
+    def bulk_add_contacts(self, five_x_five_users, access_token, list_id: int):
+        chunks = [
+            five_x_five_users[i : i + 100]
+            for i in range(0, len(five_x_five_users), 100)
+        ]
+
+        for chunk in chunks:
+            contacts = [
+                {
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                }
+                for user in chunk
+            ]
+
+            data = {"contacts": contacts}
+            response = self.__handle_request(
+                f"/lists/{list_id}/contacts",
+                api_key=access_token,
+                json=data,
+                method="POST",
+            )
+
+            if response.status_code == 401:
+                return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+            else:
+                return ProccessDataSyncResult.INCORRECT_FORMAT.value
         return ProccessDataSyncResult.SUCCESS.value
 
     def __create_contact(self, five_x_five_user, access_token, list_id: int):
@@ -253,7 +293,10 @@ class SendlaneIntegrationService:
 
         json = {"contacts": [{**profile.model_dump()}]}
         response = self.__handle_request(
-            f"/lists/{list_id}/contacts", api_key=access_token, json=json, method="POST"
+            f"/lists/{list_id}/contacts",
+            api_key=access_token,
+            json=json,
+            method="POST",
         )
         if response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
@@ -261,7 +304,9 @@ class SendlaneIntegrationService:
             return response
 
     def __mapped_list(self, list):
-        return ListFromIntegration(id=str(list.get("id")), list_name=list.get("name"))
+        return ListFromIntegration(
+            id=str(list.get("id")), list_name=list.get("name")
+        )
 
     def __mapped_sender(self, sender):
         return SendlaneSender(
@@ -301,15 +346,19 @@ class SendlaneIntegrationService:
                             and field == "personal_emails"
                             and five_x_five_user.personal_emails_last_seen
                         ):
-                            personal_emails_last_seen_str = (
-                                five_x_five_user.personal_emails_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
+                                "%Y-%m-%d %H:%M:%S"
                             )
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
+                            if (
+                                personal_emails_last_seen_str
+                                > thirty_days_ago_str
+                            ):
                                 return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(
-                            email=e.strip()
+                        if (
+                            e
+                            and self.million_verifier_integrations.is_email_verify(
+                                email=e.strip()
+                            )
                         ):
                             return e.strip()
                         verity += 1

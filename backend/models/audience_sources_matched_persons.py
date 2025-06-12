@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
     event,
@@ -7,25 +9,23 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     UUID,
-    String,
-    Float,
     DECIMAL,
     VARCHAR,
     text,
-    func,
 )
 
-from .audience_sources import AudienceSource
 from models.enrichment.enrichment_users import EnrichmentUser
-from .base import Base, create_timestamps, update_timestamps
-from .five_x_five_users import FiveXFiveUser
+from .audience_sources import AudienceSource
+from .base import Base, update_timestamps
 
 
 class AudienceSourcesMatchedPerson(Base):
     __tablename__ = "audience_sources_matched_persons"
     __table_args__ = (
         Index(
-            "audience_sources_matched_persons_source_id_email_idx", "source_id", "email"
+            "audience_sources_matched_persons_source_id_email_idx",
+            "source_id",
+            "email",
         ),
         Index("audience_sources_matched_persons_source_id_idx", "source_id"),
     )
@@ -43,12 +43,19 @@ class AudienceSourcesMatchedPerson(Base):
         nullable=False,
     )
     enrichment_user_id = Column(
-        UUID(as_uuid=True), ForeignKey(EnrichmentUser.id), nullable=False
+        UUID(as_uuid=True), ForeignKey(EnrichmentUser.id), nullable=True
     )
+    enrichment_user_asid = Column(UUID(as_uuid=True), nullable=True)
     mapped_fields = Column(JSON, nullable=True)
-    created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     updated_at = Column(
-        TIMESTAMP, nullable=False, server_default=func.now(), onupdate=func.now()
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
     email = Column(VARCHAR(64), nullable=True)
     first_name = Column(VARCHAR(64), nullable=True)
@@ -58,7 +65,9 @@ class AudienceSourcesMatchedPerson(Base):
     recency = Column(Integer, nullable=True, server_default=text("0"))
     recency_min = Column(Integer, nullable=True, server_default=text("0"))
     recency_max = Column(Integer, nullable=True, server_default=text("0"))
-    inverted_recency = Column(DECIMAL(20, 5), nullable=True, server_default=text("0"))
+    inverted_recency = Column(
+        DECIMAL(20, 5), nullable=True, server_default=text("0")
+    )
     inverted_recency_min = Column(
         DECIMAL(20, 5), nullable=True, server_default=text("0")
     )
@@ -66,9 +75,13 @@ class AudienceSourcesMatchedPerson(Base):
         DECIMAL(20, 5), nullable=True, server_default=text("0")
     )
     duration = Column(DECIMAL(20, 5), nullable=True, server_default=text("0"))
-    recency_score = Column(DECIMAL(20, 5), nullable=True, server_default=text("0"))
+    recency_score = Column(
+        DECIMAL(20, 5), nullable=True, server_default=text("0")
+    )
     view_score = Column(DECIMAL(20, 5), nullable=True, server_default=text("0"))
-    value_score = Column(DECIMAL(20, 5), nullable=True, server_default=text("0"))
+    value_score = Column(
+        DECIMAL(20, 5), nullable=True, server_default=text("0")
+    )
     sum_score = Column(DECIMAL(20, 5), nullable=True, server_default=text("0"))
     amount = Column(Integer, nullable=True, server_default=text("0"))
     amount_min = Column(Integer, nullable=True, server_default=text("0"))
@@ -78,5 +91,4 @@ class AudienceSourcesMatchedPerson(Base):
     count_max = Column(Integer, nullable=True, server_default=text("1"))
 
 
-event.listen(AudienceSourcesMatchedPerson, "before_insert", create_timestamps)
 event.listen(AudienceSourcesMatchedPerson, "before_update", update_timestamps)

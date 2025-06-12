@@ -84,7 +84,9 @@ def process_files(sts_client, session):
 
     bucket = s3.Bucket(BUCKET_NAME)
     if last_processed_file:
-        files = bucket.objects.filter(Prefix=FILES_PATH, Marker=last_processed_file)
+        files = bucket.objects.filter(
+            Prefix=FILES_PATH, Marker=last_processed_file
+        )
     else:
         files = bucket.objects.filter(Prefix=FILES_PATH)
     for file in files:
@@ -92,7 +94,9 @@ def process_files(sts_client, session):
 
 
 def main():
-    sts_client = create_sts_client(os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET"))
+    sts_client = create_sts_client(
+        os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET")
+    )
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}"
     )

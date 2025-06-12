@@ -46,7 +46,9 @@ class LookalikeFillerService:
         Returns a stream of blocks of enrichment users and a list of column names
         """
 
-        column_names = self.column_selector.clickhouse_columns(significant_fields)
+        column_names = self.column_selector.clickhouse_columns(
+            significant_fields
+        )
 
         columns = ", ".join(["asid"] + column_names)
 
@@ -57,7 +59,9 @@ class LookalikeFillerService:
 
         return rows_stream, column_names
 
-    def process_lookalike_pipeline(self, audience_lookalike: AudienceLookalikes):
+    def process_lookalike_pipeline(
+        self, audience_lookalike: AudienceLookalikes
+    ):
         sig = audience_lookalike.significant_fields or {}
         config = self.audiences_scores.get_config(sig)
         profiles = self.profile_fetcher.fetch_profiles_from_lookalike(
@@ -65,7 +69,9 @@ class LookalikeFillerService:
         )
 
         model = self.train_and_save_model(
-            lookalike_id=audience_lookalike.id, user_profiles=profiles, config=config
+            lookalike_id=audience_lookalike.id,
+            user_profiles=profiles,
+            config=config,
         )
 
         self.calculate_and_store_scores(
@@ -108,8 +114,8 @@ class LookalikeFillerService:
             for batch in rows_stream:
                 dict_batch = [dict(zip(column_names, row)) for row in batch]
                 asids = [doc["asid"] for doc in dict_batch]
-                enrichment_user_ids = self.enrichment_users.fetch_enrichment_user_ids(
-                    asids
+                enrichment_user_ids = (
+                    self.enrichment_users.fetch_enrichment_user_ids(asids)
                 )
 
                 self.audiences_scores.calculate_batch_scores(

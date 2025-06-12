@@ -61,7 +61,9 @@ async def process_files(sts_client, rmq_conn):
 
 async def main():
     logging.info("Started")
-    sts_client = create_sts_client(os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET"))
+    sts_client = create_sts_client(
+        os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET")
+    )
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     channel = await connection.channel()

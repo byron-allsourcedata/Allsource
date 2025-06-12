@@ -77,7 +77,9 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
-        await queue.consume(functools.partial(on_message_received, session=db_session))
+        await queue.consume(
+            functools.partial(on_message_received, session=db_session)
+        )
         await asyncio.Future()
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)

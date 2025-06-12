@@ -1,6 +1,5 @@
 from sqlalchemy import (
     Column,
-    Integer,
     TIMESTAMP,
     TEXT,
     text,
@@ -9,7 +8,7 @@ from sqlalchemy import (
     Sequence,
 )
 from sqlalchemy.dialects.postgresql import NUMERIC, VARCHAR
-from enums import PayoutsStatus, ConfirmationStatus
+
 from .base import Base
 
 
@@ -30,12 +29,20 @@ class ReferralPayouts(Base):
     )
     reward_amount = Column(NUMERIC(18, 2), nullable=False)
     reward_type = Column(VARCHAR(128), nullable=False)
-    created_at = Column(TIMESTAMP, nullable=False)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     status = Column(
-        VARCHAR(16), nullable=False, server_default=text("'pending'::character varying")
+        VARCHAR(16),
+        nullable=False,
+        server_default=text("'pending'::character varying"),
     )
     confirmation_status = Column(
-        VARCHAR(16), nullable=False, server_default=text("'pending'::character varying")
+        VARCHAR(16),
+        nullable=False,
+        server_default=text("'pending'::character varying"),
     )
     plan_amount = Column(NUMERIC(18, 2), nullable=False)
     paid_at = Column(TIMESTAMP, nullable=True)

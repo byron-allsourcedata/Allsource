@@ -1,11 +1,14 @@
 from models.audience_smarts import AudienceSmart
 from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import Integration
 from sqlalchemy.orm import Session, aliased
 from models.users import Users
-from enums import SourcePlatformEnum
+from enums import SourcePlatformEnum, DataSyncType
 from models.users_domains import UserDomains
 from models.subscriptions import UserSubscriptions
-from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
+from models.audience_data_sync_imported_persons import (
+    AudienceDataSyncImportedPersons,
+)
 from models.audience_smarts_validations import AudienceSmartValidation
 from models.audience_smarts_persons import AudienceSmartPerson
 from sqlalchemy import func, desc
@@ -15,6 +18,7 @@ from models.integrations.users_domains_integrations import UserIntegration
 class IntegrationsUserSyncPersistence:
     def __init__(self, db: Session):
         self.db = db
+        self.UNLIMITED = -1
 
     def create_sync(self, data: dict) -> IntegrationUserSync:
         sync = IntegrationUserSync(**data)
@@ -80,11 +84,11 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync.integration_id == UserIntegration.id,
             )
             .filter(
-                IntegrationUserSync.id == list_id, UserIntegration.user_id == user_id
+                IntegrationUserSync.id == list_id,
+                UserIntegration.user_id == user_id,
             )
             .first()
         )
-        print(sync)
         if sync:
             if sync.is_active == False:
                 active = True
@@ -114,8 +118,10 @@ class IntegrationsUserSyncPersistence:
             self.db.query(func.count(UserIntegration.id))
             .filter(
                 UserIntegration.domain_id == domain_id,
-                UserIntegration.service_name != SourcePlatformEnum.SHOPIFY.value,
-                UserIntegration.service_name != SourcePlatformEnum.BIG_COMMERCE.value,
+                UserIntegration.service_name
+                != SourcePlatformEnum.SHOPIFY.value,
+                UserIntegration.service_name
+                != SourcePlatformEnum.BIG_COMMERCE.value,
             )
             .scalar()
         )
@@ -157,7 +163,10 @@ class IntegrationsUserSyncPersistence:
                 UserIntegration,
                 UserIntegration.id == IntegrationUserSync.integration_id,
             )
-            .filter(IntegrationUserSync.domain_id == domain_id)
+            .filter(
+                IntegrationUserSync.domain_id == domain_id,
+                IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
+            )
         )
 
         if service_name:
@@ -172,7 +181,7 @@ class IntegrationsUserSyncPersistence:
                     "createdDate": sync.created_at.strftime("%b %d, %Y")
                     if sync.created_at
                     else None,
-                    "name": sync.list_name,
+                    "list_name": sync.list_name,
                     "lastSync": sync.last_sync_date.strftime("%b %d, %Y")
                     if sync.last_sync_date
                     else None,
@@ -185,7 +194,9 @@ class IntegrationsUserSyncPersistence:
                     "createdBy": sync.created_by,
                     "accountId": sync.platform_user_id,
                     "data_map": sync.data_map,
-                    "syncStatus": False if sync.is_failed == True else sync.sync_status,
+                    "syncStatus": False
+                    if sync.is_failed == True
+                    else sync.sync_status,
                     "integration_is_failed": sync.is_failed,
                     "type_error": sync.error_message,
                     "list_id": sync.list_id,
@@ -202,7 +213,7 @@ class IntegrationsUserSyncPersistence:
                 "createdDate": sync.created_at.strftime("%b %d, %Y")
                 if sync.created_at
                 else None,
-                "name": sync.list_name,
+                "list_name": sync.list_name,
                 "lastSync": sync.last_sync_date.strftime("%b %d, %Y")
                 if sync.last_sync_date
                 else None,
@@ -213,11 +224,14 @@ class IntegrationsUserSyncPersistence:
                 "suppression": sync.is_with_suppression,
                 "contacts": sync.no_of_contacts,
                 "createdBy": sync.created_by,
+                "status": "Syncing",
                 "accountId": sync.platform_user_id,
                 "campaign_id": sync.campaign_id,
                 "campaign_name": sync.campaign_name,
                 "data_map": sync.data_map,
-                "syncStatus": False if sync.is_failed == True else sync.sync_status,
+                "syncStatus": False
+                if sync.is_failed == True
+                else sync.sync_status,
                 "integration_is_failed": sync.is_failed,
                 "type_error": sync.error_message,
                 "customer_id": sync.customer_id,
@@ -248,6 +262,11 @@ class IntegrationsUserSyncPersistence:
                 IntegrationUserSync.sent_contacts,
                 IntegrationUserSync.created_by,
                 IntegrationUserSync.list_id,
+                IntegrationUserSync.list_name,
+                IntegrationUserSync.customer_id,
+                IntegrationUserSync.leads_type,
+                IntegrationUserSync.campaign_id,
+                IntegrationUserSync.campaign_name,
                 IntegrationUserSync.data_map,
                 UserIntegration.service_name,
                 UserIntegration.is_failed,
@@ -260,13 +279,18 @@ class IntegrationsUserSyncPersistence:
                 UserIntegration,
                 UserIntegration.id == IntegrationUserSync.integration_id,
             )
-            .join(
-                AudienceSmart, IntegrationUserSync.smart_audience_id == AudienceSmart.id
+            .outerjoin(
+                AudienceSmart,
+                IntegrationUserSync.smart_audience_id == AudienceSmart.id,
             )
             .outerjoin(
-                ImportedLeads, ImportedLeads.data_sync_id == IntegrationUserSync.id
+                ImportedLeads,
+                ImportedLeads.data_sync_id == IntegrationUserSync.id,
             )
-            .filter(UserIntegration.user_id == user_id)
+            .filter(
+                UserIntegration.user_id == user_id,
+                IntegrationUserSync.sync_type == DataSyncType.AUDIENCE.value,
+            )
             .group_by(
                 IntegrationUserSync.id,
                 UserIntegration.service_name,
@@ -290,7 +314,7 @@ class IntegrationsUserSyncPersistence:
                     "createdDate": sync.created_at.strftime("%b %d, %Y")
                     if sync.created_at
                     else None,
-                    "name": sync.name,
+                    "name": sync.name if sync.name else sync.list_name,
                     "lastSync": sync.last_sync_date.strftime("%b %d, %Y")
                     if sync.last_sync_date
                     else None,
@@ -299,6 +323,10 @@ class IntegrationsUserSyncPersistence:
                     "dataSync": sync.is_active,
                     "contacts": sync.no_of_contacts,
                     "createdBy": sync.created_by,
+                    "customer_id": sync.customer_id,
+                    "campaign_id": sync.campaign_id,
+                    "campaign_name": sync.campaign_name,
+                    "type": sync.leads_type,
                     "data_map": sync.data_map,
                     "syncStatus": False if sync.is_failed else sync.sync_status,
                     "integration_is_failed": sync.is_failed,
@@ -306,6 +334,7 @@ class IntegrationsUserSyncPersistence:
                     "active_segment": sync.sent_contacts,
                     "records_synced": sync.no_of_contacts,
                     "is_progress": sync.imported_count < sync.sent_contacts
+                    or sync.sent_contacts == self.UNLIMITED
                     if sync.sent_contacts
                     else False,
                 }
@@ -318,7 +347,7 @@ class IntegrationsUserSyncPersistence:
                 "createdDate": sync.created_at.strftime("%b %d, %Y")
                 if sync.created_at
                 else None,
-                "name": sync.name,
+                "name": sync.name if sync.name else sync.list_name,
                 "lastSync": sync.last_sync_date.strftime("%b %d, %Y")
                 if sync.last_sync_date
                 else None,
@@ -327,12 +356,17 @@ class IntegrationsUserSyncPersistence:
                 "dataSync": sync.is_active,
                 "createdBy": sync.created_by,
                 "data_map": sync.data_map,
+                "customer_id": sync.customer_id,
+                "campaign_id": sync.campaign_id,
+                "campaign_name": sync.campaign_name,
+                "type": sync.leads_type,
                 "syncStatus": False if sync.is_failed else sync.sync_status,
                 "integration_is_failed": sync.is_failed,
                 "list_id": sync.list_id,
                 "active_segments": sync.sent_contacts,
                 "records_synced": sync.no_of_contacts,
                 "is_progress": sync.imported_count < sync.sent_contacts
+                or sync.sent_contacts == self.UNLIMITED
                 if sync.sent_contacts
                 else False,
             }
@@ -353,7 +387,9 @@ class IntegrationsUserSyncPersistence:
         return user
 
     def update_sync(self, update_data: dict, counter, **filter_by):
-        update_data["no_of_contacts"] = IntegrationUserSync.no_of_contacts + counter
+        update_data["no_of_contacts"] = (
+            IntegrationUserSync.no_of_contacts + counter
+        )
         update = (
             self.db.query(IntegrationUserSync)
             .filter_by(**filter_by)
@@ -386,6 +422,18 @@ class IntegrationsUserSyncPersistence:
 
         return False
 
+    def get_destinations(self, type: str):
+        query = self.db.query(Integration.service_name)
+
+        if type == DataSyncType.AUDIENCE.value:
+            query = query.filter(Integration.for_audience == True)
+        elif type == DataSyncType.PIXEL.value:
+            query = query.filter(Integration.for_pixel == True)
+
+        result = [row[0] for row in query.all()]
+
+        return result
+
     def get_integration_by_sync_id(self, sync_id: int):
         return (
             self.db.query(UserIntegration)
@@ -409,14 +457,20 @@ class IntegrationsUserSyncPersistence:
                 AudienceSmartPerson.id
                 == AudienceSmartValidation.audience_smart_person_id,
             )
-            .filter(AudienceSmartPerson.enrichment_user_id == enrichment_user_id)
+            .filter(
+                AudienceSmartPerson.enrichment_user_id == enrichment_user_id
+            )
             .limit(2)
             .all()
         )
         business_email = ""
         personal_email = ""
         phone = ""
-        for verified_business_email, verified_personal_email, verified_phone in rows:
+        for (
+            verified_business_email,
+            verified_personal_email,
+            verified_phone,
+        ) in rows:
             if verified_business_email:
                 business_email = verified_business_email
             if verified_personal_email:

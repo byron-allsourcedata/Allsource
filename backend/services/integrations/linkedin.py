@@ -1,33 +1,27 @@
-import os
 import logging
-from bingads import ServiceClient, AuthorizationData, OAuthWebAuthCodeGrant
-from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
-from persistence.domains import UserDomainsPersistence
-from services.integrations.commonIntegration import (
-    get_valid_email,
-    get_valid_phone,
-    get_valid_location,
-)
-from bingads.v13.bulk.entities.audiences import BulkCampaignCustomerListAssociation
-from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters
-from schemas.integrations.integrations import *
+import os
+from typing import List
+
+import httpx
 from fastapi import HTTPException
-from faker import Faker
-import re
 
 # from models.enrichment_users import EnrichmentUser
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
-    ProccessDataSyncResult,
     IntegrationLimit,
+    DataSyncType,
 )
-import httpx
-from utils import format_phone_number
-from typing import List
+from persistence.domains import UserDomainsPersistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence
+from schemas.integrations.integrations import *
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +60,12 @@ class LinkedinIntegrationsService:
                     "content-type": "application/json",
                 }
             response = self.client.request(
-                method, url, headers=headers, json=json, data=data, params=params
+                method,
+                url,
+                headers=headers,
+                json=json,
+                data=data,
+                params=params,
             )
             if response.is_redirect:
                 redirect_url = response.headers.get("Location")
@@ -117,7 +116,9 @@ class LinkedinIntegrationsService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integrations_persisntece.create_integration(
+            integration_data
+        )
 
         if not integartion:
             raise HTTPException(
@@ -168,7 +169,9 @@ class LinkedinIntegrationsService:
     #     response = self.__handle_request(method='POST', url="https://login.microsoftonline.com/common/oauth2/v2.0/token", data=data, headers=headers)
     #     return response.json()["access_token"]
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         client_id = os.getenv("LINKEDIN_CLIENT_ID")
         client_secret = os.getenv("LINKEDIN_CLIENT_SECRET")
         code = credentials.linkedin.code
@@ -187,7 +190,9 @@ class LinkedinIntegrationsService:
             url="https://www.linkedin.com/oauth/v2/accessToken",
         )
         if token_resp.status_code != 200:
-            raise HTTPException(status_code=400, detail="Failed to get access token")
+            raise HTTPException(
+                status_code=400, detail="Failed to get access token"
+            )
 
         access_token = token_resp.json().get("access_token")
         headers = {"Authorization": f"Bearer {access_token}"}
@@ -207,20 +212,31 @@ class LinkedinIntegrationsService:
             "status": IntegrationsStatus.SUCCESS.value,
         }
 
+    def get_smart_credentials(self, user_id: int):
+        credential = (
+            self.integrations_persisntece.get_smart_credentials_for_service(
+                user_id=user_id,
+                service_name=SourcePlatformEnum.SALES_FORCE.value,
+            )
+        )
+        return credential
+
     async def create_sync(
         self,
+        domain_id: int,
         customer_id: str,
         leads_type: str,
         list_id: str,
         list_name: str,
-        domain_id: int,
         created_by: str,
         user: dict,
         data_map: List[DataMap] = [],
         campaign_id: str = None,
         campaign_name: str = None,
     ):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get("id"))
+        credentials = self.get_credentials(
+            user_id=user.get("id"), domain_id=domain_id
+        )
         if campaign_id is not None:
             self.add_customer_list_to_campaign_bulk(
                 access_token=credentials.access_token,
@@ -235,9 +251,11 @@ class LinkedinIntegrationsService:
                 "integration_id": credentials.id,
                 "list_id": list_id,
                 "list_name": list_name,
-                "domain_id": domain_id,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "leads_type": leads_type,
                 "data_map": data_map,
+                "domain_id": domain_id,
                 "created_by": created_by,
                 "campaign_id": campaign_id,
                 "campaign_name": campaign_name,
@@ -246,7 +264,8 @@ class LinkedinIntegrationsService:
         )
         return sync
 
-    # async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
+        # async def process_data_sync(self, user_integration, data_sync, enrichment_users: EnrichmentUser):
+
     #     profiles = []
     #     for enrichment_user in enrichment_users:
     #         profile = self.__mapped_bing_ads_profile(enrichment_users=enrichment_user)
@@ -294,7 +313,8 @@ class LinkedinIntegrationsService:
         credential = self.get_credentials(domain_id, user.get("id"))
         if not credential:
             raise HTTPException(
-                status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value
+                status_code=403,
+                detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value,
             )
         credential.suppression = suppression
         self.integrations_persisntece.db.commit()

@@ -43,24 +43,39 @@ class SuppressionService:
         text = file.file.read().decode("utf-8", errors="replace")
         df = pd.read_csv(StringIO(text), usecols=["email"])
         email_list = (
-            df["email"].dropna().astype(str).str.strip().loc[lambda s: s != ""].tolist()
+            df["email"]
+            .dropna()
+            .astype(str)
+            .str.strip()
+            .loc[lambda s: s != ""]
+            .tolist()
         )
 
         if not email_list:
-            return {"status": SuppressionStatus.NO_EMAILS_FOUND, "leads_count": 0}
+            return {
+                "status": SuppressionStatus.NO_EMAILS_FOUND,
+                "leads_count": 0,
+            }
 
         list_name = file.filename.rsplit(".", 1)[0]
         email_list = set(email_list)
-        suppression_lists = self.suppression_persistence.get_all_suppression_list(
-            domain_id=domain_id
+        suppression_lists = (
+            self.suppression_persistence.get_all_suppression_list(
+                domain_id=domain_id
+            )
         )
         emails_list = [
-            suppression_list.total_emails for suppression_list in suppression_lists
+            suppression_list.total_emails
+            for suppression_list in suppression_lists
         ]
         all_emails = []
         for email_str in emails_list:
             all_emails.extend(
-                [email.strip() for email in email_str.split(",") if email.strip()]
+                [
+                    email.strip()
+                    for email in email_str.split(",")
+                    if email.strip()
+                ]
             )
 
         new_leads_count = len(email_list - set(all_emails))
@@ -110,15 +125,19 @@ class SuppressionService:
     def download_suppression_list(self, suppression_list_id, domain_id):
         if suppression_list_id:
             suppression_lists = []
-            suppression_list = self.suppression_persistence.get_suppression_list_by_id(
-                suppression_list_id=suppression_list_id, domain_id=domain_id
+            suppression_list = (
+                self.suppression_persistence.get_suppression_list_by_id(
+                    suppression_list_id=suppression_list_id, domain_id=domain_id
+                )
             )
             if suppression_list:
                 suppression_lists.append(suppression_list)
 
             output = StringIO()
             writer = csv.writer(output)
-            writer.writerow(["List Name", "Created At", "Total Emails", "Status"])
+            writer.writerow(
+                ["List Name", "Created At", "Total Emails", "Status"]
+            )
             for suppression in suppression_lists:
                 writer.writerow(
                     [
@@ -164,7 +183,9 @@ class SuppressionService:
 
     def process_certain_activation(self, domain_id):
         is_url_certain_activation = (
-            self.suppression_persistence.process_certain_activation(domain_id=domain_id)
+            self.suppression_persistence.process_certain_activation(
+                domain_id=domain_id
+            )
         )
         return {
             "status": SuppressionStatus.SUCCESS,
@@ -179,7 +200,9 @@ class SuppressionService:
 
     def process_delete_contacts(self, domain_id):
         is_process_delete_contacts = (
-            self.suppression_persistence.process_delete_contacts(domain_id=domain_id)
+            self.suppression_persistence.process_delete_contacts(
+                domain_id=domain_id
+            )
         )
         return {
             "status": SuppressionStatus.SUCCESS,
@@ -187,8 +210,10 @@ class SuppressionService:
         }
 
     def process_based_activation(self, domain_id):
-        is_based_activation = self.suppression_persistence.process_based_activation(
-            domain_id=domain_id
+        is_based_activation = (
+            self.suppression_persistence.process_based_activation(
+                domain_id=domain_id
+            )
         )
         return {
             "status": SuppressionStatus.SUCCESS,
@@ -207,7 +232,9 @@ class SuppressionService:
         )
         return SuppressionStatus.SUCCESS
 
-    def process_page_views_limit(self, page_views: int, seconds: int, domain_id):
+    def process_page_views_limit(
+        self, page_views: int, seconds: int, domain_id
+    ):
         self.suppression_persistence.process_page_views_limit(
             page_views=page_views, seconds=seconds, domain_id=domain_id
         )

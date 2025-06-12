@@ -38,7 +38,9 @@ class PartnersAssetService:
 
             return {
                 "status": True,
-                "data": [self.domain_mapped(asset) for i, asset in enumerate(assets)],
+                "data": [
+                    self.domain_mapped(asset) for i, asset in enumerate(assets)
+                ],
             }
         except Exception as e:
             logger.debug("Error getting partner assets", e)
@@ -59,11 +61,16 @@ class PartnersAssetService:
         except Exception as e:
             logger.debug("Error deleting assets file", e)
             raise HTTPException(
-                status_code=500, detail=f"Unexpected error during delete: {str(e)}"
+                status_code=500,
+                detail=f"Unexpected error during delete: {str(e)}",
             )
 
     async def update_asset(
-        self, asset_id: int, description: str, type: str, file: UploadFile = None
+        self,
+        asset_id: int,
+        description: str,
+        type: str,
+        file: UploadFile = None,
     ):
         if not asset_id or not description or not type:
             return PartnersAssetsInfoEnum.NOT_VALID_DATA
@@ -89,7 +96,8 @@ class PartnersAssetService:
         except Exception as e:
             logger.debug("Error updating assets file", e)
             raise HTTPException(
-                status_code=500, detail=f"Unexpected error during update: {str(e)}"
+                status_code=500,
+                detail=f"Unexpected error during update: {str(e)}",
             )
 
     async def upload_files_asset(self, file: UploadFile, type: str):
@@ -108,7 +116,9 @@ class PartnersAssetService:
                 self.AWS.upload_string(file_contents, file_key)
                 files_data["file_url"] = file_url
 
-            preview = await self.generate_preview(file_contents, file_extension, type)
+            preview = await self.generate_preview(
+                file_contents, file_extension, type
+            )
             if preview:
                 file_preview_contents = preview.read()
                 preview_key = f"partners-assets/{file_hash}_preview.jpg"
@@ -129,7 +139,9 @@ class PartnersAssetService:
                 status_code=500, detail=f"Error during file upload: {str(e)}"
             )
 
-    async def create_asset(self, description: str, type: str, file: UploadFile = None):
+    async def create_asset(
+        self, description: str, type: str, file: UploadFile = None
+    ):
         if not file or not description or not type:
             return PartnersAssetsInfoEnum.NOT_VALID_DATA
 
@@ -137,7 +149,9 @@ class PartnersAssetService:
             creating_data = await self.upload_files_asset(file, type)
             creating_data.update({"description": description, "type": type})
 
-            created_data = self.partners_asset_persistence.create_data(creating_data)
+            created_data = self.partners_asset_persistence.create_data(
+                creating_data
+            )
 
             if not created_data:
                 logger.debug("Database error during creation", e)
@@ -150,7 +164,8 @@ class PartnersAssetService:
         except Exception as e:
             logger.debug("Error creating assets file", e)
             raise HTTPException(
-                status_code=500, detail=f"Unexpected error during creation: {str(e)}"
+                status_code=500,
+                detail=f"Unexpected error during creation: {str(e)}",
             )
 
     async def generate_preview(
@@ -235,7 +250,9 @@ class PartnersAssetService:
                     with Image.open(BytesIO(image_data)) as img:
                         if img.width >= min_width and img.height >= min_height:
                             preview_image = BytesIO()
-                            img.convert("RGB").save(preview_image, format="JPEG")
+                            img.convert("RGB").save(
+                                preview_image, format="JPEG"
+                            )
                             preview_image.seek(0)
                             return preview_image
             return None
@@ -248,7 +265,10 @@ class PartnersAssetService:
             return "0.00 MB"
         try:
             response = requests.head(file_url, allow_redirects=True, timeout=5)
-            if response.status_code == 200 and "Content-Length" in response.headers:
+            if (
+                response.status_code == 200
+                and "Content-Length" in response.headers
+            ):
                 size_in_bytes = int(response.headers["Content-Length"])
                 size_in_mb = size_in_bytes / (1024**2)
                 return f"{size_in_mb:.2f} MB"

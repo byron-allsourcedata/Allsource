@@ -1,32 +1,28 @@
-import asyncio
-import functools
-import json
 import logging
 import os
 import sys
+import asyncio
+import functools
+import json
+import pytz
+from uuid import UUID
 from collections import defaultdict
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import List, Union, Optional, Tuple
-from uuid import UUID
-
+from typing import List, Union, Optional, Any, Dict, Tuple
 import boto3
-import pytz
-from aio_pika import IncomingMessage, Connection
-from dotenv import load_dotenv
 from sqlalchemy import update, func
-from sqlalchemy.orm import Session
-
-from services.source_agent import SourceAgentService
-from schemas.source_agent import Stats
+from aio_pika import IncomingMessage, Connection
+from sqlalchemy import create_engine
+from dataclasses import asdict
+from sqlalchemy.orm import sessionmaker, Session
+from dotenv import load_dotenv
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 
-from db_dependencies import Db
-from resolver import Resolver
-
+from models import EnrichmentUserContact
 from services.insightsUtils import InsightsUtils
 from models.five_x_five_emails import FiveXFiveEmails
 from models.five_x_five_users_emails import FiveXFiveUsersEmails
@@ -34,7 +30,16 @@ from models.five_x_five_users import FiveXFiveUser
 from enums import TypeOfCustomer, EmailType, BusinessType
 from utils import get_utc_aware_date
 from models.leads_visits import LeadsVisits
-from models.enrichment import EnrichmentUsersEmails, EnrichmentUser
+from models.enrichment import (
+    EnrichmentUsersEmails,
+    EnrichmentUser,
+    EnrichmentFinancialRecord,
+    EnrichmentLifestyle,
+    EnrichmentVoterRecord,
+    EnrichmentPersonalProfiles,
+    EnrichmentEmploymentHistory,
+    EnrichmentProfessionalProfile,
+)
 from models.enrichment.enrichment_emails import EnrichmentEmails
 from models.leads_users import LeadUser
 from schemas.scripts.audience_source import (
@@ -54,7 +59,7 @@ from services.similar_audiences.audience_data_normalization import (
     AudienceDataNormalizationService,
 )
 from services.lookalikes import AudienceLookalikesService
-from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
 
 load_dotenv()
 
@@ -91,7 +96,6 @@ def assume_role(role_arn, sts_client):
 
 async def send_sse(connection, user_id: int, data: dict):
     try:
-        print(f"userd_id = {user_id}")
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
             connection=connection,
@@ -118,7 +122,9 @@ async def process_email_leads(
         }
     )
 
-    logging.info(f"Start processing {len(persons)} persons for source_id {source_id}")
+    logging.info(
+        f"Start processing {len(persons)} persons for source_id {source_id}"
+    )
 
     emails = {p.email.strip().lower() for p in persons if p.email}
     if not emails:
@@ -128,7 +134,8 @@ async def process_email_leads(
     rows = (
         db_session.query(EnrichmentEmails.email, EnrichmentUser.id)
         .join(
-            EnrichmentUsersEmails, EnrichmentEmails.id == EnrichmentUsersEmails.email_id
+            EnrichmentUsersEmails,
+            EnrichmentEmails.id == EnrichmentUsersEmails.email_id,
         )
         .join(
             EnrichmentUser,
@@ -145,10 +152,14 @@ async def process_email_leads(
     email_to_user_id = {email: user_id for email, user_id in rows}
 
     filtered_persons = [
-        p for p in persons if p.email and p.email.strip().lower() in email_to_user_id
+        p
+        for p in persons
+        if p.email and p.email.strip().lower() in email_to_user_id
     ]
     if not filtered_persons:
-        logging.info("No valid persons left after filtering by enrichment_emails.")
+        logging.info(
+            "No valid persons left after filtering by enrichment_emails."
+        )
         return 0
 
     for person in filtered_persons:
@@ -167,7 +178,8 @@ async def process_email_leads(
         if (
             date_range
             and transaction_date_obj
-            and transaction_date_obj < (datetime.now() - timedelta(days=date_range))
+            and transaction_date_obj
+            < (datetime.now() - timedelta(days=date_range))
         ):
             continue
 
@@ -183,7 +195,10 @@ async def process_email_leads(
                 matched_persons[email]["orders_amount"] += sale_amount
             if transaction_date_obj:
                 existing_date = matched_persons[email]["start_date"]
-                if existing_date is None or transaction_date_obj > existing_date:
+                if (
+                    existing_date is None
+                    or transaction_date_obj > existing_date
+                ):
                     matched_persons[email]["start_date"] = transaction_date_obj
                     logging.debug(
                         f"Updated start_date for {email}: {transaction_date_obj}"
@@ -208,14 +223,18 @@ async def process_email_leads(
                 db_session.query(AudienceSourcesMatchedPerson)
                 .filter(
                     AudienceSourcesMatchedPerson.source_id == source_id,
-                    AudienceSourcesMatchedPerson.email.in_(matched_persons.keys()),
+                    AudienceSourcesMatchedPerson.email.in_(
+                        matched_persons.keys()
+                    ),
                 )
                 .with_for_update()
                 .all()
             )
         }
 
-        logging.info(f"Found {len(existing_persons)} existing persons to update")
+        logging.info(
+            f"Found {len(existing_persons)} existing persons to update"
+        )
 
         reference_date = datetime.now()
         matched_persons_to_update = []
@@ -224,7 +243,9 @@ async def process_email_leads(
         for email, data in matched_persons.items():
             last_transaction = data["start_date"]
             recency = (
-                (reference_date - last_transaction).days if last_transaction else None
+                (reference_date - last_transaction).days
+                if last_transaction
+                else None
             )
 
             if email in existing_persons:
@@ -305,10 +326,14 @@ def calculate_website_visitor_user_value(
         AudienceSourceMath.inverted_decimal(value=recency) if recency > 0 else 0
     )
     inverted_recency_min = (
-        AudienceSourceMath.inverted_decimal(value=recency_min) if recency_min > 0 else 0
+        AudienceSourceMath.inverted_decimal(value=recency_min)
+        if recency_min > 0
+        else 0
     )
     inverted_recency_max = (
-        AudienceSourceMath.inverted_decimal(value=recency_max) if recency_max > 0 else 0
+        AudienceSourceMath.inverted_decimal(value=recency_max)
+        if recency_max > 0
+        else 0
     )
 
     recency_score = AudienceSourceMath.normalize_decimal(
@@ -362,19 +387,27 @@ async def process_user_id(
     audience_source: AudienceSource,
 ) -> int:
     five_x_five_user_ids = [p.user_id for p in persons]
-    logging.info(f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}")
+    logging.info(
+        f"user_ids find {len(five_x_five_user_ids)} for source_id {source_id}"
+    )
 
     db_session.commit()
     with db_session.begin():
         existing_uids = {
             row[0]
-            for row in db_session.query(AudienceSourcesMatchedPerson.enrichment_user_id)
+            for row in db_session.query(
+                AudienceSourcesMatchedPerson.enrichment_user_id
+            )
             .filter(AudienceSourcesMatchedPerson.source_id == source_id)
             .all()
         }
         results_query = (
-            db_session.query(LeadUser.id, FiveXFiveUser.id.label("five_x_five_user_id"))
-            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+            db_session.query(
+                LeadUser.id, FiveXFiveUser.id.label("five_x_five_user_id")
+            )
+            .join(
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
+            )
             .filter(
                 LeadUser.user_id == audience_source.user_id,
                 FiveXFiveUser.id.in_(five_x_five_user_ids),
@@ -437,7 +470,9 @@ async def process_user_id(
             last = (
                 db_session.query(LeadsVisits)
                 .filter_by(lead_id=lead_id)
-                .order_by(LeadsVisits.end_date.desc(), LeadsVisits.end_time.desc())
+                .order_by(
+                    LeadsVisits.end_date.desc(), LeadsVisits.end_time.desc()
+                )
                 .first()
             )
 
@@ -471,7 +506,9 @@ async def process_user_id(
             existing_uids.add(enrichment_user_id)
 
         if updates:
-            db_session.bulk_insert_mappings(AudienceSourcesMatchedPerson, updates)
+            db_session.bulk_insert_mappings(
+                AudienceSourcesMatchedPerson, updates
+            )
             logging.info(
                 f"Inserted {len(updates)} new persons for source_id {source_id}"
             )
@@ -498,10 +535,18 @@ async def process_and_send_chunks(
                 func.max(AudienceSourcesMatchedPerson.amount).label(
                     "max_orders_amount"
                 ),
-                func.min(AudienceSourcesMatchedPerson.count).label("min_orders_count"),
-                func.max(AudienceSourcesMatchedPerson.count).label("max_orders_count"),
-                func.min(AudienceSourcesMatchedPerson.recency).label("min_recency"),
-                func.max(AudienceSourcesMatchedPerson.recency).label("max_recency"),
+                func.min(AudienceSourcesMatchedPerson.count).label(
+                    "min_orders_count"
+                ),
+                func.max(AudienceSourcesMatchedPerson.count).label(
+                    "max_orders_count"
+                ),
+                func.min(AudienceSourcesMatchedPerson.recency).label(
+                    "min_recency"
+                ),
+                func.max(AudienceSourcesMatchedPerson.recency).label(
+                    "max_recency"
+                ),
                 func.min(AudienceSourcesMatchedPerson.start_date).label(
                     "min_start_date"
                 ),
@@ -589,7 +634,6 @@ async def normalize_persons_customer_conversion(
     data_for_normalize: DataForNormalize,
     db_session: Session,
     source_schema: str,
-    agent: SourceAgentService,
 ):
     min_recency = (
         Decimal(str(data_for_normalize.min_recency))
@@ -617,7 +661,10 @@ async def normalize_persons_customer_conversion(
     min_inv = AudienceSourceMath.inverted_decimal(Decimal(min_recency))
     max_inv = AudienceSourceMath.inverted_decimal(Decimal(max_recency))
     if min_orders_amount > max_orders_amount:
-        min_orders_amount, max_orders_amount = max_orders_amount, min_orders_amount
+        min_orders_amount, max_orders_amount = (
+            max_orders_amount,
+            min_orders_amount,
+        )
 
     if min_inv > max_inv:
         min_inv, max_inv = max_inv, min_inv
@@ -666,17 +713,134 @@ async def normalize_persons_customer_conversion(
             )
 
     elif source_schema.lower() == BusinessType.B2B.value:
-        new_updates = agent.normalize_b2b(
-            persons=persons,
-            source_id=source_id,
-            stats=Stats(
-                min_recency=min_recency,
-                max_recency=max_recency,
-                min_inv=min_inv,
-                max_inv=max_inv,
-            ),
+        # B2B Algorithm:
+        # For B2B, the score is a combination of three components:
+        # 1. Recency Score based on BUSINESS_EMAIL_LAST_SEEN_DATE.
+        # 2. Professional Score calculated from JobLevel, Department, and CompanySize.
+        # 3. Completeness Score based on the presence of a valid business email, LinkedIn URL,
+        #    and non-null professional attributes.
+        matched_ids = [UUID(p.id) for p in persons]
+        prof_rows = (
+            db_session.query(
+                AudienceSourcesMatchedPerson.id.label("mp_id"),
+                EnrichmentProfessionalProfile.job_level,
+                EnrichmentProfessionalProfile.department,
+                EnrichmentProfessionalProfile.company_size,
+            )
+            .join(
+                EnrichmentUser,
+                AudienceSourcesMatchedPerson.enrichment_user_id
+                == EnrichmentUser.id,
+            )
+            .join(
+                EnrichmentProfessionalProfile,
+                EnrichmentProfessionalProfile.asid == EnrichmentUser.asid,
+            )
+            .filter(AudienceSourcesMatchedPerson.id.in_(matched_ids))
+            .all()
         )
-        updates.extend(new_updates)
+        profile_map = {row.mp_id: row for row in prof_rows}
+
+        contact_rows = (
+            db_session.query(
+                AudienceSourcesMatchedPerson.id.label("mp_id"),
+                EnrichmentUserContact.business_email,
+                EnrichmentUserContact.business_email_validation_status,
+                EnrichmentUserContact.linkedin_url,
+            )
+            .join(
+                EnrichmentUser,
+                AudienceSourcesMatchedPerson.enrichment_user_id
+                == EnrichmentUser.id,
+            )
+            .join(
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
+            )
+            .filter(AudienceSourcesMatchedPerson.id.in_(matched_ids))
+            .all()
+        )
+        contact_map = {row.mp_id: row for row in contact_rows}
+
+        inverted_values = []
+
+        for person in persons:
+            inv = AudienceSourceMath.inverted_decimal(Decimal(person.recency))
+            inverted_values.append(inv)
+
+        job_level_map = {
+            "Executive": Decimal("1.0"),
+            "Senior": Decimal("0.8"),
+            "Manager": Decimal("0.6"),
+            "Entry": Decimal("0.4"),
+        }
+        department_map = {
+            "Sales": Decimal("1.0"),
+            "Marketing": Decimal("0.8"),
+            "Engineering": Decimal("0.6"),
+        }
+        company_size_map = {
+            "1000+": Decimal("1.0"),
+            "501-1000": Decimal("0.8"),
+            "101-500": Decimal("0.6"),
+            "51-100": Decimal("0.4"),
+        }
+        for idx, person in enumerate(persons):
+            recency_inv = inverted_values[idx]
+            recency_score = AudienceSourceMath.normalize_decimal(
+                value=recency_inv, min_val=min_inv, max_val=max_inv
+            )
+            prof = profile_map.get(UUID(person.id))
+            job_level = getattr(prof, "job_level", None)
+            department = getattr(prof, "department", None)
+            company_size = getattr(prof, "company_size", None)
+
+            job_level_weight = job_level_map.get(job_level, Decimal("0.2"))
+            department_weight = department_map.get(department, Decimal("0.4"))
+            company_size_weight = company_size_map.get(
+                company_size, Decimal("0.2")
+            )
+
+            professional_score = (
+                Decimal("0.5") * job_level_weight
+                + Decimal("0.3") * department_weight
+                + Decimal("0.2") * company_size_weight
+            )
+            completeness_score = Decimal("0.0")
+            contact = contact_map.get(UUID(person.id))
+            completeness = Decimal("0.0")
+            if (
+                contact
+                and contact.business_email
+                and contact.business_email_validation_status == "Valid"
+            ):
+                completeness += Decimal("0.4")
+            if contact and contact.linkedin_url:
+                completeness += Decimal("0.3")
+            if job_level:
+                completeness_score += Decimal("0.2")
+            if department:
+                completeness_score += Decimal("0.1")
+            lead_value_score_b2b = (
+                Decimal("0.4") * recency_score
+                + Decimal("0.4") * professional_score
+                + Decimal("0.2") * completeness_score
+            )
+            update_data = {
+                "id": person.id,
+                "source_id": source_id,
+                "email": person.email,
+                "recency_min": min_recency,
+                "recency_max": max_recency,
+                "inverted_recency": inverted_values[idx],
+                "inverted_recency_min": min_inv,
+                "inverted_recency_max": max_inv,
+                "recency_score": recency_score,
+                "view_score": professional_score,
+                "sum_score": completeness_score,
+                "value_score": lead_value_score_b2b,
+            }
+            updates.append(update_data)
     else:
         logging.warning(
             f"Unknown source_schema: {source_schema}. No lead value score computed."
@@ -713,8 +877,12 @@ async def normalize_persons_interest_leads(
         if data_for_normalize.max_recency is not None
         else Decimal("1.0")
     )
-    inverted_min_recency = AudienceSourceMath.inverted_decimal(value=min_recency)
-    inverted_max_recency = AudienceSourceMath.inverted_decimal(value=max_recency)
+    inverted_min_recency = AudienceSourceMath.inverted_decimal(
+        value=min_recency
+    )
+    inverted_max_recency = AudienceSourceMath.inverted_decimal(
+        value=max_recency
+    )
     if inverted_min_recency > inverted_max_recency:
         inverted_min_recency, inverted_max_recency = (
             inverted_max_recency,
@@ -735,7 +903,9 @@ async def normalize_persons_interest_leads(
             if person.recency is not None
             else Decimal("0.0")
         )
-        inverted_recency = AudienceSourceMath.inverted_decimal(value=current_recency)
+        inverted_recency = AudienceSourceMath.inverted_decimal(
+            value=current_recency
+        )
         recency_normalized = AudienceSourceMath.normalize_decimal(
             value=inverted_recency,
             min_val=inverted_min_recency,
@@ -753,7 +923,9 @@ async def normalize_persons_interest_leads(
 
         user_value_score = recency_normalized + orders_count_score
 
-        if user_value_score < Decimal("0.0") or user_value_score > Decimal("1.0"):
+        if user_value_score < Decimal("0.0") or user_value_score > Decimal(
+            "1.0"
+        ):
             logging.warning(
                 f"UserValueScore for person {person.id} out of bounds: {user_value_score}"
             )
@@ -804,8 +976,12 @@ async def normalize_persons_failed_leads(
         if data_for_normalize.max_recency is not None
         else Decimal("1.0")
     )
-    inverted_min_recency = AudienceSourceMath.inverted_decimal(value=min_recency)
-    inverted_max_recency = AudienceSourceMath.inverted_decimal(value=max_recency)
+    inverted_min_recency = AudienceSourceMath.inverted_decimal(
+        value=min_recency
+    )
+    inverted_max_recency = AudienceSourceMath.inverted_decimal(
+        value=max_recency
+    )
     if inverted_min_recency > inverted_max_recency:
         inverted_min_recency, inverted_max_recency = (
             inverted_max_recency,
@@ -889,11 +1065,15 @@ def calculate_and_save_significant_fields(
     audience_source_data = audience_lookalikes_service.lookalikes_persistence_service.retrieve_source_insights(
         source_uuid=source_id, audience_type=audience_type
     )
-    b2c_insights, b2b_insights, other = audience_lookalikes_service.calculate_insights(
-        audience_data=audience_source_data,
-        similar_audience_service=similar_audience_service,
+    b2c_insights, b2b_insights, other = (
+        audience_lookalikes_service.calculate_insights(
+            audience_data=audience_source_data,
+            similar_audience_service=similar_audience_service,
+        )
     )
-    combined_insights = extract_non_zero_values(b2c_insights, b2b_insights, other)
+    combined_insights = extract_non_zero_values(
+        b2c_insights, b2b_insights, other
+    )
     db_session.execute(
         update(AudienceSource)
         .where(AudienceSource.id == source_id)
@@ -907,8 +1087,6 @@ async def aud_sources_matching(
     connection: Connection,
     similar_audience_service: SimilarAudienceService,
     audience_lookalikes_service: AudienceLookalikesService,
-    insights: InsightsUtils,
-    agent: SourceAgentService,
 ):
     try:
         message_body_dict = json.loads(message.body)
@@ -921,14 +1099,18 @@ async def aud_sources_matching(
             )
 
         if not data or not audience_source:
-            logging.warning("Message data is missing or audience source not found.")
+            logging.warning(
+                "Message data is missing or audience source not found."
+            )
             await message.ack()
             return
 
         type: str = message_body.type
         persons: Union[List[PersonRow], List[PersonEntry]] = data.persons
         data_for_normalize: Optional[DataForNormalize] = (
-            data.data_for_normalize if isinstance(data, DataBodyNormalize) else None
+            data.data_for_normalize
+            if isinstance(data, DataBodyNormalize)
+            else None
         )
         atype = {
             "b2b": BusinessType.B2B,
@@ -938,7 +1120,10 @@ async def aud_sources_matching(
         db_session.commit()
         with db_session.begin():
             if type == "emails" and data_for_normalize:
-                if data_for_normalize.matched_size == data_for_normalize.all_size:
+                if (
+                    data_for_normalize.matched_size
+                    == data_for_normalize.all_size
+                ):
                     calculate_and_save_significant_fields(
                         db_session=db_session,
                         source_id=source_id,
@@ -947,14 +1132,16 @@ async def aud_sources_matching(
                         audience_type=atype,
                     )
 
-                if message_body.status == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
+                if (
+                    message_body.status
+                    == TypeOfCustomer.CUSTOMER_CONVERSIONS.value
+                ):
                     await normalize_persons_customer_conversion(
                         persons=persons,
                         source_id=source_id,
                         data_for_normalize=data_for_normalize,
                         db_session=db_session,
                         source_schema=audience_source.target_schema,
-                        agent=agent,
                     )
 
                 if message_body.status == TypeOfCustomer.FAILED_LEADS.value:
@@ -1001,19 +1188,24 @@ async def aud_sources_matching(
                 )
 
             if message_body.status == TypeOfCustomer.INTEREST.value:
-                logging.info(f"Processing {len(persons)} interest lead records.")
+                logging.info(
+                    f"Processing {len(persons)} interest lead records."
+                )
                 count = await process_email_interest_leads(
                     persons=persons, db_session=db_session, source_id=source_id
                 )
 
-        logging.info(f"Updated processed and matched records for source_id {count}.")
+        logging.info(
+            f"Updated processed and matched records for source_id {count}."
+        )
 
         total_records, processed_records, matched_records = db_session.execute(
             update(AudienceSource)
             .where(AudienceSource.id == source_id)
             .values(
                 matched_records=AudienceSource.matched_records + count,
-                processed_records=AudienceSource.processed_records + len(persons),
+                processed_records=AudienceSource.processed_records
+                + len(persons),
             )
             .returning(
                 AudienceSource.total_records,
@@ -1025,7 +1217,9 @@ async def aud_sources_matching(
             f"Updated processed and matched records for source_id {source_id}."
         )
         if processed_records >= total_records:
-            insights.process_insights(source_id=source_id)
+            InsightsUtils.process_insights(
+                source_id=source_id, db_session=db_session
+            )
             if type == "user_ids":
                 calculate_and_save_significant_fields(
                     db_session=db_session,
@@ -1063,7 +1257,9 @@ async def aud_sources_matching(
         logging.info(f"Processing completed for source_id {source_id}.")
 
     except BaseException as e:
-        logging.warning(f"Message for source_id failed and will be reprocessed. {e}")
+        logging.warning(
+            f"Message for source_id failed and will be reprocessed. {e}"
+        )
         db_session.rollback()
         await message.ack()
 
@@ -1078,6 +1274,10 @@ async def main():
             sys.exit("Invalid log level argument. Use 'DEBUG' or 'INFO'.")
 
     setup_logging(log_level)
+    db_username = os.getenv("DB_USERNAME")
+    db_password = os.getenv("DB_PASSWORD")
+    db_host = os.getenv("DB_HOST")
+    db_name = os.getenv("DB_NAME")
 
     try:
         logging.info("Starting processing...")
@@ -1086,25 +1286,26 @@ async def main():
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
 
+        engine = create_engine(
+            f"postgresql://{db_username}:{db_password}@{db_host}/{db_name}",
+            pool_pre_ping=True,
+        )
+        Session = sessionmaker(bind=engine)
+        db_session = Session()
+
         queue = await channel.declare_queue(
             name=AUDIENCE_SOURCES_MATCHING,
             durable=True,
         )
-
-        resolver = Resolver()
-        db_session = await resolver.resolve(Db)
         similar_audience_service = SimilarAudienceService(
             audience_data_normalization_service=AudienceDataNormalizationService()
         )
-        lookalikes_persistence_service = AudienceLookalikesPostgresPersistence(
+        lookalikes_persistence_service = AudienceLookalikesPersistence(
             db_session
         )
         audience_lookalikes_service = AudienceLookalikesService(
             lookalikes_persistence_service=lookalikes_persistence_service
         )
-        insights = await resolver.resolve(InsightsUtils)
-        agent_service = await resolver.resolve(SourceAgentService)
-
         await queue.consume(
             functools.partial(
                 aud_sources_matching,
@@ -1112,13 +1313,10 @@ async def main():
                 db_session=db_session,
                 similar_audience_service=similar_audience_service,
                 audience_lookalikes_service=audience_lookalikes_service,
-                insights=insights,
-                agent=agent_service,
             )
         )
 
         await asyncio.Future()
-        await resolver.cleanup()
 
     except Exception:
         logging.error("Unhandled Exception:", exc_info=True)

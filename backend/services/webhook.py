@@ -98,10 +98,8 @@ class WebhookService:
         plan = data_object.get("plan")
         if plan is None:
             if stripe_status == "open" or stripe_status == "past_due":
-                account_notification = (
-                    self.notification_persistence.get_account_notification_by_title(
-                        NotificationTitles.PAYMENT_FAILED.value
-                    )
+                account_notification = self.notification_persistence.get_account_notification_by_title(
+                    NotificationTitles.PAYMENT_FAILED.value
                 )
                 save_account_notification = (
                     self.notification_persistence.save_account_notification(
@@ -150,7 +148,9 @@ class WebhookService:
 
     def create_payment_confirmation(self, payload):
         data_object = payload.get("data").get("object")
-        product_description = data_object.get("metadata").get("product_description")
+        product_description = data_object.get("metadata").get(
+            "product_description"
+        )
         if (
             product_description != "leads_credits"
             or product_description != "prospect_credits"
@@ -166,11 +166,13 @@ class WebhookService:
         referral_parent_id = result["parent_user_id"]
         quantity = data_object.get("metadata").get("quantity")
 
-        result_transaction = self.subscription_service.create_payments_transaction(
-            user_id=user_data.id,
-            stripe_payload=payload,
-            product_description=product_description,
-            quantity=quantity,
+        result_transaction = (
+            self.subscription_service.create_payments_transaction(
+                user_id=user_data.id,
+                stripe_payload=payload,
+                product_description=product_description,
+                quantity=quantity,
+            )
         )
         if not result_transaction:
             return payload
@@ -185,7 +187,9 @@ class WebhookService:
 
     def shopify_billing_update_webhook(self, payload):
         subscription_info = payload.get("app_subscription")
-        shop_id = subscription_info.get("admin_graphql_api_shop_id").split("Shop/")[-1]
+        shop_id = subscription_info.get("admin_graphql_api_shop_id").split(
+            "Shop/"
+        )[-1]
         logger.info(f"This is the shopify webhook request -> {repr(payload)}")
         user_data = self.subscription_service.get_user_by_shopify_shop_id(
             shop_id=shop_id
@@ -211,10 +215,14 @@ class WebhookService:
         payment_period = None
         payment_amount = None
         with self.integration_service as service:
-            shopify_charge = service.shopify.get_charge_by_id(user_data, charge_id)
+            shopify_charge = service.shopify.get_charge_by_id(
+                user_data, charge_id
+            )
             payment_amount = shopify_charge.price
             if shopify_charge.billing_on:
-                billing_on = datetime.strptime(shopify_charge.billing_on, "%Y-%m-%d")
+                billing_on = datetime.strptime(
+                    shopify_charge.billing_on, "%Y-%m-%d"
+                )
                 activated_on = datetime.strptime(
                     shopify_charge.activated_on, "%Y-%m-%d"
                 )

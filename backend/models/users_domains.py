@@ -1,9 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     Column,
-    Integer,
-    BOOLEAN,
     VARCHAR,
     TIMESTAMP,
     Index,
@@ -12,7 +10,6 @@ from sqlalchemy import (
     BigInteger,
     UniqueConstraint,
     text,
-    func,
     Sequence,
 )
 
@@ -22,7 +19,11 @@ from .base import Base
 class UserDomains(Base):
     __tablename__ = "users_domains"
     __table_args__ = (
-        Index("users_domains_data_provider_id_idx", "data_provider_id", unique=True),
+        Index(
+            "users_domains_data_provider_id_idx",
+            "data_provider_id",
+            unique=True,
+        ),
         Index("users_domains_is_enable_idx", "is_enable"),
         UniqueConstraint("api_key", name="users_domains_unique"),
     )
@@ -38,8 +39,14 @@ class UserDomains(Base):
     )
     domain = Column(VARCHAR, nullable=False)
     data_provider_id = Column(VARCHAR(64), nullable=True)
-    is_pixel_installed = Column(Boolean, nullable=True, server_default=text("false"))
+    is_pixel_installed = Column(
+        Boolean, nullable=True, server_default=text("false")
+    )
     is_enable = Column(Boolean, nullable=False, server_default=text("true"))
-    created_at = Column(TIMESTAMP, nullable=True, server_default=func.now())
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     api_key = Column(VARCHAR, nullable=True)
     viewed_product_part_url = Column(VARCHAR, nullable=True)

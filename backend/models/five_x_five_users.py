@@ -1,9 +1,7 @@
 from sqlalchemy import (
     Column,
     Integer,
-    TEXT,
     Index,
-    VARCHAR,
     TIMESTAMP,
     Sequence,
     String,
@@ -28,7 +26,9 @@ class FiveXFiveUser(Base):
         Index("5x5_users_up_id_idx", "up_id", unique=True),
     )
 
-    id = Column(Integer, Sequence("5x5_users_id_seq"), primary_key=True, nullable=False)
+    id = Column(
+        Integer, Sequence("5x5_users_id_seq"), primary_key=True, nullable=False
+    )
     up_id = Column(String(64), nullable=True)
     cc_id = Column(String(64), nullable=True)
     first_name = Column(String(64), nullable=True)

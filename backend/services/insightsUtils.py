@@ -1,38 +1,31 @@
 import re
+import uuid
 from collections import defaultdict, Counter
 from typing import List, Optional, Dict, Any
-from uuid import UUID
 
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Session
 
-from db_dependencies import Db
 from enums import BusinessType
-from persistence.audience_lookalike_persons import AudienceLookalikesPersonPersistence
-from persistence.audience_sources import AudienceSourcesPersistence
-from persistence.audience_sources_matched_persons import (
-    AudienceSourcesMatchedPersonsPersistence,
+from models import AudienceSource
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
+from models.audience_lookalikes_persons import AudienceLookalikesPerson
+
+from models.enrichment import (
+    EnrichmentUser,
+    EnrichmentPersonalProfiles,
+    EnrichmentFinancialRecord,
+    EnrichmentLifestyle,
+    EnrichmentVoterRecord,
+    EnrichmentProfessionalProfile,
+    EnrichmentEmploymentHistory,
 )
-from persistence.enrichment.postgres import EnrichmentPostgresPersistence
-from resolver import injectable
+
+
 from schemas.insights import InsightsByCategory
 
 
-@injectable
 class InsightsUtils:
-    def __init__(
-        self,
-        db: Db,
-        enrichment: EnrichmentPostgresPersistence,
-        sources: AudienceSourcesPersistence,
-        matched_persons: AudienceSourcesMatchedPersonsPersistence,
-        audience_persons: AudienceLookalikesPersonPersistence,
-    ):
-        self.db = db
-        self.sources = sources
-        self.enrichment = enrichment
-        self.matched_persons = matched_persons
-        self.audience_persons = audience_persons
-
     @staticmethod
     def bucket_age(age_range: Optional[str]) -> str:
         low = None
@@ -56,13 +49,20 @@ class InsightsUtils:
             return "46-65"
         return "Other"
 
+    @staticmethod
     def process_insights_for_asids(
-        self, insights, asids: List[UUID], audience_type: BusinessType
+        insights,
+        asids: List[uuid.UUID],
+        db_session: Session,
+        audience_type: BusinessType,
     ):
         is_invalid = lambda val: (
             val is None or str(val).upper() in ("UNKNOWN", "U", "2", "", "-")
         )
-        if audience_type == BusinessType.B2C or audience_type == BusinessType.ALL:
+        if (
+            audience_type == BusinessType.B2C
+            or audience_type == BusinessType.ALL
+        ):
             # 3) PERSONAL
             personal_fields = [
                 "gender",
@@ -79,7 +79,21 @@ class InsightsUtils:
                 "pets",
             ]
             personal_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            rows = self.enrichment.personal(asids)
+            rows = (
+                db_session.query(
+                    EnrichmentPersonalProfiles.gender,
+                    EnrichmentPersonalProfiles.state_abbr,
+                    EnrichmentPersonalProfiles.religion,
+                    EnrichmentPersonalProfiles.homeowner,
+                    EnrichmentPersonalProfiles.age,
+                    EnrichmentPersonalProfiles.ethnicity,
+                    EnrichmentPersonalProfiles.language_code,
+                    EnrichmentPersonalProfiles.marital_status,
+                    EnrichmentPersonalProfiles.has_children,
+                )
+                .filter(EnrichmentPersonalProfiles.asid.in_(asids))
+                .all()
+            )
 
             for row in rows:
                 for field, val in zip(personal_fields, row):
@@ -91,7 +105,9 @@ class InsightsUtils:
                     personal_cts[field][key] += 1
 
             for field in personal_fields:
-                setattr(insights.personal_profile, field, dict(personal_cts[field]))
+                setattr(
+                    insights.personal_profile, field, dict(personal_cts[field])
+                )
 
             # 4) FINANCIAL
             financial_fields = [
@@ -109,19 +125,43 @@ class InsightsUtils:
                 "mail_order_donor",
             ]
             fin_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            rows = self.enrichment.financial(asids)
+            rows = (
+                db_session.query(
+                    EnrichmentFinancialRecord.income_range,
+                    EnrichmentFinancialRecord.net_worth,
+                    EnrichmentFinancialRecord.credit_rating,
+                    EnrichmentFinancialRecord.credit_cards,
+                    EnrichmentFinancialRecord.bank_card,
+                    EnrichmentFinancialRecord.credit_card_premium,
+                    EnrichmentFinancialRecord.credit_card_new_issue,
+                    EnrichmentFinancialRecord.credit_lines,
+                    EnrichmentFinancialRecord.credit_range_of_new_credit_lines,
+                    EnrichmentFinancialRecord.donor,
+                    EnrichmentFinancialRecord.investor,
+                    EnrichmentFinancialRecord.mail_order_donor,
+                )
+                .filter(EnrichmentFinancialRecord.asid.in_(asids))
+                .all()
+            )
 
             for row in rows:
                 for field, val in zip(financial_fields, row):
                     if is_invalid(val):
-                        if field == "number_of_credit_lines" and str(val) == "2":
+                        if (
+                            field == "number_of_credit_lines"
+                            and str(val) == "2"
+                        ):
                             key = str(val)
                         else:
                             key = "unknown"
                     elif field == "credit_cards":
                         raw = val.strip("[]")
                         raw = raw.replace("'", "").replace('"', "")
-                        cards = [c.strip().lower() for c in raw.split(",") if c.strip()]
+                        cards = [
+                            c.strip().lower()
+                            for c in raw.split(",")
+                            if c.strip()
+                        ]
                         for card in cards:
                             fin_cts[field][card] += 1
                         continue
@@ -152,7 +192,27 @@ class InsightsUtils:
                 "beauty_cosmetic_interest",
             ]
             life_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            rows = self.enrichment.lifestyles(asids)
+            rows = (
+                db_session.query(
+                    EnrichmentLifestyle.pets,
+                    EnrichmentLifestyle.cooking_enthusiast,
+                    EnrichmentLifestyle.travel,
+                    EnrichmentLifestyle.mail_order_buyer,
+                    EnrichmentLifestyle.online_purchaser,
+                    EnrichmentLifestyle.book_reader,
+                    EnrichmentLifestyle.health_and_beauty,
+                    EnrichmentLifestyle.fitness,
+                    EnrichmentLifestyle.outdoor_enthusiast,
+                    EnrichmentLifestyle.tech_enthusiast,
+                    EnrichmentLifestyle.diy,
+                    EnrichmentLifestyle.automotive_buff,
+                    EnrichmentLifestyle.smoker,
+                    EnrichmentLifestyle.golf_enthusiasts,
+                    EnrichmentLifestyle.beauty_cosmetics,
+                )
+                .filter(EnrichmentLifestyle.asid.in_(asids))
+                .all()
+            )
 
             for row in rows:
                 for field, val in zip(lifestyle_fields, row):
@@ -173,7 +233,15 @@ class InsightsUtils:
                 "political_party",
             ]
             voter_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            rows = self.enrichment.voter(asids)
+            rows = (
+                db_session.query(
+                    EnrichmentVoterRecord.congressional_district,
+                    EnrichmentVoterRecord.voting_propensity,
+                    EnrichmentVoterRecord.party_affiliation,
+                )
+                .filter(EnrichmentVoterRecord.asid.in_(asids))
+                .all()
+            )
 
             for row in rows:
                 for field, val in zip(voter_fields, row):
@@ -187,7 +255,10 @@ class InsightsUtils:
             for field in voter_fields:
                 setattr(insights.voter, field, dict(voter_cts[field]))
 
-        if audience_type == BusinessType.B2B or audience_type == BusinessType.ALL:
+        if (
+            audience_type == BusinessType.B2B
+            or audience_type == BusinessType.ALL
+        ):
             # 7) PROFESSIONAL PROFILE
             prof_fields = [
                 "current_job_title",
@@ -202,7 +273,22 @@ class InsightsUtils:
                 "annual_sales",
             ]
             prof_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            prof_rows = self.enrichment.professional(asids)
+            prof_rows = (
+                db_session.query(
+                    EnrichmentProfessionalProfile.current_job_title,
+                    EnrichmentProfessionalProfile.current_company_name,
+                    EnrichmentProfessionalProfile.job_start_date,
+                    EnrichmentProfessionalProfile.job_duration,
+                    EnrichmentProfessionalProfile.job_location,
+                    EnrichmentProfessionalProfile.job_level,
+                    EnrichmentProfessionalProfile.department,
+                    EnrichmentProfessionalProfile.company_size,
+                    EnrichmentProfessionalProfile.primary_industry,
+                    EnrichmentProfessionalProfile.annual_sales,
+                )
+                .filter(EnrichmentProfessionalProfile.asid.in_(asids))
+                .all()
+            )
 
             for row in prof_rows:
                 for field, val in zip(prof_fields, row):
@@ -214,7 +300,9 @@ class InsightsUtils:
                     prof_cts[field][key] += 1
 
             for field in prof_fields:
-                setattr(insights.professional_profile, field, dict(prof_cts[field]))
+                setattr(
+                    insights.professional_profile, field, dict(prof_cts[field])
+                )
 
             # 8) EMPLOYMENT HISTORY
             emp_fields = [
@@ -227,7 +315,19 @@ class InsightsUtils:
                 "job_description",
             ]
             emp_cts: defaultdict[str, Counter] = defaultdict(Counter)
-            emp_rows = self.enrichment.employment(asids)
+            emp_rows = (
+                db_session.query(
+                    EnrichmentEmploymentHistory.job_title,
+                    EnrichmentEmploymentHistory.company_name,
+                    EnrichmentEmploymentHistory.start_date,
+                    EnrichmentEmploymentHistory.end_date,
+                    EnrichmentEmploymentHistory.is_current,
+                    EnrichmentEmploymentHistory.location,
+                    EnrichmentEmploymentHistory.job_description,
+                )
+                .filter(EnrichmentEmploymentHistory.asid.in_(asids))
+                .all()
+            )
 
             for row in emp_rows:
                 for field, val in zip(emp_fields, row):
@@ -239,36 +339,56 @@ class InsightsUtils:
                     emp_cts[field][key] += 1
 
             for field in emp_fields:
-                setattr(insights.employment_history, field, dict(emp_cts[field]))
+                setattr(
+                    insights.employment_history, field, dict(emp_cts[field])
+                )
 
         return insights
 
+    @staticmethod
     def process_insights(
-        self,
-        source_id: UUID,
+        source_id: str,
+        db_session: Session,
         audience_type: BusinessType = BusinessType.ALL,
     ) -> "InsightsByCategory":
-        self.db.commit()
-        with self.db.begin():
+        db_session.commit()
+        with db_session.begin():
             try:
-                source_row = self.sources.get_by_id_for_update(source_id)
+                source_row = (
+                    db_session.query(AudienceSource)
+                    .filter(AudienceSource.id == source_id)
+                    .with_for_update()
+                    .one()
+                )
             except NoResultFound:
                 source_row.matched_records_status = "complete"
                 return InsightsByCategory()
 
-            user_ids = [uid for (uid,) in self.matched_persons.by_source_id(source_id)]
+            user_ids = [
+                uid
+                for (uid,) in db_session.query(
+                    AudienceSourcesMatchedPerson.enrichment_user_id
+                )
+                .filter(AudienceSourcesMatchedPerson.source_id == source_id)
+                .all()
+            ]
             if not user_ids:
                 source_row.matched_records_status = "complete"
                 return InsightsByCategory()
 
-            asids = [asid for (asid,) in self.enrichment.users(user_ids)]
+            asids = [
+                asid
+                for (asid,) in db_session.query(EnrichmentUser.asid)
+                .filter(EnrichmentUser.id.in_(user_ids))
+                .all()
+            ]
             if not asids:
                 source_row.matched_records_status = "complete"
                 return InsightsByCategory()
 
             new_insights = InsightsByCategory()
-            new_insights = self.process_insights_for_asids(
-                new_insights, asids, audience_type
+            new_insights = InsightsUtils.process_insights_for_asids(
+                new_insights, asids, db_session, audience_type
             )
 
             merged = InsightsUtils.merge_insights_json(
@@ -278,21 +398,31 @@ class InsightsUtils:
             source_row.matched_records_status = "complete"
         return new_insights
 
+    @staticmethod
     def compute_insights_for_lookalike(
-        self,
-        lookalike_id: UUID,
+        lookalike_id: uuid.UUID, db_session: Session
     ) -> InsightsByCategory:
         insights = InsightsByCategory()
         user_ids = [
-            uid for (uid,) in self.audience_persons.by_lookalike_id(lookalike_id)
+            uid
+            for (uid,) in db_session.query(
+                AudienceLookalikesPerson.enrichment_user_id
+            )
+            .filter(AudienceLookalikesPerson.lookalike_id == lookalike_id)
+            .all()
         ]
         if not user_ids:
             return insights
 
-        asids = [asid for (asid,) in self.enrichment.users(user_ids)]
+        asids = [
+            asid
+            for (asid,) in db_session.query(EnrichmentUser.asid)
+            .filter(EnrichmentUser.id.in_(user_ids))
+            .all()
+        ]
 
-        return self.process_insights_for_asids(
-            insights, asids, audience_type=BusinessType.ALL
+        return InsightsUtils.process_insights_for_asids(
+            insights, asids, db_session, audience_type=BusinessType.ALL
         )
 
     @staticmethod
@@ -310,7 +440,9 @@ class InsightsUtils:
                 new_bucket = new_metrics.get(metric, {}) or {}
                 merged_bucket: Dict[str, int] = {}
                 for key in set(old_bucket) | set(new_bucket):
-                    merged_bucket[key] = old_bucket.get(key, 0) + new_bucket.get(key, 0)
+                    merged_bucket[key] = old_bucket.get(
+                        key, 0
+                    ) + new_bucket.get(key, 0)
                 merged_metrics[metric] = merged_bucket
             merged[category] = merged_metrics
         return merged

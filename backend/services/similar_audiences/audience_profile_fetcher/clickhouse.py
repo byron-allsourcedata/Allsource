@@ -23,7 +23,10 @@ from services.similar_audiences.column_selector import AudienceColumnSelector
 @injectable
 class ClickhouseProfileFetcher(ProfileFetcherInterface):
     def __init__(
-        self, db: Db, clickhouse: Clickhouse, column_selector: AudienceColumnSelector
+        self,
+        db: Db,
+        clickhouse: Clickhouse,
+        column_selector: AudienceColumnSelector,
     ):
         self.db = db
         self.clickhouse = clickhouse
@@ -35,7 +38,9 @@ class ClickhouseProfileFetcher(ProfileFetcherInterface):
         columns = ", ".join(selected_columns)
         self.clickhouse.command("SET max_query_size = 10485760")
 
-        query = f"SELECT {columns} FROM enrichment_users WHERE asid IN %(asids)s"
+        query = (
+            f"SELECT {columns} FROM enrichment_users WHERE asid IN %(asids)s"
+        )
         result = self.clickhouse.query(query, parameters={"asids": asids})
 
         result = self.parse_clickhouse_result(result)
@@ -62,7 +67,9 @@ class ClickhouseProfileFetcher(ProfileFetcherInterface):
             audience_lookalike.significant_fields
         )
 
-        users = self.get_value_and_user_asids(self.db, audience_lookalike.source_uuid)
+        users = self.get_value_and_user_asids(
+            self.db, audience_lookalike.source_uuid
+        )
 
         customer_values = [customer[0] for customer in users]
         asids = [user[1] for user in users]
@@ -76,7 +83,9 @@ class ClickhouseProfileFetcher(ProfileFetcherInterface):
 
         return profiles
 
-    def parse_clickhouse_result(self, clickhouse_result: QueryResult) -> List[dict]:
+    def parse_clickhouse_result(
+        self, clickhouse_result: QueryResult
+    ) -> List[dict]:
         column_names = clickhouse_result.column_names
         rows = clickhouse_result.result_rows
         return [dict(zip(column_names, row)) for row in rows]
@@ -90,10 +99,14 @@ class ClickhouseProfileFetcher(ProfileFetcherInterface):
     ) -> List[Dict]:
         select_cols = column_selector.cols(audience_lookalike)
 
-        asids = self.get_value_and_user_asids(db, audience_lookalike.source_uuid)
+        asids = self.get_value_and_user_asids(
+            db, audience_lookalike.source_uuid
+        )
 
         columns = ", ".join(select_cols)
-        query = f"SELECT {columns} FROM enrichment_users WHERE asid IN %(asids)s"
+        query = (
+            f"SELECT {columns} FROM enrichment_users WHERE asid IN %(asids)s"
+        )
         result = clickhouse.query(query, parameters={"asids": asids})
 
         return self.parse_clickhouse_result(result)
@@ -103,7 +116,9 @@ class ClickhouseProfileFetcher(ProfileFetcherInterface):
     ) -> List[Tuple[Decimal, UUID]]:
         query = (
             select(
-                AudienceSourcesMatchedPerson.value_score.label("customer_value"),
+                AudienceSourcesMatchedPerson.value_score.label(
+                    "customer_value"
+                ),
                 EnrichmentUser.asid,
             )
             .select_from(AudienceSource)
@@ -113,7 +128,8 @@ class ClickhouseProfileFetcher(ProfileFetcherInterface):
             )
             .join(
                 EnrichmentUser,
-                EnrichmentUser.id == AudienceSourcesMatchedPerson.enrichment_user_id,
+                EnrichmentUser.id
+                == AudienceSourcesMatchedPerson.enrichment_user_id,
             )
             .where(AudienceSource.id == source_id)
         )

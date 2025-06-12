@@ -23,7 +23,7 @@ from enums import (
     SourcePlatformEnum,
     NotificationTitles,
 )
-from models.data_sync_imported_leads import DataSyncImportedLeads
+from models.data_sync_imported_leads import DataSyncImportedLead
 from models.leads_users import LeadUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
@@ -32,7 +32,9 @@ from sqlalchemy.orm import sessionmaker, Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from dependencies import (
     IntegrationsPresistence,
     LeadsPersistence,
@@ -66,34 +68,23 @@ def setup_logging(level):
 
 
 def check_correct_data_sync(
-    five_x_five_up_id: str,
-    lead_users_id: int,
-    data_sync_imported_id: int,
-    session: Session,
+    data_sync_imported_ids: list[int], session: Session
 ):
-    data_sync_imported_lead = (
-        session.query(DataSyncImportedLeads)
-        .filter(DataSyncImportedLeads.id == data_sync_imported_id)
-        .first()
-    )
-    if not data_sync_imported_lead:
-        return False
-
-    if data_sync_imported_lead.status != DataSyncImportedStatus.SENT.value:
-        return False
-
-    if (
-        data_sync_imported_lead.five_x_five_up_id != five_x_five_up_id
-        or data_sync_imported_lead.lead_users_id != lead_users_id
-    ):
-        return False
-
-    return True
-
-
-def get_lead_attributes(session, lead_users_id, data_sync_id):
     result = (
-        session.query(LeadUser, FiveXFiveUser, UserIntegration, IntegrationUserSync)
+        session.query(DataSyncImportedLead.lead_users_id)
+        .filter(
+            DataSyncImportedLead.id.in_(data_sync_imported_ids),
+            DataSyncImportedLead.status == DataSyncImportedStatus.SENT.value,
+        )
+        .all()
+    )
+    return [row.lead_users_id for row in result]
+
+
+def get_lead_attributes(session, lead_user_ids, data_sync_id):
+    result = (
+        session.query(FiveXFiveUser, UserIntegration, IntegrationUserSync)
+        .select_from(LeadUser)
         .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
         .join(
             UserIntegration,
@@ -106,15 +97,21 @@ def get_lead_attributes(session, lead_users_id, data_sync_id):
             IntegrationUserSync,
             IntegrationUserSync.integration_id == UserIntegration.id,
         )
-        .filter(LeadUser.id == lead_users_id, IntegrationUserSync.id == data_sync_id)
-        .first()
+        .filter(
+            LeadUser.id.in_(lead_user_ids),
+            IntegrationUserSync.id == data_sync_id,
+        )
+        .all()
     )
 
     if result:
-        lead, five_x_five_user, user_integration, data_sync = result
-        return lead, five_x_five_user, user_integration, data_sync
+        leads = [row[0] for row in result]
+        user_integration = result[0][1]
+        data_sync = result[0][2]
+
+        return leads, user_integration, data_sync
     else:
-        return None, None, None, None
+        return None, None, None
 
 
 def update_users_integrations(
@@ -175,14 +172,14 @@ def update_users_integrations(
 def update_data_sync_imported_leads(
     session,
     status,
-    data_sync_imported_id,
+    data_sync_imported_ids,
     integration_data_sync: IntegrationUserSync,
     user_integration: UserIntegration,
 ):
-    session.query(DataSyncImportedLeads).filter(
-        DataSyncImportedLeads.id == data_sync_imported_id
-    ).update({"status": status})
+    updates = [{"id": _id, "status": status} for _id in data_sync_imported_ids]
+    session.bulk_update_mappings(DataSyncImportedLead, updates)
     session.flush()
+
     if status == ProccessDataSyncResult.SUCCESS.value:
         integration_data_sync.last_sync_date = get_utc_aware_date()
         if integration_data_sync.sync_status == False:
@@ -204,18 +201,20 @@ async def send_error_msg(
     rabbitmq_connection = RabbitMQConnection()
     connection = await rabbitmq_connection.connect()
     queue_name = f"sse_events_{str(user_id)}"
-    account_notification = notification_persistence.get_account_notification_by_title(
-        title
+    account_notification = (
+        notification_persistence.get_account_notification_by_title(title)
     )
     notification_text = account_notification.text.format(service_name)
-    notification = notification_persistence.find_account_with_notification(
+    notification = notification_persistence.find_account_notifications(
         user_id=user_id, account_notification_id=account_notification.id
     )
     if not notification:
-        save_account_notification = notification_persistence.save_account_notification(
-            user_id=user_id,
-            account_notification_id=account_notification.id,
-            params=service_name,
+        save_account_notification = (
+            notification_persistence.save_account_notification(
+                user_id=user_id,
+                account_notification_id=account_notification.id,
+                params=service_name,
+            )
         )
         try:
             await publish_rabbitmq_message(
@@ -241,16 +240,15 @@ async def ensure_integration(
     try:
         message_body = json.loads(message.body)
         service_name = message_body.get("service_name")
-        five_x_five_up_id = message_body.get("five_x_five_up_id")
-        lead_users_id = message_body.get("lead_users_id")
-        data_sync_imported_id = message_body.get("data_sync_imported_id")
+        data_sync_imported_ids = message_body.get("data_sync_imported_ids")
         data_sync_id = message_body.get("data_sync_id")
+        users_id = message_body.get("users_id")
         logging.info(f"Data sync id {data_sync_id}")
-        logging.info(f"Lead User id {lead_users_id}")
-        if not check_correct_data_sync(
-            five_x_five_up_id, lead_users_id, data_sync_imported_id, session
-        ):
-            logging.warning(f"Data sync not correct")
+        lead_user_ids = check_correct_data_sync(
+            data_sync_imported_ids=data_sync_imported_ids, session=session
+        )
+        if not lead_user_ids:
+            logging.info(f"data sync empty for {data_sync_id}")
             await message.ack()
             return
 
@@ -269,14 +267,14 @@ async def ensure_integration(
             "s3": integration_service.s3,
         }
         service = service_map.get(service_name)
-        lead_user, five_x_five_user, user_integration, integration_data_sync = (
-            get_lead_attributes(session, lead_users_id, data_sync_id)
+        leads, user_integration, integration_data_sync = get_lead_attributes(
+            session, lead_user_ids, data_sync_id
         )
         if service:
             result = None
             try:
-                result = await service.process_data_sync(
-                    five_x_five_user, user_integration, integration_data_sync, lead_user
+                result = await service.process_data_sync_lead(
+                    user_integration, integration_data_sync, leads
                 )
                 logging.info(f"Result {result}")
             except BaseException as e:
@@ -288,11 +286,15 @@ async def ensure_integration(
             match result:
                 case ProccessDataSyncResult.INCORRECT_FORMAT.value:
                     logging.debug(f"incorrect_format: {service_name}")
-                    import_status = DataSyncImportedStatus.INCORRECT_FORMAT.value
+                    import_status = (
+                        DataSyncImportedStatus.INCORRECT_FORMAT.value
+                    )
 
                 case ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value:
                     logging.debug(f"incorrect_format: {service_name}")
-                    import_status = DataSyncImportedStatus.VERIFY_EMAIL_FAILED.value
+                    import_status = (
+                        DataSyncImportedStatus.VERIFY_EMAIL_FAILED.value
+                    )
 
                 case ProccessDataSyncResult.SUCCESS.value:
                     logging.debug(f"success: {service_name}")
@@ -307,7 +309,7 @@ async def ensure_integration(
                         service_name=service_name,
                     )
                     await send_error_msg(
-                        lead_user.user_id,
+                        users_id,
                         service_name,
                         notification_persistence,
                         NotificationTitles.DATA_SYNC_ERROR.value,
@@ -322,7 +324,7 @@ async def ensure_integration(
                         service_name=service_name,
                     )
                     await send_error_msg(
-                        lead_user.user_id,
+                        users_id,
                         service_name,
                         notification_persistence,
                         NotificationTitles.TOO_MANY_REQUESTS.value,
@@ -337,7 +339,7 @@ async def ensure_integration(
                         service_name=service_name,
                     )
                     await send_error_msg(
-                        lead_user.user_id,
+                        users_id,
                         service_name,
                         notification_persistence,
                         NotificationTitles.QUOTA_EXHAUSTED.value,
@@ -353,7 +355,7 @@ async def ensure_integration(
                         integration_data_sync.integration_id,
                     )
                     await send_error_msg(
-                        lead_user.user_id,
+                        users_id,
                         service_name,
                         notification_persistence,
                         NotificationTitles.AUTHENTICATION_INTEGRATION_FAILED.value,
@@ -363,7 +365,7 @@ async def ensure_integration(
                 update_data_sync_imported_leads(
                     session,
                     import_status,
-                    data_sync_imported_id,
+                    data_sync_imported_ids,
                     integration_data_sync,
                     user_integration,
                 )
@@ -428,7 +430,9 @@ async def main():
             lead_persistence=LeadsPersistence(session),
             audience_persistence=AudiencePersistence(session),
             lead_orders_persistence=LeadOrdersPersistence(session),
-            integrations_user_sync_persistence=IntegrationsUserSyncPersistence(session),
+            integrations_user_sync_persistence=IntegrationsUserSyncPersistence(
+                session
+            ),
             aws_service=AWSService(get_s3_client()),
             domain_persistence=UserDomainsPersistence(session),
             suppression_persistence=SuppressionPersistence(session),

@@ -1,16 +1,28 @@
 import logging
+
+from models import UserIntegration, IntegrationUserSync
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
 from schemas.integrations.klaviyo import *
 from fastapi import HTTPException
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from utils import extract_first_email
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import (
+    IntegrationsStatus,
+    SourcePlatformEnum,
+    ProccessDataSyncResult,
+    IntegrationLimit,
+    DataSyncType,
+)
 import httpx
 import json
 from utils import format_phone_number
@@ -99,6 +111,7 @@ class KlaviyoIntegrationsService:
             "access_token": api_key,
             "full_name": user.get("full_name"),
             "service_name": SourcePlatformEnum.KLAVIYO.value,
+            "limit": IntegrationLimit.KLAVIYO.value,
         }
 
         if common_integration:
@@ -106,7 +119,9 @@ class KlaviyoIntegrationsService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integrations_persisntece.create_integration(
+            integration_data
+        )
 
         if not integartion:
             raise HTTPException(
@@ -138,11 +153,15 @@ class KlaviyoIntegrationsService:
             credential.is_failed = True
             self.integrations_persisntece.db.commit()
             return
-        return [self.__mapped_list(list) for list in response.json().get("data")]
+        return [
+            self.__mapped_list(list) for list in response.json().get("data")
+        ]
 
     def __get_tags(self, access_token: str, credential):
         response = self.__handle_request(
-            method="GET", url="https://a.klaviyo.com/api/tags/", api_key=access_token
+            method="GET",
+            url="https://a.klaviyo.com/api/tags/",
+            api_key=access_token,
         )
         if response.status_code == 401 and credential:
             credential.error_message = "Invalid API KEY"
@@ -240,25 +259,33 @@ class KlaviyoIntegrationsService:
             return True
         return False
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         try:
             if self.test_api_key(credentials.klaviyo.api_key) == False:
                 raise HTTPException(
-                    status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value
+                    status_code=400,
+                    detail=IntegrationsStatus.CREDENTAILS_INVALID.value,
                 )
         except:
             raise HTTPException(
-                status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value
+                status_code=400,
+                detail=IntegrationsStatus.CREDENTAILS_INVALID.value,
             )
         integartions = self.__save_integrations(
-            credentials.klaviyo.api_key, None if domain is None else domain.id, user
+            credentials.klaviyo.api_key,
+            None if domain is None else domain.id,
+            user,
         )
         return {
             "integartions": integartions,
             "status": IntegrationsStatus.SUCCESS.value,
         }
 
-    def create_tag_relationships_lists(self, tags_id: str, list_id: str, api_key: str):
+    def create_tag_relationships_lists(
+        self, tags_id: str, list_id: str, api_key: str
+    ):
         self.__handle_request(
             method="POST",
             url=f"https://a.klaviyo.com/api/tags/{tags_id}/relationships/lists/",
@@ -266,7 +293,9 @@ class KlaviyoIntegrationsService:
             api_key=api_key,
         )
 
-    def update_tag_relationships_lists(self, tags_id: str, list_id: str, api_key: str):
+    def update_tag_relationships_lists(
+        self, tags_id: str, list_id: str, api_key: str
+    ):
         self.__handle_request(
             method="PUT",
             url=f"https://a.klaviyo.com/api/tags/{tags_id}/relationships/lists/",
@@ -285,13 +314,17 @@ class KlaviyoIntegrationsService:
         tags_id: str = None,
         data_map: List[DataMap] = [],
     ):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get("id"))
+        credentials = self.get_credentials(
+            domain_id=domain_id, user_id=user.get("id")
+        )
         sync = self.sync_persistence.create_sync(
             {
                 "integration_id": credentials.id,
                 "list_id": list_id,
                 "list_name": list_name,
                 "domain_id": domain_id,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "leads_type": leads_type,
                 "data_map": data_map,
                 "created_by": created_by,
@@ -299,34 +332,80 @@ class KlaviyoIntegrationsService:
         )
         if tags_id:
             self.create_tag_relationships_lists(
-                tags_id=tags_id, list_id=list_id, api_key=credentials.access_token
+                tags_id=tags_id,
+                list_id=list_id,
+                api_key=credentials.access_token,
             )
 
-    async def process_data_sync(
-        self, five_x_five_user, user_integration, data_sync, lead_user
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
     ):
-        data_map = data_sync.data_map if data_sync.data_map else None
-        profile = self.__create_profile(
-            five_x_five_user, user_integration.access_token, data_map
-        )
-        if profile in (
-            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return profile
+        for five_x_five_user in five_x_five_users:
+            profile = self.__create_profile(
+                five_x_five_user,
+                user_integration.access_token,
+                integration_data_sync.data_map,
+            )
+            if profile in (
+                ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                continue
 
-        list_response = self.__add_profile_to_list(
-            data_sync.list_id,
-            profile["id"],
-            user_integration.access_token,
-            profile["email"],
-            profile["phone_number"],
-        )
-        if list_response.status_code == 404:
-            return ProccessDataSyncResult.LIST_NOT_EXISTS.value
+            list_response = self.__add_profile_to_list(
+                integration_data_sync.list_id,
+                profile["id"],
+                user_integration.access_token,
+                profile["email"],
+                profile["phone_number"],
+            )
+            if list_response.status_code == 404:
+                return ProccessDataSyncResult.LIST_NOT_EXISTS.value
 
         return ProccessDataSyncResult.SUCCESS.value
+
+    def is_supported_region(self, phone_number: str) -> bool:
+        return phone_number.startswith("+1")
+
+    def build_bulk_profiles(self, five_x_five_users: List[FiveXFiveUser]):
+        profiles = []
+        for user in five_x_five_users:
+            profile = self.__mapped_klaviyo_profile(user)
+            if profile in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                continue
+
+            phone_number = validate_and_format_phone(profile.phone_number)
+            phone_number = (
+                phone_number.split(", ")[-1] if phone_number else None
+            )
+            json_data = {
+                "type": "profile",
+                "attributes": {
+                    "email": profile.email,
+                    "phone_number": phone_number,
+                    "first_name": profile.first_name or None,
+                    "last_name": profile.last_name or None,
+                    "organization": profile.organization or None,
+                    "location": profile.location or None,
+                    "title": profile.title or None,
+                    # "properties": properties,
+                },
+            }
+            json_data["attributes"] = {
+                k: v
+                for k, v in json_data["attributes"].items()
+                if v is not None
+            }
+
+            profiles.append(json_data)
+        return profiles
 
     def get_count_profiles(self, list_id: str, api_key: str):
         url = f"https://a.klaviyo.com/api/lists/{list_id}?additional-fields[list]=profile_count"
@@ -337,7 +416,11 @@ class KlaviyoIntegrationsService:
         )
         if response.status_code == 200:
             data = response.json()
-            return data.get("data", {}).get("attributes", {}).get("profile_count", 0)
+            return (
+                data.get("data", {})
+                .get("attributes", {})
+                .get("profile_count", 0)
+            )
 
         if response.status_code == 404:
             return ProccessDataSyncResult.LIST_NOT_EXISTS.value
@@ -379,7 +462,9 @@ class KlaviyoIntegrationsService:
             }
         }
         json_data["data"]["attributes"] = {
-            k: v for k, v in json_data["data"]["attributes"].items() if v is not None
+            k: v
+            for k, v in json_data["data"]["attributes"].items()
+            if v is not None
         }
         email = profile.email
         check_response = self.__handle_request(
@@ -388,7 +473,9 @@ class KlaviyoIntegrationsService:
             api_key=api_key,
         )
 
-        if check_response.status_code == 200 and check_response.json().get("data"):
+        if check_response.status_code == 200 and check_response.json().get(
+            "data"
+        ):
             profile_id = check_response.json()["data"][0]["id"]
             json_data["data"]["id"] = profile_id
             response = self.__handle_request(
@@ -492,19 +579,24 @@ class KlaviyoIntegrationsService:
         credential = self.get_credentials(domain_id, user.get("id"))
         if not credential:
             raise HTTPException(
-                status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value
+                status_code=403,
+                detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value,
             )
         credential.suppression = suppression
         self.integrations_persisntece.db.commit()
         return {"message": "successfuly"}
 
     def get_profile(
-        self, domain_id: int, fields: List[ContactFiled], date_last_sync: str = None
+        self,
+        domain_id: int,
+        fields: List[ContactFiled],
+        date_last_sync: str = None,
     ) -> List[ContactSuppression]:
         credentials = self.get_credentials(domain_id)
         if not credentials:
             raise HTTPException(
-                status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value
+                status_code=403,
+                detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value,
             )
         params = {
             "fields[profile]": ",".join(fields),
@@ -520,7 +612,9 @@ class KlaviyoIntegrationsService:
         if response.status_code != 200:
             raise HTTPException(
                 status_code=400,
-                detail={"status": "Profiles from Klaviyo could not be retrieved"},
+                detail={
+                    "status": "Profiles from Klaviyo could not be retrieved"
+                },
             )
         return [
             self.__mapped_profile_from_klaviyo(profile)
@@ -562,15 +656,19 @@ class KlaviyoIntegrationsService:
                             and field == "personal_emails"
                             and five_x_five_user.personal_emails_last_seen
                         ):
-                            personal_emails_last_seen_str = (
-                                five_x_five_user.personal_emails_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
+                                "%Y-%m-%d %H:%M:%S"
                             )
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
+                            if (
+                                personal_emails_last_seen_str
+                                > thirty_days_ago_str
+                            ):
                                 return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(
-                            email=e.strip()
+                        if (
+                            e
+                            and self.million_verifier_integrations.is_email_verify(
+                                email=e.strip()
+                            )
                         ):
                             return e.strip()
                         verity += 1
@@ -644,7 +742,9 @@ class KlaviyoIntegrationsService:
         return properties
 
     def __mapped_tags(self, tag: dict):
-        return KlaviyoTags(id=tag.get("id"), tag_name=tag.get("attributes").get("name"))
+        return KlaviyoTags(
+            id=tag.get("id"), tag_name=tag.get("attributes").get("name")
+        )
 
     def __mapped_tags_json_to_klaviyo(self, tag_name: str):
         return {"data": {"type": "tag", "attributes": {"name": tag_name}}}

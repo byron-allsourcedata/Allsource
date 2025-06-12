@@ -3,12 +3,16 @@ import re
 import os
 import hashlib
 import json
+from typing import Optional, Any
+
 import regex
 from urllib.parse import urlparse, parse_qs
 import logging
 from enums import ProccessDataSyncResult
 from models.five_x_five_users import FiveXFiveUser
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from config.rmq_connection import publish_rabbitmq_message_with_channel
 
 logger = logging.getLogger(__name__)
@@ -50,19 +54,33 @@ def get_valid_email(
         if email:
             emails = extract_first_email(email)
             for e in emails:
-                if e and field == "business_email" and user.business_email_last_seen:
+                if (
+                    e
+                    and field == "business_email"
+                    and user.business_email_last_seen
+                ):
                     if (
-                        user.business_email_last_seen.strftime("%Y-%m-%d %H:%M:%S")
+                        user.business_email_last_seen.strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
                         > thirty_days_ago_str
                     ):
                         return e.strip()
-                if e and field == "personal_emails" and user.personal_emails_last_seen:
+                if (
+                    e
+                    and field == "personal_emails"
+                    and user.personal_emails_last_seen
+                ):
                     personal_emails_last_seen_str = (
-                        user.personal_emails_last_seen.strftime("%Y-%m-%d %H:%M:%S")
+                        user.personal_emails_last_seen.strftime(
+                            "%Y-%m-%d %H:%M:%S"
+                        )
                     )
                     if personal_emails_last_seen_str > thirty_days_ago_str:
                         return e.strip()
-                if e and million_verifier_integrations.is_email_verify(email=e.strip()):
+                if e and million_verifier_integrations.is_email_verify(
+                    email=e.strip()
+                ):
                     return e.strip()
                 verity += 1
     if verity > 0:
@@ -115,7 +133,7 @@ def create_company_alias(company_name):
         return alias
 
 
-def validate_and_format_phone(phone_numbers: str) -> str:
+def validate_and_format_phone(phone_numbers: str) -> str | None:
     if not phone_numbers:
         return None
 
@@ -128,14 +146,40 @@ def validate_and_format_phone(phone_numbers: str) -> str:
         if len(cleaned_phone_number) == 10:
             formatted_phone_number = "+1" + cleaned_phone_number
             formatted_numbers.append(formatted_phone_number)
-        elif len(cleaned_phone_number) == 11 and cleaned_phone_number.startswith("1"):
+        elif len(
+            cleaned_phone_number
+        ) == 11 and cleaned_phone_number.startswith("1"):
             formatted_phone_number = "+" + cleaned_phone_number
             formatted_numbers.append(formatted_phone_number)
         else:
             continue
 
     unique_numbers = sorted(set(formatted_numbers))
-    return ", ".join(unique_numbers) if unique_numbers else None
+    if unique_numbers:
+        return ", ".join(unique_numbers)
+    else:
+        return None
+
+
+def get_valid_location(
+    user: FiveXFiveUser,
+) -> tuple[Any | None, Any | None, Any | None, Any | None]:
+    return (
+        getattr(user, "personal_address")
+        or getattr(user, "company_address", None),
+        getattr(user, "personal_city") or getattr(user, "company_city", None),
+        getattr(user, "personal_state") or getattr(user, "company_state", None),
+        getattr(user, "personal_zip") or getattr(user, "company_zip", None),
+    )
+
+
+def get_valid_phone(user: FiveXFiveUser) -> Optional[str]:
+    return (
+        getattr(user, "mobile_phone")
+        or getattr(user, "personal_phone")
+        or getattr(user, "direct_number")
+        or getattr(user, "company_phone", None)
+    )
 
 
 def get_url_params_list(url: str) -> str:
@@ -197,7 +241,10 @@ async def send_sse(channel, user_id: int, data: dict):
         await publish_rabbitmq_message_with_channel(
             channel=channel,
             queue_name=f"sse_events_{str(user_id)}",
-            message_body={"status": "AUDIENCE_VALIDATION_PROGRESS", "data": data},
+            message_body={
+                "status": "AUDIENCE_VALIDATION_PROGRESS",
+                "data": data,
+            },
         )
     except Exception as e:
         logging.error(f"Error sending SSE: {e}")

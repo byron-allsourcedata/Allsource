@@ -7,6 +7,7 @@ from persistence.referral_user import ReferralUserPersistence
 from dotenv import load_dotenv
 from encryption_utils import encrypt_data
 from persistence.user_persistence import UserPersistence
+from resolver import injectable
 from services.jwt_service import create_access_token
 from services.stripe_service import StripeService
 from persistence.referral_payouts import ReferralPayoutsPersistence
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 
+@injectable
 class ReferralService:
     def __init__(
         self,
@@ -46,13 +48,17 @@ class ReferralService:
 
         email = account.get("email")
         currently_due = account.get("requirements", {}).get("currently_due", [])
-        can_transfer = account.get("capabilities", {}).get("transfers", "") == "active"
+        can_transfer = (
+            account.get("capabilities", {}).get("transfers", "") == "active"
+        )
 
         if can_transfer and not user.get("is_stripe_connect"):
             self.user_persistence.confirm_stripe_connect(user.get("id"))
 
             return {
-                "connected_stripe_account_id": user.get("connected_stripe_account_id"),
+                "connected_stripe_account_id": user.get(
+                    "connected_stripe_account_id"
+                ),
                 "is_stripe_connected": True,
                 "stripe_connected_email": user.get("stripe_connected_email"),
             }
@@ -62,13 +68,17 @@ class ReferralService:
                 user_id=user.get("id"), email=email, currently_due=currently_due
             )
             return {
-                "connected_stripe_account_id": user.get("connected_stripe_account_id"),
+                "connected_stripe_account_id": user.get(
+                    "connected_stripe_account_id"
+                ),
                 "is_stripe_connected": user.get("is_stripe_connected"),
                 "stripe_connected_email": email,
                 "stripe_connected_currently_due": currently_due,
             }
         return {
-            "connected_stripe_account_id": user.get("connected_stripe_account_id"),
+            "connected_stripe_account_id": user.get(
+                "connected_stripe_account_id"
+            ),
             "is_stripe_connected": user.get("is_stripe_connected"),
             "stripe_connected_email": user.get("stripe_connected_email"),
             "stripe_connected_currently_due": user.get(
@@ -76,7 +86,9 @@ class ReferralService:
             ),
         }
 
-    def get_referral_discount_code_by_id(self, discount_code_id: int, user: dict):
+    def get_referral_discount_code_by_id(
+        self, discount_code_id: int, user: dict
+    ):
         if user.get("partner_is_active") is False:
             return {"discount_codes": None, "referral_code": None}
 
@@ -84,10 +96,19 @@ class ReferralService:
             discount_code_id
         )
 
-        return {"referral_code": encrypt_data(f"{user.get('id')}:{discount_code.id}")}
+        return {
+            "referral_code": encrypt_data(
+                f"{user.get('id')}:{discount_code.id}"
+            )
+        }
 
     def create_referral_payouts(
-        self, reward_amount, user_id, referral_parent_id, reward_type, plan_amount
+        self,
+        reward_amount,
+        user_id,
+        referral_parent_id,
+        reward_type,
+        plan_amount,
     ):
         self.referral_payouts_persistence.create_referral_payouts(
             reward_amount, user_id, referral_parent_id, reward_type, plan_amount
@@ -105,7 +126,9 @@ class ReferralService:
             }
 
         if discount_codes:
-            formatted_discount_codes = [code.to_dict() for code in discount_codes]
+            formatted_discount_codes = [
+                code.to_dict() for code in discount_codes
+            ]
 
         return {
             "discount_codes": formatted_discount_codes,
@@ -124,7 +147,9 @@ class ReferralService:
         monthly_info = []
 
         for month_year, month_payouts in grouped_by_month.items():
-            total_rewards = sum(payout.reward_amount for payout in month_payouts)
+            total_rewards = sum(
+                payout.reward_amount for payout in month_payouts
+            )
             rewards_paid = sum(
                 payout.reward_amount
                 for payout in month_payouts

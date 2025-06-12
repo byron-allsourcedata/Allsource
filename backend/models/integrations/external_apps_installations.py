@@ -19,7 +19,11 @@ class ExternalAppsInstall(Base):
     __tablename__ = "external_apps_installations"
     __table_args__ = (
         Index("external_apps_install_platform_idx", "platform", "store_hash"),
-        Index("external_apps_installations_store_hash_idx", "store_hash", unique=True),
+        Index(
+            "external_apps_installations_store_hash_idx",
+            "store_hash",
+            unique=True,
+        ),
     )
 
     id = Column(

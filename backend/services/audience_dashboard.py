@@ -8,13 +8,15 @@ logger = logging.getLogger(__name__)
 
 
 class DashboardAudienceService:
-    def __init__(self, dashboard_audience_persistence: DashboardAudiencePersistence):
+    def __init__(
+        self, dashboard_audience_persistence: DashboardAudiencePersistence
+    ):
         self.dashboard_persistence = dashboard_audience_persistence
         self.LIMIT = 5
 
     def get_sources_overview(self, user):
-        sources, count_domains = self.dashboard_persistence.get_sources_overview(
-            user.get("id")
+        sources, count_domains = (
+            self.dashboard_persistence.get_sources_overview(user.get("id"))
         )
         sources_list = [
             {
@@ -37,13 +39,12 @@ class DashboardAudienceService:
         }
 
     def get_contacts_for_pixel_contacts_statistics(self, *, user: dict):
-        user_id = user.get("id")
-        user_domains = self.dashboard_persistence.get_user_domains(user_id=user_id)
-
         results = self.dashboard_persistence.get_contacts_for_pixel_contacts_statistics(
-            user_id=user_id
+            user_id=user.get("id")
         )
-
+        domains = self.dashboard_persistence.get_user_domains(
+            user_id=user.get("id")
+        )
         daily_data = {
             domain: {
                 "total_leads": 0,
@@ -52,7 +53,7 @@ class DashboardAudienceService:
                 "abandoned_cart": 0,
                 "converted_sale": 0,
             }
-            for domain in user_domains
+            for domain in domains
         }
 
         for domain, behavior_type, count_converted_sales, lead_count in results:
@@ -72,7 +73,9 @@ class DashboardAudienceService:
 
         return result_array
 
-    def get_audience_dashboard_data(self, *, from_date: int, to_date: int, user: dict):
+    def get_audience_dashboard_data(
+        self, *, from_date: int, to_date: int, user: dict
+    ):
         total_counts = {}
         dashboard_audience_data = (
             self.dashboard_persistence.get_dashboard_audience_data(
@@ -99,7 +102,9 @@ class DashboardAudienceService:
                 elif hasattr(row, "_asdict"):
                     row_dict = row._asdict()
                 else:
-                    row_dict = {field: getattr(row, field, None) for field in fields}
+                    row_dict = {
+                        field: getattr(row, field, None) for field in fields
+                    }
 
                 filtered_data = {field: row_dict.get(field) for field in fields}
                 filtered_data["type"] = data_type
@@ -289,11 +294,15 @@ class DashboardAudienceService:
         return {
             "short_info": {
                 "sources": self.merge_data_with_chain(last_sources, "sources"),
-                "lookalikes": self.merge_data_with_chain(last_lookalikes, "lookalikes"),
+                "lookalikes": self.merge_data_with_chain(
+                    last_lookalikes, "lookalikes"
+                ),
                 "smart_audiences": self.merge_data_with_chain(
                     last_audience_smart, "smart_audiences"
                 ),
-                "data_sync": self.merge_data_with_chain(data_sync_dicts, "data_sync"),
+                "data_sync": self.merge_data_with_chain(
+                    data_sync_dicts, "data_sync"
+                ),
             },
             "full_info": {
                 "sources": last_sources,
@@ -311,13 +320,11 @@ class DashboardAudienceService:
         from_date: Optional[int] = None,
         to_date: Optional[int] = None,
     ) -> dict:
-        results = (
-            self.dashboard_persistence.get_contacts_for_pixel_contacts_by_domain_id(
-                user_id=user.get("id"),
-                domain_id=domain_id,
-                from_date=from_date,
-                to_date=to_date,
-            )
+        results = self.dashboard_persistence.get_contacts_for_pixel_contacts_by_domain_id(
+            user_id=user.get("id"),
+            domain_id=domain_id,
+            from_date=from_date,
+            to_date=to_date,
         )
         daily_data = defaultdict(
             lambda: {

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, VARCHAR, Index, BigInteger, Sequence, String
+from sqlalchemy import Column, Index, BigInteger, Sequence, String
 
 from .base import Base
 
@@ -15,6 +15,9 @@ class FiveXFiveNames(Base):
     )
 
     id = Column(
-        BigInteger, Sequence("5x5_names_id_seq"), primary_key=True, nullable=False
+        BigInteger,
+        Sequence("5x5_names_id_seq"),
+        primary_key=True,
+        nullable=False,
     )
     name = Column(String(64), nullable=True)

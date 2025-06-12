@@ -2,11 +2,17 @@ import os
 import logging
 from bingads import ServiceClient, AuthorizationData, OAuthWebAuthCodeGrant
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from persistence.domains import UserDomainsPersistence
-from bingads.v13.bulk.entities.audiences import BulkCampaignCustomerListAssociation
+from bingads.v13.bulk.entities.audiences import (
+    BulkCampaignCustomerListAssociation,
+)
 from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters
 from schemas.integrations.integrations import *
 from fastapi import HTTPException
@@ -19,6 +25,7 @@ from enums import (
     SourcePlatformEnum,
     ProccessDataSyncResult,
     IntegrationLimit,
+    DataSyncType,
 )
 import httpx
 from utils import format_phone_number
@@ -38,7 +45,7 @@ class BingAdsIntegrationsService:
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence
-        self.integrations_persisntece = integrations_persistence
+        self.integrations_persistence = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
@@ -55,7 +62,10 @@ class BingAdsIntegrationsService:
         api_key: str = None,
     ):
         if not headers:
-            headers = {"accept": "application/json", "content-type": "application/json"}
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+            }
         response = self.client.request(
             method, url, headers=headers, json=json, data=data, params=params
         )
@@ -73,7 +83,7 @@ class BingAdsIntegrationsService:
         return response
 
     def get_credentials(self, domain_id: int, user_id: int):
-        credential = self.integrations_persisntece.get_credentials_for_service(
+        credential = self.integrations_persistence.get_credentials_for_service(
             domain_id=domain_id,
             user_id=user_id,
             service_name=SourcePlatformEnum.BING_ADS.value,
@@ -86,7 +96,7 @@ class BingAdsIntegrationsService:
             credential.access_token = api_key
             credential.is_failed = False
             credential.error_message = None
-            self.integrations_persisntece.db.commit()
+            self.integrations_persistence.db.commit()
             return credential
 
         common_integration = os.getenv("COMMON_INTEGRATION") == "True"
@@ -102,7 +112,9 @@ class BingAdsIntegrationsService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integrations_persistence.create_integration(
+            integration_data
+        )
 
         if not integartion:
             raise HTTPException(
@@ -174,7 +186,9 @@ class BingAdsIntegrationsService:
             )
 
             audiences_container = response.Audiences
-            if not audiences_container or not hasattr(audiences_container, "Audience"):
+            if not audiences_container or not hasattr(
+                audiences_container, "Audience"
+            ):
                 return []
 
             audience_list = audiences_container.Audience
@@ -208,7 +222,9 @@ class BingAdsIntegrationsService:
             redirection_uri=f"{os.getenv('SITE_HOST_URL')}/bing-ads-landing",
         )
         auth.request_oauth_tokens_by_refresh_token(refresh_token)
-        return AuthorizationData(developer_token=developer_token, authentication=auth)
+        return AuthorizationData(
+            developer_token=developer_token, authentication=auth
+        )
 
     def _setup_customer_service(self, *, account_id, refresh_token):
         auth_data = self._get_authorization_data(refresh_token=refresh_token)
@@ -258,7 +274,11 @@ class BingAdsIntegrationsService:
             accounts = customer_service.SearchAccounts(
                 Predicates={
                     "Predicate": [
-                        {"Field": "UserId", "Operator": "Equals", "Value": user.Id}
+                        {
+                            "Field": "UserId",
+                            "Operator": "Equals",
+                            "Value": user.Id,
+                        }
                     ]
                 },
                 PageInfo={"Index": 0, "Size": 100},
@@ -279,7 +299,9 @@ class BingAdsIntegrationsService:
         except Exception as e:
             logger.error(f"Error getting customer info: {e}")
 
-    def get_campaigns(self, domain_id: int, customer_id: int, user_id: int) -> list:
+    def get_campaigns(
+        self, domain_id: int, customer_id: int, user_id: int
+    ) -> list:
         credentials = self.get_credentials(domain_id, user_id)
         if not credentials:
             return
@@ -312,19 +334,26 @@ class BingAdsIntegrationsService:
                 "message": str(e),
             }
 
-    def create_campaign(self, domain_id: int, user_id: int, campaign_list) -> int:
+    def create_campaign(
+        self, domain_id: int, user_id: int, campaign_list
+    ) -> int:
         credentials = self.get_credentials(domain_id, user_id)
         if not credentials:
             return
 
         campaign_service = self._setup_campaign_service(
-            account_id=campaign_list.customer_id, refresh_token=credentials.access_token
+            account_id=campaign_list.customer_id,
+            refresh_token=credentials.access_token,
         )
-        bidding_scheme = campaign_service.factory.create("EnhancedCpcBiddingScheme")
+        bidding_scheme = campaign_service.factory.create(
+            "EnhancedCpcBiddingScheme"
+        )
 
         campaign = campaign_service.factory.create("Campaign")
 
-        target_setting_detail = campaign_service.factory.create("TargetSettingDetail")
+        target_setting_detail = campaign_service.factory.create(
+            "TargetSettingDetail"
+        )
         target_setting_detail.CriterionTypeGroup = "Audience"
         target_setting_detail.TargetAndBid = True
         campaign.TargetSetting = [target_setting_detail]
@@ -344,7 +373,11 @@ class BingAdsIntegrationsService:
                 AccountId=campaign_service.authorization_data.account_id,
                 Campaigns=campaigns,
             )
-            if response and response.CampaignIds and response.CampaignIds["long"]:
+            if (
+                response
+                and response.CampaignIds
+                and response.CampaignIds["long"]
+            ):
                 return {
                     "status": IntegrationsStatus.SUCCESS.value,
                     "channel": {
@@ -365,7 +398,9 @@ class BingAdsIntegrationsService:
                                 "message": "A campaign with the same name already exists. Please choose a different name.",
                             }
                         else:
-                            raise Exception(f"Error {error.Code}: {error.Message}")
+                            raise Exception(
+                                f"Error {error.Code}: {error.Message}"
+                            )
 
         except Exception as e:
             logger.error(f"An unexpected error occurred: {e}")
@@ -374,7 +409,9 @@ class BingAdsIntegrationsService:
                 "message": str(e),
             }
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         client_id = os.getenv("AZURE_CLIENT_ID")
         client_secret = os.getenv("AZURE_CLIENT_SECRET")
         data = {
@@ -395,13 +432,17 @@ class BingAdsIntegrationsService:
             token_data = response.json()
             access_token = token_data.get("access_token")
             refresh_token = token_data.get("refresh_token")
-            integrations = self.__save_integrations(refresh_token, domain.id, user)
+            integrations = self.__save_integrations(
+                refresh_token, domain.id, user
+            )
             return {
                 "integrations": integrations,
                 "status": IntegrationsStatus.SUCCESS.value,
             }
         else:
-            raise HTTPException(status_code=400, detail="Failed to get access token")
+            raise HTTPException(
+                status_code=400, detail="Failed to get access token"
+            )
 
     def create_list(self, list, domain_id, user_id):
         credentials = self.get_credentials(domain_id, user_id)
@@ -409,7 +450,8 @@ class BingAdsIntegrationsService:
             return
         try:
             campaign_service = self._setup_campaign_service(
-                account_id=list.customer_id, refresh_token=credentials.access_token
+                account_id=list.customer_id,
+                refresh_token=credentials.access_token,
             )
             factory = campaign_service.factory
             customer_list = factory.create("CustomerList")
@@ -418,7 +460,9 @@ class BingAdsIntegrationsService:
             customer_list.MembershipDuration = 300
             customer_list.Scope = "Account"
             customer_list.Type = "CustomerList"
-            customer_list.ParentId = campaign_service.authorization_data.account_id
+            customer_list.ParentId = (
+                campaign_service.authorization_data.account_id
+            )
             audiences = factory.create("ArrayOfAudience")
             audiences.Audience = [customer_list]
             add_response = campaign_service.AddAudiences(Audiences=audiences)
@@ -436,7 +480,10 @@ class BingAdsIntegrationsService:
 
             return {
                 "status": IntegrationsStatus.SUCCESS.value,
-                "channel": {"audience_id": audience_ids[0], "audience_name": list.name},
+                "channel": {
+                    "audience_id": audience_ids[0],
+                    "audience_name": list.name,
+                },
             }
         except Exception as e:
             logger.error(f"An unexpected error occurred: {e}")
@@ -495,20 +542,31 @@ class BingAdsIntegrationsService:
             "CustomerList has been successfully added to the campaign via the Bulk API"
         )
 
+    def get_smart_credentials(self, user_id: int):
+        credential = (
+            self.integrations_persistence.get_smart_credentials_for_service(
+                user_id=user_id,
+                service_name=SourcePlatformEnum.GOOGLE_ADS.value,
+            )
+        )
+        return credential
+
     async def create_sync(
         self,
+        domain_id: int,
         customer_id: str,
         leads_type: str,
         list_id: str,
         list_name: str,
-        domain_id: int,
         created_by: str,
         user: dict,
         data_map: List[DataMap] = [],
         campaign_id: str = None,
         campaign_name: str = None,
     ):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get("id"))
+        credentials = self.get_credentials(
+            user_id=user.get("id"), domain_id=domain_id
+        )
         if campaign_id is not None:
             self.add_customer_list_to_campaign_bulk(
                 access_token=credentials.access_token,
@@ -523,9 +581,11 @@ class BingAdsIntegrationsService:
                 "integration_id": credentials.id,
                 "list_id": list_id,
                 "list_name": list_name,
-                "domain_id": domain_id,
                 "leads_type": leads_type,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "data_map": data_map,
+                "domain_id": domain_id,
                 "created_by": created_by,
                 "campaign_id": campaign_id,
                 "campaign_name": campaign_name,
@@ -582,19 +642,24 @@ class BingAdsIntegrationsService:
         credential = self.get_credentials(domain_id, user.get("id"))
         if not credential:
             raise HTTPException(
-                status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value
+                status_code=403,
+                detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value,
             )
         credential.suppression = suppression
-        self.integrations_persisntece.db.commit()
+        self.integrations_persistence.db.commit()
         return {"message": "successfuly"}
 
     def get_profile(
-        self, domain_id: int, fields: List[ContactFiled], date_last_sync: str = None
+        self,
+        domain_id: int,
+        fields: List[ContactFiled],
+        date_last_sync: str = None,
     ) -> List[ContactSuppression]:
         credentials = self.get_credentials(domain_id)
         if not credentials:
             raise HTTPException(
-                status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value
+                status_code=403,
+                detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value,
             )
         params = {
             "fields[profile]": ",".join(fields),
@@ -610,7 +675,9 @@ class BingAdsIntegrationsService:
         if response.status_code != 200:
             raise HTTPException(
                 status_code=400,
-                detail={"status": "Profiles from Klaviyo could not be retrieved"},
+                detail={
+                    "status": "Profiles from Klaviyo could not be retrieved"
+                },
             )
         return [
             self.__mapped_profile_from_klaviyo(profile)

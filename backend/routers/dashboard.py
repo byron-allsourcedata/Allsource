@@ -18,7 +18,13 @@ def get_contact(
     to_date: int = Query(
         int(
             datetime(
-                datetime.now(timezone.utc).year, 12, 31, 23, 59, 59, tzinfo=timezone.utc
+                datetime.now(timezone.utc).year,
+                12,
+                31,
+                23,
+                59,
+                59,
+                tzinfo=timezone.utc,
             ).timestamp()
         ),
         description="End date in integer format",
@@ -27,7 +33,9 @@ def get_contact(
     user=Depends(check_user_authorization),
 ):
     return dashboard_service.get_contact(
-        from_date=from_date, to_date=to_date, business_type=user.get("business_type")
+        from_date=from_date,
+        to_date=to_date,
+        business_type=user.get("business_type"),
     )
 
 

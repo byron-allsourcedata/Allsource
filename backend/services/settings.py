@@ -109,7 +109,9 @@ class SettingsService:
                 message_expiration_time = user.get("change_email_sent_at")
                 time_now = datetime.now()
                 if message_expiration_time is not None:
-                    if (message_expiration_time + timedelta(minutes=1)) > time_now:
+                    if (
+                        message_expiration_time + timedelta(minutes=1)
+                    ) > time_now:
                         return SettingStatus.RESEND_TOO_SOON
                 token_info = {
                     "id": user.get("id"),
@@ -125,7 +127,9 @@ class SettingsService:
                         "link": confirm_email_url,
                     },
                 )
-                self.settings_persistence.set_reset_email_sent_now(user.get("id"))
+                self.settings_persistence.set_reset_email_sent_now(
+                    user.get("id")
+                )
                 logger.info("Confirmation Email Sent")
 
         if account_details.change_password:
@@ -141,7 +145,9 @@ class SettingsService:
                 changes["password"] = get_password_hash(
                     account_details.change_password.new_password
                 )
-                self.settings_persistence.set_reset_password_sent_now(user.get("id"))
+                self.settings_persistence.set_reset_password_sent_now(
+                    user.get("id")
+                )
 
         if account_details.set_password:
             if account_details.set_password.new_password:
@@ -150,7 +156,9 @@ class SettingsService:
                 changes["password"] = get_password_hash(
                     account_details.set_password.new_password
                 )
-                self.settings_persistence.set_reset_password_sent_now(user.get("id"))
+                self.settings_persistence.set_reset_password_sent_now(
+                    user.get("id")
+                )
 
         if changes:
             self.settings_persistence.change_columns_data_by_userid(
@@ -215,8 +223,10 @@ class SettingsService:
 
     def get_pending_invations(self, user: dict):
         result = []
-        invations_data = self.settings_persistence.get_pending_invations_by_userid(
-            user_id=user.get("id")
+        invations_data = (
+            self.settings_persistence.get_pending_invations_by_userid(
+                user_id=user.get("id")
+            )
         )
         for invation_data in invations_data:
             team_info = {
@@ -346,11 +356,15 @@ class SettingsService:
             user_id=user_id
         )
         current_plan = self.plan_persistence.get_current_plan(user_id=user_id)
-        plan_limit_domain = user_subscription.domains_limit if user_subscription else 0
+        plan_limit_domain = (
+            user_subscription.domains_limit if user_subscription else 0
+        )
         user_limit_domain = len(self.user_domains_service.get_domains(user_id))
         subscription_details = None
         total_key = (
-            "monthly_total" if current_plan.interval == "month" else "yearly_total"
+            "monthly_total"
+            if current_plan.interval == "month"
+            else "yearly_total"
         )
         plan_name = f"{current_plan.title} {'yearly' if current_plan.interval == 'year' else ''}".strip()
         next_billing_date = None
@@ -365,7 +379,9 @@ class SettingsService:
                 billing_cycle = "Free trial"
 
             if user.get("source_platform") == "shopify":
-                next_billing_date = user_subscription.plan_end.strftime("%b %d, %Y")
+                next_billing_date = user_subscription.plan_end.strftime(
+                    "%b %d, %Y"
+                )
                 total_sum = current_plan.price
 
             subscription_details = {
@@ -376,7 +392,9 @@ class SettingsService:
                 "overage": "free" if credit_price == -1 else credit_price,
                 "next_billing_date": next_billing_date,
                 total_key: total_sum,
-                "active": True if user_subscription.status == "active" else False,
+                "active": True
+                if user_subscription.status == "active"
+                else False,
             }
         elif subscription and user_subscription:
             billing_cycle = (
@@ -417,7 +435,9 @@ class SettingsService:
                     if discount_amount:
                         final_amount = plan_amount - discount_amount
                     elif discount_percent:
-                        final_amount = plan_amount * (1 - discount_percent / 100)
+                        final_amount = plan_amount * (
+                            1 - discount_percent / 100
+                        )
                     else:
                         final_amount = plan_amount
                 else:
@@ -458,7 +478,9 @@ class SettingsService:
 
     def get_billing(self, user: dict):
         result = {}
-        current_plan = self.plan_persistence.get_current_plan(user_id=user.get("id"))
+        current_plan = self.plan_persistence.get_current_plan(
+            user_id=user.get("id")
+        )
         result["billing_details"] = self.extract_subscription_details(user=user)
         if user.get("source_platform") == "shopify":
             result["status"] = "hide"
@@ -471,7 +493,9 @@ class SettingsService:
         )
         result["usages_credits"] = {
             "leads_credits": user.get("leads_credits"),
-            "plan_leads_credits": current_plan.leads_credits if current_plan else 0,
+            "plan_leads_credits": current_plan.leads_credits
+            if current_plan
+            else 0,
             "prospect_credits": user.get("prospect_credits"),
         }
         return result
@@ -500,7 +524,9 @@ class SettingsService:
                 if billing_data.amount <= 0:
                     continue
                 line_items = billing_data
-                billing_hash["date"] = self.timestamp_to_date(billing_data.created)
+                billing_hash["date"] = self.timestamp_to_date(
+                    billing_data.created
+                )
                 billing_hash["invoice_id"] = billing_data.id
                 billing_hash["pricing_plan"] = "Overage"
                 billing_hash["total"] = billing_data.amount / 100
@@ -532,7 +558,9 @@ class SettingsService:
             )
         else:
             result["billing_history"], result["count"], result["max_page"] = (
-                self.extract_billing_history(user.get("customer_id"), page, per_page)
+                self.extract_billing_history(
+                    user.get("customer_id"), page, per_page
+                )
             )
         return result
 
@@ -545,7 +573,9 @@ class SettingsService:
         )
         return {
             "contact_count": len(inactive_leads_user),
-            "date": inactive_leads_user[0].created_at if inactive_leads_user else None,
+            "date": inactive_leads_user[0].created_at
+            if inactive_leads_user
+            else None,
         }
 
     def delete_card(self, payment_method_id):
@@ -605,10 +635,14 @@ class SettingsService:
         return hosted_invoice_url
 
     def default_card(self, user: dict, payment_method_id):
-        return set_default_card_for_customer(user.get("customer_id"), payment_method_id)
+        return set_default_card_for_customer(
+            user.get("customer_id"), payment_method_id
+        )
 
     def get_api_details(self, user):
-        get_api_details = self.settings_persistence.get_api_details(user.get("id"))
+        get_api_details = self.settings_persistence.get_api_details(
+            user.get("id")
+        )
         return [
             {
                 "api_key": result[0],
@@ -650,11 +684,15 @@ class SettingsService:
 
         if changes:
             self.settings_persistence.change_columns_data_api_details(
-                changes=changes, user_id=user.get("id"), api_keys_id=api_keys_request.id
+                changes=changes,
+                user_id=user.get("id"),
+                api_keys_id=api_keys_request.id,
             )
         else:
             changes["last_used_at"] = datetime.now()
             self.settings_persistence.change_columns_data_api_details(
-                changes=changes, user_id=user.get("id"), api_keys_id=api_keys_request.id
+                changes=changes,
+                user_id=user.get("id"),
+                api_keys_id=api_keys_request.id,
             )
         return SettingStatus.SUCCESS

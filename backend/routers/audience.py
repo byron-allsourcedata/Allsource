@@ -1,6 +1,10 @@
 from fastapi import APIRouter, Depends, Query
 
-from dependencies import get_audience_service, check_user_authorization, check_domain
+from dependencies import (
+    get_audience_service,
+    check_user_authorization,
+    check_domain,
+)
 from schemas.audience import AudienceRequest
 from typing import List, Optional
 from models.users import User

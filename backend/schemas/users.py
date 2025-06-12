@@ -42,6 +42,7 @@ class UserSignUpForm(BaseModel):
     password: str = Field(...)
     is_with_card: bool = Field(default=False)
     teams_token: Optional[str] = None
+    admin_token: Optional[str] = None
     referral_token: Optional[str] = None
     spi: Optional[str] = None
     pft: Optional[str] = None
@@ -137,14 +138,15 @@ class VerifyTokenResponse(BaseModel):
     token: Optional[str] = None
 
 
-class CalendlyDict(TypedDict):
+class MeetingData(BaseModel):
     email: Optional[str] = None
-    full_name: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     utm_params: Optional[str] = None
 
 
-class CalendlyResponse(BaseModel):
-    user: Optional[CalendlyDict] = None
+class MeetingBookingResponse(BaseModel):
+    user: Optional[MeetingData] = None
 
 
 class StripeAccountID(BaseModel):
@@ -153,6 +155,11 @@ class StripeAccountID(BaseModel):
 
 class StripeConnectResponse(BaseModel):
     status: StripeConnectStatus
+
+
+class GetStartedResponse(BaseModel):
+    is_pixel_installed: bool
+    is_source_imported: bool
 
 
 class UpdateUserRequest(BaseModel):

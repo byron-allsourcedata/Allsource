@@ -5,7 +5,9 @@ from config import ClickhouseConfig
 from db_dependencies import Clickhouse, Db
 from enums import BusinessType
 from models import AudienceSourcesMatchedPerson, EnrichmentUser
-from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence
+from persistence.audience_lookalikes import (
+    AudienceLookalikesPostgresPersistence,
+)
 from resolver import injectable
 from schemas.similar_audiences import AudienceFeatureImportance
 
@@ -25,7 +27,9 @@ class ClickhousePersistence:
     def calculate_lookalikes(
         self, user_id: int, source_uuid: UUID, lookalike_size: str
     ) -> List[Dict]:
-        return self.postgres.calculate_lookalikes(user_id, source_uuid, lookalike_size)
+        return self.postgres.calculate_lookalikes(
+            user_id, source_uuid, lookalike_size
+        )
 
     def retrieve_source_insights(
         self,
@@ -38,7 +42,8 @@ class ClickhousePersistence:
             .select_from(AudienceSourcesMatchedPerson)
             .join(
                 EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id,
+                AudienceSourcesMatchedPerson.enrichment_user_id
+                == EnrichmentUser.id,
             )
             .filter(AudienceSourcesMatchedPerson.source_id == str(source_uuid))
         )

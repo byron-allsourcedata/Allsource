@@ -1,20 +1,22 @@
-from typing import List
-from fastapi import HTTPException
-import httpx
-import os
 import csv
+import json
 import logging
+import os
 import tempfile
 import uuid
-
-from persistence.integrations.common_integration_persistence import (
-    CommonIntegrationPersistence,
-    IntegrationContext,
-)
-from services.integrations.commonIntegration import *
-from models.integrations.users_domains_integrations import UserIntegration
-from models.integrations.integrations_users_sync import IntegrationUserSync
 from datetime import datetime, timezone
+from typing import List
+from uuid import UUID
+
+import boto3
+import httpx
+from botocore.exceptions import (
+    ClientError,
+    NoCredentialsError,
+    PartialCredentialsError,
+)
+from fastapi import HTTPException
+
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
@@ -23,16 +25,19 @@ from enums import (
     DataSyncType,
 )
 from models.enrichment.enrichment_users import EnrichmentUser
-from uuid import UUID
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
-from schemas.integrations.integrations import DataMap, IntegrationCredentials
+from models.integrations.integrations_users_sync import IntegrationUserSync
+from models.integrations.users_domains_integrations import UserIntegration
 from persistence.domains import UserDomainsPersistence
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
-import json
-import boto3
-from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
+from schemas.integrations.integrations import DataMap, IntegrationCredentials
+from services.integrations.commonIntegration import *
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +51,6 @@ class S3IntegrationService:
         sync_persistence: IntegrationsUserSyncPersistence,
         client: httpx.Client,
         million_verifier_integrations: MillionVerifierIntegrationsService,
-        repo: CommonIntegrationPersistence,
     ):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
@@ -54,7 +58,6 @@ class S3IntegrationService:
         self.million_verifier_integrations = million_verifier_integrations
         self.sync_persistence = sync_persistence
         self.client = client
-        self.repo = repo
 
     def get_credentials(self, domain_id: int, user_id: int):
         return self.integrations_persisntece.get_credentials_for_service(
@@ -125,7 +128,9 @@ class S3IntegrationService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integrations_persisntece.create_integration(
+            integration_data
+        )
 
         if not integartion:
             raise HTTPException(
@@ -215,36 +220,31 @@ class S3IntegrationService:
 
         return [bucket["Name"] for bucket in lists.get("Buckets", [])]
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         try:
             self.__get_list(
-                secret_id=credentials.s3.secret_id, secret_key=credentials.s3.secret_key
+                secret_id=credentials.s3.secret_id,
+                secret_key=credentials.s3.secret_key,
             )
+            return {"status": IntegrationsStatus.SUCCESS.value}
         except NoCredentialsError:
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "status": "CREDENTIALS_MISSING",
-                    "message": "Missing AWS credentials",
-                },
-            )
+            return {
+                "status": "CREDENTIALS_MISSING",
+                "message": "Missing AWS credentials",
+            }
         except PartialCredentialsError:
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "status": "CREDENTIALS_INCOMPLETE",
-                    "message": "Incomplete AWS credentials",
-                },
-            )
+            return {
+                "status": "CREDENTIALS_INCOMPLETE",
+                "message": "Incomplete AWS credentials",
+            }
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
-            raise HTTPException(
-                status_code=400,
-                detail={
-                    "status": "CREDENTIALS_INVALID",
-                    "message": f"AWS error: {error_code}",
-                },
-            )
+            return {
+                "status": "CREDENTIALS_INVALID",
+                "message": f"AWS error: {error_code}",
+            }
 
         return self.__save_integrations(
             secret_id=credentials.s3.secret_id,
@@ -255,20 +255,24 @@ class S3IntegrationService:
 
     async def create_sync(
         self,
+        domain_id: int,
         leads_type: str,
         list_name: str,
         data_map: List[DataMap],
-        domain_id: int,
         created_by: str,
         user: dict,
     ):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get("id"))
+        credentials = self.get_credentials(
+            user_id=user.get("id"), domain_id=domain_id
+        )
         sync = self.sync_persistence.create_sync(
             {
                 "integration_id": credentials.id,
                 "list_name": list_name,
-                "domain_id": domain_id,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "leads_type": leads_type,
+                "domain_id": domain_id,
                 "data_map": data_map,
                 "created_by": created_by,
             }
@@ -276,8 +280,10 @@ class S3IntegrationService:
         return sync
 
     def get_smart_credentials(self, user_id: int):
-        credential = self.integrations_persisntece.get_smart_credentials_for_service(
-            user_id=user_id, service_name=SourcePlatformEnum.S3.value
+        credential = (
+            self.integrations_persisntece.get_smart_credentials_for_service(
+                user_id=user_id, service_name=SourcePlatformEnum.S3.value
+            )
         )
         return credential
 
@@ -310,7 +316,7 @@ class S3IntegrationService:
         integration_data_sync: IntegrationUserSync,
         enrichment_users: List[EnrichmentUser],
         target_schema: str,
-        validations: dict,
+        validations: dict = {},
     ):
         profiles = []
         for enrichment_user in enrichment_users:
@@ -367,7 +373,9 @@ class S3IntegrationService:
         secret_key = parsed_data["secret_key"]
 
         headers = (
-            sorted({key for profile in profiles for key in profile}) if profiles else []
+            sorted({key for profile in profiles for key in profile})
+            if profiles
+            else []
         )
 
         with tempfile.NamedTemporaryFile(
@@ -395,57 +403,55 @@ class S3IntegrationService:
         target_schema: str,
         validations: dict,
         data_map: list,
-    ) -> Optional[dict]:
-        user_data: User = self.repo.get_user_data(enrichment_user.asid)
-        if not user_data or not user_data.contacts:
+    ):
+        enrichment_contacts = enrichment_user.contacts
+        if not enrichment_contacts:
             return None
 
         business_email, personal_email, phone = (
-            self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+            self.sync_persistence.get_verified_email_and_phone(
+                enrichment_user.id
+            )
         )
         main_email, main_phone = resolve_main_email_and_phone(
-            enrichment_contacts=user_data.contacts,
+            enrichment_contacts=enrichment_contacts,
             validations=validations,
             target_schema=target_schema,
             business_email=business_email,
             personal_email=personal_email,
             phone=phone,
         )
+        first_name = enrichment_contacts.first_name
+        last_name = enrichment_contacts.last_name
 
-        first_name = user_data.contacts.first_name
-        last_name = user_data.contacts.last_name
-        if not (main_email and first_name and last_name):
+        if not main_email or not first_name or not last_name:
             return None
 
-        result = {"email": main_email, "firstname": first_name, "lastname": last_name}
-
-        context: IntegrationContext = self.repo.build_integration_context(
-            enrichment_user=user_data,
-            main_phone=main_phone,
-            business_email=business_email,
-            personal_email=personal_email,
-        )
-
-        # TODO Delete comment
-        # context = {
-        #     'main_phone': main_phone,
-        #     'professional_profiles': enrichment_user.professional_profiles,
-        #     'postal': enrichment_user.postal,
-        #     'personal_profiles': enrichment_user.personal_profiles,
-        #     'business_email': business_email,
-        #     'personal_email': personal_email,
-        #     'country_code': enrichment_user.postal,
-        #     'gender': enrichment_user.personal_profiles,
-        #     'zip_code': enrichment_user.personal_profiles,
-        #     'state': enrichment_user.postal,
-        #     'city': enrichment_user.postal,
-        #     'company': enrichment_user.professional_profiles,
-        #     'business_email_last_seen_date': enrichment_contacts,
-        #     'personal_email_last_seen': enrichment_contacts,
-        #     'linkedin_url': enrichment_contacts
-        # }
+        result = {
+            "email": main_email,
+            "firstname": first_name,
+            "lastname": last_name,
+        }
 
         required_types = {m["type"] for m in data_map}
+        context = {
+            "main_phone": main_phone,
+            "professional_profiles": enrichment_user.professional_profiles,
+            "postal": enrichment_user.postal,
+            "personal_profiles": enrichment_user.personal_profiles,
+            "business_email": business_email,
+            "personal_email": personal_email,
+            "country_code": enrichment_user.postal,
+            "gender": enrichment_user.personal_profiles,
+            "zip_code": enrichment_user.personal_profiles,
+            "state": enrichment_user.postal,
+            "city": enrichment_user.postal,
+            "company": enrichment_user.professional_profiles,
+            "business_email_last_seen_date": enrichment_contacts,
+            "personal_email_last_seen": enrichment_contacts,
+            "linkedin_url": enrichment_contacts,
+        }
+
         for field_type in required_types:
             filler = FIELD_FILLERS.get(field_type)
             if filler:

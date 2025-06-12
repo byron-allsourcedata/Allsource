@@ -32,7 +32,9 @@ class PayoutsService:
         monthly_info = []
 
         for month_year, month_payouts in grouped_by_month.items():
-            total_rewards = sum(payout.reward_amount for payout in month_payouts)
+            total_rewards = sum(
+                payout.reward_amount for payout in month_payouts
+            )
 
             rewards_paid = rewards_paid = sum(
                 payout.reward_amount
@@ -42,7 +44,8 @@ class PayoutsService:
             rewards_approved = sum(
                 payout.reward_amount
                 for payout in month_payouts
-                if payout.confirmation_status == ConfirmationStatus.APPROVED.value
+                if payout.confirmation_status
+                == ConfirmationStatus.APPROVED.value
             )
 
             payout_date = max(
@@ -76,7 +79,8 @@ class PayoutsService:
 
     def check_payment_active_payouts(self, referral_payouts):
         has_pending_approved = any(
-            referral_payout.confirmation_status == ConfirmationStatus.APPROVED.value
+            referral_payout.confirmation_status
+            == ConfirmationStatus.APPROVED.value
             and referral_payout.status == PayoutsStatus.PENDING.value
             for referral_payout in referral_payouts
         )
@@ -87,7 +91,8 @@ class PayoutsService:
 
     def check_pending_referral_payouts(self, referral_payouts):
         has_pending_approved = any(
-            referral_payout.confirmation_status == ConfirmationStatus.APPROVED.value
+            referral_payout.confirmation_status
+            == ConfirmationStatus.APPROVED.value
             and referral_payout.status == PayoutsStatus.PENDING.value
             for referral_payout in referral_payouts
         )
@@ -96,7 +101,8 @@ class PayoutsService:
             return PayoutsStatus.PENDING.value
 
         has_pending_pending = any(
-            referral_payout.confirmation_status == ConfirmationStatus.PENDING.value
+            referral_payout.confirmation_status
+            == ConfirmationStatus.PENDING.value
             and referral_payout.status == PayoutsStatus.PENDING.value
             for referral_payout in referral_payouts
         )
@@ -115,14 +121,14 @@ class PayoutsService:
             user_ids, search_query
         )
         partners_dict = {partner.user_id: partner for partner in partners}
-        referral_payouts = (
-            self.referral_payouts_persistence.get_referral_payouts_by_parent_ids(
-                user_ids
-            )
+        referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_parent_ids(
+            user_ids
         )
         referral_payouts_dict = {}
         for referral in referral_payouts:
-            referral_payouts_dict.setdefault(referral.parent_id, []).append(referral)
+            referral_payouts_dict.setdefault(referral.parent_id, []).append(
+                referral
+            )
 
         result = []
         for payout in payouts:
@@ -130,8 +136,10 @@ class PayoutsService:
             if partner:
                 source = "Direct"
                 if partner.master_id:
-                    master_partner = self.partners_persistence.get_partner_by_id(
-                        partner.master_id
+                    master_partner = (
+                        self.partners_persistence.get_partner_by_id(
+                            partner.master_id
+                        )
                     )
                     if master_partner:
                         source = master_partner.company_name
@@ -141,13 +149,15 @@ class PayoutsService:
                 )
 
                 reward_amount = sum(
-                    referral.reward_amount for referral in referral_payouts_for_partner
+                    referral.reward_amount
+                    for referral in referral_payouts_for_partner
                 )
 
                 rewards_approved = sum(
                     referral.reward_amount
                     for referral in referral_payouts_for_partner
-                    if referral.confirmation_status == ConfirmationStatus.APPROVED.value
+                    if referral.confirmation_status
+                    == ConfirmationStatus.APPROVED.value
                 )
 
                 payout_date = max(
@@ -189,7 +199,9 @@ class PayoutsService:
                             "company_name": partner.company_name,
                             "email": partner.email,
                             "sources": source,
-                            "number_of_accounts": len(referral_payouts_for_partner),
+                            "number_of_accounts": len(
+                                referral_payouts_for_partner
+                            ),
                             "reward_amount": reward_amount,
                             "reward_approved": rewards_approved,
                             "reward_payout_date": payout_date_formatted,
@@ -208,9 +220,7 @@ class PayoutsService:
         processed_payouts = []
 
         for referral_payout in referral_payouts:
-            referral_link = (
-                f"{os.getenv('SITE_HOST_URL')}signup?coupon={referral_payout.coupon}"
-            )
+            referral_link = f"{os.getenv('SITE_HOST_URL')}signup?coupon={referral_payout.coupon}"
             processed_payouts.append(
                 {
                     "referral_payouts_id": referral_payout.id,
@@ -236,8 +246,13 @@ class PayoutsService:
         return processed_payouts
 
     def get_total_payouts(self, year, month, partner_id, reward_type):
-        payouts = self.referral_payouts_persistence.get_total_payouts_to_refferal(
-            year=year, month=month, partner_id=partner_id, reward_type=reward_type
+        payouts = (
+            self.referral_payouts_persistence.get_total_payouts_to_refferal(
+                year=year,
+                month=month,
+                partner_id=partner_id,
+                reward_type=reward_type,
+            )
         )
         return self.process_monthly_payouts(payouts)
 
@@ -255,40 +270,44 @@ class PayoutsService:
         sort_order,
     ):
         if year and month and partner_id:
-            referral_payouts = (
-                self.referral_payouts_persistence.get_referral_payouts_by_partner_id(
-                    year=year,
-                    month=month,
-                    partner_id=partner_id,
-                    search_query=search_query,
-                    reward_type=reward_type,
-                    from_date=from_date,
-                    to_date=to_date,
-                    sort_by=sort_by,
-                    sort_order=sort_order,
-                )
+            referral_payouts = self.referral_payouts_persistence.get_referral_payouts_by_partner_id(
+                year=year,
+                month=month,
+                partner_id=partner_id,
+                search_query=search_query,
+                reward_type=reward_type,
+                from_date=from_date,
+                to_date=to_date,
+                sort_by=sort_by,
+                sort_order=sort_order,
             )
             return self.process_partner_payouts(referral_payouts)
 
         if year and month:
-            payouts = self.referral_payouts_persistence.get_all_referral_payouts(
-                is_master=is_master,
-                year=year,
-                month=month,
-                from_date=from_date,
-                to_date=to_date,
+            payouts = (
+                self.referral_payouts_persistence.get_all_referral_payouts(
+                    is_master=is_master,
+                    year=year,
+                    month=month,
+                    from_date=from_date,
+                    to_date=to_date,
+                )
             )
             return self.process_partners_payouts(
                 payouts, search_query=search_query, is_master=is_master
             )
 
         if year:
-            payouts = self.referral_payouts_persistence.get_all_referral_payouts(
-                is_master=is_master, year=year
+            payouts = (
+                self.referral_payouts_persistence.get_all_referral_payouts(
+                    is_master=is_master, year=year
+                )
             )
             return self.process_monthly_payouts(payouts)
 
-    def update_payouts_partner(self, referral_payout_id, text, confirmation_status):
+    def update_payouts_partner(
+        self, referral_payout_id, text, confirmation_status
+    ):
         if confirmation_status == "approve":
             confirmation_status = ConfirmationStatus.APPROVED.value
         elif confirmation_status == "reject":
@@ -297,7 +316,9 @@ class PayoutsService:
             confirmation_status = ConfirmationStatus.PENDING.value
 
         return self.referral_payouts_persistence.update_payouts_partner_confirmation_status(
-            referral_payout_id, confirmation_status=confirmation_status, text=text
+            referral_payout_id,
+            confirmation_status=confirmation_status,
+            text=text,
         )
 
     def is_transfer_successful(self, transfer_response):
@@ -308,10 +329,8 @@ class PayoutsService:
         )
 
     def pay_out_referrals(self, partner_id):
-        result = (
-            self.partners_persistence.get_stripe_account_and_total_reward_by_partner_id(
-                partner_id=partner_id
-            )
+        result = self.partners_persistence.get_stripe_account_and_total_reward_by_partner_id(
+            partner_id=partner_id
         )
         if result:
             stripe_account_id, total_reward, payout_ids = result

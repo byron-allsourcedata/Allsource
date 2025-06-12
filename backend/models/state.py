@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Index, BigInteger, text, Sequence
+from sqlalchemy import Column, Index, BigInteger, Sequence
 from sqlalchemy.dialects.postgresql import VARCHAR
 
 from .base import Base

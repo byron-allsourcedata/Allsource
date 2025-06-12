@@ -1,17 +1,12 @@
-from sqlalchemy.dialects.postgresql import JSONB
+from datetime import datetime, timezone
 
-from models.base import Base
-from models.users import Users
-from models.users_domains import UserDomains
 from sqlalchemy import (
     VARCHAR,
     Integer,
     Column,
-    JSON,
     Boolean,
     TIMESTAMP,
     Index,
-    func,
     ForeignKey,
     text,
     String,
@@ -19,6 +14,9 @@ from sqlalchemy import (
     BigInteger,
     Sequence,
 )
+from sqlalchemy.dialects.postgresql import JSONB
+
+from models.base import Base
 
 
 class UserIntegration(Base):
@@ -36,7 +34,9 @@ class UserIntegration(Base):
     consumer_key = Column(VARCHAR, nullable=True)
     consumer_secret = Column(VARCHAR, nullable=True)
     domain_id = Column(
-        BigInteger, ForeignKey("users_domains.id", ondelete="CASCADE"), nullable=True
+        BigInteger,
+        ForeignKey("users_domains.id", ondelete="CASCADE"),
+        nullable=True,
     )
     is_with_suppression = Column(Boolean, nullable=True)
     last_suppression_date = Column(TIMESTAMP, nullable=True)
@@ -50,7 +50,10 @@ class UserIntegration(Base):
     is_failed = Column(Boolean, nullable=False, server_default=text("false"))
     shop_id = Column(VARCHAR(32), nullable=True)
     slack_team_id = Column(VARCHAR(32), nullable=True)
-    created_at = Column(TIMESTAMP, nullable=False, server_default=func.now())
+    created_at = Column(
+        TIMESTAMP(timezone=False),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     user_id = Column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
@@ -61,7 +64,9 @@ class UserIntegration(Base):
 
     __table_args__ = (
         Index(
-            "users_domains_integrations_suppression_idx", is_with_suppression, domain_id
+            "users_domains_integrations_suppression_idx",
+            is_with_suppression,
+            domain_id,
         ),
         Index("users_domains_integrations_slack_team_id_idx", slack_team_id),
         Index("users_domains_integrations_user", user_id),
@@ -84,6 +89,10 @@ class Integration(Base):
     image_url = Column(Text, nullable=True)
     fields = Column(JSONB, nullable=True)
     type = Column(
-        String, nullable=True, server_default=text("'Marketing'::character varying")
+        String,
+        nullable=True,
+        server_default=text("'Marketing'::character varying"),
     )
     data_sync = Column(Boolean, nullable=True, server_default=text("true"))
+    for_pixel = Column(Boolean, nullable=False, server_default=text("true"))
+    for_audience = Column(Boolean, nullable=False, server_default=text("true"))

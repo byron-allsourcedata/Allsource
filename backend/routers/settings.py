@@ -46,7 +46,9 @@ def change_email_account_details(
     token: str = Query(...),
     mail: str = Query(...),
 ):
-    result = settings_service.change_email_account_details(token=token, email=mail)
+    result = settings_service.change_email_account_details(
+        token=token, email=mail
+    )
     return VerifyTokenResponse(
         status=result.get("status"), token=result.get("user_token", None)
     )
@@ -119,7 +121,9 @@ def change_user_role(
 ):
     if user.get("team_member"):
         team_member = user.get("team_member")
-        if team_member.get("team_access_level") not in {TeamAccessLevel.OWNER.value}:
+        if team_member.get("team_access_level") not in {
+            TeamAccessLevel.OWNER.value
+        }:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins only.",
@@ -166,7 +170,9 @@ def get_billing_history(
     settings_service: SettingsService = Depends(get_settings_service),
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
-    return settings_service.get_billing_history(page=page, per_page=per_page, user=user)
+    return settings_service.get_billing_history(
+        page=page, per_page=per_page, user=user
+    )
 
 
 @router.post("/billing/add-card")
@@ -218,7 +224,8 @@ def delete_card(
         team_member = user.get("team_member")
         if (
             team_member.get("team_access_level") != TeamAccessLevel.ADMIN.value
-            or team_member.get("team_access_level") != TeamAccessLevel.OWNER.value
+            or team_member.get("team_access_level")
+            != TeamAccessLevel.OWNER.value
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -238,7 +245,8 @@ def billing_overage(
         team_member = user.get("team_member")
         if (
             team_member.get("team_access_level") != TeamAccessLevel.ADMIN.value
-            or team_member.get("team_access_level") != TeamAccessLevel.OWNER.value
+            or team_member.get("team_access_level")
+            != TeamAccessLevel.OWNER.value
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -257,7 +265,8 @@ def download_billing(
         team_member = user.get("team_member")
         if (
             team_member.get("team_access_level") != TeamAccessLevel.ADMIN.value
-            or team_member.get("team_access_level") != TeamAccessLevel.OWNER.value
+            or team_member.get("team_access_level")
+            != TeamAccessLevel.OWNER.value
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -276,7 +285,8 @@ def send_billing(
         team_member = user.get("team_member")
         if (
             team_member.get("team_access_level") != TeamAccessLevel.ADMIN.value
-            or team_member.get("team_access_level") != TeamAccessLevel.OWNER.value
+            or team_member.get("team_access_level")
+            != TeamAccessLevel.OWNER.value
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -297,7 +307,8 @@ def default_card(
         team_member = user.get("team_member")
         if (
             team_member.get("team_access_level") != TeamAccessLevel.ADMIN.value
-            or team_member.get("team_access_level") != TeamAccessLevel.OWNER.value
+            or team_member.get("team_access_level")
+            != TeamAccessLevel.OWNER.value
         ):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

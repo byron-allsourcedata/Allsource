@@ -84,7 +84,11 @@ RELIGION_MAP = {
 }
 
 YES_NO_UNKNOWN_MAPS = {
-    "have_children": {"0": "Have Children", "1": "Don’t have children", "2": "Unknown"},
+    "have_children": {
+        "0": "Have Children",
+        "1": "Don’t have children",
+        "2": "Unknown",
+    },
     "marital_status": {"0": "Married", "1": "Single", "2": "Unknown"},
     "homeowner": {"0": "Home Owners", "1": "Rent home", "2": "Unknown"},
 }

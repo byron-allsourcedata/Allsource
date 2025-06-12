@@ -1,7 +1,10 @@
 import logging
+from typing import Optional
 
 from enums import UserAuthorizationStatus
+from models import SubscriptionPlan
 from persistence.plans_persistence import PlansPersistence
+from resolver import injectable
 from services.subscriptions import SubscriptionService
 from enums import SourcePlatformEnum
 
@@ -10,6 +13,7 @@ TRIAL_STUB_PLAN_ID = 17
 WITHOUT_CARD_PLAN_ID = 15
 
 
+@injectable
 class PlansService:
     def __init__(
         self,
@@ -19,7 +23,7 @@ class PlansService:
         self.plans_persistence = plans_persistence
         self.subscription_service = subscription_service
 
-    def get_customer_id(self, user):
+    def get_customer_id(self, user: dict):
         return user.get("customer_id")
 
     def is_had_trial_period(self, user):
@@ -36,7 +40,9 @@ class PlansService:
     def get_additional_credits_price_id(self):
         return self.subscription_service.get_additional_credits_price_id()
 
-    def save_reason_unsubscribe(self, reason_unsubscribe, user_id, cancel_scheduled_at):
+    def save_reason_unsubscribe(
+        self, reason_unsubscribe, user_id, cancel_scheduled_at
+    ):
         self.plans_persistence.save_reason_unsubscribe(
             reason_unsubscribe, user_id, cancel_scheduled_at
         )
@@ -54,7 +60,9 @@ class PlansService:
         user_subscription = self.plans_persistence.get_user_subscription(
             user_id=user.get("id")
         )
-        current_plan = self.plans_persistence.get_current_plan(user_id=user.get("id"))
+        current_plan = self.plans_persistence.get_current_plan(
+            user_id=user.get("id")
+        )
         if current_plan and current_plan.is_free_trial:
             stripe_plans.append(current_plan)
         stripe_plans.sort(key=lambda plan: plan.priority)
@@ -91,7 +99,9 @@ class PlansService:
         return self.subscription_service.get_subscription_by_price_id(price_id)
 
     def save_downgrade_price_id(self, price_id, subscription):
-        self.subscription_service.save_downgrade_price_id(price_id, subscription)
+        self.subscription_service.save_downgrade_price_id(
+            price_id, subscription
+        )
 
     def get_current_price(self, current_subscription_id):
         return self.plans_persistence.get_current_price(
@@ -100,3 +110,6 @@ class PlansService:
 
     def get_plan_price(self, price_id):
         return self.plans_persistence.get_plan_by_price_id(price_id=price_id)
+
+    def by_plan_alias(self, alias: str) -> Optional[SubscriptionPlan]:
+        return self.plans_persistence.get_plan_by_alias(alias=alias)

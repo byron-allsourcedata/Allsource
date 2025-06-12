@@ -1,17 +1,10 @@
-from sqlalchemy import (
-    Column,
-    event,
-    Integer,
-    TIMESTAMP,
-    JSON,
-    ForeignKey,
-    Index,
-    UUID,
-    text,
-)
-from .base import Base, create_timestamps, update_timestamps
-from models.enrichment.enrichment_users import EnrichmentUser
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, event, TIMESTAMP, ForeignKey, Index, UUID, text
+
 from models.audience_lookalikes import AudienceLookalikes
+from models.enrichment.enrichment_users import EnrichmentUser
+from .base import Base, update_timestamps
 
 
 class AudienceLookalikesPerson(Base):
@@ -34,10 +27,12 @@ class AudienceLookalikesPerson(Base):
         ForeignKey(EnrichmentUser.id, ondelete="CASCADE"),
         nullable=False,
     )
-    created_at = Column(TIMESTAMP, server_default=text("now()"), nullable=False)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
 
-    __table_args__ = (Index("audience_smarts_persons_lookalike_id", lookalike_id),)
-
-
-event.listen(AudienceLookalikesPerson, "before_insert", create_timestamps)
-event.listen(AudienceLookalikesPerson, "before_update", update_timestamps)
+    __table_args__ = (
+        Index("audience_smarts_persons_lookalike_id", lookalike_id),
+    )

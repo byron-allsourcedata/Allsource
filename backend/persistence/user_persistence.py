@@ -1,26 +1,34 @@
-import logging
 import json
+import logging
 from datetime import datetime, timedelta
+from typing import Optional
+from urllib.parse import uses_query
+from decimal import Decimal
 
-from sqlalchemy import func, desc, asc, and_
-from sqlalchemy.orm import Session, aliased
+import pytz
+from sqlalchemy import func, desc, asc, case, or_, select
+from sqlalchemy.orm import aliased
 
-
+from db_dependencies import Db
 from enums import TeamsInvitationStatus, SignUpStatus
-from models.teams_invitations import TeamInvitation
-from models.users_domains import UserDomains
-from models.users import Users
+from models import AudienceLookalikes
 from models.partner import Partner
 from models.referral_payouts import ReferralPayouts
 from models.referral_users import ReferralUser
+from models.teams_invitations import TeamInvitation
+from models.users import Users
+from models.users_domains import UserDomains
+from models.audience_sources import AudienceSource
+from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class UserPersistence:
     UNLIMITED_CREDITS = -1
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def set_reset_password_sent_now(self, user_id: int):
@@ -31,10 +39,12 @@ class UserPersistence:
         )
         self.db.commit()
 
-    def save_user_domain(self, user_id, domain):
+    def save_user_domain(self, user_id: int, domain: str):
         user_domain = (
             self.db.query(UserDomains)
-            .filter(UserDomains.domain == domain, UserDomains.user_id == user_id)
+            .filter(
+                UserDomains.domain == domain, UserDomains.user_id == user_id
+            )
             .first()
         )
         if user_domain:
@@ -55,11 +65,15 @@ class UserPersistence:
             self.db.commit()
 
     def get_team_members(self, user_id: int):
-        users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()
+        users = (
+            self.db.query(Users).filter(Users.team_owner_id == user_id).all()
+        )
         return users
 
     def get_combined_team_info(self, user_id: int):
-        users = self.db.query(Users).filter(Users.team_owner_id == user_id).all()
+        users = (
+            self.db.query(Users).filter(Users.team_owner_id == user_id).all()
+        )
         invitations = (
             self.db.query(TeamInvitation)
             .filter(TeamInvitation.team_owner_id == user_id)
@@ -76,7 +90,7 @@ class UserPersistence:
         )
         self.db.commit()
 
-    def get_user_by_email(self, email):
+    def get_user_by_email(self, email: str):
         user_object = (
             self.db.query(Users)
             .filter(func.lower(Users.email) == func.lower(email))
@@ -84,11 +98,11 @@ class UserPersistence:
         )
         return user_object
 
-    def check_status_invitations(self, teams_token, user_mail):
+    def check_status_invitations(self, admin_token, user_mail):
         result = {"success": False}
         teams_invitation = (
             self.db.query(TeamInvitation)
-            .filter(TeamInvitation.token == teams_token)
+            .filter(TeamInvitation.token == admin_token)
             .first()
         )
         if teams_invitation:
@@ -100,6 +114,16 @@ class UserPersistence:
         else:
             result["error"] = SignUpStatus.TEAM_INVITATION_INVALID
         return result
+
+    def by_id(self, user_id: int) -> Optional[Users]:
+        return self.db.execute(
+            select(Users).where(Users.id == user_id)
+        ).scalar()
+
+    def by_customer_id(self, customer_id: str) -> Optional[Users]:
+        return self.db.execute(
+            select(Users).where(Users.customer_id == customer_id)
+        ).scalar()
 
     def get_user_by_id(self, user_id, result_as_object=False):
         user, partner_is_active = (
@@ -140,6 +164,7 @@ class UserPersistence:
                 "activate_steps_percent": user.activate_steps_percent,
                 "leads_credits": user.leads_credits,
                 "prospect_credits": user.prospect_credits,
+                "validation_funds": user.validation_funds,
                 "is_leads_auto_charging": user.is_leads_auto_charging,
                 "team_access_level": user.team_access_level,
                 "current_subscription_id": user.current_subscription_id,
@@ -259,6 +284,153 @@ class UserPersistence:
             for user in users
         ]
 
+    def get_admin_users(
+        self,
+        search_query: str,
+        last_login_date_start=None,
+        last_login_date_end=None,
+        join_date_start=None,
+        join_date_end=None,
+    ):
+        Inviter = aliased(Users)
+        query = self.db.query(
+            Users.id,
+            Users.email,
+            Users.full_name,
+            Users.created_at.label("created_at"),
+            Users.last_login.label("last_login"),
+            Inviter.email.label("invited_by_email"),
+            Users.role,
+        ).outerjoin(Inviter, Users.invited_by_id == Inviter.id)
+
+        query = query.filter(Users.role.contains(["admin"]))
+
+        if search_query:
+            query = query.filter(
+                or_(
+                    Users.email.ilike(f"{search_query}%"),
+                    Users.full_name.ilike(f"{search_query}%"),
+                )
+            )
+
+        if last_login_date_start:
+            start_date = datetime.fromtimestamp(
+                last_login_date_start, tz=pytz.UTC
+            ).date()
+            query = query.filter(func.DATE(Users.last_login) >= start_date)
+
+        if last_login_date_end:
+            end_date = datetime.fromtimestamp(
+                last_login_date_end, tz=pytz.UTC
+            ).date()
+            query = query.filter(func.DATE(Users.last_login) <= end_date)
+
+        if join_date_start:
+            start_date = datetime.fromtimestamp(
+                join_date_start, tz=pytz.UTC
+            ).date()
+            query = query.filter(func.DATE(Users.created_at) >= start_date)
+
+        if join_date_end:
+            end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
+            query = query.filter(func.DATE(Users.created_at) <= end_date)
+
+        return query.all()
+
+    def get_customer_users(
+        self,
+        search_query: str,
+        page: int,
+        per_page: int,
+        sort_by: str,
+        sort_order: str,
+        last_login_date_start=None,
+        last_login_date_end=None,
+        join_date_start=None,
+        join_date_end=None,
+    ):
+        query = (
+            self.db.query(
+                Users.id,
+                Users.email,
+                Users.full_name,
+                Users.created_at,
+                Users.last_login,
+                Users.role,
+                Users.is_email_confirmed,
+                Users.is_book_call_passed,
+                Users.leads_credits.label("credits_count"),
+                func.count(
+                    case((UserDomains.is_pixel_installed == True, 1))
+                ).label("pixel_installed_count"),
+                func.count(
+                    case((func.coalesce(AudienceSource.id, None) != None, 1))
+                ).label("sources_count"),
+                func.count(
+                    case(
+                        (func.coalesce(AudienceLookalikes.id, None) != None, 1)
+                    )
+                ).label("lookalikes_count"),
+            )
+            .outerjoin(
+                AudienceLookalikes, AudienceLookalikes.user_id == Users.id
+            )
+            .outerjoin(AudienceSource, AudienceSource.user_id == Users.id)
+            .outerjoin(UserDomains, UserDomains.user_id == Users.id)
+            .filter(Users.role.any("customer"))
+            .group_by(Users.id)
+        )
+
+        if last_login_date_start:
+            start_date = datetime.fromtimestamp(
+                last_login_date_start, tz=pytz.UTC
+            ).date()
+            query = query.filter(func.DATE(Users.last_login) >= start_date)
+
+        if last_login_date_end:
+            end_date = datetime.fromtimestamp(
+                last_login_date_end, tz=pytz.UTC
+            ).date()
+            query = query.filter(func.DATE(Users.last_login) <= end_date)
+
+        if join_date_start:
+            start_date = datetime.fromtimestamp(
+                join_date_start, tz=pytz.UTC
+            ).date()
+            query = query.filter(func.DATE(Users.created_at) >= start_date)
+
+        if join_date_end:
+            end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
+            query = query.filter(func.DATE(Users.created_at) <= end_date)
+
+        if search_query:
+            query = query.filter(
+                or_(
+                    Users.email.ilike(f"%{search_query}%"),
+                    Users.full_name.ilike(f"%{search_query}%"),
+                )
+            )
+
+        total_count = query.count()
+        offset = (page - 1) * per_page
+
+        sort_options = {
+            "id": Users.id,
+            "join_date": Users.created_at,
+            "last_login_date": Users.last_login,
+        }
+
+        if sort_by in sort_options:
+            sort_column = sort_options[sort_by]
+            query = query.order_by(
+                asc(sort_column) if sort_order == "asc" else desc(sort_column)
+            )
+        else:
+            query = query.order_by(desc(Users.created_at))
+
+        users = query.limit(per_page).offset(offset).all()
+        return users, total_count
+
     def get_not_partner_users(self, page, per_page):
         query = self.db.query(
             Users.id,
@@ -294,7 +466,9 @@ class UserPersistence:
         ]
         return users_dict, total_count
 
-    def add_stripe_account(self, user_id: int, stripe_connected_account_id: str):
+    def add_stripe_account(
+        self, user_id: int, stripe_connected_account_id: str
+    ):
         self.db.query(Users).filter(Users.id == user_id).update(
             {Users.connected_stripe_account_id: stripe_connected_account_id},
             synchronize_session=False,
@@ -310,7 +484,11 @@ class UserPersistence:
         user.stripe_connected_currently_due = None
 
         if user.is_partner:
-            partner = self.db.query(Partner).filter(Partner.user_id == user_id).first()
+            partner = (
+                self.db.query(Partner)
+                .filter(Partner.user_id == user_id)
+                .first()
+            )
             if partner:
                 partner.status = "active"
 
@@ -350,7 +528,9 @@ class UserPersistence:
         parent_users = aliased(Users)
 
         order_column = getattr(Users, order_by, Users.id)
-        order_direction = asc(order_column) if order == "asc" else desc(order_column)
+        order_direction = (
+            asc(order_column) if order == "asc" else desc(order_column)
+        )
 
         query = (
             self.db.query(
@@ -373,7 +553,9 @@ class UserPersistence:
             )
             .outerjoin(ReferralPayouts, Users.id == ReferralPayouts.user_id)
             .outerjoin(ReferralUser, Users.id == ReferralUser.user_id)
-            .outerjoin(parent_users, ReferralUser.parent_user_id == parent_users.id)
+            .outerjoin(
+                parent_users, ReferralUser.parent_user_id == parent_users.id
+            )
             .filter(
                 Users.is_partner == False,
                 (Users.role == None) | ~Users.role.any("admin"),
@@ -382,7 +564,8 @@ class UserPersistence:
 
         if search_term:
             query = query.filter(
-                (Users.full_name.ilike(search_term)) | (Users.email.ilike(search_term))
+                (Users.full_name.ilike(search_term))
+                | (Users.email.ilike(search_term))
             )
 
         if start_date:
@@ -423,7 +606,9 @@ class UserPersistence:
                     if account[14]
                     else parse_utm_source(account[15])
                 ),
-                "reward_status": account[5].capitalize() if account[5] else "Inactive",
+                "reward_status": account[5].capitalize()
+                if account[5]
+                else "Inactive",
                 "will_pay": True if account[12] else False,
                 "paid_at": False if account[6] else True,
                 "reward_payout_date": account[6]
@@ -435,3 +620,26 @@ class UserPersistence:
             }
             for account in accounts
         ], query.count()
+
+    def has_sources_for_user(self, user_id: int) -> bool:
+        return (
+            self.db.query(AudienceSource)
+            .filter(AudienceSource.user_id == user_id)
+            .first()
+            is not None
+        )
+
+    def deduct_validation_funds(self, user_id: int, amount: Decimal):
+        user = self.db.query(Users).filter(Users.id == user_id).first()
+
+        # if user and user.validation_funds >= amount:
+        #     user.validation_funds -= amount
+        #     return True
+        # return False
+
+        user.validation_funds -= amount
+
+    def by_email(self, email: str) -> Optional[Users]:
+        return self.db.execute(
+            select(Users).where(Users.email == email)
+        ).scalar()

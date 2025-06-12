@@ -60,7 +60,9 @@ class AudienceColumnSelector:
             # — Personal Profiles —
             "age": EnrichmentPersonalProfiles.age.label("age"),
             "gender": EnrichmentPersonalProfiles.gender.label("gender"),
-            "homeowner": EnrichmentPersonalProfiles.homeowner.label("homeowner"),
+            "homeowner": EnrichmentPersonalProfiles.homeowner.label(
+                "homeowner"
+            ),
             "length_of_residence_years": EnrichmentPersonalProfiles.length_of_residence_years.label(
                 "length_of_residence_years"
             ),
@@ -70,9 +72,15 @@ class AudienceColumnSelector:
             "business_owner": EnrichmentPersonalProfiles.business_owner.label(
                 "business_owner"
             ),
-            "birth_day": EnrichmentPersonalProfiles.birth_day.label("birth_day"),
-            "birth_month": EnrichmentPersonalProfiles.birth_month.label("birth_month"),
-            "birth_year": EnrichmentPersonalProfiles.birth_year.label("birth_year"),
+            "birth_day": EnrichmentPersonalProfiles.birth_day.label(
+                "birth_day"
+            ),
+            "birth_month": EnrichmentPersonalProfiles.birth_month.label(
+                "birth_month"
+            ),
+            "birth_year": EnrichmentPersonalProfiles.birth_year.label(
+                "birth_year"
+            ),
             "has_children": EnrichmentPersonalProfiles.has_children.label(
                 "has_children"
             ),
@@ -80,17 +88,21 @@ class AudienceColumnSelector:
                 "number_of_children"
             ),
             "religion": EnrichmentPersonalProfiles.religion.label("religion"),
-            "ethnicity": EnrichmentPersonalProfiles.ethnicity.label("ethnicity"),
+            "ethnicity": EnrichmentPersonalProfiles.ethnicity.label(
+                "ethnicity"
+            ),
             "language_code": EnrichmentPersonalProfiles.language_code.label(
                 "language_code"
             ),
-            "state_abbr": EnrichmentPersonalProfiles.state_abbr.label("state_abbr"),
+            "state_abbr": EnrichmentPersonalProfiles.state_abbr.label(
+                "state_abbr"
+            ),
             # "state": EnrichmentPersonalProfiles.state_abbr.label(
             #     "state"
             # ),
-            "zip_code5": cast(EnrichmentPersonalProfiles.zip_code5, String).label(
-                "zip_code5"
-            ),
+            "zip_code5": cast(
+                EnrichmentPersonalProfiles.zip_code5, String
+            ).label("zip_code5"),
             # — Financial Records —
             "income_range": EnrichmentFinancialRecord.income_range.label(
                 "income_range"
@@ -166,13 +178,19 @@ class AudienceColumnSelector:
                 "voting_propensity"
             ),
             # — Employment History —
-            "job_title": EnrichmentEmploymentHistory.job_title.label("job_title"),
+            "job_title": EnrichmentEmploymentHistory.job_title.label(
+                "job_title"
+            ),
             "company_name": EnrichmentEmploymentHistory.company_name.label(
                 "company_name"
             ),
-            "start_date": EnrichmentEmploymentHistory.start_date.label("start_date"),
+            "start_date": EnrichmentEmploymentHistory.start_date.label(
+                "start_date"
+            ),
             "end_date": EnrichmentEmploymentHistory.end_date.label("end_date"),
-            "is_current": EnrichmentEmploymentHistory.is_current.label("is_current"),
+            "is_current": EnrichmentEmploymentHistory.is_current.label(
+                "is_current"
+            ),
             "location": EnrichmentEmploymentHistory.location.label("location"),
             "job_description": EnrichmentEmploymentHistory.job_description.label(
                 "job_description"
@@ -193,8 +211,12 @@ class AudienceColumnSelector:
             "job_location": EnrichmentProfessionalProfile.job_location.label(
                 "job_location"
             ),
-            "job_level": EnrichmentProfessionalProfile.job_level.label("job_level"),
-            "department": EnrichmentProfessionalProfile.department.label("department"),
+            "job_level": EnrichmentProfessionalProfile.job_level.label(
+                "job_level"
+            ),
+            "department": EnrichmentProfessionalProfile.department.label(
+                "department"
+            ),
             "company_size": EnrichmentProfessionalProfile.company_size.label(
                 "company_size"
             ),

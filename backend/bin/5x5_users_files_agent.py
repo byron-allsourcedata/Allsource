@@ -44,7 +44,9 @@ def assume_role(role_arn, sts_client):
 
 
 async def on_message_received(message_body, s3_session, rmq_connection):
-    sts_client = create_sts_client(os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET"))
+    sts_client = create_sts_client(
+        os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET")
+    )
     credentials = assume_role(os.getenv("S3_ROLE_ARN"), sts_client)
     message_json = json.loads(message_body)
     logging.info(f"{message_json['file_name']} started")
@@ -55,7 +57,9 @@ async def on_message_received(message_body, s3_session, rmq_connection):
         aws_secret_access_key=credentials["SecretAccessKey"],
         aws_session_token=credentials["SessionToken"],
     ) as s3:
-        s3_obj = await s3.get_object(Bucket=BUCKET_NAME, Key=message_json["file_name"])
+        s3_obj = await s3.get_object(
+            Bucket=BUCKET_NAME, Key=message_json["file_name"]
+        )
         async with s3_obj["Body"] as body:
             with tempfile.NamedTemporaryFile(delete=True) as temp_file:
                 file_data = await body.read()

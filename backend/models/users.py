@@ -1,7 +1,8 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
     DateTime,
-    event,
     Integer,
     Boolean,
     text,
@@ -9,18 +10,11 @@ from sqlalchemy import (
     BigInteger,
     Index,
     Sequence,
+    DECIMAL,
 )
-from sqlalchemy.dialects.postgresql import (
-    BIGINT,
-    BOOLEAN,
-    INTEGER,
-    TIMESTAMP,
-    VARCHAR,
-    ARRAY,
-    JSON,
-)
+from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR, ARRAY, JSON
 
-from .base import Base, create_timestamps, update_timestamps
+from .base import Base
 
 
 class Users(Base):
@@ -37,7 +31,9 @@ class Users(Base):
         nullable=False,
     )
     email = Column(VARCHAR, nullable=True)
-    is_email_confirmed = Column(Boolean, nullable=True, server_default=text("false"))
+    is_email_confirmed = Column(
+        Boolean, nullable=True, server_default=text("false")
+    )
     password = Column(VARCHAR, nullable=True)
     full_name = Column(VARCHAR, nullable=True)
     business_type = Column(
@@ -48,10 +44,20 @@ class Users(Base):
     )
     image = Column(VARCHAR, nullable=True)
     company_name = Column(VARCHAR, nullable=True)
-    created_at = Column(TIMESTAMP(precision=7), nullable=True)
-    last_login = Column(TIMESTAMP(precision=7), nullable=True)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    last_login = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     payment_status = Column(
-        VARCHAR, nullable=True, server_default=text("'PENDING'::character varying")
+        VARCHAR,
+        nullable=True,
+        server_default=text("'PENDING'::character varying"),
     )
     customer_id = Column(VARCHAR, nullable=True)
     company_website = Column(VARCHAR, nullable=True)
@@ -63,20 +69,29 @@ class Users(Base):
     verified_email_sent_at = Column(TIMESTAMP(precision=7), nullable=True)
     company_email_address = Column(VARCHAR, nullable=True)
     employees_workers = Column(VARCHAR(256), nullable=True)
-    is_book_call_passed = Column(Boolean, nullable=False, server_default=text("false"))
+    is_book_call_passed = Column(
+        Boolean, nullable=False, server_default=text("false")
+    )
     stripe_payment_url = Column(JSON, nullable=True)
     data_provider_id = Column(VARCHAR(64), nullable=True)
     role = Column(
-        ARRAY(VARCHAR(32)), nullable=True, server_default=text("ARRAY['customer']")
+        ARRAY(VARCHAR(32)),
+        nullable=True,
+        server_default=text("ARRAY['customer']"),
     )
     company_role = Column(VARCHAR(16), nullable=True)
     company_website_visits = Column(VARCHAR(16), nullable=True)
     pixel_code_sent_at = Column(TIMESTAMP(precision=7), nullable=True)
     calendly_uuid = Column(VARCHAR(64), nullable=True)
     calendly_invitee_uuid = Column(VARCHAR(64), nullable=True)
-    activate_steps_percent = Column(Integer, nullable=True, server_default=text("0"))
+    activate_steps_percent = Column(
+        Integer, nullable=True, server_default=text("0")
+    )
     leads_credits = Column(Integer, nullable=False, server_default=text("0"))
     prospect_credits = Column(Integer, nullable=False, server_default=text("0"))
+    validation_funds = Column(
+        DECIMAL(10, 2), nullable=False, server_default=text("0")
+    )
     change_email_sent_at = Column(TIMESTAMP(precision=7), nullable=True)
     is_leads_auto_charging = Column(
         Boolean, nullable=False, server_default=text("false")
@@ -101,12 +116,11 @@ class Users(Base):
     is_partner = Column(Boolean, nullable=True, server_default=text("false"))
     charge_id = Column(VARCHAR(64), nullable=True)
     utm_params = Column(JSON, nullable=True)
-    is_stripe_connected = Column(Boolean, nullable=False, server_default=text("false"))
+    is_stripe_connected = Column(
+        Boolean, nullable=False, server_default=text("false")
+    )
     stripe_connected_email = Column(VARCHAR, nullable=True)
     stripe_connected_currently_due = Column(JSON, nullable=True)
 
 
 User = Users
-
-event.listen(User, "before_insert", create_timestamps)
-event.listen(User, "before_update", update_timestamps)

@@ -1,25 +1,28 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
     ForeignKey,
     Integer,
-    BOOLEAN,
     TEXT,
-    event,
     Index,
     BigInteger,
     text,
     Boolean,
     Sequence,
+    event,
 )
-from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
-from .base import Base, create_timestamps, update_timestamps
+from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR
+
+from .base import Base, update_timestamps
 
 
 class UserSubscriptions(Base):
     __tablename__ = "user_subscriptions"
     __table_args__ = (
         Index(
-            "user_subscriptions_contact_credit_plan_id_idx", "contact_credit_plan_id"
+            "user_subscriptions_contact_credit_plan_id_idx",
+            "contact_credit_plan_id",
         ),
         Index("user_subscriptions_user_id_idx", "user_id"),
         Index("user_subscriptions_user_id_status_idx", "user_id", "status"),
@@ -31,8 +34,16 @@ class UserSubscriptions(Base):
         primary_key=True,
         nullable=False,
     )
-    updated_at = Column(TIMESTAMP(precision=7), nullable=True)
-    created_at = Column(TIMESTAMP(precision=7), nullable=True)
+    updated_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     plan_start = Column(TIMESTAMP(precision=7), nullable=True)
     plan_end = Column(TIMESTAMP(precision=7), nullable=True)
     user_id = Column(
@@ -54,15 +65,17 @@ class UserSubscriptions(Base):
     cancellation_reason = Column(TEXT, nullable=True)
     price_id = Column(VARCHAR, nullable=True)
     cancel_scheduled_at = Column(TIMESTAMP(precision=7), nullable=True)
-    is_avin_sended = Column(Boolean, nullable=False, server_default=text("false"))
+    is_avin_sended = Column(
+        Boolean, nullable=False, server_default=text("false")
+    )
     contact_credit_plan_id = Column(
         BigInteger,
         ForeignKey("subscription_plans.id", ondelete="SET NULL"),
         nullable=True,
     )
+    lead_credits = Column(BigInteger, nullable=True, server_default=text("0"))
 
 
 Subscription = UserSubscriptions
 
-event.listen(Subscription, "before_insert", create_timestamps)
 event.listen(Subscription, "before_update", update_timestamps)

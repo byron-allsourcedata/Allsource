@@ -15,7 +15,9 @@ from sqlalchemy.orm import sessionmaker
 from aio_pika import connect, IncomingMessage
 
 from config.rmq_connection import RabbitMQConnection
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from services.integrations.base import IntegrationService
 from dependencies import (
     IntegrationsPresistence,
@@ -55,7 +57,9 @@ if __name__ == "__main__":
             lead_persistence=LeadsPersistence(session),
             audience_persistence=AudiencePersistence(session),
             lead_orders_persistence=LeadOrdersPersistence(session),
-            integrations_user_sync_persistence=IntegrationsUserSyncPersistence(session),
+            integrations_user_sync_persistence=IntegrationsUserSyncPersistence(
+                session
+            ),
             aws_service=AWSService(get_s3_client()),
             domain_persistence=UserDomainsPersistence(session),
             suppression_persistence=SuppressionPersistence(session),
@@ -77,5 +81,7 @@ if __name__ == "__main__":
                             integration_platform = getattr(
                                 integration_service, platform.lower()
                             )
-                            integration_platform.order_sync(integration.domain_id)
+                            integration_platform.order_sync(
+                                integration.domain_id
+                            )
             time.sleep(60 * 60 * 2)

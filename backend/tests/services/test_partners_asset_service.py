@@ -26,7 +26,8 @@ def mock_aws_service():
 @pytest.fixture
 def service(mock_persistence, mock_aws_service):
     return PartnersAssetService(
-        partners_asset_persistence=mock_persistence, aws_service=mock_aws_service
+        partners_asset_persistence=mock_persistence,
+        aws_service=mock_aws_service,
     )
 
 
@@ -70,7 +71,9 @@ def test_get_file_size_success(mocker, service):
     file_size = service.get_file_size(file_url)
 
     assert file_size == "0.87 MB"
-    mock_response.assert_called_once_with(file_url, allow_redirects=True, timeout=5)
+    mock_response.assert_called_once_with(
+        file_url, allow_redirects=True, timeout=5
+    )
 
 
 def test_get_file_size_failure(mocker, service):
@@ -81,7 +84,9 @@ def test_get_file_size_failure(mocker, service):
     file_size = service.get_file_size(file_url)
 
     assert file_size == "0.00 MB"
-    mock_response.assert_called_once_with(file_url, allow_redirects=True, timeout=5)
+    mock_response.assert_called_once_with(
+        file_url, allow_redirects=True, timeout=5
+    )
 
 
 def test_get_file_size_fail_response(mocker, service):
@@ -97,7 +102,9 @@ def test_get_file_size_fail_response(mocker, service):
     file_size = service.get_file_size(file_url)
 
     assert file_size == "0.00 MB"
-    mock_response.assert_called_once_with(file_url, allow_redirects=True, timeout=5)
+    mock_response.assert_called_once_with(
+        file_url, allow_redirects=True, timeout=5
+    )
 
 
 def test_get_file_extension_valid(service):

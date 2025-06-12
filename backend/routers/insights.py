@@ -15,7 +15,9 @@ router = APIRouter()
 async def get_source_insights_info(
     uuid: UUID,
     user: dict = Depends(check_user_authorization_without_pixel),
-    insights_service: AudienceInsightsService = Depends(get_audience_insights_service),
+    insights_service: AudienceInsightsService = Depends(
+        get_audience_insights_service
+    ),
 ):
     return insights_service.get_source_insights(uuid, user)
 
@@ -24,7 +26,9 @@ async def get_source_insights_info(
 async def get_lookalike_insights_info(
     uuid: UUID,
     user: dict = Depends(check_user_authorization_without_pixel),
-    insights_service: AudienceInsightsService = Depends(get_audience_insights_service),
+    insights_service: AudienceInsightsService = Depends(
+        get_audience_insights_service
+    ),
 ):
     return insights_service.get_lookalike_insights(uuid, user)
 
@@ -32,7 +36,9 @@ async def get_lookalike_insights_info(
 @router.get("/get-data-sources")
 def get_data_sources(
     user: dict = Depends(check_user_authorization_without_pixel),
-    insights_service: AudienceInsightsService = Depends(get_audience_insights_service),
+    insights_service: AudienceInsightsService = Depends(
+        get_audience_insights_service
+    ),
 ) -> dict[str, Any]:
     return insights_service.get_data_sources(user=user)
 
@@ -41,6 +47,8 @@ def get_data_sources(
 def search_data_sources(
     query: str,
     user: dict = Depends(check_user_authorization_without_pixel),
-    insights_service: AudienceInsightsService = Depends(get_audience_insights_service),
+    insights_service: AudienceInsightsService = Depends(
+        get_audience_insights_service
+    ),
 ) -> dict[str, Any]:
     return insights_service.search_data_sources(user=user, query=query)

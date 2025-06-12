@@ -1,16 +1,16 @@
-from models.base import Base
+from datetime import timezone, datetime
+
 from sqlalchemy import (
-    Integer,
     Column,
     TIMESTAMP,
     ForeignKey,
     Index,
     VARCHAR,
     BigInteger,
-    text,
     Sequence,
 )
-from datetime import datetime
+
+from models.base import Base
 
 
 class SuppressedContact(Base):
@@ -24,12 +24,19 @@ class SuppressedContact(Base):
         nullable=False,
     )
     five_x_five_user_id = Column(
-        BigInteger, ForeignKey("5x5_users.id", ondelete="CASCADE"), nullable=False
+        BigInteger,
+        ForeignKey("5x5_users.id", ondelete="CASCADE"),
+        nullable=False,
     )
     domain_id = Column(
-        BigInteger, ForeignKey("users_domains.id", ondelete="CASCADE"), nullable=False
+        BigInteger,
+        ForeignKey("users_domains.id", ondelete="CASCADE"),
+        nullable=False,
     )
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(
+        TIMESTAMP(timezone=False),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     suppression_type = Column(VARCHAR, nullable=False)
     suppression_detail = Column(VARCHAR, nullable=False)
     requested_at = Column(TIMESTAMP, nullable=True)

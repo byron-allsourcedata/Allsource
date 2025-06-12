@@ -17,7 +17,9 @@ parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from services.insightsUtils import InsightsUtils
 from models.audience_lookalikes import AudienceLookalikes
-from models.enrichment.enrichment_lookalike_scores import EnrichmentLookalikeScore
+from models.enrichment.enrichment_lookalike_scores import (
+    EnrichmentLookalikeScore,
+)
 from models.audience_lookalikes_persons import AudienceLookalikesPerson
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 
@@ -37,7 +39,6 @@ def setup_logging(level):
 
 async def send_sse(connection, user_id: int, data: dict):
     try:
-        print(f"userd_id = {user_id}")
         logging.info(f"send client throught SSE: {data, user_id}")
         await publish_rabbitmq_message(
             connection=connection,
@@ -49,7 +50,7 @@ async def send_sse(connection, user_id: int, data: dict):
 
 
 async def aud_sources_matching(
-    message: IncomingMessage, db_session: Session, connection, insights: InsightsUtils
+    message: IncomingMessage, db_session: Session, connection
 ):
     try:
         message_body = json.loads(message.body)
@@ -77,7 +78,9 @@ async def aud_sources_matching(
                 processed_size=AudienceLookalikes.processed_size
                 + len(enrichment_user_ids)
             )
-            .returning(AudienceLookalikes.processed_size, AudienceLookalikes.size)
+            .returning(
+                AudienceLookalikes.processed_size, AudienceLookalikes.size
+            )
         ).fetchone()
 
         db_session.commit()
@@ -92,10 +95,13 @@ async def aud_sources_matching(
         loop = asyncio.get_running_loop()
         new_insights = await loop.run_in_executor(
             None,
-            insights.compute_insights_for_lookalike,
+            InsightsUtils.compute_insights_for_lookalike,
             lookalike_id,
+            db_session,
         )
-        merged = insights.merge_insights_json(existing_insights, new_insights)
+        merged = InsightsUtils.merge_insights_json(
+            existing_insights, new_insights
+        )
 
         db_session.execute(
             update(AudienceLookalikes)
@@ -155,14 +161,11 @@ async def main():
             name=AUDIENCE_LOOKALIKES_MATCHING,
             durable=True,
         )
-        insights = InsightsUtils()
-
         await queue.consume(
             functools.partial(
                 aud_sources_matching,
                 connection=connection,
                 db_session=db_session,
-                insights=insights,
             )
         )
 

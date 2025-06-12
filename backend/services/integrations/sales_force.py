@@ -1,22 +1,26 @@
 import os
+import re
 import csv
 import logging
 import io
 import hashlib
-
-from persistence.integrations.common_integration_persistence import (
-    CommonIntegrationPersistence,
-)
 from persistence.leads_persistence import LeadsPersistence, FiveXFiveUser
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
+from schemas.integrations.sales_force import SalesForceProfile
 from fastapi import HTTPException
 from services.integrations.commonIntegration import *
 from models.integrations.users_domains_integrations import UserIntegration
 from models.integrations.integrations_users_sync import IntegrationUserSync
+from datetime import datetime, timedelta
+from utils import extract_first_email
 from enums import (
     IntegrationsStatus,
     SourcePlatformEnum,
@@ -26,7 +30,10 @@ from enums import (
 )
 import httpx
 from models.enrichment.enrichment_users import EnrichmentUser
+import json
+from utils import format_phone_number
 from typing import List
+from utils import validate_and_format_phone, format_phone_number
 from uuid import UUID
 
 
@@ -38,14 +45,12 @@ class SalesForceIntegrationsService:
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         client: httpx.Client,
-        repo: CommonIntegrationPersistence,
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
         self.sync_persistence = sync_persistence
-        self.repo = repo
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
 
@@ -60,7 +65,10 @@ class SalesForceIntegrationsService:
         api_key: str = None,
     ):
         if not headers:
-            headers = {"accept": "application/json", "content-type": "application/json"}
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+            }
         response = self.client.request(
             method, url, headers=headers, json=json, data=data, params=params
         )
@@ -86,8 +94,11 @@ class SalesForceIntegrationsService:
         return credential
 
     def get_smart_credentials(self, user_id: int):
-        credential = self.integrations_persisntece.get_smart_credentials_for_service(
-            user_id=user_id, service_name=SourcePlatformEnum.SALES_FORCE.value
+        credential = (
+            self.integrations_persisntece.get_smart_credentials_for_service(
+                user_id=user_id,
+                service_name=SourcePlatformEnum.SALES_FORCE.value,
+            )
         )
         return credential
 
@@ -116,7 +127,9 @@ class SalesForceIntegrationsService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integrations_persisntece.create_integration(
+            integration_data
+        )
 
         if not integartion:
             raise HTTPException(
@@ -182,7 +195,9 @@ class SalesForceIntegrationsService:
         for rec in records:
             all_keys.update(rec.keys())
 
-        writer = csv.DictWriter(output, fieldnames=list(all_keys), lineterminator="\n")
+        writer = csv.DictWriter(
+            output, fieldnames=list(all_keys), lineterminator="\n"
+        )
         writer.writeheader()
 
         for rec in records:
@@ -239,13 +254,19 @@ class SalesForceIntegrationsService:
             }
             upload_url = f"{base_url}/{job_id}/batches"
             upload_resp = self.__handle_request(
-                method="PUT", url=upload_url, data=csv_data, headers=upload_headers
+                method="PUT",
+                url=upload_url,
+                data=csv_data,
+                headers=upload_headers,
             )
             upload_resp.raise_for_status()
             close_url = f"{base_url}/{job_id}"
             close_payload = {"state": "UploadComplete"}
             close_resp = self.__handle_request(
-                method="PATCH", url=close_url, json=close_payload, headers=headers
+                method="PATCH",
+                url=close_url,
+                json=close_payload,
+                headers=headers,
             )
             close_resp.raise_for_status()
         except Exception as e:
@@ -254,7 +275,9 @@ class SalesForceIntegrationsService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         client_id = os.getenv("SALES_FORCE_TOKEN")
         client_secret = os.getenv("SALES_FORCE_SECRET")
         data = {
@@ -275,14 +298,19 @@ class SalesForceIntegrationsService:
             refresh_token = token_data.get("refresh_token")
             instance_url = token_data.get("instance_url")
             integration = self.__save_integrations(
-                refresh_token, instance_url, None if domain is None else domain.id, user
+                refresh_token,
+                instance_url,
+                None if domain is None else domain.id,
+                user,
             )
             return {
                 "integrations": integration,
                 "status": IntegrationsStatus.SUCCESS.value,
             }
         else:
-            raise HTTPException(status_code=400, detail="Failed to get access token")
+            raise HTTPException(
+                status_code=400, detail="Failed to get access token"
+            )
 
     async def create_sync(
         self,
@@ -292,12 +320,16 @@ class SalesForceIntegrationsService:
         user: dict,
         data_map: List[DataMap] = [],
     ):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get("id"))
+        credentials = self.get_credentials(
+            user_id=user.get("id"), domain_id=domain_id
+        )
         sync = self.sync_persistence.create_sync(
             {
                 "integration_id": credentials.id,
                 "domain_id": domain_id,
                 "leads_type": leads_type,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "data_map": data_map,
                 "created_by": created_by,
             }
@@ -341,9 +373,9 @@ class SalesForceIntegrationsService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        enrichment_users: list[EnrichmentUser],
+        enrichment_users: EnrichmentUser,
         target_schema: str,
-        validations: dict,
+        validations: dict = {},
     ):
         profiles = []
         access_token = self.get_access_token(user_integration.access_token)
@@ -376,23 +408,62 @@ class SalesForceIntegrationsService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
+    ):
+        profiles = []
+        access_token = self.get_access_token(user_integration.access_token)
+        if not access_token:
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+
+        for five_x_five_user in five_x_five_users:
+            profile = self.__mapped_sales_force_profile_lead(
+                five_x_five_user, integration_data_sync.data_map
+            )
+            if profile:
+                profiles.append(profile)
+
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        response_result = self.bulk_upsert_leads(
+            profiles=profiles,
+            instance_url=user_integration.instance_url,
+            access_token=access_token,
+        )
+        if response_result in (
+            ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
+            ProccessDataSyncResult.INCORRECT_FORMAT.value,
+        ):
+            return profile
+
+        return ProccessDataSyncResult.SUCCESS.value
+
     def set_suppression(self, suppression: bool, domain_id: int, user: dict):
         credential = self.get_credentials(domain_id, user.get("id"))
         if not credential:
             raise HTTPException(
-                status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value
+                status_code=403,
+                detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value,
             )
         credential.suppression = suppression
         self.integrations_persisntece.db.commit()
         return {"message": "successfuly"}
 
     def get_profile(
-        self, domain_id: int, fields: List[ContactFiled], date_last_sync: str = None
+        self,
+        domain_id: int,
+        fields: List[ContactFiled],
+        date_last_sync: str = None,
     ) -> List[ContactSuppression]:
         credentials = self.get_credentials(domain_id)
         if not credentials:
             raise HTTPException(
-                status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value
+                status_code=403,
+                detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value,
             )
         params = {
             "fields[profile]": ",".join(fields),
@@ -408,7 +479,9 @@ class SalesForceIntegrationsService:
         if response.status_code != 200:
             raise HTTPException(
                 status_code=400,
-                detail={"status": "Profiles from Klaviyo could not be retrieved"},
+                detail={
+                    "status": "Profiles from Klaviyo could not be retrieved"
+                },
             )
         return [
             self.__mapped_profile_from_klaviyo(profile)
@@ -421,31 +494,31 @@ class SalesForceIntegrationsService:
         target_schema: str,
         validations: dict,
         data_map: list,
-    ) -> Optional[dict]:
-        user_data: User = self.repo.get_user_data(enrichment_user.asid)
-        if not user_data or not user_data.contacts:
+    ) -> dict:
+        enrichment_contacts = enrichment_user.contacts
+        if not enrichment_contacts:
             return None
 
-        contacts = user_data.contacts
-
         business_email, personal_email, phone = (
-            self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+            self.sync_persistence.get_verified_email_and_phone(
+                enrichment_user.id
+            )
         )
         main_email, main_phone = resolve_main_email_and_phone(
-            enrichment_contacts=contacts,
+            enrichment_contacts=enrichment_contacts,
             validations=validations,
             target_schema=target_schema,
             business_email=business_email,
             personal_email=personal_email,
             phone=phone,
         )
-        first_name = contacts.first_name
-        last_name = contacts.last_name
+        first_name = enrichment_contacts.first_name
+        last_name = enrichment_contacts.last_name
 
         if not main_email or not first_name or not last_name:
             return None
 
-        professional_profiles = user_data.professional_profiles
+        professional_profiles = enrichment_user.professional_profiles
         if not professional_profiles:
             return None
 
@@ -459,12 +532,22 @@ class SalesForceIntegrationsService:
         state = None
         city = None
         postal_code = None
-        postal = user_data.postal
-        if postal:
-            country = postal.home_country or postal.business_country
-            state = postal.home_state or postal.business_state
-            city = postal.home_city or postal.business_city
-            postal_code = postal.home_postal_code or postal.business_postal_code
+        if enrichment_user.postal:
+            enrichment_postal = enrichment_user.postal
+            country = (
+                enrichment_postal.home_country
+                or enrichment_postal.business_country
+            )
+            state = (
+                enrichment_postal.home_state or enrichment_postal.business_state
+            )
+            city = (
+                enrichment_postal.home_city or enrichment_postal.business_city
+            )
+            postal_code = (
+                enrichment_postal.home_postal_code
+                or enrichment_postal.business_postal_code
+            )
 
         result = {
             # 'Id': str(enrichment_user.id),
@@ -482,3 +565,149 @@ class SalesForceIntegrationsService:
         }
 
         return result
+
+    def __mapped_sales_force_profile_lead(
+        self, five_x_five_user: FiveXFiveUser, data_map: list
+    ) -> dict:
+        email_fields = [
+            "business_email",
+            "personal_emails",
+            "additional_personal_emails",
+        ]
+
+        def get_valid_email(user) -> str:
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
+            verity = 0
+            for field in email_fields:
+                email = getattr(user, field, None)
+                if email:
+                    emails = extract_first_email(email)
+                    for e in emails:
+                        if (
+                            e
+                            and field == "business_email"
+                            and five_x_five_user.business_email_last_seen
+                        ):
+                            if (
+                                five_x_five_user.business_email_last_seen.strftime(
+                                    "%Y-%m-%d %H:%M:%S"
+                                )
+                                > thirty_days_ago_str
+                            ):
+                                return e.strip()
+                        if (
+                            e
+                            and field == "personal_emails"
+                            and five_x_five_user.personal_emails_last_seen
+                        ):
+                            personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
+                                "%Y-%m-%d %H:%M:%S"
+                            )
+                            if (
+                                personal_emails_last_seen_str
+                                > thirty_days_ago_str
+                            ):
+                                return e.strip()
+                        if (
+                            e
+                            and self.million_verifier_integrations.is_email_verify(
+                                email=e.strip()
+                            )
+                        ):
+                            return e.strip()
+                        verity += 1
+            if verity > 0:
+                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        first_email = get_valid_email(five_x_five_user)
+
+        if first_email in (
+            ProccessDataSyncResult.INCORRECT_FORMAT.value,
+            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+        ):
+            return first_email
+
+        company_name = getattr(five_x_five_user, "company_name", None)
+        if not company_name:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        first_phone = (
+            getattr(five_x_five_user, "mobile_phone")
+            or getattr(five_x_five_user, "personal_phone")
+            or getattr(five_x_five_user, "direct_number")
+            or getattr(five_x_five_user, "company_phone", None)
+        )
+        phone_number = validate_and_format_phone(first_phone)
+        mobile_phone = getattr(five_x_five_user, "mobile_phone", None)
+
+        location = {
+            "address1": getattr(five_x_five_user, "personal_address")
+            or getattr(five_x_five_user, "company_address", None),
+            "city": getattr(five_x_five_user, "personal_city")
+            or getattr(five_x_five_user, "company_city", None),
+            "region": getattr(five_x_five_user, "personal_state")
+            or getattr(five_x_five_user, "company_state", None),
+            "zip": getattr(five_x_five_user, "personal_zip")
+            or getattr(five_x_five_user, "company_zip", None),
+        }
+
+        description = getattr(five_x_five_user, "company_description", None)
+        if description:
+            description = description[:9999]
+
+        company_employee_count = getattr(
+            five_x_five_user, "company_employee_count", None
+        )
+        if company_employee_count:
+            company_employee_count = str(company_employee_count).replace(
+                "+", ""
+            )
+            if "to" in company_employee_count:
+                start, end = company_employee_count.split(" to ")
+                company_employee_count = (int(start) + int(end)) // 2
+            else:
+                company_employee_count = int(company_employee_count)
+            company_employee_count = str(company_employee_count)
+
+        company_revenue = getattr(five_x_five_user, "company_revenue", None)
+        if company_revenue:
+            try:
+                company_revenue = (
+                    str(company_revenue).replace("+", "").split(" to ")[-1]
+                )
+                if "Billion" in company_revenue:
+                    cleaned_value = float(company_revenue.split()[0]) * 10**9
+                elif "Million" in company_revenue:
+                    cleaned_value = float(company_revenue.split()[0]) * 10**6
+                elif company_revenue.isdigit():
+                    cleaned_value = float(company_revenue)
+                else:
+                    cleaned_value = 0
+            except:
+                cleaned_value = 0
+
+            company_revenue = str(cleaned_value)
+
+        return {
+            "FirstName": getattr(five_x_five_user, "first_name", None),
+            "LastName": getattr(five_x_five_user, "last_name", None),
+            "Email": first_email,
+            "Phone": ", ".join(phone_number.split(", ")[-3:])
+            if phone_number
+            else None,
+            "MobilePhone": ", ".join(mobile_phone.split(", ")[-3:])
+            if mobile_phone
+            else None,
+            "Company": company_name,
+            "Title": getattr(five_x_five_user, "job_title", None),
+            "Industry": getattr(five_x_five_user, "primary_industry", None),
+            "LeadSource": "Web",
+            "City": location.get("city") if location else None,
+            "State": location.get("region") if location else None,
+            "Country": "USA",
+            "NumberOfEmployees": company_employee_count,
+            "AnnualRevenue": company_revenue,
+            "Description": description,
+        }

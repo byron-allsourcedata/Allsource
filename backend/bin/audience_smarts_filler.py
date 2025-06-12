@@ -37,7 +37,9 @@ def format_ids(ids):
     return tuple(ids) if ids else None
 
 
-async def aud_smarts_reader(message: IncomingMessage, db_session: Session, connection):
+async def aud_smarts_reader(
+    message: IncomingMessage, db_session: Session, connection
+):
     try:
         message_body = json.loads(message.body)
         data = message_body.get("data")
@@ -87,7 +89,9 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
             try:
                 lalp_query = (
                     db_session.query(
-                        AudienceLALP.enrichment_user_id.label("enrichment_user_id")
+                        AudienceLALP.enrichment_user_id.label(
+                            "enrichment_user_id"
+                        )
                     )
                     .filter(
                         AudienceLALP.lookalike_id.in_(lookalike_include)
@@ -103,7 +107,9 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
 
                 smp_query = (
                     db_session.query(
-                        AudienceSMP.enrichment_user_id.label("enrichment_user_id")
+                        AudienceSMP.enrichment_user_id.label(
+                            "enrichment_user_id"
+                        )
                     )
                     .filter(
                         AudienceSMP.source_id.in_(source_include)
@@ -159,7 +165,9 @@ async def aud_smarts_reader(message: IncomingMessage, db_session: Session, conne
                     "validation_params": validation_params,
                     "count_iterations": common_count,
                     "count": count,
-                    "enrichment_users_ids": [str(person_id) for person_id in persons],
+                    "enrichment_users_ids": [
+                        str(person_id) for person_id in persons
+                    ],
                 }
                 await publish_rabbitmq_message(
                     connection=connection,

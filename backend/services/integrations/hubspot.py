@@ -1,6 +1,8 @@
 import logging
 import re
 import json
+from uuid import UUID
+
 from pydantic import EmailStr
 
 from enums import (
@@ -10,12 +12,11 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
+from models import FiveXFiveUser
 from persistence.domains import UserDomainsPersistence
-from persistence.integrations.common_integration_persistence import (
-    CommonIntegrationPersistence,
-    IntegrationContext,
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
 )
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 import httpx
@@ -25,11 +26,13 @@ from models.integrations.users_domains_integrations import UserIntegration
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from fastapi import HTTPException
 from models.enrichment.enrichment_users import EnrichmentUser
-from typing import List
+from typing import List, Any
 from schemas.integrations.integrations import DataMap
 from schemas.integrations.integrations import IntegrationCredentials
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
-from uuid import UUID
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from utils import get_valid_email, get_valid_location, get_valid_phone
 
 
 class HubspotIntegrationsService:
@@ -38,15 +41,13 @@ class HubspotIntegrationsService:
         domain_persistence: UserDomainsPersistence,
         integrations_persistence: IntegrationsPresistence,
         leads_persistence: LeadsPersistence,
-        repo: CommonIntegrationPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         client: httpx.Client,
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence
-        self.integrations_persistence = integrations_persistence
+        self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
-        self.repo = repo
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
@@ -84,7 +85,7 @@ class HubspotIntegrationsService:
         return response
 
     def get_credentials(self, domain_id: int, user_id: int):
-        credential = self.integrations_persistence.get_credentials_for_service(
+        credential = self.integrations_persisntece.get_credentials_for_service(
             domain_id=domain_id,
             user_id=user_id,
             service_name=SourcePlatformEnum.HUBSPOT.value,
@@ -92,8 +93,10 @@ class HubspotIntegrationsService:
         return credential
 
     def get_smart_credentials(self, user_id: int):
-        credential = self.integrations_persistence.get_smart_credentials_for_service(
-            user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value
+        credential = (
+            self.integrations_persisntece.get_smart_credentials_for_service(
+                user_id=user_id, service_name=SourcePlatformEnum.HUBSPOT.value
+            )
         )
         return credential
 
@@ -103,7 +106,7 @@ class HubspotIntegrationsService:
             credential.access_token = api_key
             credential.is_failed = False
             credential.error_message = None
-            self.integrations_persistence.db.commit()
+            self.integrations_persisntece.db.commit()
             return credential
 
         common_integration = os.getenv("COMMON_INTEGRATION") == "True"
@@ -119,7 +122,9 @@ class HubspotIntegrationsService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integration = self.integrations_persistence.create_integration(integration_data)
+        integration = self.integrations_persisntece.create_integration(
+            integration_data
+        )
 
         if not integration:
             raise HTTPException(
@@ -150,15 +155,19 @@ class HubspotIntegrationsService:
             return True
         return False
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         try:
             if self.test_API_key(credentials.hubspot.access_token) == False:
                 raise HTTPException(
-                    status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value
+                    status_code=400,
+                    detail=IntegrationsStatus.CREDENTAILS_INVALID.value,
                 )
         except:
             raise HTTPException(
-                status_code=400, detail=IntegrationsStatus.CREDENTAILS_INVALID.value
+                status_code=400,
+                detail=IntegrationsStatus.CREDENTAILS_INVALID.value,
             )
         integartions = self.__save_integrations(
             credentials.hubspot.access_token,
@@ -178,13 +187,17 @@ class HubspotIntegrationsService:
         data_map: List[DataMap] = None,
         leads_type: str = None,
     ):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get("id"))
+        credentials = self.get_credentials(
+            user_id=user.get("id"), domain_id=domain_id
+        )
         sync = self.sync_persistence.create_sync(
             {
                 "integration_id": credentials.id,
-                "domain_id": domain_id,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "leads_type": leads_type,
                 "data_map": data_map,
+                "domain_id": domain_id,
                 "created_by": created_by,
             }
         )
@@ -238,8 +251,8 @@ class HubspotIntegrationsService:
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
         enrichment_users: List[EnrichmentUser],
-        target_schema: str,
-        validations: dict,
+        target_schema: str = None,
+        validations: dict = {},
     ):
         profiles = []
         for enrichment_user in enrichment_users:
@@ -255,7 +268,31 @@ class HubspotIntegrationsService:
         if not profiles:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        list_response = self.__create_profiles(user_integration.access_token, profiles)
+        list_response = self.__create_profiles(
+            user_integration.access_token, profiles
+        )
+        return list_response
+
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        lead_users: List[FiveXFiveUser],
+    ):
+        profiles = []
+        for lead_user in lead_users:
+            profile = self.__mapped_profile_lead(
+                lead_user, integration_data_sync.data_map
+            )
+            if profile:
+                profiles.append(profile)
+
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        list_response = self.__create_profiles(
+            user_integration.access_token, profiles
+        )
         return list_response
 
     def __create_profiles(self, access_token, profiles_list):
@@ -264,7 +301,11 @@ class HubspotIntegrationsService:
             "filterGroups": [
                 {
                     "filters": [
-                        {"propertyName": "email", "operator": "IN", "values": emails}
+                        {
+                            "propertyName": "email",
+                            "operator": "IN",
+                            "values": emails,
+                        }
                     ]
                 }
             ],
@@ -288,12 +329,13 @@ class HubspotIntegrationsService:
         to_create = []
         to_update = []
         for props in profiles_list:
-            clean_props = {
-                k: v for k, v in props.items() if v is not None and k != "email"
-            }
+            clean_props = {k: v for k, v in props.items() if v is not None}
             email = props.get("email")
             if email in existing:
-                to_update.append({"id": existing[email], "properties": clean_props})
+                clean_props.pop("email", None)
+                to_update.append(
+                    {"id": existing[email], "properties": clean_props}
+                )
             else:
                 to_create.append({"properties": clean_props})
 
@@ -335,27 +377,26 @@ class HubspotIntegrationsService:
         target_schema: str,
         validations: dict,
         data_map: list,
-    ) -> dict:
-        user_data: User = self.repo.get_user_data(enrichment_user.asid)
-
-        if not user_data:
+    ) -> dict[str, Any] | None:
+        enrichment_contacts = enrichment_user.contacts
+        if not enrichment_contacts:
             return None
 
         business_email, personal_email, phone = (
-            self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+            self.sync_persistence.get_verified_email_and_phone(
+                enrichment_user.id
+            )
         )
-
         main_email, main_phone = resolve_main_email_and_phone(
-            enrichment_contacts=user_data.contacts,
+            enrichment_contacts=enrichment_contacts,
             validations=validations,
             target_schema=target_schema,
             business_email=business_email,
             personal_email=personal_email,
             phone=phone,
         )
-
-        first_name = user_data.contacts.first_name
-        last_name = user_data.contacts.last_name
+        first_name = enrichment_contacts.first_name
+        last_name = enrichment_contacts.last_name
 
         if not main_email or not first_name or not last_name:
             return None
@@ -366,23 +407,46 @@ class HubspotIntegrationsService:
             "lastname": last_name,
         }
 
-        context: IntegrationContext = self.repo.build_integration_context(
-            enrichment_user=enrichment_user,
-            main_phone=main_phone,
-        )
-
-        # TODO DELETE COMMENT
-        # context = {
-        #     "main_phone": main_phone,
-        #     "professional_profiles": user_data.professional_profiles,
-        #     "postal": user_data.postal,
-        #     "personal_profiles": user_data.personal_profiles,
-        # }
-
         required_types = {m["type"] for m in data_map}
+        context = {
+            "main_phone": main_phone,
+            "professional_profiles": enrichment_user.professional_profiles,
+            "postal": enrichment_user.postal,
+            "personal_profiles": enrichment_user.personal_profiles,
+        }
+
         for field_type in required_types:
             filler = FIELD_FILLERS.get(field_type)
             if filler:
                 filler(result, context)
 
         return result
+
+    def __mapped_profile_lead(
+        self, lead: FiveXFiveUser, data_map: list
+    ) -> dict[str, Any] | None:
+        first_email = get_valid_email(lead, self.million_verifier_integrations)
+
+        if first_email in (
+            ProccessDataSyncResult.INCORRECT_FORMAT.value,
+            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+        ):
+            return None
+
+        first_phone = get_valid_phone(lead)
+        location = get_valid_location(lead)
+
+        return {
+            "email": first_email,
+            "phone": first_phone,
+            "address": location[0],
+            "firstname": getattr(lead, "first_name", None),
+            "lastname": getattr(lead, "last_name", None),
+            "company": getattr(lead, "company_name", None),
+            "website": getattr(lead, "company_domain", None),
+            "jobtitle": getattr(lead, "job_title", None),
+            "industry": getattr(lead, "primary_industry", None),
+            "annualrevenue": getattr(lead, "company_revenue", None),
+            "hs_linkedin_url": getattr(lead, "linkedin_url", None),
+            "gender": getattr(lead, "gender", None),
+        }

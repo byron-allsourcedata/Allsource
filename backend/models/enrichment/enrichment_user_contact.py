@@ -1,9 +1,7 @@
 from sqlalchemy import (
     Column,
-    Integer,
     TEXT,
     UUID,
-    SmallInteger,
     TIMESTAMP,
     ForeignKey,
     text,
@@ -12,6 +10,7 @@ from sqlalchemy import (
     inspect,
 )
 from sqlalchemy.orm import relationship
+
 from models.base import Base
 
 
@@ -50,7 +49,9 @@ class EnrichmentUserContact(Base):
     linkedin_url = Column(TEXT, nullable=True)
     email = Column(TEXT, nullable=True)
 
-    __table_args__ = (Index("ix_enrichment_users_contacts_asid", asid),)
+    __table_args__ = (
+        Index("ix_enrichment_users_contacts_asid", asid, unique=True),
+    )
 
     @classmethod
     def get_fields(cls, exclude_fields=None):

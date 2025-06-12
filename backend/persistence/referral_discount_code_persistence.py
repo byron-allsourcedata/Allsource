@@ -1,14 +1,18 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import asc
+
+from db_dependencies import Db
 from models.referral_users import ReferralUser
 from models.users import Users
 from datetime import datetime, timezone
 from enums import ProgramType
 from models.referral_discount_codes import ReferralDiscountCode
+from resolver import injectable
 
 
+@injectable
 class ReferralDiscountCodesPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_referral_discount_codes(self):
@@ -22,7 +26,8 @@ class ReferralDiscountCodesPersistence:
         return (
             self.db.query(ReferralDiscountCode.coupon)
             .join(
-                ReferralUser, ReferralUser.discount_code_id == ReferralDiscountCode.id
+                ReferralUser,
+                ReferralUser.discount_code_id == ReferralDiscountCode.id,
             )
             .where(ReferralUser.user_id == user_id)
             .scalar()
@@ -36,7 +41,9 @@ class ReferralDiscountCodesPersistence:
         )
 
     def save_referral_users(self, user_id, parent_user_id, discount_code_id):
-        parent_user = self.db.query(Users).where(Users.id == parent_user_id).first()
+        parent_user = (
+            self.db.query(Users).where(Users.id == parent_user_id).first()
+        )
         referral_program_type = (
             ProgramType.PARTNER.value
             if parent_user.is_partner

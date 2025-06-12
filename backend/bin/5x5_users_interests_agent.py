@@ -108,7 +108,9 @@ async def main():
         session = aioboto3.Session()
         await queue.consume(
             functools.partial(
-                on_message_received, s3_session=session, rmq_connection=connection
+                on_message_received,
+                s3_session=session,
+                rmq_connection=connection,
             )
         )
         await asyncio.Future()

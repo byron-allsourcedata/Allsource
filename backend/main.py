@@ -2,9 +2,10 @@ import logging
 
 from h11._abnf import status_code
 
-from config import ClickhouseConfig
 from config.base import Base
+from config.hubspot import HubspotConfig
 from config.sentry import SentryConfig
+from config.util import EnvVarError
 from routers import main_router
 from external_api_routers import subapi_router
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,6 +32,15 @@ if SentryConfig.SENTRY_DSN is not None:
 else:
     logger.warning("Error alerts are disabled")
 
+
+try:
+    HubspotConfig.init()
+    logger.warning("Hubspot CRM integration is enabled")
+except EnvVarError as e:
+    logger.warning(
+        f"Error initializing Hubspot: {e}\n\t\tHubspot CRM integration is disabled"
+    )
+
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 external_api = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -49,16 +59,26 @@ async def http_exception_handler(request: Request, exc: Exception):
     logger.error(f"HTTP Exception: {str(exc)}\n{traceback.format_exc()}")
     return JSONResponse(
         status_code=500,
-        content={"status": "Internal Server Error", "detail": {"error": str(exc)}},
+        content={
+            "status": "Internal Server Error",
+            "detail": {"error": str(exc)},
+        },
     )
 
 
 @external_api.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logger.error(f"Validation Exception: {exc.errors()}\n{traceback.format_exc()}")
+async def validation_exception_handler(
+    request: Request, exc: RequestValidationError
+):
+    logger.error(
+        f"Validation Exception: {exc.errors()}\n{traceback.format_exc()}"
+    )
     return JSONResponse(
         status_code=400,
-        content={"status": status_code, "detail": {"error": traceback.format_exc()}},
+        content={
+            "status": status_code,
+            "detail": {"error": traceback.format_exc()},
+        },
     )
 
 

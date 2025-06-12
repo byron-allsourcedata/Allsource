@@ -1,5 +1,16 @@
-from sqlalchemy import Column, event, Integer, TIMESTAMP, TEXT, VARCHAR, text, Sequence
-from .base import Base, create_timestamps, update_timestamps
+from datetime import datetime, timezone
+
+from sqlalchemy import (
+    Column,
+    event,
+    Integer,
+    TIMESTAMP,
+    TEXT,
+    VARCHAR,
+    text,
+    Sequence,
+)
+from .base import Base, update_timestamps
 
 
 class PartnersAsset(Base):
@@ -15,9 +26,16 @@ class PartnersAsset(Base):
     type = Column(VARCHAR(16), nullable=False)
     file_url = Column(TEXT, nullable=False)
     preview_url = Column(TEXT, nullable=True)
-    created_at = Column(TIMESTAMP, nullable=False, server_default=text("now()"))
-    updated_at = Column(TIMESTAMP, nullable=False, server_default=text("now()"))
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    updated_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
 
 
-event.listen(PartnersAsset, "before_insert", create_timestamps)
 event.listen(PartnersAsset, "before_update", update_timestamps)

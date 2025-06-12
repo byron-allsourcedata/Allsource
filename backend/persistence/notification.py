@@ -17,7 +17,9 @@ class NotificationPersistence:
             .first()
         )
 
-    def save_account_notification(self, user_id, account_notification_id, params=None):
+    def save_account_notification(
+        self, user_id, account_notification_id, params=None
+    ):
         account_notification = UserAccountNotification(
             user_id=user_id,
             notification_id=account_notification_id,
@@ -32,7 +34,8 @@ class NotificationPersistence:
             self.db.query(UserAccountNotification)
             .filter(
                 UserAccountNotification.user_id == user_id,
-                UserAccountNotification.notification_id == account_notification_id,
+                UserAccountNotification.notification_id
+                == account_notification_id,
                 UserAccountNotification.is_checked == False,
             )
             .order_by(desc(UserAccountNotification.id))
@@ -45,14 +48,16 @@ class NotificationPersistence:
             self.db.query(UserAccountNotification).filter(
                 UserAccountNotification.user_id == user_id
             ).update(
-                {UserAccountNotification.is_checked: True}, synchronize_session=False
+                {UserAccountNotification.is_checked: True},
+                synchronize_session=False,
             )
         else:
             notification_ids = request.notification_ids
             self.db.query(UserAccountNotification).filter(
                 UserAccountNotification.id.in_(notification_ids)
             ).update(
-                {UserAccountNotification.is_checked: True}, synchronize_session=False
+                {UserAccountNotification.is_checked: True},
+                synchronize_session=False,
             )
 
         self.db.commit()
@@ -77,7 +82,8 @@ class NotificationPersistence:
             )
             .join(
                 UserAccountNotification,
-                AccountNotification.id == UserAccountNotification.notification_id,
+                AccountNotification.id
+                == UserAccountNotification.notification_id,
             )
             .join(Users, UserAccountNotification.user_id == Users.id)
             .filter(Users.id == user_id)

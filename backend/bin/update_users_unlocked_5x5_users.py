@@ -31,7 +31,8 @@ def update_users_unlocked(
     users_unlocked_five_x_five_user = (
         session.query(UsersUnlockedFiveXFiveUser)
         .filter(
-            UsersUnlockedFiveXFiveUser.five_x_five_up_id == five_x_five_user.up_id,
+            UsersUnlockedFiveXFiveUser.five_x_five_up_id
+            == five_x_five_user.up_id,
             UsersUnlockedFiveXFiveUser.domain_id == domain_id,
         )
         .first()
@@ -64,7 +65,9 @@ async def process_users(session):
                 LeadUser.created_at,
                 LeadUser.domain_id,
             )
-            .filter(and_(LeadUser.id > current_id, LeadUser.id <= current_id + 1000))
+            .filter(
+                and_(LeadUser.id > current_id, LeadUser.id <= current_id + 1000)
+            )
             .all()
         )
         for lead_user in leads_users:

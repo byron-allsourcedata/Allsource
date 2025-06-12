@@ -1,4 +1,6 @@
 from sqlalchemy.orm import Session
+
+from db_dependencies import Db
 from models.referral_payouts import ReferralPayouts
 from datetime import datetime, timezone
 from sqlalchemy import extract, or_, func, case, and_, asc, desc
@@ -9,13 +11,21 @@ from models.referral_discount_codes import ReferralDiscountCode
 import math
 import pytz
 
+from resolver import injectable
 
+
+@injectable
 class ReferralPayoutsPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def create_referral_payouts(
-        self, reward_amount, user_id, referral_parent_id, reward_type, plan_amount
+        self,
+        reward_amount,
+        user_id,
+        referral_parent_id,
+        reward_type,
+        plan_amount,
     ):
         referral_payout = ReferralPayouts(
             parent_id=referral_parent_id,
@@ -86,10 +96,14 @@ class ReferralPayoutsPersistence:
         )
 
         if year:
-            query = query.filter(extract("year", ReferralPayouts.created_at) == year)
+            query = query.filter(
+                extract("year", ReferralPayouts.created_at) == year
+            )
 
         if month:
-            query = query.filter(extract("month", ReferralPayouts.created_at) == month)
+            query = query.filter(
+                extract("month", ReferralPayouts.created_at) == month
+            )
 
         return query.all()
 
@@ -110,10 +124,14 @@ class ReferralPayoutsPersistence:
         )
 
         if year:
-            query = query.filter(extract("year", ReferralPayouts.created_at) == year)
+            query = query.filter(
+                extract("year", ReferralPayouts.created_at) == year
+            )
 
         if month:
-            query = query.filter(extract("month", ReferralPayouts.created_at) == month)
+            query = query.filter(
+                extract("month", ReferralPayouts.created_at) == month
+            )
 
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
@@ -157,7 +175,9 @@ class ReferralPayoutsPersistence:
                 ReferralDiscountCode.coupon,
             )
             .join(ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id)
-            .outerjoin(ReferralUser, ReferralUser.user_id == ReferralPayouts.user_id)
+            .outerjoin(
+                ReferralUser, ReferralUser.user_id == ReferralPayouts.user_id
+            )
             .outerjoin(Users, Users.id == ReferralPayouts.user_id)
             .outerjoin(
                 ReferralDiscountCode,
@@ -168,7 +188,9 @@ class ReferralPayoutsPersistence:
         )
 
         if reward_type == "master_partner":
-            query = query.filter(ReferralPayouts.reward_type == "master_partner")
+            query = query.filter(
+                ReferralPayouts.reward_type == "master_partner"
+            )
         else:
             query = query.filter(ReferralPayouts.reward_type == "partner")
 
@@ -190,10 +212,14 @@ class ReferralPayoutsPersistence:
             )
 
         if year:
-            query = query.filter(extract("year", ReferralPayouts.created_at) == year)
+            query = query.filter(
+                extract("year", ReferralPayouts.created_at) == year
+            )
 
         if month:
-            query = query.filter(extract("month", ReferralPayouts.created_at) == month)
+            query = query.filter(
+                extract("month", ReferralPayouts.created_at) == month
+            )
 
         sort_options = {
             "join_date": Users.created_at,
@@ -209,20 +235,31 @@ class ReferralPayoutsPersistence:
 
     def get_overview_payout_history(self, page, per_page, from_date, to_date):
         start_date = (
-            datetime.fromtimestamp(from_date, tz=pytz.UTC) if from_date else None
+            datetime.fromtimestamp(from_date, tz=pytz.UTC)
+            if from_date
+            else None
         )
-        end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC) if to_date else None
+        end_date = (
+            datetime.fromtimestamp(to_date, tz=pytz.UTC) if to_date else None
+        )
         paid_alias = case(
-            (ReferralPayouts.status == "paid", ReferralPayouts.reward_amount), else_=0
+            (ReferralPayouts.status == "paid", ReferralPayouts.reward_amount),
+            else_=0,
         )
         query = self.db.query(
-            func.to_char(ReferralPayouts.paid_at, "YYYY-MM").label("year_month"),
+            func.to_char(ReferralPayouts.paid_at, "YYYY-MM").label(
+                "year_month"
+            ),
             func.sum(ReferralPayouts.plan_amount).label("total_revenue"),
-            func.sum(ReferralPayouts.reward_amount).label("total_reward_amount"),
+            func.sum(ReferralPayouts.reward_amount).label(
+                "total_reward_amount"
+            ),
             func.sum(paid_alias).label("total_rewards_paid"),
         ).filter(ReferralPayouts.paid_at.isnot(None))
         if start_date and end_date:
-            query = query.filter(ReferralPayouts.paid_at.between(start_date, end_date))
+            query = query.filter(
+                ReferralPayouts.paid_at.between(start_date, end_date)
+            )
         query = query.group_by("year_month").order_by("year_month")
         offset = (page - 1) * per_page
         result = query.limit(per_page).offset(offset).all()

@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
     BigInteger,
@@ -5,10 +7,10 @@ from sqlalchemy import (
     VARCHAR,
     ForeignKey,
     Index,
-    UniqueConstraint,
+    event,
 )
-from sqlalchemy import event
-from .base import Base, create_timestamps, update_timestamps
+
+from .base import Base, update_timestamps
 
 
 class DataSyncImportedLead(Base):
@@ -16,7 +18,6 @@ class DataSyncImportedLead(Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     status = Column(VARCHAR(64), nullable=False)
-    five_x_five_up_id = Column(VARCHAR, nullable=False)
     service_name = Column(VARCHAR(128), nullable=False)
     data_sync_id = Column(
         BigInteger,
@@ -25,8 +26,16 @@ class DataSyncImportedLead(Base):
         ),
         nullable=False,
     )
-    created_at = Column(TIMESTAMP, nullable=True)
-    updated_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    updated_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     lead_users_id = Column(
         BigInteger,
         ForeignKey("leads_users.id", ondelete="CASCADE", onupdate="CASCADE"),
@@ -35,17 +44,17 @@ class DataSyncImportedLead(Base):
 
     __table_args__ = (
         Index(
-            "data_sync_imported_leads_data_sync_id_status_idx", "data_sync_id", "status"
+            "data_sync_imported_leads_data_sync_id_status_idx",
+            data_sync_id,
+            status,
         ),
-        UniqueConstraint(
-            "five_x_five_up_id",
-            "service_name",
-            "data_sync_id",
-            "lead_users_id",
-            name="data_sync_imported_leads_five_x_five_up_id_service_name_data_sy",
+        Index(
+            "data_sync_imported_leads_lead_users_id_data_sync_id_idx",
+            lead_users_id,
+            data_sync_id,
+            unique=True,
         ),
     )
 
 
-event.listen(DataSyncImportedLead, "before_insert", create_timestamps)
 event.listen(DataSyncImportedLead, "before_update", update_timestamps)

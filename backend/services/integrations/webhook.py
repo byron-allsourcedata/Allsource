@@ -1,10 +1,14 @@
 import logging
 from datetime import datetime
+
+from models import UserIntegration
 from utils import format_phone_number
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from persistence.domains import UserDomainsPersistence
 from persistence.leads_persistence import LeadsPersistence
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from datetime import datetime, timedelta
 from typing import List
@@ -12,9 +16,16 @@ import httpx
 import os
 from models.five_x_five_users import FiveXFiveUser
 from schemas.integrations.integrations import DataMap, IntegrationCredentials
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from fastapi import HTTPException
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from enums import (
+    IntegrationsStatus,
+    SourcePlatformEnum,
+    ProccessDataSyncResult,
+    DataSyncType,
+)
 from httpx import Client
 from utils import extract_first_email
 
@@ -57,7 +68,12 @@ class WebhookIntegrationService:
                     "content-type": "application/json",
                 }
             response = self.client.request(
-                method, url, headers=headers, json=json, data=data, params=params
+                method,
+                url,
+                headers=headers,
+                json=json,
+                data=data,
+                params=params,
             )
             if response.is_redirect:
                 redirect_url = response.headers.get("Location")
@@ -101,7 +117,9 @@ class WebhookIntegrationService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integration_persistence.create_integration(integration_data)
+        integartion = self.integration_persistence.create_integration(
+            integration_data
+        )
 
         if not integartion:
             raise HTTPException(
@@ -111,7 +129,9 @@ class WebhookIntegrationService:
 
         return IntegrationsStatus.SUCCESS
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         integration = self.save_integration(domain_id=domain.id, user=user)
         return integration
 
@@ -126,7 +146,9 @@ class WebhookIntegrationService:
                 status_code=403,
                 detail={"status": IntegrationsStatus.CREDENTIALS_NOT_FOUND},
             )
-        response = self.__handle_request(url=list.webhook_url, method=list.method)
+        response = self.__handle_request(
+            url=list.webhook_url, method=list.method
+        )
         if not response or response.status_code == 404:
             self.integration_persistence.db.commit()
             return IntegrationsStatus.INVALID_WEBHOOK_URL
@@ -156,6 +178,8 @@ class WebhookIntegrationService:
                 "domain_id": domain_id,
                 "leads_type": leads_type,
                 "data_map": data_map,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "created_by": created_by,
                 "hook_url": webhook_url,
                 "method": method,
@@ -163,11 +187,15 @@ class WebhookIntegrationService:
         )
         return sync
 
-    async def process_data_sync(
-        self, five_x_five_user, access_token, integration_data_sync, lead_user
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
     ):
         profile = self.__create_profile(
-            five_x_five_user, integration_data_sync, lead_user
+            five_x_five_users=five_x_five_users,
+            integration_data_sync=integration_data_sync,
         )
         if profile in (
             ProccessDataSyncResult.AUTHENTICATION_FAILED.value,
@@ -178,17 +206,29 @@ class WebhookIntegrationService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __create_profile(self, five_x_five_user, sync: IntegrationUserSync, lead_user):
-        data = self.__mapped_lead(five_x_five_user, sync.data_map, lead_user)
-        if data in (
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return data
+    def __create_profile(
+        self,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
+    ):
+        results = []
+        for five_x_five_user in five_x_five_users:
+            data = self.__mapped_lead(
+                five_x_five_user=five_x_five_user,
+                data_map=integration_data_sync.data_map,
+            )
+            if data in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                return data
+            results.append(data)
 
-        logger.info(f"sending data: {data}")
+            logger.info(f"sending data: {data}")
         response = self.__handle_request(
-            url=sync.hook_url, method=sync.method, json=data
+            url=integration_data_sync.hook_url,
+            method=integration_data_sync.method,
+            json=results,
         )
         if not response or response.status_code == 401:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
@@ -250,7 +290,10 @@ class WebhookIntegrationService:
     def map_phone_numbers(five_x_five_user, mapped_fields):
         properties = {}
 
-        if "business_phone" in mapped_fields and "personal_phone" in mapped_fields:
+        if (
+            "business_phone" in mapped_fields
+            and "personal_phone" in mapped_fields
+        ):
             direct, personal, mobile = (
                 five_x_five_user.direct_number,
                 five_x_five_user.personal_phone,
@@ -285,7 +328,10 @@ class WebhookIntegrationService:
                     properties["business_phone"] = None
                     properties["personal_phone"] = format_phone_number(personal)
 
-        if "business_phone" in mapped_fields and "business_phone" not in properties:
+        if (
+            "business_phone" in mapped_fields
+            and "business_phone" not in properties
+        ):
             direct, personal, mobile = (
                 five_x_five_user.direct_number,
                 five_x_five_user.personal_phone,
@@ -305,7 +351,10 @@ class WebhookIntegrationService:
                 case (False, True, False) | (False, False, False):
                     properties["business_phone"] = None
 
-        if "personal_phone" in mapped_fields and "personal_phone" not in properties:
+        if (
+            "personal_phone" in mapped_fields
+            and "personal_phone" not in properties
+        ):
             personal, mobile = (
                 five_x_five_user.personal_phone,
                 five_x_five_user.mobile_phone,
@@ -324,9 +373,12 @@ class WebhookIntegrationService:
                     properties["personal_phone"] = None
         return properties
 
-    def __mapped_lead(self, five_x_five_user: FiveXFiveUser, data_map, lead_user):
+    def __mapped_lead(self, five_x_five_user: FiveXFiveUser, data_map):
         properties = {}
-        if all(item.get("type") == "" and item.get("value") == "" for item in data_map):
+        if all(
+            item.get("type") == "" and item.get("value") == ""
+            for item in data_map
+        ):
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
         mapped_fields = {mapping["type"] for mapping in data_map}
@@ -335,45 +387,19 @@ class WebhookIntegrationService:
             value_field = getattr(five_x_five_user, five_x_five_field, "")
             if value_field:
                 if isinstance(value_field, datetime):
-                    properties[mapping["value"]] = value_field.strftime("%Y-%m-%d")
+                    properties[mapping["value"]] = value_field.strftime(
+                        "%Y-%m-%d"
+                    )
                 elif isinstance(value_field, str):
                     properties[mapping["value"]] = (
-                        value_field[:2048] if len(value_field) > 2048 else value_field
+                        value_field[:2048]
+                        if len(value_field) > 2048
+                        else value_field
                     )
                 else:
                     properties[mapping["value"]] = value_field
             else:
                 properties[mapping["value"]] = ""
-
-        if "urls_visited" in mapped_fields:
-            page_time = self.leads_persistence.get_latest_page_time(lead_user.id)
-            page_time_array = [
-                {
-                    "page": row.page,
-                    "total_spent_time": str(row.total_spent_time),
-                    "count": row.count,
-                }
-                for row in page_time
-            ]
-            for mapping in data_map:
-                if mapping["type"] == "urls_visited":
-                    properties[mapping["value"]] = page_time_array
-
-        if "urls_visited_with_parameters" in mapped_fields:
-            page_time = self.leads_persistence.get_latest_page_time(lead_user.id)
-            page_time_array = [
-                {
-                    "page": self.build_full_url(
-                        row.page, row.page_parameters.replace(", ", "&")
-                    ),
-                    "total_spent_time": str(row.total_spent_time),
-                    "count": row.count,
-                }
-                for row in page_time
-            ]
-            for mapping in data_map:
-                if mapping["type"] == "urls_visited_with_parameters":
-                    properties[mapping["value"]] = page_time_array
 
         if "time_on_site" in mapped_fields or "url_visited" in mapped_fields:
             time_on_site, url_visited = self.leads_persistence.get_visit_stats(
@@ -402,7 +428,9 @@ class WebhookIntegrationService:
                 five_x_five_user.mobile_phone
             )
 
-        properties.update(self.map_phone_numbers(five_x_five_user, mapped_fields))
+        properties.update(
+            self.map_phone_numbers(five_x_five_user, mapped_fields)
+        )
 
         if "personal_email" in mapped_fields:
             email_fields = ["personal_emails", "additional_personal_emails"]

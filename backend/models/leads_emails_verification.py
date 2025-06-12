@@ -1,16 +1,15 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
-    event,
-    Integer,
     TIMESTAMP,
-    BOOLEAN,
     VARCHAR,
     Index,
     BigInteger,
-    text,
     Boolean,
     Sequence,
 )
+
 from .base import Base
 
 
@@ -28,5 +27,9 @@ class LeadEmailsVerification(Base):
     )
     email = Column(VARCHAR(128), nullable=False)
     is_verify = Column(Boolean, nullable=False)
-    created_at = Column(TIMESTAMP, nullable=False)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     verify_result = Column(VARCHAR(64), nullable=False)

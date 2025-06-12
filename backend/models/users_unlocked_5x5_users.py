@@ -1,18 +1,18 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
     ForeignKey,
     event,
-    Integer,
     VARCHAR,
     Index,
     DECIMAL,
     BigInteger,
-    text,
     Sequence,
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP
 
-from .base import Base, create_timestamps
+from .base import Base, update_timestamps
 
 
 class UsersUnlockedFiveXFiveUser(Base):
@@ -40,15 +40,25 @@ class UsersUnlockedFiveXFiveUser(Base):
     user_id = Column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
-    created_at = Column(TIMESTAMP(precision=6), nullable=True)
-    updated_at = Column(TIMESTAMP(precision=6), nullable=True)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+    updated_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     transaction_id = Column(VARCHAR, nullable=True)
     amount_credits = Column(DECIMAL(10, 2), nullable=True)
     domain_id = Column(
-        BigInteger, ForeignKey("users_domains.id", ondelete="CASCADE"), nullable=True
+        BigInteger,
+        ForeignKey("users_domains.id", ondelete="CASCADE"),
+        nullable=True,
     )
     five_x_five_up_id = Column(VARCHAR, nullable=False)
     stripe_request_created_at = Column(TIMESTAMP, nullable=True)
 
 
-event.listen(UsersUnlockedFiveXFiveUser, "before_insert", create_timestamps)
+event.listen(UsersUnlockedFiveXFiveUser, "before_insert", update_timestamps)

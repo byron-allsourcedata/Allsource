@@ -42,17 +42,27 @@ class CommonIntegrationPersistence:
     def __init__(self, db: Db):
         self.db = db
 
-    def get_contacts_by_user(self, asid: UUID) -> Optional[EnrichmentUserContact]:
-        return self.db.query(EnrichmentUserContact).filter_by(asid=asid).one_or_none()
+    def get_contacts_by_user(
+        self, asid: UUID
+    ) -> Optional[EnrichmentUserContact]:
+        return (
+            self.db.query(EnrichmentUserContact)
+            .filter_by(asid=asid)
+            .one_or_none()
+        )
 
     def get_postal_by_user(self, asid: UUID) -> Optional[EnrichmentPostal]:
-        return self.db.query(EnrichmentPostal).filter_by(asid=asid).one_or_none()
+        return (
+            self.db.query(EnrichmentPostal).filter_by(asid=asid).one_or_none()
+        )
 
     def get_personal_profiles_by_user(
         self, asid: UUID
     ) -> Optional[EnrichmentPersonalProfiles]:
         return (
-            self.db.query(EnrichmentPersonalProfiles).filter_by(asid=asid).one_or_none()
+            self.db.query(EnrichmentPersonalProfiles)
+            .filter_by(asid=asid)
+            .one_or_none()
         )
 
     def get_professional_profiles_by_user(
@@ -70,12 +80,16 @@ class CommonIntegrationPersistence:
         personal_model = self.get_personal_profiles_by_user(user_asid)
         professional_model = self.get_professional_profiles_by_user(user_asid)
 
-        contacts = UserContacts.from_orm(contact_model) if contact_model else None
+        contacts = (
+            UserContacts.from_orm(contact_model) if contact_model else None
+        )
 
         postal = UserPostalInfo.from_orm(postal_model) if postal_model else None
 
         personal_profiles: Optional[PersonalProfiles] = (
-            PersonalProfiles.from_orm(personal_model) if personal_model else None
+            PersonalProfiles.from_orm(personal_model)
+            if personal_model
+            else None
         )
 
         professional_profiles: Optional[ProfessionalProfile] = (

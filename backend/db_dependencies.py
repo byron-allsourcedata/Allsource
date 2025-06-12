@@ -27,4 +27,6 @@ def get_clickhouse_db():
         ch.close()
 
 
-Clickhouse = Annotated[clickhouse_connect.driver.Client, Depends(get_clickhouse_db)]
+Clickhouse = Annotated[
+    clickhouse_connect.driver.Client, Depends(get_clickhouse_db)
+]

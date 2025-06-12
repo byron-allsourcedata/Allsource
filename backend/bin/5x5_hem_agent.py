@@ -48,7 +48,9 @@ def assume_role(role_arn, sts_client):
 file_list = []
 
 
-async def on_message_received(message_body, s3_session, sts_client, rmq_connection):
+async def on_message_received(
+    message_body, s3_session, sts_client, rmq_connection
+):
     message_body_json = json.loads(message_body)
     file_name = message_body_json["file_name"]
     logging.info(f"{file_name}")
@@ -111,7 +113,9 @@ async def main():
             message = await queue.get(no_ack=False)
             if message:
                 await message.ack()
-                await on_message_received(message.body, session, sts_client, connection)
+                await on_message_received(
+                    message.body, session, sts_client, connection
+                )
             else:
                 logging.info("No message returned")
                 await asyncio.sleep(5)

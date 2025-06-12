@@ -1,10 +1,18 @@
 import requests
 from bingads import ServiceClient, AuthorizationData, OAuthWebAuthCodeGrant
-from bingads.v13.bulk import BulkServiceManager, EntityUploadParameters, BulkFileReader
+from bingads.v13.bulk import (
+    BulkServiceManager,
+    EntityUploadParameters,
+    BulkFileReader,
+)
 from bingads.v13.bulk.entities import BulkCustomerList
 from bingads.service_client import AuthorizationData, ServiceClient
 from bingads.v13 import *
-from bingads.v13.bulk import BulkServiceManager, BulkCustomAudience, BulkFileReader
+from bingads.v13.bulk import (
+    BulkServiceManager,
+    BulkCustomAudience,
+    BulkFileReader,
+)
 from bingads.v13.bulk.entities.audiences import BulkCustomAudience
 from bingads.v13.bulk import BulkServiceManager, BulkFileReader
 import requests
@@ -69,27 +77,35 @@ from bingads.service_client import ServiceClient
 from bingads.authorization import AuthorizationData, OAuthWebAuthCodeGrant
 
 
-def _get_authorization_data(developer_token, client_id, client_secret, refresh_token):
+def _get_authorization_data(
+    developer_token, client_id, client_secret, refresh_token
+):
     auth = OAuthWebAuthCodeGrant(
         client_id=client_id,
         client_secret=client_secret,
         redirection_uri="http://localhost:3000/bing-ads-landing",
     )
     auth.request_oauth_tokens_by_refresh_token(refresh_token)
-    return AuthorizationData(developer_token=developer_token, authentication=auth)
+    return AuthorizationData(
+        developer_token=developer_token, authentication=auth
+    )
 
 
 def _setup_services(auth_data):
     # CustomerManagement для получения customer_id и account_id
     customer_service = ServiceClient(
-        service="CustomerManagementService", version=13, authorization_data=auth_data
+        service="CustomerManagementService",
+        version=13,
+        authorization_data=auth_data,
     )
     user = customer_service.GetUser().User
     auth_data.customer_id = user.CustomerId
 
     accounts = customer_service.SearchAccounts(
         Predicates={
-            "Predicate": [{"Field": "UserId", "Operator": "Equals", "Value": user.Id}]
+            "Predicate": [
+                {"Field": "UserId", "Operator": "Equals", "Value": user.Id}
+            ]
         },
         PageInfo={"Index": 0, "Size": 100},
     )
@@ -97,12 +113,18 @@ def _setup_services(auth_data):
 
     # CampaignManagement для работы с аудиториями
     campaign_service = ServiceClient(
-        service="CampaignManagementService", version=13, authorization_data=auth_data
+        service="CampaignManagementService",
+        version=13,
+        authorization_data=auth_data,
     )
     return campaign_service
 
 
-from bingads.v13.bulk import BulkServiceManager, FileUploadParameters, ResultFileType
+from bingads.v13.bulk import (
+    BulkServiceManager,
+    FileUploadParameters,
+    ResultFileType,
+)
 import hashlib
 
 
@@ -146,7 +168,9 @@ def add_emails_to_audience(
 
     accounts = cust_svc.SearchAccounts(
         Predicates={
-            "Predicate": [{"Field": "UserId", "Operator": "Equals", "Value": user.Id}]
+            "Predicate": [
+                {"Field": "UserId", "Operator": "Equals", "Value": user.Id}
+            ]
         },
         PageInfo={"Index": 0, "Size": 100},
     )
@@ -201,7 +225,12 @@ def add_emails_to_audience(
 
 
 def set_bing_ads_audience_contacts(
-    developer_token, client_id, client_secret, refresh_token, audience_id, contacts
+    developer_token,
+    client_id,
+    client_secret,
+    refresh_token,
+    audience_id,
+    contacts,
 ):
     try:
         # 1. Аутентификация с OAuth 2.0
@@ -245,8 +274,12 @@ def set_bing_ads_audience_contacts(
         if hasattr(response, "PartialErrors") and response.PartialErrors:
             errors = []
             for error in response.PartialErrors.BatchError:
-                errors.append({"code": error.ErrorCode, "message": error.Message})
-            raise Exception("Errors while setting audience contacts: " + str(errors))
+                errors.append(
+                    {"code": error.ErrorCode, "message": error.Message}
+                )
+            raise Exception(
+                "Errors while setting audience contacts: " + str(errors)
+            )
 
         return {"status": "success", "audience_id": audience_id}
 
@@ -255,11 +288,17 @@ def set_bing_ads_audience_contacts(
         # Если доступна информация о SOAP fault, добавляем её в ошибку
         if hasattr(e, "fault"):
             fault_detail = e.fault.detail
-            error_info["tracking_id"] = getattr(fault_detail, "TrackingId", None)
+            error_info["tracking_id"] = getattr(
+                fault_detail, "TrackingId", None
+            )
             if hasattr(fault_detail, "ApiFault"):
                 api_errors = []
-                for error in fault_detail.ApiFault.OperationErrors.OperationError:
-                    api_errors.append({"code": error.Code, "message": error.Message})
+                for (
+                    error
+                ) in fault_detail.ApiFault.OperationErrors.OperationError:
+                    api_errors.append(
+                        {"code": error.Code, "message": error.Message}
+                    )
                 error_info["api_errors"] = api_errors
 
         return error_info
@@ -308,7 +347,9 @@ def create_campaign(
 
     accounts = cust_svc.SearchAccounts(
         Predicates={
-            "Predicate": [{"Field": "UserId", "Operator": "Equals", "Value": user.Id}]
+            "Predicate": [
+                {"Field": "UserId", "Operator": "Equals", "Value": user.Id}
+            ]
         },
         PageInfo={"Index": 0, "Size": 100},
     )
@@ -326,7 +367,9 @@ def create_campaign(
     bidding_scheme = campaign_service.factory.create("EnhancedCpcBiddingScheme")
     # Создание объекта кампании
     campaign = campaign_service.factory.create("Campaign")
-    target_setting_detail = campaign_service.factory.create("TargetSettingDetail")
+    target_setting_detail = campaign_service.factory.create(
+        "TargetSettingDetail"
+    )
     target_setting_detail.CriterionTypeGroup = "Audience"
     target_setting_detail.TargetAndBid = True
     campaign.TargetSetting = [target_setting_detail]
@@ -420,7 +463,9 @@ def create_ad_group_bulk(
 
     accounts = cust_svc.SearchAccounts(
         Predicates={
-            "Predicate": [{"Field": "UserId", "Operator": "Equals", "Value": user.Id}]
+            "Predicate": [
+                {"Field": "UserId", "Operator": "Equals", "Value": user.Id}
+            ]
         },
         PageInfo={"Index": 0, "Size": 100},
     )
@@ -506,7 +551,9 @@ def add_customer_list_to_campaign_bulk(
 
     accounts = cust_svc.SearchAccounts(
         Predicates={
-            "Predicate": [{"Field": "UserId", "Operator": "Equals", "Value": user.Id}]
+            "Predicate": [
+                {"Field": "UserId", "Operator": "Equals", "Value": user.Id}
+            ]
         },
         PageInfo={"Index": 0, "Size": 100},
     )

@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlalchemy import Column, String, Float, ForeignKey, text, Index
 from sqlalchemy.dialects.postgresql import UUID
 from models.base import Base
@@ -16,19 +14,13 @@ class EnrichmentVoterRecord(Base):
     )
     asid = Column(
         UUID(as_uuid=True),
-        ForeignKey("enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"),
+        ForeignKey(
+            "enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"
+        ),
         nullable=False,
     )
     party_affiliation = Column(String(20), nullable=True)
     congressional_district = Column(String(10), nullable=True)
     voting_propensity = Column(Float, nullable=True)
 
-    __table_args__ = (Index("ix_voter_asid", asid),)
-
-
-class EnrichmentVoterRecord2:
-    id: UUID
-    asid: UUID
-    party_affiliation: Optional[str]
-    congressional_district: Optional[str]
-    voting_propensity: Optional[float]
+    __table_args__ = (Index("ix_voter_asid", asid, unique=True),)

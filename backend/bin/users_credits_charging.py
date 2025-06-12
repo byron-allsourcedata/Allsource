@@ -53,7 +53,9 @@ async def save_account_notification(
     session, user_id, account_notification_id, params=None
 ):
     account_notification = UserAccountNotification(
-        user_id=user_id, notification_id=account_notification_id, params=str(params)
+        user_id=user_id,
+        notification_id=account_notification_id,
+        params=str(params),
     )
     session.add(account_notification)
     session.commit()
@@ -115,7 +117,9 @@ async def on_message_received(message, session, subscription_service):
             logging.info(f"leads_credits > 0")
             activate_count = min(user.leads_credits, lead_user_count)
             session.query(LeadUser).filter(
-                LeadUser.id.in_([user.id for user in lead_users[:activate_count]])
+                LeadUser.id.in_(
+                    [user.id for user in lead_users[:activate_count]]
+                )
             ).update({"is_active": True}, synchronize_session=False)
 
             user.leads_credits -= activate_count
@@ -159,7 +163,9 @@ async def on_message_received(message, session, subscription_service):
                         ):
                             created_timestamp = stripe_payload.get("created")
                             created_at = (
-                                datetime.fromtimestamp(created_timestamp, timezone.utc)
+                                datetime.fromtimestamp(
+                                    created_timestamp, timezone.utc
+                                )
                                 if created_timestamp
                                 else None
                             )
@@ -170,12 +176,17 @@ async def on_message_received(message, session, subscription_service):
 
                                 lead_subset = lead_users[:QUANTITY]
                                 five_x_five_ids = [
-                                    user.five_x_five_user_id for user in lead_subset
+                                    user.five_x_five_user_id
+                                    for user in lead_subset
                                 ]
 
                                 id_up_pairs = (
-                                    session.query(FiveXFiveUser.id, FiveXFiveUser.up_id)
-                                    .filter(FiveXFiveUser.id.in_(five_x_five_ids))
+                                    session.query(
+                                        FiveXFiveUser.id, FiveXFiveUser.up_id
+                                    )
+                                    .filter(
+                                        FiveXFiveUser.id.in_(five_x_five_ids)
+                                    )
                                     .all()
                                 )
                                 id_to_up = dict(id_up_pairs)
@@ -190,7 +201,9 @@ async def on_message_received(message, session, subscription_service):
                                         transaction_dicts.append(
                                             {
                                                 "user_id": user.id,
-                                                "transaction_id": str(transaction_id),
+                                                "transaction_id": str(
+                                                    transaction_id
+                                                ),
                                                 "created_at": datetime.now(
                                                     timezone.utc
                                                 ),
@@ -207,24 +220,34 @@ async def on_message_received(message, session, subscription_service):
                                         )
 
                                 session.bulk_insert_mappings(
-                                    UsersUnlockedFiveXFiveUser, transaction_dicts
+                                    UsersUnlockedFiveXFiveUser,
+                                    transaction_dicts,
                                 )
                                 session.commit()
 
                                 session.query(LeadUser).filter(
-                                    LeadUser.id.in_([user.id for user in lead_subset])
-                                ).update({"is_active": True}, synchronize_session=False)
+                                    LeadUser.id.in_(
+                                        [user.id for user in lead_subset]
+                                    )
+                                ).update(
+                                    {"is_active": True},
+                                    synchronize_session=False,
+                                )
                                 session.commit()
                                 logging.error(f"Purchase success")
                     else:
                         logging.error(
                             f"Purchase failed: {result['error']}", exc_info=True
                         )
-                        account_notification = await get_account_notification_by_title(
-                            session, NotificationTitles.PAYMENT_FAILED.value
+                        account_notification = (
+                            await get_account_notification_by_title(
+                                session, NotificationTitles.PAYMENT_FAILED.value
+                            )
                         )
-                        user_account_notification = await save_account_notification(
-                            session, user.id, account_notification.id
+                        user_account_notification = (
+                            await save_account_notification(
+                                session, user.id, account_notification.id
+                            )
                         )
                         queue_name = f"sse_events_{str(user.id)}"
                         rabbitmq_connection = RabbitMQConnection()
@@ -246,7 +269,9 @@ async def on_message_received(message, session, subscription_service):
         logging.info(f"message ack")
         await message.ack()
     except Exception as e:
-        logging.error(f"Error occurred while processing message: {e}", exc_info=True)
+        logging.error(
+            f"Error occurred while processing message: {e}", exc_info=True
+        )
         session.rollback()
         await asyncio.sleep(5)
         await message.ack()

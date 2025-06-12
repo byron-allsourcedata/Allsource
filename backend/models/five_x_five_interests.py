@@ -1,21 +1,13 @@
-from sqlalchemy import (
-    Column,
-    Integer,
-    VARCHAR,
-    TEXT,
-    Index,
-    BigInteger,
-    Sequence,
-    String,
-    Text,
-)
+from sqlalchemy import Column, Index, BigInteger, Sequence, String, Text
 
 from .base import Base
 
 
 class FiveXFiveInterest(Base):
     __tablename__ = "5x5_interests"
-    __table_args__ = (Index("5x5_interests_topic_id_idx", "topic_id", unique=True),)
+    __table_args__ = (
+        Index("5x5_interests_topic_id_idx", "topic_id", unique=True),
+    )
 
     id = Column(BigInteger, Sequence("user_interests_id_seq"), primary_key=True)
     category = Column(String(64), nullable=True)

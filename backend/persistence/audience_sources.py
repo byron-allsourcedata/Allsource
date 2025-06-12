@@ -5,7 +5,6 @@ from uuid import UUID
 from sqlalchemy import desc, asc, select
 from sqlalchemy.orm import Session
 
-from db_dependencies import Db
 from enums import TypeOfSourceOrigin, TypeOfCustomer
 from models.audience_sources import AudienceSource
 from models.users import Users
@@ -15,14 +14,12 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.orm import Query
 
 from persistence.utils import apply_filters
-from resolver import injectable
 
 logger = logging.getLogger(__name__)
 
 
-@injectable
 class AudienceSourcesPersistence:
-    def __init__(self, db: Db):
+    def __init__(self, db: Session):
         self.db = db
 
     def get_sources(
@@ -94,22 +91,17 @@ class AudienceSourcesPersistence:
 
     def get_source_by_id(self, source_id) -> Optional[AudienceSource]:
         return (
-            self.db.query(AudienceSource).filter(AudienceSource.id == source_id).first()
+            self.db.query(AudienceSource)
+            .filter(AudienceSource.id == source_id)
+            .first()
         )
-
-    def get_by_id_for_update(self, source_id: UUID) -> AudienceSource:
-        source: AudienceSource = self.db.execute(
-            select(AudienceSource)
-            .where(AudienceSource.id == source_id)
-            .with_for_update()
-        ).scalar_one()
-
-        return source
 
     def create_source(self, **creating_data) -> Optional[AudienceSource]:
         source_type = creating_data.get("source_type")
         if not source_type:
-            source_type = "viewed_product,visitor,abandoned_cart,converted_sales"
+            source_type = (
+                "viewed_product,visitor,abandoned_cart,converted_sales"
+            )
 
         source = AudienceSource(
             user_id=creating_data.get("user_id"),

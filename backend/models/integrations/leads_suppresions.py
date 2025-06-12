@@ -12,7 +12,7 @@ from sqlalchemy import (
     ForeignKey,
     Sequence,
 )
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class LeadsSupperssion(Base):
@@ -20,7 +20,9 @@ class LeadsSupperssion(Base):
 
     id = Column(
         BigInteger,
-        Sequence("integrations_suppressed_contacts_id_seq", metadata=Base.metadata),
+        Sequence(
+            "integrations_suppressed_contacts_id_seq", metadata=Base.metadata
+        ),
         primary_key=True,
         nullable=False,
     )
@@ -28,11 +30,16 @@ class LeadsSupperssion(Base):
     phone_number = Column(String, nullable=True)
     id_service = Column(String, nullable=True)
     domain_id = Column(
-        BigInteger, ForeignKey("users_domains.id", ondelete="CASCADE"), nullable=False
+        BigInteger,
+        ForeignKey("users_domains.id", ondelete="CASCADE"),
+        nullable=False,
     )
     integration_id = Column(
         BigInteger,
         ForeignKey("users_domains_integrations.id", ondelete="CASCADE"),
         nullable=False,
     )
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(
+        TIMESTAMP(timezone=False),
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )

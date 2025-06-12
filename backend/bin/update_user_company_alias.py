@@ -42,13 +42,17 @@ async def process_users(session):
             )
             .filter(
                 and_(
-                    FiveXFiveUser.id > current_id, FiveXFiveUser.id <= current_id + 1000
+                    FiveXFiveUser.id > current_id,
+                    FiveXFiveUser.id <= current_id + 1000,
                 )
             )
             .all()
         )
         for five_x_five_user in five_x_five_users:
-            if five_x_five_user.company_name and not five_x_five_user.company_alias:
+            if (
+                five_x_five_user.company_name
+                and not five_x_five_user.company_alias
+            ):
                 update_company_alias_to_user(
                     session=session,
                     user_id=five_x_five_user.id,

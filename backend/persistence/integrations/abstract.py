@@ -21,7 +21,9 @@ class ServiceIntegrationsPersistence(IntegrationPersistenceABC):
     def save_customer(self, customer: dict, user_id: int) -> str:
         existing_lead_user = (
             self.session.query(LeadUser)
-            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+            .join(
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
+            )
             .filter(
                 FiveXFiveUser.business_email == customer["email"],
                 LeadUser.domain_id == user_id,
@@ -73,4 +75,6 @@ class ServiceIntegrationsPersistence(IntegrationPersistenceABC):
                 return "CREATED"
 
     def get_service_user_by_id(self, id: int):
-        return self.session.query(self.model).filter(self.model.id == id).first()
+        return (
+            self.session.query(self.model).filter(self.model.id == id).first()
+        )

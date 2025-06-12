@@ -1,3 +1,4 @@
+from db_dependencies import Db
 from models.partner import Partner
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import case
@@ -10,10 +11,12 @@ from models.users import Users
 from models.plans import SubscriptionPlan
 from models.referral_users import ReferralUser
 from enums import ConfirmationStatus, PayoutsStatus
+from resolver import injectable
 
 
+@injectable
 class PartnersPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_partners_by_user_ids(self, user_ids, search_query=None):
@@ -74,11 +77,16 @@ class PartnersPersistence:
                 ReferralPayouts.created_at.label("last_payment_date"),
                 func.count(ReferralUser.parent_user_id).label("count_accounts"),
                 case(
-                    (Partner.master_id > 0, MasterPartner.company_name), else_="Direct"
+                    (Partner.master_id > 0, MasterPartner.company_name),
+                    else_="Direct",
                 ).label("source"),
             )
-            .outerjoin(ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id)
-            .outerjoin(ReferralUser, ReferralUser.parent_user_id == Partner.user_id)
+            .outerjoin(
+                ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id
+            )
+            .outerjoin(
+                ReferralUser, ReferralUser.parent_user_id == Partner.user_id
+            )
             .outerjoin(MasterPartner, MasterPartner.id == Partner.master_id)
             .filter(Partner.is_master == is_master)
             .group_by(
@@ -103,7 +111,8 @@ class PartnersPersistence:
 
         if search_term:
             query = query.filter(
-                (Partner.name.ilike(search_term)) | (Partner.email.ilike(search_term))
+                (Partner.name.ilike(search_term))
+                | (Partner.email.ilike(search_term))
             )
 
         if start_date:
@@ -113,7 +122,9 @@ class PartnersPersistence:
             end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partner.join_date <= end_date)
 
-        results = [row._asdict() for row in query.offset(offset).limit(limit).all()]
+        results = [
+            row._asdict() for row in query.offset(offset).limit(limit).all()
+        ]
 
         return results, query.count()
 
@@ -140,11 +151,16 @@ class PartnersPersistence:
                 ReferralPayouts.created_at.label("last_payment_date"),
                 func.count(ReferralUser.parent_user_id).label("count_accounts"),
                 case(
-                    (Partner.master_id > 0, MasterPartner.company_name), else_="Direct"
+                    (Partner.master_id > 0, MasterPartner.company_name),
+                    else_="Direct",
                 ).label("source"),
             )
-            .outerjoin(ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id)
-            .outerjoin(ReferralUser, ReferralUser.parent_user_id == Partner.user_id)
+            .outerjoin(
+                ReferralPayouts, ReferralPayouts.parent_id == Partner.user_id
+            )
+            .outerjoin(
+                ReferralUser, ReferralUser.parent_user_id == Partner.user_id
+            )
             .outerjoin(MasterPartner, MasterPartner.id == Partner.master_id)
             .filter(Partner.master_id == id)
             .group_by(
@@ -169,7 +185,8 @@ class PartnersPersistence:
 
         if search_term:
             query = query.filter(
-                (Partner.name.ilike(search_term)) | (Partner.email.ilike(search_term))
+                (Partner.name.ilike(search_term))
+                | (Partner.email.ilike(search_term))
             )
 
         if start_date:
@@ -178,7 +195,9 @@ class PartnersPersistence:
             end_date = datetime.combine(end_date, datetime.max.time())
             query = query.filter(Partner.join_date <= end_date)
 
-        results = [row._asdict() for row in query.offset(offset).limit(limit).all()]
+        results = [
+            row._asdict() for row in query.offset(offset).limit(limit).all()
+        ]
 
         return results, query.count()
 
@@ -222,11 +241,16 @@ class PartnersPersistence:
         return (
             self.db.query(Partner)
             .join(MasterPartner, MasterPartner.id == Partner.master_id)
-            .filter(Partner.id == partner_id, MasterPartner.user_id == parent_user_id)
+            .filter(
+                Partner.id == partner_id,
+                MasterPartner.user_id == parent_user_id,
+            )
             .first()
         )
 
-    def update_partner_by_email(self, email: int, **kwargs) -> Optional[Partner]:
+    def update_partner_by_email(
+        self, email: int, **kwargs
+    ) -> Optional[Partner]:
         partner = self.get_partner_by_email(email)
 
         for key, value in kwargs.items():
@@ -244,7 +268,9 @@ class PartnersPersistence:
         default_email = os.getenv("DEFAULT_USER_FOR_REFERRAL_USER")
         if default_email:
             default_user = (
-                self.db.query(Users).filter(Users.email == default_email).first()
+                self.db.query(Users)
+                .filter(Users.email == default_email)
+                .first()
             )
             if default_user:
                 referral = ReferralUser(
@@ -273,7 +299,10 @@ class PartnersPersistence:
             join_date=creating_data.get("join_date"),
         )
 
-        if "master_id" in creating_data and creating_data["master_id"] is not None:
+        if (
+            "master_id" in creating_data
+            and creating_data["master_id"] is not None
+        ):
             partner.master_id = creating_data["master_id"]
 
         self.db.add(partner)

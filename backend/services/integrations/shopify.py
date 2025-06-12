@@ -1,4 +1,5 @@
 import hashlib
+import logging
 import os
 import binascii
 import httpx
@@ -17,7 +18,9 @@ from schemas.integrations.integrations import IntegrationCredentials
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from httpx import Client
 from schemas.integrations.shopify import ShopifyShopRedactForm
 from schemas.users import ShopifyPayloadModel
@@ -27,6 +30,10 @@ from enums import SourcePlatformEnum
 from datetime import datetime, timedelta, timezone
 from services.aws import AWSService
 from sqlalchemy.orm import Session
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class ShopifyIntegrationService:
@@ -43,7 +50,9 @@ class ShopifyIntegrationService:
         self.integration_persistence = integration_persistence
         self.lead_persistence = lead_persistence
         self.lead_orders_persistence = lead_orders_persistence
-        self.integrations_user_sync_persistence = integrations_user_sync_persistence
+        self.integrations_user_sync_persistence = (
+            integrations_user_sync_persistence
+        )
         self.client = client
         self.AWS = aws_service
         self.db = db
@@ -53,15 +62,21 @@ class ShopifyIntegrationService:
             shopify.Session.setup(
                 api_key=ShopifyConfig.key, secret=ShopifyConfig.secret
             )
-            session = shopify.Session(shopify_data.shop, ShopifyConfig.api_version)
-            access_token = session.request_token(params=shopify_data.model_dump())
+            session = shopify.Session(
+                shopify_data.shop, ShopifyConfig.api_version
+            )
+            access_token = session.request_token(
+                params=shopify_data.model_dump()
+            )
             return access_token
         except Exception as e:
             pass
 
     def get_charge_by_id(self, user_data, charge_id):
         with shopify.Session.temp(
-            user_data.shop_domain, ShopifyConfig.api_version, user_data.shopify_token
+            user_data.shop_domain,
+            ShopifyConfig.api_version,
+            user_data.shopify_token,
         ):
             charge = shopify.RecurringApplicationCharge.find(charge_id)
             return charge
@@ -144,18 +159,24 @@ class ShopifyIntegrationService:
 
             result = response.json()
 
-            if result.get("data") and result["data"].get("appSubscriptionCreate"):
+            if result.get("data") and result["data"].get(
+                "appSubscriptionCreate"
+            ):
                 subscription_data = result["data"]["appSubscriptionCreate"]
                 if subscription_data.get("userErrors"):
                     errors = subscription_data["userErrors"]
-                    raise ValueError(f"Errors while creating subscription: {errors}")
+                    raise ValueError(
+                        f"Errors while creating subscription: {errors}"
+                    )
 
                 confirmation_url = subscription_data.get("confirmationUrl")
                 return {"link": confirmation_url}
             else:
                 raise ValueError(f"Unexpected response: {result}")
 
-    def initialize_subscription_charge(self, plan: SubscriptionPlan, user: dict):
+    def initialize_subscription_charge(
+        self, plan: SubscriptionPlan, user: dict
+    ):
         test_mode = True if os.getenv("APP_MODE") == "dev" else False
         if user.get("shopify_token") is None:
             return {
@@ -217,31 +238,42 @@ class ShopifyIntegrationService:
         data: dict = None,
         params: dict = None,
     ):
-        if self.client.is_closed:
-            self.client = httpx.Client()
+        try:
+            if self.client.is_closed:
+                self.client = httpx.Client()
 
-        response = self.client.request(
-            method, url, headers=headers, json=json, data=data, params=params
-        )
-
-        if response.is_redirect:
-            redirect_url = response.headers.get("Location")
-            if redirect_url:
-                response = self.client.request(
-                    method,
-                    redirect_url,
-                    headers=headers,
-                    json=json,
-                    data=data,
-                    params=params,
-                )
-
-        if response.status_code not in {200, 201}:
-            raise HTTPException(
-                status_code=response.status_code, detail={"status": "error"}
+            response = self.client.request(
+                method,
+                url,
+                headers=headers,
+                json=json,
+                data=data,
+                params=params,
             )
 
-        return response
+            if response.is_redirect:
+                redirect_url = response.headers.get("Location")
+                if redirect_url:
+                    response = self.client.request(
+                        method,
+                        redirect_url,
+                        headers=headers,
+                        json=json,
+                        data=data,
+                        params=params,
+                    )
+
+            if response.status_code not in {200, 201}:
+                logger.error(f"Connection error: {response.text}")
+                return None
+
+            return response
+        except httpx.ConnectError as e:
+            logger.error(f"Connection error: {e}")
+            return None
+        except httpx.RequestError as e:
+            logger.error(f"Request error: {e}")
+            return None
 
     def __get_orders(self, credential):
         date = datetime.now() - timedelta(hours=24)
@@ -257,7 +289,9 @@ class ShopifyIntegrationService:
             "Content-Type": "application/json",
         }
 
-        response = self.__handle_request("GET", url, headers=headers, params=params)
+        response = self.__handle_request(
+            "GET", url, headers=headers, params=params
+        )
         if response.status_code == 401:
             credential.error_message = "Invalid Access Token"
             credential.is_failde = True
@@ -278,9 +312,11 @@ class ShopifyIntegrationService:
                 (str(domain.id) + os.getenv("SECRET_SALT")).encode()
             ).hexdigest()
             self.db.query(UserDomains).filter(
-                UserDomains.user_id == user_id, UserDomains.domain == domain.domain
+                UserDomains.user_id == user_id,
+                UserDomains.domain == domain.domain,
             ).update(
-                {UserDomains.data_provider_id: client_id}, synchronize_session=False
+                {UserDomains.data_provider_id: client_id},
+                synchronize_session=False,
             )
             self.db.commit()
         query = f"""
@@ -303,16 +339,20 @@ class ShopifyIntegrationService:
         ):
             shopify.GraphQL().execute(query)
 
-    def __set_pixel(self, user_id, domain, credentials):
+    def __set_pixel(
+        self, user_id: int, domain: int, credentials: IntegrationCredentials
+    ):
         client_id = domain.data_provider_id
         if client_id is None:
             client_id = hashlib.sha256(
                 (str(domain.id) + os.getenv("SECRET_SALT")).encode()
             ).hexdigest()
             self.db.query(UserDomains).filter(
-                UserDomains.user_id == user_id, UserDomains.domain == domain.domain
+                UserDomains.user_id == user_id,
+                UserDomains.domain == domain.domain,
             ).update(
-                {UserDomains.data_provider_id: client_id}, synchronize_session=False
+                {UserDomains.data_provider_id: client_id},
+                synchronize_session=False,
             )
             self.db.commit()
         with open("../backend/data/js_pixels/shopify.js", "r") as file:
@@ -321,7 +361,9 @@ class ShopifyIntegrationService:
         script_shopify = (
             f"window.pixelClientId = '{client_id}';\n" + existing_script_code
         )
-        self.AWS.upload_string(script_shopify, f"shopify-pixel-code/{client_id}.js")
+        self.AWS.upload_string(
+            script_shopify, f"shopify-pixel-code/{client_id}.js"
+        )
         script_event_url = f"https://maximiz-data.s3.us-east-2.amazonaws.com/shopify-pixel-code/{client_id}.js"
         url = f"{credentials.shopify.shop_domain}/admin/api/2024-07/script_tags.json"
 
@@ -330,9 +372,7 @@ class ShopifyIntegrationService:
             "Content-Type": "application/json",
         }
         scrips_list = self.__handle_request("GET", url, headers=headers)
-        if scrips_list.status_code == 401:
-            credentials.shopify.error_message = "Invalid Access Token"
-            self.integration_persistence.db.commit()
+        if not scrips_list or scrips_list.status_code == 401:
             raise HTTPException(
                 status_code=403,
                 detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
@@ -344,8 +384,12 @@ class ShopifyIntegrationService:
                     f"{credentials.shopify.shop_domain}/admin/api/2024-07/script_tags/{script.get('id')}.json",
                     headers=headers,
                 )
-        script_event_data = {"script_tag": {"event": "onload", "src": script_event_url}}
-        self.__handle_request("POST", url, headers=headers, json=script_event_data)
+        script_event_data = {
+            "script_tag": {"event": "onload", "src": script_event_url}
+        }
+        self.__handle_request(
+            "POST", url, headers=headers, json=script_event_data
+        )
         return {"message": "Successfully"}
 
     def __get_customers(self, shop_domain: str, access_token: str):
@@ -356,7 +400,9 @@ class ShopifyIntegrationService:
         return response.json().get("customers")
 
     def get_shopify_install_url(self, shop, r):
-        shopify.Session.setup(api_key=ShopifyConfig.key, secret=ShopifyConfig.secret)
+        shopify.Session.setup(
+            api_key=ShopifyConfig.key, secret=ShopifyConfig.secret
+        )
         shopify.Session.validate_params(params=r.query_params)
         session = shopify.Session(shop, ShopifyConfig.api_version)
         state = binascii.b2a_hex(os.urandom(15)).decode("utf-8")
@@ -367,8 +413,10 @@ class ShopifyIntegrationService:
 
     def handle_uninstalled_app(self, payload):
         shop_id = payload["id"]
-        user_integration = self.integration_persistence.get_integration_by_shop_id(
-            shop_id=shop_id
+        user_integration = (
+            self.integration_persistence.get_integration_by_shop_id(
+                shop_id=shop_id
+            )
         )
         if user_integration:
             self.db.delete(user_integration)
@@ -389,7 +437,8 @@ class ShopifyIntegrationService:
                 self.db.query(UserDomains).filter(
                     UserDomains.id == user_integration.domain_id
                 ).update(
-                    {UserDomains.is_pixel_installed: False}, synchronize_session=False
+                    {UserDomains.is_pixel_installed: False},
+                    synchronize_session=False,
                 )
             self.db.query(User).filter(User.shop_id == str(shop_id)).update(
                 {
@@ -419,11 +468,15 @@ class ShopifyIntegrationService:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
         shop_redact_form: ShopifyShopRedactForm = (
-            ShopifyShopRedactForm.model_validate_json(request_body.decode("utf-8"))
+            ShopifyShopRedactForm.model_validate_json(
+                request_body.decode("utf-8")
+            )
         )
 
-        user_integration = self.integration_persistence.get_integration_by_shop_id(
-            shop_id=shop_redact_form.shop_id
+        user_integration = (
+            self.integration_persistence.get_integration_by_shop_id(
+                shop_id=shop_redact_form.shop_id
+            )
         )
         if user_integration:
             user = (
@@ -445,15 +498,19 @@ class ShopifyIntegrationService:
                 user_subscription.cancel_scheduled_at = datetime.now(
                     timezone.utc
                 ).replace(tzinfo=None)
-                user_subscription.cancellation_reason = "APP removing from Shopify side"
+                user_subscription.cancellation_reason = (
+                    "APP removing from Shopify side"
+                )
                 user_subscription.status = "canceled"
                 self.db.commit()
 
     def oauth_shopify_callback(self, shop, r):
         result = {}
         query_params = dict(r.query_params)
-        user_integration = self.integration_persistence.get_integration_by_shop_url(
-            shop_url=shop
+        user_integration = (
+            self.integration_persistence.get_integration_by_shop_url(
+                shop_url=shop
+            )
         )
 
         if user_integration is None:
@@ -525,7 +582,9 @@ class ShopifyIntegrationService:
         if shop_id:
             credentials["shop_id"] = shop_id
 
-        integration = self.integration_persistence.create_integration(credentials)
+        integration = self.integration_persistence.create_integration(
+            credentials
+        )
         if not integration:
             raise HTTPException(
                 status_code=409,
@@ -547,23 +606,34 @@ class ShopifyIntegrationService:
         customer_json = self.__mapped_customer_for_shopify(customer)
         url = f"{shop_domain}/admin/api/2024-07/customers.json"
 
-        headers = {"X-Shopify-Token": access_token, "Content-Type": "application/json"}
+        headers = {
+            "X-Shopify-Token": access_token,
+            "Content-Type": "application/json",
+        }
         response = self.__handle_request(
             "POST", url, headers=headers, json=customer_json
         )
         return response.json().get("customers")
 
     def add_integration(
-        self, credentials: IntegrationCredentials, domain, user: dict, shop_id=None
+        self,
+        credentials: IntegrationCredentials,
+        domain,
+        user: dict,
+        shop_id=None,
     ):
         if not credentials.shopify.shop_domain.startswith("https://"):
             credentials.shopify.shop_domain = (
                 f"https://{credentials.shopify.shop_domain}"
             )
         shop_domain = (
-            credentials.shopify.shop_domain.lower().lstrip("http://").lstrip("https://")
+            credentials.shopify.shop_domain.lower()
+            .lstrip("http://")
+            .lstrip("https://")
         )
-        user_website = domain.domain.lower().lstrip("http://").lstrip("https://")
+        user_website = (
+            domain.domain.lower().lstrip("http://").lstrip("https://")
+        )
         if user_website != shop_domain:
             raise HTTPException(
                 status_code=400,
@@ -645,7 +715,9 @@ class ShopifyIntegrationService:
             )
             for lead in leads_list:
                 self.__create_or_update_shopify_customer(
-                    self.lead_persistence.get_lead_data(lead.five_x_five_user_id),
+                    self.lead_persistence.get_lead_data(
+                        lead.five_x_five_user_id
+                    ),
                     credential.shop_domain,
                     credential.access_token,
                 )
@@ -659,7 +731,8 @@ class ShopifyIntegrationService:
         customers = [
             self.__mapped_customer(customer)
             for customer in self.__get_customers(
-                credentials.shopify.shop_domain, credentials.shopify.access_token
+                credentials.shopify.shop_domain,
+                credentials.shopify.access_token,
             )
         ]
         self.__save_customer(customers, user_id)
@@ -688,7 +761,9 @@ class ShopifyIntegrationService:
             currency=customer.get("currency", "GBP"),
             phone=customer.get("phone"),
             accepts_marketing=customer.get("accepts_marketing", False),
-            accepts_marketing_updated_at=customer.get("accepts_marketing_updated_at"),
+            accepts_marketing_updated_at=customer.get(
+                "accepts_marketing_updated_at"
+            ),
             marketing_opt_in_level=customer.get("marketing_opt_in_level"),
             email_marketing_consent_state=email_marketing_consent.get("state"),
             email_marketing_consent_opt_in_level=email_marketing_consent.get(

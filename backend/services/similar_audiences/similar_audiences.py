@@ -8,7 +8,6 @@ from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 from typing_extensions import deprecated
 
-from resolver import injectable
 from schemas.similar_audiences import (
     AudienceData,
     AudienceFeatureImportance,
@@ -24,19 +23,23 @@ from .exceptions import EqualTrainTargets, EmptyTrainDataset
 pd.set_option("future.no_silent_downcasting", True)
 
 
-@injectable
 class SimilarAudienceService:
     def __init__(
-        self, audience_data_normalization_service: AudienceDataNormalizationService
+        self,
+        audience_data_normalization_service: AudienceDataNormalizationService,
     ):
-        self.audience_data_normalization_service = audience_data_normalization_service
+        self.audience_data_normalization_service = (
+            audience_data_normalization_service
+        )
 
     @deprecated("Use get_trained_model instead")
     def get_audience_feature_importance(
         self, audience_data: List[AudienceData]
     ) -> AudienceFeatureImportance:
         audience_data = [d.__dict__ for d in audience_data]
-        model = self.get_trained_model(audience_data, default_normalization_config())
+        model = self.get_trained_model(
+            audience_data, default_normalization_config()
+        )
         return self.audience_importance(model)
 
     def get_trained_model(
@@ -47,7 +50,9 @@ class SimilarAudienceService:
 
         df = pd.DataFrame(audience_data)
         data, customer_value = (
-            self.audience_data_normalization_service.normalize_dataframe(df, config)
+            self.audience_data_normalization_service.normalize_dataframe(
+                df, config
+            )
         )
         model = self.train_catboost(data, customer_value)
         return model
@@ -64,7 +69,9 @@ class SimilarAudienceService:
             }
         )
 
-        feature_importance["Importance"] = feature_importance["Importance"] / 100
+        feature_importance["Importance"] = (
+            feature_importance["Importance"] / 100
+        )
 
         return dict(
             zip(feature_importance["Feature"], feature_importance["Importance"])
@@ -81,14 +88,21 @@ class SimilarAudienceService:
         df = df.infer_objects(copy=False)
         return df
 
-    def train_catboost(self, df: DataFrame, amount: DataFrame) -> CatBoostRegressor:
+    def train_catboost(
+        self, df: DataFrame, amount: DataFrame
+    ) -> CatBoostRegressor:
         x = df
         y = amount
 
-        cat_features = x.select_dtypes(include=["object", "category"]).columns.tolist()
+        cat_features = x.select_dtypes(
+            include=["object", "category"]
+        ).columns.tolist()
         if cat_features:
             x[cat_features] = (
-                x[cat_features].fillna("NA").astype(str).infer_objects(copy=False)
+                x[cat_features]
+                .fillna("NA")
+                .astype(str)
+                .infer_objects(copy=False)
             )
 
         x_train, x_test, y_train, y_test = train_test_split(x, y)
@@ -120,7 +134,9 @@ class SimilarAudienceService:
             }
         )
 
-        feature_importance["Importance"] = feature_importance["Importance"] / 100
+        feature_importance["Importance"] = (
+            feature_importance["Importance"] / 100
+        )
 
         return dict(
             zip(feature_importance["Feature"], feature_importance["Importance"])

@@ -1,5 +1,6 @@
 import hashlib
 import os
+import logging
 import httpx
 from urllib.parse import urlencode
 from jose import JWTError
@@ -10,7 +11,9 @@ from enums import IntegrationsStatus, SourcePlatformEnum
 from schemas.integrations.integrations import IntegrationCredentials, OrderAPI
 from schemas.integrations.bigcommerce import BigCommerceInfo
 from persistence.leads_persistence import LeadsPersistence
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from services.aws import AWSService
 from persistence.domains import UserDomainsPersistence
 from bigcommerce.api import BigcommerceApi
@@ -21,6 +24,9 @@ from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.external_apps_installations import (
     ExternalAppsInstallationsPersistence,
 )
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class BigcommerceIntegrationsService:
@@ -60,38 +66,52 @@ class BigcommerceIntegrationsService:
         params: dict = None,
         access_token: str = None,
     ):
-        if self.client.is_closed:
-            self.client = httpx.Client()
-        if not headers:
-            headers = {
-                "X-Auth-Token": access_token,
-                "accept": "application/json",
-                "content-type": "application/json",
-            }
-        url = f"https://api.bigcommerce.com/stores/{url}"
-        response = self.client.request(
-            method, url, headers=headers, json=json, data=data, params=params
-        )
-        if response.is_redirect:
-            redirect_url = response.headers.get("Location")
-            if redirect_url:
-                response = self.client.request(
-                    method,
-                    redirect_url,
-                    headers=headers,
-                    json=json,
-                    data=data,
-                    params=params,
-                )
+        try:
+            if self.client.is_closed:
+                self.client = httpx.Client()
+            if not headers:
+                headers = {
+                    "X-Auth-Token": access_token,
+                    "accept": "application/json",
+                    "content-type": "application/json",
+                }
+            url = f"https://api.bigcommerce.com/stores/{url}"
+            response = self.client.request(
+                method,
+                url,
+                headers=headers,
+                json=json,
+                data=data,
+                params=params,
+            )
+            if response.is_redirect:
+                redirect_url = response.headers.get("Location")
+                if redirect_url:
+                    response = self.client.request(
+                        method,
+                        redirect_url,
+                        headers=headers,
+                        json=json,
+                        data=data,
+                        params=params,
+                    )
 
-        return response
+            return response
+        except httpx.ConnectError as e:
+            logger.error(f"Connection error: {e}")
+            return None
+        except httpx.RequestError as e:
+            logger.error(f"Request error: {e}")
+            return None
 
     def __get_store_info(self, store_hash: str, access_token: str):
         url = f"{store_hash}/v2/store"
         info = self.__handle_request(url, access_token=access_token)
         return self.__mapped_info(info.json())
 
-    def bigcommerce_redirect_login(self, store_hash, is_pixel_install, domain, user):
+    def bigcommerce_redirect_login(
+        self, store_hash, is_pixel_install, domain, user
+    ):
         params = {
             "client_id": BigcommerceConfig.client_id,
             "context": f"stores/{store_hash}",
@@ -102,10 +122,14 @@ class BigcommerceIntegrationsService:
         }
         query_string = urlencode(params, safe=":/")
 
-        authorize_url = f"https://login.bigcommerce.com/oauth2/authorize?{query_string}"
+        authorize_url = (
+            f"https://login.bigcommerce.com/oauth2/authorize?{query_string}"
+        )
         return {"url": authorize_url}
 
-    def connect_integration(self, credentials: IntegrationCredentials, domain, user):
+    def connect_integration(
+        self, credentials: IntegrationCredentials, domain, user
+    ):
         external_app_install = self.epi_persistence.get_epi_by_filter_one(
             store_hash=credentials.bigcommerce.shop_domain
         )
@@ -117,7 +141,9 @@ class BigcommerceIntegrationsService:
             credentials.bigcommerce.shop_domain, False, domain, user
         )
 
-    def __save_integrations(self, store_hash: str, access_token: str, domain_id, user):
+    def __save_integrations(
+        self, store_hash: str, access_token: str, domain_id, user
+    ):
         credential = self.get_credentials(domain_id)
         if credential:
             credential.access_token = access_token
@@ -142,10 +168,8 @@ class BigcommerceIntegrationsService:
         return integration
 
     def get_external_apps_installations_by_shop_hash(self, shop_hash):
-        return (
-            self.integrations_persistence.get_external_apps_installations_by_shop_hash(
-                shop_hash=shop_hash
-            )
+        return self.integrations_persistence.get_external_apps_installations_by_shop_hash(
+            shop_hash=shop_hash
         )
 
     def add_external_apps_install(
@@ -169,7 +193,9 @@ class BigcommerceIntegrationsService:
             if not epi:
                 raise HTTPException(
                     status_code=400,
-                    detail={"status": IntegrationsStatus.CREATE_IS_FAILED.value},
+                    detail={
+                        "status": IntegrationsStatus.CREATE_IS_FAILED.value
+                    },
                 )
             return epi
         except:
@@ -178,7 +204,9 @@ class BigcommerceIntegrationsService:
                 detail={"status": IntegrationsStatus.CREATE_IS_FAILED.value},
             )
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         eai = self.eai_persistence.get_epi_by_filter_one(
             platform=SourcePlatformEnum.BIG_COMMERCE.value,
             store_hash=credentials.bigcommerce.shop_domain,
@@ -194,13 +222,15 @@ class BigcommerceIntegrationsService:
         )
         if not info:
             raise HTTPException(
-                status_code=409, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value
+                status_code=409,
+                detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value,
             )
         if info.domain.startswith("https://"):
             info.domain = info.domain.replace("https://", "")
         if not credentials and info.domain != domain.domain:
             raise HTTPException(
-                status_code=400, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value
+                status_code=400,
+                detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value,
             )
         integration = self.__save_integrations(
             store_hash=eai.store_hash,
@@ -216,7 +246,8 @@ class BigcommerceIntegrationsService:
         )
         if not integration:
             raise HTTPException(
-                status_code=409, detail=IntegrationsStatus.CREATE_IS_FAILED.value
+                status_code=409,
+                detail=IntegrationsStatus.CREATE_IS_FAILED.value,
             )
         return integration
 
@@ -232,11 +263,13 @@ class BigcommerceIntegrationsService:
             )
         except JWTError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [JWT]"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid Request [JWT]",
             )
         if not payload or not payload_jwt:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid Request [NON]",
             )
         user = payload.get("user")
         owner = payload.get("owner")
@@ -268,15 +301,19 @@ class BigcommerceIntegrationsService:
             )
         except JWTError:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [JWT]"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid Request [JWT]",
             )
         if not payload or not payload_jwt:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Request [NON]"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid Request [NON]",
             )
 
-        user_integration = self.integrations_persistence.get_integration_by_shop_url(
-            shop_url=payload.get("store_hash")
+        user_integration = (
+            self.integrations_persistence.get_integration_by_shop_url(
+                shop_url=payload.get("store_hash")
+            )
         )
         self.integrations_persistence.delete_external_apps_installations(
             shop_hash=payload.get("store_hash")
@@ -300,12 +337,15 @@ class BigcommerceIntegrationsService:
             access_token=new_credentials.bigcommerce.access_token,
         )
         if not info:
-            raise HTTPException(status_code=409, detail=IntegrationCredentials.value)
+            raise HTTPException(
+                status_code=409, detail=IntegrationCredentials.value
+            )
         if info.domain.startswith("https://"):
             info.domain = f"{credentials.bigcommerce.shop_domain}"
         if not credentials and info.domain != domain.domain:
             raise HTTPException(
-                status_code=400, detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value
+                status_code=400,
+                detail=IntegrationsStatus.NOT_MATCHED_EARLIER.value,
             )
         integration = self.__save_integrations(
             store_hash=new_credentials.bigcommerce.shop_domain,
@@ -321,7 +361,8 @@ class BigcommerceIntegrationsService:
         )
         if not integration:
             raise HTTPException(
-                status_code=409, detail=IntegrationsStatus.CREATE_IS_FAILED.value
+                status_code=409,
+                detail=IntegrationsStatus.CREATE_IS_FAILED.value,
             )
         return integration
 
@@ -332,9 +373,11 @@ class BigcommerceIntegrationsService:
                 (str(domain.id) + os.getenv("SECRET_SALT")).encode()
             ).hexdigest()
             self.integrations_persistence.db.query(UserDomains).filter(
-                UserDomains.user_id == user_id, UserDomains.domain == domain.domain
+                UserDomains.user_id == user_id,
+                UserDomains.domain == domain.domain,
             ).update(
-                {UserDomains.data_provider_id: client_id}, synchronize_session=False
+                {UserDomains.data_provider_id: client_id},
+                synchronize_session=False,
             )
             self.integrations_persistence.db.commit()
         with open("../backend/data/js_pixels/bigcommerce.js", "r") as file:
@@ -349,7 +392,10 @@ class BigcommerceIntegrationsService:
 
         script_event_url = f"https://maximiz-data.s3.us-east-2.amazonaws.com/bigcommrce-pixel-code/{client_id}.js"
         url = f"{shop_domain}/v3/content/scripts"
-        headers = {"X-Auth-Token": access_token, "Content-Type": "application/json"}
+        headers = {
+            "X-Auth-Token": access_token,
+            "Content-Type": "application/json",
+        }
 
         script_event_data = {
             "name": "Maximiz Pixel Script",
@@ -410,8 +456,10 @@ class BigcommerceIntegrationsService:
         ]
         for order in orders:
             try:
-                lead_user = self.lead_persistence.get_leads_user_filter_by_email(
-                    domain_id, order.email
+                lead_user = (
+                    self.lead_persistence.get_leads_user_filter_by_email(
+                        domain_id, order.email
+                    )
                 )
                 if lead_user:
                     self.lead_orders_persistence.create_lead_order(

@@ -6,15 +6,18 @@ from grpc import StatusCode
 import time
 import google.api_core.exceptions
 from google.auth.exceptions import RefreshError
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+
+from models import FiveXFiveUser
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from persistence.domains import UserDomainsPersistence
 from schemas.integrations.integrations import *
-from services.integrations.commonIntegration import (
-    resolve_main_email_and_phone,
-    UserData,
-)
+from services.integrations.commonIntegration import resolve_main_email_and_phone
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
@@ -35,7 +38,13 @@ from enums import (
 )
 import httpx
 from typing import List
-from utils import validate_and_format_phone
+from utils import (
+    validate_and_format_phone,
+    get_valid_email,
+    get_valid_phone,
+    get_valid_location,
+    format_phone_number,
+)
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -67,7 +76,10 @@ class GoogleAdsIntegrationsService:
         api_key: str = None,
     ):
         if not headers:
-            headers = {"accept": "application/json", "content-type": "application/json"}
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+            }
         response = self.client.request(
             method, url, headers=headers, json=json, data=data, params=params
         )
@@ -93,12 +105,17 @@ class GoogleAdsIntegrationsService:
         return credential
 
     def get_smart_credentials(self, user_id: int):
-        credential = self.integrations_persistence.get_smart_credentials_for_service(
-            user_id=user_id, service_name=SourcePlatformEnum.GOOGLE_ADS.value
+        credential = (
+            self.integrations_persistence.get_smart_credentials_for_service(
+                user_id=user_id,
+                service_name=SourcePlatformEnum.GOOGLE_ADS.value,
+            )
         )
         return credential
 
-    def __save_integrations(self, access_token: str, domain_id: int, user: dict):
+    def __save_integrations(
+        self, access_token: str, domain_id: int, user: dict
+    ):
         credential = self.get_credentials(domain_id, user.get("id"))
         if credential:
             credential.access_token = access_token
@@ -120,7 +137,9 @@ class GoogleAdsIntegrationsService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integrations_persistence.create_integration(integration_data)
+        integartion = self.integrations_persistence.create_integration(
+            integration_data
+        )
 
         if not integartion:
             raise HTTPException(
@@ -149,7 +168,9 @@ class GoogleAdsIntegrationsService:
         )
         return sync
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         client_id = os.getenv("CLIENT_GOOGLE_ID")
         client_secret = os.getenv("CLIENT_GOOGLE_SECRET")
         data = {
@@ -165,7 +186,9 @@ class GoogleAdsIntegrationsService:
         token_info = response.json()
         access_token = token_info.get("refresh_token")
         if not access_token:
-            raise HTTPException(status_code=400, detail="Failed to get access token")
+            raise HTTPException(
+                status_code=400, detail="Failed to get access token"
+            )
 
         integrations = self.__save_integrations(
             access_token, None if domain is None else domain.id, user
@@ -177,24 +200,28 @@ class GoogleAdsIntegrationsService:
 
     async def create_sync(
         self,
+        domain_id: int,
         customer_id: str,
         leads_type: str,
         list_id: str,
         list_name: str,
-        domain_id: int,
         created_by: str,
         user: dict,
         data_map: List[DataMap] = [],
     ):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get("id"))
+        credentials = self.get_credentials(
+            user_id=user.get("id"), domain_id=domain_id
+        )
         sync = self.sync_persistence.create_sync(
             {
                 "integration_id": credentials.id,
                 "list_id": list_id,
                 "list_name": list_name,
-                "domain_id": domain_id,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "leads_type": leads_type,
                 "data_map": data_map,
+                "domain_id": domain_id,
                 "created_by": created_by,
                 "customer_id": customer_id,
             }
@@ -235,13 +262,44 @@ class GoogleAdsIntegrationsService:
         integration_data_sync: IntegrationUserSync,
         enrichment_users: List[EnrichmentUser],
         target_schema: str,
-        validations: dict,
+        validations: dict = {},
     ):
         profiles = []
         for enrichment_user in enrichment_users:
             result = self.__mapped_googleads_profile(
                 enrichment_user, target_schema, validations
             )
+            if result:
+                profiles.append(result)
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        list_response = self.__add_profile_to_list(
+            access_token=user_integration.access_token,
+            customer_id=integration_data_sync.customer_id,
+            user_list_id=integration_data_sync.list_id,
+            profiles=profiles,
+        )
+
+        if list_response == ProccessDataSyncResult.TOO_MANY_REQUESTS.value:
+            return self.__add_profile_to_list(
+                access_token=user_integration.access_token,
+                customer_id=integration_data_sync.customer_id,
+                user_list_id=integration_data_sync.list_id,
+                profiles=profiles,
+            )
+
+        return list_response
+
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
+    ):
+        profiles = []
+        for enrichment_user in five_x_five_users:
+            result = self.__mapped_googleads_profile_lead(enrichment_user)
             if result:
                 profiles.append(result)
         if not profiles:
@@ -284,7 +342,9 @@ class GoogleAdsIntegrationsService:
         query = query.format(customer_id=customer_id)
 
         try:
-            response = google_ads_service.search(customer_id=customer_id, query=query)
+            response = google_ads_service.search(
+                customer_id=customer_id, query=query
+            )
             for row in response:
                 job = row.offline_user_data_job
                 return job.id
@@ -295,7 +355,9 @@ class GoogleAdsIntegrationsService:
             logger.error(f"Error: {str(e)}")
             return None
 
-    def __add_profile_to_list(self, access_token, customer_id, user_list_id, profiles):
+    def __add_profile_to_list(
+        self, access_token, customer_id, user_list_id, profiles
+    ):
         client = self.get_google_ads_client(access_token)
         ad_user_data_consent = client.enums.ConsentStatusEnum.GRANTED
         ad_personalization_consent = client.enums.ConsentStatusEnum.GRANTED
@@ -318,7 +380,9 @@ class GoogleAdsIntegrationsService:
             )
         except core_exceptions.ResourceExhausted as ex:
             msg = str(ex)
-            if "Too many requests" in msg or re.search(r"Retry in \d+ seconds", msg):
+            if "Too many requests" in msg or re.search(
+                r"Retry in \d+ seconds", msg
+            ):
                 logger.warning(f"Rate limit exceeded: {msg}")
                 time.sleep(10)
                 return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
@@ -347,8 +411,13 @@ class GoogleAdsIntegrationsService:
                 time.sleep(retry_secs)
                 return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
 
-            if status == StatusCode.RESOURCE_EXHAUSTED and "check quota" in message:
-                logger.error(f"Quota exhausted for request {request_id}: {message}")
+            if (
+                status == StatusCode.RESOURCE_EXHAUSTED
+                and "check quota" in message
+            ):
+                logger.error(
+                    f"Quota exhausted for request {request_id}: {message}"
+                )
                 return ProccessDataSyncResult.QUOTA_EXHAUSTED.value
             logger.error(
                 f"Request with ID '{ex.request_id}' failed with status "
@@ -357,7 +426,9 @@ class GoogleAdsIntegrationsService:
             return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
         except Exception as ex:
             msg = str(ex)
-            if "Too many requests" in msg or re.search(r"Retry in \d+ seconds", msg):
+            if "Too many requests" in msg or re.search(
+                r"Retry in \d+ seconds", msg
+            ):
                 logger.warning(f"Rate limit exceeded: {msg}")
                 time.sleep(10)
                 return ProccessDataSyncResult.TOO_MANY_REQUESTS.value
@@ -371,22 +442,54 @@ class GoogleAdsIntegrationsService:
         credential = self.get_credentials(domain_id)
         if not credential:
             raise HTTPException(
-                status_code=403, detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value
+                status_code=403,
+                detail=IntegrationsStatus.CREDENTIALS_NOT_FOUND.value,
             )
         credential.suppression = suppression
         self.integrations_persistence.db.commit()
         return {"message": "successfuly"}
 
+    def __mapped_googleads_profile_lead(
+        self, five_x_five_user: FiveXFiveUser
+    ) -> GoogleAdsProfile | None:
+        first_email = get_valid_email(
+            five_x_five_user, self.million_verifier_integrations
+        )
+
+        if first_email in (
+            ProccessDataSyncResult.INCORRECT_FORMAT.value,
+            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+        ):
+            return None
+
+        first_phone = get_valid_phone(five_x_five_user)
+
+        address_parts = get_valid_location(five_x_five_user)
+
+        return GoogleAdsProfile(
+            email=first_email,
+            first_name=getattr(five_x_five_user, "first_name", None),
+            last_name=getattr(five_x_five_user, "last_name", None),
+            phone=validate_and_format_phone(format_phone_number(first_phone)),
+            city=address_parts[1],
+            state=address_parts[2],
+            address=address_parts[0],
+        )
+
     def __mapped_googleads_profile(
-        self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict
-    ) -> Optional[GoogleAdsProfile]:
-        enrichment_data = self.get_data(enrichment_user)
-        enrichment_contacts = enrichment_data.contacts
+        self,
+        enrichment_user: EnrichmentUser,
+        target_schema: str,
+        validations: dict,
+    ) -> GoogleAdsProfile:
+        enrichment_contacts = enrichment_user.contacts
         if not enrichment_contacts:
             return None
 
         business_email, personal_email, phone = (
-            self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+            self.sync_persistence.get_verified_email_and_phone(
+                enrichment_user.id
+            )
         )
         main_email, main_phone = resolve_main_email_and_phone(
             enrichment_contacts,
@@ -402,7 +505,7 @@ class GoogleAdsIntegrationsService:
         if not main_email or not first_name or not last_name:
             return None
 
-        enrichment_user_postal = enrichment_data.postal
+        enrichment_user_postal = enrichment_user.postal
         city = None
         state = None
         country_code = None
@@ -428,13 +531,6 @@ class GoogleAdsIntegrationsService:
             country_code=country_code,
         )
 
-    # TODO: move
-    def get_data(self, enrichment_user: EnrichmentUser) -> Optional[UserData]:
-        contacts = enrichment_user.contacts
-        postal = enrichment_user.postal
-
-        return UserData(contacts=contacts, postal=postal)
-
     def get_google_ads_client(self, refresh_token):
         credentials = Credentials(
             None,
@@ -447,7 +543,8 @@ class GoogleAdsIntegrationsService:
             credentials.refresh(Request())
 
         client = GoogleAdsClient(
-            credentials=credentials, developer_token=os.getenv("GOOGLE_ADS_TOKEN")
+            credentials=credentials,
+            developer_token=os.getenv("GOOGLE_ADS_TOKEN"),
         )
         return client
 
@@ -522,9 +619,7 @@ class GoogleAdsIntegrationsService:
             offline_user_data_job.type_ = (
                 client.enums.OfflineUserDataJobTypeEnum.CUSTOMER_MATCH_USER_LIST
             )
-            offline_user_data_job.customer_match_user_list_metadata.user_list = (
-                user_list_resource_name
-            )
+            offline_user_data_job.customer_match_user_list_metadata.user_list = user_list_resource_name
 
             if ad_user_data_consent:
                 offline_user_data_job.customer_match_user_list_metadata.consent.ad_user_data = ad_user_data_consent
@@ -532,10 +627,8 @@ class GoogleAdsIntegrationsService:
             if ad_personalization_consent:
                 offline_user_data_job.customer_match_user_list_metadata.consent.ad_personalization = ad_personalization_consent
 
-            create_offline_user_data_job_response = (
-                offline_user_data_job_service_client.create_offline_user_data_job(
-                    customer_id=customer_id, job=offline_user_data_job
-                )
+            create_offline_user_data_job_response = offline_user_data_job_service_client.create_offline_user_data_job(
+                customer_id=customer_id, job=offline_user_data_job
             )
 
             offline_user_data_job_resource_name = (
@@ -559,7 +652,7 @@ class GoogleAdsIntegrationsService:
         )
 
     def build_offline_user_data_job_operations(
-        self, client, profiles: GoogleAdsProfile
+        self, client, profiles: List[GoogleAdsProfile]
     ):
         raw_records = []
         for profile in profiles:
@@ -587,7 +680,9 @@ class GoogleAdsIntegrationsService:
                 user_data.user_identifiers.append(user_identifier)
 
             if "phone" in record:
-                hashed_phone_number = self.normalize_and_hash(record["phone"], True)
+                hashed_phone_number = self.normalize_and_hash(
+                    record["phone"], True
+                )
                 if hashed_phone_number:
                     user_identifier = client.get_type("UserIdentifier")
                     user_identifier.hashed_phone_number = hashed_phone_number
@@ -674,7 +769,7 @@ class GoogleAdsIntegrationsService:
                 "message": str(e),
             }
 
-    def get_customer_info(self, domain_id, user_id):
+    def get_ad_accounts(self, domain_id, user_id):
         try:
             credential = self.get_credentials(domain_id, user_id)
             client = self.get_google_ads_client(credential.access_token)
@@ -712,7 +807,9 @@ class GoogleAdsIntegrationsService:
                             }
                         )
                 except GoogleAdsException as ex:
-                    logger.error(f"Error requesting data for customer_id {customer_id}")
+                    logger.error(
+                        f"Error requesting data for customer_id {customer_id}"
+                    )
                     for error in ex.failure.errors:
                         logger.error(
                             f"Error code: {error.error_code}, msg: {error.message}"

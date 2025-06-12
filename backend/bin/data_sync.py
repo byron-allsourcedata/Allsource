@@ -48,7 +48,9 @@ async def on_message_received(message: IncomingMessage, integration_service):
         await message.reject(requeue=True)
 
 
-async def process_data_sync(message_body, integration_service: IntegrationService):
+async def process_data_sync(
+    message_body, integration_service: IntegrationService
+):
     await integration_service.klaviyo.process_data_sync(message_body)
     integration_service.meta.process_data_sync(message_body)
     await integration_service.omnisend.process_data_sync(message_body)
@@ -93,7 +95,9 @@ async def main():
         )
         with integration_service as service:
             await queue.consume(
-                functools.partial(on_message_received, integration_service=service)
+                functools.partial(
+                    on_message_received, integration_service=service
+                )
             )
             await asyncio.Future()
     except Exception as err:

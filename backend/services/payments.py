@@ -31,7 +31,9 @@ def manage_subscription_schedule(
 ):
     if current_subscription.get("schedule"):
         subscription_schedule_id = current_subscription["schedule"]
-        schedule = stripe.SubscriptionSchedule.retrieve(subscription_schedule_id)
+        schedule = stripe.SubscriptionSchedule.retrieve(
+            subscription_schedule_id
+        )
         stripe.SubscriptionSchedule.release(schedule.id)
 
     schedule = stripe.SubscriptionSchedule.create(
@@ -45,7 +47,9 @@ def manage_subscription_schedule(
                 "items": [
                     {
                         "price": schedule["phases"][0]["items"][0]["price"],
-                        "quantity": schedule["phases"][0]["items"][0]["quantity"],
+                        "quantity": schedule["phases"][0]["items"][0][
+                            "quantity"
+                        ],
                     }
                 ],
                 "start_date": schedule["phases"][0]["start_date"],
@@ -97,7 +101,9 @@ class PaymentsService:
         self.plan_persistence = plan_persistence
         self.subscription_service = subscription_service
         self.integration_service = integration_service
-        self.referral_discount_codes_persistence = referral_discount_codes_persistence
+        self.referral_discount_codes_persistence = (
+            referral_discount_codes_persistence
+        )
 
     def upgrade_subscription(
         self, current_subscription, platform_subscription_id, price_id
@@ -118,7 +124,9 @@ class PaymentsService:
             cancel_at_period_end=False,
             items=[
                 {
-                    "id": current_subscription.get("items").get("data")[0].get("id"),
+                    "id": current_subscription.get("items")
+                    .get("data")[0]
+                    .get("id"),
                     "deleted": True,
                 },
                 {"price": price_id},
@@ -149,11 +157,15 @@ class PaymentsService:
         plan = self.plan_persistence.get_plan_by_alias(alias)
         if not self.plan_persistence.get_user_subscription(user.get("id")):
             trial_period = plan.trial_days
-            discount_code = self.referral_discount_codes_persistence.get_discount_code(
-                user_id=user.get("id")
+            discount_code = (
+                self.referral_discount_codes_persistence.get_discount_code(
+                    user_id=user.get("id")
+                )
             )
         if get_default_payment_method(customer_id):
-            status_subscription = renew_subscription(plan.stripe_price_id, customer_id)
+            status_subscription = renew_subscription(
+                plan.stripe_price_id, customer_id
+            )
             return {"status_subscription": status_subscription}
         result_url = create_stripe_checkout_session(
             customer_id=self.plans_service.get_customer_id(user),
@@ -169,13 +181,19 @@ class PaymentsService:
         return self.plans_service.get_user_subscription_authorization_status()
 
     def downgrade_subscription(
-        self, current_subscription, platform_subscription_id, price_id, subscription
+        self,
+        current_subscription,
+        platform_subscription_id,
+        price_id,
+        subscription,
     ):
         schedule_downgrade_subscription = manage_subscription_schedule(
             current_subscription, platform_subscription_id, price_id
         )
         self.plans_service.save_downgrade_price_id(price_id, subscription)
-        return {"status": get_subscription_status(schedule_downgrade_subscription)}
+        return {
+            "status": get_subscription_status(schedule_downgrade_subscription)
+        }
 
     def cancel_user_subscription(self, user, reason_unsubscribe):
         subscription_data = {}
@@ -232,7 +250,9 @@ class PaymentsService:
                 )
 
         platform_subscription_id = subscription.platform_subscription_id
-        current_subscription = stripe.Subscription.retrieve(platform_subscription_id)
+        current_subscription = stripe.Subscription.retrieve(
+            platform_subscription_id
+        )
         plan = self.plan_persistence.get_plan_by_alias(alias)
         is_downgrade = self.is_downgrade(
             plan.stripe_price_id, user.get("current_subscription_id")
@@ -246,7 +266,9 @@ class PaymentsService:
             )
         else:
             return self.upgrade_subscription(
-                current_subscription, platform_subscription_id, plan.stripe_price_id
+                current_subscription,
+                platform_subscription_id,
+                plan.stripe_price_id,
             )
 
     def cancel_downgrade(self, user: dict):
@@ -255,7 +277,9 @@ class PaymentsService:
         )
         if not subscription:
             return SubscriptionStatus.SUBSCRIPTION_NOT_FOUND
-        subscription_data = cancel_downgrade(subscription.platform_subscription_id)
+        subscription_data = cancel_downgrade(
+            subscription.platform_subscription_id
+        )
         if subscription_data == "SUCCESS":
             self.subscription_service.cancellation_downgrade(subscription.id)
 

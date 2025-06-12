@@ -1,21 +1,16 @@
 from sqlalchemy import (
     Column,
     Integer,
-    DATE,
-    TIME,
     VARCHAR,
     ForeignKey,
     Index,
     BigInteger,
-    text,
     Date,
     Time,
     Sequence,
 )
 
 from .base import Base
-from .five_x_five_users import FiveXFiveUser
-from .users_domains import UserDomains
 
 
 class LeadsVisits(Base):
@@ -40,15 +35,19 @@ class LeadsVisits(Base):
     end_date = Column(Date, nullable=True)
     end_time = Column(Time, nullable=True)
     pages_count = Column(Integer, nullable=True)
-    average_time_sec = Column(Integer, nullable=True)
-    full_time_sec = Column(Integer, nullable=True)
+    average_time_sec = Column(Integer, nullable=False, default=10)
+    full_time_sec = Column(Integer, nullable=False, default=10)
     lead_id = Column(
-        BigInteger, ForeignKey("leads_users.id", ondelete="CASCADE"), nullable=True
+        BigInteger,
+        ForeignKey("leads_users.id", ondelete="CASCADE"),
+        nullable=True,
     )
     behavior_type = Column(VARCHAR, nullable=True)
     five_x_five_user_id = Column(
         Integer, ForeignKey("5x5_users.id", ondelete="SET NULL"), nullable=True
     )
     domain_id = Column(
-        Integer, ForeignKey("users_domains.id", ondelete="SET NULL"), nullable=True
+        Integer,
+        ForeignKey("users_domains.id", ondelete="SET NULL"),
+        nullable=True,
     )

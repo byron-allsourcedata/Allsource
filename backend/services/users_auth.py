@@ -9,6 +9,7 @@ from google.oauth2 import id_token
 from sqlalchemy.orm import Session
 from persistence.domains import UserDomainsPersistence
 from fastapi import HTTPException, status
+from persistence.admin import AdminPersistence
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
 from enums import (
     SignUpStatus,
@@ -32,12 +33,24 @@ from persistence.referral_discount_code_persistence import (
     ReferralDiscountCodesPersistence,
 )
 from schemas.auth_google_token import AuthGoogleData
-from schemas.users import UserSignUpForm, UserLoginForm, ResetPasswordForm, UtmParams
+from schemas.users import (
+    UserSignUpForm,
+    UserLoginForm,
+    ResetPasswordForm,
+    UtmParams,
+)
 from services.integrations.base import IntegrationService
 from services.partners import PartnersService
 from schemas.integrations.integrations import ShopifyOrBigcommerceCredentials
 from services.payments_plans import PaymentsPlans
 from . import stripe_service
+from .crm.hubspot.api import NewContactCRM
+from .crm.hubspot.exceptions import (
+    AddingCRMContact,
+    UpdateContactStatusException,
+)
+from .crm.hubspot.schemas import HubspotLeadStatus
+from .crm.service import CrmService
 from .jwt_service import (
     get_password_hash,
     create_access_token,
@@ -45,9 +58,10 @@ from .jwt_service import (
     decode_jwt_data,
 )
 from .sendgrid import SendgridHandler
-from .stripe_service import get_stripe_payment_url
+from .stripe_service import get_stripe_payment_url, NewStripeCustomer
 from .subscriptions import SubscriptionService
 from encryption_utils import decrypt_data
+from .user_name import UserNamesService
 
 EMAIL_NOTIFICATIONS = "email_notifications"
 logger = logging.getLogger(__name__)
@@ -66,6 +80,9 @@ class UsersAuth:
         partners_service: PartnersService,
         domain_persistence: UserDomainsPersistence,
         referral_persistence_service: ReferralDiscountCodesPersistence,
+        admin_persistence: AdminPersistence,
+        crm: CrmService,
+        user_names: UserNamesService,
     ):
         self.db = db
         self.payments_service = payments_service
@@ -73,10 +90,13 @@ class UsersAuth:
         self.send_grid_persistence_service = send_grid_persistence_service
         self.subscription_service = subscription_service
         self.plan_persistence = plans_persistence
+        self.admin_persistence = admin_persistence
         self.integration_service = integration_service
         self.partners_service = partners_service
         self.domain_persistence = domain_persistence
         self.referral_persistence_service = referral_persistence_service
+        self.crm = crm
+        self.user_names = user_names
         self.UNLIMITED = -1
         self.FREE_TRIAL_DAYS = 14
 
@@ -110,7 +130,9 @@ class UsersAuth:
             return UserAuthorizationStatus.NEED_BOOK_CALL
         return UserAuthorizationStatus.NEED_CONFIRM_EMAIL
 
-    def get_utc_aware_date_for_mssql(self, delta: timedelta = timedelta(seconds=0)):
+    def get_utc_aware_date_for_mssql(
+        self, delta: timedelta = timedelta(seconds=0)
+    ):
         date = self.get_utc_aware_date()
         if delta:
             date += delta
@@ -191,9 +213,13 @@ class UsersAuth:
 
         utm_params_dict = utm_params.model_dump() if utm_params else {}
         utm_params_cleaned = {
-            key: value for key, value in utm_params_dict.items() if value is not None
+            key: value
+            for key, value in utm_params_dict.items()
+            if value is not None
         }
-        utm_params_json = json.dumps(utm_params_cleaned) if utm_params_cleaned else None
+        utm_params_json = (
+            json.dumps(utm_params_cleaned) if utm_params_cleaned else None
+        )
 
         if awin_awc:
             source_platform = SourcePlatformEnum.AWIN.value
@@ -224,6 +250,7 @@ class UsersAuth:
 
     def create_account_google(self, auth_google_data: AuthGoogleData):
         teams_token = auth_google_data.teams_token
+        admin_token = auth_google_data.admin_token
         referral_token = auth_google_data.referral_token
         owner_id = None
         status = SignUpStatus.NEED_CHOOSE_PLAN
@@ -265,7 +292,9 @@ class UsersAuth:
                     logger.error("Invalid Shopify access token or shop ID.")
                     return {"status": OauthShopify.ERROR_SHOPIFY_TOKEN.value}
             except Exception as e:
-                logger.exception("An error occurred while processing Shopify data.")
+                logger.exception(
+                    "An error occurred while processing Shopify data."
+                )
                 return {"status": OauthShopify.ERROR_SHOPIFY_TOKEN.value}
 
         google_request = google_requests.Request()
@@ -276,12 +305,28 @@ class UsersAuth:
         if idinfo:
             if teams_token:
                 status = SignUpStatus.SUCCESS
-                status_result = self.user_persistence_service.check_status_invitations(
+                status_result = (
+                    self.user_persistence_service.check_status_invitations(
+                        admin_token=admin_token, user_mail=idinfo.get("email")
+                    )
+                )
+                if status_result["success"] is False:
+                    return {
+                        "is_success": True,
+                        "status": status_result["error"],
+                    }
+                owner_id = status_result["team_owner_id"]
+
+            if admin_token:
+                status = SignUpStatus.SUCCESS
+                status_result = self.admin_persistence.check_status_invitations(
                     teams_token=teams_token, user_mail=idinfo.get("email")
                 )
                 if status_result["success"] is False:
-                    return {"is_success": True, "status": status_result["error"]}
-                owner_id = status_result["team_owner_id"]
+                    return {
+                        "is_success": True,
+                        "status": status_result["error"],
+                    }
             full_name = idinfo.get("given_name")
             family_name = idinfo.get("family_name")
             if family_name and family_name != "None":
@@ -296,7 +341,9 @@ class UsersAuth:
         else:
             return {"status": SignUpStatus.NOT_VALID_EMAIL}
 
-        check_user_object = self.user_persistence_service.get_user_by_email(email)
+        check_user_object = self.user_persistence_service.get_user_by_email(
+            email
+        )
         if check_user_object is not None:
             logger.info(f"User already exists in database with email: {email}")
             return {"status": SignUpStatus.EMAIL_ALREADY_EXISTS}
@@ -321,6 +368,11 @@ class UsersAuth:
             pft=auth_google_data.pft,
         )
 
+        if admin_token:
+            self.admin_persistence.update_admin_user(
+                user_id=user_object.id, admin_token=admin_token
+            )
+
         if teams_token:
             notification_id = self.save_account_notification(
                 user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value
@@ -331,7 +383,9 @@ class UsersAuth:
                 notification_id=notification_id,
             )
             self.user_persistence_service.update_teams_owner_id(
-                user_id=user_object.id, teams_token=teams_token, owner_id=owner_id
+                user_id=user_object.id,
+                teams_token=teams_token,
+                owner_id=owner_id,
             )
             token_info = {"id": owner_id, "team_member_id": user_object.id}
         else:
@@ -362,7 +416,10 @@ class UsersAuth:
                 user_id=user_object.id, ftd=ftd
             )
             self.partners_service.setUser(
-                user_object.email, user_object.id, "signup", datetime.datetime.now()
+                user_object.email,
+                user_object.id,
+                "signup",
+                datetime.datetime.now(),
             )
 
         conditions = [
@@ -375,6 +432,9 @@ class UsersAuth:
                 user_id=user_object.id, ftd=ftd
             )
 
+        self.__on_create_account(
+            email=user_object.email, full_name=user_object.full_name
+        )
         if not user_object.is_with_card:
             return {
                 "status": SignUpStatus.FILL_COMPANY_DETAILS,
@@ -390,7 +450,9 @@ class UsersAuth:
         if user.is_with_card:
             if user.company_name:
                 subscription_plan_is_active = (
-                    self.subscription_service.is_user_has_active_subscription(user.id)
+                    self.subscription_service.is_user_has_active_subscription(
+                        user.id
+                    )
                 )
                 if subscription_plan_is_active:
                     return {"status": LoginStatus.SUCCESS}
@@ -411,10 +473,8 @@ class UsersAuth:
             if user.is_email_confirmed:
                 if user.company_name:
                     if user.is_book_call_passed:
-                        subscription_plan_is_active = (
-                            self.subscription_service.is_user_has_active_subscription(
-                                user.id
-                            )
+                        subscription_plan_is_active = self.subscription_service.is_user_has_active_subscription(
+                            user.id
                         )
                         if subscription_plan_is_active:
                             return {"status": LoginStatus.SUCCESS}
@@ -468,13 +528,17 @@ class UsersAuth:
                     logger.error("Invalid Shopify access token or shop ID.")
                     shopify_status = OauthShopify.ERROR_SHOPIFY_TOKEN
             except Exception as e:
-                logger.exception("An error occurred while processing Shopify data.")
+                logger.exception(
+                    "An error occurred while processing Shopify data."
+                )
                 shopify_status = OauthShopify.ERROR_SHOPIFY_TOKEN
 
         if not user_object.is_email_confirmed:
             self.user_persistence_service.email_confirmed(user_object.id)
         if user_object:
-            self.user_persistence_service.set_last_signed_in(user_id=user_object.id)
+            self.user_persistence_service.set_last_signed_in(
+                user_id=user_object.id
+            )
             if user_object.team_owner_id:
                 token_info = {
                     "id": user_object.team_owner_id,
@@ -489,9 +553,14 @@ class UsersAuth:
                 }
             token = create_access_token(token_info)
             if shopify_data and shopify_status is None:
-                if user_object.source_platform == SourcePlatformEnum.SHOPIFY.value:
-                    user_subscription = self.subscription_service.get_user_subscription(
-                        user_object.id
+                if (
+                    user_object.source_platform
+                    == SourcePlatformEnum.SHOPIFY.value
+                ):
+                    user_subscription = (
+                        self.subscription_service.get_user_subscription(
+                            user_object.id
+                        )
                     )
                     if user_subscription.domains_limit != self.UNLIMITED:
                         domain = self.domain_persistence.get_domain_by_filter(
@@ -499,7 +568,9 @@ class UsersAuth:
                         )
                         if not domain:
                             if (
-                                self.domain_persistence.count_domain(user_object.id)
+                                self.domain_persistence.count_domain(
+                                    user_object.id
+                                )
                                 >= user_subscription.domains_limit
                             ):
                                 shopify_status = OauthShopify.NEED_UPGRADE_PLAN
@@ -511,19 +582,26 @@ class UsersAuth:
                         user_object, shopify_data, shopify_access_token, shop_id
                     )
 
-            authorization_data = self.get_user_authorization_information(user_object)
+            authorization_data = self.get_user_authorization_information(
+                user_object
+            )
             if authorization_data["status"] == LoginStatus.PAYMENT_NEEDED:
                 result = {
                     "status": authorization_data["status"].value,
                     "token": token,
-                    "stripe_payment_url": authorization_data.get("stripe_payment_url"),
+                    "stripe_payment_url": authorization_data.get(
+                        "stripe_payment_url"
+                    ),
                 }
                 if shopify_status:
                     result["shopify_status"] = shopify_status
                 return result
 
             if authorization_data["status"] != UserAuthorizationStatus.SUCCESS:
-                result = {"status": authorization_data["status"].value, "token": token}
+                result = {
+                    "status": authorization_data["status"].value,
+                    "token": token,
+                }
                 if shopify_status:
                     result["shopify_status"] = shopify_status
 
@@ -541,21 +619,31 @@ class UsersAuth:
     def create_account(self, user_form: UserSignUpForm):
         if not user_form.password or " " in user_form.password:
             logger.debug("Invalid password provided.")
-            return {"is_success": True, "status": SignUpStatus.PASSWORD_NOT_VALID}
+            return {
+                "is_success": True,
+                "status": SignUpStatus.PASSWORD_NOT_VALID,
+            }
         user_form.full_name = user_form.full_name.strip()
         if not user_form.full_name:
             logger.debug("Invalid full name provided.")
-            return {"is_success": True, "status": SignUpStatus.INCORRECT_FULL_NAME}
+            return {
+                "is_success": True,
+                "status": SignUpStatus.INCORRECT_FULL_NAME,
+            }
         user_form.password = get_password_hash(user_form.password.strip())
 
         if self.user_persistence_service.get_user_by_email(user_form.email):
             logger.info(f"User already exists with email: {user_form.email}")
-            return {"is_success": True, "status": SignUpStatus.EMAIL_ALREADY_EXISTS}
+            return {
+                "is_success": True,
+                "status": SignUpStatus.EMAIL_ALREADY_EXISTS,
+            }
 
         status = SignUpStatus.NEED_CHOOSE_PLAN
         owner_id = None
         shopify_data = user_form.shopify_data
         teams_token = user_form.teams_token
+        admin_token = user_form.admin_token
         referral_token = user_form.referral_token
         coupon = user_form.coupon
         shopify_access_token = None
@@ -591,16 +679,27 @@ class UsersAuth:
                         "status": OauthShopify.ERROR_SHOPIFY_TOKEN.value,
                     }
             except Exception as e:
-                logger.exception("An error occurred while processing Shopify data.")
+                logger.exception(
+                    "An error occurred while processing Shopify data."
+                )
                 return {
                     "is_success": True,
                     "status": OauthShopify.ERROR_SHOPIFY_TOKEN.value,
                 }
+        if admin_token:
+            status = SignUpStatus.SUCCESS
+            status_result = self.admin_persistence.check_status_invitations(
+                admin_token=admin_token, user_mail=user_form.email
+            )
+            if status_result["success"] is False:
+                return {"is_success": True, "status": status_result["error"]}
 
         if teams_token:
             status = SignUpStatus.SUCCESS
-            status_result = self.user_persistence_service.check_status_invitations(
-                teams_token=teams_token, user_mail=user_form.email
+            status_result = (
+                self.user_persistence_service.check_status_invitations(
+                    teams_token=teams_token, user_mail=user_form.email
+                )
             )
             if status_result["success"] is False:
                 return {"is_success": True, "status": status_result["error"]}
@@ -614,8 +713,16 @@ class UsersAuth:
             logger.info(
                 f"User already exists in database with email: {user_form.email}"
             )
-            return {"is_success": True, "status": SignUpStatus.EMAIL_ALREADY_EXISTS}
-        customer_id = stripe_service.create_customer(user_form)
+            return {
+                "is_success": True,
+                "status": SignUpStatus.EMAIL_ALREADY_EXISTS,
+            }
+        customer_id = stripe_service.create_customer(
+            NewStripeCustomer(
+                email=user_form.email, full_name=user_form.full_name
+            )
+        )
+
         user_data = {
             "email": user_form.email,
             "full_name": user_form.full_name,
@@ -637,6 +744,11 @@ class UsersAuth:
             pft=user_form.pft,
         )
 
+        if admin_token:
+            self.admin_persistence.update_admin_user(
+                user_id=user_object.id, admin_token=admin_token
+            )
+
         if teams_token:
             notification_id = self.save_account_notification(
                 user_object.id, NotificationTitles.TEAM_MEMBER_ADDED.value
@@ -647,7 +759,9 @@ class UsersAuth:
                 notification_id=notification_id,
             )
             self.user_persistence_service.update_teams_owner_id(
-                user_id=user_object.id, teams_token=teams_token, owner_id=owner_id
+                user_id=user_object.id,
+                teams_token=teams_token,
+                owner_id=owner_id,
             )
             token_info = {"id": owner_id, "team_member_id": user_object.id}
         else:
@@ -697,24 +811,36 @@ class UsersAuth:
         conditions = [
             is_with_card is False,
             teams_token is None,
+            admin_token is None,
             referral_token is None,
             shopify_data is None,
             shop_hash is None,
         ]
         if all(conditions):
+            self.__on_create_account(
+                email=user_object.email, full_name=user_object.full_name
+            )
             return self._send_email_verification(user_object, token)
 
         if teams_token:
-            return {"is_success": True, "status": SignUpStatus.SUCCESS, "token": token}
+            return {
+                "is_success": True,
+                "status": SignUpStatus.SUCCESS,
+                "token": token,
+            }
+        if admin_token:
+            return {
+                "is_success": True,
+                "status": SignUpStatus.SUCCESS_ADMIN,
+                "token": token,
+            }
 
         return {"is_success": True, "status": status, "token": token}
 
     def _process_big_commerce_integration(self, user_object, shop_hash):
         with self.integration_service as service:
-            external_apps_installations = (
-                service.bigcommerce.get_external_apps_installations_by_shop_hash(
-                    shop_hash
-                )
+            external_apps_installations = service.bigcommerce.get_external_apps_installations_by_shop_hash(
+                shop_hash
             )
             if external_apps_installations:
                 domain = self.user_persistence_service.save_user_domain(
@@ -748,14 +874,17 @@ class UsersAuth:
                 credentials, domain, user_object.__dict__, shop_id
             )
             service.shopify.create_webhooks_for_store(
-                shopify_data=shopify_data, shopify_access_token=shopify_access_token
+                shopify_data=shopify_data,
+                shopify_access_token=shopify_access_token,
             )
 
         if not user_object.shop_id:
             user_object.shop_id = shop_id
             user_object.shopify_token = shopify_access_token
             user_object.shop_domain = shopify_data.shop
-            self.partners_service.setUser(user_object.email, user_object.id, "active")
+            self.partners_service.setUser(
+                user_object.email, user_object.id, "active"
+            )
         user_object.source_platform = SourcePlatformEnum.SHOPIFY.value
         self.db.commit()
 
@@ -785,9 +914,7 @@ class UsersAuth:
         if not template_id:
             return {"is_success": False, "error": "email template not found"}
 
-        confirm_email_url = (
-            f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}"
-        )
+        confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/authentication/verify-token?token={token}"
         mail_object = SendgridHandler()
         mail_object.send_sign_up_mail(
             to_emails=user_object.email,
@@ -797,7 +924,9 @@ class UsersAuth:
                 "link": confirm_email_url,
             },
         )
-        self.user_persistence_service.set_verified_email_sent_now(user_object.id)
+        self.user_persistence_service.set_verified_email_sent_now(
+            user_object.id
+        )
         logger.info("Confirmation Email Sent")
         return {
             "is_success": True,
@@ -838,7 +967,9 @@ class UsersAuth:
                     logger.error("Invalid Shopify access token or shop ID.")
                     shopify_status = OauthShopify.ERROR_SHOPIFY_TOKEN
             except Exception as e:
-                logger.exception("An error occurred while processing Shopify data.")
+                logger.exception(
+                    "An error occurred while processing Shopify data."
+                )
                 shopify_status = OauthShopify.ERROR_SHOPIFY_TOKEN
 
         logger.debug("Password verification passed")
@@ -859,8 +990,10 @@ class UsersAuth:
 
         if shopify_data and shopify_status is None:
             if user_object.source_platform == SourcePlatformEnum.SHOPIFY.value:
-                user_subscription = self.subscription_service.get_user_subscription(
-                    user_object.id
+                user_subscription = (
+                    self.subscription_service.get_user_subscription(
+                        user_object.id
+                    )
                 )
                 if user_subscription.domains_limit != self.UNLIMITED:
                     domain = self.domain_persistence.get_domain_by_filter(
@@ -879,26 +1012,35 @@ class UsersAuth:
                 self._process_shopify_integration(
                     user_object, shopify_data, shopify_access_token, shop_id
                 )
-        authorization_data = self.get_user_authorization_information(user_object)
+        authorization_data = self.get_user_authorization_information(
+            user_object
+        )
         if authorization_data["status"] == LoginStatus.PAYMENT_NEEDED:
             result = {
                 "status": authorization_data["status"].value,
                 "token": token,
                 "is_partner": user_object.is_partner,
-                "stripe_payment_url": authorization_data.get("stripe_payment_url"),
+                "stripe_payment_url": authorization_data.get(
+                    "stripe_payment_url"
+                ),
             }
             if shopify_status:
                 result["shopify_status"] = shopify_status
             return result
 
         if authorization_data["status"] != LoginStatus.SUCCESS:
-            result = {"status": authorization_data["status"].value, "token": token}
+            result = {
+                "status": authorization_data["status"].value,
+                "token": token,
+            }
             if shopify_status:
                 result["shopify_status"] = shopify_status
             return result
 
         result = {
-            "status": LoginStatus.SUCCESS,
+            "status": LoginStatus.SUCCESS_ADMIN
+            if "admin" in user_object.role
+            else LoginStatus.SUCCESS,
             "token": token,
             "is_partner": user_object.is_partner,
         }
@@ -912,7 +1054,9 @@ class UsersAuth:
             data = decode_jwt_data(token)
         except:
             return {"status": VerifyToken.INCORRECT_TOKEN}
-        check_user_object = self.user_persistence_service.get_user_by_id(data.get("id"))
+        check_user_object = self.user_persistence_service.get_user_by_id(
+            data.get("id")
+        )
         if check_user_object:
             if check_user_object.get("is_email_confirmed"):
                 if check_user_object.get("team_owner_id"):
@@ -929,7 +1073,9 @@ class UsersAuth:
                     "status": VerifyToken.EMAIL_ALREADY_VERIFIED,
                     "user_token": user_token,
                 }
-            self.user_persistence_service.email_confirmed(check_user_object.get("id"))
+
+            self.__confirm_email(check_user_object)
+
             if check_user_object.get("team_owner_id"):
                 token_info = {
                     "id": check_user_object.get("team_owner_id"),
@@ -942,6 +1088,29 @@ class UsersAuth:
             user_token = create_access_token(token_info)
             return {"status": VerifyToken.SUCCESS, "user_token": user_token}
         return {"status": VerifyToken.INCORRECT_TOKEN}
+
+    def __on_create_account(self, full_name: str, email: str):
+        first_name, last_name = self.user_names.split_name(full_name)
+
+        try:
+            self.crm.add_contact(
+                NewContactCRM(
+                    email=email, firstname=first_name, lastname=last_name
+                )
+            )
+        except AddingCRMContact as e:
+            logger.error(e.exception)
+
+    def __confirm_email(self, check_user_object: dict):
+        self.user_persistence_service.email_confirmed(
+            check_user_object.get("id")
+        )
+        email = check_user_object.get("email")
+
+        try:
+            self.crm.update_status(email, HubspotLeadStatus.NEW)
+        except UpdateContactStatusException as e:
+            logger.error(e)
 
     def reset_password(self, reset_password_form: ResetPasswordForm):
         if reset_password_form:
@@ -956,20 +1125,23 @@ class UsersAuth:
                 if (message_expiration_time + timedelta(minutes=1)) > time_now:
                     return ResetPasswordEnum.RESEND_TOO_SOON
             if db_user.team_owner_id:
-                token_info = {"id": db_user.team_owner_id, "team_member_id": db_user.id}
+                token_info = {
+                    "id": db_user.team_owner_id,
+                    "team_member_id": db_user.id,
+                }
             else:
                 token_info = {
                     "id": db_user.id,
                 }
 
             token = create_access_token(token_info)
-            template_id = self.send_grid_persistence_service.get_template_by_alias(
-                SendgridTemplate.FORGOT_PASSWORD_TEMPLATE.value
+            template_id = (
+                self.send_grid_persistence_service.get_template_by_alias(
+                    SendgridTemplate.FORGOT_PASSWORD_TEMPLATE.value
+                )
             )
             if db_user:
-                confirm_email_url = (
-                    f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
-                )
+                confirm_email_url = f"{os.getenv('SITE_HOST_URL')}/forgot-password?token={token}"
                 mail_object = SendgridHandler()
                 mail_object.send_sign_up_mail(
                     to_emails=db_user.email,
@@ -980,7 +1152,9 @@ class UsersAuth:
                         "email": db_user.email,
                     },
                 )
-                self.user_persistence_service.set_reset_password_sent_now(db_user.id)
+                self.user_persistence_service.set_reset_password_sent_now(
+                    db_user.id
+                )
                 logger.info("Confirmation Email Sent")
                 return ResetPasswordEnum.SUCCESS
         return ResetPasswordEnum.NOT_VALID_EMAIL

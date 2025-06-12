@@ -2,22 +2,24 @@ from typing import Optional
 from uuid import UUID
 
 from catboost import CatBoostRegressor
+from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from typing_extensions import Annotated
 
-from db_dependencies import Db
+from dependencies import Db
 from models.enrichment.enrichment_models import EnrichmentModels
-from resolver import injectable
 
 
-@injectable
 class EnrichmentModelsPersistence:
     db: Session
 
-    def __init__(self, db: Db):
+    def __init__(self, db: Session):
         self.db = db
 
-    def save(self, lookalike_id: UUID, model: CatBoostRegressor) -> EnrichmentModels:
+    def save(
+        self, lookalike_id: UUID, model: CatBoostRegressor
+    ) -> EnrichmentModels:
         new_model = EnrichmentModels(
             lookalike_id=lookalike_id, model=model._serialize_model()
         )
@@ -40,3 +42,12 @@ class EnrichmentModelsPersistence:
 
         (model,) = result
         return model
+
+
+def get_persistence_repository(db: Db) -> EnrichmentModelsPersistence:
+    return EnrichmentModelsPersistence(db)
+
+
+EnrichmentModelsPersistenceDep = Annotated[
+    EnrichmentModelsPersistence, Depends(get_persistence_repository)
+]

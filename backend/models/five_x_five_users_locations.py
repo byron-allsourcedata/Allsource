@@ -1,5 +1,6 @@
+from sqlalchemy import Column, ForeignKey, BigInteger
+
 from .base import Base
-from sqlalchemy import Column, Integer, ForeignKey, BigInteger
 
 
 class FiveXFiveUsersLocations(Base):
@@ -12,5 +13,8 @@ class FiveXFiveUsersLocations(Base):
         nullable=False,
     )
     location_id = Column(
-        BigInteger, ForeignKey("5x5_locations.id"), primary_key=True, nullable=False
+        BigInteger,
+        ForeignKey("5x5_locations.id"),
+        primary_key=True,
+        nullable=False,
     )

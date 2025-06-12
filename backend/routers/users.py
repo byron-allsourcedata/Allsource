@@ -32,6 +32,7 @@ from schemas.users import (
     DeleteNotificationRequest,
     StripeAccountID,
     StripeConnectResponse,
+    GetStartedResponse,
 )
 from services.notification import Notification
 from services.users import UsersService
@@ -46,7 +47,20 @@ def get_me(user_service: UsersService = Depends(get_users_service)):
     plan = user_service.get_info_plan()
     domains = user_service.get_domains()
     user_info = user_service.get_my_info()
-    return {"user_info": user_info, "user_plan": plan, "user_domains": domains}
+
+    is_pixel_installed = any(
+        domain.get("is_pixel_installed") is True for domain in domains
+    )
+    has_source = user_service.check_source_import()
+    return {
+        "user_info": user_info,
+        "user_plan": plan,
+        "user_domains": domains,
+        "get_started": {
+            "is_pixel_installed": is_pixel_installed,
+            "is_source_imported": has_source,
+        },
+    }
 
 
 @router.get("/notification")
@@ -94,12 +108,15 @@ async def create_user(
             status=user_data.get("status"), token=user_data.get("token")
         )
     else:
-        raise HTTPException(status_code=500, detail={"error": user_data.get("error")})
+        raise HTTPException(
+            status_code=500, detail={"error": user_data.get("error")}
+        )
 
 
 @router.post("/login", response_model=UserLoginFormResponse)
 async def login_user(
-    user_form: UserLoginForm, users_service: UsersAuth = Depends(get_users_auth_service)
+    user_form: UserLoginForm,
+    users_service: UsersAuth = Depends(get_users_auth_service),
 ):
     user_data = users_service.login_account(user_form)
     return UserLoginFormResponse(
@@ -151,14 +168,18 @@ async def verify_token(
 )
 async def resend_verification_email(
     authorization: Annotated[str, Header()],
-    user: UsersEmailVerificationService = Depends(get_users_email_verification_service),
+    user: UsersEmailVerificationService = Depends(
+        get_users_email_verification_service
+    ),
 ):
     token = authorization.replace("Bearer ", "")
     user_data = user.resend_verification_email(token)
     if user_data.get("is_success"):
         return ResendVerificationEmailResponse(status=user_data.get("status"))
     else:
-        raise HTTPException(status_code=500, detail={"error": user_data.get("error")})
+        raise HTTPException(
+            status_code=500, detail={"error": user_data.get("error")}
+        )
 
 
 @router.post("/reset-password", response_model=ResetPasswordResponse)
@@ -182,17 +203,39 @@ async def update_password(
     "/check-verification-status", response_model=CheckVerificationStatusResponse
 )
 async def check_verification_status(
-    user: UsersEmailVerificationService = Depends(get_users_email_verification_service),
+    user: UsersEmailVerificationService = Depends(
+        get_users_email_verification_service
+    ),
 ):
     result_status = user.check_verification_status()
     return CheckVerificationStatusResponse(status=result_status)
 
 
+@router.get("/count-validation-funds", response_model=float)
+async def check_verification_status(user=Depends(check_user_authentication)):
+    return user.get("validation_funds")
+
+
 @router.post("/connect-stripe", response_model=StripeConnectResponse)
 async def connect_stripe(
-    connect_account_id: StripeAccountID, user: UsersService = Depends(get_users_service)
+    connect_account_id: StripeAccountID,
+    user: UsersService = Depends(get_users_service),
 ):
     result_status = user.add_stripe_account(
         connect_account_id.stripe_connect_account_id
     )
     return StripeConnectResponse(status=result_status)
+
+
+@router.get("/get-started")
+async def get_started_info(
+    user_service: UsersService = Depends(get_users_service),
+):
+    domains = user_service.get_domains()
+    is_pixel_installed = any(
+        domain.get("is_pixel_installed") is True for domain in domains
+    )
+    has_source = user_service.check_source_import()
+    return GetStartedResponse(
+        is_pixel_installed=is_pixel_installed, is_source_imported=has_source
+    )

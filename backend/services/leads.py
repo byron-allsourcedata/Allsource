@@ -72,7 +72,9 @@ class LeadsService:
             )
         )
         state_dict = (
-            {state.state_code: state.state_name for state in states} if states else {}
+            {state.state_code: state.state_name for state in states}
+            if states
+            else {}
         )
         leads_list = []
         for lead in leads:
@@ -81,7 +83,9 @@ class LeadsService:
             combined_datetime = datetime.strptime(
                 f"{first_visited_date} {first_visited_time}", "%d.%m.%Y %H:%M"
             )
-            adjusted_datetime = combined_datetime + timedelta(hours=timezone_offset)
+            adjusted_datetime = combined_datetime + timedelta(
+                hours=timezone_offset
+            )
             adjusted_date = adjusted_datetime.strftime("%d.%m.%Y")
             adjusted_time = adjusted_datetime.strftime("%H:%M")
             if not lead[66]:
@@ -90,7 +94,9 @@ class LeadsService:
                         "id": lead[0],
                         "first_name": lead[1],
                         "last_name": lead[9],
-                        "behavior_type": "converted_sales" if lead[65] else lead[56],
+                        "behavior_type": "converted_sales"
+                        if lead[65]
+                        else lead[56],
                         "first_visited_date": adjusted_date,
                         "first_visited_time": adjusted_time,
                         "visitor_type": lead[63],
@@ -107,7 +113,9 @@ class LeadsService:
                         "mobile_phone": self.format_phone_number(lead[3])
                         if lead[3]
                         else None,
-                        "personal_phone": self.format_phone_number(lead[4].strip())
+                        "personal_phone": self.format_phone_number(
+                            lead[4].strip()
+                        )
                         if lead[4]
                         else None,
                         "gender": lead[5],
@@ -148,13 +156,19 @@ class LeadsService:
                         "net_worth": lead[22],
                         "job_title": lead[23],
                         "last_updated": lead[24],
-                        "personal_emails_last_seen": lead[25].strftime("%d.%m.%Y %H:%M")
+                        "personal_emails_last_seen": lead[25].strftime(
+                            "%d.%m.%Y %H:%M"
+                        )
                         if lead[25]
                         else None,
-                        "company_last_updated": lead[26].strftime("%d.%m.%Y %H:%M")
+                        "company_last_updated": lead[26].strftime(
+                            "%d.%m.%Y %H:%M"
+                        )
                         if lead[26]
                         else None,
-                        "job_title_last_updated": lead[27].strftime("%d.%m.%Y %H:%M")
+                        "job_title_last_updated": lead[27].strftime(
+                            "%d.%m.%Y %H:%M"
+                        )
                         if lead[27]
                         else None,
                         "age_min": lead[28],
@@ -187,8 +201,12 @@ class LeadsService:
                         "personal_zip": lead[53],
                         "professional_zip": lead[54],
                         "company_zip": lead[55],
-                        "behavior_type": "converted_sales" if lead[65] else lead[56],
-                        "state": self.convert_state_code_to_name(lead[57], state_dict),
+                        "behavior_type": "converted_sales"
+                        if lead[65]
+                        else lead[56],
+                        "state": self.convert_state_code_to_name(
+                            lead[57], state_dict
+                        ),
                         "city": lead[58].title() if lead[58] else None,
                         "first_visited_date": adjusted_date,
                         "first_visited_time": adjusted_time,
@@ -302,7 +320,9 @@ class LeadsService:
         )
 
         state_dict = (
-            {state.state_code: state.state_name for state in states} if states else {}
+            {state.state_code: state.state_name for state in states}
+            if states
+            else {}
         )
 
         for five_x_five_user in result_five_x_five_users:
@@ -315,7 +335,11 @@ class LeadsService:
             for visit in leads_requests[lead_user_id]:
                 spent_time_sec = int(visit["spent_time_sec"])
                 page_visits_info.append(f"{visit['page']} {spent_time_sec}")
-                qs = visit["page_parameters"].replace(", ", "&").replace(",", "&")
+                qs = (
+                    visit["page_parameters"]
+                    .replace(", ", "&")
+                    .replace(",", "&")
+                )
                 url = f"{visit['page']}?{qs}" if qs else visit["page"]
                 page_visits_info_with_parameters.append(url)
                 page_visits_count += 1
@@ -453,7 +477,10 @@ class LeadsService:
             if start_letter.isdecimal():
                 results.add(lead.number)
             else:
-                if start_letter in (f"{lead.first_name} {lead.last_name}").lower():
+                if (
+                    start_letter
+                    in (f"{lead.first_name} {lead.last_name}").lower()
+                ):
                     results.add(f"{lead.first_name} {lead.last_name}")
                 if lead.email and start_letter in (lead.email).lower():
                     results.add(lead.email)

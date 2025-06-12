@@ -14,7 +14,9 @@ class AWSService:
         except Exception:
             return False
 
-    def download_file(self, bucket_name: str, object_name: str, file_name: str) -> None:
+    def download_file(
+        self, bucket_name: str, object_name: str, file_name: str
+    ) -> None:
         self.s3_client.download_file(bucket_name, object_name, file_name)
 
     def list_files(self, bucket_name: str) -> list:

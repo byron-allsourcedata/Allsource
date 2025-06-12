@@ -66,7 +66,9 @@ from .leads_visits import LeadsVisits
 from .partner import Partner
 from .partners_asset import PartnersAsset
 from .plans import SubscriptionPlan
-from .enrichment.enrichment_professional_profiles import EnrichmentProfessionalProfile
+from .enrichment.enrichment_professional_profiles import (
+    EnrichmentProfessionalProfile,
+)
 from .referral_discount_codes import ReferralDiscountCode
 from .referral_payouts import ReferralPayouts
 from .referral_users import ReferralUser
@@ -85,6 +87,7 @@ from .audience_linkedin_verification import AudienceLinkedinVerification
 from .audience_smarts_validations import AudienceSmartValidation
 from .usa_zip_codes import UsaZipCode
 from .audience_postals_verification import AudiencePostalVerification
+from .admin_invitations import AdminInvitation
 
 
 __all__ = [
@@ -166,8 +169,8 @@ __all__ = [
     "UserDomains",
     "UsersUnlockedFiveXFiveUser",
     "EnrichmentUsersEmails",
-    "EnrichmentPersonalProfilesPersonalProfiles",
     "AudienceLinkedinVerification",
     "AudiencePostalVerification",
     "EnrichmentPersonalProfiles",
+    "AdminInvitation",
 ]

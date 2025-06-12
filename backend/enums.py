@@ -53,6 +53,7 @@ class TypeOfSourceOrigin(Enum):
 class DataSyncType(Enum):
     AUDIENCE = "audience"
     PIXEL = "pixel"
+    CONTACT = "contact"
 
 
 class IntegrationLimit(Enum):
@@ -63,6 +64,8 @@ class IntegrationLimit(Enum):
     META = 5000
     HUBSPOT = 100
     S3 = 10000
+    KLAVIYO = 1000
+    LINKEDIN = 100
 
 
 class BusinessType(Enum):
@@ -75,6 +78,7 @@ class BusinessType(Enum):
 class AudienceSettingAlias(Enum):
     AVERAGE_SUCCESS_VALIDATIONS = "average_success_validations"
     VALIDATION_PRIORITY = "validation_priority"
+    VALIDATION_COST = "validation_cost"
 
 
 class LeadStatus(Enum):
@@ -131,17 +135,6 @@ class SourcePlatformEnum(Enum):
     LINKEDIN = "linkedin"
 
 
-class IntegrationLimit(Enum):
-    MAILCHIMP = 10000
-    SALESFORCE = 10000
-    BING_ADS = 100000
-    GOOGLE_ADS = 5000
-    META = 5000
-    HUBSPOT = 100
-    S3 = 10000
-    LINKEDIN = 100
-
-
 class UserPaymentStatusEnum(Enum):
     COMPLETE = "COMPLETE"
     ONGOING = "ONGOING"
@@ -182,6 +175,12 @@ class SettingStatus(Enum):
     OWNER_ROLE_CHANGE_NOT_ALLOWED = "OWNER_ROLE_CHANGE_NOT_ALLOWED"
 
 
+class AdminStatus(Enum):
+    SUCCESS = "SUCCESS"
+    ALREADY_EXISTS = "ALREADY_EXISTS"
+    SENDGRID_TEMPLATE_NOT_FAILED = "SENDGRID_TEMPLATE_NOT_FAILED"
+
+
 class VerificationEmail(Enum):
     EMAIL_ALREADY_VERIFIED = "EMAIL_ALREADY_VERIFIED"
     EMAIL_VERIFIED = "EMAIL_VERIFIED"
@@ -218,6 +217,7 @@ class SignUpStatus(Enum):
     INCORRECT_FULL_NAME = "INCORRECT_FULL_NAME"
     INCORRECT_REFERRAL_CODE = "INCORRECT_REFERRAL_CODE"
     SUCCESS = "SUCCESS"
+    SUCCESS_ADMIN = "SUCCESS_ADMIN"
 
 
 class TeamsInvitationStatus(Enum):
@@ -241,6 +241,7 @@ class LoginStatus(Enum):
     NEED_BOOK_CALL = "NEED_BOOK_CALL"
     PAYMENT_NEEDED = "PAYMENT_NEEDED"
     PIXEL_INSTALLATION_NEEDED = "PIXEL_INSTALLATION_NEEDED"
+    SUCCESS_ADMIN = "SUCCESS_ADMIN"
 
 
 class PixelStatus(Enum):
@@ -265,6 +266,7 @@ class SendgridTemplate(Enum):
     SEND_PIXEL_CODE_TEMPLATE = "send_pixel_code_template"
     CHANGE_EMAIL_TEMPLATE = "change_email_template"
     TEAM_MEMBERS_TEMPLATE = "team_members_template"
+    ADMIN_INVITATION_TEMPLATE = "admin_invitation_template"
     PAYMENT_INVOICE_TEMPLATE = "payment_invoice_template"
     PAYMENT_FAILURE_NOTIFICATION = "payment_failure_notification"
     PARTNER_INVITE_TEMPLATE = "partner_invite_template"
@@ -350,7 +352,9 @@ class IntegrationsStatus(Enum):
     CREATE_IS_FAILED = "CREATED_IS_FAILED"
     CREDENTIALS_NOT_FOUND = "CREDENTIALS_NOT_FOUND"
     SUCCESS = "SUCCESS"
-    NOT_MATCHED_EARLIER = "Store Domain does not match the one you specified earlier"
+    NOT_MATCHED_EARLIER = (
+        "Store Domain does not match the one you specified earlier"
+    )
     ALREADY_EXIST = "ALREADY_EXIST"
     INVALID_WEBHOOK_URL = "INVALID_WEBHOOK_URL"
     JOIN_CHANNEL_IS_FAILED = "JOIN_CHANNEL_IS_FAILED"

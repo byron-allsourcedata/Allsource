@@ -91,9 +91,9 @@ class SuppressionPersistence:
         return rule
 
     def save_rules_multiple_emails(self, domain_id: int, emails):
-        rules = self.get_rules(domain_id=domain_id) or self.create_suppression_rule(
+        rules = self.get_rules(
             domain_id=domain_id
-        )
+        ) or self.create_suppression_rule(domain_id=domain_id)
         if emails:
             rules.suppressions_multiple_emails = ", ".join(emails)
         else:
@@ -102,9 +102,9 @@ class SuppressionPersistence:
         self.db.commit()
 
     def process_collecting_contacts(self, domain_id: int):
-        rules = self.get_rules(domain_id=domain_id) or self.create_suppression_rule(
+        rules = self.get_rules(
             domain_id=domain_id
-        )
+        ) or self.create_suppression_rule(domain_id=domain_id)
         if rules.is_stop_collecting_contacts == False:
             rules.is_stop_collecting_contacts = True
         else:
@@ -113,9 +113,9 @@ class SuppressionPersistence:
         return rules.is_stop_collecting_contacts
 
     def process_certain_activation(self, domain_id: int):
-        rules = self.get_rules(domain_id=domain_id) or self.create_suppression_rule(
+        rules = self.get_rules(
             domain_id=domain_id
-        )
+        ) or self.create_suppression_rule(domain_id=domain_id)
         if rules.is_url_certain_activation == False:
             rules.is_url_certain_activation = True
         else:
@@ -124,9 +124,9 @@ class SuppressionPersistence:
         return rules.is_url_certain_activation
 
     def process_delete_contacts(self, domain_id: int):
-        rules = self.get_rules(domain_id=domain_id) or self.create_suppression_rule(
+        rules = self.get_rules(
             domain_id=domain_id
-        )
+        ) or self.create_suppression_rule(domain_id=domain_id)
         if rules.is_delete_contacts == False:
             rules.is_delete_contacts = True
         else:
@@ -135,18 +135,18 @@ class SuppressionPersistence:
         return rules.is_delete_contacts
 
     def process_certain_urls(self, domain_id: int, url_list):
-        rules = self.get_rules(domain_id=domain_id) or self.create_suppression_rule(
+        rules = self.get_rules(
             domain_id=domain_id
-        )
+        ) or self.create_suppression_rule(domain_id=domain_id)
         if not url_list:
             rules.activate_certain_urls = None
         rules.activate_certain_urls = ", ".join(url_list)
         self.db.commit()
 
     def process_based_activation(self, domain_id: int):
-        rules = self.get_rules(domain_id=domain_id) or self.create_suppression_rule(
+        rules = self.get_rules(
             domain_id=domain_id
-        )
+        ) or self.create_suppression_rule(domain_id=domain_id)
         if rules.is_based_activation == False:
             rules.is_based_activation = True
         else:
@@ -155,9 +155,9 @@ class SuppressionPersistence:
         return rules.is_based_activation
 
     def save_suppress_contact_days(self, domain_id: int, days):
-        rules = self.get_rules(domain_id=domain_id) or self.create_suppression_rule(
+        rules = self.get_rules(
             domain_id=domain_id
-        )
+        ) or self.create_suppression_rule(domain_id=domain_id)
         try:
             days = int(days)
         except (ValueError, TypeError):
@@ -167,11 +167,13 @@ class SuppressionPersistence:
         return True
 
     def process_based_urls(self, domain_id: int, identifiers):
-        rules = self.get_rules(domain_id=domain_id) or self.create_suppression_rule(
+        rules = self.get_rules(
             domain_id=domain_id
-        )
+        ) or self.create_suppression_rule(domain_id=domain_id)
         cleaned_identifiers = [
-            identifier.replace("utm_source", "").replace("=", "").replace(" ", "")
+            identifier.replace("utm_source", "")
+            .replace("=", "")
+            .replace(" ", "")
             for identifier in identifiers
             if identifier
         ]
@@ -183,9 +185,9 @@ class SuppressionPersistence:
         self.db.commit()
 
     def process_page_views_limit(self, domain_id: int, page_views, seconds):
-        rules = self.get_rules(domain_id=domain_id) or self.create_suppression_rule(
+        rules = self.get_rules(
             domain_id=domain_id
-        )
+        ) or self.create_suppression_rule(domain_id=domain_id)
         if not seconds:
             rules.collection_timeout = None
         if not page_views:

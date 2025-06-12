@@ -29,7 +29,13 @@ def get_contact(
     to_date: int = Query(
         int(
             datetime(
-                datetime.now(timezone.utc).year, 12, 31, 23, 59, 59, tzinfo=timezone.utc
+                datetime.now(timezone.utc).year,
+                12,
+                31,
+                23,
+                59,
+                59,
+                tzinfo=timezone.utc,
             ).timestamp()
         ),
         description="End date in integer format",

@@ -13,7 +13,7 @@ from routers import (
     admin_accounts,
     leads,
     audience,
-    calendly,
+    meeting_booking,
     integrations,
     settings,
     domains,
@@ -50,15 +50,19 @@ main_router.include_router(suppressions.router, prefix="/suppressions")
 main_router.include_router(leads.router, prefix="/leads")
 main_router.include_router(slack.router, prefix="/slack")
 main_router.include_router(sse_events.router)
-main_router.include_router(calendly.router, prefix="/calendly")
+main_router.include_router(meeting_booking.router, prefix="/calendly")
 main_router.include_router(
     integrations.router, prefix="/integrations", tags=["Integrations"]
 )
-main_router.include_router(data_sync.router, prefix="/data-sync", tags=["DataSync"])
+main_router.include_router(
+    data_sync.router, prefix="/data-sync", tags=["DataSync"]
+)
 main_router.include_router(settings.router, prefix="/settings")
 main_router.include_router(domains.router, prefix="/domains", tags=["Domains"])
 main_router.include_router(referral.router, prefix="/referral")
 main_router.include_router(leads_companies.router, prefix="/company")
 main_router.include_router(lookalikes.router, prefix="/audience-lookalikes")
-main_router.include_router(dashboard_audience.router, prefix="/audience-dashboard")
+main_router.include_router(
+    dashboard_audience.router, prefix="/audience-dashboard"
+)
 main_router.include_router(insights.router, prefix="/audience-insights")

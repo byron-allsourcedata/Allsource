@@ -49,6 +49,17 @@ def has_integration_and_data_sync(
     return integration_service.has_integration_and_data_sync(user=user)
 
 
+@router.get("/has-data-sync-and-contacts")
+def has_data_sync_and_contacts(
+    user: dict = Depends(check_user_authorization_without_pixel),
+    domain: dict = Depends(check_domain),
+    integration_service: IntegrationService = Depends(get_integration_service),
+):
+    return integration_service.has_data_sync_and_contacts(
+        user=user, domain=domain
+    )
+
+
 @router.post("/sync/switch-toggle-smart-audience-sync")
 async def switch_toggle(
     data: SyncRequest,
@@ -66,7 +77,9 @@ async def switch_toggle(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied. Admins and standard only.",
             )
-    return integration_service.switch_toggle_smart_sync(user=user, list_id=data.list_id)
+    return integration_service.switch_toggle_smart_sync(
+        user=user, list_id=data.list_id
+    )
 
 
 @router.post("/sync")
@@ -217,6 +230,14 @@ async def get_tags(
     with integration_service as service:
         service = getattr(service, service_name.lower())
         return service.get_tags(domain.id, user)
+
+
+@router.get("/destinations")
+def get_destinations(
+    type: str = Query(...),
+    integration_service: IntegrationService = Depends(get_integration_service),
+):
+    return integration_service.get_destinations(type=type)
 
 
 @router.post("/sync/tags")

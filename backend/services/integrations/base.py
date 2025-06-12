@@ -1,19 +1,28 @@
+from typing import Optional
+
 import httpx
+import ssl
+import truststore
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from models import UserDomains
+from models import UserDomains, FiveXFiveUser
 from services.aws import AWSService
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_persistence import LeadsPersistence
 from persistence.leads_order_persistence import LeadOrdersPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from persistence.integrations.suppression import IntegrationsSuppressionPersistence
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.suppression import (
+    IntegrationsSuppressionPersistence,
+)
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from persistence.audience_persistence import AudiencePersistence
 from persistence.integrations.external_apps_installations import (
     ExternalAppsInstallationsPersistence,
 )
+from enums import DataSyncType
 from .attentive import AttentiveIntegrationsService
 from .hubspot import HubspotIntegrationsService
 from .shopify import ShopifyIntegrationService
@@ -54,13 +63,17 @@ class IntegrationService:
         epi_persistence: ExternalAppsInstallationsPersistence,
     ):
         self.db = db
-        self.client = httpx.Client()
+        self.client = httpx.Client(
+            verify=truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        )
         self.integration_persistence = integration_persistence
         self.user_persistence = user_persistence
         self.lead_persistence = lead_persistence
         self.audience_persistence = audience_persistence
         self.lead_orders_persistence = lead_orders_persistence
-        self.integrations_user_sync_persistence = integrations_user_sync_persistence
+        self.integrations_user_sync_persistence = (
+            integrations_user_sync_persistence
+        )
         self.aws_service = aws_service
         self.million_verifier_integrations = million_verifier_integrations
         self.domain_persistence = domain_persistence
@@ -81,15 +94,33 @@ class IntegrationService:
         )
 
     def has_integration_and_data_sync(self, user: dict) -> dict:
-        has_integration = self.integration_persistence.has_integration_and_data_sync(
-            user_id=user.get("id"),
+        has_integration = (
+            self.integration_persistence.has_integration_and_data_sync(
+                user_id=user.get("id"),
+            )
         )
-        has_any_sync = self.integration_persistence.has_any_sync(
-            user_id=user.get("id"),
+        has_any_sync = self.integration_persistence.has_data_sync(
+            user_id=user.get("id"), type=DataSyncType.AUDIENCE.value
         )
         return {
             "hasIntegration": has_integration,
             "hasAnySync": has_any_sync,
+        }
+
+    def has_data_sync_and_contacts(self, user: dict, domain: dict) -> dict:
+        has_data_sync = self.integration_persistence.has_data_sync(
+            user_id=user.get("id"),
+            domain_id=domain.id,
+            type=DataSyncType.CONTACT.value,
+        )
+        has_contacts_in_domain = (
+            self.integration_persistence.has_contacts_in_domain(
+                user_id=user.get("id"), domain_id=domain.id
+            )
+        )
+        return {
+            "hasDataSync": has_data_sync,
+            "hasContacts": has_contacts_in_domain,
         }
 
     def delete_integration(self, service_name: str, domain, user: dict):
@@ -107,6 +138,14 @@ class IntegrationService:
             domain_id=domain_id,
             service_name=service_name,
             integrations_users_sync_id=integrations_users_sync_id,
+        )
+
+    def get_destinations(
+        self,
+        type: str,
+    ):
+        return self.integrations_user_sync_persistence.get_destinations(
+            type=type
         )
 
     def get_all_audience_sync(
@@ -129,7 +168,8 @@ class IntegrationService:
     def is_integration_limit_reached(self, user: dict, domain: UserDomains):
         if domain is None:
             raise HTTPException(
-                status_code=400, detail={"status": DomainStatus.DOMAIN_NOT_FOUND.value}
+                status_code=400,
+                detail={"status": DomainStatus.DOMAIN_NOT_FOUND.value},
             )
 
         integration_limit, domain_integrations_count = (
@@ -145,7 +185,9 @@ class IntegrationService:
         return False
 
     def get_leads_for_zapier(self, domain):
-        five_x_five_users = self.lead_persistence.get_last_leads_for_zapier(domain.id)
+        five_x_five_users = self.lead_persistence.get_last_leads_for_zapier(
+            domain.id
+        )
         valid_users = []
         if not five_x_five_users:
             return []
@@ -158,7 +200,9 @@ class IntegrationService:
 
             def get_valid_email(user) -> str:
                 thirty_days_ago = datetime.now() - timedelta(days=30)
-                thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
+                thirty_days_ago_str = thirty_days_ago.strftime(
+                    "%Y-%m-%d %H:%M:%S"
+                )
                 verity = 0
                 for field in email_fields:
                     email = getattr(user, field, None)
@@ -182,15 +226,19 @@ class IntegrationService:
                                 and field == "personal_emails"
                                 and five_x_five_user.personal_emails_last_seen
                             ):
-                                personal_emails_last_seen_str = (
-                                    five_x_five_user.personal_emails_last_seen.strftime(
-                                        "%Y-%m-%d %H:%M:%S"
-                                    )
+                                personal_emails_last_seen_str = five_x_five_user.personal_emails_last_seen.strftime(
+                                    "%Y-%m-%d %H:%M:%S"
                                 )
-                                if personal_emails_last_seen_str > thirty_days_ago_str:
+                                if (
+                                    personal_emails_last_seen_str
+                                    > thirty_days_ago_str
+                                ):
                                     return e.strip()
-                            if e and self.million_verifier_integrations.is_email_verify(
-                                email=e.strip()
+                            if (
+                                e
+                                and self.million_verifier_integrations.is_email_verify(
+                                    email=e.strip()
+                                )
                             ):
                                 return e.strip()
                             verity += 1
@@ -220,8 +268,12 @@ class IntegrationService:
                 {
                     "id": five_x_five_user.id,
                     "first_name": five_x_five_user.first_name,
-                    "mobile_phone": format_phone_number(five_x_five_user.mobile_phone),
-                    "direct_number": format_phone_number(five_x_five_user.mobile_phone),
+                    "mobile_phone": format_phone_number(
+                        five_x_five_user.mobile_phone
+                    ),
+                    "direct_number": format_phone_number(
+                        five_x_five_user.mobile_phone
+                    ),
                     "gender": five_x_five_user.gender,
                     "personal_phone": format_phone_number(
                         five_x_five_user.personal_phone
@@ -255,7 +307,9 @@ class IntegrationService:
             shop_domain
         )
 
-    def delete_sync_domain(self, domain_id: int, list_id, service_name: str = None):
+    def delete_sync_domain(
+        self, domain_id: int, list_id, service_name: str = None
+    ):
         result = self.integrations_user_sync_persistence.delete_sync(
             domain_id=domain_id, list_id=list_id
         )
@@ -277,10 +331,11 @@ class IntegrationService:
         return {"status": "FAILED"}
 
     def switch_toggle_smart_sync(self, user: dict, list_id):
-        result = self.integrations_user_sync_persistence.switch_toggle_smart_sync(
-            user_id=user.get("id"), list_id=list_id
+        result = (
+            self.integrations_user_sync_persistence.switch_toggle_smart_sync(
+                user_id=user.get("id"), list_id=list_id
+            )
         )
-        print(result)
         if result is not None:
             return {"status": "SUCCESS", "data_sync": result}
         return {"status": "FAILED"}

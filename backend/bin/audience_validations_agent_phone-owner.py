@@ -6,7 +6,8 @@ import functools
 import json
 import requests
 from rapidfuzz import fuzz
-from aio_pika import IncomingMessage
+from decimal import Decimal
+from aio_pika import IncomingMessage, Channel
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.dialects.postgresql import insert
@@ -19,6 +20,7 @@ from models.audience_smarts import AudienceSmart
 from utils import send_sse
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_phones_verification import AudiencePhoneVerification
+from persistence.user_persistence import UserPersistence
 from models.audience_smarts_validations import AudienceSmartValidation
 from config.rmq_connection import (
     RabbitMQConnection,
@@ -27,7 +29,9 @@ from config.rmq_connection import (
 
 load_dotenv()
 
-AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = "aud_validation_agent_phone-owner-api"
+AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API = (
+    "aud_validation_agent_phone-owner-api"
+)
 AUDIENCE_VALIDATION_PROGRESS = "AUDIENCE_VALIDATION_PROGRESS"
 AUDIENCE_VALIDATION_FILLER = "aud_validation_filler"
 REAL_TIME_API_KEY = os.getenv("REAL_TIME_API_KEY")
@@ -51,7 +55,12 @@ def setup_logging(level):
     )
 
 
-async def process_rmq_message(message: IncomingMessage, db_session: Session, channel):
+async def process_rmq_message(
+    message: IncomingMessage,
+    db_session: Session,
+    channel: Channel,
+    user_persistence: UserPersistence,
+):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -61,11 +70,13 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
             "count_persons_before_validation"
         )
         validation_type = message_body.get("validation_type")
+        validation_cost = message_body.get("validation_cost")
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         failed_ids = []
         verifications = []
         verified_phones = []
+        write_off_funds = Decimal(0)
 
         for record in batch:
             person_id = record.get("audience_smart_person_id")
@@ -74,7 +85,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
             for phone_field in ["phone_mobile1", "phone_mobile2"]:
                 if (
                     phone_field == "phone_mobile1"
-                    and record.get("phone_mobile1") == record.get("phone_mobile2")
+                    and record.get("phone_mobile1")
+                    == record.get("phone_mobile2")
                     and not record.get("phone_mobile1")
                 ):
                     continue
@@ -88,6 +100,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
 
                 if not phone_number:
                     continue
+
+                write_off_funds += Decimal(validation_cost)
 
                 existing_verification = (
                     db_session.query(AudiencePhoneVerification)
@@ -123,9 +137,13 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                         if response.status_code != 200:
                             continue
 
-                        caller_name = response_data.get("caller_name", "").title()
+                        caller_name = response_data.get(
+                            "caller_name", ""
+                        ).title()
                         similarity = fuzz.ratio(full_name, caller_name)
-                        is_verify = similarity > 70 and caller_name != "Unavailable"
+                        is_verify = (
+                            similarity > 70 and caller_name != "Unavailable"
+                        )
 
                         logging.debug(
                             f"similarity: {full_name} - {caller_name} = {similarity}"
@@ -155,6 +173,14 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                     break
                 else:
                     continue
+
+        if write_off_funds:
+            user_persistence.deduct_validation_funds(user_id, write_off_funds)
+            # if not resultOperation:
+            #     logging.error("Not enough validation funds")
+            #     await message.reject(requeue=True)
+            #     return
+            db_session.flush()
 
         if len(verifications):
             verification_data = [
@@ -188,7 +214,11 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
                 [
-                    {"id": pid, "is_validation_processed": False, "is_valid": False}
+                    {
+                        "id": pid,
+                        "is_validation_processed": False,
+                        "is_valid": False,
+                    }
                     for pid in failed_ids
                 ],
             )
@@ -197,7 +227,10 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         if success_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
-                [{"id": pid, "is_validation_processed": False} for pid in success_ids],
+                [
+                    {"id": pid, "is_validation_processed": False}
+                    for pid in success_ids
+                ],
             )
             db_session.flush()
 
@@ -234,6 +267,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                             rule[key]["count_submited"] = (
                                 count_persons_before_validation
                             )
+                            rule[key]["count_cost"] = str(write_off_funds)
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -294,12 +328,17 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
+        user_persistence = UserPersistence(db_session)
+
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_PHONE_OWNER_API, durable=True
         )
         await queue.consume(
             functools.partial(
-                process_rmq_message, channel=channel, db_session=db_session
+                process_rmq_message,
+                channel=channel,
+                db_session=db_session,
+                userPersistence=user_persistence,
             )
         )
 

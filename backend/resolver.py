@@ -36,7 +36,9 @@ class NotAnnotated(Exception):
 
 
 class InjectionError(Exception):
-    def __init__(self, dependency, wrong_annotation: Optional[NotAnnotated] = None):
+    def __init__(
+        self, dependency, wrong_annotation: Optional[NotAnnotated] = None
+    ):
         self.dependency = dependency
         self.wrong_annotation = wrong_annotation
 

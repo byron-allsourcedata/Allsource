@@ -1,22 +1,17 @@
-from sqlalchemy import (
-    Column,
-    event,
-    Integer,
-    ForeignKey,
-    BigInteger,
-    text,
-    Index,
-    Sequence,
-)
-from sqlalchemy.dialects.postgresql import BIGINT, TIMESTAMP, VARCHAR
+from datetime import datetime, timezone
 
-from .base import Base, create_timestamps
+from sqlalchemy import Column, ForeignKey, BigInteger, Index, Sequence
+from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR
+
+from .base import Base
 
 
 class TeamInvitation(Base):
     __tablename__ = "teams_invitations"
     __table_args__ = (
-        Index("teams_invitations_mail_team_owner_id_idx", "mail", "team_owner_id"),
+        Index(
+            "teams_invitations_mail_team_owner_id_idx", "mail", "team_owner_id"
+        ),
         Index("teams_invitations_md5_hash_idx", "token"),
     )
 
@@ -29,7 +24,11 @@ class TeamInvitation(Base):
     mail = Column(VARCHAR(64), nullable=True)
     access_level = Column(VARCHAR(64), nullable=True)
     status = Column(VARCHAR(32), nullable=True)
-    date_invited_at = Column(TIMESTAMP(precision=7), nullable=True)
+    date_invited_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     invited_by_id = Column(
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
@@ -37,6 +36,3 @@ class TeamInvitation(Base):
         BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
     token = Column(VARCHAR(64), nullable=True)
-
-
-event.listen(TeamInvitation, "before_insert", create_timestamps)

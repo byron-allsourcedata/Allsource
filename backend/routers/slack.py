@@ -31,7 +31,9 @@ async def slack_oauth_callback(
             await publish_rabbitmq_message(
                 connection=connection,
                 queue_name=queue_name,
-                message_body={"status": "Integration with slack was successful"},
+                message_body={
+                    "status": "Integration with slack was successful"
+                },
             )
         except:
             logging.error("Failed to publish rabbitmq message")
@@ -60,7 +62,9 @@ async def get_channels(
     domain=Depends(check_domain),
     slack_service: SlackService = Depends(get_slack_service),
 ):
-    return slack_service.get_channels(domain_id=domain.id, user_id=user.get("id"))
+    return slack_service.get_channels(
+        domain_id=domain.id, user_id=user.get("id")
+    )
 
 
 @router.post("/create-channel")

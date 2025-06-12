@@ -14,17 +14,22 @@ async def get_companies(
     user=Depends(check_user_authorization),
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(
-        15, alias="per_page", ge=1, le=500, description="Items per page"
+        10, alias="per_page", ge=1, le=500, description="Items per page"
     ),
     from_date: int = Query(None, description="Start date in integer format"),
     to_date: int = Query(None, description="End date in integer format"),
     regions: str = Query(None, description="Comma-separated list of regions"),
     sort_by: str = Query(None, description="Field"),
-    sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
-    search_query: str = Query(
-        None, description="Search for email, first name, lastname and phone number"
+    sort_order: str = Query(
+        None, description="Field to sort by: 'asc' or 'desc'"
     ),
-    timezone_offset: float = Query(0, description="timezone offset in integer format"),
+    search_query: str = Query(
+        None,
+        description="Search for email, first name, lastname and phone number",
+    ),
+    timezone_offset: float = Query(
+        0, description="timezone offset in integer format"
+    ),
     employees_range: str = Query(
         None, description="Number of employees in the company"
     ),
@@ -56,12 +61,15 @@ async def get_companies(
 async def get_employees(
     page: int = Query(1, alias="page", ge=1, description="Page number"),
     per_page: int = Query(
-        15, alias="per_page", ge=1, le=500, description="Items per page"
+        10, alias="per_page", ge=1, le=500, description="Items per page"
     ),
     sort_by: str = Query(None, description="Field"),
-    sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
+    sort_order: str = Query(
+        None, description="Field to sort by: 'asc' or 'desc'"
+    ),
     search_query: str = Query(
-        None, description="Search for email, first name, lastname and phone number"
+        None,
+        description="Search for email, first name, lastname and phone number",
     ),
     company_id: int = Query(None),
     job_title: str = Query(None),
@@ -91,7 +99,9 @@ def get_employees(
     id: int = Query(None),
     company_service: CompanyService = Depends(get_companies_service),
 ):
-    return company_service.get_employee_by_id(company_id=company_id, employee_id=id)
+    return company_service.get_employee_by_id(
+        company_id=company_id, employee_id=id
+    )
 
 
 @router.get("/employees/{employee_id}")
@@ -114,21 +124,24 @@ async def get_industry(
 
 @router.get("/{company_id}/departments")
 async def get_department(
-    company_id: int, company_service: CompanyService = Depends(get_companies_service)
+    company_id: int,
+    company_service: CompanyService = Depends(get_companies_service),
 ):
     return company_service.get_uniq_primary__departments(company_id)
 
 
 @router.get("/{company_id}/seniorities")
 async def get_seniority(
-    company_id: int, company_service: CompanyService = Depends(get_companies_service)
+    company_id: int,
+    company_service: CompanyService = Depends(get_companies_service),
 ):
     return company_service.get_uniq_primary__seniorities(company_id)
 
 
 @router.get("/{company_id}/job-titles")
 async def get_seniority(
-    company_id: int, company_service: CompanyService = Depends(get_companies_service)
+    company_id: int,
+    company_service: CompanyService = Depends(get_companies_service),
 ):
     return company_service.get_uniq_primary__job_titles(company_id)
 
@@ -157,10 +170,13 @@ async def download_employees(
     department: str = Query(None),
     seniority: str = Query(None),
     sort_by: str = Query(None, description="Field"),
-    sort_order: str = Query(None, description="Field to sort by: 'asc' or 'desc'"),
+    sort_order: str = Query(
+        None, description="Field to sort by: 'asc' or 'desc'"
+    ),
     regions: str = Query(None, description="Comma-separated list of regions"),
     search_query: str = Query(
-        None, description="Search for email, first name, lastname and phone number"
+        None,
+        description="Search for email, first name, lastname and phone number",
     ),
     company_service: CompanyService = Depends(get_companies_service),
 ):

@@ -23,7 +23,10 @@ def apply_filters(
 
     if name:
         filters.append(
-            or_(AudienceSource.name.ilike(f"{name}"), Users.full_name.ilike(f"{name}"))
+            or_(
+                AudienceSource.name.ilike(f"{name}"),
+                Users.full_name.ilike(f"{name}"),
+            )
         )
 
     if source_origin_list:
@@ -44,7 +47,10 @@ def apply_filters(
             # for the 'or_' function, which then combines them with the logical OR operator.
             # This means that 'or_conditions' will be true if any one of the conditions is true.
             or_conditions = or_(
-                *[AudienceSource.source_type.contains(t) for t in source_type_list]
+                *[
+                    AudienceSource.source_type.contains(t)
+                    for t in source_type_list
+                ]
             )
             filters.append(or_conditions)
 
@@ -59,7 +65,9 @@ def apply_filters(
 
     if created_date_start and created_date_end:
         filters.append(
-            AudienceSource.created_at.between(created_date_start, created_date_end)
+            AudienceSource.created_at.between(
+                created_date_start, created_date_end
+            )
         )
     elif created_date_start:
         filters.append(AudienceSource.created_at >= created_date_start)

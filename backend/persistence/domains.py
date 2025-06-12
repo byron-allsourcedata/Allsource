@@ -1,8 +1,11 @@
 from datetime import datetime, timezone
+from typing import List
 
+from db_dependencies import Db
 from models.five_x_five_users import FiveXFiveUser
 from models.users_domains import UserDomains
 from models.leads_users import LeadUser
+from models.users import Users
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from sqlalchemy.orm import Session, aliased
@@ -10,9 +13,12 @@ from sqlalchemy import func, case, and_, or_, distinct
 from fastapi import HTTPException
 import re
 
+from resolver import injectable
 
+
+@injectable
 class UserDomainsPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_domains_by_user(self, user_id: int, domain_substr: str = None):
@@ -22,7 +28,9 @@ class UserDomainsPersistence:
         return query.all()
 
     def get_domain_name(self, domain_id: int):
-        query = self.db.query(UserDomains.domain).filter(UserDomains.id == domain_id)
+        query = self.db.query(UserDomains.domain).filter(
+            UserDomains.id == domain_id
+        )
         result = query.first()
 
         return result.domain if result else None
@@ -37,7 +45,8 @@ class UserDomainsPersistence:
                     (
                         or_(
                             and_(
-                                LeadUser.behavior_type != "product_added_to_cart",
+                                LeadUser.behavior_type
+                                != "product_added_to_cart",
                                 LeadUser.is_converted_sales == True,
                             ),
                             and_(
@@ -105,7 +114,9 @@ class UserDomainsPersistence:
             )
         )
 
-        total_count = converted_sales + viewed_product + visitor + abandoned_cart
+        total_count = (
+            converted_sales + viewed_product + visitor + abandoned_cart
+        )
 
         query = (
             self.db.query(
@@ -119,12 +130,16 @@ class UserDomainsPersistence:
                 total_count.label("total_count"),
             )
             .outerjoin(LeadUser, UserDomains.id == LeadUser.domain_id)
-            .outerjoin(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+            .outerjoin(
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
+            )
             .outerjoin(added_to_cart, added_to_cart.lead_user_id == LeadUser.id)
             .outerjoin(ordered, ordered.lead_user_id == LeadUser.id)
             .filter(UserDomains.user_id == user_id)
             .group_by(
-                UserDomains.id, UserDomains.domain, UserDomains.is_pixel_installed
+                UserDomains.id,
+                UserDomains.domain,
+                UserDomains.is_pixel_installed,
             )
         )
 
@@ -141,10 +156,15 @@ class UserDomainsPersistence:
     def create_domain(self, user_id, data: dict):
         normalized_domain = self.normalize_domain(data.get("domain"))
         existing_domains = (
-            self.db.query(UserDomains).filter(UserDomains.user_id == user_id).all()
+            self.db.query(UserDomains)
+            .filter(UserDomains.user_id == user_id)
+            .all()
         )
         for existing_domain in existing_domains:
-            if self.normalize_domain(existing_domain.domain) == normalized_domain:
+            if (
+                self.normalize_domain(existing_domain.domain)
+                == normalized_domain
+            ):
                 raise HTTPException(
                     status_code=409, detail={"status": "Domain already exists"}
                 )
@@ -156,6 +176,24 @@ class UserDomainsPersistence:
         self.db.add(domain)
         self.db.commit()
         return domain
+
+    def delete_user(self, user: Users):
+        self.db.delete(user)
+        self.db.commit()
+
+    def create_user_by_dict(self, user_dict: dict):
+        user = Users(**user_dict)
+        self.db.add(user)
+        self.db.commit()
+        return user.id
+
+    def get_user_by_email(self, email: str):
+        user_object = (
+            self.db.query(Users)
+            .filter(func.lower(Users.email) == func.lower(email))
+            .first()
+        )
+        return user_object
 
     def count_domain(self, user_id: int):
         return (
@@ -172,7 +210,9 @@ class UserDomainsPersistence:
 
     def update_first_domain_by_user_id(self, user_id: int, new_domain):
         domain_query = (
-            self.db.query(UserDomains).filter(UserDomains.user_id == user_id).first()
+            self.db.query(UserDomains)
+            .filter(UserDomains.user_id == user_id)
+            .first()
         )
 
         if domain_query:
@@ -195,3 +235,11 @@ class UserDomainsPersistence:
             {UserDomains.is_pixel_installed: is_pixel_install}
         )
         self.db.commit()
+
+    def get_verify_domains(self) -> List[UserDomains]:
+        domains = (
+            self.db.query(UserDomains)
+            .filter(UserDomains.is_pixel_installed)
+            .all()
+        )
+        return domains

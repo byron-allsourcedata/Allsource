@@ -31,7 +31,10 @@ if __name__ == "__main__":
     leads_persistence = LeadsPersistence(db=session)
     integrations_persistence = IntegrationsPresistence(db=session)
     integration_serivce = IntegrationService(
-        session, integrations_persistence, leads_persistence, audience_persistence
+        session,
+        integrations_persistence,
+        leads_persistence,
+        audience_persistence,
     )
     while True:
         with integration_serivce as integ_service:

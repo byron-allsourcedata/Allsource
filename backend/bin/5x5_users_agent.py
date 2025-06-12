@@ -53,14 +53,18 @@ def save_emails_to_user(session, emails, five_x_five_user_id, type):
             if not email_obj:
                 email_host = email.split("@")[-1] if "@" in email else None
                 if email_host:
-                    email_obj = FiveXFiveEmails(email=email, email_host=email_host)
+                    email_obj = FiveXFiveEmails(
+                        email=email, email_host=email_host
+                    )
                     session.add(email_obj)
                     session.flush()
             if email_obj:
                 five_x_five_user_email = (
                     insert(FiveXFiveUsersEmails)
                     .values(
-                        user_id=five_x_five_user_id, email_id=email_obj.id, type=type
+                        user_id=five_x_five_user_id,
+                        email_id=email_obj.id,
+                        type=type,
                     )
                     .on_conflict_do_nothing()
                 )
@@ -86,7 +90,11 @@ def save_phones_to_user(session, phones, five_x_five_user_id, type):
 
             five_x_five_user_phone = (
                 insert(FiveXFiveUsersPhones)
-                .values(user_id=five_x_five_user_id, phone_id=phone_obj.id, type=type)
+                .values(
+                    user_id=five_x_five_user_id,
+                    phone_id=phone_obj.id,
+                    type=type,
+                )
                 .on_conflict_do_nothing()
             )
             session.execute(five_x_five_user_phone)
@@ -105,7 +113,9 @@ def save_city_and_state_to_user(
         city = convert_to_none(personal_city).lower()
     if state:
         state = convert_to_none(personal_state).lower()
-        state_id = session.query(States.id).filter(States.state_code == state).scalar()
+        state_id = (
+            session.query(States.id).filter(States.state_code == state).scalar()
+        )
         if state_id is None:
             state_data = States(
                 state_code=state,
@@ -116,7 +126,8 @@ def save_city_and_state_to_user(
     location = (
         session.query(FiveXFiveLocations)
         .filter(
-            FiveXFiveLocations.city == city, FiveXFiveLocations.state_id == state_id
+            FiveXFiveLocations.city == city,
+            FiveXFiveLocations.state_id == state_id,
         )
         .first()
     )
@@ -131,7 +142,9 @@ def save_city_and_state_to_user(
 
     leads_locations = (
         insert(FiveXFiveUsersLocations)
-        .values(five_x_five_user_id=five_x_five_user_id, location_id=location.id)
+        .values(
+            five_x_five_user_id=five_x_five_user_id, location_id=location.id
+        )
         .on_conflict_do_nothing()
     )
     session.execute(leads_locations)
@@ -178,12 +191,16 @@ async def on_message_received(message, session):
         )
         company_last_updated = convert_to_none(
             pd.to_datetime(
-                user_json.get("COMPANY_LAST_UPDATED", None), unit="s", errors="coerce"
+                user_json.get("COMPANY_LAST_UPDATED", None),
+                unit="s",
+                errors="coerce",
             )
         )
         job_title_last_updated = convert_to_none(
             pd.to_datetime(
-                user_json.get("JOB_TITLE_LAST_UPDATED", None), unit="s", errors="coerce"
+                user_json.get("JOB_TITLE_LAST_UPDATED", None),
+                unit="s",
+                errors="coerce",
             )
         )
         first_name = str(user_json.get("FIRST_NAME")).lower().strip()
@@ -274,7 +291,9 @@ async def on_message_received(message, session):
             company_zip=None
             if convert_to_none(user_json.get("COMPANY_ZIP")) is None
             else str(int(user_json.get("COMPANY_ZIP"))),
-            company_linkedin_url=convert_to_none(user_json.get("COMPANY_LINKEDIN_URL")),
+            company_linkedin_url=convert_to_none(
+                user_json.get("COMPANY_LINKEDIN_URL")
+            ),
             company_revenue=convert_to_none(user_json.get("COMPANY_REVENUE")),
             company_employee_count=convert_to_none(
                 user_json.get("COMPANY_EMPLOYEE_COUNT")
@@ -292,7 +311,9 @@ async def on_message_received(message, session):
             ),
             linkedin_url=convert_to_none(user_json.get("LINKEDIN_URL")),
             personal_address=convert_to_none(user_json.get("PERSONAL_ADDRESS")),
-            personal_address_2=convert_to_none(user_json.get("PERSONAL_ADDRESS_2")),
+            personal_address_2=convert_to_none(
+                user_json.get("PERSONAL_ADDRESS_2")
+            ),
             personal_zip=None
             if convert_to_none(user_json.get("PERSONAL_ZIP")) is None
             else str(int(user_json.get("PERSONAL_ZIP"))),
@@ -302,12 +323,18 @@ async def on_message_received(message, session):
             homeowner=convert_to_none(user_json.get("HOMEOWNER")),
             seniority_level=convert_to_none(user_json.get("SENIORITY_LEVEL")),
             department=convert_to_none(user_json.get("DEPARTMENT")),
-            professional_address=convert_to_none(user_json.get("PROFESSIONAL_ADDRESS")),
+            professional_address=convert_to_none(
+                user_json.get("PROFESSIONAL_ADDRESS")
+            ),
             professional_address_2=convert_to_none(
                 user_json.get("PROFESSIONAL_ADDRESS_2")
             ),
-            professional_city=convert_to_none(user_json.get("PROFESSIONAL_CITY")),
-            professional_state=convert_to_none(user_json.get("PROFESSIONAL_STATE")),
+            professional_city=convert_to_none(
+                user_json.get("PROFESSIONAL_CITY")
+            ),
+            professional_state=convert_to_none(
+                user_json.get("PROFESSIONAL_STATE")
+            ),
             professional_zip=None
             if convert_to_none(user_json.get("PROFESSIONAL_ZIP")) is None
             else str(int(user_json.get("PROFESSIONAL_ZIP"))),
@@ -323,10 +350,16 @@ async def on_message_received(message, session):
                 user_json.get("PERSONAL_EMAILS_VALIDATION_STATUS")
             ),
             work_history=convert_to_none(user_json.get("WORK_HISTORY")),
-            education_history=convert_to_none(user_json.get("EDUCATION_HISTORY")),
-            company_description=convert_to_none(user_json.get("COMPANY_DESCRIPTION")),
+            education_history=convert_to_none(
+                user_json.get("EDUCATION_HISTORY")
+            ),
+            company_description=convert_to_none(
+                user_json.get("COMPANY_DESCRIPTION")
+            ),
             related_domains=convert_to_none(user_json.get("RELATED_DOMAINS")),
-            social_connections=convert_to_none(user_json.get("SOCIAL_CONNECTIONS")),
+            social_connections=convert_to_none(
+                user_json.get("SOCIAL_CONNECTIONS")
+            ),
             dpv_code=convert_to_none(user_json.get("DPV_CODE")),
             company_alias=company_alias,
             personal_zip4=None
@@ -334,7 +367,9 @@ async def on_message_received(message, session):
             else str(int(user_json.get("PERSONAL_ZIP4"))),
         )
         existing_user = (
-            session.query(FiveXFiveUser).filter_by(up_id=five_x_five_user.up_id).first()
+            session.query(FiveXFiveUser)
+            .filter_by(up_id=five_x_five_user.up_id)
+            .first()
         )
         if existing_user:
             existing_user.cc_id = five_x_five_user.cc_id
@@ -361,7 +396,9 @@ async def on_message_received(message, session):
             existing_user.company_city = five_x_five_user.company_city
             existing_user.company_state = five_x_five_user.company_state
             existing_user.company_zip = five_x_five_user.company_zip
-            existing_user.company_linkedin_url = five_x_five_user.company_linkedin_url
+            existing_user.company_linkedin_url = (
+                five_x_five_user.company_linkedin_url
+            )
             existing_user.company_revenue = five_x_five_user.company_revenue
             existing_user.company_employee_count = (
                 five_x_five_user.company_employee_count
@@ -372,7 +409,10 @@ async def on_message_received(message, session):
             existing_user.personal_emails_last_seen = (
                 five_x_five_user.personal_emails_last_seen
             )
-            existing_user.company_last_updated = five_x_five_user.company_last_updated
+
+            existing_user.company_last_updated = (
+                five_x_five_user.company_last_updated
+            )
             existing_user.job_title_last_updated = (
                 five_x_five_user.job_title_last_updated
             )
@@ -383,7 +423,9 @@ async def on_message_received(message, session):
             )
             existing_user.linkedin_url = five_x_five_user.linkedin_url
             existing_user.personal_address = five_x_five_user.personal_address
-            existing_user.personal_address_2 = five_x_five_user.personal_address_2
+            existing_user.personal_address_2 = (
+                five_x_five_user.personal_address_2
+            )
             existing_user.personal_zip = five_x_five_user.personal_zip
             existing_user.married = five_x_five_user.married
             existing_user.children = five_x_five_user.children
@@ -391,12 +433,16 @@ async def on_message_received(message, session):
             existing_user.homeowner = five_x_five_user.homeowner
             existing_user.seniority_level = five_x_five_user.seniority_level
             existing_user.department = five_x_five_user.department
-            existing_user.professional_address = five_x_five_user.professional_address
+            existing_user.professional_address = (
+                five_x_five_user.professional_address
+            )
             existing_user.professional_address_2 = (
                 five_x_five_user.professional_address_2
             )
             existing_user.professional_city = five_x_five_user.professional_city
-            existing_user.professional_state = five_x_five_user.professional_state
+            existing_user.professional_state = (
+                five_x_five_user.professional_state
+            )
             existing_user.professional_zip = five_x_five_user.professional_zip
             existing_user.professional_zip4 = five_x_five_user.professional_zip4
             existing_user.primary_industry = five_x_five_user.primary_industry
@@ -411,9 +457,13 @@ async def on_message_received(message, session):
             )
             existing_user.work_history = five_x_five_user.work_history
             existing_user.education_history = five_x_five_user.education_history
-            existing_user.company_description = five_x_five_user.company_description
+            existing_user.company_description = (
+                five_x_five_user.company_description
+            )
             existing_user.related_domains = five_x_five_user.related_domains
-            existing_user.social_connections = five_x_five_user.social_connections
+            existing_user.social_connections = (
+                five_x_five_user.social_connections
+            )
             existing_user.dpv_code = five_x_five_user.dpv_code
             existing_user.company_alias = company_alias
             existing_user.personal_zip4 = five_x_five_user.personal_zip4
@@ -427,25 +477,34 @@ async def on_message_received(message, session):
         save_emails_to_user(session, emails, five_x_five_user_id, "business")
         emails = str(user_json.get("PERSONAL_EMAILS", "")).split(", ")
         save_emails_to_user(session, emails, five_x_five_user_id, "personal")
-        emails = str(user_json.get("ADDITIONAL_PERSONAL_EMAILS", "")).split(", ")
-        save_emails_to_user(session, emails, five_x_five_user_id, "additional_personal")
+        emails = str(user_json.get("ADDITIONAL_PERSONAL_EMAILS", "")).split(
+            ", "
+        )
+        save_emails_to_user(
+            session, emails, five_x_five_user_id, "additional_personal"
+        )
 
-        mobile_phone_set = set(mobile_phone.split(", ")) if mobile_phone else set()
+        mobile_phone_set = (
+            set(mobile_phone.split(", ")) if mobile_phone else set()
+        )
         if mobile_phone:
             save_phones_to_user(
                 session, mobile_phone, five_x_five_user_id, "mobile_phone"
             )
         if direct_number:
             direct_number = [
-                num for num in direct_number.split(", ") if num not in mobile_phone_set
+                num
+                for num in direct_number.split(", ")
+                if num not in mobile_phone_set
             ]
             save_phones_to_user(
                 session, direct_number, five_x_five_user_id, "direct_number"
             )
-
         if personal_phone:
             personal_phone = [
-                num for num in personal_phone.split(", ") if num not in mobile_phone_set
+                num
+                for num in personal_phone.split(", ")
+                if num not in mobile_phone_set
             ]
             save_phones_to_user(
                 session, personal_phone, five_x_five_user_id, "personal_phone"
@@ -493,7 +552,9 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         db_session = Session()
-        await queue.consume(functools.partial(on_message_received, session=db_session))
+        await queue.consume(
+            functools.partial(on_message_received, session=db_session)
+        )
         await asyncio.Future()
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)

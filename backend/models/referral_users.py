@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
-    Integer,
     VARCHAR,
     Index,
     TIMESTAMP,
@@ -9,13 +10,18 @@ from sqlalchemy import (
     ForeignKey,
     Sequence,
 )
+
 from .base import Base
 
 
 class ReferralUser(Base):
     __tablename__ = "referral_users"
     __table_args__ = (
-        Index("referral_users_user_id_parent_user_id_idx", "user_id", "parent_user_id"),
+        Index(
+            "referral_users_user_id_parent_user_id_idx",
+            "user_id",
+            "parent_user_id",
+        ),
     )
 
     id = Column(
@@ -36,6 +42,12 @@ class ReferralUser(Base):
         nullable=True,
     )
     referral_program_type = Column(
-        VARCHAR(32), nullable=False, server_default=text("'partner'::character varying")
+        VARCHAR(32),
+        nullable=False,
+        server_default=text("'partner'::character varying"),
     )
-    created_at = Column(TIMESTAMP, nullable=False)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )

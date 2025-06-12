@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
-    event,
     Integer,
     TIMESTAMP,
     JSON,
@@ -9,12 +10,11 @@ from sqlalchemy import (
     Index,
     UUID,
     text,
-    func,
+    event,
 )
-from .base import Base, create_timestamps, update_timestamps
-from models.users_domains import UserDomains
 from sqlalchemy.dialects.postgresql import ENUM
-from datetime import datetime, timezone
+
+from .base import Base, update_timestamps
 
 target_schemas = ENUM("b2c", "b2b", name="target_schemas", create_type=False)
 
@@ -39,9 +39,11 @@ class AudienceSource(Base):
         nullable=False,
         server_default=text("gen_random_uuid()"),
     )
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+    )
     created_by_user_id = Column(
-        Integer, ForeignKey("users.id", onupdate="SET NULL"), nullable=True
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
     )
     name = Column(VARCHAR(128), nullable=False)
     file_url = Column(VARCHAR(256), nullable=True)
@@ -62,11 +64,20 @@ class AudienceSource(Base):
     matched_records_status = Column(
         VARCHAR(16), nullable=False, server_default=text("'pending'")
     )
-    processed_records = Column(Integer, nullable=False, server_default=text("0"))
+    processed_records = Column(
+        Integer, nullable=False, server_default=text("0")
+    )
     mapped_fields = Column(JSON, nullable=True)
     domain_id = Column(
-        Integer, ForeignKey("users_domains.id", onupdate="SET NULL"), nullable=True
+        Integer,
+        ForeignKey("users_domains.id", onupdate="SET NULL"),
+        nullable=True,
     )
-    target_schema = Column(target_schemas, nullable=False, server_default="'b2c'")
+    target_schema = Column(
+        target_schemas, nullable=False, server_default="'b2c'"
+    )
     insights = Column(JSON, nullable=True)
     significant_fields = Column(JSON, nullable=True)
+
+
+event.listen(AudienceSource, "before_update", update_timestamps)

@@ -1,9 +1,19 @@
 import uuid
+from datetime import datetime, timezone
 
-from sqlalchemy import Column, Index, UUID, ForeignKey, text, String, BigInteger
+from sqlalchemy import (
+    Column,
+    Index,
+    UUID,
+    ForeignKey,
+    String,
+    BigInteger,
+    event,
+)
 from sqlalchemy.dialects.postgresql import TIMESTAMP
+
 from models.enrichment.enrichment_users import EnrichmentUser
-from .base import Base
+from .base import Base, update_timestamps
 
 
 class AudienceDataSyncImportedPersons(Base):
@@ -23,7 +33,9 @@ class AudienceDataSyncImportedPersons(Base):
         nullable=True,
     )
     created_at = Column(
-        TIMESTAMP, server_default=text("CURRENT_TIMESTAMP"), nullable=True
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
     updated_at = Column(TIMESTAMP, nullable=True)
     enrichment_user_id = Column(
@@ -40,6 +52,13 @@ class AudienceDataSyncImportedPersons(Base):
             unique=True,
         ),
         Index(
-            "audience_data_sync_imported_persons_data_sync", data_sync_id, unique=False
+            "audience_data_sync_imported_persons_data_sync",
+            data_sync_id,
+            unique=False,
         ),
     )
+
+
+event.listen(
+    AudienceDataSyncImportedPersons, "before_update", update_timestamps
+)

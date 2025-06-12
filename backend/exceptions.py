@@ -22,7 +22,9 @@ InvalidToken = HTTPException(
 InvalidState = HTTPException(
     status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid State"
 )
-NotFound = HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found")
+NotFound = HTTPException(
+    status_code=status.HTTP_404_NOT_FOUND, detail="Not Found"
+)
 ProfileNotFound = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND, detail="Profile Not Found"
 )
@@ -36,7 +38,8 @@ StepNotFound = HTTPException(
     status_code=status.HTTP_404_NOT_FOUND, detail="Step Not Found"
 )
 ScheduleTimeBlockNotFound = HTTPException(
-    status_code=status.HTTP_404_NOT_FOUND, detail="Schedule Time Block Not Found"
+    status_code=status.HTTP_404_NOT_FOUND,
+    detail="Schedule Time Block Not Found",
 )
 TokenError = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,

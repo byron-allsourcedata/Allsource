@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Boolean, ForeignKey, text, Index, String
+from sqlalchemy import Column, ForeignKey, text, Index, String
 from sqlalchemy.dialects.postgresql import UUID
+
 from models.base import Base
 
 
@@ -14,7 +15,9 @@ class EnrichmentLifestyle(Base):
     )
     asid = Column(
         UUID(as_uuid=True),
-        ForeignKey("enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"),
+        ForeignKey(
+            "enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"
+        ),
         nullable=False,
     )
     pets = Column(String(8), nullable=False)
@@ -34,4 +37,4 @@ class EnrichmentLifestyle(Base):
     beauty_cosmetics = Column(String(8), nullable=False)
     smoker = Column(String(8), nullable=False)
 
-    __table_args__ = (Index("ix_lifestyle_asid", asid),)
+    __table_args__ = (Index("ix_lifestyle_asid", asid, unique=True),)

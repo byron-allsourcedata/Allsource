@@ -8,10 +8,12 @@ import boto3
 import random
 import requests
 import re
+from decimal import Decimal
 from datetime import datetime
+from aio_pika import Channel
 from rapidfuzz import fuzz
 from sqlalchemy import update
-from aio_pika import IncomingMessage, Message
+from aio_pika import IncomingMessage, Message, Channel
 from sqlalchemy import create_engine, func, select
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
@@ -24,6 +26,7 @@ from models.audience_smarts import AudienceSmart
 from utils import send_sse
 from models.audience_smarts_persons import AudienceSmartPerson
 from models.audience_postals_verification import AudiencePostalVerification
+from persistence.user_persistence import UserPersistence
 from config.rmq_connection import (
     RabbitMQConnection,
     publish_rabbitmq_message_with_channel,
@@ -52,11 +55,15 @@ def setup_logging(level):
 
 def tokenize_address(text: str) -> set[str]:
     tokens = re.findall(r"\w+", text.lower())
-    filtered = {tok for tok in tokens if not re.fullmatch(r"\d{5}(?:-\d{4})?", tok)}
+    filtered = {
+        tok for tok in tokens if not re.fullmatch(r"\d{5}(?:-\d{4})?", tok)
+    }
     return filtered
 
 
-def compare_addresses(normalized_address: str, normalized_addr_text: str) -> bool:
+def compare_addresses(
+    normalized_address: str, normalized_addr_text: str
+) -> bool:
     tokens_req = tokenize_address(normalized_address)
     tokens_text = tokenize_address(normalized_addr_text)
     return tokens_req.issubset(tokens_text)
@@ -82,7 +89,12 @@ def verify_address(addresses, address, city, state_name):
     return is_verified
 
 
-async def process_rmq_message(message: IncomingMessage, db_session: Session, channel):
+async def process_rmq_message(
+    message: IncomingMessage,
+    db_session: Session,
+    channel: Channel,
+    user_persistence: UserPersistence,
+):
     try:
         message_body = json.loads(message.body)
         user_id = message_body.get("user_id")
@@ -92,10 +104,12 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
             "count_persons_before_validation"
         )
         validation_type = message_body.get("validation_type")
+        validation_cost = message_body.get("validation_cost")
         logging.info(f"aud_smart_id: {aud_smart_id}")
         logging.info(f"validation_type: {validation_type}")
         failed_ids = []
         verifications = []
+        write_off_funds = Decimal(0)
 
         for record in batch:
             person_id = record.get("audience_smart_person_id")
@@ -108,6 +122,8 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
             if not postal_code or not city or not state_name:
                 failed_ids.append(person_id)
                 continue
+
+            write_off_funds += Decimal(validation_cost)
 
             existing_verification = (
                 db_session.query(AudiencePostalVerification)
@@ -136,12 +152,16 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                     failed_ids.append(person_id)
                     continue
 
-                elif response.status_code != 200 and not response_data.get("success"):
+                elif response.status_code != 200 and not response_data.get(
+                    "success"
+                ):
                     logging.debug(f"response: {response_data}")
                     failed_ids.append(person_id)
 
                 addresses = response_data.get("result", {}).get("addresses", [])
-                is_verified = verify_address(addresses, address, city, state_name)
+                is_verified = verify_address(
+                    addresses, address, city, state_name
+                )
                 verifications.append(
                     {"postal_code": postal_code, "is_verified": is_verified}
                 )
@@ -161,6 +181,14 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
 
         logging.info(f"success_ids len: {len(success_ids)}")
 
+        if write_off_funds:
+            user_persistence.deduct_validation_funds(user_id, write_off_funds)
+            # if not resultOperation:
+            #     logging.error("Not enough validation funds")
+            #     await message.reject(requeue=True)
+            #     return
+            db_session.flush()
+
         if verifications:
             stmt = insert(AudiencePostalVerification).values(verifications)
             stmt = stmt.on_conflict_do_update(
@@ -177,7 +205,11 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
                 [
-                    {"id": pid, "is_validation_processed": False, "is_valid": False}
+                    {
+                        "id": pid,
+                        "is_validation_processed": False,
+                        "is_valid": False,
+                    }
                     for pid in failed_ids
                 ],
             )
@@ -186,7 +218,10 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
         if success_ids:
             db_session.bulk_update_mappings(
                 AudienceSmartPerson,
-                [{"id": pid, "is_validation_processed": False} for pid in success_ids],
+                [
+                    {"id": pid, "is_validation_processed": False}
+                    for pid in success_ids
+                ],
             )
             db_session.flush()
 
@@ -223,6 +258,7 @@ async def process_rmq_message(message: IncomingMessage, db_session: Session, cha
                             rule[key]["count_submited"] = (
                                 count_persons_before_validation
                             )
+                            rule[key]["count_cost"] = str(write_off_funds)
                 aud_smart.validations = json.dumps(validations)
                 db_session.commit()
             await publish_rabbitmq_message_with_channel(
@@ -281,13 +317,18 @@ async def main():
         Session = sessionmaker(bind=engine)
         db_session = Session()
 
+        user_persistence = UserPersistence(db_session)
+
         queue = await channel.declare_queue(
             name=AUDIENCE_VALIDATION_AGENT_POSTAL,
             durable=True,
         )
         await queue.consume(
             functools.partial(
-                process_rmq_message, channel=channel, db_session=db_session
+                process_rmq_message,
+                channel=channel,
+                db_session=db_session,
+                user_persistence=user_persistence,
             )
         )
 

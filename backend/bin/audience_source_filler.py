@@ -22,7 +22,11 @@ from itertools import islice
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-from schemas.scripts.audience_source import MessageBody, PersonRow, DataBodyFromSource
+from schemas.scripts.audience_source import (
+    MessageBody,
+    PersonRow,
+    DataBodyFromSource,
+)
 from models.leads_users import LeadUser
 from sqlalchemy import and_, or_, func, create_engine, distinct
 from enums import SourceType, LeadStatus, TypeOfCustomer
@@ -92,7 +96,9 @@ def parse_date(date_str: str) -> str | None:
         try:
             parsed_date = datetime.strptime(date_str, fmt)
             if parsed_date.tzinfo is not None:
-                parsed_date = parsed_date.astimezone(timezone.utc).replace(tzinfo=None)
+                parsed_date = parsed_date.astimezone(timezone.utc).replace(
+                    tzinfo=None
+                )
             return parsed_date.isoformat()
         except ValueError:
             continue
@@ -119,10 +125,14 @@ async def parse_csv_file(
 
     file_url = source.file_url
     if not file_url:
-        logging.warning(f"File URL is missing for AudienceSource ID {source_id}.")
+        logging.warning(
+            f"File URL is missing for AudienceSource ID {source_id}."
+        )
         return False
 
-    sts_client = create_sts_client(os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET"))
+    sts_client = create_sts_client(
+        os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET")
+    )
     credentials = assume_role(os.getenv("S3_ROLE_ARN"), sts_client)
     key = extract_key_from_url(file_url)
     async with s3_session.client(
@@ -162,7 +172,11 @@ async def parse_csv_file(
     await send_sse(
         connection,
         user_id,
-        {"source_id": source_id, "total": total_rows, "processed": processed_rows},
+        {
+            "source_id": source_id,
+            "total": total_rows,
+            "processed": processed_rows,
+        },
     )
 
     send_rows = 0
@@ -213,7 +227,9 @@ async def parse_csv_file(
             message_body = MessageBody(
                 type="emails",
                 data=DataBodyFromSource(
-                    persons=batch_rows, source_id=str(source_id), user_id=user_id
+                    persons=batch_rows,
+                    source_id=str(source_id),
+                    user_id=user_id,
                 ),
                 status=status,
             )
@@ -231,7 +247,9 @@ async def parse_csv_file(
 
 def get_max_ids(db_session, domain_id, statuses):
     query = (
-        db_session.query(func.max(LeadUser.id), func.count(distinct(FiveXFiveUser.id)))
+        db_session.query(
+            func.max(LeadUser.id), func.count(distinct(FiveXFiveUser.id))
+        )
         .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
         .filter(LeadUser.domain_id == domain_id)
     )
@@ -256,8 +274,11 @@ def get_max_ids(db_session, domain_id, statuses):
         or LeadStatus.CONVERTED_SALES.value in statuses
     ):
         query = query.outerjoin(
-            LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
-        ).outerjoin(LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id)
+            LeadsUsersAddedToCart,
+            LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
+        ).outerjoin(
+            LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+        )
         if LeadStatus.ABANDONED_CART.value in statuses:
             filters.append(
                 or_(
@@ -267,7 +288,8 @@ def get_max_ids(db_session, domain_id, statuses):
                     ),
                     and_(
                         LeadUser.behavior_type == "product_added_to_cart",
-                        LeadsUsersAddedToCart.added_at > LeadsUsersOrdered.ordered_at,
+                        LeadsUsersAddedToCart.added_at
+                        > LeadsUsersOrdered.ordered_at,
                     ),
                 )
             )
@@ -280,7 +302,8 @@ def get_max_ids(db_session, domain_id, statuses):
                     ),
                     and_(
                         LeadUser.is_converted_sales == True,
-                        LeadsUsersAddedToCart.added_at < LeadsUsersOrdered.ordered_at,
+                        LeadsUsersAddedToCart.added_at
+                        < LeadsUsersOrdered.ordered_at,
                     ),
                 )
             )
@@ -293,7 +316,9 @@ def get_max_ids(db_session, domain_id, statuses):
     return max_id, total_count
 
 
-async def send_pixel_contacts(*, data, source_id, db_session, connection, user_id):
+async def send_pixel_contacts(
+    *, data, source_id, db_session, connection, user_id
+):
     domain_id = data.get("domain_id")
     statuses = data.get("statuses")
     logging.info(f"Processing AudienceSource with ID: {source_id}")
@@ -318,7 +343,11 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
     await send_sse(
         connection,
         user_id,
-        {"source_id": source_id, "total": total_rows, "processed": processed_rows},
+        {
+            "source_id": source_id,
+            "total": total_rows,
+            "processed": processed_rows,
+        },
     )
     if not max_id:
         return False
@@ -350,7 +379,8 @@ async def send_pixel_contacts(*, data, source_id, db_session, connection, user_i
             or LeadStatus.CONVERTED_SALES.value in statuses
         ):
             query = query.outerjoin(
-                LeadsUsersAddedToCart, LeadsUsersAddedToCart.lead_user_id == LeadUser.id
+                LeadsUsersAddedToCart,
+                LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
             ).outerjoin(
                 LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
             )

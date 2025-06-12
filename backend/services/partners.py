@@ -10,7 +10,11 @@ from services.referral import ReferralService
 from persistence.partners_persistence import PartnersPersistence
 from persistence.sendgrid_persistence import SendgridPersistence
 from persistence.plans_persistence import PlansPersistence
-from schemas.partners import PartnersResponse, PartnerUserData, PartnersObjectResponse
+from schemas.partners import (
+    PartnersResponse,
+    PartnerUserData,
+    PartnersObjectResponse,
+)
 from services.sendgrid import SendgridHandler
 from enums import SendgridTemplate
 from types import SimpleNamespace
@@ -50,7 +54,9 @@ class PartnersService:
         )
 
         result = [
-            self.partner_mapped(partner, self.get_subsciption_name(partner["user_id"]))
+            self.partner_mapped(
+                partner, self.get_subsciption_name(partner["user_id"])
+            )
             for partner in partners
         ]
         return {"data": {"items": result, "totalCount": total_count}}
@@ -67,12 +73,16 @@ class PartnersService:
         limit = rowsPerPage
 
         partner = self.partners_persistence.get_partner_by_email(email)
-        partners, total_count = self.partners_persistence.get_partners_by_partner_id(
-            partner.id, start_date, end_date, offset, limit
+        partners, total_count = (
+            self.partners_persistence.get_partners_by_partner_id(
+                partner.id, start_date, end_date, offset, limit
+            )
         )
 
         result = [
-            self.partner_mapped(partner, self.get_subsciption_name(partner["user_id"]))
+            self.partner_mapped(
+                partner, self.get_subsciption_name(partner["user_id"])
+            )
             for partner in partners
         ]
         return {"data": {"items": result, "totalCount": total_count}}
@@ -85,12 +95,16 @@ class PartnersService:
 
         search_term = f"%{search}%" if search else None
 
-        partners, total_count = self.partners_persistence.get_partners_by_partner_id(
-            id, start_date, end_date, offset, limit, search_term
+        partners, total_count = (
+            self.partners_persistence.get_partners_by_partner_id(
+                id, start_date, end_date, offset, limit, search_term
+            )
         )
 
         result = [
-            self.partner_mapped(partner, self.get_subsciption_name(partner["user_id"]))
+            self.partner_mapped(
+                partner, self.get_subsciption_name(partner["user_id"])
+            )
             for partner in partners
         ]
 
@@ -120,7 +134,12 @@ class PartnersService:
         }
 
     def send_message_in_email(
-        self, full_name: str, message: str, email: str, template_id, commission=""
+        self,
+        full_name: str,
+        message: str,
+        email: str,
+        template_id,
+        commission="",
     ):
         mail_object = SendgridHandler()
         mail_object.send_sign_up_mail(
@@ -134,7 +153,9 @@ class PartnersService:
             },
         )
 
-    def send_referral_in_email(self, full_name: str, email: str, commission: int):
+    def send_referral_in_email(
+        self, full_name: str, email: str, commission: int
+    ):
         mail_object = SendgridHandler()
         template_id = self.send_grid_persistence.get_template_by_alias(
             SendgridTemplate.PARTNER_INVITE_TEMPLATE.value
@@ -200,8 +221,10 @@ class PartnersService:
     ) -> PartnersObjectResponse:
         status = True
         new_data_dict = new_data.dict()
-        updated_data, commission_changed = self.partners_persistence.update_partner(
-            partner_id=partner_id, **new_data_dict
+        updated_data, commission_changed = (
+            self.partners_persistence.update_partner(
+                partner_id=partner_id, **new_data_dict
+            )
         )
 
         if commission_changed:
@@ -240,8 +263,10 @@ class PartnersService:
             )
 
         update_data = {"is_active": payload.status}
-        updated_data, commission_changed = self.partners_persistence.update_partner(
-            partner_id=partner_id, **update_data
+        updated_data, commission_changed = (
+            self.partners_persistence.update_partner(
+                partner_id=partner_id, **update_data
+            )
         )
 
         message = payload.message

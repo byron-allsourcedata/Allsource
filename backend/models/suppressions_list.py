@@ -1,6 +1,9 @@
-from sqlalchemy import Column, event, Integer, TEXT, BigInteger, text, Sequence
+from datetime import datetime, timezone
+
+from sqlalchemy import Column, TEXT, BigInteger, Sequence
 from sqlalchemy.dialects.postgresql import TIMESTAMP, VARCHAR
-from .base import Base, create_timestamps
+
+from .base import Base
 
 
 class SuppressionList(Base):
@@ -13,7 +16,11 @@ class SuppressionList(Base):
         nullable=False,
     )
     list_name = Column(VARCHAR(256), nullable=True)
-    created_at = Column(TIMESTAMP(precision=7), nullable=True)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     total_emails = Column(TEXT, nullable=True)
     status = Column(VARCHAR(32), nullable=True)
     domain_id = Column(BigInteger, nullable=True)
@@ -26,6 +33,3 @@ class SuppressionList(Base):
             "total_emails": self.total_emails,
             "status": self.status,
         }
-
-
-event.listen(SuppressionList, "before_insert", create_timestamps)

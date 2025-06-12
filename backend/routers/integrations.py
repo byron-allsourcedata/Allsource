@@ -1,14 +1,23 @@
-import json
-import os
 import hashlib
+import json
 import logging
-from urllib.parse import urlencode
-from fastapi import APIRouter, Depends, Query, HTTPException, status, Body, Request
+import os
+
+import httpx
+from fastapi import (
+    APIRouter,
+    Depends,
+    Query,
+    HTTPException,
+    status,
+    Body,
+    Request,
+)
 from fastapi.responses import RedirectResponse
-from enums import CreateDataSync, SubscriptionStatus
-from utils import normalize_url
+from typing_extensions import Annotated
+
+from config.bigcommerce import BigcommerceConfig
 from config.rmq_connection import RabbitMQConnection, publish_rabbitmq_message
-from persistence.settings_persistence import SettingsPersistence
 from dependencies import (
     get_integration_service,
     IntegrationService,
@@ -19,24 +28,19 @@ from dependencies import (
     check_user_authorization_without_pixel,
     check_pixel_install_domain,
     check_user_authentication,
-    get_user_persistence_service,
     UserPersistence,
-    get_user_domain_persistence,
     UserDomainsPersistence,
     check_api_key,
     get_settings_persistence,
 )
-from schemas.integrations.integrations import *
+from enums import CreateDataSync, TeamAccessLevel
 from persistence.domains import UserDomains
-from enums import TeamAccessLevel
+from persistence.settings_persistence import SettingsPersistence
+from schemas.integrations.integrations import *
 from schemas.integrations.shopify import (
     ShopifyLandingResponse,
     GenericEcommerceResponse,
 )
-import httpx
-from typing_extensions import Annotated
-from config.bigcommerce import BigcommerceConfig
-
 
 router = APIRouter()
 
@@ -47,7 +51,9 @@ async def get_integrations_service(
     type: str | None = Query(None),
     data_sync: bool | None = Query(None),
     user=Depends(check_user_authentication),
-    persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
+    persistence: IntegrationsPresistence = Depends(
+        get_user_integrations_presistence
+    ),
 ):
     filter = {}
     if type:
@@ -69,7 +75,9 @@ async def get_integrations_smart_audinece_sync(
     data_sync: bool | None = Query(None),
     integration_list: str | None = Query(None),
     user=Depends(check_user_authentication),
-    persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
+    persistence: IntegrationsPresistence = Depends(
+        get_user_integrations_presistence
+    ),
 ):
     filter = {}
     if type:
@@ -89,7 +97,9 @@ async def get_integrations_credentials(
     user=Depends(check_user_authorization_without_pixel),
     domain=Depends(check_domain),
 ):
-    return integration_serivce.get_user_service_credentials(domain=domain, user=user)
+    return integration_serivce.get_user_service_credentials(
+        domain=domain, user=user
+    )
 
 
 @router.get("/credentials/{platform}")
@@ -244,7 +254,10 @@ async def create_campaign(
     with integrations_service as service:
         service = getattr(service, service_name)
         return service.create_campaign(
-            list_data, domain_id=domain.id, user_id=user.get("id")
+            campaign_name=list_data.campaign_name,
+            daily_budget=list_data.daily_budget,
+            ad_account_id=list_data.ad_account_id,
+            user_id=user.get("id"),
         )
 
 
@@ -261,11 +274,13 @@ async def get_sender(
 @router.get("/sync/ad_accounts")
 async def get_ad_accounts(
     integration_service: IntegrationService = Depends(get_integration_service),
+    service_name: str = Query(...),
     user=Depends(check_user_authorization),
     domain=Depends(check_domain),
 ):
-    with integration_service as serivce:
-        return serivce.meta.get_ad_accounts(domain.id, user.get("id"))
+    with integration_service as service:
+        service = getattr(service, service_name)
+        return service.get_ad_accounts(domain.id, user.get("id"))
 
 
 @router.post("/suppression/")
@@ -288,7 +303,9 @@ async def set_suppression(
             )
     with integration_service as service:
         service = getattr(service, service_name)
-        return service.set_supperssions(suppression_data.suppression, domain.id, user)
+        return service.set_supperssions(
+            suppression_data.suppression, domain.id, user
+        )
 
 
 @router.get("/bigcommerce/oauth")
@@ -325,10 +342,10 @@ async def remove_user_callback(request: Request):
 @router.get("/bigcommerce/auth/callback")
 def bigcommerce_auth(
     code: Optional[str],
+    domain_persistence: UserDomainsPersistence,
+    user_persistence: UserPersistence,
     state: str = Query(None),
     integration_service: IntegrationService = Depends(get_integration_service),
-    user_persistence: UserPersistence = Depends(get_user_persistence_service),
-    domain_persistence: UserDomainsPersistence = Depends(get_user_domain_persistence),
 ):
     payload = {
         "client_id": BigcommerceConfig.client_id,
@@ -341,7 +358,7 @@ def bigcommerce_auth(
     with httpx.Client() as client:
         token_response = client.post(BigcommerceConfig.token_url, data=payload)
         if token_response.status_code != 200:
-            return "The pixel is not installed. Please visit https://app.maximiz.ai/dashboard and complete the integration there."
+            return "The pixel is not installed. Please visit https://allsourcedata.io and complete the integration there."
 
         token_data = token_response.json()
 
@@ -349,21 +366,17 @@ def bigcommerce_auth(
     shop_hash = token_data.get("context", "").split("/")[1]
 
     if state:
-        user_id, domain_id, is_pixel_install = (state.split(":") + [None, None, None])[
-            :3
-        ]
-        redirect_url = (
-            BigcommerceConfig.frontend_dashboard_redirect
-            if is_pixel_install
-            else BigcommerceConfig.frontend_redirect
-        )
+        user_id, domain_id, is_pixel_install = (
+            state.split(":") + [None, None, None]
+        )[:3]
+        redirect_url = BigcommerceConfig.frontend_get_started_redirect
 
         user = user_persistence.get_user_by_id(user_id)
         domain_entry = domain_persistence.get_domain_by_filter(id=domain_id)
         domain = domain_entry[0] if domain_entry else None
 
         if not domain:
-            return RedirectResponse(f"{redirect_url}?message=Failed")
+            return RedirectResponse(f"{redirect_url}&install_bigcommerce=false")
 
         try:
             with integration_service as service:
@@ -376,9 +389,9 @@ def bigcommerce_auth(
                     domain=domain,
                     user=user,
                 )
-            return RedirectResponse(f"{redirect_url}?message=Successfully")
+            return RedirectResponse(f"{redirect_url}?install_bigcommerce=true")
         except Exception:
-            return RedirectResponse(f"{redirect_url}?message=Failed")
+            return RedirectResponse(f"{redirect_url}?install_bigcommerce=false")
     else:
         with httpx.Client() as client:
             shop_response = client.get(
@@ -391,7 +404,9 @@ def bigcommerce_auth(
             )
 
             if shop_response.status_code != 200:
-                return RedirectResponse(BigcommerceConfig.external_app_installed)
+                return RedirectResponse(
+                    BigcommerceConfig.external_app_installed
+                )
 
             shop_data = shop_response.json()
             domain_url = shop_data.get("domain")
@@ -425,11 +440,13 @@ def oauth_bigcommerce_uninstall(
 
 @router.get("/bigcommerce/load", status_code=status.HTTP_200_OK)
 def oauth_bigcommerce_load(
+    user_persistence: UserPersistence,
     signed_payload: Annotated[str, Query()],
     signed_payload_jwt: Annotated[str, Query()],
     integration_service: IntegrationService = Depends(get_integration_service),
-    user_persistence: UserPersistence = Depends(get_user_persistence_service),
-    settings_persistence: SettingsPersistence = Depends(get_settings_persistence),
+    settings_persistence: SettingsPersistence = Depends(
+        get_settings_persistence
+    ),
 ):
     with integration_service as service:
         result = service.bigcommerce.oauth_bigcommerce_load(
@@ -443,7 +460,9 @@ def oauth_bigcommerce_load(
     if user:
         return RedirectResponse(BigcommerceConfig.frontend_sign_in_redirect)
 
-    team_invitation = settings_persistence.get_team_invitation_by_email(user_email)
+    team_invitation = settings_persistence.get_team_invitation_by_email(
+        user_email
+    )
     if team_invitation:
         return RedirectResponse(
             f"{BigcommerceConfig.frontend_sign_up_redirect}?teams_token={team_invitation.token}&user_mail={user_email}"
@@ -489,10 +508,10 @@ async def auth(
 
 @router.post("/zapier/webhook", status_code=201)
 async def subscribe_zapier_webhook(
+    user_persistence: UserPersistence,
     hook_data=Body(...),
     domain=Depends(check_api_key),
     integrations_service: IntegrationService = Depends(get_integration_service),
-    user_persistence: UserPersistence = Depends(get_user_persistence_service),
 ):
     with integrations_service as service:
         user = user_persistence.get_user_by_id(domain.user_id)
@@ -586,7 +605,9 @@ async def shopify_customers_redact(
     with integrations_service as service:
         request_body = await r.body()
         shopify_hmac_header = r.headers.get("X-Shopify-Hmac-SHA256")
-        service.shopify.shopify_customers_redact(request_body, shopify_hmac_header)
+        service.shopify.shopify_customers_redact(
+            request_body, shopify_hmac_header
+        )
         return GenericEcommerceResponse(message="No customer data found")
 
 
@@ -599,19 +620,9 @@ async def oauth_shopify_redact(
         request_body = await r.body()
         shopify_hmac_header = r.headers.get("X-Shopify-Hmac-SHA256")
         service.shopify.oauth_shopify_redact(request_body, shopify_hmac_header)
-        return GenericEcommerceResponse(message="Shopify data deleted successfully")
-
-
-@router.get("/customers-info")
-def customers_info(
-    service_name: str = Query(...),
-    user=Depends(check_user_authentication),
-    domain=Depends(check_domain),
-    integration_service: IntegrationService = Depends(get_integration_service),
-):
-    with integration_service as service:
-        service = getattr(service, service_name)
-        return service.get_customer_info(domain.id, user.get("id"))
+        return GenericEcommerceResponse(
+            message="Shopify data deleted successfully"
+        )
 
 
 @router.get("/get-channels")
@@ -640,26 +651,13 @@ def get_campaigns(
         return service.get_campaigns(domain.id, customer_id, user.get("id"))
 
 
-@router.post("/create-campaign", status_code=201)
-async def create_campaign(
-    campaign_data: CreateCampaignList,
-    service_name: str = Query(...),
-    integrations_service: IntegrationService = Depends(get_integration_service),
-    user=Depends(check_user_authorization),
-    domain=Depends(check_domain),
-):
-    with integrations_service as service:
-        service = getattr(service, service_name)
-        return service.create_campaign(
-            domain_id=domain.id, user_id=user.get("id"), campaign_list=campaign_data
-        )
-
-
 @router.post("/kajabi")
 async def kajabi_webhook(
     request: Request,
     domain: str,
-    persistence: IntegrationsPresistence = Depends(get_user_integrations_presistence),
+    persistence: IntegrationsPresistence = Depends(
+        get_user_integrations_presistence
+    ),
 ):
     body = await request.json()
     event_type = body.get("event")

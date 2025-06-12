@@ -1,20 +1,31 @@
+import json
 import logging
-import httpx
-import re
-from typing import List
-from datetime import datetime
-from schemas.integrations.omnisend import Identifiers, OmnisendProfile
-from schemas.integrations.integrations import DataMap, IntegrationCredentials
-from persistence.leads_persistence import LeadsPersistence
-from datetime import datetime, timedelta
 import os
-from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
-from persistence.domains import UserDomainsPersistence
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
-from utils import extract_first_email
-from enums import IntegrationsStatus, SourcePlatformEnum, ProccessDataSyncResult
+from datetime import datetime, timedelta
+from typing import List
+
+import httpx
+
+from enums import (
+    IntegrationsStatus,
+    SourcePlatformEnum,
+    ProccessDataSyncResult,
+    DataSyncType,
+)
+from models import UserIntegration, IntegrationUserSync
 from models.five_x_five_users import FiveXFiveUser
+from persistence.domains import UserDomainsPersistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
+from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
+from persistence.leads_persistence import LeadsPersistence
+from schemas.integrations.integrations import DataMap, IntegrationCredentials
+from schemas.integrations.omnisend import Identifiers, OmnisendProfile
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from utils import extract_first_email, get_valid_email
 
 
 class OmnisendIntegrationService:
@@ -98,17 +109,24 @@ class OmnisendIntegrationService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integration_persistence.create_integration(integration_data)
+        integartion = self.integration_persistence.create_integration(
+            integration_data
+        )
 
         if not integartion:
             return IntegrationsStatus.CREATE_IS_FAILED
 
         return IntegrationsStatus.SUCCESS
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         if self.get_credentials(domain.id, user.get("id")):
             return IntegrationsStatus.ALREADY_EXIST
-        if self.get_list_contact(credentials.omnisend.api_key).status_code != 200:
+        if (
+            self.get_list_contact(credentials.omnisend.api_key).status_code
+            != 200
+        ):
             return IntegrationsStatus.CREDENTAILS_INVALID
         return self.__save_integrations(
             api_key=credentials.omnisend.api_key,
@@ -126,22 +144,31 @@ class OmnisendIntegrationService:
         list_id: str = None,
         list_name: str = None,
     ):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get("id"))
+        credentials = self.get_credentials(
+            domain_id=domain_id, user_id=user.get("id")
+        )
         sync = self.sync_persistence.create_sync(
             {
                 "integration_id": credentials.id,
                 "domain_id": domain_id,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "leads_type": leads_type,
                 "data_map": data_map,
                 "created_by": created_by,
             }
         )
 
-    async def process_data_sync(
-        self, five_x_five_user, user_integration, data_sync, lead_user
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
     ):
-        profile = self.__create_profile(
-            five_x_five_user, user_integration.access_token, data_sync.data_map
+        profile = self.__create_bulk_profiles(
+            five_x_five_users,
+            user_integration.access_token,
+            integration_data_sync.data_map,
         )
 
         if profile in (
@@ -153,101 +180,74 @@ class OmnisendIntegrationService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __create_profile(self, five_x_five_user, access_token, data_map):
-        profile = self.__mapped_profile(five_x_five_user)
-        identifiers = self.__mapped_identifiers(five_x_five_user)
-        if identifiers in (
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return identifiers
-        if data_map:
-            properties = self.__map_properties(five_x_five_user, data_map)
-        else:
-            properties = {}
-        json_data = {
-            "customProperties": properties,
-            "address": profile.address,
-            "city": profile.city,
-            "state": profile.state,
-            "postalCode": profile.postalCode,
-            "gender": profile.gender,
-            "firstName": profile.firstName,
-            "lastName": profile.lastName,
-            "identifiers": [identifiers.model_dump()],
+    def __create_bulk_profiles(self, five_x_five_users, access_token, data_map):
+        bulk_profiles = []
+        for user in five_x_five_users:
+            profile = self.__mapped_profile(user)
+            identifiers = self.__mapped_identifiers(user)
+            if not identifiers:
+                continue
+
+            properties = (
+                self.__map_properties(user, data_map) if data_map else {}
+            )
+            contact_data = {
+                "customProperties": properties,
+                "address": profile.address,
+                "city": profile.city,
+                "state": profile.state,
+                "postalCode": profile.postalCode,
+                "gender": profile.gender,
+                "firstName": profile.firstName,
+                "lastName": profile.lastName,
+                "identifiers": [identifiers.model_dump()],
+            }
+            contact_data = {
+                k: v for k, v in contact_data.items() if v is not None
+            }
+            bulk_profiles.append(contact_data)
+
+        if not bulk_profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        payload = {
+            "method": "POST",
+            "endpoint": "contacts",
+            "items": bulk_profiles,
         }
-        json_data = {k: v for k, v in json_data.items() if v is not None}
+
         response = self.__handle_request(
-            "/contacts", method="POST", api_key=access_token, json=json_data
+            "/batches",
+            method="POST",
+            api_key=access_token,
+            data=json.dumps(payload),
         )
-        if response.status_code != 200:
+        if response.status_code not in (200, 201, 202):
             if response.status_code in (403, 401):
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
             if response.status_code == 400:
                 return ProccessDataSyncResult.INCORRECT_FORMAT.value
             logging.error("Error response: %s", response.text)
-        return response.json()
+            return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
+
+        return ProccessDataSyncResult.SUCCESS.value
 
     def __mapped_identifiers(self, five_x_five_user: FiveXFiveUser):
-        email_fields = [
-            "business_email",
-            "personal_emails",
-            "additional_personal_emails",
-        ]
-
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if (
-                            e
-                            and field == "business_email"
-                            and five_x_five_user.business_email_last_seen
-                        ):
-                            if (
-                                five_x_five_user.business_email_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and field == "personal_emails"
-                            and five_x_five_user.personal_emails_last_seen
-                        ):
-                            personal_emails_last_seen_str = (
-                                five_x_five_user.personal_emails_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                            )
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
-                                return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(
-                            email=e.strip()
-                        ):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        first_email = get_valid_email(five_x_five_user)
+        first_email = get_valid_email(
+            five_x_five_user, self.million_verifier_integrations
+        )
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
             ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
         ):
-            return first_email
+            return None
 
         return Identifiers(id=first_email)
 
-    def __mapped_profile(self, five_x_five_user: FiveXFiveUser) -> OmnisendProfile:
+    def __mapped_profile(
+        self, five_x_five_user: FiveXFiveUser
+    ) -> OmnisendProfile:
         gender = getattr(five_x_five_user, "gender", None)
         if gender not in ["m", "f"]:
             gender = None

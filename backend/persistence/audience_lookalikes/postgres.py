@@ -1,21 +1,16 @@
-import math
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional, List, Dict, Any, Tuple
-from urllib.parse import unquote
 from uuid import UUID
 
 import pytz
-from fastapi import HTTPException
-from sqlalchemy import asc, desc, or_, func, select
-from sqlalchemy.exc import IntegrityError
+from psycopg2.extras import NumericRange
+from pydantic.v1 import UUID4
+from sqlalchemy.dialects.postgresql import INT4RANGE
 
 from db_dependencies import Db
 from enums import LookalikeSize, BusinessType
-from models.audience_lookalikes import AudienceLookalikes
-from models.audience_sources import AudienceSource
-from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.enrichment import (
+    EnrichmentUser,
     EnrichmentPersonalProfiles,
     EnrichmentFinancialRecord,
     EnrichmentLifestyle,
@@ -23,52 +18,50 @@ from models.enrichment import (
     EnrichmentProfessionalProfile,
     EnrichmentEmploymentHistory,
 )
+from models.audience_sources import AudienceSource
+from models.audience_lookalikes import AudienceLookalikes
+from models.audience_sources_matched_persons import AudienceSourcesMatchedPerson
 from models.enrichment.enrichment_users import EnrichmentUser
-from models.users import Users
 from models.users_domains import UserDomains
-from persistence.audience_lookalikes.dto import SourceInfo, LookalikeInfo
-from persistence.audience_lookalikes.interface import (
+from sqlalchemy.orm import Session
+from typing import Optional, List, Dict, Any
+import math
+from sqlalchemy import asc, desc, or_, func
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
+from urllib.parse import unquote
+from models.enrichment.enrichment_lookalike_scores import (
+    EnrichmentLookalikeScore,
+)
+from uuid import UUID
+
+from models.users import Users
+from persistence.audience_lookalikes import (
     AudienceLookalikesPersistenceInterface,
 )
 from resolver import injectable
-from schemas.similar_audiences import AudienceFeatureImportance
+from schemas.similar_audiences import AudienceData, AudienceFeatureImportance
 
 
 @injectable
-class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterface):
+class AudienceLookalikesPostgresPersistence(
+    AudienceLookalikesPersistenceInterface
+):
     def __init__(self, db: Db):
         self.db = db
 
-    def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
-        query = select(AudienceLookalikes).where(AudienceLookalikes.id == lookalike_id)
-        return self.db.execute(query).scalar()
-
-    def get_source_info(self, uuid_of_source, user_id) -> Optional[SourceInfo]:
-        result: tuple[AudienceSource, str] | None = (
+    def get_source_info(self, uuid_of_source, user_id):
+        source = (
             self.db.query(AudienceSource, Users.full_name)
             .join(Users, Users.id == AudienceSource.created_by_user_id)
             .filter(
-                AudienceSource.id == uuid_of_source, AudienceSource.user_id == user_id
+                AudienceSource.id == uuid_of_source,
+                AudienceSource.user_id == user_id,
             )
             .first()
         )
 
-        if not result:
-            return None
-
-        source, name = result
-
-        return SourceInfo(
-            name=source.name,
-            target_schema=source.target_schema,
-            source=source.source_origin,
-            type=source.source_type,
-            created_date=source.created_at,
-            created_by=name,
-            number_of_customers=source.total_records,
-            matched_records=source.matched_records,
-            matched_records_status=source.matched_records_status,
-        )
+        return source
 
     def get_lookalikes(
         self,
@@ -82,7 +75,7 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
         lookalike_size: Optional[str] = None,
         lookalike_type: Optional[str] = None,
         search_query: Optional[str] = None,
-    ) -> Tuple[List[LookalikeInfo], int, int, int]:
+    ):
         query = (
             self.db.query(
                 AudienceLookalikes,
@@ -93,7 +86,10 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
                 UserDomains.domain,
                 AudienceSource.target_schema,
             )
-            .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)
+            .join(
+                AudienceSource,
+                AudienceLookalikes.source_uuid == AudienceSource.id,
+            )
             .outerjoin(UserDomains, AudienceSource.domain_id == UserDomains.id)
             .join(Users, Users.id == AudienceSource.created_by_user_id)
             .filter(AudienceLookalikes.user_id == user_id)
@@ -142,29 +138,19 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
 
         if lookalike_type:
             types = [
-                unquote(i.strip()).replace(" ", "_") for i in lookalike_type.split(",")
+                unquote(i.strip()).replace(" ", "_")
+                for i in lookalike_type.split(",")
             ]
-            filters = [AudienceSource.source_type.ilike(f"%{t}%") for t in types]
+            filters = [
+                AudienceSource.source_type.ilike(f"%{t}%") for t in types
+            ]
             query = query.filter(or_(*filters))
 
         offset = (page - 1) * per_page
         result_query = query.limit(per_page).offset(offset).all()
         count = query.count()
         max_page = math.ceil(count / per_page)
-
-        lookalikes = [
-            LookalikeInfo(
-                lookalike=raw_lookalike.__dict__,
-                source_type=source_type,
-                name=name,
-                full_name=full_name,
-                source_origin=source_origin,
-                domain=domain,
-                target_schema=target_schema,
-            )
-            for raw_lookalike, name, source_type, full_name, source_origin, domain, target_schema in result_query
-        ]
-        return lookalikes, count, max_page, source_count
+        return result_query, count, max_page, source_count
 
     def create_lookalike(
         self,
@@ -181,8 +167,7 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
                 status_code=404, detail="Source not found or access denied"
             )
 
-        sources = source_info
-        created_by = source_info.created_by
+        sources, created_by = source_info
 
         if (
             sources.matched_records == 0
@@ -194,7 +179,8 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
             )
 
         audience_feature_dict = {
-            k: round(v * 1000) / 1000 for k, v in audience_feature_importance.items()
+            k: round(v * 1000) / 1000
+            for k, v in audience_feature_importance.items()
         }
 
         def get_max_size(lookalike_size):
@@ -213,7 +199,9 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
 
         sorted_dict = dict(
             sorted(
-                audience_feature_dict.items(), key=lambda item: item[1], reverse=True
+                audience_feature_dict.items(),
+                key=lambda item: item[1],
+                reverse=True,
             )
         )
         lookalike = AudienceLookalikes(
@@ -232,8 +220,8 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
         return {
             "id": lookalike.id,
             "name": lookalike.name,
-            "source": sources.source,
-            "source_type": sources.type,
+            "source": sources.source_origin,
+            "source_type": sources.source_type,
             "size": lookalike.size,
             "size_progress": lookalike.processed_size,
             "train_model_size": lookalike.train_model_size,
@@ -270,7 +258,8 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
         )
 
         updated_rows = query.update(
-            {AudienceLookalikes.name: name_of_lookalike}, synchronize_session=False
+            {AudienceLookalikes.name: name_of_lookalike},
+            synchronize_session=False,
         )
         self.db.commit()
 
@@ -284,7 +273,10 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
                 AudienceSource.source_type,
                 Users.full_name,
             )
-            .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)
+            .join(
+                AudienceSource,
+                AudienceLookalikes.source_uuid == AudienceSource.id,
+            )
             .join(Users, Users.id == AudienceSource.created_by_user_id)
             .filter(AudienceLookalikes.user_id == user_id)
         )
@@ -329,7 +321,10 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
                 AudienceSource.source_origin,
                 AudienceSource.target_schema,
             )
-            .join(AudienceSource, AudienceLookalikes.source_uuid == AudienceSource.id)
+            .join(
+                AudienceSource,
+                AudienceLookalikes.source_uuid == AudienceSource.id,
+            )
             .join(Users, Users.id == AudienceSource.created_by_user_id)
             .filter(AudienceLookalikes.id == id)
         ).first()
@@ -365,7 +360,9 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
         else:
             enrichment_models = enrichment_models_b2c + enrichment_models_b2b
 
-        select_cols = [AudienceSourcesMatchedPerson.value_score.label("customer_value")]
+        select_cols = [
+            AudienceSourcesMatchedPerson.value_score.label("customer_value")
+        ]
         for model in enrichment_models:
             select_cols.extend(all_columns_except(model, "id", "asid"))
 
@@ -374,7 +371,8 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
             .select_from(AudienceSourcesMatchedPerson)
             .join(
                 EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id,
+                AudienceSourcesMatchedPerson.enrichment_user_id
+                == EnrichmentUser.id,
             )
         )
 
@@ -409,13 +407,15 @@ class AudienceLookalikesPostgresPersistence(AudienceLookalikesPersistenceInterfa
         audience_source = (
             self.db.query(AudienceSource)
             .filter(
-                AudienceSource.id == str(source_uuid), AudienceSource.user_id == user_id
+                AudienceSource.id == str(source_uuid),
+                AudienceSource.user_id == user_id,
             )
             .first()
         )
         if not audience_source:
             raise HTTPException(
-                status_code=404, detail="Audience source not found or access denied"
+                status_code=404,
+                detail="Audience source not found or access denied",
             )
 
         total_matched = (

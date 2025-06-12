@@ -48,7 +48,9 @@ def assume_role(role_arn, sts_client):
 async def save_files_for_db(table, session, file_key):
     for i in range(len(table)):
         requested_at_str = str(table["EVENT_DATE"][i].as_py())
-        requested_at = datetime.fromisoformat(requested_at_str).replace(tzinfo=None)
+        requested_at = datetime.fromisoformat(requested_at_str).replace(
+            tzinfo=None
+        )
         up_id = None
         if str(table["UP_ID"][i]) != "None":
             up_id = str(table["UP_ID"][i])
@@ -110,7 +112,9 @@ async def process_files(sts_client, session):
             last_processed_file = None
 
         if last_processed_file:
-            files = bucket.objects.filter(Prefix=FILES_PATH, Marker=last_processed_file)
+            files = bucket.objects.filter(
+                Prefix=FILES_PATH, Marker=last_processed_file
+            )
         else:
             files = bucket.objects.filter(Prefix=FILES_PATH)
 
@@ -122,7 +126,9 @@ async def process_files(sts_client, session):
 
 
 async def main():
-    sts_client = create_sts_client(os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET"))
+    sts_client = create_sts_client(
+        os.getenv("S3_KEY_ID"), os.getenv("S3_KEY_SECRET")
+    )
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
         pool_pre_ping=True,

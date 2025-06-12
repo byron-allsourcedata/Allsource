@@ -1,9 +1,14 @@
 from models import UserDomains, IntegrationUserSync
-from models.integrations.users_domains_integrations import UserIntegration, Integration
+from models.integrations.users_domains_integrations import (
+    UserIntegration,
+    Integration,
+)
 from models.integrations.external_apps_installations import ExternalAppsInstall
 from models.kajabi import Kajabi
+from models.leads_users import LeadUser
 from sqlalchemy.orm import Session
 from typing import Optional
+from enums import DataSyncType
 from sqlalchemy import and_, or_
 
 
@@ -42,23 +47,53 @@ class IntegrationsPresistence:
     def has_integration_and_data_sync(self, user_id: int) -> bool:
         row = (
             self.db.query(UserIntegration)
+            .join(
+                Integration,
+                Integration.service_name == UserIntegration.service_name,
+            )
             .filter(
                 UserIntegration.user_id == user_id,
+                Integration.for_audience == True,
             )
             .first()
         )
-        print(row)
         return row is not None
 
-    def has_any_sync(self, user_id: int) -> bool:
-        row = (
+    def has_data_sync(
+        self, user_id: int, type: str, domain_id: int = None
+    ) -> bool:
+        query = (
             self.db.query(UserIntegration)
+            .join(
+                Integration,
+                Integration.service_name == UserIntegration.service_name,
+            )
             .join(
                 IntegrationUserSync,
                 IntegrationUserSync.integration_id == UserIntegration.id,
             )
+        )
+
+        query = query.filter(
+            UserIntegration.user_id == user_id,
+            IntegrationUserSync.sync_type == type,
+        )
+
+        if type == DataSyncType.AUDIENCE.value:
+            query = query.filter(Integration.for_audience == True)
+        elif type == DataSyncType.PIXEL.value:
+            query = query.filter(Integration.for_pixel == True)
+
+        if domain_id:
+            query = query.filter(IntegrationUserSync.domain_id == domain_id)
+
+        return query.first() is not None
+
+    def has_contacts_in_domain(self, user_id: int, domain_id: int) -> bool:
+        row = (
+            self.db.query(LeadUser)
             .filter(
-                UserIntegration.user_id == user_id,
+                LeadUser.user_id == user_id, LeadUser.domain_id == domain_id
             )
             .first()
         )
@@ -160,7 +195,10 @@ class IntegrationsPresistence:
         self.db.commit()
 
     def delete_integration(
-        self, domain_id: Optional[int], service_name: str, user_id: Optional[str]
+        self,
+        domain_id: Optional[int],
+        service_name: str,
+        user_id: Optional[str],
     ):
         query = self.db.query(UserIntegration).filter(
             UserIntegration.service_name == service_name
@@ -195,7 +233,7 @@ class IntegrationsPresistence:
                 query = query.filter_by(**{key: value})
         return (
             query.order_by(Integration.service_name.asc())
-            .filter(Integration.data_sync == True)
+            .filter(Integration.for_pixel == True)
             .all()
         )
 
@@ -204,5 +242,7 @@ class IntegrationsPresistence:
 
     def get_users_integrations(self, service_name):
         return (
-            self.db.query(UserIntegration).filter_by(service_name=service_name).first()
+            self.db.query(UserIntegration)
+            .filter_by(service_name=service_name)
+            .first()
         )

@@ -4,7 +4,9 @@ from fastapi import HTTPException
 from httpx import Client
 import os
 from enums import IntegrationsStatus, SourcePlatformEnum
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from schemas.integrations.integrations import IntegrationCredentials, DataMap
 
@@ -64,14 +66,18 @@ class AttentiveIntegrationsService:
             return False
         return True
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         api_key = credentials.attentive.api_key
         try:
             result_authentication = self.http_authentication(api_key=api_key)
             if not result_authentication:
                 raise HTTPException(
                     status_code=400,
-                    detail={"status": IntegrationsStatus.CREDENTAILS_INVALID.value},
+                    detail={
+                        "status": IntegrationsStatus.CREDENTAILS_INVALID.value
+                    },
                 )
         except:
             raise HTTPException(

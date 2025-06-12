@@ -1,7 +1,7 @@
 import hashlib
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import List
 from uuid import UUID
 
@@ -18,24 +18,26 @@ from enums import (
     DataSyncType,
     IntegrationLimit,
 )
+from models import FiveXFiveUser
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from persistence.domains import UserDomainsPersistence
-from persistence.integrations.common_integration_persistence import (
-    CommonIntegrationPersistence,
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
 )
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
 from persistence.leads_persistence import LeadsPersistence
 from schemas.integrations.integrations import (
     IntegrationCredentials,
-    DataMap,
     ListFromIntegration,
 )
 from schemas.integrations.meta import AdAccountScheme
-from services.integrations.commonIntegration import resolve_main_email_and_phone, User
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.commonIntegration import resolve_main_email_and_phone
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
+from utils import get_valid_email, format_phone_number
 
 APP_SECRET = MetaConfig.app_secret
 APP_ID = MetaConfig.app_piblic
@@ -49,13 +51,11 @@ class MetaIntegrationsService:
         leads_persistence: LeadsPersistence,
         sync_persistence: IntegrationsUserSyncPersistence,
         client: httpx.Client,
-        repo: CommonIntegrationPersistence,
         million_verifier_integrations: MillionVerifierIntegrationsService,
     ):
         self.domain_persistence = domain_persistence
         self.integrations_persisntece = integrations_persistence
         self.leads_persistence = leads_persistence
-        self.repo = repo
         self.sync_persistence = sync_persistence
         self.million_verifier_integrations = million_verifier_integrations
         self.client = client
@@ -71,7 +71,10 @@ class MetaIntegrationsService:
         api_key: str = None,
     ):
         if not headers:
-            headers = {"accept": "application/json", "content-type": "application/json"}
+            headers = {
+                "accept": "application/json",
+                "content-type": "application/json",
+            }
         response = self.client.request(
             method, url, headers=headers, json=json, data=data, params=params
         )
@@ -97,8 +100,10 @@ class MetaIntegrationsService:
         )
 
     def get_smart_credentials(self, user_id: int):
-        credential = self.integrations_persisntece.get_smart_credentials_for_service(
-            user_id=user_id, service_name=SourcePlatformEnum.META.value
+        credential = (
+            self.integrations_persisntece.get_smart_credentials_for_service(
+                user_id=user_id, service_name=SourcePlatformEnum.META.value
+            )
         )
         return credential
 
@@ -110,12 +115,15 @@ class MetaIntegrationsService:
             return
         return response.json()
 
-    def add_integration(self, credentials: IntegrationCredentials, domain, user: dict):
+    def add_integration(
+        self, credentials: IntegrationCredentials, domain, user: dict
+    ):
         credential = self.get_credentials(domain.id, user.get("id"))
         access_token = self.get_long_lived_token(credentials.meta.access_token)
         if not access_token:
             raise HTTPException(
-                status_code=400, detail={"status": "Long-lived token unavailable"}
+                status_code=400,
+                detail={"status": "Long-lived token unavailable"},
             )
         if credential:
             credential.is_failed = False
@@ -142,10 +150,14 @@ class MetaIntegrationsService:
         else:
             integration_data["domain_id"] = domain.id
 
-        integartion = self.integrations_persisntece.create_integration(integration_data)
+        integartion = self.integrations_persisntece.create_integration(
+            integration_data
+        )
 
-        integrations = self.integrations_persisntece.get_all_integrations_filter_by(
-            ad_account_id=ad_account_info.get("id"), domain_id=domain.id
+        integrations = (
+            self.integrations_persisntece.get_all_integrations_filter_by(
+                ad_account_id=ad_account_info.get("id"), domain_id=domain.id
+            )
         )
         for integration in integrations:
             integration.access_token == access_token.get("access_token")
@@ -161,7 +173,9 @@ class MetaIntegrationsService:
         return integartion
 
     def check_custom_audience_terms(self, ad_account_id, access_token):
-        url = f"https://graph.facebook.com/v22.0/{ad_account_id}/customaudiences"
+        url = (
+            f"https://graph.facebook.com/v22.0/{ad_account_id}/customaudiences"
+        )
 
         params = {
             "access_token": access_token,
@@ -236,18 +250,14 @@ class MetaIntegrationsService:
     def get_list(self, ad_account_id: str, domain_id: int, user_id: int):
         credentials = self.get_credentials(domain_id, user_id)
         if not credentials:
-            return
+            return None
+
         response_audience = self.__get_audience_list(
             ad_account_id, credentials.access_token
         )
         response_campaign = self.__get_campaigns_list(
             ad_account_id, credentials.access_token
         )
-        if not response_audience or not response_campaign:
-            credentials.is_failed = True
-            credentials.error_message = "Connection Error"
-            self.integrations_persisntece.db.commit()
-            return
         audience_lists = (
             [
                 self.__mapped_meta_list(audience)
@@ -264,18 +274,24 @@ class MetaIntegrationsService:
             if response_campaign
             else []
         )
-        return {"audience_lists": audience_lists, "campaign_lists": campaign_lists}
+        return {
+            "audience_lists": audience_lists,
+            "campaign_lists": campaign_lists,
+        }
 
-    def create_list(self, list, domain_id: int, user_id: int, description: str = None):
+    def create_list(
+        self, list, domain_id: int, user_id: int, description: str = None
+    ):
         credential = self.get_credentials(domain_id, user_id)
         if not credential:
             raise HTTPException(
                 status_code=403,
-                detail={"status": IntegrationsStatus.CREDENTIALS_NOT_FOUND.value},
+                detail={
+                    "status": IntegrationsStatus.CREDENTIALS_NOT_FOUND.value
+                },
             )
         FacebookAdsApi.init(access_token=credential.access_token)
         fields = []
-        id_account = None
         params = {
             "name": list.name,
             "subtype": "CUSTOM",
@@ -305,30 +321,8 @@ class MetaIntegrationsService:
         domain_id: int,
         created_by: str,
         user_id: int,
-        campaign={},
-        customer_id=None,
-        list_id=None,
     ):
         credentials = self.get_credentials(domain_id, user_id)
-        campaign_id = campaign.get("campaign_id")
-        if campaign_id == -1 and campaign.get("campaign_name"):
-            campaign_id = self.create_campaign(
-                campaign["campaign_name"],
-                campaign["daily_budget"],
-                credentials.access_token,
-                customer_id,
-            )
-        if campaign_id and campaign_id != -1:
-            self.create_adset(
-                customer_id,
-                campaign["campaign_name"],
-                campaign_id,
-                credentials.access_token,
-                list_id,
-                campaign["campaign_objective"],
-                campaign["bid_amount"],
-            )
-
         sync = self.sync_persistence.edit_sync(
             {
                 "integration_id": credentials.id,
@@ -342,19 +336,17 @@ class MetaIntegrationsService:
     def create_adset(
         self,
         ad_account_id,
-        campaign_name,
         campaign_id,
         access_token,
         list_id,
-        campaign_objective,
-        bid_amount,
+        campaign_name,
+        bid_amount=None,
+        campaign_objective=None,
     ):
         url = f"https://graph.facebook.com/v22.0/{ad_account_id}/adsets"
         ad_set_data = {
             "name": f"{campaign_name}_ad",
-            "optimization_goal": campaign_objective,
             "billing_event": "IMPRESSIONS",
-            "bid_amount": bid_amount,
             "targeting": {
                 "custom_audiences": [{"id": list_id}],
                 "geo_locations": {"countries": ["US"]},
@@ -363,56 +355,71 @@ class MetaIntegrationsService:
             "access_token": access_token,
             "status": "PAUSED",
         }
-        response = self.__handle_request(method="POST", url=url, json=ad_set_data)
 
-    def create_campaign(self, campaign_name, daily_budget, access_token, ad_account_id):
+        if campaign_objective:
+            ad_set_data["optimization_goal"] = campaign_objective
+        else:
+            ad_set_data["optimization_goal"] = "LANDING_PAGE_VIEWS"
+
+        if bid_amount is not None:
+            ad_set_data["bid_amount"] = bid_amount
+
+        response = self.__handle_request(
+            method="POST", url=url, json=ad_set_data
+        )
+
+    def create_campaign(
+        self, campaign_name: str, daily_budget: str, ad_account_id, user_id: int
+    ):
+        credentials = self.get_smart_credentials(user_id=user_id)
         url = f"https://graph.facebook.com/v22.0/{ad_account_id}/campaigns"
+        start_time = datetime.now(timezone.utc).isoformat()
+        end_time = (
+            datetime.now(timezone.utc) + timedelta(days=365)
+        ).isoformat()
         campaign_data = {
             "name": campaign_name,
             "objective": "OUTCOME_TRAFFIC",
             "status": "ACTIVE",
             "buying_type": "AUCTION",
             "daily_budget": daily_budget,
-            "start_time": "2025-03-20T00:00:00",
-            "end_time": "2026-03-20T00:00:00",
-            "access_token": access_token,
+            "start_time": start_time,
+            "end_time": end_time,
+            "access_token": credentials.access_token,
             "special_ad_categories": [],
         }
-        response = self.__handle_request(method="POST", url=url, json=campaign_data)
+        response = self.__handle_request(
+            method="POST", url=url, json=campaign_data
+        )
         response = response.json()
         campaign_id = response["id"]
-        return campaign_id
+        return {"id": campaign_id, "list_name": campaign_name}
 
     async def create_sync(
         self,
-        customer_id: int,
         domain_id: int,
+        customer_id: int,
         created_by: str,
         user: dict,
-        campaign={},
-        data_map: List[DataMap] = None,
-        leads_type: str = None,
-        list_id: str = None,
-        list_name: str = None,
+        leads_type: str,
+        list_id: str,
+        list_name: str,
+        campaign=None,
     ):
-        credentials = self.get_credentials(domain_id=domain_id, user_id=user.get("id"))
-        campaign_id = campaign.get("campaign_id")
-        if campaign_id == -1 and campaign.get("campaign_name"):
-            campaign_id = self.create_campaign(
-                campaign["campaign_name"],
-                campaign["daily_budget"],
-                credentials.access_token,
-                customer_id,
-            )
-        if campaign_id and campaign_id != -1:
+        if campaign is None:
+            campaign = {}
+        credentials = self.get_credentials(
+            user_id=user.get("id"), domain_id=domain_id
+        )
+        if campaign.get("campaign_id"):
             self.create_adset(
-                customer_id,
-                campaign["campaign_name"],
-                campaign_id,
-                credentials.access_token,
-                list_id,
-                campaign["campaign_objective"],
-                campaign["bid_amount"],
+                ad_account_id=customer_id,
+                campaign_id=campaign["campaign_id"],
+                access_token=credentials.access_token,
+                list_id=list_id,
+                campaign_objective=campaign["campaign_objective"],
+                campaign_name=campaign["campaign_name"],
+                bid_amount=campaign["bid_amount"],
             )
         sync = self.sync_persistence.create_sync(
             {
@@ -420,13 +427,12 @@ class MetaIntegrationsService:
                 "list_id": list_id,
                 "list_name": list_name,
                 "leads_type": leads_type,
-                "domain_id": domain_id,
+                "sent_contacts": -1,
+                "sync_type": DataSyncType.CONTACT.value,
                 "customer_id": customer_id,
-                "campaign_id": campaign_id,
+                "domain_id": domain_id,
+                "campaign_id": campaign.get("campaign_id"),
                 "campaign_name": campaign.get("campaign_name"),
-                "data_map": [data.model_dump_json() for data in data_map]
-                if data_map
-                else None,
                 "created_by": created_by,
             }
         )
@@ -439,29 +445,22 @@ class MetaIntegrationsService:
         user: dict,
         smart_audience_id: UUID,
         sent_contacts: int,
-        campaign={},
-        data_map: List[DataMap] = None,
-        list_id: str = None,
-        list_name: str = None,
+        list_id: str,
+        list_name: str,
+        campaign=None,
     ):
+        if campaign is None:
+            campaign = {}
         credentials = self.get_smart_credentials(user_id=user.get("id"))
-        campaign_id = campaign.get("campaign_id")
-        if campaign_id == -1 and campaign.get("campaign_name"):
-            campaign_id = self.create_campaign(
-                campaign["campaign_name"],
-                campaign["daily_budget"],
-                credentials.access_token,
-                customer_id,
-            )
-        if campaign_id and campaign_id != -1:
+        if campaign.get("campaign_id"):
             self.create_adset(
-                customer_id,
-                campaign["campaign_name"],
-                campaign_id,
-                credentials.access_token,
-                list_id,
-                campaign["campaign_objective"],
-                campaign["bid_amount"],
+                ad_account_id=customer_id,
+                campaign_id=campaign["campaign_id"],
+                access_token=credentials.access_token,
+                list_id=list_id,
+                campaign_objective=campaign["campaign_objective"],
+                campaign_name=campaign["campaign_name"],
+                bid_amount=campaign["bid_amount"],
             )
         sync = self.sync_persistence.create_sync(
             {
@@ -470,11 +469,10 @@ class MetaIntegrationsService:
                 "list_name": list_name,
                 "customer_id": customer_id,
                 "sent_contacts": sent_contacts,
-                "campaign_id": campaign_id,
+                "campaign_id": campaign.get("campaign_id"),
                 "campaign_name": campaign.get("campaign_name"),
                 "sync_type": DataSyncType.AUDIENCE.value,
                 "smart_audience_id": smart_audience_id,
-                "data_map": data_map if data_map else None,
                 "created_by": created_by,
             }
         )
@@ -484,15 +482,36 @@ class MetaIntegrationsService:
         self,
         user_integration: UserIntegration,
         integration_data_sync: IntegrationUserSync,
-        enrichment_users: List[EnrichmentUser],
+        enrichment_users: EnrichmentUser,
         target_schema: str,
-        validations: dict,
+        validations: dict = {},
     ):
         profiles = []
         for enrichment_user in enrichment_users:
             profile = self.__hash_mapped_meta_user(
                 enrichment_user, target_schema, validations
             )
+            if profile:
+                profiles.append(profile)
+
+        if not profiles:
+            return ProccessDataSyncResult.INCORRECT_FORMAT.value
+
+        return self.__create_user(
+            custom_audience_id=integration_data_sync.list_id,
+            access_token=user_integration.access_token,
+            profiles=profiles,
+        )
+
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
+    ):
+        profiles = []
+        for five_x_five_user in five_x_five_users:
+            profile = self.__hash_mapped_meta_user_lead(five_x_five_user)
             if profile:
                 profiles.append(profile)
 
@@ -551,26 +570,73 @@ class MetaIntegrationsService:
 
         return ProccessDataSyncResult.SUCCESS.value
 
-    def __hash_mapped_meta_user(
-        self, enrichment_user: EnrichmentUser, target_schema: str, validations: dict
-    ):
-        user_data: User = self.repo.get_user_data(enrichment_user.asid)
-        if not user_data or not user_data.contacts:
+    def __hash_mapped_meta_user_lead(self, five_x_five_user: FiveXFiveUser):
+        first_email = get_valid_email(
+            five_x_five_user, self.million_verifier_integrations
+        )
+
+        if first_email in (
+            ProccessDataSyncResult.INCORRECT_FORMAT.value,
+            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+        ):
             return None
-        user_contacts = user_data.contacts
+
+        def hash_value(value):
+            return (
+                hashlib.sha256(value.encode("utf-8")).hexdigest()
+                if value
+                else ""
+            )
+
+        first_phone = (
+            getattr(five_x_five_user, "mobile_phone")
+            or getattr(five_x_five_user, "personal_phone")
+            or getattr(five_x_five_user, "direct_number")
+            or getattr(five_x_five_user, "company_phone", None)
+        )
+        first_phone = format_phone_number(first_phone)
+
+        return [
+            hash_value(first_email),  # EMAIL
+            hash_value(first_phone),  # PHONE
+            hash_value(five_x_five_user.gender),  # GEN
+            hash_value(""),  # DOBY
+            hash_value(""),  # DOBM
+            hash_value(""),  # DOBD
+            hash_value(five_x_five_user.first_name),  # FN
+            hash_value(five_x_five_user.last_name),  # LN
+            hash_value(five_x_five_user.first_name[0].lower()),  # FI
+            hash_value(five_x_five_user.personal_state),  # ST
+            hash_value(five_x_five_user.personal_city),  # CT
+            hash_value(five_x_five_user.personal_zip),  # ZIP
+            hash_value("USA"),  # COUNTRY
+        ]
+
+    def __hash_mapped_meta_user(
+        self,
+        enrichment_user: EnrichmentUser,
+        target_schema: str,
+        validations: dict,
+    ):
+        enrichment_contacts = enrichment_user.contacts
+        if not enrichment_contacts:
+            return None
+
         business_email, personal_email, phone = (
-            self.sync_persistence.get_verified_email_and_phone(enrichment_user.id)
+            self.sync_persistence.get_verified_email_and_phone(
+                enrichment_user.id
+            )
         )
         main_email, main_phone = resolve_main_email_and_phone(
-            user_data.contacts,
+            enrichment_contacts,
             validations,
             target_schema,
             business_email,
             personal_email,
             phone,
         )
-        first_name = user_contacts.first_name
-        last_name = user_contacts.last_name
+        first_name = enrichment_contacts.first_name
+        last_name = enrichment_contacts.last_name
 
         if not main_email or not first_name or not last_name:
             return None
@@ -609,7 +675,11 @@ class MetaIntegrationsService:
             birth_year = str(enrichment_personal_profiles.birth_year)
 
         def hash_value(value):
-            return hashlib.sha256(value.encode("utf-8")).hexdigest() if value else ""
+            return (
+                hashlib.sha256(value.encode("utf-8")).hexdigest()
+                if value
+                else ""
+            )
 
         return [
             hash_value(main_email),  # EMAIL
@@ -628,7 +698,11 @@ class MetaIntegrationsService:
         ]
 
     def __mapped_meta_list(self, list):
-        return ListFromIntegration(id=list.get("id"), list_name=list.get("name"))
+        return ListFromIntegration(
+            id=list.get("id"), list_name=list.get("name")
+        )
 
     def __mapped_ad_account(self, ad_account):
-        return AdAccountScheme(id=ad_account.get("id"), name=ad_account.get("name"))
+        return AdAccountScheme(
+            id=ad_account.get("id"), name=ad_account.get("name")
+        )

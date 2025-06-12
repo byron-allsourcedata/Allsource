@@ -87,7 +87,9 @@ async def aud_smarts_matching(
 
             db_session.commit()
 
-            processed_records_value = processed_records[0] if processed_records else 0
+            processed_records_value = (
+                processed_records[0] if processed_records else 0
+            )
 
             await send_sse(
                 connection,
@@ -160,7 +162,9 @@ async def main():
         )
         await queue.consume(
             functools.partial(
-                aud_smarts_matching, connection=connection, db_session=db_session
+                aud_smarts_matching,
+                connection=connection,
+                db_session=db_session,
             )
         )
 

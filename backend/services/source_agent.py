@@ -68,7 +68,9 @@ class SourceAgentService:
 
             job_level_weight = job_level_map.get(job_level, Decimal("0.2"))
             department_weight = department_map.get(department, Decimal("0.4"))
-            company_size_weight = company_size_map.get(company_size, Decimal("0.2"))
+            company_size_weight = company_size_map.get(
+                company_size, Decimal("0.2")
+            )
 
             professional_score = (
                 Decimal("0.5") * job_level_weight

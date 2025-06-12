@@ -1,627 +1,646 @@
-'use client'
-import React, { useEffect, useState } from "react";
+"use client";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { usersStyle } from "./userStyle";
 import {
-    Box, Button, Grid, Typography, TableHead, TableRow, TableCell,
-    TableBody, TableContainer, Paper, Table,
-    Switch, Pagination,
-    SwitchProps,
-    IconButton,
-    Popover,
+	Box,
+	Typography,
+	Tabs,
+	Tab,
+	Chip,
+	TextField,
+	InputAdornment,
+	Button,
 } from "@mui/material";
-import { useUser } from "@/context/UserContext";
-import { useTrial } from '@/context/TrialProvider';
-import { styled } from '@mui/material/styles';
-import axiosInstance from '../../../../axios/axiosInterceptorInstance';
+import axios from "axios";
+import axiosInstance from "../../../../axios/axiosInterceptorInstance";
 import { useRouter } from "next/navigation";
-import CustomizedProgressBar from '@/components/ProgressBar'
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
-import { MoreHoriz } from "@mui/icons-material";
-import { datasyncStyle } from "@/app/(client)/data-sync/datasyncStyle";
-import { leadsStyles } from "@/app/(client)/leads/leadsStyles";
+import Account from "./components/Account";
+import InviteAdmin from "./components/InviteAdmin";
+import CustomCards from "./components/CustomCards";
+import FilterPopup from "./components/FilterPopup";
+import CustomizedProgressBar from "@/components/ProgressBar";
+import { showErrorToast } from "@/components/ToastNotification";
+import { CloseIcon, SearchIcon, FilterListIcon } from "@/icon";
 
+interface CustomCardsProps {
+	users: number;
+	pixel_contacts: number;
+	sources: number;
+	lookalikes: number;
+	smart_audience: number;
+	data_sync: number;
+}
+
+interface FilterParams {
+	joinDate: { fromDate: number | null; toDate: number | null };
+	lastLoginDate: { fromDate: number | null; toDate: number | null };
+}
 
 interface UserData {
-    id: number
-    full_name: string
-    email: string
-    created_at: string
-    payment_status: string
-    is_trial: boolean
+	id: number;
+	full_name: string;
+	email: string;
+	created_at: string;
+	payment_status?: string;
+	is_trial?: boolean;
+	last_login: string;
+	invited_by_email?: string;
+	role: string[];
+	pixel_installed_count?: number;
+	sources_count?: number;
+	lookalikes_count?: number;
+	credits_count?: number;
+	type?: string;
 }
-
-
-interface TableBodyUserProps {
-    data: UserData[]
-    handleSwitchChange: any
-}
-
-const IOSSwitch = styled((props: SwitchProps) => (
-    <Switch focusVisibleClassName=".Mui-focusVisible" disableRipple {...props} />
-))(({ theme }) => ({
-    width: 56,
-    height: 26,
-    padding: 0,
-    '& .MuiSwitch-switchBase': {
-        padding: 0,
-        margin: 2,
-        transitionDuration: '300ms',
-        '&.Mui-checked': {
-            transform: 'translateX(30px)',
-            color: '#fff',
-            '& + .MuiSwitch-track': {
-                backgroundColor: theme.palette.mode === 'dark' ? '#2ECA45' : '#65C466',
-                opacity: 1,
-                border: 0,
-            },
-            '&.Mui-disabled + .MuiSwitch-track': {
-                opacity: 0.5,
-            },
-        },
-        '&.Mui-focusVisible .MuiSwitch-thumb': {
-            color: '#33cf4d',
-            border: '6px solid #fff',
-        },
-        '&.Mui-disabled .MuiSwitch-thumb': {
-            color:
-                theme.palette.mode === 'light'
-                    ? theme.palette.grey[100]
-                    : theme.palette.grey[600],
-        },
-        '&.Mui-disabled + .MuiSwitch-track': {
-            opacity: theme.palette.mode === 'light' ? 0.7 : 0.3,
-        },
-    },
-    '& .MuiSwitch-thumb': {
-        boxSizing: 'border-box',
-        width: 22,
-        height: 22,
-    },
-    '& .MuiSwitch-track': {
-        borderRadius: 26 / 2,
-        backgroundColor: theme.palette.mode === 'light' ? '#E9E9EA' : '#39393D',
-        opacity: 1,
-        transition: theme.transitions.create(['background-color'], {
-            duration: 500,
-        }),
-    },
-}));
-
-const tableHeaders = [
-    { key: 'account_name', label: `Account name`, sortable: false },
-    { key: 'email', label: 'Email', sortable: false },
-    { key: 'join_date', label: 'Join date', sortable: true },
-    { key: 'plan_amount', label: 'Plan amount', sortable: false },
-    { key: 'last_payment_date', label: 'Last payment date', sortable: true },
-    { key: 'reward_status', label: 'Reward status', sortable: false },
-    { key: 'reward_payout_date', label: 'Reward Payout date', sortable: true },
-    { key: 'sources', label: 'Sources', sortable: false },
-    { key: 'status', label: 'Status', sortable: false },
-    { key: 'actions', label: 'Actions', sortable: false },
-];
-
-const TableHeader: React.FC<{ onSort: (field: string) => void, sortField: string, sortOrder: string }> = ({ onSort, sortField, sortOrder }) => {
-    const [order, setOrder] = useState<'asc' | 'desc' | undefined>(undefined);
-    const [orderBy, setOrderBy] = useState<string | undefined>(undefined);
-
-    return (
-        <TableHead>
-            <TableRow>
-                {tableHeaders.map(({ key, label, sortable }) => (
-                    <TableCell
-                        key={key}
-                        sx={{
-                            ...datasyncStyle.table_column,
-                            backgroundColor: "#fff",
-                            textWrap: 'wrap',
-                            textAlign: 'center',
-                            position: "relative",
-                            ...(key === "account_name" && {
-                                position: "sticky",
-                                left: 0,
-                                zIndex: 1,
-                            }),
-                            ...(key === "actions" && {
-                                "::after": {
-                                    content: "none",
-                                },
-                            }),
-                        }}
-                        onClick={sortable ? () => onSort(key) : undefined}
-                    >
-                        <Box sx={{ display: 'flex', alignItems: 'center' }} style={key === "email" || key === "status" || key === "actions" ? { justifyContent: "center" } : {}}>
-                            <Typography variant="body2" className='table-heading'>{label}</Typography>
-                            {sortable && (
-                                <IconButton size="small" sx={{ ml: 1 }}>
-                                    {orderBy === key ? (
-                                        order === 'asc' ? (
-                                            <ArrowUpwardIcon fontSize="inherit" />
-                                        ) : (
-                                            <ArrowDownwardIcon fontSize="inherit" />
-                                        )
-                                    ) : (
-                                        <SwapVertIcon fontSize="inherit" />
-                                    )}
-                                </IconButton>
-                            )}
-                        </Box>
-                    </TableCell>
-                ))}
-            </TableRow>
-        </TableHead>
-    );
-};
-
-const TableBodyClient: React.FC<TableBodyUserProps> = ({ data, handleSwitchChange }) => {
-    const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
-    const [activeRow, setActiveRow] = useState<number | null>(null);
-
-    const handleOpenMenu = (event: React.MouseEvent<HTMLElement>, rowId: number) => {
-        setMenuAnchor(event.currentTarget);
-        setActiveRow(rowId);
-    };
-
-    const handleCloseMenu = () => {
-        setMenuAnchor(null);
-        setActiveRow(null);
-    };
-
-    const formatDate = (dateString: string | null): string => {
-        if (!dateString) return '--';
-        const date = new Date(dateString);
-        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-    };
-    const getStatusStyle = (behavior_type: any) => {
-        switch (behavior_type) {
-            case false:
-                return {
-                    background: 'rgba(235, 243, 254, 1)',
-                    color: 'rgba(20, 110, 246, 1)',
-                };
-            case true:
-                return {
-                    background: 'rgba(244, 252, 238, 1)',
-                    color: 'rgba(43, 91, 0, 1)',
-                };
-            case "TRIAL_ACTIVE":
-                return {
-                    background: 'rgba(235, 243, 254, 1)',
-                    color: 'rgba(20, 110, 246, 1) !important',
-                };
-            case 'FILL_COMPANY_DETAILS':
-                return {
-                    background: 'rgba(254, 243, 205, 1)',
-                    color: 'rgba(101, 79, 0, 1) !important',
-                };
-            case 'SUBSCRIPTION_ACTIVE':
-                return {
-                    background: 'rgba(234, 248, 221, 1)',
-                    color: 'rgba(43, 91, 0, 1) !important',
-                };
-            case 'NEED_CONFIRM_EMAIL':
-                return {
-                    background: 'rgba(241, 241, 249, 1)',
-                    color: 'rgba(56, 152, 252, 1) !important',
-                };
-            case "NEED_CHOOSE_PLAN":
-                return {
-                    background: 'rgba(254, 238, 236, 1)',
-                    color: 'rgba(244, 87, 69, 1) !important',
-                };
-            case "NEED_BOOK_CALL":
-                return {
-                    background: 'rgba(254, 238, 236, 1)',
-                    color: 'rgba(244, 87, 69, 1) !important',
-                };
-            default:
-                return {
-                    background: 'transparent',
-                    color: 'inherit',
-                };
-        }
-    };
-
-    const formatFunnelText = (text: boolean) => {
-        if (text === false) {
-            return 'New';
-        }
-        if (text === true) {
-            return 'Returning';
-        }
-        if (text === 'NEED_CHOOSE_PLAN') {
-            return "Need choose Plan"
-        }
-        if (text === 'FILL_COMPANY_DETAILS') {
-            return "Fill company details"
-        }
-        if (text === 'TRIAL_ACTIVE') {
-            return "Trial Active"
-        }
-        if (text === 'SUBSCRIPTION_ACTIVE') {
-            return "Subscription Active"
-        }
-        if (text === 'NEED_CONFIRM_EMAIL') {
-            return "Need confirm email"
-        }
-        if (text === 'NEED_BOOK_CALL') {
-            return "Need book call"
-        }
-        if (text === 'PAYMENT_NEEDED') {
-            return "Payment needed"
-        }
-    };
-
-    const renderCellContent = (key: string, row: any) => {
-        switch (key) {
-            case 'account_name':
-                return row.full_name || '--';
-            case 'email':
-                return row.email || '--';
-            case 'join_date':
-                return formatDate(row.created_at);
-            case 'status':
-                return (
-                    <Typography
-                        className="paragraph"
-                        sx={{
-                            display: 'flex',
-                            padding: '2px 8px',
-                            borderRadius: '2px',
-                            fontFamily: 'Roboto',
-                            fontSize: '12px',
-                            fontWeight: '400',
-                            lineHeight: 'normal',
-                            backgroundColor: getStatusStyle(row.payment_status).background,
-                            color: getStatusStyle(row.payment_status).color,
-                            justifyContent: 'center',
-                            minWidth: '130px',
-                            textTransform: 'capitalize'
-                        }}
-                    >
-                        {formatFunnelText(row.payment_status) || "--"}
-                    </Typography>
-                );
-            // case 'status':
-            //     return (
-            //         <IOSSwitch
-            //             onChange={() => onSwitchChange(row)}
-            //             checked={!!row.is_trial}
-            //             disabled={['SUBSCRIPTION_ACTIVE', 'NEED_CONFIRM_EMAIL', 'FILL_COMPANY_DETAILS'].includes(row.payment_status)}
-            //         />
-            //     );
-            case 'actions':
-                return (
-                    <>
-                        <IconButton
-                            onClick={(event) => handleOpenMenu(event, row.id)}
-                            sx={{ ':hover': { backgroundColor: 'transparent' } }}
-                        >
-                            <MoreHoriz />
-                        </IconButton>
-                        <Popover
-                            open={Boolean(menuAnchor) && activeRow === row.id}
-                            anchorEl={menuAnchor}
-                            onClose={handleCloseMenu}
-                            anchorOrigin={{
-                                vertical: "bottom",
-                                horizontal: "center",
-                            }}
-                        >
-                            <Box
-                                sx={{
-                                    p: 1,
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    alignItems: "flex-start",
-                                    width: "100%",
-                                    maxWidth: "160px",
-                                }}
-                            >
-                                <Button
-                                    sx={{
-                                        justifyContent: "flex-start",
-                                        width: "100%",
-                                        textTransform: "none",
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: "14px",
-                                        color: "rgba(32, 33, 36, 1)",
-                                        fontWeight: 600,
-                                        ":hover": {
-                                            color: "rgba(56, 152, 252, 1)",
-                                            backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        // Add your logic here
-                                        console.log("Payment history clicked");
-                                    }}
-                                >
-                                    Payment History
-                                </Button>
-                                <Button
-                                    sx={{
-                                        justifyContent: "flex-start",
-                                        width: "100%",
-                                        textTransform: "none",
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: "14px",
-                                        color: "rgba(32, 33, 36, 1)",
-                                        fontWeight: 600,
-                                        ":hover": {
-                                            color: "rgba(56, 152, 252, 1)",
-                                            backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        // Add your logic here
-                                        console.log("Rewards history clicked");
-                                    }}
-                                >
-                                    Rewards History
-                                </Button>
-                                <Button
-                                    sx={{
-                                        justifyContent: "flex-start",
-                                        width: "100%",
-                                        textTransform: "none",
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: "14px",
-                                        color: "rgba(32, 33, 36, 1)",
-                                        fontWeight: 600,
-                                        ":hover": {
-                                            color: "rgba(56, 152, 252, 1)",
-                                            backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        // Add your logic here
-                                        console.log("Disable clicked");
-                                    }}
-                                >
-                                    Disable
-                                </Button>
-                                {row.is_trial ? (
-                                    <Button
-                                        sx={{
-                                            justifyContent: "flex-start",
-                                            width: "100%",
-                                            textTransform: "none",
-                                            fontFamily: "Nunito Sans",
-                                            fontSize: "14px",
-                                            color: "rgba(32, 33, 36, 1)",
-                                            fontWeight: 600,
-                                            ":hover": {
-                                                color: "rgba(56, 152, 252, 1)",
-                                                backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            handleSwitchChange(row, "deactivate");
-                                            handleCloseMenu();
-                                        }}
-                                    >
-                                        Deactivate Trial
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        sx={{
-                                            justifyContent: "flex-start",
-                                            width: "100%",
-                                            textTransform: "none",
-                                            fontFamily: "Nunito Sans",
-                                            fontSize: "14px",
-                                            color: "rgba(32, 33, 36, 1)",
-                                            fontWeight: 600,
-                                            ":hover": {
-                                                color: "rgba(56, 152, 252, 1)",
-                                                backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                            },
-                                        }}
-                                        onClick={() => {
-                                            handleSwitchChange(row, "activate");
-                                            handleCloseMenu();
-                                        }}
-                                    >
-                                        Activate Trial
-                                    </Button>
-                                )}
-                                <Button
-                                    sx={{
-                                        justifyContent: "flex-start",
-                                        width: "100%",
-                                        textTransform: "none",
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: "14px",
-                                        color: "rgba(32, 33, 36, 1)",
-                                        fontWeight: 600,
-                                        ":hover": {
-                                            color: "rgba(56, 152, 252, 1)",
-                                            backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        // Add your logic here
-                                        console.log("Terminate clicked");
-                                    }}
-                                >
-                                    Terminate
-                                </Button>
-                                <Button
-                                    sx={{
-                                        justifyContent: "flex-start",
-                                        width: "100%",
-                                        textTransform: "none",
-                                        fontFamily: "Nunito Sans",
-                                        fontSize: "14px",
-                                        color: "rgba(32, 33, 36, 1)",
-                                        fontWeight: 600,
-                                        ":hover": {
-                                            color: "rgba(56, 152, 252, 1)",
-                                            backgroundColor: "rgba(80, 82, 178, 0.1)",
-                                        },
-                                    }}
-                                    onClick={() => {
-                                        handleSwitchChange(row, "activate");
-                                        handleCloseMenu();
-                                    }}
-                                >
-                                    Log Info
-                                </Button>
-                            </Box>
-                        </Popover>
-
-                    </>
-                );
-
-            default:
-                return row[key] || '--';
-        }
-    };
-
-    return (
-        <TableBody>
-            {data.map((row) => (
-                <TableRow key={row.id}>
-                    {tableHeaders.map(({ key }) => (
-                        <TableCell key={key} sx={{ ...leadsStyles.table_array, textAlign: key === 'actions' ? 'center' : 'left', position: 'relative', padding: '8px' }} >
-                            {renderCellContent(key, row)}
-                        </TableCell>
-                    ))}
-                </TableRow>
-            ))}
-        </TableBody>
-    );
-};
 
 const Users: React.FC = () => {
-    const router = useRouter();
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const open = Boolean(anchorEl);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [rowsPerPage] = useState(9);
-    const [data, setData] = useState<UserData[]>([]);
-    const [paginatedData, setPaginatedData] = useState<UserData[]>([]);
-    const [totalItems, setTotalItems] = useState(0);
-    const [isLoading, setIsLoading] = useState(true);
-    const [sortedData, setSortedData] = useState<UserData[]>([]);
-    const [sortField, setSortField] = useState<string>('');
-    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-    const { full_name: userFullName, email: userEmail, resetUserData, } = useUser();
-    const meItem = typeof window !== "undefined" ? sessionStorage.getItem("me") : null;
-    const meData = meItem ? JSON.parse(meItem) : { full_name: '', email: '' };
-    const full_name = userFullName || meData.full_name;
-    const email = userEmail || meData.email;
-    const { resetTrialData } = useTrial();
-    const handleSignOut = () => {
-        localStorage.clear();
-        sessionStorage.clear();
-        resetUserData();
-        resetTrialData();
-        window.location.href = "/signin";
-    };
+	const router = useRouter();
+	const [loading, setLoading] = useState(false);
+	const [tabIndex, setTabIndex] = useState(0);
+	const [rowsPerPageOptions, setRowsPerPageOptions] = useState<number[]>();
+	const [search, setSearch] = useState("");
+	const [page, setPage] = useState(0);
+	const [rowsPerPage, setRowsPerPage] = useState<number>(50);
+	const [totalCount, setTotalCount] = useState(0);
+	const [order, setOrder] = useState<"asc" | "desc">("desc");
+	const [orderBy, setOrderBy] = useState<string>("");
+	const [isSliderOpen, setSliderOpen] = useState(false);
+	const [filterPopupOpen, setFilterPopupOpen] = useState(false);
+	const [selectedFilters, setSelectedFilters] = useState<
+		{ label: string; value: string }[]
+	>([]);
+	const [userData, setUserData] = useState<UserData[]>([]);
+	const [valuesMetrics, setValueMetrics] = useState<CustomCardsProps>({
+		users: 0,
+		pixel_contacts: 0,
+		sources: 0,
+		lookalikes: 0,
+		smart_audience: 0,
+		data_sync: 0,
+	});
 
-    const handleProfileMenuClose = () => {
-        setAnchorEl(null);
-    };
-    const handleSettingsClick = () => {
-        handleProfileMenuClose();
-        router.push("/settings");
-    };
+	useEffect(() => {
+		const accessToken = localStorage.getItem("token");
+		if (!accessToken) {
+			router.push("/signin");
+			return;
+		}
+	}, []);
 
-    useEffect(() => {
-        const accessToken = localStorage.getItem('token');
-        if (!accessToken) {
-            router.push('/signin');
-            return;
-        }
+	useEffect(() => {
+		fetchData();
+	}, [order, selectedFilters]);
 
-        const fetchData = async () => {
-            try {
-                let url = `/admin/users?page=${currentPage + 1}&per_page=${rowsPerPage}`;
-                const response = await axiosInstance.get(url);
-                if (response.status === 200) {
-                    setPaginatedData(response.data.users);
-                    setTotalItems(response.data.count || 0);
-                }
-            }
-            catch {
-            }
-            finally {
-                setIsLoading(false);
-            }
-        };
-        fetchData();
-    }, [currentPage]);
+	useEffect(() => {
+		fetchUserData();
+	}, [tabIndex, page, rowsPerPage, order, selectedFilters]);
 
-    const handlePageChange = (event: React.ChangeEvent<unknown>, page: number) => {
-        setCurrentPage(page);
-    };
+	const handleSearchChange = (
+		event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+	) => {
+		setSearch(event.target.value);
+	};
 
-    const handleProfileMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
+	const handleResetFilters = async () => {
+		const url =
+			`/admin/admins?page=${page + 1}&per_page=${rowsPerPage}` +
+			`&sort_by=${orderBy}&sort_order=${order}`;
 
-    const handleSort = (field: string) => {
-        const isAsc = sortField === field && sortOrder === 'asc';
-        setSortOrder(isAsc ? 'desc' : 'asc');
-        setSortField(field);
-    };
+		try {
+			setLoading(true);
+			sessionStorage.removeItem("filtersByAdmin");
+			const response = await axiosInstance.get(url);
+			if (response.status === 200) {
+				setUserData(response.data.users);
+				setTotalCount(response.data.count);
+				const options = [50, 100, 300, 500];
+				let RowsPerPageOptions = options.filter(
+					(option) => option <= response.data.count,
+				);
+				if (RowsPerPageOptions.length < options.length) {
+					RowsPerPageOptions = [
+						...RowsPerPageOptions,
+						options[RowsPerPageOptions.length],
+					];
+				}
+				setRowsPerPageOptions(RowsPerPageOptions);
+				const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
+					? rowsPerPage
+					: 15;
+				setRowsPerPage(selectedValue);
+			}
+			setSelectedFilters([]);
+		} catch (error) {
+			console.error("Error fetching leads:", error);
+		} finally {
+			setLoading(false);
+		}
+	};
 
-    const handleSwitchChange = async (user: any, action: 'activate' | 'deactivate') => {
-        const updatedData = sortedData.map((item) =>
-            item.id === user.id ? { ...item, is_trial: action === 'activate' } : item
-        );
-        setSortedData(updatedData);
+	const fetchData = async () => {
+		try {
+			setLoading(true);
+			let url = "/admin/audience-metrics?";
 
-        await axiosInstance.get('/admin/confirm_customer', {
-            params: {
-                mail: user.email,
-                free_trial: action === 'activate',
-            },
-        });
-    };
+			if (selectedFilters.length > 0) {
+				for (const filter of selectedFilters) {
+					url += `&${filter.label}=${filter.value}`;
+				}
+			}
 
+			if (search.trim() !== "") {
+				url += `&search_query=${encodeURIComponent(search.trim())}`;
+			}
 
-    const totalPages = Math.ceil(totalItems / rowsPerPage);
+			const response = await axiosInstance.get(url);
+			if (response.status === 200) {
+				setValueMetrics({
+					users: response.data.audience_metrics.users_count ?? 0,
+					pixel_contacts: response.data.audience_metrics.pixel_contacts ?? 0,
+					sources: response.data.audience_metrics.sources_count ?? 0,
+					lookalikes: response.data.audience_metrics.lookalike_count ?? 0,
+					smart_audience: response.data.audience_metrics.smart_count ?? 0,
+					data_sync: response.data.audience_metrics.sync_count ?? 0,
+				});
+			}
+		} catch (error) {
+			if (axios.isAxiosError(error)) {
+				if (error.response?.status === 403) {
+					showErrorToast("Error 403: Access is denied");
+					router.push("/signin");
+				} else {
+					showErrorToast(`Error: ${error.response?.status}`);
+					router.push("/signin");
+				}
+			}
+		} finally {
+			setLoading(false);
+		}
+		fetchUserData();
+	};
 
-    if (isLoading) {
-        return <CustomizedProgressBar />;
-    }
+	const fetchUserData = async () => {
+		try {
+			let url = "/admin";
 
-    return (
-        <>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <Grid container width='100%'>
-                    <Grid item xs={12} md={12} sx={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'start', justifyContent: 'space-between', mb: 4 }}>
-                            <Typography variant="h4" component="h1" sx={usersStyle.title}>
-                                Users
-                            </Typography>
-                        </Box>
-                        {/* {data.length > 0 && ( */}
-                        <Grid sx={{ pl: 1, pr: 3 }} xs={12} mt={0}>
-                            <TableContainer component={Paper}>
-                                <Table aria-label="simple table">
-                                    <TableHeader onSort={handleSort} sortField={sortField} sortOrder={sortOrder} />
-                                    <TableBodyClient data={paginatedData} handleSwitchChange={handleSwitchChange} />
-                                </Table>
-                            </TableContainer>
-                            <Pagination
-                                count={totalPages}
-                                page={currentPage}
-                                onChange={handlePageChange}
-                                color="primary"
-                                sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 2 }}
-                            />
-                        </Grid>
-                        {/* )} */}
-                    </Grid>
-                </Grid>
-            </Box>
-        </>
-    );
+			if (tabIndex === 1) {
+				url +=
+					`/admins?page=${page + 1}&per_page=${rowsPerPage}` +
+					`&sort_by=${orderBy}&sort_order=${order}`;
+			} else {
+				url +=
+					`/users?page=${page + 1}&per_page=${rowsPerPage}` +
+					`&sort_by=${orderBy}&sort_order=${order}`;
+			}
+
+			if (selectedFilters.length > 0) {
+				for (const filter of selectedFilters) {
+					url += `&${filter.label}=${filter.value}`;
+				}
+			}
+
+			if (search.trim() !== "") {
+				url += `&search_query=${encodeURIComponent(search.trim())}`;
+			}
+
+			const response = await axiosInstance.get(url);
+			if (response.status === 200) {
+				setUserData(response.data.users);
+				setTotalCount(response.data.count);
+				const options = [50, 100, 300, 500];
+				let RowsPerPageOptions = options.filter(
+					(option) => option <= response.data.count,
+				);
+				if (RowsPerPageOptions.length < options.length) {
+					RowsPerPageOptions = [
+						...RowsPerPageOptions,
+						options[RowsPerPageOptions.length],
+					];
+				}
+				setRowsPerPageOptions(RowsPerPageOptions);
+				const selectedValue = RowsPerPageOptions.includes(rowsPerPage)
+					? rowsPerPage
+					: 15;
+				setRowsPerPage(selectedValue);
+			}
+		} catch {
+		} finally {
+			setLoading(false);
+		}
+	};
+
+	const tabs = [
+		{ label: "Accounts", visible: true },
+		{ label: "Admins", visible: true },
+	];
+
+	const handleFilterPopupOpen = () => {
+		setFilterPopupOpen(true);
+	};
+
+	const handleFilterPopupClose = () => {
+		setFilterPopupOpen(false);
+	};
+
+	const handleDeleteFilter = (filterToDelete: {
+		label: string;
+		value: string;
+	}) => {
+		const updatedFilters = selectedFilters.filter(
+			(filter) => filter.label !== filterToDelete.label,
+		);
+
+		setSelectedFilters(updatedFilters);
+
+		const filters = JSON.parse(
+			sessionStorage.getItem("filtersByAdmin") || "{}",
+		);
+
+		switch (filterToDelete.label) {
+			case "From Date":
+				filters.from_date = null;
+				break;
+			case "To Date":
+				filters.to_date = null;
+				break;
+			default:
+				break;
+		}
+
+		sessionStorage.setItem("filtersByAdmin", JSON.stringify(filters));
+	};
+
+	function formatFilterValue(value: string): string {
+		if (/^\d+$/.test(value)) {
+			const date = new Date(Number.parseInt(value, 10) * 1000);
+			const month = (date.getMonth() + 1).toString().padStart(2, "0");
+			const day = date.getDate().toString().padStart(2, "0");
+			const year = date.getFullYear();
+			return `${month}/${day}/${year}`;
+		}
+		return value.charAt(0).toUpperCase() + value.slice(1);
+	}
+
+	function formatFilterLabel(label: string) {
+		if (typeof label !== "string") return "";
+		const normalized = label.replace(/_/g, " ");
+		return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+	}
+
+	const handleApplyFilters = (filters: FilterParams) => {
+		const newSelectedFilters: { label: string; value: string }[] = [];
+
+		const processDateRange = (key: keyof FilterParams, baseLabel: string) => {
+			const from = filters[key].fromDate;
+			const to = filters[key].toDate;
+
+			if (from) {
+				newSelectedFilters.push({
+					label: `${baseLabel}_start`,
+					value: String(from),
+				});
+			}
+
+			if (to) {
+				newSelectedFilters.push({
+					label: `${baseLabel}_end`,
+					value: String(to),
+				});
+			}
+		};
+
+		processDateRange("lastLoginDate", "last_login_date");
+		processDateRange("joinDate", "join_date");
+
+		setSelectedFilters(newSelectedFilters);
+	};
+
+	const handleFormOpenPopup = () => {
+		setSliderOpen(true);
+	};
+
+	const handleFormClosePopup = () => {
+		setSliderOpen(false);
+	};
+
+	const handleTabChange = (
+		event: React.SyntheticEvent | null,
+		newIndex: number,
+	) => {
+		setTabIndex(newIndex);
+	};
+
+	if (loading) {
+		return <CustomizedProgressBar />;
+	}
+
+	return (
+		<>
+			<Box
+				sx={{
+					flex: 1,
+					display: "flex",
+					flexDirection: "column",
+					pr: 2,
+					width: "100%",
+					overflowX: "scroll",
+				}}
+			>
+				<Box
+					sx={{
+						display: "flex",
+						flexDirection: "row",
+						alignItems: "start",
+						justifyContent: "space-between",
+					}}
+				>
+					<Typography variant="h4" component="h1" sx={usersStyle.title}>
+						Users
+					</Typography>
+				</Box>
+				<Box sx={{ display: "flex", flexDirection: "column" }}>
+					<Box>
+						<CustomCards values={valuesMetrics} />
+					</Box>
+					<InviteAdmin open={isSliderOpen} onClose={handleFormClosePopup} />
+					<Box
+						sx={{
+							display: "flex",
+							justifyContent: "space-between",
+							pb: "24px",
+						}}
+					>
+						<Box>
+							<Tabs
+								value={tabIndex}
+								onChange={handleTabChange}
+								aria-label="admin tabs"
+								TabIndicatorProps={{
+									sx: {
+										backgroundColor: "rgba(56, 152, 252, 1)",
+										height: "2px",
+										bottom: 5,
+									},
+								}}
+								sx={{
+									maxWidth: 200,
+									minHeight: 0,
+									justifyContent: "flex-start",
+									alignItems: "left",
+									"@media (max-width: 600px)": {
+										border: "1px solid rgba(228, 228, 228, 1)",
+										borderRadius: "4px",
+										width: "100%",
+										"& .MuiTabs-indicator": {
+											height: "1.4px",
+										},
+									},
+								}}
+							>
+								{tabs
+									.filter((t) => t.visible)
+									.map((tab, index) => (
+										<Tab
+											key={index}
+											label={tab.label}
+											sx={{
+												fontFamily: "Nunito Sans",
+												fontWeight: 500,
+												fontSize: "14px",
+												lineHeight: "100%",
+												letterSpacing: "0%",
+												color: "rgba(112, 112, 113, 1)",
+												textTransform: "none",
+												padding: "4px 1px",
+												minHeight: "auto",
+												flexGrow: 1,
+												pb: "10px",
+												textAlign: "center",
+												mr: 2,
+												minWidth: "auto",
+												"&.Mui-selected": {
+													fontWeight: 700,
+													color: "rgba(56, 152, 252, 1)",
+												},
+												"&.MuiTabs-indicator": {
+													backgroundColor: "rgba(56, 152, 252, 1)",
+												},
+												"@media (max-width: 600px)": {
+													mr: 1,
+													borderRadius: "4px",
+													"&.Mui-selected": {
+														backgroundColor: "rgba(249, 249, 253, 1)",
+														border: "1px solid rgba(220, 220, 239, 1)",
+													},
+												},
+											}}
+										/>
+									))}
+							</Tabs>
+
+							<Box
+								sx={{
+									display: "flex",
+									alignItems: "center",
+									flexDirection: "row",
+									flexWrap: "wrap",
+									gap: 1,
+									mt: 2,
+									mb: 2,
+									overflowX: "auto",
+									"@media (max-width: 600px)": {
+										mb: 1,
+									},
+								}}
+							>
+								{selectedFilters.length > 0 && (
+									<Chip
+										className="second-sub-title"
+										label="Clear all"
+										onClick={handleResetFilters}
+										sx={{
+											color: `${"rgba(56, 152, 252, 1)"} !important`,
+											backgroundColor: "transparent",
+											lineHeight: "20px !important",
+											fontWeight: "400 !important",
+											borderRadius: "4px",
+										}}
+									/>
+								)}
+								{selectedFilters.map((filter) => (
+									<Chip
+										key={filter.label}
+										label={`${formatFilterLabel(filter.label)}: ${formatFilterValue(filter.value)}`}
+										onDelete={() => handleDeleteFilter(filter)}
+										deleteIcon={
+											<CloseIcon
+												sx={{
+													backgroundColor: "transparent",
+													color: "#828282 !important",
+													fontSize: "14px !important",
+												}}
+											/>
+										}
+										sx={{
+											borderRadius: "4.5px",
+											backgroundColor: "rgba(80, 82, 178, 0.10)",
+											color: "#5F6368 !important",
+											lineHeight: "16px !important",
+										}}
+									/>
+								))}
+							</Box>
+						</Box>
+
+						<Box sx={{ display: "flex", gap: "16px" }}>
+							<TextField
+								id="input-with-icon-textfield"
+								placeholder="Search by account name, emails"
+								value={search}
+								onChange={(e) => {
+									handleSearchChange(e);
+								}}
+								onKeyDown={(e) => {
+									if (e.key === "Enter") {
+										e.preventDefault();
+										fetchData();
+									}
+								}}
+								InputProps={{
+									startAdornment: (
+										<InputAdornment position="start">
+											<SearchIcon style={{ cursor: "pointer" }} />
+										</InputAdornment>
+									),
+								}}
+								variant="outlined"
+								sx={{
+									flex: 1,
+									width: "360px",
+									"& .MuiOutlinedInput-root": {
+										borderRadius: "4px",
+										height: "40px",
+									},
+									"& input": {
+										paddingLeft: 0,
+									},
+									"& input::placeholder": {
+										fontSize: "14px",
+										color: "#8C8C8C",
+									},
+								}}
+							/>
+							{tabIndex === 1 && (
+								<Button
+									variant="outlined"
+									sx={{
+										height: "40px",
+										borderRadius: "4px",
+										textTransform: "none",
+										fontSize: "14px",
+										fontWeight: "500",
+										color: "rgba(56, 152, 252, 1)",
+										borderColor: "rgba(56, 152, 252, 1)",
+										"&:hover": {
+											backgroundColor: "rgba(80, 82, 178, 0.1)",
+											borderColor: "rgba(56, 152, 252, 1)",
+										},
+									}}
+									onClick={() => {
+										handleFormOpenPopup();
+									}}
+								>
+									Add Admin
+								</Button>
+							)}
+							<Button
+								onClick={handleFilterPopupOpen}
+								aria-haspopup="true"
+								sx={{
+									textTransform: "none",
+									height: "40px",
+									color:
+										selectedFilters.length > 0
+											? "rgba(56, 152, 252, 1)"
+											: "rgba(128, 128, 128, 1)",
+									border:
+										selectedFilters.length > 0
+											? `1px solid ${"rgba(56, 152, 252, 1)"}`
+											: "1px solid rgba(184, 184, 184, 1)",
+									borderRadius: "4px",
+									padding: "8px",
+									opacity: "1",
+									minWidth: "auto",
+									position: "relative",
+									"@media (max-width: 900px)": {
+										border: "none",
+										padding: 0,
+									},
+									"&:hover": {
+										backgroundColor: "transparent",
+										border: `1px solid ${"rgba(56, 152, 252, 1)"}`,
+										color: "rgba(56, 152, 252, 1)",
+										"& .MuiSvgIcon-root": {
+											color: "rgba(56, 152, 252, 1)",
+										},
+									},
+								}}
+							>
+								<FilterListIcon
+									fontSize="medium"
+									sx={{
+										color:
+											selectedFilters.length > 0
+												? "rgba(56, 152, 252, 1)"
+												: "rgba(128, 128, 128, 1)",
+									}}
+								/>
+
+								{selectedFilters.length > 0 && (
+									<Box
+										sx={{
+											position: "absolute",
+											top: 6,
+											right: 8,
+											width: "10px",
+											height: "10px",
+											backgroundColor: "red",
+											borderRadius: "50%",
+											"@media (max-width: 900px)": {
+												top: -1,
+												right: 1,
+											},
+										}}
+									/>
+								)}
+							</Button>
+							<FilterPopup
+								open={filterPopupOpen}
+								onClose={handleFilterPopupClose}
+								onApply={handleApplyFilters}
+							/>
+						</Box>
+					</Box>
+					<Account
+						is_admin={tabIndex !== 0}
+						rowsPerPageOptions={rowsPerPageOptions}
+						totalCount={totalCount}
+						userData={userData}
+						setPage={setPage}
+						page={page}
+						setRowsPerPage={setRowsPerPage}
+						rowsPerPage={rowsPerPage}
+						order={order}
+						orderBy={orderBy}
+						setOrder={setOrder}
+						setOrderBy={setOrderBy}
+						setLoading={setLoading}
+					/>
+				</Box>
+			</Box>
+		</>
+	);
 };
 
 export default Users;

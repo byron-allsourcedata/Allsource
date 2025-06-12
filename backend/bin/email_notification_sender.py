@@ -27,7 +27,9 @@ EMAIL_NOTIFICATIONS = "email_notifications"
 
 def get_template_by_alias(session, alias):
     template = (
-        session.query(SendgridTemplate).filter(SendgridTemplate.alias == alias).first()
+        session.query(SendgridTemplate)
+        .filter(SendgridTemplate.alias == alias)
+        .first()
     )
     if template:
         return template.template_id
@@ -86,8 +88,12 @@ async def main():
         connection = await rabbitmq_connection.connect()
         channel = await connection.channel()
         await channel.set_qos(prefetch_count=1)
-        queue = await channel.declare_queue(name=EMAIL_NOTIFICATIONS, durable=True)
-        await queue.consume(functools.partial(on_message_received, session=session))
+        queue = await channel.declare_queue(
+            name=EMAIL_NOTIFICATIONS, durable=True
+        )
+        await queue.consume(
+            functools.partial(on_message_received, session=session)
+        )
         await asyncio.Future()
     except Exception as err:
         logging.error("Unhandled Exception:", exc_info=True)

@@ -1,4 +1,13 @@
-from sqlalchemy import Column, Date, Boolean, String, Text, ForeignKey, text, Index
+from sqlalchemy import (
+    Column,
+    Date,
+    Boolean,
+    String,
+    Text,
+    ForeignKey,
+    text,
+    Index,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from models.base import Base
 
@@ -20,7 +29,9 @@ class EnrichmentEmploymentHistory(Base):
     )
     asid = Column(
         UUID(as_uuid=True),
-        ForeignKey("enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"),
+        ForeignKey(
+            "enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"
+        ),
         nullable=False,
     )
     job_title = Column(String(100), nullable=True)

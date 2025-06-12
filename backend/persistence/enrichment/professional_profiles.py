@@ -25,7 +25,8 @@ class ProfessionalProfilesPersistence:
             )
             .join(
                 EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id,
+                AudienceSourcesMatchedPerson.enrichment_user_id
+                == EnrichmentUser.id,
             )
             .join(
                 EnrichmentProfessionalProfile,

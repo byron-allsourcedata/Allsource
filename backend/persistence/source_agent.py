@@ -26,7 +26,8 @@ class SourceAgentPersistence:
             )
             .join(
                 EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id,
+                AudienceSourcesMatchedPerson.enrichment_user_id
+                == EnrichmentUser.id,
             )
             .join(
                 EnrichmentProfessionalProfile,
@@ -48,10 +49,12 @@ class SourceAgentPersistence:
             )
             .join(
                 EnrichmentUser,
-                AudienceSourcesMatchedPerson.enrichment_user_id == EnrichmentUser.id,
+                AudienceSourcesMatchedPerson.enrichment_user_id
+                == EnrichmentUser.id,
             )
             .join(
-                EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
             .filter(AudienceSourcesMatchedPerson.id.in_(matched_ids))
             .all()

@@ -36,7 +36,10 @@ class CalculateRequest(BaseModel):
     audience_feature_importance_other: Dict[str, float]
 
     @staticmethod
-    def _make_zero_dicts(**key_sets: Iterable[str]) -> Dict[str, Dict[str, float]]:
+    def _make_zero_dicts(
+        **key_sets: Iterable[str],
+    ) -> Dict[str, Dict[str, float]]:
         return {
-            category: {key: 0.0 for key in keys} for category, keys in key_sets.items()
+            category: {key: 0.0 for key in keys}
+            for category, keys in key_sets.items()
         }

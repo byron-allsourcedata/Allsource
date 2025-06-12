@@ -1,15 +1,16 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
-    Integer,
     VARCHAR,
     Index,
     TIMESTAMP,
     TEXT,
     ForeignKey,
     BigInteger,
-    text,
     Sequence,
 )
+
 from .base import Base
 
 

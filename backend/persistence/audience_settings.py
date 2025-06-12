@@ -23,10 +23,21 @@ class AudienceSettingPersistence:
 
         return json.loads(stats.value) if stats else {}
 
+    def get_cost_validations(self) -> Dict[str, float]:
+        costs = (
+            self.db.query(AudienceSetting).filter(
+                AudienceSetting.alias
+                == AudienceSettingAlias.VALIDATION_COST.value
+            )
+        ).first()
+
+        return json.loads(costs.value) if costs else {}
+
     def get_validation_priority(self) -> str:
         priority = (
             self.db.query(AudienceSetting).filter(
-                AudienceSetting.alias == AudienceSettingAlias.VALIDATION_PRIORITY.value
+                AudienceSetting.alias
+                == AudienceSettingAlias.VALIDATION_PRIORITY.value
             )
         ).first()
 

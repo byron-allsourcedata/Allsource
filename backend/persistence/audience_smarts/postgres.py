@@ -16,18 +16,24 @@ from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources import AudienceSource
-from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
+from models.audience_data_sync_imported_persons import (
+    AudienceDataSyncImportedPersons,
+)
 from models.users import Users
 from models.state import States
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
+from models.enrichment.enrichment_personal_profiles import (
+    EnrichmentPersonalProfiles,
+)
 from persistence.audience_smarts.dto import (
     AudienceSmartDTO,
     PersonRecord,
     SyncedPersonRecord,
 )
-from persistence.audience_smarts.interface import AudienceSmartsPersistenceInterface
+from persistence.audience_smarts.interface import (
+    AudienceSmartsPersistenceInterface,
+)
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
@@ -71,12 +77,15 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             .select_from(EnrichmentUser)
             .join(combined_subq, combined_subq.c.uid == EnrichmentUser.id)
             .join(
-                EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
         )
 
         if data.get("use_case") == "linkedin":
-            count_q = count_q.filter(EnrichmentUserContact.linkedin_url.isnot(None))
+            count_q = count_q.filter(
+                EnrichmentUserContact.linkedin_url.isnot(None)
+            )
 
         return count_q.scalar()
 
@@ -118,7 +127,9 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
     ) -> AudienceSmartDTO:
         use_case_id = self.get_use_case_id_by_alias(use_case_alias)
         if not use_case_id:
-            raise ValueError(f"Use case with alias '{use_case_alias}' not found.")
+            raise ValueError(
+                f"Use case with alias '{use_case_alias}' not found."
+            )
 
         new_audience = AudienceSmart(
             name=name,
@@ -263,7 +274,9 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         return query.all()
 
     def get_validations_by_aud_smart_id(self, id: UUID) -> Tuple[List[Row]]:
-        query = self.db.query(AudienceSmart.validations).filter(AudienceSmart.id == id)
+        query = self.db.query(AudienceSmart.validations).filter(
+            AudienceSmart.id == id
+        )
         return query.first()
 
     def search_audience_smart(self, start_letter: str, user_id: int):
@@ -332,7 +345,8 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
             .join(
-                EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
             .join(
                 EnrichmentPersonalProfiles,
@@ -359,7 +373,8 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         self, data_sync_id, enrichment_field_names
     ) -> List[SyncedPersonRecord]:
         enrichment_fields = [
-            getattr(EnrichmentUserContact, field) for field in enrichment_field_names
+            getattr(EnrichmentUserContact, field)
+            for field in enrichment_field_names
         ]
 
         fields = [
@@ -375,10 +390,12 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
             .select_from(AudienceDataSyncImportedPersons)
             .join(
                 EnrichmentUser,
-                EnrichmentUser.id == AudienceDataSyncImportedPersons.enrichment_user_id,
+                EnrichmentUser.id
+                == AudienceDataSyncImportedPersons.enrichment_user_id,
             )
             .outerjoin(
-                EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
             .outerjoin(
                 EnrichmentPersonalProfiles,
@@ -389,7 +406,9 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
                 func.lower(States.state_code)
                 == func.lower(EnrichmentPersonalProfiles.state_abbr),
             )
-            .filter(AudienceDataSyncImportedPersons.data_sync_id == data_sync_id)
+            .filter(
+                AudienceDataSyncImportedPersons.data_sync_id == data_sync_id
+            )
         )
 
         rows = query.all()
@@ -445,8 +464,12 @@ class AudienceSmartsPostgresPersistence(AudienceSmartsPersistenceInterface):
         return [
             row[0]
             for row in (
-                self.db.query(AudienceDataSyncImportedPersons.enrichment_user_id)
-                .filter(AudienceDataSyncImportedPersons.data_sync_id == data_sync_id)
+                self.db.query(
+                    AudienceDataSyncImportedPersons.enrichment_user_id
+                )
+                .filter(
+                    AudienceDataSyncImportedPersons.data_sync_id == data_sync_id
+                )
                 .all()
             )
         ]

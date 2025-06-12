@@ -1,6 +1,5 @@
 from sqlalchemy import (
     Column,
-    event,
     Integer,
     ForeignKey,
     Index,
@@ -10,10 +9,11 @@ from sqlalchemy import (
     Numeric,
     Boolean,
     Sequence,
+    DECIMAL,
 )
-from sqlalchemy.dialects.postgresql import BOOLEAN, INTEGER, NUMERIC, VARCHAR, JSONB
+from sqlalchemy.dialects.postgresql import VARCHAR, JSONB
 
-from .base import Base, create_timestamps, update_timestamps
+from .base import Base
 
 
 class SubscriptionPlan(Base):
@@ -21,10 +21,15 @@ class SubscriptionPlan(Base):
     __table_args__ = (
         Index("subscription_plans_alias_idx", "alias", unique=True),
         Index(
-            "subscription_plans_contact_credit_plan_id_idx", "contact_credit_plan_id"
+            "subscription_plans_contact_credit_plan_id_idx",
+            "contact_credit_plan_id",
         ),
-        Index("subscription_plans_interval_is_active_idx", "interval", "is_active"),
-        Index("subscription_plans_platform_is_active_idx", "platform", "is_active"),
+        Index(
+            "subscription_plans_interval_is_active_idx", "interval", "is_active"
+        ),
+        Index(
+            "subscription_plans_platform_is_active_idx", "platform", "is_active"
+        ),
         Index("subscription_plans_title_interval_idx", "title", "interval"),
         Index("subscription_plans_title_price_idx", "title", "price"),
     )
@@ -45,11 +50,16 @@ class SubscriptionPlan(Base):
     is_default = Column(Boolean, nullable=True)
     coupon_id = Column(VARCHAR, nullable=True)
     is_active = Column(Boolean, nullable=True)
-    is_free_trial = Column(Boolean, nullable=False, server_default=text("false"))
+    is_free_trial = Column(
+        Boolean, nullable=False, server_default=text("false")
+    )
     domains_limit = Column(Integer, nullable=True)
     integrations_limit = Column(Integer, nullable=True)
     leads_credits = Column(BigInteger, nullable=True)
     prospect_credits = Column(BigInteger, nullable=True)
+    validation_funds = Column(
+        DECIMAL(10, 2), server_default=text("0"), nullable=True
+    )
     members_limit = Column(Integer, nullable=True)
     features = Column(JSONB, nullable=True)
     priority = Column(Integer, nullable=True)
@@ -61,7 +71,3 @@ class SubscriptionPlan(Base):
         ForeignKey("subscription_plans.id", ondelete="SET NULL"),
         nullable=True,
     )
-
-
-event.listen(SubscriptionPlan, "before_insert", create_timestamps)
-event.listen(SubscriptionPlan, "before_update", update_timestamps)

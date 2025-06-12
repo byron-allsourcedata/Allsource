@@ -100,13 +100,17 @@ def read_and_fill_enrichment_postal(db_session, file_path):
                     home_address_line2=home_address_line2.lower().capitalize()
                     if home_address_line2
                     else None,
-                    home_city=home_city.lower().capitalize() if home_city else None,
+                    home_city=home_city.lower().capitalize()
+                    if home_city
+                    else None,
                     home_state=clean_nan(record.get("HomeState")),
                     home_postal_code=home_postal_code
                     if home_postal_code != "-"
                     else None,
                     home_country=clean_nan(record.get("HomeCountry")),
-                    home_address_last_seen=clean_nan(record.get("HomeAddressLastSeen")),
+                    home_address_last_seen=clean_nan(
+                        record.get("HomeAddressLastSeen")
+                    ),
                     home_address_validation_status=clean_nan(
                         record.get("HomeAddressValidStatus")
                     ),
@@ -118,7 +122,9 @@ def read_and_fill_enrichment_postal(db_session, file_path):
                     ),
                     business_city=clean_nan(record.get("BusinessCity")),
                     business_state=clean_nan(record.get("BusinessState")),
-                    business_postal_code=clean_nan(record.get("BusinessPostalCode")),
+                    business_postal_code=clean_nan(
+                        record.get("BusinessPostalCode")
+                    ),
                     business_country=clean_nan(record.get("BusinessCountry")),
                     business_address_last_seen=clean_nan(
                         record.get("BusinessAddressLastSeen")

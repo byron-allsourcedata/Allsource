@@ -37,32 +37,45 @@ class TestCheckCertainUrls(unittest.TestCase):
         self.assertEqual(False, result)
 
         activate_certain_urls = "/my.html"
-        result = check_certain_urls("test-w.com/post/my.html", activate_certain_urls)
+        result = check_certain_urls(
+            "test-w.com/post/my.html", activate_certain_urls
+        )
         self.assertEqual(True, result)
 
         activate_certain_urls = "post"
-        result = check_certain_urls("test-w.com/post/my.html", activate_certain_urls)
+        result = check_certain_urls(
+            "test-w.com/post/my.html", activate_certain_urls
+        )
         self.assertEqual(True, result)
 
         activate_certain_urls = "posts"
-        result = check_certain_urls("test-w.com/post/my.html", activate_certain_urls)
+        result = check_certain_urls(
+            "test-w.com/post/my.html", activate_certain_urls
+        )
         self.assertEqual(False, result)
 
         activate_certain_urls = "https://test-w.com/post/#"
-        result = check_certain_urls("https://test-w.com/post/", activate_certain_urls)
+        result = check_certain_urls(
+            "https://test-w.com/post/", activate_certain_urls
+        )
         self.assertEqual(False, result)
 
         activate_certain_urls = "https://test-w.com/post/#"
-        result = check_certain_urls("https://test-w.com/post/#", activate_certain_urls)
+        result = check_certain_urls(
+            "https://test-w.com/post/#", activate_certain_urls
+        )
         self.assertEqual(True, result)
 
         activate_certain_urls = "https://test-w.com/post/#/"
-        result = check_certain_urls("https://test-w.com/post/#", activate_certain_urls)
+        result = check_certain_urls(
+            "https://test-w.com/post/#", activate_certain_urls
+        )
         self.assertEqual(True, result)
 
         activate_certain_urls = "https://test-w.com/post/#/?par1=val1&par2=val2"
         result = check_certain_urls(
-            "https://test-w.com/post/#/?par1=val1&par2=val2", activate_certain_urls
+            "https://test-w.com/post/#/?par1=val1&par2=val2",
+            activate_certain_urls,
         )
         self.assertEqual(True, result)
 
@@ -74,7 +87,8 @@ class TestCheckCertainUrls(unittest.TestCase):
 
         activate_certain_urls = "https://my-web.com/leads/?par1=val1&par2=val2"
         result = check_certain_urls(
-            "https://my-web.com/leads/?par1=val1&par2=val2", activate_certain_urls
+            "https://my-web.com/leads/?par1=val1&par2=val2",
+            activate_certain_urls,
         )
         self.assertEqual(True, result)
 
@@ -92,19 +106,22 @@ class TestCheckCertainUrls(unittest.TestCase):
 
         activate_certain_urls = "leads/?par2=val2&par1=val1"
         result = check_certain_urls(
-            "https://my-web.com/leads/?par1=val1&par2=val2", activate_certain_urls
+            "https://my-web.com/leads/?par1=val1&par2=val2",
+            activate_certain_urls,
         )
         self.assertEqual(False, result)
 
         activate_certain_urls = "http://my-web.com/leads/?par1=val1&par2=val2"
         result = check_certain_urls(
-            "https://my-web.com/leads/?par1=val1&par2=val2", activate_certain_urls
+            "https://my-web.com/leads/?par1=val1&par2=val2",
+            activate_certain_urls,
         )
         self.assertEqual(True, result)
 
         activate_certain_urls = "http://my-we.com/leads/?par1=val1&par2=val2"
         result = check_certain_urls(
-            "https://my-web.com/leads/?par1=val1&par2=val2", activate_certain_urls
+            "https://my-web.com/leads/?par1=val1&par2=val2",
+            activate_certain_urls,
         )
         self.assertEqual(False, result)
 

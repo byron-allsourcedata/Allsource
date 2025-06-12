@@ -8,173 +8,187 @@ import axiosInstance from "@/axios/axiosInterceptorInstance";
 import CustomizedProgressBar from "@/components/CustomizedProgressBar";
 import React from "react";
 import { B2BData, B2CData, FieldRankMap } from "@/types/insights";
+import HintCard from "@/app/(client)/components/HintCard";
+import { useInsightsHints } from "../../../context/IntegrationsHintsContext";
 
 type StatisticsTabProps = {
-  type: string;
-  b2bData: B2BData;
-  b2cData: B2CData;
-  fieldRanks: FieldRankMap;
+	type: string;
+	b2bData: B2BData;
+	b2cData: B2CData;
+	fieldRanks: FieldRankMap;
 };
 
-const StaticticsTab: React.FC<StatisticsTabProps> = ({ type, b2bData, b2cData, fieldRanks }) => {
-  const [targetIndex, setTargetIndex] = useState(0);
-  const handleTargetChange = (
-    event: React.SyntheticEvent,
-    newIndex: number
-  ) => {
-    setTargetIndex(newIndex);
-  };
-  const tabs = type.toLowerCase() === "b2c"
-    ? [
-        {
-          key: "b2c",
-          label: "B2C",
-          content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
-        },
-      ]
-    : [
-        {
-          key: "b2b",
-          label: "B2B",
-          content: <B2BTabs data={b2bData} fieldRanks={fieldRanks} />,
-        },
-        {
-          key: "b2c",
-          label: "B2C",
-          content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
-        },
-      ];
-  return (
-    <Box>
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          position: "sticky",
-          top: 50,
-          zIndex: 100,
-          backgroundColor: "#fff",
-          justifyContent: "space-between",
-          width: "97%",
-          "@media (max-width: 600px)": {
-            flexDirection: "column",
-            display: "flex",
-            alignItems: "flex-start",
-            zIndex: 1,
-            width: "100%",
-            pr: 1.5,
-          },
-        }}
-      >
-        <Box
-          sx={{
-            flexGrow: 1,
-            display: "flex",
-            width: "100%",
-            justifyContent: "center",
-            alignItems: "start",
-          }}
-        >
-          <Tabs
-            value={targetIndex}
-            onChange={handleTargetChange}
-            sx={{
-              textTransform: "none",
-              minHeight: 0,
-              pt: 2,
-              mb: 0.25,
-              alignItems: "start",
-              "& .MuiTabs-indicator": {
-                backgroundColor: "rgba(30, 136, 229, 1)",
-                height: "1.4px",
-              },
-              "@media (max-width: 600px)": {
-                border: "1px solid rgba(228, 228, 228, 1)",
-                borderRadius: "4px",
-                pt: 0,
-                width: "100%",
-                "& .MuiTabs-indicator": {
-                  height: "0",
-                },
-              },
-            }}
-            aria-label="insights tabs"
-          >
-            { type.toUpperCase() !== "B2C" && (
-                <Tab
-                className="main-text"
-                sx={{
-                  textTransform: "none",
-                  padding: "4px 24px",
-                  flexGrow: 1,
-                  minHeight: "auto",
-                  minWidth: "76px",
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  lineHeight: "19.1px",
-                  textAlign: "left",
-                  "&.Mui-selected": {
-                    color: "rgba(30, 136, 229, 1)",
-                  },
-                  "@media (max-width: 600px)": {
-                    mr: 0,
-                    borderRadius: "4px",
-                    "&.Mui-selected": {
-                      backgroundColor: "rgba(249, 249, 253, 1)",
-                      border: "1px solid rgba(220, 220, 239, 1)",
-                    },
-                  },
-                }}
-                label="B2B"
-              />
-            )}
-            
-            <Tab
-              className="main-text"
-              sx={{
-                textTransform: "none",
-                padding: "4px 24px",
-                minHeight: "auto",
-                flexGrow: 1,
-                textAlign: "center",
-                fontSize: "14px",
-                fontWeight: 700,
-                lineHeight: "19.1px",
-                minWidth: "76px",
-                "&.Mui-selected": {
-                  color: "rgba(30, 136, 229, 1)",
-                },
-                "@media (max-width: 600px)": {
-                  mr: 0,
-                  borderRadius: "4px",
-                  "&.Mui-selected": {
-                    backgroundColor: "rgba(249, 249, 253, 1)",
-                    border: "1px solid rgba(220, 220, 239, 1)",
-                  },
-                },
-              }}
-              label="B2C"
-            />
-          </Tabs>
-        </Box>
-      </Box>
+const StaticticsTab: React.FC<StatisticsTabProps> = ({
+	type,
+	b2bData,
+	b2cData,
+	fieldRanks,
+}) => {
+	const [targetIndex, setTargetIndex] = useState(0);
+	const {
+		insightsHints,
+		cardsInsights,
+		changeInsightsHint,
+		resetInsightsHints,
+	} = useInsightsHints();
+	const handleTargetChange = (
+		event: React.SyntheticEvent,
+		newIndex: number,
+	) => {
+		setTargetIndex(newIndex);
+	};
+	const tabs =
+		type.toLowerCase() === "b2c"
+			? [
+					{
+						key: "b2c",
+						label: "B2C",
+						content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
+					},
+				]
+			: [
+					{
+						key: "b2b",
+						label: "B2B",
+						content: <B2BTabs data={b2bData} fieldRanks={fieldRanks} />,
+					},
+					{
+						key: "b2c",
+						label: "B2C",
+						content: <B2CTabs data={b2cData} fieldRanks={fieldRanks} />,
+					},
+				];
+	return (
+		<Box>
+			<Box
+				sx={{
+					display: "flex",
+					flexDirection: "row",
+					alignItems: "center",
+					position: "sticky",
+					top: 50,
+					zIndex: 100,
+					backgroundColor: "#fff",
+					justifyContent: "space-between",
+					width: "97%",
+					"@media (max-width: 600px)": {
+						flexDirection: "column",
+						display: "flex",
+						alignItems: "flex-start",
+						zIndex: 1,
+						width: "100%",
+						pr: 1.5,
+					},
+				}}
+			>
+				<Box
+					sx={{
+						flexGrow: 1,
+						display: "flex",
+						width: "100%",
+						justifyContent: "center",
+						alignItems: "start",
+					}}
+				>
+					<Tabs
+						value={targetIndex}
+						onChange={handleTargetChange}
+						sx={{
+							textTransform: "none",
+							minHeight: 0,
+							pt: 2,
+							mb: 0.25,
+							alignItems: "start",
+							"& .MuiTabs-indicator": {
+								backgroundColor: "rgba(30, 136, 229, 1)",
+								height: "1.4px",
+							},
+							"@media (max-width: 600px)": {
+								border: "1px solid rgba(228, 228, 228, 1)",
+								borderRadius: "4px",
+								pt: 0,
+								width: "100%",
+								"& .MuiTabs-indicator": {
+									height: "0",
+								},
+							},
+						}}
+						aria-label="insights tabs"
+					>
+						{type.toUpperCase() !== "B2C" && (
+							<Tab
+								className="main-text"
+								sx={{
+									textTransform: "none",
+									padding: "4px 24px",
+									flexGrow: 1,
+									minHeight: "auto",
+									minWidth: "76px",
+									fontSize: "14px",
+									fontWeight: 700,
+									lineHeight: "19.1px",
+									textAlign: "left",
+									"&.Mui-selected": {
+										color: "rgba(30, 136, 229, 1)",
+									},
+									"@media (max-width: 600px)": {
+										mr: 0,
+										borderRadius: "4px",
+										"&.Mui-selected": {
+											backgroundColor: "rgba(249, 249, 253, 1)",
+											border: "1px solid rgba(220, 220, 239, 1)",
+										},
+									},
+								}}
+								label="B2B"
+							/>
+						)}
 
-      <Box
-        sx={{
-          display: "flex",
-          flexDirection: "column",
-          flexGrow: 1,
-        }}
-      >
-        {tabs.map((tab, idx) => (
-          <TabPanel key={tab.key} value={targetIndex} index={idx}>
-            {tab.content}
-          </TabPanel>
-        ))}
-      </Box>
-    </Box>
-  );
+						<Tab
+							className="main-text"
+							sx={{
+								textTransform: "none",
+								padding: "4px 24px",
+								minHeight: "auto",
+								flexGrow: 1,
+								textAlign: "center",
+								fontSize: "14px",
+								fontWeight: 700,
+								lineHeight: "19.1px",
+								minWidth: "76px",
+								"&.Mui-selected": {
+									color: "rgba(30, 136, 229, 1)",
+								},
+								"@media (max-width: 600px)": {
+									mr: 0,
+									borderRadius: "4px",
+									"&.Mui-selected": {
+										backgroundColor: "rgba(249, 249, 253, 1)",
+										border: "1px solid rgba(220, 220, 239, 1)",
+									},
+								},
+							}}
+							label="B2C"
+						/>
+					</Tabs>
+				</Box>
+			</Box>
+
+			<Box
+				sx={{
+					display: "flex",
+					flexDirection: "column",
+					flexGrow: 1,
+				}}
+			>
+				{tabs.map((tab, idx) => (
+					<TabPanel key={tab.key} value={targetIndex} index={idx}>
+						{tab.content}
+					</TabPanel>
+				))}
+			</Box>
+		</Box>
+	);
 };
 
 export default StaticticsTab;

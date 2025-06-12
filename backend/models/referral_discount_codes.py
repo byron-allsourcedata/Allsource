@@ -1,4 +1,12 @@
-from sqlalchemy import Column, Integer, VARCHAR, Boolean, text, BigInteger, Sequence
+from sqlalchemy import (
+    Column,
+    Integer,
+    VARCHAR,
+    Boolean,
+    text,
+    BigInteger,
+    Sequence,
+)
 from .base import Base
 
 
@@ -13,7 +21,9 @@ class ReferralDiscountCode(Base):
     )
     name = Column(VARCHAR(128), nullable=True)
     discount_amount = Column(Integer, nullable=True)
-    is_percentage = Column(Boolean, nullable=False, server_default=text("false"))
+    is_percentage = Column(
+        Boolean, nullable=False, server_default=text("false")
+    )
     coupon = Column(VARCHAR(128), nullable=True)
 
     def to_dict(self):

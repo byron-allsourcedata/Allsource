@@ -13,7 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 class MillionVerifierIntegrationsService:
-    def __init__(self, million_verifier_persistence: MillionVerifierPersistence):
+    def __init__(
+        self, million_verifier_persistence: MillionVerifierPersistence
+    ):
         self.million_verifier_persistence = million_verifier_persistence
         self.api_key = os.getenv("MILLION_VERIFIER_KEY")
         self.api_url = "https://api.millionverifier.com/api/v3/"

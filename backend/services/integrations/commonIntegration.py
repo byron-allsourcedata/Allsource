@@ -1,36 +1,17 @@
-from pydantic import BaseModel
-
 from config.folders import Folders
 from pandas import DataFrame
 import re
-from typing import Optional, TypedDict
+from typing import Optional
+
+from models import EnrichmentPostal
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
 import pandas as pd
 
-
-class MainPhoneContext(TypedDict):
-    main_phone: Optional[str]
-
-
-class CompanyContext(TypedDict):
-    professional_profiles: Optional[str]
-
-
-class TotalContext(MainPhoneContext, CompanyContext, TypedDict):
-    pass
-
-
-def process_phone(result, context: MainPhoneContext):
-    add_phone(result, context["main_phone"])
-
-
-def process_company(result, ctx):
-    add_company(result, ctx["professional_profiles"])
-
-
 FIELD_FILLERS = {
-    "phone": process_phone,
-    "company": process_company,
+    "phone": lambda result, ctx: add_phone(result, ctx["main_phone"]),
+    "company": lambda result, ctx: add_company(
+        result, ctx["professional_profiles"]
+    ),
     "city": lambda result, ctx: add_city(result, ctx["postal"]),
     "state": lambda result, ctx: add_state(result, ctx["postal"]),
     "zip_code": lambda result, ctx: add_zip(result, ctx["personal_profiles"]),
@@ -46,64 +27,12 @@ FIELD_FILLERS = {
     ctx: add_business_email_last_seen_date(
         result, ctx["business_email_last_seen_date"]
     ),
-    "personal_email_last_seen": lambda result, ctx: add_personal_email_last_seen(
-        result, ctx["personal_email_last_seen"]
+    "personal_email_last_seen": lambda result,
+    ctx: add_personal_email_last_seen(result, ctx["personal_email_last_seen"]),
+    "linkedin_url": lambda result, ctx: add_linkedin_url(
+        result, ctx["linkedin_url"]
     ),
-    "linkedin_url": lambda result, ctx: add_linkedin_url(result, ctx["linkedin_url"]),
 }
-
-
-class UserPostalInfo(BaseModel):
-    home_city: str
-    business_city: str
-    home_state: str
-    business_state: str
-    home_country: str
-    business_country: str
-
-
-class UserContacts(BaseModel):
-    first_name: str
-    last_name: str
-    business_email: str
-    personal_email: str
-    other_emails: str
-    phone_mobile1: str
-    phone_mobile2: str
-    linkedin_url: Optional[str]
-
-    class Config:
-        orm_mode = True
-
-
-class ProfessionalProfile(BaseModel):
-    current_company_name: Optional[str]
-
-    class Config:
-        orm_mode = True
-
-
-class PersonalProfiles(BaseModel):
-    zip_code5: Optional[str]
-    gender: Optional[str]
-
-    class Config:
-        orm_mode = True
-
-
-class UserData(BaseModel):
-    contacts: Optional[UserContacts]
-    postal: Optional[UserPostalInfo]
-
-
-class User(BaseModel):
-    contacts: Optional[UserContacts]
-    postal: Optional[UserPostalInfo]
-    personal_profiles: Optional[PersonalProfiles]
-    professional_profiles: Optional[ProfessionalProfile]
-
-    class Config:
-        orm_mode = True
 
 
 def get_states_dataframe() -> DataFrame:
@@ -144,7 +73,9 @@ def get_email_by_emails(
         "b2c": [personal_email, business_email, other_emails],
     }
 
-    for email in priority.get(target, [business_email, personal_email, other_emails]):
+    for email in priority.get(
+        target, [business_email, personal_email, other_emails]
+    ):
         if email:
             return email
     return None
@@ -155,7 +86,7 @@ def get_phone_by_phones(phone_mobile1, phone_mobile2):
 
 
 def resolve_main_email_and_phone(
-    enrichment_contacts: UserContacts,
+    enrichment_contacts,
     validations: dict,
     target_schema: Optional[str],
     business_email: str,
@@ -194,7 +125,8 @@ def resolve_main_email_and_phone(
             phone
             if validations.get("phone")
             else get_phone_by_phones(
-                enrichment_contacts.phone_mobile1, enrichment_contacts.phone_mobile2
+                enrichment_contacts.phone_mobile1,
+                enrichment_contacts.phone_mobile2,
             )
         )
     else:
@@ -228,43 +160,45 @@ def add_personal_email(result: dict, personal_email: Optional[str]) -> None:
         result["personal_email"] = personal_email
 
 
-def add_linkedin_url(result: dict, enrichment_contacts: UserContacts) -> None:
+def add_linkedin_url(
+    result: dict, enrichment_contacts: EnrichmentUserContact
+) -> None:
     if enrichment_contacts:
         result["linkedin_url"] = enrichment_contacts.linkedin_url
 
 
-def add_company(result: dict, professional_profiles: ProfessionalProfile) -> None:
+def add_company(result: dict, professional_profiles) -> None:
     if professional_profiles and professional_profiles.current_company_name:
-        result["company_name"] = professional_profiles.current_company_name
+        result["company"] = professional_profiles.current_company_name
 
 
-def add_city(result: dict, postal: UserPostalInfo) -> None:
+def add_city(result: dict, postal: EnrichmentPostal) -> None:
     if postal:
         city = postal.home_city or postal.business_city
         if city:
             result["city"] = city
 
 
-def add_state(result: dict, postal: UserPostalInfo) -> None:
+def add_state(result: dict, postal) -> None:
     if postal:
         state = postal.home_state or postal.business_state
         if state:
             result["state"] = state
 
 
-def add_country_code(result: dict, postal: UserPostalInfo) -> None:
+def add_country_code(result: dict, postal) -> None:
     if postal:
         country_code = postal.home_country or postal.business_country
         if country_code:
             result["country_code"] = country_code
 
 
-def add_zip(result: dict, personal_profiles: PersonalProfiles) -> None:
+def add_zip(result: dict, personal_profiles) -> None:
     if personal_profiles and personal_profiles.zip_code5:
         result["zip"] = str(personal_profiles.zip_code5)
 
 
-def add_gender(result: dict, personal_profiles: PersonalProfiles) -> None:
+def add_gender(result: dict, personal_profiles) -> None:
     if personal_profiles and personal_profiles.gender in (1, 2):
         result["gender"] = "m" if personal_profiles.gender == 1 else "f"
 
@@ -288,6 +222,6 @@ def add_personal_email_last_seen(
     if enrichment_contacts:
         personal_email_last_seen = enrichment_contacts.personal_email_last_seen
         if personal_email_last_seen:
-            result["personal_email_last_seen"] = personal_email_last_seen.strftime(
-                "%Y-%m-%d %H:%M:%S"
+            result["personal_email_last_seen"] = (
+                personal_email_last_seen.strftime("%Y-%m-%d %H:%M:%S")
             )

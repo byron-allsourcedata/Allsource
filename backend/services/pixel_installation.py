@@ -2,19 +2,22 @@ import hashlib
 import logging
 import os
 import re
+from typing import Optional
 
 from fastapi import HTTPException, status
 from ffmpeg import run_async
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from bs4 import BeautifulSoup
 import requests
 
 from enums import BaseEnum, SendgridTemplate, PixelStatus, DomainStatus
 from models.subscriptions import UserSubscriptions
-from models.users import Users
+from models.users import Users, User
 from models.users_domains import UserDomains
 from datetime import datetime, timedelta
+
+from schemas.pixel_installation import PixelInstallationResponse
 from utils import normalize_url
 from persistence.sendgrid_persistence import SendgridPersistence
 from services.sendgrid import SendgridHandler
@@ -23,7 +26,9 @@ logger = logging.getLogger(__name__)
 
 
 class PixelInstallationService:
-    def __init__(self, db: Session, send_grid_persistence_service: SendgridPersistence):
+    def __init__(
+        self, db: Session, send_grid_persistence_service: SendgridPersistence
+    ):
         self.db = db
         self.send_grid_persistence_service = send_grid_persistence_service
 
@@ -43,21 +48,32 @@ class PixelInstallationService:
                 UserDomains.user_id == user.get("id"),
                 UserDomains.domain == domain.domain,
             ).update(
-                {UserDomains.data_provider_id: client_id}, synchronize_session=False
+                {UserDomains.data_provider_id: client_id},
+                synchronize_session=False,
             )
             self.db.commit()
 
-        script = f'''
-            <script type="text/javascript">
-            (function(s, p, i, c, e) {{
-                s[e] = s[e] || function() {{ (s[e].a = s[e].a || []).push(arguments); }};
-                s[e].l = 1 * new Date();
-                var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];
-                k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);
-                s.pixelClientId = i;
-            }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/pixel.js", "{client_id}", document, "script");
-            </script>
-        '''
+        script = (
+            f'<script src="https://pixel.allsourcedata.io/pixel.js?dpid={client_id}"></script>'
+            "\n"
+            '<script type="text/javascript">'
+            "\n"
+            "    (function(s, p, i, c, e) {"
+            "\n"
+            "    s[e] = s[e] || function() { (s[e].a = s[e].a || []).push(arguments); };"
+            "\n"
+            "    s[e].l = 1 * new Date();"
+            "\n"
+            '    var k = c.createElement("script"), a = c.getElementsByTagName("script")[0];'
+            "\n"
+            "    k.async = 1, k.src = p, a.parentNode.insertBefore(k, a);"
+            "\n"
+            "    s.pixelClientId = i;"
+            "\n"
+            f'    }})(window, "https://maximiz-data.s3.us-east-2.amazonaws.com/allsource_pixel.js", "{client_id}", document, "script");'
+            "\n"
+            "</script>"
+        )
 
         return script, client_id
 
@@ -128,7 +144,7 @@ class PixelInstallationService:
         result["user_id"] = user.get("id")
         return result
 
-    def check_pixel_installed_via_api(self, pixelClientId, url):
+    def verify_and_mark_pixel(self, pixelClientId, url):
         result = {"status": PixelStatus.INCORRECT_PROVIDER_ID.value}
         domain = (
             self.db.query(UserDomains)
@@ -141,6 +157,26 @@ class PixelInstallationService:
                 result["status"] = PixelStatus.PIXEL_CODE_INSTALLED.value
                 domain.is_pixel_installed = True
                 self.db.commit()
-            user = self.db.query(Users).filter(Users.id == domain.user_id).first()
+            user = (
+                self.db.query(Users).filter(Users.id == domain.user_id).first()
+            )
             result["user_id"] = user.id
         return result
+
+    def check_pixel_installation_status(
+        self, user: dict, select_domain: str
+    ) -> Optional[PixelInstallationResponse]:
+        row = (
+            self.db.query(UserDomains.is_pixel_installed)
+            .filter(
+                UserDomains.user_id == user["id"],
+                UserDomains.domain == select_domain,
+            )
+            .first()
+        )
+
+        if row is None:
+            return None
+
+        installed_flag = bool(row[0])
+        return PixelInstallationResponse(pixel_installation=installed_flag)

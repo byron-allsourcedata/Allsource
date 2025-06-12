@@ -34,7 +34,11 @@ class CompanyInfoService:
             ):
                 return {"status": CompanyInfoEnum.NEED_EMAIL_VERIFIED}
 
-            user = self.db.query(Users).filter(Users.id == self.user.get("id")).first()
+            user = (
+                self.db.query(Users)
+                .filter(Users.id == self.user.get("id"))
+                .first()
+            )
             user.company_website = company_info.company_website
             user.is_company_details_filled = True
             self.db.flush()
@@ -80,7 +84,9 @@ class CompanyInfoService:
     def check_company_info_authorization(self):
         if self.user.get("is_with_card"):
             if self.user.get("company_website"):
-                subscription_plan_exists = self.user.get("current_subscription_id")
+                subscription_plan_exists = self.user.get(
+                    "current_subscription_id"
+                )
                 if subscription_plan_exists:
                     return CompanyInfoEnum.DASHBOARD_ALLOWED
                 return CompanyInfoEnum.NEED_CHOOSE_PLAN

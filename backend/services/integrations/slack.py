@@ -9,21 +9,34 @@ from urllib.parse import unquote
 import base64
 import os
 from datetime import datetime, timedelta
-from utils import extract_first_email
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+
+from models import UserIntegration, IntegrationUserSync
+from utils import extract_first_email, get_valid_email
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from schemas.integrations.integrations import DataMap
 from slack_sdk.oauth import AuthorizeUrlGenerator
 from models.five_x_five_users import FiveXFiveUser
 from persistence.user_persistence import UserPersistence
 from persistence.integrations.user_sync import IntegrationsUserSyncPersistence
-from enums import SourcePlatformEnum, IntegrationsStatus, ProccessDataSyncResult
-from persistence.integrations.integrations_persistence import IntegrationsPresistence
+from enums import (
+    SourcePlatformEnum,
+    IntegrationsStatus,
+    ProccessDataSyncResult,
+    DataSyncType,
+)
+from persistence.integrations.integrations_persistence import (
+    IntegrationsPresistence,
+)
 from persistence.leads_persistence import LeadsPersistence
 
 logger = logging.getLogger("slack")
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+formatter = logging.Formatter(
+    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
@@ -76,7 +89,9 @@ class SlackService:
             domain_id, SourcePlatformEnum.SLACK.value, access_token
         )
 
-    def save_integration(self, domain_id: int, access_token: str, user: dict, team_id):
+    def save_integration(
+        self, domain_id: int, access_token: str, user: dict, team_id
+    ):
         credential = self.get_credential(domain_id, user.get("id"))
         if credential:
             return self.update_credential(domain_id, access_token)
@@ -85,6 +100,8 @@ class SlackService:
         integration_data = {
             "access_token": access_token,
             "full_name": user.get("full_name"),
+            "sent_contacts": -1,
+            "sync_type": DataSyncType.CONTACT.value,
             "service_name": SourcePlatformEnum.SLACK.value,
             "slack_team_id": team_id,
         }
@@ -94,7 +111,9 @@ class SlackService:
         else:
             integration_data["domain_id"] = domain_id
 
-        integartion = self.integrations_persistence.create_integration(integration_data)
+        integartion = self.integrations_persistence.create_integration(
+            integration_data
+        )
 
         if not integartion:
             raise HTTPException(
@@ -110,7 +129,12 @@ class SlackService:
 
         generator = AuthorizeUrlGenerator(
             client_id=SlackConfig.client_id,
-            scopes=["channels:join", "channels:manage", "channels:read", "chat:write"],
+            scopes=[
+                "channels:join",
+                "channels:manage",
+                "channels:read",
+                "chat:write",
+            ],
             user_scopes=[],
             redirect_uri=SlackConfig.redirect_url,
         )
@@ -151,7 +175,9 @@ class SlackService:
             return {"status": "OAuth failed"}
 
     def update_app_home_opened(self, team_id):
-        self.integrations_persistence.update_app_home_opened(slack_team_id=team_id)
+        self.integrations_persistence.update_app_home_opened(
+            slack_team_id=team_id
+        )
         return True
 
     def handle_app_home_opened(self, user_id, team_id):
@@ -198,7 +224,9 @@ class SlackService:
         user_integration = self.get_credential(domain_id, user_id)
         client = WebClient(token=user_integration.access_token)
         try:
-            response = client.conversations_create(name=channel_name, is_private=False)
+            response = client.conversations_create(
+                name=channel_name, is_private=False
+            )
             if response["ok"]:
                 return {
                     "status": IntegrationsStatus.SUCCESS.value,
@@ -231,74 +259,36 @@ class SlackService:
     def get_first_visited_url(self, lead_user):
         return self.lead_persistence.get_first_visited_url(lead_user)
 
-    async def process_data_sync(
-        self, five_x_five_user, user_integration, data_sync, lead_user
+    async def process_data_sync_lead(
+        self,
+        user_integration: UserIntegration,
+        integration_data_sync: IntegrationUserSync,
+        five_x_five_users: List[FiveXFiveUser],
     ):
-        visited_url = self.get_first_visited_url(lead_user)
-        user_text = self.generate_user_text(five_x_five_user, visited_url)
-        if user_text in (
-            ProccessDataSyncResult.INCORRECT_FORMAT.value,
-            ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
-        ):
-            return user_text
+        for five_x_five_user in five_x_five_users:
+            user_text = self.generate_user_text(five_x_five_user)
+            if user_text in (
+                ProccessDataSyncResult.INCORRECT_FORMAT.value,
+                ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value,
+            ):
+                continue
 
-        return self.send_message_to_channels(
-            user_text, user_integration.access_token, data_sync.list_id
-        )
+            result = self.send_message_to_channels(
+                user_text,
+                user_integration.access_token,
+                integration_data_sync.list_id,
+            )
+            if result != ProccessDataSyncResult.SUCCESS.value:
+                return result
+        return ProccessDataSyncResult.SUCCESS.value
 
-    def generate_user_text(self, five_x_five_user: FiveXFiveUser, visited_url) -> str:
+    def generate_user_text(self, five_x_five_user: FiveXFiveUser) -> str:
         if not five_x_five_user.linkedin_url:
             return ProccessDataSyncResult.INCORRECT_FORMAT.value
 
-        email_fields = [
-            "business_email",
-            "personal_emails",
-            "additional_personal_emails",
-        ]
-
-        def get_valid_email(user) -> str:
-            thirty_days_ago = datetime.now() - timedelta(days=30)
-            thirty_days_ago_str = thirty_days_ago.strftime("%Y-%m-%d %H:%M:%S")
-            verity = 0
-            for field in email_fields:
-                email = getattr(user, field, None)
-                if email:
-                    emails = extract_first_email(email)
-                    for e in emails:
-                        if (
-                            e
-                            and field == "business_email"
-                            and five_x_five_user.business_email_last_seen
-                        ):
-                            if (
-                                five_x_five_user.business_email_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                                > thirty_days_ago_str
-                            ):
-                                return e.strip()
-                        if (
-                            e
-                            and field == "personal_emails"
-                            and five_x_five_user.personal_emails_last_seen
-                        ):
-                            personal_emails_last_seen_str = (
-                                five_x_five_user.personal_emails_last_seen.strftime(
-                                    "%Y-%m-%d %H:%M:%S"
-                                )
-                            )
-                            if personal_emails_last_seen_str > thirty_days_ago_str:
-                                return e.strip()
-                        if e and self.million_verifier_integrations.is_email_verify(
-                            email=e.strip()
-                        ):
-                            return e.strip()
-                        verity += 1
-            if verity > 0:
-                return ProccessDataSyncResult.VERIFY_EMAIL_FAILED.value
-            return ProccessDataSyncResult.INCORRECT_FORMAT.value
-
-        first_email = get_valid_email(five_x_five_user)
+        first_email = get_valid_email(
+            five_x_five_user, self.million_verifier_integrations
+        )
 
         if first_email in (
             ProccessDataSyncResult.INCORRECT_FORMAT.value,
@@ -315,7 +305,6 @@ class SlackService:
             f"{five_x_five_user.company_revenue or 'Unknown Revenue'} | "
             f"{five_x_five_user.primary_industry or 'Unknown Industry'}",
             "Email": first_email,
-            "Visited URL": visited_url,
             "Location": (
                 f"{five_x_five_user.professional_city}, {five_x_five_user.professional_state}".strip(
                     ", "
@@ -325,7 +314,9 @@ class SlackService:
                 else None
             ),
         }
-        user_text = "\n".join([f"*{key}:* {value}" for key, value in data.items()])
+        user_text = "\n".join(
+            [f"*{key}:* {value}" for key, value in data.items()]
+        )
         return user_text
 
     def get_channels(self, domain_id, user_id):
@@ -339,7 +330,10 @@ class SlackService:
                     {"id": channel["id"], "name": channel["name"]}
                     for channel in channels_data
                 ]
-                return {"status": ProccessDataSyncResult.SUCCESS, "channels": channels}
+                return {
+                    "status": ProccessDataSyncResult.SUCCESS,
+                    "channels": channels,
+                }
             except SlackApiError as e:
                 logger.error(f"Slack API Error: {e.response.get('error')}")
                 return {"status": ProccessDataSyncResult.AUTHENTICATION_FAILED}
@@ -351,11 +345,15 @@ class SlackService:
         try:
             response = client.conversations_info(channel=channel_id)
             if not response["ok"] or not response["channel"]["is_member"]:
-                logger.warning(f"Access to the channel #{channel_id} is denied.")
+                logger.warning(
+                    f"Access to the channel #{channel_id} is denied."
+                )
                 return ProccessDataSyncResult.AUTHENTICATION_FAILED.value
 
             client.chat_postMessage(channel=channel_id, text=text)
-            logger.info(f"The message has been sent to the channel: #{channel_id}")
+            logger.info(
+                f"The message has been sent to the channel: #{channel_id}"
+            )
             return ProccessDataSyncResult.SUCCESS.value
 
         except SlackApiError as e:
@@ -377,7 +375,10 @@ class SlackService:
             service_name=SourcePlatformEnum.SLACK.value,
         )
         join_result = self.join_channel(credentials.access_token, list_id)
-        if join_result["status"] == IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value:
+        if (
+            join_result["status"]
+            == IntegrationsStatus.JOIN_CHANNEL_IS_FAILED.value
+        ):
             return join_result
         self.sync_persistence.create_sync(
             {

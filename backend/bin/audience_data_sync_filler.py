@@ -6,13 +6,17 @@ import sys
 current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
-
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
 from sqlalchemy import create_engine, select
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, timezone
-from enums import DataSyncImportedStatus, AudienceSmartStatuses
+from enums import (
+    DataSyncImportedStatus,
+    ProccessDataSyncResult,
+    AudienceSmartStatuses,
+    DataSyncType,
+)
 from utils import get_utc_aware_date
 from models.enrichment.enrichment_users import EnrichmentUser
 from typing import Optional
@@ -23,8 +27,10 @@ from sqlalchemy.dialects.postgresql import insert
 from services.subscriptions import SubscriptionService
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
-from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
-from dependencies import PlansPersistence, Db
+from models.audience_data_sync_imported_persons import (
+    AudienceDataSyncImportedPersons,
+)
+from dependencies import PlansPersistence
 
 load_dotenv()
 
@@ -56,8 +62,10 @@ def fetch_data_syncs(session):
             IntegrationUserSync,
             IntegrationUserSync.integration_id == UserIntegration.id,
         )
+        .filter(IntegrationUserSync.sent_contacts > 0)
         .all()
     )
+
     user_integrations = [res[0] for res in results]
     data_syncs = [res[1] for res in results]
 
@@ -80,7 +88,8 @@ def get_no_of_imported_contacts(session, data_sync_id):
     return (
         session.query(AudienceDataSyncImportedPersons)
         .filter(
-            AudienceDataSyncImportedPersons.status != DataSyncImportedStatus.SENT.value,
+            AudienceDataSyncImportedPersons.status
+            != DataSyncImportedStatus.SENT.value,
             AudienceDataSyncImportedPersons.data_sync_id == data_sync_id,
         )
         .count()
@@ -129,13 +138,18 @@ def fetch_enrichment_users_by_data_sync(
             AudienceSmartPerson,
             AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id,
         )
-        .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id)
+        .join(
+            AudienceSmart,
+            AudienceSmart.id == AudienceSmartPerson.smart_audience_id,
+        )
         .join(
             IntegrationUserSync,
             IntegrationUserSync.smart_audience_id == AudienceSmart.id,
         )
         .filter(
-            IntegrationUserSync.id == data_sync_id, AudienceSmartPerson.is_valid == True
+            IntegrationUserSync.id == data_sync_id,
+            AudienceSmartPerson.is_valid == True,
+            IntegrationUserSync.sync_type != DataSyncType.CONTACT.value,
         )
     )
 
@@ -146,7 +160,9 @@ def fetch_enrichment_users_by_data_sync(
     return result
 
 
-def update_last_sent_encrihment_user(session, data_sync_id, last_encrichment_id):
+def update_last_sent_encrihment_user(
+    session, data_sync_id, last_encrichment_id
+):
     session.query(IntegrationUserSync).filter(
         IntegrationUserSync.id == data_sync_id
     ).update({IntegrationUserSync.last_sent_enrichment_id: last_encrichment_id})
@@ -173,17 +189,25 @@ def get_previous_imported_encrhment_users(
         )
         .join(
             AudienceDataSyncImportedPersons,
-            AudienceDataSyncImportedPersons.enrichment_user_id == EnrichmentUser.id,
+            AudienceDataSyncImportedPersons.enrichment_user_id
+            == EnrichmentUser.id,
         )
-        .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id)
+        .join(
+            AudienceSmart,
+            AudienceSmart.id == AudienceSmartPerson.smart_audience_id,
+        )
         .join(
             IntegrationUserSync,
             IntegrationUserSync.smart_audience_id == AudienceSmart.id,
         )
-        .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id)
+        .join(
+            UserIntegration,
+            UserIntegration.id == IntegrationUserSync.integration_id,
+        )
         .filter(
             AudienceDataSyncImportedPersons.data_sync_id == data_sync_id,
-            AudienceDataSyncImportedPersons.status == DataSyncImportedStatus.SENT.value,
+            AudienceDataSyncImportedPersons.status
+            == DataSyncImportedStatus.SENT.value,
             UserIntegration.service_name == service_name,
         )
         .order_by(EnrichmentUser.id)
@@ -194,9 +218,15 @@ def get_previous_imported_encrhment_users(
 
 
 async def send_leads_to_rmq(
-    session, rmq_connection, encrhment_users, data_sync, user_integrations_service_name
+    session,
+    rmq_connection,
+    encrhment_users,
+    data_sync,
+    user_integrations_service_name,
 ):
-    enrichment_user_ids = [encrhment_user.id for encrhment_user in encrhment_users]
+    enrichment_user_ids = [
+        encrhment_user.id for encrhment_user in encrhment_users
+    ]
     arr_enrichment_users = []
 
     records = [
@@ -213,7 +243,9 @@ async def send_leads_to_rmq(
     stmt = (
         insert(AudienceDataSyncImportedPersons)
         .values(records)
-        .on_conflict_do_nothing(index_elements=["enrichment_user_id", "data_sync_id"])
+        .on_conflict_do_nothing(
+            index_elements=["enrichment_user_id", "data_sync_id"]
+        )
         .returning(
             AudienceDataSyncImportedPersons.enrichment_user_id,
             AudienceDataSyncImportedPersons.id,
@@ -244,7 +276,10 @@ async def send_leads_to_rmq(
         for eid, imported_id in inserted_map.items()
     ]
 
-    msg = {"data_sync_id": data_sync.id, "arr_enrichment_users": arr_enrichment_users}
+    msg = {
+        "data_sync_id": data_sync.id,
+        "arr_enrichment_users": arr_enrichment_users,
+    }
     await send_leads_to_queue(rmq_connection, msg)
 
 
@@ -317,7 +352,9 @@ async def process_user_integrations(
         last_encrichment_id = encrhment_users[-1].id
         if last_encrichment_id:
             logging.info(f"last_lead_id = {last_encrichment_id}")
-            update_last_sent_encrihment_user(session, data_sync.id, last_encrichment_id)
+            update_last_sent_encrihment_user(
+                session, data_sync.id, last_encrichment_id
+            )
             update_data_sync_integration(session, data_sync.id, data_sync)
 
 

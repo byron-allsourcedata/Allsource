@@ -19,9 +19,12 @@ def get_payouts_partners(
     is_master: Optional[bool] = Query(default=False),
     reward_type: Optional[str] = Query(default="partner"),
     sort_by: str = Query(None, description="Field"),
-    sort_order: str = Query("desc", description="Field to sort by: 'asc' or 'desc'"),
+    sort_order: str = Query(
+        "desc", description="Field to sort by: 'asc' or 'desc'"
+    ),
     search_query: str = Query(
-        None, description="Search for email, first name, lastname and phone number"
+        None,
+        description="Search for email, first name, lastname and phone number",
     ),
 ):
     return referral_service.get_payouts_partners(

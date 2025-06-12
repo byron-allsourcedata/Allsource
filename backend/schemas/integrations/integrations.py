@@ -68,7 +68,9 @@ class S3Credentials(BaseModel):
 class IntegrationCredentials(BaseModel):
     shopify: Optional[ShopifyOrBigcommerceCredentials] = None
     woocommerce: Optional[WoocommerceCredentials] = None
-    bigcommerce: Optional[ShopifyOrBigcommerceCredentials | ExternalAppInstalled] = None
+    bigcommerce: Optional[
+        ShopifyOrBigcommerceCredentials | ExternalAppInstalled
+    ] = None
     klaviyo: Optional[ApiKeyCredentials] = None
     mailchimp: Optional[ApiKeyCredentials] = None
     attentive: Optional[ApiKeyCredentials] = None
@@ -113,11 +115,10 @@ class DataMap(BaseModel):
 
 
 class Campaign(BaseModel):
-    campaign_id: int
-    campaign_name: str
-    campaign_objective: str
-    bid_amount: int
-    daily_budget: int
+    campaign_id: Optional[str] = None
+    campaign_name: Optional[str] = None
+    campaign_objective: Optional[str] = None
+    bid_amount: Optional[str] = None
 
 
 class SyncCreate(BaseModel):
@@ -130,8 +131,6 @@ class SyncCreate(BaseModel):
     integrations_users_sync_id: Optional[int] = None
     leads_type: Optional[str] = "allContacts"
     data_map: Optional[List[DataMap]] = None
-    campaign_id: Optional[int] = (None,)
-    campaign_name: Optional[str] = (None,)
     campaign: Optional[Campaign] = None
 
 
@@ -151,17 +150,9 @@ class SmartAudienceSyncCreate(BaseModel):
 
 class CreateCampaign(BaseModel):
     campaign_name: str
-    campaign_objective: Optional[str] = None
     bid_amount: Optional[str] = None
     daily_budget: Optional[str] = None
     ad_account_id: Optional[str] = None
-
-
-class CreateCampaignList(BaseModel):
-    name: str
-    daily_budget: int
-    type: str
-    customer_id: str
 
 
 class CreateListOrTags(BaseModel):

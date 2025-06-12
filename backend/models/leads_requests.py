@@ -36,17 +36,23 @@ class LeadsRequests(Base):
         nullable=False,
     )
     lead_id = Column(
-        BigInteger, ForeignKey("leads_users.id", ondelete="CASCADE"), nullable=True
+        BigInteger,
+        ForeignKey("leads_users.id", ondelete="CASCADE"),
+        nullable=True,
     )
     page = Column(VARCHAR(1024), nullable=False)
     requested_at = Column(TIMESTAMP, nullable=False)
     visit_id = Column(
-        BigInteger, ForeignKey("leads_visits.id", ondelete="CASCADE"), nullable=False
+        BigInteger,
+        ForeignKey("leads_visits.id", ondelete="CASCADE"),
+        nullable=False,
     )
     page_parameters = Column(VARCHAR(1024), nullable=True)
     spent_time_sec = Column(BigInteger, nullable=False)
     domain_id = Column(
-        Integer, ForeignKey("users_domains.id", ondelete="SET NULL"), nullable=True
+        Integer,
+        ForeignKey("users_domains.id", ondelete="SET NULL"),
+        nullable=True,
     )
     five_x_five_user_id = Column(
         Integer, ForeignKey("5x5_users.id", ondelete="SET NULL"), nullable=True

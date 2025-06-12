@@ -31,7 +31,9 @@ class SseEventsService:
             rmq_connection = RabbitMQConnection()
             connection = await rmq_connection.connect()
             channel = await connection.channel()
-            queue = await channel.declare_queue(name=queue_name, auto_delete=True)
+            queue = await channel.declare_queue(
+                name=queue_name, auto_delete=True
+            )
 
             try:
                 async with queue.iterator() as queue_iter:

@@ -24,7 +24,9 @@ class FiveXFiveCookieSyncFile(Base):
         ),
     )
 
-    id = Column(Integer, Sequence("5x5_cookie_sync_file_id_seq"), primary_key=True)
+    id = Column(
+        Integer, Sequence("5x5_cookie_sync_file_id_seq"), primary_key=True
+    )
     trovo_id = Column(String(128), nullable=True)
     partner_id = Column(String(128), nullable=True)
     partner_uid = Column(Text, nullable=True)

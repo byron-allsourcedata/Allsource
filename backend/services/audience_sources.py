@@ -41,12 +41,17 @@ class AudienceSourceMath:
         value: float, min_val: float, max_val: float, coefficient=1.0
     ) -> float:
         return coefficient * (
-            (value - min_val) / (max_val - min_val) if max_val > min_val else 0.0
+            (value - min_val) / (max_val - min_val)
+            if max_val > min_val
+            else 0.0
         )
 
     @staticmethod
     def normalize_decimal(
-        value: Decimal, min_val: Decimal, max_val: Decimal, coefficient=Decimal("1.0")
+        value: Decimal,
+        min_val: Decimal,
+        max_val: Decimal,
+        coefficient=Decimal("1.0"),
     ) -> Decimal:
         return coefficient * (
             (value - min_val) / (max_val - min_val)
@@ -248,8 +253,12 @@ class AudienceSourceService:
                     str(matched_person.inverted_recency_max)
                     if matched_person.inverted_recency_max is not None
                     else "",
-                    str(matched_person.end_date) if matched_person.end_date else "",
-                    str(matched_person.start_date) if matched_person.start_date else "",
+                    str(matched_person.end_date)
+                    if matched_person.end_date
+                    else "",
+                    str(matched_person.start_date)
+                    if matched_person.start_date
+                    else "",
                     str(matched_person.duration)
                     if matched_person.duration is not None
                     else "",
@@ -266,7 +275,10 @@ class AudienceSourceService:
                 writer.writerow(relevant_data)
 
         if audience_source.source_origin == TypeOfSourceOrigin.CSV.value:
-            if audience_source.source_type == TypeOfCustomer.CUSTOMER_CONVERSIONS.value:
+            if (
+                audience_source.source_type
+                == TypeOfCustomer.CUSTOMER_CONVERSIONS.value
+            ):
                 if audience_source.target_schema == BusinessType.B2C.value:
                     writer.writerow(
                         [
@@ -311,7 +323,9 @@ class AudienceSourceService:
                             str(person.start_date)
                             if person.start_date is not None
                             else "",
-                            str(person.recency) if person.recency is not None else "",
+                            str(person.recency)
+                            if person.recency is not None
+                            else "",
                             str(person.recency_min)
                             if person.recency_min is not None
                             else "",
@@ -330,7 +344,9 @@ class AudienceSourceService:
                             str(person.recency_score)
                             if hasattr(person, "recency_score")
                             else "",
-                            str(person.amount) if hasattr(person, "amount") else "",
+                            str(person.amount)
+                            if hasattr(person, "amount")
+                            else "",
                             str(person.amount_min)
                             if hasattr(person, "amount_min")
                             else "",
@@ -386,7 +402,9 @@ class AudienceSourceService:
                             str(person.start_date)
                             if person.start_date is not None
                             else "",
-                            str(person.recency) if person.recency is not None else "",
+                            str(person.recency)
+                            if person.recency is not None
+                            else "",
                             str(person.recency_min)
                             if person.recency_min is not None
                             else "",
@@ -449,9 +467,13 @@ class AudienceSourceService:
                 for person in audience_sources_matched_persons:
                     relevant_data = [
                         person.email or "",
-                        str(person.start_date) if person.start_date is not None else "",
+                        str(person.start_date)
+                        if person.start_date is not None
+                        else "",
                         str(person.count) if person.count is not None else "",
-                        str(person.recency) if person.recency is not None else "",
+                        str(person.recency)
+                        if person.recency is not None
+                        else "",
                         str(person.recency_min)
                         if person.recency_min is not None
                         else "",
@@ -514,10 +536,18 @@ class AudienceSourceService:
                     relevant_data = [
                         person.email or "",
                         str(person.count) if person.count is not None else "",
-                        str(person.count_min) if person.count_min is not None else "",
-                        str(person.count_max) if person.count_max is not None else "",
-                        str(person.start_date) if person.start_date is not None else "",
-                        str(person.recency) if person.recency is not None else "",
+                        str(person.count_min)
+                        if person.count_min is not None
+                        else "",
+                        str(person.count_max)
+                        if person.count_max is not None
+                        else "",
+                        str(person.start_date)
+                        if person.start_date is not None
+                        else "",
+                        str(person.recency)
+                        if person.recency is not None
+                        else "",
                         str(person.recency_min)
                         if person.recency_min is not None
                         else "",
@@ -533,7 +563,9 @@ class AudienceSourceService:
                         str(person.inverted_recency_max)
                         if person.inverted_recency_max is not None
                         else "",
-                        str(person.view_score) if person.view_score is not None else "",
+                        str(person.view_score)
+                        if person.view_score is not None
+                        else "",
                         str(person.recency_score)
                         if person.recency_score is not None
                         else "",
@@ -582,7 +614,13 @@ class AudienceSourceService:
             return None
 
     async def send_matching_status(
-        self, source_id, user_id, type, statuses, domain_id=None, mapped_fields=None
+        self,
+        source_id,
+        user_id,
+        type,
+        statuses,
+        domain_id=None,
+        mapped_fields=None,
     ):
         queue_name = QueueName.AUDIENCE_SOURCES_READER.value
         rabbitmq_connection = RabbitMQConnection()
@@ -603,14 +641,18 @@ class AudienceSourceService:
         try:
             message_body = {"type": type, "data": data}
             await publish_rabbitmq_message(
-                connection=connection, queue_name=queue_name, message_body=message_body
+                connection=connection,
+                queue_name=queue_name,
+                message_body=message_body,
             )
         except Exception as e:
             logger.error(e)
         finally:
             await rabbitmq_connection.close()
 
-    async def create_source(self, user: User, payload: NewSource) -> SourceResponse:
+    async def create_source(
+        self, user: User, payload: NewSource
+    ) -> SourceResponse:
         creating_data = {
             "user_id": user.get("id"),
             "target_schema": payload.target_schema,
@@ -623,9 +665,13 @@ class AudienceSourceService:
             if payload.rows
             else None,
         }
-        created_data = self.audience_sources_persistence.create_source(**creating_data)
+        created_data = self.audience_sources_persistence.create_source(
+            **creating_data
+        )
         mapped_fields: Dict[str, str] = (
-            {row.type: row.value for row in payload.rows} if payload.rows else {}
+            {row.type: row.value for row in payload.rows}
+            if payload.rows
+            else {}
         )
 
         await self.send_matching_status(
@@ -640,7 +686,9 @@ class AudienceSourceService:
         if not created_data:
             logger.debug("Database error during creation")
 
-        domain_name = self.domain_persistence.get_domain_name(created_data.domain_id)
+        domain_name = self.domain_persistence.get_domain_name(
+            created_data.domain_id
+        )
 
         setattr(created_data, "created_by", user.get("full_name"))
         if domain_name:
@@ -654,7 +702,9 @@ class AudienceSourceService:
         return count_deleted > 0
 
     def get_sample_customers_list(self, source_type: str):
-        return os.path.join(os.getcwd(), "data/sample-source-" + source_type + ".csv")
+        return os.path.join(
+            os.getcwd(), "data/sample-source-" + source_type + ".csv"
+        )
 
     def get_domains(self, user_id: int, page: int, per_page: int):
         result, has_more = self.audience_sources_persistence.get_domains_source(

@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 
@@ -15,12 +16,16 @@ from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_sources import AudienceSource
-from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
+from models.audience_data_sync_imported_persons import (
+    AudienceDataSyncImportedPersons,
+)
 from models.users import Users
 from models.state import States
 from models.enrichment.enrichment_users import EnrichmentUser
 from models.enrichment.enrichment_user_contact import EnrichmentUserContact
-from models.enrichment.enrichment_personal_profiles import EnrichmentPersonalProfiles
+from models.enrichment.enrichment_personal_profiles import (
+    EnrichmentPersonalProfiles,
+)
 from schemas.audience import DataSourcesFormat
 from typing import Optional, Tuple, List
 from sqlalchemy.engine.row import Row
@@ -62,12 +67,15 @@ class AudienceSmartsPersistence:
             .select_from(EnrichmentUser)
             .join(combined_subq, combined_subq.c.uid == EnrichmentUser.id)
             .join(
-                EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
         )
 
         if data.get("use_case") == "linkedin":
-            count_q = count_q.filter(EnrichmentUserContact.linkedin_url.isnot(None))
+            count_q = count_q.filter(
+                EnrichmentUserContact.linkedin_url.isnot(None)
+            )
 
         return count_q.scalar()
 
@@ -106,19 +114,23 @@ class AudienceSmartsPersistence:
         target_schema: str,
         validation_params: Optional[dict],
         active_segment_records: int,
+        need_validate: bool,
     ) -> AudienceSmart:
         use_case_id = self.get_use_case_id_by_alias(use_case_alias)
         if not use_case_id:
-            raise ValueError(f"Use case with alias '{use_case_alias}' not found.")
+            raise ValueError(
+                f"Use case with alias '{use_case_alias}' not found."
+            )
 
         new_audience = AudienceSmart(
             name=name,
             user_id=user_id,
             created_by_user_id=created_by_user_id,
             use_case_id=use_case_id,
-            validations=validation_params,
+            validations=validation_params if need_validate else json.dumps({}),
             total_records=total_records,
             target_schema=target_schema,
+            validated_records=0 if need_validate else active_segment_records,
             active_segment_records=active_segment_records,
             status=status,
         )
@@ -239,7 +251,9 @@ class AudienceSmartsPersistence:
         return query.all()
 
     def get_validations_by_aud_smart_id(self, id: UUID) -> Tuple[List[Row]]:
-        query = self.db.query(AudienceSmart.validations).filter(AudienceSmart.id == id)
+        query = self.db.query(AudienceSmart.validations).filter(
+            AudienceSmart.id == id
+        )
         return query.first()
 
     def search_audience_smart(self, start_letter: str, user_id: int):
@@ -285,7 +299,9 @@ class AudienceSmartsPersistence:
         self.db.commit()
         return updated_count
 
-    def get_persons_by_smart_aud_id(self, smart_audience_id, sent_contacts, fields):
+    def get_persons_by_smart_aud_id(
+        self, smart_audience_id, sent_contacts, fields
+    ):
         contact_fields = [
             getattr(EnrichmentUserContact, field)
             for field in fields
@@ -306,7 +322,8 @@ class AudienceSmartsPersistence:
                 EnrichmentUser.id == AudienceSmartPerson.enrichment_user_id,
             )
             .join(
-                EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
             .join(
                 EnrichmentPersonalProfiles,
@@ -321,9 +338,12 @@ class AudienceSmartsPersistence:
         smarts = query.limit(sent_contacts).all()
         return smarts
 
-    def get_synced_persons_by_smart_aud_id(self, data_sync_id, enrichment_field_names):
+    def get_synced_persons_by_smart_aud_id(
+        self, data_sync_id, enrichment_field_names
+    ):
         enrichment_fields = [
-            getattr(EnrichmentUserContact, field) for field in enrichment_field_names
+            getattr(EnrichmentUserContact, field)
+            for field in enrichment_field_names
         ]
 
         fields = [
@@ -337,10 +357,12 @@ class AudienceSmartsPersistence:
             .select_from(AudienceDataSyncImportedPersons)
             .join(
                 EnrichmentUser,
-                EnrichmentUser.id == AudienceDataSyncImportedPersons.enrichment_user_id,
+                EnrichmentUser.id
+                == AudienceDataSyncImportedPersons.enrichment_user_id,
             )
             .outerjoin(
-                EnrichmentUserContact, EnrichmentUserContact.asid == EnrichmentUser.asid
+                EnrichmentUserContact,
+                EnrichmentUserContact.asid == EnrichmentUser.asid,
             )
             .outerjoin(
                 EnrichmentPersonalProfiles,
@@ -351,7 +373,9 @@ class AudienceSmartsPersistence:
                 func.lower(States.state_code)
                 == func.lower(EnrichmentPersonalProfiles.state_abbr),
             )
-            .filter(AudienceDataSyncImportedPersons.data_sync_id == data_sync_id)
+            .filter(
+                AudienceDataSyncImportedPersons.data_sync_id == data_sync_id
+            )
         )
 
         return query.all()

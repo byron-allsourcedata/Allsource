@@ -19,7 +19,13 @@ class ExternalAppsInstallationsPersistence:
         self.session.commit()
 
     def get_epi_by_filter_one(self, **filter_by):
-        return self.session.query(ExternalAppsInstall).filter_by(**filter_by).first()
+        return (
+            self.session.query(ExternalAppsInstall)
+            .filter_by(**filter_by)
+            .first()
+        )
 
     def get_epi_by_filter_all(self, **filter_by):
-        return self.session.query(ExternalAppsInstall).filter_by(**filter_by).all()
+        return (
+            self.session.query(ExternalAppsInstall).filter_by(**filter_by).all()
+        )

@@ -53,30 +53,38 @@ class CompanyService:
         revenue_range,
         industry,
     ):
-        companies, count, max_page = self.company_persistence_service.filter_companies(
-            domain_id=self.domain.id,
-            page=page,
-            per_page=per_page,
-            from_date=from_date,
-            to_date=to_date,
-            regions=regions,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            employees_range=employees_range,
-            employee_visits=employee_visits,
-            revenue_range=revenue_range,
-            industry=industry,
-            search_query=search_query,
+        companies, count, max_page = (
+            self.company_persistence_service.filter_companies(
+                domain_id=self.domain.id,
+                page=page,
+                per_page=per_page,
+                from_date=from_date,
+                to_date=to_date,
+                regions=regions,
+                sort_by=sort_by,
+                sort_order=sort_order,
+                employees_range=employees_range,
+                employee_visits=employee_visits,
+                revenue_range=revenue_range,
+                industry=industry,
+                search_query=search_query,
+            )
         )
 
         company_list = []
         for company in companies:
-            first_visited_date = company[5].strftime("%d.%m.%Y") if company[5] else None
-            first_visited_time = company[6].strftime("%H:%M") if company[6] else None
+            first_visited_date = (
+                company[5].strftime("%d.%m.%Y") if company[5] else None
+            )
+            first_visited_time = (
+                company[6].strftime("%H:%M") if company[6] else None
+            )
             combined_datetime = datetime.strptime(
                 f"{first_visited_date} {first_visited_time}", "%d.%m.%Y %H:%M"
             )
-            adjusted_datetime = combined_datetime + timedelta(hours=timezone_offset)
+            adjusted_datetime = combined_datetime + timedelta(
+                hours=timezone_offset
+            )
             adjusted_date = adjusted_datetime.strftime("%d.%m.%Y")
             adjusted_time = adjusted_datetime.strftime("%H:%M")
 
@@ -112,28 +120,47 @@ class CompanyService:
         )
 
         state_dict = (
-            {state.state_code: state.state_name for state in states} if states else {}
+            {state.state_code: state.state_name for state in states}
+            if states
+            else {}
         )
 
         employee = employees[0]
 
         employee_data = {
             "id": {"value": employee[0], "visibility_status": "visible"},
-            "first_name": {"value": employee[1], "visibility_status": "visible"},
+            "first_name": {
+                "value": employee[1],
+                "visibility_status": "visible",
+            },
             "last_name": {"value": employee[2], "visibility_status": "visible"},
             "mobile_phone": {
                 "value": self.format_phone_number(employee[3]),
                 "visibility_status": "visible",
             },
-            "linkedin_url": {"value": employee[4], "visibility_status": "visible"},
-            "personal_email": {"value": employee[5], "visibility_status": "visible"},
-            "business_email": {"value": employee[6], "visibility_status": "visible"},
+            "linkedin_url": {
+                "value": employee[4],
+                "visibility_status": "visible",
+            },
+            "personal_email": {
+                "value": employee[5],
+                "visibility_status": "visible",
+            },
+            "business_email": {
+                "value": employee[6],
+                "visibility_status": "visible",
+            },
             "seniority": {"value": employee[7], "visibility_status": "visible"},
-            "department": {"value": employee[8], "visibility_status": "visible"},
+            "department": {
+                "value": employee[8],
+                "visibility_status": "visible",
+            },
             "job_title": {"value": employee[9], "visibility_status": "visible"},
             "city": {"value": employee[10], "visibility_status": "visible"},
             "state": {
-                "value": self.convert_state_code_to_name(employee[11], state_dict),
+                "value": self.convert_state_code_to_name(
+                    employee[11], state_dict
+                ),
                 "visibility_status": "visible",
             },
             "is_unlocked": {"value": True, "visibility_status": "visible"},
@@ -172,17 +199,25 @@ class CompanyService:
 
         employees_list = []
         state_dict = (
-            {state.state_code: state.state_name for state in states} if states else {}
+            {state.state_code: state.state_name for state in states}
+            if states
+            else {}
         )
         for employee in employees:
             employees_list.append(
                 {
-                    "id": {"value": employee[0], "visibility_status": "visible"},
+                    "id": {
+                        "value": employee[0],
+                        "visibility_status": "visible",
+                    },
                     "first_name": {
                         "value": employee[1],
                         "visibility_status": "visible",
                     },
-                    "last_name": {"value": employee[2], "visibility_status": "visible"},
+                    "last_name": {
+                        "value": employee[2],
+                        "visibility_status": "visible",
+                    },
                     "mobile_phone": self.get_field_with_status(
                         self.format_phone_number(employee[3]), employee[12]
                     ),
@@ -195,13 +230,22 @@ class CompanyService:
                     "business_email": self.get_field_with_status(
                         employee[6], employee[12]
                     ),
-                    "seniority": {"value": employee[7], "visibility_status": "visible"},
+                    "seniority": {
+                        "value": employee[7],
+                        "visibility_status": "visible",
+                    },
                     "department": {
                         "value": employee[8],
                         "visibility_status": "visible",
                     },
-                    "job_title": {"value": employee[9], "visibility_status": "visible"},
-                    "city": {"value": employee[10], "visibility_status": "visible"},
+                    "job_title": {
+                        "value": employee[9],
+                        "visibility_status": "visible",
+                    },
+                    "city": {
+                        "value": employee[10],
+                        "visibility_status": "visible",
+                    },
                     "state": {
                         "value": self.convert_state_code_to_name(
                             employee[11], state_dict
@@ -228,32 +272,61 @@ class CompanyService:
 
         employee = employees[0]
         state_dict = (
-            {state.state_code: state.state_name for state in states} if states else {}
+            {state.state_code: state.state_name for state in states}
+            if states
+            else {}
         )
         employee_data = {
             "id": {"value": employee[0], "visibility_status": "visible"},
-            "first_name": {"value": employee[1], "visibility_status": "visible"},
+            "first_name": {
+                "value": employee[1],
+                "visibility_status": "visible",
+            },
             "last_name": {"value": employee[2], "visibility_status": "visible"},
             "mobile_phone": self.get_field_with_status(
                 self.format_phone_number(employee[3]), employee[27]
             ),
-            "linkedin_url": self.get_field_with_status(employee[4], employee[27]),
-            "personal_email": self.get_field_with_status(employee[5], employee[27]),
-            "business_email": self.get_field_with_status(employee[6], employee[27]),
+            "linkedin_url": self.get_field_with_status(
+                employee[4], employee[27]
+            ),
+            "personal_email": self.get_field_with_status(
+                employee[5], employee[27]
+            ),
+            "business_email": self.get_field_with_status(
+                employee[6], employee[27]
+            ),
             "seniority": {"value": employee[7], "visibility_status": "visible"},
-            "department": {"value": employee[8], "visibility_status": "visible"},
+            "department": {
+                "value": employee[8],
+                "visibility_status": "visible",
+            },
             "job_title": {"value": employee[9], "visibility_status": "visible"},
             "city": {"value": employee[10], "visibility_status": "visible"},
             "state": {"value": employee[11], "visibility_status": "visible"},
-            "company_name": {"value": employee[12], "visibility_status": "visible"},
-            "company_city": {"value": employee[13], "visibility_status": "visible"},
-            "company_phone": {"value": employee[14], "visibility_status": "visible"},
+            "company_name": {
+                "value": employee[12],
+                "visibility_status": "visible",
+            },
+            "company_city": {
+                "value": employee[13],
+                "visibility_status": "visible",
+            },
+            "company_phone": {
+                "value": employee[14],
+                "visibility_status": "visible",
+            },
             "company_description": {
                 "value": employee[15],
                 "visibility_status": "visible",
             },
-            "company_address": {"value": employee[16], "visibility_status": "visible"},
-            "company_zip": {"value": employee[17], "visibility_status": "visible"},
+            "company_address": {
+                "value": employee[16],
+                "visibility_status": "visible",
+            },
+            "company_zip": {
+                "value": employee[17],
+                "visibility_status": "visible",
+            },
             "company_linkedin_url": {
                 "value": employee[18],
                 "visibility_status": "visible",
@@ -264,21 +337,33 @@ class CompanyService:
             "personal_emails_last_seen": self.get_field_with_status(
                 employee[20], employee[27]
             ),
-            "personal_zip": self.get_field_with_status(employee[21], employee[27]),
+            "personal_zip": self.get_field_with_status(
+                employee[21], employee[27]
+            ),
             "company_last_updated": {
                 "value": employee[22],
                 "visibility_status": "visible",
             },
-            "company_domain": {"value": employee[23], "visibility_status": "visible"},
-            "personal_address": self.get_field_with_status(employee[24], employee[27]),
+            "company_domain": {
+                "value": employee[23],
+                "visibility_status": "visible",
+            },
+            "personal_address": self.get_field_with_status(
+                employee[24], employee[27]
+            ),
             "other_personal_emails": self.get_field_with_status(
                 employee[25], employee[27]
             ),
             "company_state": {
-                "value": self.convert_state_code_to_name(employee[26], state_dict),
+                "value": self.convert_state_code_to_name(
+                    employee[26], state_dict
+                ),
                 "visibility_status": "visible",
             },
-            "is_unlocked": {"value": employee[27], "visibility_status": "visible"},
+            "is_unlocked": {
+                "value": employee[27],
+                "visibility_status": "visible",
+            },
         }
 
         return employee_data
@@ -318,26 +403,34 @@ class CompanyService:
         return limited_results
 
     def get_uniq_primary_industry(self):
-        industry = self.company_persistence_service.get_unique_primary_industries(
-            domain_id=self.domain.id
+        industry = (
+            self.company_persistence_service.get_unique_primary_industries(
+                domain_id=self.domain.id
+            )
         )
         return industry
 
     def get_uniq_primary__departments(self, company_id):
-        departments = self.company_persistence_service.get_unique_primary__departments(
-            company_id
+        departments = (
+            self.company_persistence_service.get_unique_primary__departments(
+                company_id
+            )
         )
         return departments
 
     def get_uniq_primary__seniorities(self, company_id):
-        seniorities = self.company_persistence_service.get_unique_primary__seniorities(
-            company_id
+        seniorities = (
+            self.company_persistence_service.get_unique_primary__seniorities(
+                company_id
+            )
         )
         return seniorities
 
     def get_uniq_primary__job_titles(self, company_id):
-        job_titles = self.company_persistence_service.get_unique_primary__job_titles(
-            company_id
+        job_titles = (
+            self.company_persistence_service.get_unique_primary__job_titles(
+                company_id
+            )
         )
         return job_titles
 
@@ -451,7 +544,9 @@ class CompanyService:
         writer.writerow(["Column", "Value"])
 
         for header, key in headers_mapping:
-            field = employee.get(key, {"value": None, "visibility_status": "missing"})
+            field = employee.get(
+                key, {"value": None, "visibility_status": "missing"}
+            )
             value = field.get("value")
             status = field.get("visibility_status", "missing")
             formatted_value = ""

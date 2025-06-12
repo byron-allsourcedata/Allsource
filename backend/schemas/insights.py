@@ -25,7 +25,9 @@ class PersonalProfiles(BaseModel):
     homeowner: Dict[str, float] = {}
 
     @staticmethod
-    def _map_keys(data: Dict[str, int], key_map: Dict[str, str]) -> Dict[str, int]:
+    def _map_keys(
+        data: Dict[str, int], key_map: Dict[str, str]
+    ) -> Dict[str, int]:
         return {key_map.get(k, k): v for k, v in data.items()}
 
     @staticmethod
@@ -62,7 +64,10 @@ class PersonalProfiles(BaseModel):
                 continue
 
             if key in YES_NO_UNKNOWN_MAPS:
-                mapped = {YES_NO_UNKNOWN_MAPS[key].get(k, k): v for k, v in val.items()}
+                mapped = {
+                    YES_NO_UNKNOWN_MAPS[key].get(k, k): v
+                    for k, v in val.items()
+                }
                 filtered = {k: v for k, v in mapped.items() if k != "Unknown"}
                 total = sum(filtered.values())
                 setattr(
@@ -79,7 +84,8 @@ class PersonalProfiles(BaseModel):
                     setattr(self, key, {k: 0.0 for k in filtered})
                 else:
                     percent = {
-                        k: round(v / total * 100, 2) for k, v in filtered.items()
+                        k: round(v / total * 100, 2)
+                        for k, v in filtered.items()
                     }
                     setattr(self, key, percent)
             else:
@@ -143,11 +149,15 @@ class FinancialProfiles(BaseModel):
                 continue
 
             if key == "net_worth_range":
-                mapped = {NET_WORTH_RANGE_MAP.get(k, k): v for k, v in val.items()}
+                mapped = {
+                    NET_WORTH_RANGE_MAP.get(k, k): v for k, v in val.items()
+                }
                 setattr(self, key, self._to_percent(mapped))
 
             elif key == "credit_score_range":
-                mapped = {CREDIT_SCORE_RANGE_MAP.get(k, k): v for k, v in val.items()}
+                mapped = {
+                    CREDIT_SCORE_RANGE_MAP.get(k, k): v for k, v in val.items()
+                }
                 setattr(self, key, self._to_percent(mapped))
 
             elif key == "income_range":
@@ -378,11 +388,17 @@ class Financial(BaseModel):
     bank_card: Optional[Dict[str, int]] = Field(default_factory=dict)
     mail_order_donor: Optional[Dict[str, int]] = Field(default_factory=dict)
     credit_card_premium: Optional[Dict[str, int]] = Field(default_factory=dict)
-    credit_card_new_issue: Optional[Dict[str, int]] = Field(default_factory=dict)
+    credit_card_new_issue: Optional[Dict[str, int]] = Field(
+        default_factory=dict
+    )
     donor: Optional[Dict[str, int]] = Field(default_factory=dict)
-    credit_range_of_new_credit: Optional[Dict[str, int]] = Field(default_factory=dict)
+    credit_range_of_new_credit: Optional[Dict[str, int]] = Field(
+        default_factory=dict
+    )
     investor: Optional[Dict[str, int]] = Field(default_factory=dict)
-    number_of_credit_lines: Optional[Dict[str, int]] = Field(default_factory=dict)
+    number_of_credit_lines: Optional[Dict[str, int]] = Field(
+        default_factory=dict
+    )
 
 
 class Lifestyle(BaseModel):
@@ -392,7 +408,9 @@ class Lifestyle(BaseModel):
     mail_order_buyer: Optional[Dict[str, int]] = Field(default_factory=dict)
     online_purchaser: Optional[Dict[str, int]] = Field(default_factory=dict)
     book_reader: Optional[Dict[str, int]] = Field(default_factory=dict)
-    health_and_beauty_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
+    health_and_beauty_interest: Optional[Dict[str, int]] = Field(
+        default_factory=dict
+    )
     fitness_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
     outdoor_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
     tech_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
@@ -400,11 +418,15 @@ class Lifestyle(BaseModel):
     automotive: Optional[Dict[str, int]] = Field(default_factory=dict)
     smoker: Optional[Dict[str, int]] = Field(default_factory=dict)
     golf_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
-    beauty_cosmetic_interest: Optional[Dict[str, int]] = Field(default_factory=dict)
+    beauty_cosmetic_interest: Optional[Dict[str, int]] = Field(
+        default_factory=dict
+    )
 
 
 class Voter(BaseModel):
-    congressional_district: Optional[Dict[str, int]] = Field(default_factory=dict)
+    congressional_district: Optional[Dict[str, int]] = Field(
+        default_factory=dict
+    )
     voting_propensity: Optional[Dict[str, int]] = Field(default_factory=dict)
     political_party: Optional[Dict[str, int]] = Field(default_factory=dict)
 

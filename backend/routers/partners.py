@@ -35,7 +35,9 @@ def get_payouts_partners(
     search_query: str = Query(None, description="Search for email, first name"),
     sort_by: str = Query(None, description="Field"),
     user: dict = Depends(check_user_partner),
-    sort_order: str = Query("desc", description="Field to sort by: 'asc' or 'desc'"),
+    sort_order: str = Query(
+        "desc", description="Field to sort by: 'asc' or 'desc'"
+    ),
 ):
     return referral_service.get_payouts_partners(
         year=year,
@@ -138,7 +140,9 @@ async def update_opportunity_partner(
     payload: OpportunityStatus,
     get_partners_service: PartnersService = Depends(get_partners_service),
 ):
-    result = await get_partners_service.update_opportunity_partner(partner_id, payload)
+    result = await get_partners_service.update_opportunity_partner(
+        partner_id, payload
+    )
 
     return result
 
@@ -150,7 +154,9 @@ async def update_partner(
     partnerNewData: PartnerUpdateRequest,
     get_partners_service: PartnersService = Depends(get_partners_service),
 ):
-    result = await get_partners_service.update_partner(partner_id, partnerNewData)
+    result = await get_partners_service.update_partner(
+        partner_id, partnerNewData
+    )
 
     return result
 

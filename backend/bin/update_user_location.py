@@ -53,13 +53,17 @@ def save_city_and_state_to_user(
         .first()
     )
     if not location:
-        location = FiveXFiveLocations(country="us", city=city, state_id=state_id)
+        location = FiveXFiveLocations(
+            country="us", city=city, state_id=state_id
+        )
         session.add(location)
         session.flush()
 
     leads_locations = (
         insert(FiveXFiveUsersLocations)
-        .values(five_x_five_user_id=five_x_five_user_id, location_id=location.id)
+        .values(
+            five_x_five_user_id=five_x_five_user_id, location_id=location.id
+        )
         .on_conflict_do_nothing()
     )
     session.execute(leads_locations)
@@ -78,13 +82,17 @@ async def process_users(session):
             session.query(FiveXFiveUser)
             .filter(
                 and_(
-                    FiveXFiveUser.id > current_id, FiveXFiveUser.id <= current_id + 1000
+                    FiveXFiveUser.id > current_id,
+                    FiveXFiveUser.id <= current_id + 1000,
                 )
             )
             .all()
         )
         for five_x_five_user in five_x_five_users:
-            if five_x_five_user.personal_city and five_x_five_user.personal_state:
+            if (
+                five_x_five_user.personal_city
+                and five_x_five_user.personal_state
+            ):
                 save_city_and_state_to_user(
                     session=session,
                     personal_city=five_x_five_user.personal_city,

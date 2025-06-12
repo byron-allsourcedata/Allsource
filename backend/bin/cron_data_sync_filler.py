@@ -7,21 +7,25 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from config.rmq_connection import publish_rabbitmq_message, RabbitMQConnection
-from sqlalchemy import create_engine, select, and_, or_
+from sqlalchemy import create_engine, and_, or_, select
 from dotenv import load_dotenv
 from models.leads_visits import LeadsVisits
 from sqlalchemy.orm import sessionmaker, Session
 from datetime import datetime, timezone, timedelta
-from enums import DataSyncImportedStatus, ProccessDataSyncResult, SourcePlatformEnum
+from enums import (
+    DataSyncImportedStatus,
+    ProccessDataSyncResult,
+    SourcePlatformEnum,
+    DataSyncType,
+)
 from utils import get_utc_aware_date
 from models.leads_users_added_to_cart import LeadsUsersAddedToCart
 from models.leads_users_ordered import LeadsUsersOrdered
 from models.users_domains import UserDomains
 from sqlalchemy.dialects.postgresql import insert
 from models.integrations.integrations_users_sync import IntegrationUserSync
-from models.five_x_five_users import FiveXFiveUser
 from models.integrations.users_domains_integrations import UserIntegration
-from models.data_sync_imported_leads import DataSyncImportedLeads
+from models.data_sync_imported_leads import DataSyncImportedLead
 from models.leads_users import LeadUser
 
 load_dotenv()
@@ -64,10 +68,10 @@ def fetch_data_syncs(session):
 
 def update_data_sync_integration(session, data_sync_id):
     no_of_contacts = (
-        session.query(DataSyncImportedLeads)
+        session.query(DataSyncImportedLead)
         .filter(
-            DataSyncImportedLeads.status == ProccessDataSyncResult.SUCCESS.value,
-            DataSyncImportedLeads.data_sync_id == data_sync_id,
+            DataSyncImportedLead.status == ProccessDataSyncResult.SUCCESS.value,
+            DataSyncImportedLead.data_sync_id == data_sync_id,
         )
         .count()
     )
@@ -93,12 +97,18 @@ def fetch_leads_by_domain(
         last_sent_lead_id = 0
 
     query = (
-        session.query(LeadUser.id, LeadUser.behavior_type, FiveXFiveUser.up_id)
-        .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+        session.query(
+            LeadUser.id.label("id"),
+            LeadUser.user_id.label("user_id"),
+        )
         .join(UserDomains, UserDomains.id == LeadUser.domain_id)
         .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
+        .join(
+            IntegrationUserSync, IntegrationUserSync.domain_id == UserDomains.id
+        )
         .filter(
             LeadUser.domain_id == domain_id,
+            IntegrationUserSync.sync_type == DataSyncType.CONTACT.value,
             LeadUser.id > last_sent_lead_id,
             LeadUser.is_active == True,
             UserDomains.is_enable == True,
@@ -110,6 +120,7 @@ def fetch_leads_by_domain(
             LeadUser.is_confirmed == True,
         )
     )
+
     if data_sync_leads_type != "allContacts":
         if data_sync_leads_type == "converted_sales":
             query = query.filter(LeadUser.is_converted_sales == True)
@@ -137,7 +148,8 @@ def fetch_leads_by_domain(
                     LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
                 )
                 .outerjoin(
-                    LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+                    LeadsUsersOrdered,
+                    LeadsUsersOrdered.lead_user_id == LeadUser.id,
                 )
                 .filter(
                     and_(
@@ -167,79 +179,93 @@ def update_last_sent_lead(session, data_sync_id, last_lead_id):
 
 
 def update_data_sync_imported_leads(session, status, data_sync_id):
-    session.db.query(DataSyncImportedLeads).filter(
-        DataSyncImportedLeads.id == data_sync_id
+    session.db.query(DataSyncImportedLead).filter(
+        DataSyncImportedLead.id == data_sync_id
     ).update({"status": status})
     session.db.commit()
 
 
 def get_previous_imported_leads(session, data_sync_id):
-    query = (
-        session.query(LeadUser.id, LeadUser.behavior_type, FiveXFiveUser.up_id)
-        .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
-        .join(DataSyncImportedLeads, DataSyncImportedLeads.lead_users_id == LeadUser.id)
+    lead_users = (
+        session.query(
+            LeadUser.id.label("id"),
+            LeadUser.user_id.label("user_id"),
+        )
+        .join(
+            DataSyncImportedLead,
+            DataSyncImportedLead.lead_users_id == LeadUser.id,
+        )
         .join(UserDomains, UserDomains.id == LeadUser.domain_id)
         .join(LeadsVisits, LeadsVisits.lead_id == LeadUser.id)
         .filter(
-            DataSyncImportedLeads.data_sync_id == data_sync_id,
-            DataSyncImportedLeads.status == DataSyncImportedStatus.SENT.value,
+            DataSyncImportedLead.data_sync_id == data_sync_id,
+            DataSyncImportedLead.status == DataSyncImportedStatus.SENT.value,
             LeadUser.is_active == True,
             UserDomains.is_enable == True,
         )
+        .all()
     )
 
-    return query.all()
+    return lead_users
 
 
 async def send_leads_to_rmq(
-    session, rmq_connection, lead_users, data_sync, user_integrations_service_name
+    session,
+    rmq_connection,
+    lead_users,
+    data_sync,
+    user_integrations_service_name,
 ):
-    last_lead_id = None
-    for lead in lead_users:
-        last_lead_id = lead.id
-        data_sync_imported_leads = (
-            insert(DataSyncImportedLeads)
-            .values(
-                status=DataSyncImportedStatus.SENT.value,
-                five_x_five_up_id=lead.up_id,
-                lead_users_id=lead.id,
-                service_name=user_integrations_service_name,
-                data_sync_id=data_sync.id,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
-            )
-            .returning(DataSyncImportedLeads.id)
-            .on_conflict_do_nothing()
-        )
-
-        data_sync_imported_leads = session.execute(data_sync_imported_leads)
-        session.commit()
-        data_sync_id = data_sync_imported_leads.scalar()
-        if not data_sync_id:
-            existing_id_query = select(DataSyncImportedLeads.id).filter_by(
-                five_x_five_up_id=lead.up_id, data_sync_id=data_sync.id
-            )
-            data_sync_id = session.execute(existing_id_query).scalar()
-
-        processed_lead = {
-            "data_sync_imported_id": data_sync_id,
-            "data_sync_id": data_sync.id,
-            "lead_users_id": lead.id,
-            "five_x_five_up_id": lead.up_id,
+    lead_ids = [lead_user.id for lead_user in lead_users]
+    users_id = lead_users[-1].user_id
+    records = [
+        {
+            "status": DataSyncImportedStatus.SENT.value,
+            "lead_users_id": eid,
             "service_name": user_integrations_service_name,
+            "data_sync_id": data_sync.id,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
         }
-        await send_leads_to_queue(rmq_connection, processed_lead)
-    if last_lead_id:
-        logging.info(f"last_lead_id = {last_lead_id}")
-        update_last_sent_lead(session, data_sync.id, last_lead_id)
-        update_data_sync_integration(session, data_sync.id)
+        for eid in lead_ids
+    ]
+    stmt = (
+        insert(DataSyncImportedLead)
+        .values(records)
+        .on_conflict_do_nothing(
+            index_elements=["lead_users_id", "data_sync_id"]
+        )
+    )
+
+    session.execute(stmt)
+    session.commit()
+    result = session.execute(
+        select(DataSyncImportedLead.id)
+        .where(DataSyncImportedLead.lead_users_id.in_(lead_ids))
+        .where(DataSyncImportedLead.data_sync_id == data_sync.id)
+    )
+    data_sync_imported_ids = [row.id for row in result]
+
+    processed_lead = {
+        "data_sync_id": data_sync.id,
+        "data_sync_imported_ids": data_sync_imported_ids,
+        "users_id": users_id,
+        "service_name": user_integrations_service_name,
+    }
+    await send_leads_to_queue(rmq_connection, processed_lead)
 
 
 async def process_user_integrations(rmq_connection, session):
     user_integrations, data_syncs = fetch_data_syncs(session)
     for i, data_sync in enumerate(data_syncs):
-        if data_sync.sync_status == False or user_integrations[i].is_failed == True:
-            if user_integrations[i].service_name == SourcePlatformEnum.WEBHOOK.value:
+        if (
+            data_sync.sync_status == False
+            or user_integrations[i].is_failed == True
+        ):
+            if (
+                user_integrations[i].service_name
+                == SourcePlatformEnum.WEBHOOK.value
+            ):
                 if (
                     data_sync.last_sync_date is not None
                     and data_sync.last_sync_date.replace(tzinfo=timezone.utc)
@@ -269,11 +295,12 @@ async def process_user_integrations(rmq_connection, session):
 
         lead_users = get_previous_imported_leads(session, data_sync.id)
         logging.info(f"Re imported leads= {len(lead_users)}")
-        if BATCH_SIZE - len(lead_users) > 0:
+        data_sync_limit = user_integrations[i].limit
+        if data_sync_limit - len(lead_users) > 0:
             additional_leads = fetch_leads_by_domain(
                 session,
                 data_sync.domain_id,
-                BATCH_SIZE - len(lead_users),
+                data_sync_limit - len(lead_users),
                 data_sync.last_sent_lead_id,
                 data_sync.leads_type,
             )
@@ -281,7 +308,7 @@ async def process_user_integrations(rmq_connection, session):
 
         update_data_sync_integration(session, data_sync.id)
         if not lead_users:
-            logging.info(f"lead_users empty")
+            logging.info("lead_users empty")
             continue
 
         logging.debug(f"lead_users len = {len(lead_users)}")
@@ -293,6 +320,11 @@ async def process_user_integrations(rmq_connection, session):
             data_sync,
             user_integrations[i].service_name,
         )
+        last_lead_id = lead_users[-1].id
+        if last_lead_id:
+            logging.info(f"last_lead_id = {last_lead_id}")
+            update_last_sent_lead(session, data_sync.id, last_lead_id)
+            update_data_sync_integration(session, data_sync.id)
 
 
 async def main():
@@ -338,7 +370,7 @@ async def main():
             await process_user_integrations(rmq_connection, db_session)
 
             logging.info("Processing completed. Sleeping for 10 minutes...")
-        except Exception as err:
+        except Exception:
             logging.error("Unhandled Exception:", exc_info=True)
         finally:
             if db_session:

@@ -23,11 +23,16 @@ class UsersEmailVerificationService:
 
     def resend_verification_email(self, token: str):
         if not self.user.get("is_email_confirmed"):
-            template_id = self.send_grid_persistence_service.get_template_by_alias(
-                SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value
+            template_id = (
+                self.send_grid_persistence_service.get_template_by_alias(
+                    SendgridTemplate.EMAIL_VERIFICATION_TEMPLATE.value
+                )
             )
             if not template_id:
-                return {"is_success": False, "error": "email template not found"}
+                return {
+                    "is_success": False,
+                    "error": "email template not found",
+                }
             message_expiration_time = self.user.get("verified_email_sent_at")
             time_now = datetime.now()
             if message_expiration_time is not None:

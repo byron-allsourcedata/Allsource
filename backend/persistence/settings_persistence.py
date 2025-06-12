@@ -70,7 +70,9 @@ class SettingsPersistence:
             if user.team_access_level == TeamAccessLevel.OWNER:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail={"error": SettingStatus.OWNER_ROLE_CHANGE_NOT_ALLOWED.value},
+                    detail={
+                        "error": SettingStatus.OWNER_ROLE_CHANGE_NOT_ALLOWED.value
+                    },
                 )
             user.team_access_level = access_level
         self.db.commit()
@@ -140,7 +142,9 @@ class SettingsPersistence:
         return (
             self.db.query(invited, inviter.email)
             .outerjoin(inviter, invited.invited_by_id == inviter.id)
-            .filter(or_(invited.team_owner_id == user_id, invited.id == user_id))
+            .filter(
+                or_(invited.team_owner_id == user_id, invited.id == user_id)
+            )
             .order_by(inviter.email)
             .all()
         )
@@ -154,7 +158,9 @@ class SettingsPersistence:
 
     def get_team_invitation_by_email(self, email):
         return (
-            self.db.query(TeamInvitation).filter(TeamInvitation.mail == email).first()
+            self.db.query(TeamInvitation)
+            .filter(TeamInvitation.mail == email)
+            .first()
         )
 
     def exists_team_member(self, user_id, user_mail):

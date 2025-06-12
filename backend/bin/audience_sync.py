@@ -38,9 +38,12 @@ def setup_logging(level):
     )
 
 
-def filter_loyal_category_customer(categories_purchased: Dict[int, int]) -> bool:
+def filter_loyal_category_customer(
+    categories_purchased: Dict[int, int],
+) -> bool:
     return any(
-        count >= LOYAL_CATEGORY_THRESHOLD for count in categories_purchased.values()
+        count >= LOYAL_CATEGORY_THRESHOLD
+        for count in categories_purchased.values()
     )
 
 
@@ -53,7 +56,9 @@ def filter_frequent_customer(purchase_count: int) -> bool:
 
 
 def filter_recent_customer(last_purchase_date: datetime) -> bool:
-    return (get_utc_aware_date() - last_purchase_date).days <= RECENT_PURCHASE_DAYS
+    return (
+        get_utc_aware_date() - last_purchase_date
+    ).days <= RECENT_PURCHASE_DAYS
 
 
 def filter_high_aov_customer(total_spend: float, purchase_count: int) -> bool:
@@ -68,7 +73,10 @@ async def fetch_consignments_data(
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 consignments_url,
-                headers={"X-Auth-Token": access_token, "Accept": "application/json"},
+                headers={
+                    "X-Auth-Token": access_token,
+                    "Accept": "application/json",
+                },
             ) as response:
                 response.raise_for_status()
                 return await response.json()
@@ -82,7 +90,10 @@ async def fetch_item_data(item_url: str, access_token: str) -> Optional[dict]:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 item_url,
-                headers={"X-Auth-Token": access_token, "Accept": "application/json"},
+                headers={
+                    "X-Auth-Token": access_token,
+                    "Accept": "application/json",
+                },
             ) as response:
                 response.raise_for_status()
                 return await response.json()
@@ -92,7 +103,10 @@ async def fetch_item_data(item_url: str, access_token: str) -> Optional[dict]:
 
 
 async def bigcommerce_process(
-    store_hash: str, access_token: str, audience_type: str, audience_threshold: float
+    store_hash: str,
+    access_token: str,
+    audience_type: str,
+    audience_threshold: float,
 ) -> List[dict]:
     api = BigcommerceApi(
         store_hash=store_hash,
@@ -136,7 +150,9 @@ async def bigcommerce_process(
         avg_time_on_site = 0  # Пример: среднее время на сайте
         product_page_time = 0  # Пример: время на странице продукта
         cart_items = 0  # Пример: количество товаров в корзине
-        checkout_status = order["custom_status"]  # Пример: статус оформления заказа
+        checkout_status = order[
+            "custom_status"
+        ]  # Пример: статус оформления заказа
         last_cart_update = None  # Пример: время последнего обновления корзины
         customer_similarity_score = 5
 
@@ -199,29 +215,36 @@ async def bigcommerce_process(
                     )
                     if not first_visit_date:
                         first_visit_date = order_date
-                    last_visit_date = max(last_visit_date or order_date, order_date)
+                    last_visit_date = max(
+                        last_visit_date or order_date, order_date
+                    )
                 except ValueError as e:
-                    logging.error(f"Error parsing date for order {order['id']}: {e}")
+                    logging.error(
+                        f"Error parsing date for order {order['id']}: {e}"
+                    )
 
         if (
             audience_type == "Loyal category customer"
             and not filter_loyal_category_customer(categories_purchased)
         ):
             continue
-        if audience_type == "High LTV customer" and not filter_high_ltv_customer(
-            total_spend
+        if (
+            audience_type == "High LTV customer"
+            and not filter_high_ltv_customer(total_spend)
         ):
             continue
-        if audience_type == "Frequent customer" and not filter_frequent_customer(
-            purchase_count
+        if (
+            audience_type == "Frequent customer"
+            and not filter_frequent_customer(purchase_count)
         ):
             continue
         if audience_type == "Recent customer" and not filter_recent_customer(
             last_visit_date
         ):
             continue
-        if audience_type == "High AOV customer" and not filter_high_aov_customer(
-            total_spend, purchase_count
+        if (
+            audience_type == "High AOV customer"
+            and not filter_high_aov_customer(total_spend, purchase_count)
         ):
             continue
 
@@ -229,7 +252,8 @@ async def bigcommerce_process(
         customer_data["total_spend"] += total_spend
         customer_data["purchase_count"] += purchase_count
         customer_data["last_visit_date"] = max(
-            customer_data["last_purchase_date"] or last_visit_date, last_visit_date
+            customer_data["last_purchase_date"] or last_visit_date,
+            last_visit_date,
         )
 
         for category, count in categories_purchased.items():
@@ -244,7 +268,9 @@ async def bigcommerce_process(
                 "date_created": customer_info["date_created"],
                 "date_modified": customer_info["date_modified"],
                 "store_credit": customer_info["store_credit"],
-                "registration_ip_address": customer_info["registration_ip_address"],
+                "registration_ip_address": customer_info[
+                    "registration_ip_address"
+                ],
                 "customer_group_id": customer_info["customer_group_id"],
                 "tax_exempt_category": customer_info["tax_exempt_category"],
                 "reset_pass_on_login": customer_info["reset_pass_on_login"],
@@ -284,7 +310,9 @@ async def audience_process(message: IncomingMessage, session: Session):
 
         if result_process:
             audience = (
-                session.query(Audience).filter(Audience.id == audience_id).first()
+                session.query(Audience)
+                .filter(Audience.id == audience_id)
+                .first()
             )
             if audience:
                 audience.status = "success"
@@ -326,7 +354,9 @@ async def main():
         )
         Session = sessionmaker(bind=engine)
         session = Session()
-        await queue.consume(functools.partial(audience_process, session=session))
+        await queue.consume(
+            functools.partial(audience_process, session=session)
+        )
         await asyncio.Future()
 
     except Exception as err:

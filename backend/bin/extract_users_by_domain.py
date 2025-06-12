@@ -71,7 +71,9 @@ def check_blacklist_domain_email(
     return None
 
 
-async def fetch_users_by_domain(db_session, company_domains, job_titles, mail_domain):
+async def fetch_users_by_domain(
+    db_session, company_domains, job_titles, mail_domain
+):
     results = []
     count = 1
     output_files_counter = 1
@@ -105,9 +107,13 @@ async def fetch_users_by_domain(db_session, company_domains, job_titles, mail_do
                     mail_domain,
                 )
                 mobile_number = (
-                    user.mobile_phone or user.personal_phone or user.company_phone
+                    user.mobile_phone
+                    or user.personal_phone
+                    or user.company_phone
                 )
-                mobile_number = mobile_number.split(", ")[-1] if mobile_number else None
+                mobile_number = (
+                    mobile_number.split(", ")[-1] if mobile_number else None
+                )
                 mobile_number = format_phone_number(mobile_number)
 
                 if email:
@@ -160,17 +166,25 @@ async def main():
         with open(input_file, "r") as file:
             content = file.read()
             company_domains = [
-                domain.strip() for domain in content.splitlines() if domain.strip()
+                domain.strip()
+                for domain in content.splitlines()
+                if domain.strip()
             ]
 
         with open(job_title_path, "r") as file:
-            job_titles = {title.strip().lower() for title in file if title.strip()}
+            job_titles = {
+                title.strip().lower() for title in file if title.strip()
+            }
 
         with open(job_title_path, "r") as file:
-            job_titles = {title.strip().lower() for title in file if title.strip()}
+            job_titles = {
+                title.strip().lower() for title in file if title.strip()
+            }
 
         with open(mail_path, "r") as file:
-            mail_domain = {title.strip().lower() for title in file if title.strip()}
+            mail_domain = {
+                title.strip().lower() for title in file if title.strip()
+            }
 
         job_titles = {job_title.lower() for job_title in job_titles}
         await fetch_users_by_domain(

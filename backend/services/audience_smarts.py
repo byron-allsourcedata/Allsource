@@ -4,8 +4,7 @@ import json
 import io
 import csv
 
-from persistence.audience_lookalikes import AudienceLookalikesPostgresPersistence
-from persistence.audience_lookalikes.dto import LookalikeInfo
+from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from persistence.audience_sources import AudienceSourcesPersistence
 from persistence.audience_settings import AudienceSettingPersistence
 from schemas.audience import (
@@ -33,7 +32,7 @@ class AudienceSmartsService:
     def __init__(
         self,
         audience_smarts_persistence: AudienceSmartsPersistence,
-        lookalikes_persistence_service: AudienceLookalikesPostgresPersistence,
+        lookalikes_persistence_service: AudienceLookalikesPersistence,
         audience_sources_persistence: AudienceSourcesPersistence,
         audience_settings_persistence: AudienceSettingPersistence,
     ):
@@ -55,17 +54,19 @@ class AudienceSmartsService:
         statuses: Optional[List[str]] = None,
         use_cases: Optional[List[str]] = None,
     ) -> SmartsAudienceObjectResponse:
-        audience_smarts, count = self.audience_smarts_persistence.get_audience_smarts(
-            user_id=user.get("id"),
-            page=page,
-            per_page=per_page,
-            sort_by=sort_by,
-            sort_order=sort_order,
-            from_date=from_date,
-            to_date=to_date,
-            search_query=search_query,
-            statuses=statuses,
-            use_cases=use_cases,
+        audience_smarts, count = (
+            self.audience_smarts_persistence.get_audience_smarts(
+                user_id=user.get("id"),
+                page=page,
+                per_page=per_page,
+                sort_by=sort_by,
+                sort_order=sort_order,
+                from_date=from_date,
+                to_date=to_date,
+                search_query=search_query,
+                statuses=statuses,
+                use_cases=use_cases,
+            )
         )
 
         audience_smarts_list = []
@@ -104,18 +105,32 @@ class AudienceSmartsService:
         return limited_results
 
     def delete_audience_smart(self, id: UUID) -> bool:
-        count_deleted = self.audience_smarts_persistence.delete_audience_smart(id)
+        count_deleted = self.audience_smarts_persistence.delete_audience_smart(
+            id
+        )
         return count_deleted > 0
 
     def estimates_predictable_validation(
         self, validations: List[str]
     ) -> Dict[str, float]:
-        stats = self.audience_settings_persistence.get_average_success_validations()
+        stats = (
+            self.audience_settings_persistence.get_average_success_validations()
+        )
         product = 1.0
         for key in validations:
             product *= stats.get(key, 1.0)
 
         return product
+
+    def calculate_validation_cost(
+        self, count_active_segment: int, validations: List[str]
+    ) -> float:
+        stats = self.audience_settings_persistence.get_cost_validations()
+        costs = 0
+        for key in validations:
+            costs += count_active_segment * stats.get(key, 1.0)
+
+        return round(costs, 2)
 
     def update_audience_smart(self, id: UUID, new_name: str) -> bool:
         count_updated = self.audience_smarts_persistence.update_audience_smart(
@@ -124,8 +139,10 @@ class AudienceSmartsService:
         return count_updated > 0
 
     def set_data_syncing_status(self, id: UUID) -> bool:
-        count_updated = self.audience_smarts_persistence.set_data_syncing_status(
-            id, AudienceSmartStatuses.DATA_SYNCING.value
+        count_updated = (
+            self.audience_smarts_persistence.set_data_syncing_status(
+                id, AudienceSmartStatuses.DATA_SYNCING.value
+            )
         )
         return count_updated > 0
 
@@ -174,10 +191,14 @@ class AudienceSmartsService:
         try:
             message_body = {"data": data}
             await publish_rabbitmq_message(
-                connection=connection, queue_name=queue_name, message_body=message_body
+                connection=connection,
+                queue_name=queue_name,
+                message_body=message_body,
             )
         except Exception as e:
-            logger.error(f"Failed to publish message to {queue_name}. Error: {e}")
+            logger.error(
+                f"Failed to publish message to {queue_name}. Error: {e}"
+            )
         finally:
             await rabbitmq_connection.close()
 
@@ -229,6 +250,7 @@ class AudienceSmartsService:
             total_records=total_records,
             target_schema=target_schema,
             status=status,
+            need_validate=need_validate,
         )
         await self.start_scripts_for_matching(
             created_data.id,
@@ -260,8 +282,8 @@ class AudienceSmartsService:
         )
 
     def get_datasources_by_aud_smart_id(self, id: UUID) -> DataSourcesResponse:
-        data_sources = self.audience_smarts_persistence.get_datasources_by_aud_smart_id(
-            id
+        data_sources = (
+            self.audience_smarts_persistence.get_datasources_by_aud_smart_id(id)
         )
         includes = []
         excludes = []
@@ -292,7 +314,9 @@ class AudienceSmartsService:
             self.audience_settings_persistence.get_validation_priority()
         )
 
-        priority_order = validation_priority.split(",") if validation_priority else []
+        priority_order = (
+            validation_priority.split(",") if validation_priority else []
+        )
 
         parsed_validations = json.loads(raw_validations_obj.validations)
 
@@ -304,10 +328,13 @@ class AudienceSmartsService:
                     for subkey in item.keys():
                         count_submited = item[subkey].get("count_submited", 0)
                         count_validated = item[subkey].get("count_validated", 0)
+                        count_cost = item[subkey].get("count_cost", 0)
 
                         if subkey == "recency":
                             subkey_with_param = (
-                                "recency " + str(item[subkey].get("days")) + " days"
+                                "recency "
+                                + str(item[subkey].get("days"))
+                                + " days"
                             )
                         else:
                             subkey_with_param = subkey
@@ -319,7 +346,7 @@ class AudienceSmartsService:
                                     "type_validation": subkey_with_param,
                                     "count_submited": count_submited,
                                     "count_validated": count_validated,
-                                    "count_cost": 0,
+                                    "count_cost": count_cost,
                                 },
                             }
                         )
@@ -332,7 +359,7 @@ class AudienceSmartsService:
 
         return [{item["key"]: item["validation"]} for item in result]
 
-    def get_datasource(self, user: dict) -> dict:
+    def get_datasource(self, user: dict):
         lookalikes, count, max_page, _ = (
             self.lookalikes_persistence_service.get_lookalikes(
                 user_id=user.get("id"), page=1, per_page=50
@@ -344,16 +371,24 @@ class AudienceSmartsService:
         )
 
         lookalike_list = []
-        for lookalike_info in lookalikes:
+        for (
+            lookalike,
+            source_name,
+            source_type,
+            created_by,
+            source_origin,
+            domain,
+            target_schema,
+        ) in lookalikes:
             lookalike_list.append(
                 {
-                    **lookalike_info.lookalike.__dict__,
-                    "source": lookalike_info.name,
-                    "source_type": lookalike_info.source_type,
-                    "created_by": lookalike_info.full_name,
-                    "source_origin": lookalike_info.source_origin,
-                    "domain": lookalike_info.domain,
-                    "target_schema": lookalike_info.target_schema,
+                    **lookalike.__dict__,
+                    "source": source_name,
+                    "source_type": source_type,
+                    "created_by": created_by,
+                    "source_origin": source_origin,
+                    "domain": domain,
+                    "target_schema": target_schema,
                 }
             )
 
@@ -397,13 +432,24 @@ class AudienceSmartsService:
         return output
 
     def download_synced_persons(self, data_sync_id):
-        exclude_fields = {"id", "asid", "up_id", "rsid", "name_prefix", "name_suffix"}
+        exclude_fields = {
+            "id",
+            "asid",
+            "up_id",
+            "rsid",
+            "name_prefix",
+            "name_suffix",
+        }
 
         fields = EnrichmentUserContact.get_fields(exclude_fields=exclude_fields)
-        headers = EnrichmentUserContact.get_headers(exclude_fields=exclude_fields)
+        headers = EnrichmentUserContact.get_headers(
+            exclude_fields=exclude_fields
+        )
 
-        persons = self.audience_smarts_persistence.get_synced_persons_by_smart_aud_id(
-            data_sync_id, fields
+        persons = (
+            self.audience_smarts_persistence.get_synced_persons_by_smart_aud_id(
+                data_sync_id, fields
+            )
         )
 
         fields.insert(-1, "state")
@@ -430,7 +476,9 @@ class AudienceSmartsService:
         return output
 
     def get_processing_source(self, id: str) -> Optional[SmartsResponse]:
-        smart_source = self.audience_smarts_persistence.get_processing_sources(id)
+        smart_source = self.audience_smarts_persistence.get_processing_sources(
+            id
+        )
         if not smart_source:
             return None
 

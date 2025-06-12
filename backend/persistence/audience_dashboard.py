@@ -1,21 +1,32 @@
 from datetime import datetime, timezone, timedelta
-from typing import Optional, List
+from collections import defaultdict
 
-from sqlalchemy import and_, or_
+import pytz
+from sqlalchemy.sql import (
+    func,
+    select,
+    union_all,
+    literal_column,
+    extract,
+    case,
+    literal,
+)
 from sqlalchemy.orm import aliased
-from sqlalchemy.sql import func, select, case
-
+from enums import AudienceSmartStatuses
 from models import Users
 from models.audience_lookalikes import AudienceLookalikes
 from models.audience_smarts import AudienceSmart
 from models.audience_smarts_data_sources import AudienceSmartsDataSources
-from models.audience_smarts_use_cases import AudienceSmartsUseCase
+from sqlalchemy import and_, or_, String
+from collections import OrderedDict
 from models.audience_sources import AudienceSource
+from models.users_domains import UserDomains
+from models.audience_smarts_use_cases import AudienceSmartsUseCase
+from models.leads_visits import LeadsVisits
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from models.leads_users import LeadUser
-from models.leads_visits import LeadsVisits
-from models.users_domains import UserDomains
+from typing import Optional, List, Dict
 
 
 class DashboardAudiencePersistence:
@@ -41,6 +52,100 @@ class DashboardAudiencePersistence:
             .count()
         )
         return source_rows, installed_domains_count
+
+    def get_audience_metrics(
+        self,
+        last_login_date_start: int,
+        last_login_date_end: int,
+        join_date_start: int,
+        join_date_end: int,
+        search_query: str,
+    ):
+        user_filters = [Users.role.contains(["customer"])]
+
+        if last_login_date_start:
+            start_date = datetime.fromtimestamp(
+                last_login_date_start, tz=pytz.UTC
+            ).date()
+            user_filters.append(func.DATE(Users.last_login) >= start_date)
+
+        if last_login_date_end:
+            end_date = datetime.fromtimestamp(
+                last_login_date_end, tz=pytz.UTC
+            ).date()
+            user_filters.append(func.DATE(Users.last_login) <= end_date)
+
+        if join_date_start:
+            start_date = datetime.fromtimestamp(
+                join_date_start, tz=pytz.UTC
+            ).date()
+            user_filters.append(func.DATE(Users.created_at) >= start_date)
+
+        if join_date_end:
+            end_date = datetime.fromtimestamp(join_date_end, tz=pytz.UTC).date()
+            user_filters.append(func.DATE(Users.created_at) <= end_date)
+
+        if search_query:
+            user_filters.append(
+                or_(
+                    Users.email.ilike(f"%{search_query}%"),
+                    Users.full_name.ilike(f"%{search_query}%"),
+                )
+            )
+
+        queries = [
+            {
+                "query": self.db.query(
+                    func.count(Users.id).label("count")
+                ).filter(*user_filters),
+                "key": "users_count",
+            },
+            {
+                "query": self.db.query(
+                    func.count(UserDomains.id).label("count")
+                )
+                .join(Users, Users.id == UserDomains.user_id)
+                .filter(UserDomains.is_pixel_installed == True, *user_filters),
+                "key": "pixel_contacts",
+            },
+            {
+                "query": self.db.query(
+                    func.count(AudienceSource.id).label("count")
+                )
+                .join(Users, Users.id == AudienceSource.user_id)
+                .filter(*user_filters),
+                "key": "sources_count",
+            },
+            {
+                "query": self.db.query(
+                    func.count(AudienceLookalikes.id).label("count")
+                )
+                .join(Users, Users.id == AudienceLookalikes.user_id)
+                .filter(*user_filters),
+                "key": "lookalike_count",
+            },
+            {
+                "query": self.db.query(
+                    func.count(AudienceSmart.id).label("count")
+                )
+                .join(Users, Users.id == AudienceSmart.user_id)
+                .filter(*user_filters),
+                "key": "smart_count",
+            },
+            {
+                "query": self.db.query(
+                    func.count(IntegrationUserSync.id).label("count")
+                )
+                .join(
+                    UserDomains, UserDomains.id == IntegrationUserSync.domain_id
+                )
+                .join(Users, Users.id == UserDomains.user_id)
+                .filter(*user_filters),
+                "key": "sync_count",
+            },
+        ]
+
+        return queries
 
     def get_dashboard_audience_data(
         self, *, from_date: int, to_date: int, user_id: int
@@ -125,7 +230,10 @@ class DashboardAudiencePersistence:
         return [
             row[0]
             for row in self.db.query(UserDomains.domain)
-            .filter(UserDomains.user_id == user_id)
+            .filter(
+                UserDomains.user_id == user_id,
+                UserDomains.is_pixel_installed == True,
+            )
             .all()
         ]
 
@@ -135,9 +243,9 @@ class DashboardAudiencePersistence:
             self.db.query(
                 UserDomains.domain,
                 LeadUser.behavior_type,
-                func.sum(case((LeadUser.is_converted_sales == True, 1), else_=0)).label(
-                    "count_converted_sales"
-                ),
+                func.sum(
+                    case((LeadUser.is_converted_sales == True, 1), else_=0)
+                ).label("count_converted_sales"),
                 func.count(LeadUser.id).label("lead_count"),
             )
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
@@ -178,7 +286,10 @@ class DashboardAudiencePersistence:
                 AudienceLookalikes.size.label("size"),
                 AudienceSource.target_schema.label("target_type"),
             )
-            .join(AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid)
+            .join(
+                AudienceSource,
+                AudienceSource.id == AudienceLookalikes.source_uuid,
+            )
             .filter(AudienceLookalikes.user_id == user_id)
             .order_by(priority_order, AudienceLookalikes.created_date.desc())
             .limit(limit)
@@ -206,9 +317,15 @@ class DashboardAudiencePersistence:
                 AudienceSource.total_records.label("no_of_customers"),
                 UserDomains.domain.label("domain"),
             )
-            .join(UserDomains, AudienceSource.domain_id == UserDomains.id, isouter=True)
+            .join(
+                UserDomains,
+                AudienceSource.domain_id == UserDomains.id,
+                isouter=True,
+            )
             .filter(AudienceSource.user_id == user_id)
-            .order_by(priority_audience_source_order, AudienceSource.created_at.desc())
+            .order_by(
+                priority_audience_source_order, AudienceSource.created_at.desc()
+            )
             .limit(limit)
             .all()
         )
@@ -242,13 +359,16 @@ class DashboardAudiencePersistence:
                 )
                 .outerjoin(
                     DataSourcesFromLookalike,
-                    DataSourcesFromLookalike.lookalike_id == AudienceLookalikes.id,
+                    DataSourcesFromLookalike.lookalike_id
+                    == AudienceLookalikes.id,
                 )
                 .outerjoin(
                     AudienceSmart,
                     or_(
-                        AudienceSmart.id == DataSourcesFromSource.smart_audience_id,
-                        AudienceSmart.id == DataSourcesFromLookalike.smart_audience_id,
+                        AudienceSmart.id
+                        == DataSourcesFromSource.smart_audience_id,
+                        AudienceSmart.id
+                        == DataSourcesFromLookalike.smart_audience_id,
                     ),
                 )
                 .outerjoin(
@@ -267,15 +387,18 @@ class DashboardAudiencePersistence:
                 )
                 .select_from(AudienceLookalikes)
                 .join(
-                    AudienceSource, AudienceSource.id == AudienceLookalikes.source_uuid
+                    AudienceSource,
+                    AudienceSource.id == AudienceLookalikes.source_uuid,
                 )
                 .outerjoin(
                     AudienceSmartsDataSources,
-                    AudienceSmartsDataSources.lookalike_id == AudienceLookalikes.id,
+                    AudienceSmartsDataSources.lookalike_id
+                    == AudienceLookalikes.id,
                 )
                 .outerjoin(
                     AudienceSmart,
-                    AudienceSmart.id == AudienceSmartsDataSources.smart_audience_id,
+                    AudienceSmart.id
+                    == AudienceSmartsDataSources.smart_audience_id,
                 )
                 .outerjoin(
                     IntegrationUserSync,
@@ -297,7 +420,8 @@ class DashboardAudiencePersistence:
                     DataSourcesFromSource.smart_audience_id == AudienceSmart.id,
                 )
                 .outerjoin(
-                    AudienceSource, AudienceSource.id == DataSourcesFromSource.source_id
+                    AudienceSource,
+                    AudienceSource.id == DataSourcesFromSource.source_id,
                 )
                 .outerjoin(
                     AudienceLookalikes,
@@ -327,7 +451,8 @@ class DashboardAudiencePersistence:
                     DataSourcesFromSource.smart_audience_id == AudienceSmart.id,
                 )
                 .outerjoin(
-                    AudienceSource, AudienceSource.id == DataSourcesFromSource.source_id
+                    AudienceSource,
+                    AudienceSource.id == DataSourcesFromSource.source_id,
                 )
                 .outerjoin(
                     AudienceLookalikes,
@@ -341,7 +466,9 @@ class DashboardAudiencePersistence:
         self, user_id: int, limit: int, smart_audiences: List[AudienceSmart]
     ):
         smart_audience_ids = [data_sync.id for data_sync in smart_audiences]
-        priority_order = case((AudienceSmart.id.in_(smart_audience_ids), 0), else_=1)
+        priority_order = case(
+            (AudienceSmart.id.in_(smart_audience_ids), 0), else_=1
+        )
         lookalike_smart_audiences = (
             self.db.query(
                 AudienceSmart.id.label("id"),
@@ -388,7 +515,8 @@ class DashboardAudiencePersistence:
                 UserIntegration.id == IntegrationUserSync.integration_id,
             )
             .join(
-                AudienceSmart, AudienceSmart.id == IntegrationUserSync.smart_audience_id
+                AudienceSmart,
+                AudienceSmart.id == IntegrationUserSync.smart_audience_id,
             )
             .join(
                 AudienceSmartsUseCase,
@@ -404,14 +532,21 @@ class DashboardAudiencePersistence:
 
         include_agg = (
             self.db.query(
-                AudienceSmartsDataSources.smart_audience_id.label("smart_audience_id"),
+                AudienceSmartsDataSources.smart_audience_id.label(
+                    "smart_audience_id"
+                ),
                 func.array_agg(AudienceSource.id).label("inc_source_ids"),
                 func.array_agg(AudienceSource.name).label("inc_source_names"),
-                func.array_agg(AudienceLookalikes.id).label("inc_lookalike_ids"),
-                func.array_agg(AudienceLookalikes.name).label("inc_lookalike_names"),
+                func.array_agg(AudienceLookalikes.id).label(
+                    "inc_lookalike_ids"
+                ),
+                func.array_agg(AudienceLookalikes.name).label(
+                    "inc_lookalike_names"
+                ),
             )
             .outerjoin(
-                AudienceSource, AudienceSmartsDataSources.source_id == AudienceSource.id
+                AudienceSource,
+                AudienceSmartsDataSources.source_id == AudienceSource.id,
             )
             .outerjoin(
                 AudienceLookalikes,
@@ -424,14 +559,21 @@ class DashboardAudiencePersistence:
 
         exclude_agg = (
             self.db.query(
-                AudienceSmartsDataSources.smart_audience_id.label("smart_audience_id"),
+                AudienceSmartsDataSources.smart_audience_id.label(
+                    "smart_audience_id"
+                ),
                 func.array_agg(AudienceSource.id).label("exc_source_ids"),
                 func.array_agg(AudienceSource.name).label("exc_source_names"),
-                func.array_agg(AudienceLookalikes.id).label("exc_lookalike_ids"),
-                func.array_agg(AudienceLookalikes.name).label("exc_lookalike_names"),
+                func.array_agg(AudienceLookalikes.id).label(
+                    "exc_lookalike_ids"
+                ),
+                func.array_agg(AudienceLookalikes.name).label(
+                    "exc_lookalike_names"
+                ),
             )
             .outerjoin(
-                AudienceSource, AudienceSmartsDataSources.source_id == AudienceSource.id
+                AudienceSource,
+                AudienceSmartsDataSources.source_id == AudienceSource.id,
             )
             .outerjoin(
                 AudienceLookalikes,
@@ -464,8 +606,12 @@ class DashboardAudiencePersistence:
                 AudienceSmartsUseCase,
                 AudienceSmartsUseCase.id == AudienceSmart.use_case_id,
             )
-            .outerjoin(include_agg, include_agg.c.smart_audience_id == AudienceSmart.id)
-            .outerjoin(exclude_agg, exclude_agg.c.smart_audience_id == AudienceSmart.id)
+            .outerjoin(
+                include_agg, include_agg.c.smart_audience_id == AudienceSmart.id
+            )
+            .outerjoin(
+                exclude_agg, exclude_agg.c.smart_audience_id == AudienceSmart.id
+            )
             .filter(AudienceSmart.user_id == user_id)
             .order_by(priority_order, AudienceSmart.created_at.desc())
             .limit(limit)
@@ -487,9 +633,9 @@ class DashboardAudiencePersistence:
             self.db.query(
                 func.date(LeadsVisits.start_date).label("date"),
                 LeadUser.behavior_type,
-                func.sum(case((LeadUser.is_converted_sales == True, 1), else_=0)).label(
-                    "count_converted_sales"
-                ),
+                func.sum(
+                    case((LeadUser.is_converted_sales == True, 1), else_=0)
+                ).label("count_converted_sales"),
                 func.count(LeadUser.id).label("count"),
             )
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
@@ -506,7 +652,9 @@ class DashboardAudiencePersistence:
             query = query.filter(LeadsVisits.start_date.between(from_dt, to_dt))
 
         results = (
-            query.group_by(func.date(LeadsVisits.start_date), LeadUser.behavior_type)
+            query.group_by(
+                func.date(LeadsVisits.start_date), LeadUser.behavior_type
+            )
             .order_by(func.date(LeadsVisits.start_date))
             .all()
         )

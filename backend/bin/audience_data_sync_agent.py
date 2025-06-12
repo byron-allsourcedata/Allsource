@@ -10,7 +10,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, os.pardir))
 sys.path.append(parent_dir)
 from uuid import UUID
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.exc import PendingRollbackError
 from dotenv import load_dotenv
 from models.enrichment.enrichment_users import EnrichmentUser
@@ -26,14 +26,18 @@ from enums import (
     NotificationTitles,
     AudienceSmartStatuses,
 )
-from models.audience_data_sync_imported_persons import AudienceDataSyncImportedPersons
+from models.audience_data_sync_imported_persons import (
+    AudienceDataSyncImportedPersons,
+)
 from models.integrations.integrations_users_sync import IntegrationUserSync
 from models.integrations.users_domains_integrations import UserIntegration
 from sqlalchemy.orm import sessionmaker, Session
 from aio_pika import IncomingMessage
 from config.rmq_connection import RabbitMQConnection
 from services.integrations.base import IntegrationService
-from services.integrations.million_verifier import MillionVerifierIntegrationsService
+from services.integrations.million_verifier import (
+    MillionVerifierIntegrationsService,
+)
 from dependencies import (
     IntegrationsPresistence,
     LeadsPersistence,
@@ -99,12 +103,18 @@ def get_lead_attributes(session, enrichment_user_ids, data_sync_id):
             AudienceSmartPerson,
             AudienceSmartPerson.enrichment_user_id == EnrichmentUser.id,
         )
-        .join(AudienceSmart, AudienceSmart.id == AudienceSmartPerson.smart_audience_id)
+        .join(
+            AudienceSmart,
+            AudienceSmart.id == AudienceSmartPerson.smart_audience_id,
+        )
         .join(
             IntegrationUserSync,
             IntegrationUserSync.smart_audience_id == AudienceSmart.id,
         )
-        .join(UserIntegration, UserIntegration.id == IntegrationUserSync.integration_id)
+        .join(
+            UserIntegration,
+            UserIntegration.id == IntegrationUserSync.integration_id,
+        )
         .filter(
             EnrichmentUser.id.in_(enrichment_user_ids),
             IntegrationUserSync.id == data_sync_id,
@@ -117,7 +127,13 @@ def get_lead_attributes(session, enrichment_user_ids, data_sync_id):
         data_sync = result[0][2]
         target_schema = result[0][3]
         validations = result[0][4]
-        return enrichment_users, user_integration, data_sync, target_schema, validations
+        return (
+            enrichment_users,
+            user_integration,
+            data_sync,
+            target_schema,
+            validations,
+        )
     else:
         return [], None, None, None, None
 
@@ -146,16 +162,19 @@ def update_users_integrations(
         logging.info(
             f"Authentication failed for  user_domain_integration_id {user_domain_integration_id}"
         )
+
         subquery = (
-            session.query(AudienceSmart.id)
+            select(AudienceSmart.id)
             .join(
                 IntegrationUserSync,
                 IntegrationUserSync.smart_audience_id == AudienceSmart.id,
             )
             .filter(IntegrationUserSync.id == integration_data_sync_id)
-            .subquery()
         )
-        session.query(AudienceSmart).filter(AudienceSmart.id.in_(subquery)).update(
+
+        session.query(AudienceSmart).filter(
+            AudienceSmart.id.in_(subquery)
+        ).update(
             {AudienceSmart.status: AudienceSmartStatuses.FAILED.value},
             synchronize_session=False,
         )
@@ -191,7 +210,9 @@ def update_data_sync_imported_leads(
     enrichment_user_ids,
 ):
     session.query(AudienceDataSyncImportedPersons).filter(
-        AudienceDataSyncImportedPersons.enrichment_user_id.in_(enrichment_user_ids)
+        AudienceDataSyncImportedPersons.enrichment_user_id.in_(
+            enrichment_user_ids
+        )
     ).update({"status": status}, synchronize_session=False)
 
     session.flush()
@@ -213,8 +234,8 @@ async def send_error_msg(
     notification_persistence: NotificationPersistence,
     title: str,
 ):
-    account_notification = notification_persistence.get_account_notification_by_title(
-        title
+    account_notification = (
+        notification_persistence.get_account_notification_by_title(title)
     )
     notification = notification_persistence.find_account_notifications(
         user_id=user_id, account_notification_id=account_notification.id
@@ -226,10 +247,12 @@ async def send_error_msg(
     connection = await rabbitmq_connection.connect()
     queue_name = f"sse_events_{str(user_id)}"
     notification_text = account_notification.text.format(service_name)
-    save_account_notification = notification_persistence.save_account_notification(
-        user_id=user_id,
-        account_notification_id=account_notification.id,
-        params=service_name,
+    save_account_notification = (
+        notification_persistence.save_account_notification(
+            user_id=user_id,
+            account_notification_id=account_notification.id,
+            params=service_name,
+        )
     )
     try:
         await publish_rabbitmq_message(
@@ -262,9 +285,13 @@ async def ensure_integration(
             enrichment_user_ids.append(enrichment_user_id)
 
             if not check_correct_data_sync(
-                enrichment_user_id, enrichment_users["data_sync_imported_id"], session
+                enrichment_user_id,
+                enrichment_users["data_sync_imported_id"],
+                session,
             ):
-                logging.debug(f"Data sync not correct for user {enrichment_user_id}")
+                logging.debug(
+                    f"Data sync not correct for user {enrichment_user_id}"
+                )
                 continue
 
         if not enrichment_user_ids:
@@ -320,7 +347,9 @@ async def ensure_integration(
             match result:
                 case ProccessDataSyncResult.INCORRECT_FORMAT.value:
                     logging.debug(f"incorrect_format: {service_name}")
-                    import_status = DataSyncImportedStatus.INCORRECT_FORMAT.value
+                    import_status = (
+                        DataSyncImportedStatus.INCORRECT_FORMAT.value
+                    )
 
                 case ProccessDataSyncResult.SUCCESS.value:
                     logging.debug(f"success: {service_name}")
@@ -442,7 +471,9 @@ async def main():
             lead_persistence=LeadsPersistence(session),
             audience_persistence=AudiencePersistence(session),
             lead_orders_persistence=LeadOrdersPersistence(session),
-            integrations_user_sync_persistence=IntegrationsUserSyncPersistence(session),
+            integrations_user_sync_persistence=IntegrationsUserSyncPersistence(
+                session
+            ),
             aws_service=AWSService(get_s3_client()),
             domain_persistence=UserDomainsPersistence(session),
             suppression_persistence=SuppressionPersistence(session),

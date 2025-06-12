@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
-    event,
     Integer,
     BOOLEAN,
     TIMESTAMP,
@@ -11,7 +12,8 @@ from sqlalchemy import (
     Index,
     Sequence,
 )
-from .base import Base, create_timestamps
+
+from .base import Base
 
 
 class SuppressionRule(Base):
@@ -26,20 +28,28 @@ class SuppressionRule(Base):
         primary_key=True,
         nullable=False,
     )
-    created_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     is_stop_collecting_contacts = Column(Boolean, nullable=True)
     is_url_certain_activation = Column(Boolean, nullable=True)
     activate_certain_urls = Column(TEXT, nullable=True)
     is_based_activation = Column(Boolean, nullable=True)
     activate_based_urls = Column(TEXT, nullable=True)
     domain_id = Column(
-        Integer, ForeignKey("users_domains.id", ondelete="CASCADE"), nullable=False
+        Integer,
+        ForeignKey("users_domains.id", ondelete="CASCADE"),
+        nullable=False,
     )
     actual_contect_days = Column(Integer, nullable=True)
     page_views_limit = Column(Integer, nullable=True)
     collection_timeout = Column(Integer, nullable=True)
     suppressions_multiple_emails = Column(TEXT, nullable=True)
-    is_delete_contacts = Column(BOOLEAN, nullable=False, server_default=text("FALSE"))
+    is_delete_contacts = Column(
+        BOOLEAN, nullable=False, server_default=text("FALSE")
+    )
 
     def to_dict(self):
         return {
@@ -54,6 +64,3 @@ class SuppressionRule(Base):
             "actual_contect_days": self.actual_contect_days,
             "is_delete_contacts": self.is_delete_contacts,
         }
-
-
-event.listen(SuppressionRule, "before_insert", create_timestamps)

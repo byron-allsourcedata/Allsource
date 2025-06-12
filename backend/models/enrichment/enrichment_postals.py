@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import Column, VARCHAR, TIMESTAMP, ForeignKey, Index
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
@@ -8,10 +10,14 @@ from models.base import Base
 class EnrichmentPostal(Base):
     __tablename__ = "enrichment_postals"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False)
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid4, nullable=False
+    )
     asid = Column(
         UUID(as_uuid=True),
-        ForeignKey("enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"),
+        ForeignKey(
+            "enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"
+        ),
         nullable=False,
     )
     home_address_line1 = Column(VARCHAR(256), nullable=True)
@@ -33,9 +39,11 @@ class EnrichmentPostal(Base):
     address_source = Column(VARCHAR(4), nullable=True)
     raw_url_date = Column(TIMESTAMP, nullable=True)
     raw_last_updated = Column(TIMESTAMP, nullable=True)
-    created_date = Column(TIMESTAMP, nullable=False)
-
-    __table_args__ = (Index("enrichment_postals_asid_idx", asid),)
+    created_date = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
 
     enrichment_user = relationship(
         "EnrichmentUser",

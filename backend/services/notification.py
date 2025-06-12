@@ -19,17 +19,22 @@ class Notification:
         self.leads_persistence = leads_persistence
 
     def get_notification(self, user: dict):
-        notifications = self.notification_persistence.get_notifications_by_user_id(
-            user_id=user.get("id")
+        notifications = (
+            self.notification_persistence.get_notifications_by_user_id(
+                user_id=user.get("id")
+            )
         )
 
         result = []
         for notification in notifications:
-            params = notification.params.split(", ") if notification.params else []
+            params = (
+                notification.params.split(", ") if notification.params else []
+            )
 
             try:
                 converted_params = [
-                    float(param) if "." in param else int(param) for param in params
+                    float(param) if "." in param else int(param)
+                    for param in params
                 ]
             except ValueError:
                 converted_params = [str(param) for param in params]
@@ -59,5 +64,7 @@ class Notification:
         return "SUCCESS"
 
     def dismiss(self, request, user):
-        self.notification_persistence.dismiss(request=request, user_id=user.get("id"))
+        self.notification_persistence.dismiss(
+            request=request, user_id=user.get("id")
+        )
         return "SUCCESS"

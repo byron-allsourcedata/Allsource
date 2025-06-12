@@ -6,6 +6,9 @@ import pytz
 from sqlalchemy import and_, or_, desc, asc, Integer, distinct, select
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import func
+
+from db_dependencies import Db
+from resolver import injectable
 from utils import format_phone_number
 from models.audience import Audience
 from models.audience_leads import AudienceLeads
@@ -55,9 +58,13 @@ def build_net_worth_filters(net_worth_str: str):
             start, end = map(int, part.split("-"))
             filters.append(
                 and_(
-                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(Integer)
+                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(
+                        Integer
+                    )
                     >= start,
-                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(Integer)
+                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(
+                        Integer
+                    )
                     <= end,
                 )
             )
@@ -67,9 +74,13 @@ def build_net_worth_filters(net_worth_str: str):
             value = int(part)
             filters.append(
                 and_(
-                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(Integer)
+                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(
+                        Integer
+                    )
                     >= value,
-                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(Integer)
+                    func.regexp_replace(Lead.net_worth, r"[\$,]", "", "g").cast(
+                        Integer
+                    )
                     <= value,
                 )
             )
@@ -80,8 +91,9 @@ def normalize_profession(profession: str) -> str:
     return profession.lower().replace(" ", "-")
 
 
+@injectable
 class LeadsPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def filter_leads(
@@ -108,7 +120,9 @@ class LeadsPersistence:
         LastNameAlias = aliased(FiveXFiveNames)
 
         recurring_visits_subquery = (
-            self.db.query(LeadsVisits.lead_id, func.count().label("recurring_visits"))
+            self.db.query(
+                LeadsVisits.lead_id, func.count().label("recurring_visits")
+            )
             .group_by(LeadsVisits.lead_id)
             .subquery()
         )
@@ -186,8 +200,12 @@ class LeadsPersistence:
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
-            .outerjoin(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
-            .outerjoin(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
+            .outerjoin(
+                FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id
+            )
+            .outerjoin(
+                LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id
+            )
             .outerjoin(
                 FiveXFiveUsersLocations,
                 FiveXFiveUsersLocations.five_x_five_user_id == FiveXFiveUser.id,
@@ -201,7 +219,9 @@ class LeadsPersistence:
                 recurring_visits_subquery,
                 recurring_visits_subquery.c.lead_id == LeadUser.id,
             )
-            .filter(LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True)
+            .filter(
+                LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True
+            )
             .group_by(
                 FiveXFiveUser.id,
                 LeadUser.behavior_type,
@@ -265,12 +285,16 @@ class LeadsPersistence:
             status_list = status.split(",")
             filters = []
 
-            if "converted_sales" in status_list or "abandoned_cart" in status_list:
+            if (
+                "converted_sales" in status_list
+                or "abandoned_cart" in status_list
+            ):
                 query = query.outerjoin(
                     LeadsUsersAddedToCart,
                     LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
                 ).outerjoin(
-                    LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+                    LeadsUsersOrdered,
+                    LeadsUsersOrdered.lead_user_id == LeadUser.id,
                 )
 
             if "converted_sales" in status_list:
@@ -336,10 +360,13 @@ class LeadsPersistence:
             filters = []
             for recurring_visit in recurring_visits_list:
                 if recurring_visit == "4+":
-                    filters.append(recurring_visits_subquery.c.recurring_visits > 4)
+                    filters.append(
+                        recurring_visits_subquery.c.recurring_visits > 4
+                    )
                 else:
                     filters.append(
-                        recurring_visits_subquery.c.recurring_visits == recurring_visit
+                        recurring_visits_subquery.c.recurring_visits
+                        == recurring_visit
                     )
             query = query.filter(or_(*filters))
 
@@ -348,15 +375,21 @@ class LeadsPersistence:
             region_list = regions.split(",")
             for region_data in region_list:
                 region_data = region_data.split("-")
-                filters.append(FiveXFiveLocations.city.ilike(f"{region_data[0]}%"))
+                filters.append(
+                    FiveXFiveLocations.city.ilike(f"{region_data[0]}%")
+                )
 
                 if len(region_data) > 1 and region_data[1]:
-                    filters.append(States.state_name.ilike(f"{region_data[1]}%"))
+                    filters.append(
+                        States.state_name.ilike(f"{region_data[1]}%")
+                    )
 
             query = query.filter(or_(*filters))
 
         if page_url:
-            query = query.outerjoin(LeadsRequests, LeadsRequests.lead_id == LeadUser.id)
+            query = query.outerjoin(
+                LeadsRequests, LeadsRequests.lead_id == LeadUser.id
+            )
             filters = []
             page_list = page_url.split(",")
             for page_url in page_list:
@@ -419,27 +452,33 @@ class LeadsPersistence:
                     FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
                 )
                 .outerjoin(
-                    FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id
+                    FiveXFiveEmails,
+                    FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
                 )
                 .outerjoin(
                     FiveXFiveUsersPhones,
                     FiveXFiveUsersPhones.user_id == FiveXFiveUser.id,
                 )
                 .outerjoin(
-                    FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id
+                    FiveXFivePhones,
+                    FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id,
                 )
             )
 
             filters = [
                 FiveXFiveEmails.email.ilike(f"{search_query}%"),
                 FiveXFiveEmails.email_host.ilike(f"{search_query}%"),
-                FiveXFivePhones.number.ilike(f"{search_query.replace('+', '')}%"),
+                FiveXFivePhones.number.ilike(
+                    f"{search_query.replace('+', '')}%"
+                ),
             ]
             search_query = search_query.split()
             if len(search_query) == 1:
                 filters.extend(
                     [
-                        FirstNameAlias.name.ilike(f"{search_query[0].strip()}%"),
+                        FirstNameAlias.name.ilike(
+                            f"{search_query[0].strip()}%"
+                        ),
                         LastNameAlias.name.ilike(f"{search_query[0].strip()}%"),
                     ]
                 )
@@ -459,7 +498,9 @@ class LeadsPersistence:
             self.db.query(
                 LeadsRequests.lead_id,
                 LeadsRequests.page,
-                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time"),
+                func.sum(LeadsRequests.spent_time_sec).label(
+                    "total_spent_time"
+                ),
             )
             .filter(LeadsRequests.lead_id.in_(lead_ids))
             .group_by(LeadsRequests.lead_id, LeadsRequests.page)
@@ -526,7 +567,9 @@ class LeadsPersistence:
         query = (
             self.db.query(
                 func.date(LeadsVisits.start_date).label("start_date"),
-                func.count(LeadsVisits.lead_id.distinct()).label("returning_visitors"),
+                func.count(LeadsVisits.lead_id.distinct()).label(
+                    "returning_visitors"
+                ),
             )
             .join(LeadUser, LeadUser.id == LeadsVisits.lead_id)
             .join(
@@ -548,11 +591,17 @@ class LeadsPersistence:
     ) -> list[int]:
         stmt = (
             select(LeadUser.id)
-            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
             .join(
-                FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
             )
-            .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
+            .join(
+                FiveXFiveUsersEmails,
+                FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
+            )
+            .join(
+                FiveXFiveEmails,
+                FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
+            )
             .where(
                 FiveXFiveEmails.email.in_(email_list),
                 LeadUser.domain_id == domain_id,
@@ -574,7 +623,9 @@ class LeadsPersistence:
 
     def get_visit_stats(self, five_x_five_user_id: int):
         recurring_visits_subquery = (
-            self.db.query(LeadsVisits.lead_id, func.count().label("url_visited"))
+            self.db.query(
+                LeadsVisits.lead_id, func.count().label("url_visited")
+            )
             .group_by(LeadsVisits.lead_id)
             .subquery()
         )
@@ -585,7 +636,9 @@ class LeadsPersistence:
                 recurring_visits_subquery.c.url_visited,
             )
             .select_from(LeadUser)
-            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
+            .join(
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
+            )
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
             .outerjoin(
                 recurring_visits_subquery,
@@ -646,11 +699,15 @@ class LeadsPersistence:
     def get_contact_data_for_b2b(self, domain_id, from_date, to_date):
         start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
         end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-        new_leads_data = self.get_new_leads_per_day(domain_id, start_date, end_date)
+        new_leads_data = self.get_new_leads_per_day(
+            domain_id, start_date, end_date
+        )
         returning_visitors_data = self.get_returning_visitors_per_day(
             domain_id, start_date, end_date
         )
-        page_views_data = self.get_page_views_per_day(domain_id, start_date, end_date)
+        page_views_data = self.get_page_views_per_day(
+            domain_id, start_date, end_date
+        )
         return new_leads_data, returning_visitors_data, page_views_data
 
     def get_lifetime_revenue(self, domain_id):
@@ -671,10 +728,16 @@ class LeadsPersistence:
         total_investment = 0
 
         for transaction in transactions:
-            key = (transaction.price_id, transaction.start_date, transaction.end_date)
+            key = (
+                transaction.price_id,
+                transaction.start_date,
+                transaction.end_date,
+            )
             if key not in unique_combinations:
                 unique_combinations.add(key)
-                total_investment += transaction.amount if transaction.amount else 0
+                total_investment += (
+                    transaction.amount if transaction.amount else 0
+                )
 
         return total_investment
 
@@ -712,14 +775,20 @@ class LeadsPersistence:
         return results, lifetime_revenue, investment
 
     def get_lead_data(self, lead_id):
-        return self.db.query(FiveXFiveUser).filter(FiveXFiveUser.id == lead_id).first()
+        return (
+            self.db.query(FiveXFiveUser)
+            .filter(FiveXFiveUser.id == lead_id)
+            .first()
+        )
 
     def get_latest_page_time(self, lead_id):
         latest_page_time_subquery = (
             self.db.query(
                 LeadsRequests.page,
                 LeadsRequests.page_parameters,
-                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time"),
+                func.sum(LeadsRequests.spent_time_sec).label(
+                    "total_spent_time"
+                ),
                 func.count().label("count"),
             )
             .filter(LeadsRequests.lead_id == lead_id)
@@ -739,7 +808,9 @@ class LeadsPersistence:
     def get_ids_user_leads_ids(self, domain_id, leads_ids):
         lead_users = (
             self.db.query(LeadUser)
-            .filter(LeadUser.domain_id == domain_id, LeadUser.lead_id.in_(leads_ids))
+            .filter(
+                LeadUser.domain_id == domain_id, LeadUser.lead_id.in_(leads_ids)
+            )
             .all()
         )
         lead_ids_set = {lead_user.lead_id for lead_user in lead_users}
@@ -768,16 +839,23 @@ class LeadsPersistence:
                 LeadsRequests.lead_id,
                 LeadsRequests.page,
                 LeadsRequests.page_parameters,
-                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time"),
+                func.sum(LeadsRequests.spent_time_sec).label(
+                    "total_spent_time"
+                ),
             )
             .filter(LeadsRequests.lead_id.in_(lead_user_ids))
-            .group_by(LeadsRequests.lead_id, LeadsRequests.page)
+            .group_by(
+                LeadsRequests.lead_id,
+                LeadsRequests.page,
+                LeadsRequests.page_parameters,
+            )
             .subquery()
         )
 
         filtered_page_time_query = self.db.query(
             latest_page_time_subquery.c.lead_id,
             latest_page_time_subquery.c.page,
+            latest_page_time_subquery.c.page_parameters,
             latest_page_time_subquery.c.total_spent_time,
         ).all()
 
@@ -817,7 +895,9 @@ class LeadsPersistence:
         LastNameAlias = aliased(FiveXFiveNames)
 
         recurring_visits_subquery = (
-            self.db.query(LeadsVisits.lead_id, func.count().label("recurring_visits"))
+            self.db.query(
+                LeadsVisits.lead_id, func.count().label("recurring_visits")
+            )
             .group_by(LeadsVisits.lead_id)
             .subquery()
         )
@@ -825,7 +905,9 @@ class LeadsPersistence:
         query = (
             self.db.query(LeadUser.id, FiveXFiveUser)
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-            .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
+            .join(
+                FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id
+            )
             .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
             .join(LeadsVisits, LeadsVisits.id == LeadUser.first_visit_id)
             .outerjoin(
@@ -853,7 +935,9 @@ class LeadsPersistence:
         if from_date and to_date:
             start_date = datetime.fromtimestamp(from_date, tz=pytz.UTC)
             end_date = datetime.fromtimestamp(to_date, tz=pytz.UTC)
-            query = query.filter(LeadsVisits.start_date.between(start_date, end_date))
+            query = query.filter(
+                LeadsVisits.start_date.between(start_date, end_date)
+            )
 
         if status:
             status_filters = []
@@ -872,7 +956,8 @@ class LeadsPersistence:
                         LeadsUsersAddedToCart.lead_user_id == LeadUser.id,
                     )
                     query = query.outerjoin(
-                        LeadsUsersOrdered, LeadsUsersOrdered.lead_user_id == LeadUser.id
+                        LeadsUsersOrdered,
+                        LeadsUsersOrdered.lead_user_id == LeadUser.id,
                     )
                     query = query.filter(
                         LeadsUsersAddedToCart.added_at.isnot(None),
@@ -890,7 +975,9 @@ class LeadsPersistence:
                 query = query.filter(or_(*status_filters))
 
         if from_time and to_time:
-            query = query.filter(LeadsVisits.start_time.between(from_time, to_time))
+            query = query.filter(
+                LeadsVisits.start_time.between(from_time, to_time)
+            )
 
         if recurring_visits:
             visit_filters = [
@@ -909,7 +996,9 @@ class LeadsPersistence:
             query = query.filter(or_(*region_filters))
 
         if page_url:
-            query = query.outerjoin(LeadsRequests, LeadsRequests.lead_id == LeadUser.id)
+            query = query.outerjoin(
+                LeadsRequests, LeadsRequests.lead_id == LeadUser.id
+            )
             filters = []
             page_list = page_url.split(",")
             for page_url in page_list:
@@ -940,7 +1029,13 @@ class LeadsPersistence:
                 "1_pages": LeadsVisits.pages_count == 1,
             }
             query = query.filter(
-                or_(*(visit_map[v] for v in page_visits.split(",") if v in visit_map))
+                or_(
+                    *(
+                        visit_map[v]
+                        for v in page_visits.split(",")
+                        if v in visit_map
+                    )
+                )
             )
 
         if average_time_spent:
@@ -968,16 +1063,20 @@ class LeadsPersistence:
 
         if search_query:
             query = query.outerjoin(
-                FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id
+                FiveXFiveUsersEmails,
+                FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
             )
             query = query.outerjoin(
-                FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id
+                FiveXFiveEmails,
+                FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
             )
             query = query.outerjoin(
-                FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id
+                FiveXFiveUsersPhones,
+                FiveXFiveUsersPhones.user_id == FiveXFiveUser.id,
             )
             query = query.outerjoin(
-                FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id
+                FiveXFivePhones,
+                FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id,
             )
 
             search_filters = [
@@ -987,8 +1086,12 @@ class LeadsPersistence:
 
             search_terms = search_query.split()
             if len(search_terms) == 1:
-                search_filters.append(FirstNameAlias.name.ilike(f"{search_terms[0]}%"))
-                search_filters.append(LastNameAlias.name.ilike(f"{search_terms[0]}%"))
+                search_filters.append(
+                    FirstNameAlias.name.ilike(f"{search_terms[0]}%")
+                )
+                search_filters.append(
+                    LastNameAlias.name.ilike(f"{search_terms[0]}%")
+                )
             elif len(search_terms) == 2:
                 search_filters.append(
                     and_(
@@ -1010,12 +1113,16 @@ class LeadsPersistence:
             self.db.query(
                 LeadsRequests.lead_id,
                 LeadsRequests.page,
-                func.sum(LeadsRequests.spent_time_sec).label("total_spent_time"),
+                func.sum(LeadsRequests.spent_time_sec).label(
+                    "total_spent_time"
+                ),
                 LeadsRequests.page_parameters,
             )
             .filter(LeadsRequests.lead_id.in_(lead_user_ids))
             .group_by(
-                LeadsRequests.lead_id, LeadsRequests.page, LeadsRequests.page_parameters
+                LeadsRequests.lead_id,
+                LeadsRequests.page,
+                LeadsRequests.page_parameters,
             )
             .subquery()
         )
@@ -1062,7 +1169,8 @@ class LeadsPersistence:
             )
             .join(
                 FiveXFiveLocations,
-                FiveXFiveUsersLocations.location_id == FiveXFiveUsersLocations.id,
+                FiveXFiveUsersLocations.location_id
+                == FiveXFiveUsersLocations.id,
             )
         )
 
@@ -1078,11 +1186,15 @@ class LeadsPersistence:
             query = query.filter(Lead.id.notin_(audience_subquery))
         if regions:
             regions = regions.split(",")
-            filters = [FiveXFiveLocations.city == region.lower() for region in regions]
+            filters = [
+                FiveXFiveLocations.city == region.lower() for region in regions
+            ]
             query = query.filter(or_(*filters))
         if professions:
             professions = professions.split(",")
-            normalized_professions = [normalize_profession(p) for p in professions]
+            normalized_professions = [
+                normalize_profession(p) for p in professions
+            ]
             profession_filters = []
             for profession in normalized_professions:
                 profession_filters.append(
@@ -1109,11 +1221,14 @@ class LeadsPersistence:
         max_page = math.ceil(count / per_page) if per_page > 0 else 1
         return leads_data, count, max_page
 
-    def get_leads_users_by_lead_id(self, lead_id: int, domain_id: int) -> LeadUser:
+    def get_leads_users_by_lead_id(
+        self, lead_id: int, domain_id: int
+    ) -> LeadUser:
         return (
             self.db.query(LeadUser)
             .filter(
-                LeadUser.five_x_five_user_id == lead_id, LeadUser.domain_id == domain_id
+                LeadUser.five_x_five_user_id == lead_id,
+                LeadUser.domain_id == domain_id,
             )
             .first()
         )
@@ -1121,17 +1236,29 @@ class LeadsPersistence:
     def get_leads_user_filter_by_email(self, domain_id: int, email: str):
         return (
             self.db.query(LeadUser)
-            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
             .join(
-                FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
             )
-            .join(FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id)
-            .filter(LeadUser.domain_id == domain_id, FiveXFiveEmails.email == email)
+            .join(
+                FiveXFiveUsersEmails,
+                FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
+            )
+            .join(
+                FiveXFiveEmails,
+                FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
+            )
+            .filter(
+                LeadUser.domain_id == domain_id, FiveXFiveEmails.email == email
+            )
             .first()
         )
 
     def get_leads_domain(self, domain_id: int, **filter_by: dict):
-        return self.db.query(LeadUser).filter_by(domain_id=domain_id, **filter_by).all()
+        return (
+            self.db.query(LeadUser)
+            .filter_by(domain_id=domain_id, **filter_by)
+            .all()
+        )
 
     def get_last_leads_for_zapier(self, domain_id: int):
         lead_users = (
@@ -1146,7 +1273,8 @@ class LeadsPersistence:
 
         recurring_visits_subquery = (
             self.db.query(
-                LeadsVisits.lead_id, func.count(LeadsVisits.id).label("url_visited")
+                LeadsVisits.lead_id,
+                func.count(LeadsVisits.id).label("url_visited"),
             )
             .group_by(LeadsVisits.lead_id)
             .subquery()
@@ -1210,21 +1338,29 @@ class LeadsPersistence:
                 FiveXFivePhones.number,
             )
             .join(LeadUser, LeadUser.five_x_five_user_id == FiveXFiveUser.id)
-            .join(FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id)
+            .join(
+                FirstNameAlias, FirstNameAlias.id == FiveXFiveUser.first_name_id
+            )
             .join(LastNameAlias, LastNameAlias.id == FiveXFiveUser.last_name_id)
             .outerjoin(
-                FiveXFiveUsersEmails, FiveXFiveUsersEmails.user_id == FiveXFiveUser.id
+                FiveXFiveUsersEmails,
+                FiveXFiveUsersEmails.user_id == FiveXFiveUser.id,
             )
             .outerjoin(
-                FiveXFiveEmails, FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id
+                FiveXFiveEmails,
+                FiveXFiveEmails.id == FiveXFiveUsersEmails.email_id,
             )
             .outerjoin(
-                FiveXFiveUsersPhones, FiveXFiveUsersPhones.user_id == FiveXFiveUser.id
+                FiveXFiveUsersPhones,
+                FiveXFiveUsersPhones.user_id == FiveXFiveUser.id,
             )
             .outerjoin(
-                FiveXFivePhones, FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id
+                FiveXFivePhones,
+                FiveXFivePhones.id == FiveXFiveUsersPhones.phone_id,
             )
-            .filter(LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True)
+            .filter(
+                LeadUser.domain_id == domain_id, LeadUser.is_confirmed == True
+            )
             .group_by(
                 FiveXFiveUser.first_name,
                 FiveXFiveUser.last_name,
@@ -1302,8 +1438,12 @@ class LeadsPersistence:
     def get_lead_user_by_up_id(self, domain_id, up_id):
         return (
             self.db.query(LeadUser)
-            .join(FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id)
-            .filter(FiveXFiveUser.up_id == up_id, LeadUser.domain_id == domain_id)
+            .join(
+                FiveXFiveUser, FiveXFiveUser.id == LeadUser.five_x_five_user_id
+            )
+            .filter(
+                FiveXFiveUser.up_id == up_id, LeadUser.domain_id == domain_id
+            )
             .first()
         )
 

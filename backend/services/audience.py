@@ -15,7 +15,9 @@ class AudienceService:
         self.AUDIENCE_SYNC = "audience_sync"
 
     def get_user_audience_list(self, domain_id) -> List[AudienceResponse]:
-        return self.audience_persistence_service.get_user_audience_list(domain_id)
+        return self.audience_persistence_service.get_user_audience_list(
+            domain_id
+        )
 
     async def create_audience(
         self,

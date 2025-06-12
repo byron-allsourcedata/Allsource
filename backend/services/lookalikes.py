@@ -1,17 +1,18 @@
-from typing import List, Tuple, Dict, Set, Optional
+from typing import List, Tuple, Dict, Set
 from uuid import UUID
 
 from pydantic.v1 import UUID4
 
-from models import AudienceLookalikes
 from persistence.audience_lookalikes import AudienceLookalikesPersistence
 from enums import BaseEnum, BusinessType
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 
-from resolver import injectable
 from schemas.lookalikes import CalculateRequest, B2CInsights, B2BInsights
-from schemas.similar_audiences import AudienceFeatureImportance, NormalizationConfig
+from schemas.similar_audiences import (
+    AudienceFeatureImportance,
+    NormalizationConfig,
+)
 from services.similar_audiences import SimilarAudienceService
 from services.similar_audiences.exceptions import (
     EqualTrainTargets,
@@ -94,9 +95,10 @@ PROFESSIONAL_PROFILE = {
 }
 
 
-@injectable
 class AudienceLookalikesService:
-    def __init__(self, lookalikes_persistence_service: AudienceLookalikesPersistence):
+    def __init__(
+        self, lookalikes_persistence_service: AudienceLookalikesPersistence
+    ):
         self.lookalikes_persistence_service = lookalikes_persistence_service
 
     def get_lookalikes(
@@ -128,8 +130,15 @@ class AudienceLookalikesService:
         )
 
         result = []
-        for lookalike_info in result_query:
-            lookalike = lookalike_info.lookalike
+        for (
+            lookalike,
+            source_name,
+            source_type,
+            created_by,
+            source_origin,
+            domain,
+            target_schema,
+        ) in result_query:
             significant_fields = getattr(lookalike, "significant_fields", None)
             if significant_fields and isinstance(significant_fields, dict):
                 processed_fields = {}
@@ -152,13 +161,13 @@ class AudienceLookalikesService:
 
             result.append(
                 {
-                    **lookalike_info.lookalike,
-                    "source": lookalike_info.name,
-                    "source_type": lookalike_info.source_type,
-                    "created_by": lookalike_info.lookalike["created_by_user_id"],
-                    "source_origin": lookalike_info.source_origin,
-                    "domain": lookalike_info.domain,
-                    "target_schema": lookalike_info.target_schema,
+                    **lookalike.__dict__,
+                    "source": source_name,
+                    "source_type": source_type,
+                    "created_by": created_by,
+                    "source_origin": source_origin,
+                    "domain": domain,
+                    "target_schema": target_schema,
                 }
             )
 
@@ -171,31 +180,28 @@ class AudienceLookalikesService:
             },
         }
 
-    def get_lookalike(self, lookalike_id: UUID) -> Optional[AudienceLookalikes]:
-        return self.lookalikes_persistence_service.get_lookalike(
-            lookalike_id=lookalike_id
-        )
-
-    def get_source_info(self, uuid_of_source, user) -> dict:
+    def get_source_info(self, uuid_of_source, user):
         source_info = self.lookalikes_persistence_service.get_source_info(
             uuid_of_source, user.get("id")
         )
-        if not source_info:
-            return {}
-
-        return {
-            "name": source_info.name,
-            "target_schema": source_info.target_schema,
-            "source": source_info.source_origin,
-            "type": source_info.source_type,
-            "created_date": source_info.created_at,
-            "created_by": source_info.created_by,
-            "number_of_customers": source_info.total_records,
-            "matched_records": source_info.matched_records,
-        }
+        if source_info:
+            sources, created_by = source_info
+            return {
+                "name": sources.name,
+                "target_schema": sources.target_schema,
+                "source": sources.source_origin,
+                "type": sources.source_type,
+                "created_date": sources.created_at,
+                "created_by": created_by,
+                "number_of_customers": sources.total_records,
+                "matched_records": sources.matched_records,
+            }
+        return {}
 
     def get_all_sources(self, user):
-        sources = self.lookalikes_persistence_service.get_all_sources(user.get("id"))
+        sources = self.lookalikes_persistence_service.get_all_sources(
+            user.get("id")
+        )
         result = [
             {
                 "id": source.id,
@@ -215,8 +221,10 @@ class AudienceLookalikesService:
 
     def delete_lookalike(self, uuid_of_lookalike, user):
         try:
-            delete_lookalike = self.lookalikes_persistence_service.delete_lookalike(
-                uuid_of_lookalike, user.get("id")
+            delete_lookalike = (
+                self.lookalikes_persistence_service.delete_lookalike(
+                    uuid_of_lookalike, user.get("id")
+                )
             )
             if delete_lookalike:
                 return {"status": "SUCCESS"}
@@ -257,7 +265,9 @@ class AudienceLookalikesService:
             return {"status": "SUCCESS"}
         return {"status": "FAILURE"}
 
-    def _default_insights(self) -> Tuple[B2CInsights, B2BInsights, Dict[str, float]]:
+    def _default_insights(
+        self,
+    ) -> Tuple[B2CInsights, B2BInsights, Dict[str, float]]:
         zero_dicts = CalculateRequest._make_zero_dicts(
             personal=PERSONAL,
             financial=FINANCIAL,
@@ -351,7 +361,9 @@ class AudienceLookalikesService:
             | EMPLOYMENT_HISTORY
             | PROFESSIONAL_PROFILE
         )
-        present_keys = {key for record in audience_data for key in record.keys()}
+        present_keys = {
+            key for record in audience_data for key in record.keys()
+        }
         unordered = [field for field in allowed if field in present_keys]
         return NormalizationConfig(
             numerical_features=[],
@@ -369,12 +381,12 @@ class AudienceLookalikesService:
             if len(audience_data) < 2:
                 raise LessThenTwoTrainDataset
 
-            normalization_config = self.build_normalization_config(audience_data)
+            normalization_config = self.build_normalization_config(
+                audience_data
+            )
 
-            audience_feature_dict = (
-                similar_audience_service.get_audience_feature_importance_with_config(
-                    audience_data=audience_data, config=normalization_config
-                )
+            audience_feature_dict = similar_audience_service.get_audience_feature_importance_with_config(
+                audience_data=audience_data, config=normalization_config
             )
 
             rounded_feature = {
@@ -399,10 +411,12 @@ class AudienceLookalikesService:
         uuid_of_source: UUID,
         lookalike_size: str,
     ) -> CalculateRequest:
-        audience_data = self.lookalikes_persistence_service.calculate_lookalikes(
-            user_id=user.get("id"),
-            source_uuid=uuid_of_source,
-            lookalike_size=lookalike_size,
+        audience_data = (
+            self.lookalikes_persistence_service.calculate_lookalikes(
+                user_id=user.get("id"),
+                source_uuid=uuid_of_source,
+                lookalike_size=lookalike_size,
+            )
         )
         b2c_insights, b2b_insights, other = self.calculate_insights(
             audience_data=audience_data,
@@ -416,7 +430,9 @@ class AudienceLookalikesService:
         )
 
     def get_processing_lookalike(self, id: str):
-        lookalike = self.lookalikes_persistence_service.get_processing_lookalike(id)
+        lookalike = (
+            self.lookalikes_persistence_service.get_processing_lookalike(id)
+        )
         if not lookalike:
             return None
 

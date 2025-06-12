@@ -180,8 +180,12 @@ class DashboardService:
 
             daily_data[start_date]["visitors"] = accumulated_visitor
             daily_data[start_date]["view_products"] = accumulated_viewed_product
-            daily_data[start_date]["abandoned_cart"] = accumulated_abandoned_cart
-            daily_data[start_date]["converted_sale"] = accumulated_converted_sale
+            daily_data[start_date]["abandoned_cart"] = (
+                accumulated_abandoned_cart
+            )
+            daily_data[start_date]["converted_sale"] = (
+                accumulated_converted_sale
+            )
 
         response = {"daily_data": daily_data, "total_counts": total_counts}
 
@@ -201,9 +205,16 @@ class DashboardService:
         )
 
         for date in sorted(all_dates):
-            new_leads = next((item[1] for item in new_leads_data if item[0] == date), 0)
+            new_leads = next(
+                (item[1] for item in new_leads_data if item[0] == date), 0
+            )
             returning_visitors = next(
-                (item[1] for item in returning_visitors_data if item[0] == date), 0
+                (
+                    item[1]
+                    for item in returning_visitors_data
+                    if item[0] == date
+                ),
+                0,
             )
             page_views = next(
                 (item[1] for item in page_views_data if item[0] == date), 0
@@ -233,11 +244,13 @@ class DashboardService:
 
         for result in results:
             start_date = result.get("start_date").isoformat()
-            accumulated_contacts_collected += result.get("new_leads", 0) + result.get(
+            accumulated_contacts_collected += result.get(
+                "new_leads", 0
+            ) + result.get("returning_visitors", 0)
+            accumulated_new_leads += result.get("new_leads", 0)
+            accumulated_returning_visitors += result.get(
                 "returning_visitors", 0
             )
-            accumulated_new_leads += result.get("new_leads", 0)
-            accumulated_returning_visitors += result.get("returning_visitors", 0)
             accumulated_page_views += result.get("page_views", 0)
             daily_data[start_date] = {
                 "contacts_collected": accumulated_contacts_collected,

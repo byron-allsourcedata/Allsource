@@ -1,6 +1,7 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
-    Integer,
     TIMESTAMP,
     JSON,
     VARCHAR,
@@ -10,13 +11,11 @@ from sqlalchemy import (
     text,
     String,
     BigInteger,
-    PrimaryKeyConstraint,
+    event,
 )
-from .base import Base
-from models.users import Users
-from models.audience_smarts_use_cases import AudienceSmartsUseCase
 from sqlalchemy.dialects.postgresql import ENUM
-from sqlalchemy.sql import func
+
+from .base import Base, update_timestamps
 
 audience_smarts_statuses = ENUM(
     "unvalidated",
@@ -42,9 +41,15 @@ class AudienceSmart(Base):
     )
 
     name = Column(String(128), nullable=False)
-    created_at = Column(TIMESTAMP, server_default=func.now(), nullable=False)
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     updated_at = Column(
-        TIMESTAMP, server_default=func.now(), onupdate=func.now(), nullable=False
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
     )
     user_id = Column(BigInteger, ForeignKey("users.id"), nullable=True)
     created_by_user_id = Column(
@@ -52,11 +57,15 @@ class AudienceSmart(Base):
     )
     total_records = Column(BigInteger, server_default="0", nullable=False)
     validated_records = Column(BigInteger, server_default="0", nullable=False)
-    active_segment_records = Column(BigInteger, server_default="0", nullable=False)
+    active_segment_records = Column(
+        BigInteger, server_default="0", nullable=False
+    )
     processed_active_segment_records = Column(
         BigInteger, server_default="0", nullable=False
     )
-    status = Column(audience_smarts_statuses, server_default="'ready'", nullable=False)
+    status = Column(
+        audience_smarts_statuses, server_default="'ready'", nullable=False
+    )
     use_case_id = Column(
         UUID(as_uuid=True),
         ForeignKey("audience_smarts_use_cases.id", onupdate="SET NULL"),
@@ -66,7 +75,9 @@ class AudienceSmart(Base):
     target_schema = Column(VARCHAR(128), nullable=True)
 
     __table_args__ = (
-        Index("audience_smarts_active_segment_records_idx", active_segment_records),
+        Index(
+            "audience_smarts_active_segment_records_idx", active_segment_records
+        ),
         Index("audience_smarts_created_at_idx", created_at, unique=True),
         Index("audience_smarts_created_at_user_id_idx", created_at, user_id),
         Index("audience_smarts_status_idx", status),
@@ -76,3 +87,6 @@ class AudienceSmart(Base):
         Index("audience_smarts_user_created_at", user_id, created_at),
         Index("audience_smarts_pkey", id, unique=True),
     )
+
+
+event.listen(AudienceSmart, "before_update", update_timestamps)

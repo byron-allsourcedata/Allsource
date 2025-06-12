@@ -1,5 +1,6 @@
-from sqlalchemy import Column, String, Text, SmallInteger, ForeignKey, text, Index
+from sqlalchemy import Column, String, Text, ForeignKey, text, Index
 from sqlalchemy.dialects.postgresql import UUID
+
 from models.base import Base
 
 
@@ -14,7 +15,9 @@ class EnrichmentFinancialRecord(Base):
     )
     asid = Column(
         UUID(as_uuid=True),
-        ForeignKey("enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"),
+        ForeignKey(
+            "enrichment_users.asid", ondelete="CASCADE", onupdate="CASCADE"
+        ),
         nullable=False,
     )
     income_range = Column(String(10), nullable=True)
@@ -30,4 +33,4 @@ class EnrichmentFinancialRecord(Base):
     investor = Column(String(8), nullable=False)
     mail_order_donor = Column(String(8), nullable=False)
 
-    __table_args__ = (Index("ix_financial_asid", asid),)
+    __table_args__ = (Index("ix_financial_asid", asid, unique=True),)

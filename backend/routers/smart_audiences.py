@@ -19,7 +19,9 @@ from typing import Optional, List, Dict
 from uuid import UUID
 from enums import BaseEnum
 
-router = APIRouter(dependencies=[Depends(check_user_authorization_without_pixel)])
+router = APIRouter(
+    dependencies=[Depends(check_user_authorization_without_pixel)]
+)
 
 
 @router.get("", response_model=SmartsAudienceObjectResponse)
@@ -61,7 +63,22 @@ def calculate_smart_audience(
         get_audience_smarts_service
     ),
 ):
-    return audience_smarts_service.calculate_smart_audience(raw_data_sources=request)
+    return audience_smarts_service.calculate_smart_audience(
+        raw_data_sources=request
+    )
+
+
+@router.post("/validation-cost-calculate", response_model=float)
+def calculate_validation_cost(
+    request=Body(...),
+    audience_smarts_service: AudienceSmartsService = Depends(
+        get_audience_smarts_service
+    ),
+):
+    return audience_smarts_service.calculate_validation_cost(
+        count_active_segment=request["count_active_segment"],
+        validations=request["validations"],
+    )
 
 
 @router.get("/{id}/data-sources", response_model=DataSourcesResponse)
@@ -78,7 +95,8 @@ def get_datasource_by_id(
 
 
 @router.get(
-    "/{id}/validation-history", response_model=List[Dict[str, ValidationHistory]]
+    "/{id}/validation-history",
+    response_model=List[Dict[str, ValidationHistory]],
 )
 def get_validations_by_id(
     id: UUID,
@@ -100,27 +118,24 @@ async def create_smart_audience(
         get_audience_smarts_service
     ),
 ):
-    try:
-        if user.get("team_member"):
-            user_id = user.get("team_member").get("id")
-        else:
-            user_id = user.get("id")
+    if user.get("team_member"):
+        user_id = user.get("team_member").get("id")
+    else:
+        user_id = user.get("id")
 
-        return await audience_smarts_service.create_audience_smart(
-            name=request.smart_audience_name,
-            user=user,
-            created_by_user_id=user_id,
-            use_case_alias=request.use_case,
-            validation_params=request.validation_params,
-            data_sources=request.data_sources,
-            contacts_to_validate=request.contacts_to_validate,
-            active_segment_records=request.active_segment_records,
-            is_validate_skip=request.is_validate_skip,
-            total_records=request.total_records,
-            target_schema=request.target_schema,
-        )
-    except ValueError:
-        raise HTTPException(status_code=400)
+    return await audience_smarts_service.create_audience_smart(
+        name=request.smart_audience_name,
+        user=user,
+        created_by_user_id=user_id,
+        use_case_alias=request.use_case,
+        validation_params=request.validation_params,
+        data_sources=request.data_sources,
+        contacts_to_validate=request.contacts_to_validate,
+        active_segment_records=request.active_segment_records,
+        is_validate_skip=request.is_validate_skip,
+        total_records=request.total_records,
+        target_schema=request.target_schema,
+    )
 
 
 @router.get("/get-datasource")
@@ -144,7 +159,9 @@ def search_audience_smart(
     ),
     user: dict = Depends(check_user_authorization_without_pixel),
 ):
-    return audience_smarts_service.search_audience_smart(start_letter, user=user)
+    return audience_smarts_service.search_audience_smart(
+        start_letter, user=user
+    )
 
 
 @router.get("/estimates-predictable-validation")
@@ -204,7 +221,9 @@ def download_persons(
     return BaseEnum.FAILURE
 
 
-@router.get("/get-processing-smart-source", response_model=Optional[SmartsResponse])
+@router.get(
+    "/get-processing-smart-source", response_model=Optional[SmartsResponse]
+)
 def get_processing_source(
     id: str = Query(...),
     audience_smarts_service: AudienceSmartsService = Depends(

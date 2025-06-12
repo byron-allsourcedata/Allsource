@@ -1,9 +1,8 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
-    Integer,
-    BOOLEAN,
     TEXT,
-    DateTime,
     Index,
     BigInteger,
     text,
@@ -12,7 +11,7 @@ from sqlalchemy import (
     Sequence,
 )
 from sqlalchemy.dialects.postgresql import TIMESTAMP
-from sqlalchemy.sql import func
+
 from .base import Base
 
 
@@ -44,4 +43,8 @@ class UserAccountNotification(Base):
     )
     params = Column(TEXT, nullable=True)
     is_checked = Column(Boolean, nullable=False, server_default=text("false"))
-    created_at = Column(TIMESTAMP, nullable=True, server_default=func.now())
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )

@@ -1,9 +1,9 @@
+from datetime import datetime, timezone
+
 from sqlalchemy import (
     Column,
-    event,
     Integer,
     TIMESTAMP,
-    BOOLEAN,
     VARCHAR,
     Index,
     text,
@@ -14,8 +14,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 
-from .base import Base, create_timestamps, update_timestamps
-from models.users import Users
+from .base import Base
 
 
 class Partner(Base):
@@ -33,7 +32,9 @@ class Partner(Base):
         primary_key=True,
         nullable=False,
     )
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True
+    )
     master_id = Column(Integer, ForeignKey("partners.id"), nullable=True)
     commission = Column(Integer, nullable=True)
     email = Column(VARCHAR(64), nullable=False)
@@ -48,7 +49,11 @@ class Partner(Base):
     )
     is_master = Column(Boolean, nullable=False, server_default=text("false"))
     is_active = Column(Boolean, nullable=False, server_default=text("true"))
-    created_at = Column(TIMESTAMP, nullable=False, server_default=text("now()"))
+    created_at = Column(
+        TIMESTAMP,
+        nullable=False,
+        default=lambda: datetime.now(timezone.utc).replace(tzinfo=None),
+    )
     updated_at = Column(TIMESTAMP, nullable=False, server_default=text("now()"))
 
     parent = relationship(
@@ -57,8 +62,7 @@ class Partner(Base):
     users = relationship("Users", backref="partners")
 
     def to_dict(self) -> dict:
-        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
-
-
-event.listen(Partner, "before_insert", create_timestamps)
-event.listen(Partner, "before_update", update_timestamps)
+        return {
+            c.key: getattr(self, c.key)
+            for c in inspect(self).mapper.column_attrs
+        }

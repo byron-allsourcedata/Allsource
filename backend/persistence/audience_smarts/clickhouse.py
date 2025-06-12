@@ -8,7 +8,9 @@ from persistence.audience_smarts.dto import (
     PersonRecord,
     SyncedPersonRecord,
 )
-from persistence.audience_smarts.interface import AudienceSmartsPersistenceInterface
+from persistence.audience_smarts.interface import (
+    AudienceSmartsPersistenceInterface,
+)
 from resolver import injectable
 from schemas.audience import DataSourcesFormat
 from sqlalchemy.engine.row import Row
@@ -16,7 +18,9 @@ from sqlalchemy.engine.row import Row
 
 @injectable
 class AudienceSmartsClickhousePersistence(AudienceSmartsPersistenceInterface):
-    def __init__(self, client: Clickhouse, postgres: AudienceSmartsPostgresPersistence):
+    def __init__(
+        self, client: Clickhouse, postgres: AudienceSmartsPostgresPersistence
+    ):
         self.client = client
         self.postgres = postgres
 

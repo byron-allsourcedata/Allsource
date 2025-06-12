@@ -42,26 +42,26 @@ if __name__ == "__main__":
         lead_persistence=LeadsPersistence(db_session),
         audience_persistence=AudiencePersistence(db_session),
         lead_orders_persistence=LeadOrdersPersistence(db_session),
-        integrations_user_sync_persistence=IntegrationsUserSyncPersistence(db_session),
+        integrations_user_sync_persistence=IntegrationsUserSyncPersistence(
+            db_session
+        ),
         aws_service=AWSService(get_s3_client()),
         domain_persistence=UserDomainsPersistence(db_session),
         suppression_persistence=SuppressionPersistence(db_session),
     )
     while True:
         logging.info("Start suppression sync")
-        integrations = (
-            integration_service.integration_persistence.get_all_integrations_filter_by(
-                is_with_suppression=True
-            )
+        integrations = integration_service.integration_persistence.get_all_integrations_filter_by(
+            is_with_suppression=True
         )
         for integration in integrations:
-            last_suppression_date = (
-                integration_service.suppression_persistence.get_last_leads_suppression(
-                    domain_id=integration.domain_id, integration_id=integration.id
-                )
+            last_suppression_date = integration_service.suppression_persistence.get_last_leads_suppression(
+                domain_id=integration.domain_id, integration_id=integration.id
             )
             with integration_service as service:
-                service = getattr(integration_service, integration.service_name.lower())
+                service = getattr(
+                    integration_service, integration.service_name.lower()
+                )
                 if last_suppression_date:
                     contact = service.get_profile(
                         integration.domain_id,
@@ -69,7 +69,9 @@ if __name__ == "__main__":
                         fileds=FIELD,
                     )
                 else:
-                    contacts = service.get_profile(integration.domain_id, fields=FIELD)
+                    contacts = service.get_profile(
+                        integration.domain_id, fields=FIELD
+                    )
                 for contact in contacts:
                     integration_service.suppression_persistence.create(
                         {

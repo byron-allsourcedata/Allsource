@@ -1,7 +1,10 @@
+from typing import List
+
 from fastapi import HTTPException
 import uuid
 import os
 from enums import SubscriptionStatus
+from models import Users
 from persistence.domains import UserDomainsPersistence, UserDomains
 from persistence.plans_persistence import PlansPersistence
 from schemas.domains import DomainResponse, UpdateDomain
@@ -22,7 +25,9 @@ class UserDomainsService:
         self.UNLIMITED = -1
 
     def create(self, user, domain: str):
-        plan_info = self.subscription_service.get_user_subscription((user.get("id")))
+        plan_info = self.subscription_service.get_user_subscription(
+            (user.get("id"))
+        )
         if plan_info.domains_limit != self.UNLIMITED:
             if (
                 self.domain_persistence.count_domain(user.get("id"))
@@ -30,17 +35,46 @@ class UserDomainsService:
             ):
                 raise HTTPException(
                     status_code=403,
-                    detail={"status": SubscriptionStatus.NEED_UPGRADE_PLAN.value},
+                    detail={
+                        "status": SubscriptionStatus.NEED_UPGRADE_PLAN.value
+                    },
                 )
         new_domain = self.domain_persistence.create_domain(
             user.get("id"), {"domain": normalize_url(domain)}
         )
         return self.domain_mapped(new_domain)
 
+    def clean_account(self, email):
+        user = self.domain_persistence.get_user_by_email(email=email)
+        if not user:
+            return None
+
+        user_dict = {
+            c.name: getattr(user, c.name)
+            for c in Users.__table__.columns
+            if c.name not in ["id", "current_subscription_id"]
+        }
+        self.domain_persistence.delete_user(user=user)
+        user_id = self.domain_persistence.create_user_by_dict(
+            user_dict=user_dict
+        )
+        self.subscription_service.create_subscription_from_free_trial(
+            user_id=user_id, ftd=None
+        )
+        return f"{os.environ.get('SITE_HOST_URL')}"
+
     def get_domains(self, user_id: int, **filter_by):
         domains = self.domain_persistence.get_domains_by_user(user_id)
         sorted_domains = sorted(domains, key=lambda x: x.created_at)
-        return [self.domain_mapped(domain) for i, domain in enumerate(sorted_domains)]
+        return [
+            self.domain_mapped(domain)
+            for i, domain in enumerate(sorted_domains)
+        ]
+
+    def get_verify_domains(self) -> List[str]:
+        domains = self.domain_persistence.get_verify_domains()
+        domain_list_name = [domain.domain for domain in domains]
+        return domain_list_name
 
     def pixel_installed_anywhere(self, user):
         domains = self.domain_persistence.get_domains_by_user(user.get("id"))
@@ -82,8 +116,6 @@ class UserDomainsService:
         ).model_dump()
 
     def delete_domain(self, user_id: int, domain_id: int):
-        if self.domain_persistence.count_domain(user_id) == 1:
-            raise HTTPException(status_code=409, detail={"status": "LAST_DOMAIN"})
         return self.domain_persistence.delete_domain(user_id, domain_id)
 
     def __create_api_key(self, domain: UserDomains):
@@ -95,7 +127,9 @@ class UserDomainsService:
     def get_api_key(self, domain_id: int):
         domains = self.domain_persistence.get_domain_by_filter(id=domain_id)
         if not domains:
-            raise HTTPException(status_code=404, detail={"status": "Domain not found"})
+            raise HTTPException(
+                status_code=404, detail={"status": "Domain not found"}
+            )
         api_key = domains[0].api_key
         if not api_key:
             api_key = self.__create_api_key(domains[0])
