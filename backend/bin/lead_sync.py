@@ -82,6 +82,7 @@ def setup_logging(level):
 
 LAST_PROCESSED_FILE_PATH = "tmp/last_processed_leads_sync.txt"
 AMOUNT_CREDITS = 1
+UNLIMITED = -1
 QUEUE_CREDITS_CHARGING = "credits_charging"
 EMAIL_NOTIFICATIONS = "email_notifications"
 
@@ -359,7 +360,7 @@ async def process_payment_unlocked_five_x_five_user(
         )
         return
 
-    if user.leads_credits - AMOUNT_CREDITS < 0:
+    if user.leads_credits > UNLIMITED and user.leads_credits - AMOUNT_CREDITS < 0:
         if overage_enabled:
 
             await send_overage_leads_notification(
@@ -390,14 +391,15 @@ async def process_payment_unlocked_five_x_five_user(
     )
 
     session.add(users_unlocked_five_x_five_user)
-    user.leads_credits -= AMOUNT_CREDITS
-    await handle_payment_notification(
-        user,
-        notification_persistence,
-        plan_leads_credits,
-        user.leads_credits,
-        contact_credit_price,
-    )
+    if user.leads_credits > UNLIMITED:
+        user.leads_credits -= AMOUNT_CREDITS
+        await handle_payment_notification(
+            user,
+            notification_persistence,
+            plan_leads_credits,
+            user.leads_credits,
+            contact_credit_price,
+        )
     session.flush()
     return
 
