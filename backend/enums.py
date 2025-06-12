@@ -340,6 +340,7 @@ class NotificationTitles(Enum):
     NO_CREDITS = "no_credits"
     TOO_MANY_REQUESTS = "too_many_requests"
     QUOTA_EXHAUSTED = "quota_exhausted"
+    PAYMENT_REQUIRED = "payment_required"
 
 
 class CreditsStatus(Enum):

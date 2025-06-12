@@ -678,7 +678,7 @@ const DataSyncList = memo(({ service_name, filters }: DataSyncProps) => {
 					} else if (dataSyncPlatform === "webhook") {
 						setOpenWebhookIconPopup(true);
 					} else if (dataSyncPlatform === "hubspot") {
-						setOpenWebhookConnect(true);
+						setOpenHubspotIconPopup(true);
 					} else if (dataSyncPlatform === "sales_force") {
 						setSalesForceIconPopupOpen(true);
 					}
