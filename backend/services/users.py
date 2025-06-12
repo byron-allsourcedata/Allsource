@@ -90,13 +90,13 @@ class UsersService:
         }
 
     def add_percent_to_domain(
-            self,
-            domain: UserDomains,
-            activate_percent,
-            is_current_subscription_id,
-            contacts_resolving: bool,
-            data_synced: bool,
-            data_sync_failed: bool,
+        self,
+        domain: UserDomains,
+        activate_percent,
+        is_current_subscription_id,
+        contacts_resolving: bool,
+        data_synced: bool,
+        data_sync_failed: bool,
     ):
         domain_percent = 0
         if domain.is_pixel_installed:
@@ -140,8 +140,9 @@ class UsersService:
             else:
                 disabled_domains.append(data)
 
-        return sorted(enabled_domains, key=lambda x: (x["created_at"], x["id"])) + \
-               sorted(disabled_domains, key=lambda x: (x["created_at"], x["id"]))
+        return sorted(
+            enabled_domains, key=lambda x: (x["created_at"], x["id"])
+        ) + sorted(disabled_domains, key=lambda x: (x["created_at"], x["id"]))
 
     def domain_mapped(self, domain: UserDomains):
         return DomainResponse(
