@@ -48,6 +48,19 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [loading, setLoading] = useState(true);
 
+	const pixelPages = [
+		// "/analytics",
+		"/dashboard", // CHANGE TO analytics
+		"/leads",
+		"/company",
+		"/suppressions",
+		"/data-sync-pixel",
+	];
+
+	const hasSubheader =
+		(pathname.startsWith("/management") && pathname !== "/management") ||
+		pixelPages.includes(pathname);
+
 	useEffect(() => {
 		if (!isAuthenticated) return;
 
@@ -127,7 +140,7 @@ export const ClientLayout: React.FC<ClientLayoutProps> = ({ children }) => {
 						NotificationData={latestNotification}
 						onDismissNotification={handleDismissNotification}
 					/>
-					<PixelSubheader />
+					{hasSubheader && <PixelSubheader />}
 					<Grid
 						container
 						className="page-container"

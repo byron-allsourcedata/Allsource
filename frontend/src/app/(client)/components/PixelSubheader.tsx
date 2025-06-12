@@ -6,21 +6,20 @@ import {
 	Menu,
 	MenuItem,
 	IconButton,
-	Switch,
 } from "@mui/material";
 import Image from "next/image";
-import React, { useEffect, useState, useRef } from "react";
+import React from "react";
+import DomainButton from "./DomainsButton";
 
 const subheaderStyles = {
 	headers: {
 		display: "flex",
 		padding: "1.125rem 1.5rem",
-		pl: ".75rem",
+		pl: "6px",
 		justifyContent: "space-between",
 		alignItems: "center",
 		minHeight: "4rem",
 		maxHeight: "4rem",
-		color: "rgba(244, 87, 69, 1)",
 		borderBottom: `1px solid rgba(228, 228, 228, 1)`,
 		position: "sticky",
 		overflowY: "hidden",
@@ -50,7 +49,47 @@ const PixelSubheader: React.FC<SubHeaderProps> = ({}) => {
 						display: { xs: "none", md: "flex" },
 					}}
 				>
-					Hello
+					<Box sx={{ display: "flex", alignItems: "center", gap: "24px" }}>
+						{/* Domain Selector */}
+						<DomainButton />
+
+						{/* Colorful Labels */}
+						<Box display="flex" gap="8px">
+							<Box
+								sx={{
+									backgroundColor: "rgba(56, 152, 252, 0.1)",
+									borderRadius: "4px",
+									padding: "4px 8px",
+								}}
+							>
+								<Typography variant="body2" color="primary">
+									Label 1
+								</Typography>
+							</Box>
+							<Box
+								sx={{
+									backgroundColor: "rgba(244, 87, 69, 0.1)",
+									borderRadius: "4px",
+									padding: "4px 8px",
+								}}
+							>
+								<Typography variant="body2" color="error">
+									Label 2
+								</Typography>
+							</Box>
+							<Box
+								sx={{
+									backgroundColor: "rgba(46, 204, 113, 0.1)",
+									borderRadius: "4px",
+									padding: "4px 8px",
+								}}
+							>
+								<Typography variant="body2" sx={{ color: "#2ECC71" }}>
+									Label 3
+								</Typography>
+							</Box>
+						</Box>
+					</Box>
 				</Box>
 			</Box>
 		</Box>
