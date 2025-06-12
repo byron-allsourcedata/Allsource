@@ -1,5 +1,7 @@
 import logging
 from datetime import datetime, timezone
+
+from db_dependencies import Db
 from enums import PlanAlias
 from dateutil.relativedelta import relativedelta
 from sqlalchemy.orm import Session
@@ -19,6 +21,7 @@ from models.users_domains import UserDomains
 from models.users_unlocked_5x5_users import UsersUnlockedFiveXFiveUser
 from persistence.plans_persistence import PlansPersistence
 from persistence.user_persistence import UserPersistence
+from resolver import injectable
 from utils import get_utc_aware_date_for_postgres
 from decimal import *
 from models.referral_payouts import ReferralPayouts
@@ -33,13 +36,14 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
+@injectable
 class SubscriptionService:
     AMOUNT_CREDITS = 1
     UNLIMITED = -1
 
     def __init__(
         self,
-        db: Session,
+        db: Db,
         user_persistence_service: UserPersistence,
         plans_persistence: PlansPersistence,
         referral_service: ReferralService,
@@ -241,7 +245,7 @@ class SubscriptionService:
         user_subscription = result["subscription"]
         if not user_subscription:
             return False
-        if not is_active and user_subscription.status == "inactive":
+        if not is_active or user_subscription.status == "inactive":
             billing_date = user_subscription.plan_end.astimezone(timezone.utc)
             if billing_date + relativedelta(months=1) <= datetime.now(
                 timezone.utc

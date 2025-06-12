@@ -923,7 +923,7 @@ const MailchimpDatasync: React.FC<ConnectMailChimpPopupProps> = ({
 										}}
 									>
 										<Typography variant="subtitle1" className="paragraph">
-											Synchronise all data in real-time from this moment forward
+											Synchronize all data in real-time from this moment forward
 											for seamless integration and continuous updates.
 										</Typography>
 										<FormControl sx={{ gap: "16px" }} error={tab2Error}>

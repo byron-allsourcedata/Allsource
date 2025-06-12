@@ -7,6 +7,7 @@ from persistence.referral_user import ReferralUserPersistence
 from dotenv import load_dotenv
 from encryption_utils import encrypt_data
 from persistence.user_persistence import UserPersistence
+from resolver import injectable
 from services.jwt_service import create_access_token
 from services.stripe_service import StripeService
 from persistence.referral_payouts import ReferralPayoutsPersistence
@@ -17,6 +18,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 
+@injectable
 class ReferralService:
     def __init__(
         self,
