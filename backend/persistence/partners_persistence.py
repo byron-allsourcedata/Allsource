@@ -1,3 +1,4 @@
+from db_dependencies import Db
 from models.partner import Partner
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql import case
@@ -10,10 +11,12 @@ from models.users import Users
 from models.plans import SubscriptionPlan
 from models.referral_users import ReferralUser
 from enums import ConfirmationStatus, PayoutsStatus
+from resolver import injectable
 
 
+@injectable
 class PartnersPersistence:
-    def __init__(self, db: Session):
+    def __init__(self, db: Db):
         self.db = db
 
     def get_partners_by_user_ids(self, user_ids, search_query=None):

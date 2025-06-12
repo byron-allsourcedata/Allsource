@@ -29,7 +29,6 @@ from dependencies import (
     check_pixel_install_domain,
     check_user_authentication,
     UserPersistence,
-    get_user_domain_persistence,
     UserDomainsPersistence,
     check_api_key,
     get_settings_persistence,
@@ -343,12 +342,10 @@ async def remove_user_callback(request: Request):
 @router.get("/bigcommerce/auth/callback")
 def bigcommerce_auth(
     code: Optional[str],
+    domain_persistence: UserDomainsPersistence,
     user_persistence: UserPersistence,
     state: str = Query(None),
     integration_service: IntegrationService = Depends(get_integration_service),
-    domain_persistence: UserDomainsPersistence = Depends(
-        get_user_domain_persistence
-    ),
 ):
     payload = {
         "client_id": BigcommerceConfig.client_id,
